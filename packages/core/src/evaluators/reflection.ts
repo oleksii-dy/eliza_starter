@@ -300,6 +300,8 @@ export const reflectionEvaluator: Evaluator = {
 
     const reflectionInterval = Math.ceil(runtime.getConversationLength() / 4);
 
+    logger.debug('Reflection', reflectionInterval, messages, lastMessageId);
+
     return messages.length > reflectionInterval;
   },
   description:

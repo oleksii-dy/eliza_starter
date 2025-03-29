@@ -103,7 +103,7 @@ export class TwitterInteractionClient {
     //     (this.state?.TWITTER_POLL_INTERVAL ||
     //       (this.runtime.getSetting('TWITTER_POLL_INTERVAL') as unknown as number) ||
     //       120) * 1000;
-    //   this.handleTwitterInteractions();
+    this.handleTwitterInteractions();
     //   setTimeout(handleTwitterInteractionsLoop, interactionInterval);
     // };
     // handleTwitterInteractionsLoop();

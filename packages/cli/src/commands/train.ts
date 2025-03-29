@@ -6,10 +6,14 @@ import {
   type Plugin,
   logger,
   stringToUuid,
+  ChannelType,
   encryptedCharacter,
   Memory,
   State,
+  createUniqueUuid,
+  validateUuid,
 } from '@elizaos/core';
+
 import { Command } from 'commander';
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
@@ -249,11 +253,29 @@ export async function trainAgent(
   // report to console
   logger.debug(`trained ${runtime.character.name} as ${runtime.agentId}`);
 
-  let uuid = 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6';
+  const roomId = createUniqueUuid(runtime, 'default-room-training');
+  const entityId = createUniqueUuid(runtime, 'Anon');
+
+  await runtime.ensureConnection({
+    entityId: entityId,
+    roomId: roomId,
+    userName: 'User',
+    name: 'User',
+    source: 'train',
+    channelId: roomId,
+    serverId: 'client-chat',
+    type: ChannelType.DM,
+    worldId: roomId,
+  });
+
+  //  let uuid = 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6';
   let message: Memory = {
-    entityId: uuid,
-    content: {},
-    roomId: uuid,
+    entityId: entityId,
+    content: {
+      text: 'Post Tweet',
+    },
+
+    roomId: roomId,
   };
   let state: State = {
     values: {},
@@ -265,19 +287,33 @@ export async function trainAgent(
   let callback = (response: any): Promise<Memory[]> => {
     console.log('response', response);
     let m: Memory = {
-      entityId: uuid,
-      content: {},
-      roomId: uuid,
+      entityId: entityId,
+      //content: {},
+      content: {
+        text: 'Post Image Tweet',
+      },
+
+      roomId: roomId,
     };
     return Promise.resolve([m]);
   };
-  await runtime.evaluate(
+  console.log(
+    'Going to eval',
     message,
     state,
     true, // Post generation is always a "responding" scenario
     callback,
     responseMessages
   );
+  let foo = await runtime.evaluate(
+    message,
+    state,
+    true, // Post generation is always a "responding" scenario
+    callback,
+    responseMessages
+  );
+  console.log('Eval', foo);
+  console.log('Eval', responseMessages);
 
   return runtime;
 }

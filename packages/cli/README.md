@@ -212,3 +212,13 @@ CLI
 `tsx ./src/index.ts  train`
 
 DEBUG=\* NODE_NO_WARNINGS=1 LOG_LEVEL=debug tsx ./src/index.ts train
+
+strace -f -s 99999 -o strace.txt tsx ./src/index.ts train # 2>&1 | grep ^JSON log.txt | cut -b 5- | jq -s . | gron | grep stack | cut -d. -f2- | sort | uniq -c | sort -n
+
+3768953 execve("/home/mdupont/.bun/bin/node", ["node", "/home/mdupont/.local/share/pnpm/global/5/.pnpm/tsx@4.19.2/node_modules/tsx/dist/cli.mjs", "./src/index.ts", "train"], 0x5f120e0c2dc8 /_ 64 vars _/) = -1 ENOENT (No such file or directory)
+
+3768969 execve("/gnu/store/9nx4zhahn1y95clyrga28rnrjlrqrqyn-node-18.19.0/bin/node", ["/gnu/store/9nx4zhahn1y95clyrga28rnrjlrqrqyn-node-18.19.0/bin/node", "--require", "/home/mdupont/.local/share/pnpm/global/5/.pnpm/tsx@4.19.2/node_modules/tsx/dist/preflight.cjs", "--import", "file:///home/mdupont/.local/share/pnpm/global/5/.pnpm/tsx@4.19.2/node_modules/tsx/dist/loader.mjs", "./src/index.ts", "train"], 0x7ee354003410 /_ 64 vars _/ <unfinished ...>
+
+node --prof ./dist/index.js train
+
+bun run build

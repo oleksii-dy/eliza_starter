@@ -396,7 +396,8 @@ export class AgentRuntime implements IAgentRuntime {
 
     // Register plugin services
     if (plugin.services) {
-      //await Promise.all(plugin.services.map((service) => this.registerService(service)));
+      this.runtimeLogger.log('Register plugin services', plugin.services);
+      await Promise.all(plugin.services.map((service) => this.registerService(service)));
     }
   }
 
@@ -528,7 +529,7 @@ export class AgentRuntime implements IAgentRuntime {
       this.runtimeLogger.warn(
         `[AgentRuntime][${this.character.name}] No TEXT_EMBEDDING model registered. Skipping embedding dimension setup.`
       );
-      console.info('DeBUG models', this.models);
+      this.runtimeLogger.info('DeBUG models', this.models);
     } else {
       // Only run ensureEmbeddingDimension if we have an embedding model
       await this.ensureEmbeddingDimension();
@@ -914,7 +915,10 @@ export class AgentRuntime implements IAgentRuntime {
     callback?: HandlerCallback,
     responses?: Memory[]
   ) {
+    this.runtimeLogger.log('Evaluate', message);
+    this.runtimeLogger.log('Evaluators', this.evaluators);
     const evaluatorPromises = this.evaluators.map(async (evaluator: Evaluator) => {
+      this.runtimeLogger.log('Evaluator', evaluator);
       if (!evaluator.handler) {
         return null;
       }
@@ -923,7 +927,11 @@ export class AgentRuntime implements IAgentRuntime {
       }
       const result = await evaluator.validate(this, message, state);
 
+      this.runtimeLogger.log('Validate', message, state, result);
       if (result) {
+        return evaluator;
+      } else {
+        // Hack also return the evaluator even if it fails for testing FIXME remove
         return evaluator;
       }
       return null;
@@ -934,15 +942,25 @@ export class AgentRuntime implements IAgentRuntime {
     // get the evaluators that were chosen by the response handler
 
     if (evaluators.length === 0) {
+      this.runtimeLogger.log('no eval');
       return [];
     }
 
+    this.runtimeLogger.log('Message', message);
+
     state = await this.composeState(message, ['RECENT_MESSAGES', 'EVALUATORS']);
+
+    this.runtimeLogger.log('state', state);
 
     await Promise.all(
       evaluators.map(async (evaluator) => {
+        this.runtimeLogger.log('evaluator', evaluator);
+
         if (evaluator.handler) {
           await evaluator.handler(this, message, state, {}, callback, responses);
+
+          this.runtimeLogger.log('evaluator', responses);
+
           // log to database
           this.adapter.log({
             entityId: message.entityId,

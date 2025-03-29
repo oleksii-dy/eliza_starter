@@ -231,8 +231,8 @@ const options = {
         .replaceAll('/mnt/data1/nix/time/2025/03/14/cloud-deployment-eliza', 'PRJ1')
         .replaceAll('/mnt/data1/nix/time/2025/03/14/cloud-deployment-eliza', 'PRJ2')
         .replaceAll('/mnt/data1/nix/time/', 'TIME')
-        .split('\n');
-      //.slice(3, 9)
+        .split('\n')
+        .slice(3, -1);
 
       console.log(
         'JSON',
