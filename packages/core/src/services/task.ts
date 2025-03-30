@@ -107,17 +107,18 @@ export class TaskService extends Service {
    * Starts a timer that runs a function to check tasks at a specified interval.
    */
   private startTimer() {
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
+    logger.debug('Start time skipped');
+    // if (this.timer) {
+    //   clearInterval(this.timer);
+    // }
 
-    this.timer = setInterval(async () => {
-      try {
-        await this.checkTasks();
-      } catch (error) {
-        logger.error('Error checking tasks:', error);
-      }
-    }, this.TICK_INTERVAL) as unknown as NodeJS.Timeout;
+    // this.timer = setInterval(async () => {
+    //   try {
+    //     await this.checkTasks();
+    //   } catch (error) {
+    //     logger.error('Error checking tasks:', error);
+    //   }
+    // }, this.TICK_INTERVAL) as unknown as NodeJS.Timeout;
   }
 
   /**

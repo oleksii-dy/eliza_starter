@@ -30,12 +30,13 @@ import { displayBanner } from '../displayBanner';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const wait = (minTime = 1000, maxTime = 3000) => {
-  const waitTime = Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
-  return new Promise((resolve) => setTimeout(resolve, waitTime));
-};
+//export const wait = (minTime = 1000, maxTime = 3000) => {
+//  const waitTime = Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
+//return new Promise((resolve) => setTimeout(resolve, waitTime));
+//};
 
 /**
+   Prompt for environment variables for all plugins in the project
  * Analyzes project agents and their plugins to determine which environment variables to prompt for
  */
 export async function promptForProjectPlugins(
@@ -109,7 +110,7 @@ export async function trainAgent(
     isPluginTestMode?: boolean;
   } = {}
 ): Promise<IAgentRuntime> {
-  console.log('train agent');
+  console.log('trainAgent', character, server, plugins, options);
   character.id ??= stringToUuid(character.name);
 
   const encryptedChar = encryptedCharacter(character);
@@ -233,9 +234,11 @@ export async function trainAgent(
     }
   }
 
+  const myplugins = [...plugins, ...characterPlugins];
+  logger.debug('myplugins', myplugins);
   const runtime = new AgentRuntime({
     character: encryptedChar,
-    plugins: [...plugins, ...characterPlugins],
+    plugins: myplugins,
   });
 
   logger.debug('RUNTIME', runtime);
@@ -250,6 +253,12 @@ export async function trainAgent(
   // add to container
   server.registerAgent(runtime);
 
+  //    console.log("runtime2345", runtime);
+  console.log('runtimeactions2345', runtime.action);
+  //console.log("server2345", server);
+
+  //    logger.debug("runtime", runtime);
+  //logger.debug("server", server);
   // report to console
   logger.debug(`trained ${runtime.character.name} as ${runtime.agentId}`);
 
@@ -527,9 +536,11 @@ const trainAgents = async (options: {
 
   server.train();
 
-  // if characters are provided, train the agents with the characters
+  //
   if (options.characters) {
+    logger.debug('if characters are provided, train the agents with the characters');
     for (const character of options.characters) {
+      logger.debug('train the characters', character);
       // make sure character has sql plugin
       if (!character.plugins.includes('@elizaos/plugin-sql')) {
         character.plugins.push('@elizaos/plugin-sql');
@@ -547,7 +558,7 @@ const trainAgents = async (options: {
       await trainAgent(character, server);
     }
   } else {
-    // train agents based on project, plugin, or custom configuration
+    logger.debug('Train agents based on project, plugin, or custom configuration');
     if (isProject && projectModule?.default) {
       // Load all project agents, call their init and register their plugins
       const project = projectModule.default;
@@ -581,7 +592,7 @@ const trainAgents = async (options: {
             );
             trainedAgents.push(runtime);
             // wait .5 seconds
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            //await new Promise((resolve) => setTimeout(resolve, 500));
           } catch (agentError) {
             logger.error(`Error training agent ${agent.character.name}: ${agentError}`);
           }
@@ -598,7 +609,9 @@ const trainAgents = async (options: {
         await trainAgent(defaultCharacter, server);
       }
     } else if (isPlugin && pluginModule) {
-      // Before training with the plugin, prompt for any environment variables it needs
+      logger.debug(
+        'Before training with the plugin, prompt for any environment variables it needs'
+      );
       if (pluginModule.name) {
         try {
           await promptForEnvVars(pluginModule.name);
@@ -633,7 +646,7 @@ const trainAgents = async (options: {
       });
       logger.info('Character trained with plugin successfully');
     } else {
-      // When not in a project or plugin, load the default character with all plugins
+      logger.debug('When not in a project or plugin, load the default character with all plugins');
       const { character: defaultElizaCharacter } = await import('../characters/eliza');
       logger.info('Using default Eliza character with all plugins for training');
       await trainAgent(defaultElizaCharacter, server);

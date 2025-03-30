@@ -600,6 +600,7 @@ const handleServerSync = async ({ runtime, world, rooms, entities, source }: Wor
 
         // Add a small delay between batches if not the last batch
         if (i + batchSize < entities.length) {
+          logger.debug('wait', entities);
           await new Promise((resolve) => setTimeout(resolve, 500));
         }
       }
@@ -648,6 +649,7 @@ const events = {
 
   [EventType.POST_GENERATED]: [
     async (payload: InvokePayload) => {
+      console.log('POST GENERATED', payload);
       await postGeneratedHandler(payload);
     },
   ],
