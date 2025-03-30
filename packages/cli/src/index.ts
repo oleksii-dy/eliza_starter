@@ -17,6 +17,7 @@ import { project } from './commands/project';
 import { publish } from './commands/publish';
 import { start } from './commands/start';
 import { train } from './commands/train';
+import { prof } from './commands/prof';
 import { teeCommand as tee } from './commands/tee';
 import { test } from './commands/test';
 import { update } from './commands/update';
@@ -24,7 +25,7 @@ import { loadEnvironment } from './utils/get-config';
 import { displayBanner } from './displayBanner';
 //import { discordPlugin } from "@elizaos/plugin-discord";
 import * as discordPlugin from '@elizaos/plugin-discord';
-console.log('discordPlugin', discordPlugin);
+//console.log('discordPlugin', discordPlugin);
 process.on('SIGINT', () => process.exit(0));
 process.on('SIGTERM', () => process.exit(0));
 
@@ -62,6 +63,7 @@ async function main() {
     .addCommand(tee)
     .addCommand(start)
     .addCommand(train)
+    .addCommand(prof)
     .addCommand(update)
     .addCommand(test)
     .addCommand(env)

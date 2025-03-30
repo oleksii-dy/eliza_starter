@@ -30,7 +30,9 @@
     "twitter-api-v2": "^1.18.2",
     "undici": "^7.1.1",
     "undici-types": "^7.2.0",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "@hapi/shot": "^6.0.1",
+    "@types/hapi": "^18.0.14"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "1.1.3",

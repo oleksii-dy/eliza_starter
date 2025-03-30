@@ -707,7 +707,7 @@ export const train = new Command()
   .option('--build', 'Build the project before training')
   .action(async (options) => {
     console.log('train!');
-    displayBanner();
+    //    displayBanner();
 
     try {
       // Build the project first unless skip-build is specified
