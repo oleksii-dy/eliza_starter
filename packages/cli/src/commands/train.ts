@@ -20,6 +20,9 @@ import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { character, character as defaultCharacter } from '../characters/eliza';
 import { AgentServer } from '../server/index';
+
+import { MyRequest, conversation, MyResponse } from '../server/api/abstract';
+
 import { jsonToCharacter, loadCharacterTryPath } from '../server/loader';
 import { loadConfig, saveConfig } from '../utils/config-manager.js';
 import { promptForEnvVars } from '../utils/env-prompt.js';
@@ -251,10 +254,10 @@ export async function trainAgent(
   await runtime.initialize();
 
   // add to container
-  server.registerAgent(runtime);
+  //server.registerAgent(runtime);
 
   //    console.log("runtime2345", runtime);
-  console.log('runtimeactions2345', runtime.action);
+  //console.log('runtimeactions2345', runtime.actions);
   //console.log("server2345", server);
 
   //    logger.debug("runtime", runtime);
@@ -276,6 +279,37 @@ export async function trainAgent(
     type: ChannelType.DM,
     worldId: roomId,
   });
+
+  let req: MyRequest = {
+    params: {
+      agentId: entityId,
+    },
+    body: {
+      text: 'Hello',
+      roomId: roomId,
+      entityId: entityId,
+      userName: 'User',
+      name: 'User',
+    },
+    //validateUuid: validateUuid,
+    //validateBody: () => true,cons
+    //validateParams: () => true,
+    // headers: {},
+    //query: {},
+  };
+  let res: MyResponse = {
+    status: (code: number) => ({
+      // json: (data: any) => console.log(`Response: ${code}`, data),
+      //send: (data: any) => console.log('Response sent:', data),
+      //set: () => {},
+      //setHeader: () => {},
+      //status: (newCode: number) => this.status(newCode),
+    }),
+    set: () => {},
+    send: (data: any) => console.log('Response sent:', data),
+  };
+  let r = await conversation(req, res);
+  console.log(req, res, r);
 
   //  let uuid = 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6';
   let message: Memory = {

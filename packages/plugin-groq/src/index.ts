@@ -30,35 +30,35 @@ function getCloudflareGatewayBaseURL(runtime: any, provider: string): string | u
   const cloudflareGatewayId = runtime.getSetting('CLOUDFLARE_AI_GATEWAY_ID');
 
   const defaultUrl = 'https://api.groq.com/openai/v1';
-  logger.debug('Cloudflare Gateway Configuration:', {
-    isEnabled: isCloudflareEnabled,
-    hasAccountId: !!cloudflareAccountId,
-    hasGatewayId: !!cloudflareGatewayId,
-    provider: provider,
-  });
+  //  logger.debug('Cloudflare Gateway Configuration:', {
+  //    isEnabled: isCloudflareEnabled,
+  //    hasAccountId: !!cloudflareAccountId,
+  //    hasGatewayId: !!cloudflareGatewayId,
+  //    provider: provider,
+  //  });
 
   if (!isCloudflareEnabled) {
-    logger.debug('Cloudflare Gateway is not enabled');
+    //    logger.debug('Cloudflare Gateway is not enabled');
     return defaultUrl;
   }
 
   if (!cloudflareAccountId) {
-    logger.warn('Cloudflare Gateway is enabled but CLOUDFLARE_AI_ACCOUNT_ID is not set');
+    //    logger.warn('Cloudflare Gateway is enabled but CLOUDFLARE_AI_ACCOUNT_ID is not set');
     return defaultUrl;
   }
 
   if (!cloudflareGatewayId) {
-    logger.warn('Cloudflare Gateway is enabled but CLOUDFLARE_AI_GATEWAY_ID is not set');
+    //    logger.warn('Cloudflare Gateway is enabled but CLOUDFLARE_AI_GATEWAY_ID is not set');
     return defaultUrl;
   }
 
   const baseURL = `https://gateway.ai.cloudflare.com/v1/${cloudflareAccountId}/${cloudflareGatewayId}/${provider.toLowerCase()}`;
-  logger.info('Using Cloudflare Gateway:', {
-    provider,
-    baseURL,
-    accountId: cloudflareAccountId,
-    gatewayId: cloudflareGatewayId,
-  });
+  //  logger.info('Using Cloudflare Gateway:', {
+  //    provider,
+  //    baseURL,
+  //    accountId: cloudflareAccountId,
+  //    gatewayId: cloudflareGatewayId,
+  //  });
 
   return baseURL;
 }
@@ -363,7 +363,7 @@ export const groqPlugin: Plugin = {
         'llama-3.1-8b-instant-ope2';
 
       logger.log('generating text');
-      logger.log(prompt);
+      logger.log('PROMP357', prompt);
 
       const { text: openaiResponse } = await generateText({
         model: groq.languageModel(model),
@@ -376,6 +376,8 @@ export const groqPlugin: Plugin = {
         presencePenalty: presence_penalty,
         stopSequences: stopSequences,
       });
+
+      logger.log('RESP357', openaiResponse);
 
       return openaiResponse;
     },
@@ -550,6 +552,7 @@ export const groqPlugin: Plugin = {
       return data.text;
     },
     [ModelType.OBJECT_SMALL]: async (runtime, params: ObjectGenerationParams) => {
+      logger.debug('ModelType.OBJECT_SMALL.prompt:', params.prompt);
       const baseURL = getCloudflareGatewayBaseURL(runtime, 'groq');
       const groq = createGroq({
         apiKey: runtime.getSetting('GROQ_API_KEY'),
@@ -564,12 +567,14 @@ export const groqPlugin: Plugin = {
         if (params.schema) {
           // Skip zod validation and just use the generateObject without schema
           logger.info('Using OBJECT_SMALL without schema validation');
+
           const { object } = await generateObject({
             model: groq.languageModel(model),
             output: 'no-schema',
             prompt: params.prompt,
             temperature: params.temperature,
           });
+          logger.debug('groq object:', object);
           return object;
         }
 
@@ -579,6 +584,7 @@ export const groqPlugin: Plugin = {
           prompt: params.prompt,
           temperature: params.temperature,
         });
+        console.log('OBJECT_SMALL', object);
         return object;
       } catch (error) {
         logger.error('Error generating object:', error);
@@ -615,6 +621,7 @@ export const groqPlugin: Plugin = {
           prompt: params.prompt,
           temperature: params.temperature,
         });
+        console.log('OBJECT_LARGER', object);
         return object;
       } catch (error) {
         logger.error('Error generating object:', error);
