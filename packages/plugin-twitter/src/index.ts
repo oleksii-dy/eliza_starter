@@ -100,15 +100,15 @@ export class TwitterService extends Service {
       await client.client.init();
 
       if (client.space) {
-        client.space.startPeriodicSpaceCheck();
+        //        client.space.startPeriodicSpaceCheck();
       }
 
       if (client.post) {
-        client.post.start();
+        //        client.post.start();
       }
 
       if (client.interaction) {
-        client.interaction.start();
+        //        client.interaction.start();
       }
 
       // Store the client instance
