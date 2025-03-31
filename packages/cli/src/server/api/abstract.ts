@@ -48,48 +48,49 @@ export class MyResponse {
   //readonly pipe: (stream: Readable) => void;
   //readonly statusCode: number;
 }
-export async function conversation(req: MyRequest, res: MyResponse) {
-  const agentId = validateUuid(req.params.agentId);
-  if (!agentId) {
-    console.error('Invalid agent ID format', {
-      success: false,
-      error: {
-        code: 'INVALID_ID',
-        message: 'Invalid agent ID format',
-      },
-    });
-    return;
-  }
+export async function conversation(runtime: IAgentRuntime, roomId, entityId, userName, text) {
+  //req: MyRequest, res: MyResponse) {
+  // const agentId = validateUuid(req.params.agentId);
+  // if (!agentId) {
+  //   console.error('Invalid agent ID format', {
+  //     success: false,
+  //     error: {
+  //       code: 'INVALID_ID',
+  //       message: 'Invalid agent ID format',
+  //     },
+  //   });
+  //   return;
+  // }
 
-  const { text, roomId: rawRoomId, entityId: rawUserId } = req.body;
-  if (!text) {
-    console.error('Text is required for conversation', {
-      success: false,
-      error: {
-        code: 'INVALID_REQUEST',
-        message: 'Text is required for conversation',
-      },
-    });
+  // const { text, roomId: rawRoomId, entityId: rawUserId } = req.body;
+  // if (!text) {
+  //   console.error('Text is required for conversation', {
+  //     success: false,
+  //     error: {
+  //       code: 'INVALID_REQUEST',
+  //       message: 'Text is required for conversation',
+  //     },
+  //   });
 
-    return;
-  }
+  //   return;
+  // }
 
-  const runtime = agents.get(agentId);
+  // //const runtime = agents.get(agentId);
 
-  if (!runtime) {
-    console.error('Agent not found no runtime', {
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: 'Agent not found',
-      },
-    });
-    return;
-  }
+  // if (!runtime) {
+  //   console.error('Agent not found no runtime', {
+  //     success: false,
+  //     error: {
+  //       code: 'NOT_FOUND',
+  //       message: 'Agent not found',
+  //     },
+  //   });
+  //   return;
+  // }
 
   try {
-    const roomId = createUniqueUuid(runtime, rawRoomId ?? `default-room-${agentId}`);
-    const entityId = createUniqueUuid(runtime, rawUserId ?? 'Anon');
+    //const roomId = createUniqueUuid(runtime, rawRoomId ?? `default-room-${agentId}`);
+    //const entityId = createUniqueUuid(runtime, rawUserId ?? 'Anon');
 
     logger.debug('[SPEECH CONVERSATION] Ensuring connection');
     await runtime.ensureConnection({
@@ -97,7 +98,7 @@ export async function conversation(req: MyRequest, res: MyResponse) {
       roomId,
       userName: req.body.userName,
       name: req.body.name,
-      source: 'direct',
+      source: 'training',
       type: ChannelType.API,
     });
 
@@ -105,7 +106,7 @@ export async function conversation(req: MyRequest, res: MyResponse) {
     const content: Content = {
       text,
       attachments: [],
-      source: 'direct',
+      source: 'training',
       inReplyTo: undefined,
       channelType: ChannelType.API,
     };

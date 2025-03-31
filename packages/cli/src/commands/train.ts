@@ -267,18 +267,18 @@ export async function trainAgent(
 
   const roomId = createUniqueUuid(runtime, 'default-room-training');
   const entityId = createUniqueUuid(runtime, 'Anon');
-
-  await runtime.ensureConnection({
-    entityId: entityId,
-    roomId: roomId,
-    userName: 'User',
-    name: 'User',
-    source: 'train',
-    channelId: roomId,
-    serverId: 'client-chat',
-    type: ChannelType.DM,
-    worldId: roomId,
-  });
+  const userName = 'User';
+  // await runtime.ensureConnection({
+  //   entityId: entityId,
+  //   roomId: roomId,
+  //
+  //   name: 'User',
+  //   source: 'train',
+  //   channelId: roomId,
+  //   serverId: 'client-chat',
+  //   type: ChannelType.DM,
+  //   worldId: roomId,
+  // });
 
   let req: MyRequest = {
     params: {
@@ -308,7 +308,14 @@ export async function trainAgent(
     set: () => {},
     send: (data: any) => console.log('Response sent:', data),
   };
-  let r = await conversation(runtime, req, res);
+  let r = await conversation(
+    runtime,
+    roomId,
+    entityId, // agentId,
+    userName,
+    //req, res
+    'Hello' //req.body.text
+  );
   console.log(req, res, r);
 
   //  let uuid = 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6';
