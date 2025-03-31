@@ -308,7 +308,7 @@ export async function trainAgent(
     set: () => {},
     send: (data: any) => console.log('Response sent:', data),
   };
-  let r = await conversation(req, res);
+  let r = await conversation(runtime, req, res);
   console.log(req, res, r);
 
   //  let uuid = 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6';

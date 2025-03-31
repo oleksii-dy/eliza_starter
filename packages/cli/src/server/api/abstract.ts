@@ -77,7 +77,7 @@ export async function conversation(req: MyRequest, res: MyResponse) {
   const runtime = agents.get(agentId);
 
   if (!runtime) {
-    console.error('Agent not found', {
+    console.error('Agent not found no runtime', {
       success: false,
       error: {
         code: 'NOT_FOUND',
