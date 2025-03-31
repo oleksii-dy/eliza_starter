@@ -150,7 +150,14 @@ export class TelegramService extends Service {
     // Regular message handler
     this.bot.on('message', async (ctx) => {
       try {
+        // First check if this is from an authorized chat
         if (!(await this.isGroupAuthorized(ctx))) return;
+
+        // Handle the chat - this will either process a new chat or an existing one
+        await this.handleNewChat(ctx);
+
+        // Only after we've ensured all necessary entities and rooms exist,
+        // process the actual message content
         await this.messageManager.handleMessage(ctx);
       } catch (error) {
         logger.error('Error handling message:', error);
@@ -177,26 +184,10 @@ export class TelegramService extends Service {
     const chatId = ctx.chat?.id.toString();
     if (!chatId) return false;
 
-    // If this is a chat we haven't seen before, emit WORLD_JOINED event
-    if (!this.knownChats.has(chatId)) {
-      await this.handleNewChat(ctx);
-    }
-
-    // TODO: I think we should allow only owner to DM the bot.
-    // How do we check who is the bot owner on telegram?
-    // I don't think the agent should process those messages.
-    // We expose the bot to the public.
-    // Use a configuration setting:
-    //    You could add a TELEGRAM_BOT_OWNER_ID setting in your
-    //    environment variables where you specify your Telegram user ID.
-    // Or use this existing setting:
-    //    TELEGRAM_ALLOWED_CHATS
-    //    This is a comma-separated list of chat IDs that are allowed to interact with the bot.
-    //    If this setting is not set, all chats are allowed.
-    //    If this setting is set, only the chats listed in this setting are allowed to interact with the bot.
+    // Check authorization based on TELEGRAM_ALLOWED_CHATS setting
     const allowedChats = this.runtime.getSetting('TELEGRAM_ALLOWED_CHATS');
     if (!allowedChats) {
-      return true;
+      return true; // If no setting, allow all chats
     }
 
     try {
@@ -253,11 +244,17 @@ export class TelegramService extends Service {
     const chat = ctx.chat;
     const chatId = chat.id.toString();
 
-    // Mark this chat as known
+    // If we already know this chat, handle it differently
+    if (this.knownChats.has(chatId)) {
+      await this.handleExistingChat(ctx);
+      return;
+    }
+
+    // Mark this chat as known for future messages
     this.knownChats.set(chatId, chat);
 
     // Get chat title and channel type
-    const { chatTitle } = this.getChatTypeInfo(chat);
+    const { chatTitle, channelType } = this.getChatTypeInfo(chat);
 
     const worldId = createUniqueUuid(this.runtime, chatId) as UUID;
     const userId = createUniqueUuid(this.runtime, ctx.from.id.toString()) as UUID;
@@ -328,6 +325,111 @@ export class TelegramService extends Service {
   }
 
   /**
+   * Handles messages in existing chats
+   * @param {Context} ctx - The context of the incoming update
+   */
+  private async handleExistingChat(ctx: Context): Promise<void> {
+    const chat = ctx.chat;
+    const chatId = chat.id.toString();
+    const worldId = createUniqueUuid(this.runtime, chatId) as UUID;
+
+    // Check if this is a forum topic message
+    // First ensure the message exists and is a supergroup
+    const isSupergroup = chat.type === 'supergroup';
+    const hasForum = isSupergroup && 'is_forum' in chat && chat.is_forum === true;
+    const hasMessageThreadId = ctx.message && 'message_thread_id' in ctx.message;
+    const isForumTopic = hasForum && hasMessageThreadId;
+
+    if (isForumTopic) {
+      await this.handleNewForumTopic(ctx, worldId);
+    } else {
+      await this.handleNewEntity(ctx, worldId);
+    }
+  }
+
+  /**
+   * Handles new forum topics in supergroups
+   * @param {Context} ctx - The context of the incoming update
+   * @param {UUID} worldId - The world ID for this chat
+   */
+  private async handleNewForumTopic(ctx: Context, worldId: UUID): Promise<void> {
+    if (!ctx.message || !('message_thread_id' in ctx.message)) return;
+
+    const chat = ctx.chat;
+    const chatId = chat.id.toString();
+    const topicId = ctx.message.message_thread_id.toString();
+
+    // Create channelId for the topic and derive roomId
+    const channelId = `${chatId}-${topicId}`;
+    const roomId = createUniqueUuid(this.runtime, channelId) as UUID;
+
+    // Default topic name
+    let topicName = `Topic ${topicId}`;
+
+    // Safely try to get the topic name using type casting for TypeScript
+    try {
+      // This is a safe operation but TypeScript doesn't know the structure
+      // of forum topics, so we use a type assertion
+      const message = ctx.message as any;
+      if (message?.forum_topic_created?.name) {
+        topicName = message.forum_topic_created.name;
+      }
+    } catch (error) {
+      // If anything goes wrong, just use the default name
+      logger.debug(`Could not get forum topic name: ${error.message}`);
+    }
+
+    // We need to call ensureRoomExists directly to set up the room with the correct name.
+    // While ENTITY_JOINED would create the room, it doesn't allow us to specify the room name.
+    // This ensures the forum topic room is created with its proper name before handling the entity.
+    await this.runtime.ensureRoomExists({
+      id: roomId,
+      name: topicName,
+      source: 'telegram',
+      type: ChannelType.GROUP,
+      channelId: channelId,
+      serverId: chatId,
+      worldId,
+    });
+
+    // Handle the entity in this new room
+    await this.handleNewEntity(ctx, worldId, roomId);
+  }
+
+  /**
+   * Handles new entities in existing chats
+   * @param {Context} ctx - The context of the incoming update
+   * @param {UUID} worldId - The world ID for this chat
+   * @param {UUID} roomId - Optional room ID for forum topics
+   */
+  private async handleNewEntity(ctx: Context, worldId: UUID, roomId?: UUID): Promise<void> {
+    if (!ctx.from) return;
+
+    const chat = ctx.chat;
+    const chatId = chat.id.toString();
+    const entityId = createUniqueUuid(this.runtime, ctx.from.id.toString()) as UUID;
+
+    // If no specific roomId provided, use the default chat room
+    const targetRoomId = roomId || (createUniqueUuid(this.runtime, chatId) as UUID);
+
+    // Get chat type for metadata
+    const { channelType } = this.getChatTypeInfo(chat);
+
+    // Emit ENTITY_JOINED event to ensure entity is synced
+    this.runtime.emitEvent(EventType.ENTITY_JOINED, {
+      runtime: this.runtime,
+      entityId,
+      serverId: chat.id, // chat.id is always worldId in telegram!
+      roomId: targetRoomId,
+      metadata: {
+        type: channelType,
+        joinedAt: Date.now(),
+      },
+      source: 'telegram',
+    });
+  }
+
+  /**
    * Builds standardized entity representations from Telegram chat data
    * @param chat - The Telegram chat object
    * @returns Array of standardized Entity objects
@@ -394,6 +496,8 @@ export class TelegramService extends Service {
   }
 
   /**
+   * // TODO: this is not working imo. Please check I think we can get rid of this.
+   *
    * Sets up tracking for new entities in a group chat to sync them as entities
    * @param {number} chatId - The Telegram chat ID to track entities for
    */
