@@ -104,16 +104,18 @@ export async function promptForProjectPlugins(
  */
 export async function trainAgent(
   character: Character,
+
   server: AgentServer,
-  init?: (runtime: IAgentRuntime) => void,
-  plugins: Plugin[] = [],
+  //plugins: Plugin[] = [],
+
   options: {
+    prompt?: string;
     dataDir?: string;
     postgresUrl?: string;
     isPluginTestMode?: boolean;
   } = {}
 ): Promise<IAgentRuntime> {
-  console.log('trainAgent', character, server, plugins, options);
+  console.log('trainAgent', character, server, options);
   character.id ??= stringToUuid(character.name);
 
   const encryptedChar = encryptedCharacter(character);
@@ -237,7 +239,10 @@ export async function trainAgent(
     }
   }
 
-  const myplugins = [...plugins, ...characterPlugins];
+  const myplugins = [
+    //...plugins,
+    ...characterPlugins,
+  ];
   logger.debug('myplugins', myplugins);
   const runtime = new AgentRuntime({
     character: encryptedChar,
@@ -246,9 +251,9 @@ export async function trainAgent(
 
   logger.debug('RUNTIME', runtime);
 
-  if (init) {
-    await init(runtime);
-  }
+  // if (init) {
+  // await init(runtime);
+  //}
 
   // train services/plugins/process knowledge
   await runtime.initialize();
@@ -314,7 +319,7 @@ export async function trainAgent(
     entityId, // agentId,
     userName,
     //req, res
-    'Hello' //req.body.text
+    options.prompt ? options.prompt : 'Hello'
   );
   //console.log(req, res, r);
 
@@ -387,17 +392,21 @@ async function stopAgent(runtime: IAgentRuntime, server: AgentServer) {
  * @returns {Promise<void>} A promise that resolves when the agents are successfully trained.
  */
 const trainAgents = async (options: {
-  configure?: boolean;
+  //configure?: boolean;
   trainer?: Character;
-  plugins?: string[];
-  characters?: Character[];
+  program?: string[];
+  prompt: string;
+  prompt_file: string;
+  tools: string[];
+  character: Character;
 }) => {
   console.log('train agents');
   // Load environment variables from project .env or .eliza/.env
   await loadEnvironment();
 
   // Configure database settings - pass reconfigure option to potentially force reconfiguration
-  const postgresUrl = await configureDatabaseSettings(options.configure);
+  const postgresUrl = await configureDatabaseSettings();
+  //options.configure
 
   // Get PGLite data directory from environment (may have been set during configuration)
   const pgliteDataDir = process.env.PGLITE_DATA_DIR;
@@ -406,23 +415,23 @@ const trainAgents = async (options: {
   const existingConfig = loadConfig();
 
   // Check if we should reconfigure based on command-line option or if using default config
-  const shouldConfigure = options.configure || existingConfig.isDefault;
+  //const shouldConfigure = //options.configure ||
+  // existingConfig.isDefault;
 
   // Handle service and model selection
-  console.log('Should configure?');
-  if (shouldConfigure) {
-    // First-time setup or reconfiguration requested
-    if (existingConfig.isDefault) {
-      logger.info("First time setup. Let's configure your Eliza agent.");
-    } else {
-      logger.info('Reconfiguration requested.');
-    }
+  // console.log('Should configure?');
+  // if (shouldConfigure) {
+  //   // First-time setup or reconfiguration requested
+  //   if (existingConfig.isDefault) {
+  //     logger.info("First time setup. Let's configure your Eliza agent.");
+  //   } else {
+  //     logger.info('Reconfiguration requested.');
+  //   }
 
-    // Save the configuration AFTER user has made selections
-    saveConfig({
-      lastUpdated: new Date().toISOString(),
-    });
-  }
+  // Save the configuration AFTER user has made selections
+  saveConfig({
+    lastUpdated: new Date().toISOString(),
+  });
 
   // Create server instance with appropriate database settings
   const server = new AgentServer({
@@ -433,7 +442,8 @@ const trainAgents = async (options: {
   // Set up server properties
   server.trainAgent = async (character) => {
     logger.info(`training agent for character ${character.name}`);
-    return trainAgent(character, server);
+
+    return trainAgent(character, server, options);
   };
   server.stopAgent = (runtime: IAgentRuntime) => {
     stopAgent(runtime, server);
@@ -572,32 +582,29 @@ const trainAgents = async (options: {
       'Running in standalone mode - using default Eliza character from ../characters/eliza'
     );
   }
-
   //  await server.initialize();
-
   server.train();
-
   //
-  if (options.characters) {
+  if (options.character) {
     logger.debug('if characters are provided, train the agents with the characters');
-    for (const character of options.characters) {
-      logger.debug('train the characters', character);
-      // make sure character has sql plugin
-      if (!character.plugins.includes('@elizaos/plugin-sql')) {
-        character.plugins.push('@elizaos/plugin-sql');
-      }
-
-      // make sure character has at least one ai provider
-      if (process.env.OPENAI_API_KEY) {
-        character.plugins.push('@elizaos/plugin-openai');
-      } else if (process.env.ANTHROPIC_API_KEY) {
-        character.plugins.push('@elizaos/plugin-anthropic');
-      } else {
-        character.plugins.push('@elizaos/plugin-local-ai');
-      }
-
-      await trainAgent(character, server);
+    //for (const character of options.characters) {
+    logger.debug('train the characters', options.character);
+    const character = options.character;
+    // make sure character has sql plugin
+    if (!character.plugins.includes('@elizaos/plugin-sql')) {
+      character.plugins.push('@elizaos/plugin-sql');
     }
+
+    // make sure character has at least one ai provider
+    if (process.env.OPENAI_API_KEY) {
+      character.plugins.push('@elizaos/plugin-openai');
+    } else if (process.env.ANTHROPIC_API_KEY) {
+      character.plugins.push('@elizaos/plugin-anthropic');
+    } else {
+      character.plugins.push('@elizaos/plugin-local-ai');
+    }
+
+    await trainAgent(character, server);
   } else {
     logger.debug('Train agents based on project, plugin, or custom configuration');
     if (isProject && projectModule?.default) {
@@ -628,8 +635,8 @@ const trainAgents = async (options: {
             const runtime = await trainAgent(
               agent.character,
               server,
-              agent.init,
-              agent.plugins || []
+              agent.init
+              //agent.plugins || []
             );
             trainedAgents.push(runtime);
             // wait .5 seconds
@@ -708,10 +715,11 @@ export const train = new Command()
   .name('train')
   .description('train the Eliza agent with configurable plugins and services')
   .option('-t, --trainer <trainer>', 'Trainer to use')
-  .option('-p, --plugins <program>', 'Program to run')
-  .option('-c, --configure', 'Reconfigure services and AI models (skips using saved configuration)')
+  .option('-p, --program <program>', 'Program to run')
   .option('--character <character>', 'Path or URL to character file to use instead of default')
-  .option('--build', 'Build the project before training')
+  .option('--prompt <prompt>', 'Prompt to guide training', 'Adapt to the scenario.')
+  .option('--prompt-file <file>', 'Path to file with prompt text')
+  .option('--tools <tools>', 'Comma-separated list of tools (simulator, stressTest, enhancer)', '')
   .action(async (options) => {
     console.log('train!');
     //    displayBanner();
