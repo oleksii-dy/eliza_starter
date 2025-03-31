@@ -1,6 +1,6 @@
 import { buildProject } from '@/src/utils/build-project';
 import { copyTemplate } from '@/src/utils/copy-template';
-import { checkServer, handleError } from '@/src/utils/handle-error';
+import { checkServer } from '@/src/utils/handle-error';
 import { runBunCommand } from '@/src/utils/run-bun';
 import { logger } from '@elizaos/core';
 import { Command } from 'commander';
@@ -101,238 +101,238 @@ export const create = new Command()
   .action(async (name, opts) => {
     displayBanner();
 
-    try {
-      // Parse options but use "" as the default for type to force prompting
-      const initialOptions = {
-        dir: opts.dir || '.',
-        yes: opts.yes || false,
-        type: opts.type || '',
-      };
+    // try {
+    // Parse options but use "" as the default for type to force prompting
+    const initialOptions = {
+      dir: opts.dir || '.',
+      yes: opts.yes || false,
+      type: opts.type || '',
+    };
 
-      // Prompt for project type if not specified
-      let projectType = initialOptions.type;
-      if (!projectType) {
-        const { type } = await prompts({
-          type: 'select',
-          name: 'type',
-          message: 'What would you like to create?',
-          choices: [
-            { title: 'Project - Contains agents and plugins', value: 'project' },
-            {
-              title: 'Plugin - Can be added to the registry and installed by others',
-              value: 'plugin',
-            },
-          ],
-          initial: 0,
-        });
-
-        if (!type) {
-          process.exit(0);
-        }
-
-        projectType = type;
-      } else {
-        // Validate the provided type
-        if (!['project', 'plugin'].includes(projectType)) {
-          logger.error(`Invalid type: ${projectType}. Must be either 'project' or 'plugin'`);
-          process.exit(1);
-        }
-      }
-
-      // Now validate with zod after we've determined the type
-      const options = initOptionsSchema.parse({
-        ...initialOptions,
-        type: projectType,
-      });
-
-      // Try to find .env file by recursively checking parent directories
-      const envPath = path.join(process.cwd(), '.env');
-
-      let currentPath = envPath;
-      let depth = 0;
-      const maxDepth = 10;
-
-      let postgresUrl = null;
-
-      while (depth < maxDepth && currentPath.includes(path.sep)) {
-        if (existsSync(currentPath)) {
-          const env = readFileSync(currentPath, 'utf8');
-          const envVars = env.split('\n').filter((line) => line.trim() !== '');
-          const postgresUrlLine = envVars.find((line) => line.startsWith('POSTGRES_URL='));
-          if (postgresUrlLine) {
-            postgresUrl = postgresUrlLine.split('=')[1].trim();
-            break;
-          }
-        }
-
-        // Move up one directory by getting the parent directory path
-        // First get the directory containing the current .env file
-        const currentDir = path.dirname(currentPath);
-        // Then move up one directory from there
-        const parentDir = path.dirname(currentDir);
-        currentPath = path.join(parentDir, '.env');
-        depth++;
-      }
-
-      // Prompt for project/plugin name if not provided
-      let projectName = name;
-      if (!projectName) {
-        const { nameResponse } = await prompts({
-          type: 'text',
-          name: 'nameResponse',
-          message: `What would you like to name your ${options.type}?`,
-          validate: (value) => value.length > 0 || `${options.type} name is required`,
-        });
-
-        if (!nameResponse) {
-          process.exit(0);
-        }
-
-        projectName = nameResponse;
-      }
-
-      // Set up target directory
-      // If -d is ".", create in current directory with project name
-      // If -d is specified, create project directory inside that directory
-      const targetDir = path.resolve(options.dir, projectName);
-
-      // Create or check directory
-      if (!existsSync(targetDir)) {
-        await fs.mkdir(targetDir, { recursive: true });
-      } else {
-        const files = await fs.readdir(targetDir);
-        const isEmpty = files.length === 0 || files.every((f) => f.startsWith('.'));
-
-        if (!isEmpty && !options.yes) {
-          const { proceed } = await prompts({
-            type: 'confirm',
-            name: 'proceed',
-            message: 'Directory is not empty. Continue anyway?',
-            initial: false,
-          });
-
-          if (!proceed) {
-            process.exit(0);
-          }
-        }
-      }
-
-      // For plugin initialization, we can simplify the process
-      if (options.type === 'plugin') {
-        const pluginName = projectName.startsWith('@elizaos/plugin-')
-          ? projectName
-          : `@elizaos/plugin-${projectName}`;
-
-        // Copy plugin template
-        await copyTemplate('plugin', targetDir, pluginName);
-
-        // Install dependencies
-        logger.info('Installing dependencies...');
-        try {
-          await runBunCommand(['install', '--no-optional'], targetDir);
-          logger.success('Dependencies installed successfully!');
-
-          // Build the plugin after installing dependencies
-          await buildProject(targetDir, true);
-        } catch (_error) {
-          logger.warn(
-            "Failed to install dependencies automatically. Please run 'bun install' manually."
-          );
-        }
-
-        logger.success('Plugin initialized successfully!');
-
-        // Get the relative path for display
-        const cdPath =
-          options.dir === '.'
-            ? projectName // If creating in current directory, just use the name
-            : path.relative(process.cwd(), targetDir); // Otherwise use path relative to current directory
-
-        logger.info(`\nYour plugin is ready! Here's what you can do next:
-1. \`cd ${cdPath}\` to change into your plugin directory
-2. \`${colors.cyan('npx elizaos start')}\` to start development
-3. \`${colors.cyan('npx elizaos test')}\` to test your plugin
-4. \`${colors.cyan('npx elizaos plugin publish')}\` to publish your plugin to the registry`);
-
-        // Set the user's shell working directory before exiting
-        // Note: This only works if the CLI is run with shell integration
-        process.stdout.write(`\u001B]1337;CurrentDir=${targetDir}\u0007`);
-        return;
-      }
-
-      // For project initialization, continue with the regular flow
-      // Get available databases and select one
-      const availableDatabases = await getLocalAvailableDatabases();
-
-      const { database } = await prompts({
+    // Prompt for project type if not specified
+    let projectType = initialOptions.type;
+    if (!projectType) {
+      const { type } = await prompts({
         type: 'select',
-        name: 'database',
-        message: 'Select your database:',
-        choices: availableDatabases
-          .sort((a, b) => a.localeCompare(b))
-          .map((db) => ({
-            title: db,
-            value: db,
-          })),
-        initial: availableDatabases.indexOf('pglite'),
+        name: 'type',
+        message: 'What would you like to create?',
+        choices: [
+          { title: 'Project - Contains agents and plugins', value: 'project' },
+          {
+            title: 'Plugin - Can be added to the registry and installed by others',
+            value: 'plugin',
+          },
+        ],
+        initial: 0,
       });
 
-      if (!database) {
-        logger.error('No database selected');
+      if (!type) {
+        process.exit(0);
+      }
+
+      projectType = type;
+    } else {
+      // Validate the provided type
+      if (!['project', 'plugin'].includes(projectType)) {
+        logger.error(`Invalid type: ${projectType}. Must be either 'project' or 'plugin'`);
         process.exit(1);
       }
+    }
 
-      // Copy project template
-      await copyTemplate('project', targetDir, projectName);
+    // Now validate with zod after we've determined the type
+    const options = initOptionsSchema.parse({
+      ...initialOptions,
+      type: projectType,
+    });
 
-      // Database configuration
-      const { elizaDbDir, envFilePath } = getElizaDirectories();
+    // Try to find .env file by recursively checking parent directories
+    const envPath = path.join(process.cwd(), '.env');
 
-      // Only create directories and configure based on database choice
-      if (database === 'pglite') {
-        // Set up PGLite directory and configuration
-        await setupPgLite(elizaDbDir, envFilePath);
-        logger.debug(`Using PGLite database directory: ${elizaDbDir}`);
-      } else if (database === 'postgres' && !postgresUrl) {
-        // Handle Postgres configuration
-        postgresUrl = await promptAndStorePostgresUrl(envFilePath);
+    let currentPath = envPath;
+    let depth = 0;
+    const maxDepth = 10;
+
+    let postgresUrl = null;
+
+    while (depth < maxDepth && currentPath.includes(path.sep)) {
+      if (existsSync(currentPath)) {
+        const env = readFileSync(currentPath, 'utf8');
+        const envVars = env.split('\n').filter((line) => line.trim() !== '');
+        const postgresUrlLine = envVars.find((line) => line.startsWith('POSTGRES_URL='));
+        if (postgresUrlLine) {
+          postgresUrl = postgresUrlLine.split('=')[1].trim();
+          break;
+        }
       }
 
-      // Set up src directory
-      const srcDir = path.join(targetDir, 'src');
-      if (!existsSync(srcDir)) {
-        await fs.mkdir(srcDir);
+      // Move up one directory by getting the parent directory path
+      // First get the directory containing the current .env file
+      const currentDir = path.dirname(currentPath);
+      // Then move up one directory from there
+      const parentDir = path.dirname(currentDir);
+      currentPath = path.join(parentDir, '.env');
+      depth++;
+    }
+
+    // Prompt for project/plugin name if not provided
+    let projectName = name;
+    if (!projectName) {
+      const { nameResponse } = await prompts({
+        type: 'text',
+        name: 'nameResponse',
+        message: `What would you like to name your ${options.type}?`,
+        validate: (value) => value.length > 0 || `${options.type} name is required`,
+      });
+
+      if (!nameResponse) {
+        process.exit(0);
       }
 
-      // Create knowledge directory
-      await fs.mkdir(path.join(targetDir, 'knowledge'), { recursive: true });
+      projectName = nameResponse;
+    }
+
+    // Set up target directory
+    // If -d is ".", create in current directory with project name
+    // If -d is specified, create project directory inside that directory
+    const targetDir = path.resolve(options.dir, projectName);
+
+    // Create or check directory
+    if (!existsSync(targetDir)) {
+      await fs.mkdir(targetDir, { recursive: true });
+    } else {
+      const files = await fs.readdir(targetDir);
+      const isEmpty = files.length === 0 || files.every((f) => f.startsWith('.'));
+
+      if (!isEmpty && !options.yes) {
+        const { proceed } = await prompts({
+          type: 'confirm',
+          name: 'proceed',
+          message: 'Directory is not empty. Continue anyway?',
+          initial: false,
+        });
+
+        if (!proceed) {
+          process.exit(0);
+        }
+      }
+    }
+
+    // For plugin initialization, we can simplify the process
+    if (options.type === 'plugin') {
+      const pluginName = projectName.startsWith('@elizaos/plugin-')
+        ? projectName
+        : `@elizaos/plugin-${projectName}`;
+
+      // Copy plugin template
+      await copyTemplate('plugin', targetDir, pluginName);
 
       // Install dependencies
-      await installDependencies(targetDir);
+      logger.info('Installing dependencies...');
+      try {
+        await runBunCommand(['install', '--no-optional'], targetDir);
+        logger.success('Dependencies installed successfully!');
 
-      // Build the project after installing dependencies
-      await buildProject(targetDir);
+        // Build the plugin after installing dependencies
+        await buildProject(targetDir, true);
+      } catch (_error) {
+        logger.warn(
+          "Failed to install dependencies automatically. Please run 'bun install' manually."
+        );
+      }
 
-      logger.success('Project initialized successfully!');
+      logger.success('Plugin initialized successfully!');
 
-      // Show next steps with updated message
+      // Get the relative path for display
       const cdPath =
         options.dir === '.'
           ? projectName // If creating in current directory, just use the name
           : path.relative(process.cwd(), targetDir); // Otherwise use path relative to current directory
 
-      logger.info(`\nYour project is ready! Here's what you can do next:
+      logger.info(`\nYour plugin is ready! Here's what you can do next:
+1. \`cd ${cdPath}\` to change into your plugin directory
+2. \`${colors.cyan('npx elizaos start')}\` to start development
+3. \`${colors.cyan('npx elizaos test')}\` to test your plugin
+4. \`${colors.cyan('npx elizaos plugin publish')}\` to publish your plugin to the registry`);
+
+      // Set the user's shell working directory before exiting
+      // Note: This only works if the CLI is run with shell integration
+      process.stdout.write(`\u001B]1337;CurrentDir=${targetDir}\u0007`);
+      return;
+    }
+
+    // For project initialization, continue with the regular flow
+    // Get available databases and select one
+    const availableDatabases = await getLocalAvailableDatabases();
+
+    const { database } = await prompts({
+      type: 'select',
+      name: 'database',
+      message: 'Select your database:',
+      choices: availableDatabases
+        .sort((a, b) => a.localeCompare(b))
+        .map((db) => ({
+          title: db,
+          value: db,
+        })),
+      initial: availableDatabases.indexOf('pglite'),
+    });
+
+    if (!database) {
+      logger.error('No database selected');
+      process.exit(1);
+    }
+
+    // Copy project template
+    await copyTemplate('project', targetDir, projectName);
+
+    // Database configuration
+    const { elizaDbDir, envFilePath } = getElizaDirectories();
+
+    // Only create directories and configure based on database choice
+    if (database === 'pglite') {
+      // Set up PGLite directory and configuration
+      await setupPgLite(elizaDbDir, envFilePath);
+      logger.debug(`Using PGLite database directory: ${elizaDbDir}`);
+    } else if (database === 'postgres' && !postgresUrl) {
+      // Handle Postgres configuration
+      postgresUrl = await promptAndStorePostgresUrl(envFilePath);
+    }
+
+    // Set up src directory
+    const srcDir = path.join(targetDir, 'src');
+    if (!existsSync(srcDir)) {
+      await fs.mkdir(srcDir);
+    }
+
+    // Create knowledge directory
+    await fs.mkdir(path.join(targetDir, 'knowledge'), { recursive: true });
+
+    // Install dependencies
+    await installDependencies(targetDir);
+
+    // Build the project after installing dependencies
+    await buildProject(targetDir);
+
+    logger.success('Project initialized successfully!');
+
+    // Show next steps with updated message
+    const cdPath =
+      options.dir === '.'
+        ? projectName // If creating in current directory, just use the name
+        : path.relative(process.cwd(), targetDir); // Otherwise use path relative to current directory
+
+    logger.info(`\nYour project is ready! Here's what you can do next:
 1. \`cd ${cdPath}\` to change into your project directory
 2. Run \`npx elizaos start\` to start your project
 3. Visit \`http://localhost:3000\` (or your custom port) to view your project in the browser`);
 
-      // exit successfully
-      // Set the user's shell working directory before exiting
-      // Note: This only works if the CLI is run with shell integration
-      process.stdout.write(`\u001B]1337;CurrentDir=${targetDir}\u0007`);
-      process.exit(0);
-    } catch (error) {
-      await checkServer();
-      handleError(error);
-    }
+    // exit successfully
+    // Set the user's shell working directory before exiting
+    // Note: This only works if the CLI is run with shell integration
+    process.stdout.write(`\u001B]1337;CurrentDir=${targetDir}\u0007`);
+    process.exit(0);
+    // } catch (error) {
+    //   await checkServer();
+    //   handleError(error);
+    // }
   });

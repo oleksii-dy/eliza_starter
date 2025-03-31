@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { handleError } from '@/src/utils/handle-error';
+//import { handleError } from '@/src/utils/handle-error';
 import { logger } from '@elizaos/core';
 import { Command } from 'commander';
 import dotenv from 'dotenv';
@@ -489,11 +489,11 @@ env
   .command('list')
   .description('List all environment variables')
   .action(async () => {
-    try {
-      await listEnvVars();
-    } catch (error) {
-      handleError(error);
-    }
+    //try {
+    await listEnvVars();
+    // } catch (error) {
+    //   handleError(error);
+    // }
   });
 
 // Edit global subcommand
@@ -501,11 +501,11 @@ env
   .command('edit-global')
   .description('Edit global environment variables')
   .action(async () => {
-    try {
-      await editEnvVars('global');
-    } catch (error) {
-      handleError(error);
-    }
+    //try {
+    await editEnvVars('global');
+    // } catch (error) {
+    //   handleError(error);
+    // }
   });
 
 // Edit local subcommand
@@ -513,11 +513,11 @@ env
   .command('edit-local')
   .description('Edit local environment variables')
   .action(async () => {
-    try {
-      await editEnvVars('local');
-    } catch (error) {
-      handleError(error);
-    }
+    //try {
+    await editEnvVars('local');
+    //} catch (error) {
+    //  handleError(error);
+    //}
   });
 
 // Reset subcommand
@@ -525,11 +525,11 @@ env
   .command('reset')
   .description('Reset all environment variables and wipe the cache folder')
   .action(async () => {
-    try {
-      await resetEnv();
-    } catch (error) {
-      handleError(error);
-    }
+    //try {
+    await resetEnv();
+    //} catch (error) {
+    //      handleError(error);
+    //}
   });
 
 // Set custom path subcommand
@@ -537,11 +537,11 @@ env
   .command('set-path <path>')
   .description('Set a custom path for the global environment file')
   .action(async (customPath: string) => {
-    try {
-      await setEnvPath(customPath);
-    } catch (error) {
-      handleError(error);
-    }
+    //try {
+    await setEnvPath(customPath);
+    //    } catch (error) {
+    //handleError(error);
+    //}
   });
 
 // Interactive mode
@@ -549,11 +549,11 @@ env
   .command('interactive')
   .description('Interactive environment variable management')
   .action(async () => {
-    try {
-      await showMainMenu();
-    } catch (error) {
-      handleError(error);
-    }
+    //try {
+    await showMainMenu();
+    //} catch (error) {
+    //      handleError(error);
+    //}
   });
 
 // Default command (show help if no subcommand provided)

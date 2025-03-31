@@ -21,13 +21,13 @@ import { fileURLToPath } from 'node:url';
 import { character, character as defaultCharacter } from '../characters/eliza';
 import { AgentServer } from '../server/index';
 
-import { MyRequest, conversation, MyResponse } from '../server/api/abstract';
+import { conversation } from '../server/api/abstract';
 
 import { jsonToCharacter, loadCharacterTryPath } from '../server/loader';
 import { loadConfig, saveConfig } from '../utils/config-manager.js';
 import { promptForEnvVars } from '../utils/env-prompt.js';
 import { configureDatabaseSettings, loadEnvironment } from '../utils/get-config';
-import { handleError } from '../utils/handle-error';
+//import { handleError } from '../utils/handle-error';
 import { installPlugin } from '../utils/install-plugin';
 import { displayBanner } from '../displayBanner';
 const __filename = fileURLToPath(import.meta.url);
@@ -280,34 +280,34 @@ export async function trainAgent(
   //   worldId: roomId,
   // });
 
-  let req: MyRequest = {
-    params: {
-      agentId: entityId,
-    },
-    body: {
-      text: 'Hello',
-      roomId: roomId,
-      entityId: entityId,
-      userName: 'User',
-      name: 'User',
-    },
-    //validateUuid: validateUuid,
-    //validateBody: () => true,cons
-    //validateParams: () => true,
-    // headers: {},
-    //query: {},
-  };
-  let res: MyResponse = {
-    status: (code: number) => ({
-      // json: (data: any) => console.log(`Response: ${code}`, data),
-      //send: (data: any) => console.log('Response sent:', data),
-      //set: () => {},
-      //setHeader: () => {},
-      //status: (newCode: number) => this.status(newCode),
-    }),
-    set: () => {},
-    send: (data: any) => console.log('Response sent:', data),
-  };
+  // let req: MyRequest = {
+  //   params: {
+  //     agentId: entityId,
+  //   },
+  //   body: {
+  //     text: 'Hello',
+  //     roomId: roomId,
+  //     entityId: entityId,
+  //     userName: 'User',
+  //     name: 'User',
+  //   },
+  //   //validateUuid: validateUuid,
+  //   //validateBody: () => true,cons
+  //   //validateParams: () => true,
+  //   // headers: {},
+  //   //query: {},
+  // };
+  // let res: MyResponse = {
+  //   status: (code: number) => ({
+  //     // json: (data: any) => console.log(`Response: ${code}`, data),
+  //     //send: (data: any) => console.log('Response sent:', data),
+  //     //set: () => {},
+  //     //setHeader: () => {},
+  //     //status: (newCode: number) => this.status(newCode),
+  //   }),
+  //   set: () => {},
+  //   send: (data: any) => console.log('Response sent:', data),
+  // };
   let r = await conversation(
     runtime,
     roomId,
@@ -316,7 +316,7 @@ export async function trainAgent(
     //req, res
     'Hello' //req.body.text
   );
-  console.log(req, res, r);
+  //console.log(req, res, r);
 
   //  let uuid = 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6';
   let message: Memory = {
@@ -716,39 +716,39 @@ export const train = new Command()
     console.log('train!');
     //    displayBanner();
 
-    try {
-      // Build the project first unless skip-build is specified
-      if (options.build) {
-        await buildProject(process.cwd());
-      }
-
-      // Collect server options
-      const characterPath = options.character;
-
-      if (characterPath) {
-        options.characters = [];
-        try {
-          // if character path is a comma separated list, load all characters
-          // can be remote path also
-          if (characterPath.includes(',')) {
-            const characterPaths = characterPath.split(',');
-            for (const characterPath of characterPaths) {
-              logger.info(`Loading character from ${characterPath}`);
-              const characterData = await loadCharacterTryPath(characterPath);
-              options.characters.push(characterData);
-            }
-          }
-          await trainAgents(options);
-        } catch (error) {
-          logger.error(`Failed to load character: ${error}`);
-          process.exit(1);
-        }
-      } else {
-        await trainAgents(options);
-      }
-    } catch (error) {
-      handleError(error);
+    // try {
+    // Build the project first unless skip-build is specified
+    if (options.build) {
+      await buildProject(process.cwd());
     }
+
+    // Collect server options
+    const characterPath = options.character;
+
+    if (characterPath) {
+      options.characters = [];
+      try {
+        // if character path is a comma separated list, load all characters
+        // can be remote path also
+        if (characterPath.includes(',')) {
+          const characterPaths = characterPath.split(',');
+          for (const characterPath of characterPaths) {
+            logger.info(`Loading character from ${characterPath}`);
+            const characterData = await loadCharacterTryPath(characterPath);
+            options.characters.push(characterData);
+          }
+        }
+        await trainAgents(options);
+      } catch (error) {
+        logger.error(`Failed to load character: ${error}`);
+        process.exit(1);
+      }
+    } else {
+      await trainAgents(options);
+    }
+    // } catch (error) {
+    //   handleError(error);
+    // }
   });
 
 // This is the function that registers the command with the CLI

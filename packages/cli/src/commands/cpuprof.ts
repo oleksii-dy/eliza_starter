@@ -5,7 +5,7 @@ import { Command } from 'commander';
 import fs from 'node:fs';
 
 import { loadCharacterTryPath } from '../server/loader';
-import { handleError } from '../utils/handle-error';
+//import { handleError } from '../utils/handle-error';
 
 /**
  * A parsed .cpuprofile as defined previously
@@ -88,8 +88,12 @@ ${functions.join(', ')}`;
   .join('\n')}`,
   };
   console.log(functionGroups);
-  return [];
-  return report;
+  const chunks: ReportChunk = {
+    title: 'Function Categories Report',
+    content: `Functions by category:`,
+  };
+  return chunks;
+  //return report;
 }
 
 function profileMetadata(profile: Profile): ReportChunk {
@@ -257,37 +261,37 @@ export const cpuprof = new Command()
     console.log('Profile!');
     //displayBanner();
 
-    try {
-      // Build the project first unless skip-build is specified
-      if (options.build) {
-        await buildProject(process.cwd());
-      }
-
-      // Collect server options
-      const characterPath = options.character;
-
-      if (characterPath) {
-        options.characters = [];
-        try {
-          // if character path is a comma separated list, load all characters
-          // can be remote path also
-          if (characterPath.includes(',')) {
-            const characterPaths = characterPath.split(',');
-            for (const characterPath of characterPaths) {
-              logger.info(`Loading character from ${characterPath}`);
-              const characterData = await loadCharacterTryPath(characterPath);
-              options.characters.push(characterData);
-            }
-          }
-          await profileAgents(options);
-        } catch (error) {
-          logger.error(`Failed to load character: ${error}`);
-          process.exit(1);
-        }
-      } else {
-        await profileAgents(options);
-      }
-    } catch (error) {
-      handleError(error);
+    //try {
+    // Build the project first unless skip-build is specified
+    if (options.build) {
+      await buildProject(process.cwd());
     }
+
+    // Collect server options
+    const characterPath = options.character;
+
+    if (characterPath) {
+      options.characters = [];
+      try {
+        // if character path is a comma separated list, load all characters
+        // can be remote path also
+        if (characterPath.includes(',')) {
+          const characterPaths = characterPath.split(',');
+          for (const characterPath of characterPaths) {
+            logger.info(`Loading character from ${characterPath}`);
+            const characterData = await loadCharacterTryPath(characterPath);
+            options.characters.push(characterData);
+          }
+        }
+        await profileAgents(options);
+      } catch (error) {
+        logger.error(`Failed to load character: ${error}`);
+        process.exit(1);
+      }
+    } else {
+      await profileAgents(options);
+    }
+    // } catch (error) {
+    //   handleError(error);
+    // }
   });

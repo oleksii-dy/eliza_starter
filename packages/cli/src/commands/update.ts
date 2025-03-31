@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { buildProject } from '@/src/utils/build-project';
-import { handleError } from '@/src/utils/handle-error';
+//import { handleError } from '@/src/utils/handle-error';
 import { runBunCommand } from '@/src/utils/run-bun';
 import { logger } from '@elizaos/core';
 import { Command } from 'commander';
@@ -201,29 +201,29 @@ export const update = new Command()
   .option('--check', 'Check for available updates without applying them')
   .option('--skip-build', 'Skip building after updating')
   .action(async (options) => {
-    try {
-      const cwd = process.cwd();
+    // try {
+    const cwd = process.cwd();
 
-      // Determine if we're in a project or plugin directory
-      const isPlugin = checkIfPluginDir(cwd);
-      logger.info(`Detected ${isPlugin ? 'plugin' : 'project'} directory`);
+    // Determine if we're in a project or plugin directory
+    const isPlugin = checkIfPluginDir(cwd);
+    logger.info(`Detected ${isPlugin ? 'plugin' : 'project'} directory`);
 
-      if (options.check) {
-        // Only check for updates without applying them
-        logger.info('Checking for available updates...');
-        const cliVersion = getCurrentCliVersion();
-        logger.info(`Current CLI version: ${cliVersion}`);
-        logger.info('To apply updates, run this command without the --check flag');
-        return;
-      }
-
-      // Update dependencies
-      await updateDependencies(cwd, isPlugin);
-
-      logger.success(
-        `${isPlugin ? 'Plugin' : 'Project'} successfully updated to the latest ElizaOS packages`
-      );
-    } catch (error) {
-      handleError(error);
+    if (options.check) {
+      // Only check for updates without applying them
+      logger.info('Checking for available updates...');
+      const cliVersion = getCurrentCliVersion();
+      logger.info(`Current CLI version: ${cliVersion}`);
+      logger.info('To apply updates, run this command without the --check flag');
+      return;
     }
+
+    // Update dependencies
+    await updateDependencies(cwd, isPlugin);
+
+    logger.success(
+      `${isPlugin ? 'Plugin' : 'Project'} successfully updated to the latest ElizaOS packages`
+    );
+    //} catch (error) {
+    //      handleError(error);
+    //}
   });

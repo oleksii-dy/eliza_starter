@@ -80,7 +80,8 @@ async function main() {
   await program.parseAsync();
 }
 
-main().catch((error) => {
-  logger.error('An error occurred:', error);
-  process.exit(1);
-});
+main();
+//.catch((error) => {
+//  logger.error('An error occurred:', error);
+//  process.exit(1);
+//});

@@ -7,7 +7,7 @@ import { buildProject } from '@/src/utils/build-project';
 import { logger } from '@elizaos/core';
 import { Command } from 'commander';
 import { execa } from 'execa';
-import { handleError } from '../utils/handle-error';
+//import { handleError } from '../utils/handle-error';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -312,70 +312,70 @@ export const dev = new Command()
   .option('--character <character>', 'Path or URL to character file to use instead of default')
   .option('--build', 'Build the project before starting')
   .action(async (options) => {
-    try {
-      const cwd = process.cwd();
-      const { isProject, isPlugin } = await determineProjectType();
+    // try {
+    const cwd = process.cwd();
+    const { isProject, isPlugin } = await determineProjectType();
 
-      // Prepare CLI arguments for the start command
-      const cliArgs: string[] = [];
-      if (options.port) cliArgs.push('--port', options.port.toString());
-      if (options.configure) cliArgs.push('--configure');
-      if (options.character) cliArgs.push('--character', options.character);
+    // Prepare CLI arguments for the start command
+    const cliArgs: string[] = [];
+    if (options.port) cliArgs.push('--port', options.port.toString());
+    if (options.configure) cliArgs.push('--configure');
+    if (options.character) cliArgs.push('--character', options.character);
 
-      // Function to rebuild and restart the server
-      const rebuildAndRestart = async () => {
-        try {
-          // Ensure the server is stopped first
-          await stopServer();
+    // Function to rebuild and restart the server
+    const rebuildAndRestart = async () => {
+      try {
+        // Ensure the server is stopped first
+        await stopServer();
 
-          logger.info('Rebuilding project after file change...');
+        logger.info('Rebuilding project after file change...');
 
-          // Run the build process
-          await buildProject(cwd, isPlugin);
+        // Run the build process
+        await buildProject(cwd, isPlugin);
 
-          logger.success('Rebuild successful, restarting server...');
+        logger.success('Rebuild successful, restarting server...');
 
-          // Start the server with the args
+        // Start the server with the args
+        await startServer(cliArgs);
+      } catch (error) {
+        logger.error(`Error during rebuild and restart: ${error.message}`);
+        // Try to restart the server even if build fails
+        if (!serverProcess) {
+          logger.info('Attempting to restart server regardless of build failure...');
           await startServer(cliArgs);
-        } catch (error) {
-          logger.error(`Error during rebuild and restart: ${error.message}`);
-          // Try to restart the server even if build fails
-          if (!serverProcess) {
-            logger.info('Attempting to restart server regardless of build failure...');
-            await startServer(cliArgs);
-          }
-        }
-      };
-
-      if (!isProject && !isPlugin) {
-        logger.warn('Not in a recognized project or plugin directory. Running in standalone mode.');
-      } else {
-        logger.info(`Running in ${isProject ? 'project' : 'plugin'} mode`);
-
-        // Ensure initial build is performed
-        logger.info('Building project...');
-        try {
-          await buildProject(cwd, isPlugin);
-        } catch (error) {
-          logger.error(`Initial build failed: ${error.message}`);
-          logger.info('Continuing with dev mode anyway...');
         }
       }
+    };
 
-      // Start the server initially
-      await startServer(cliArgs);
+    if (!isProject && !isPlugin) {
+      logger.warn('Not in a recognized project or plugin directory. Running in standalone mode.');
+    } else {
+      logger.info(`Running in ${isProject ? 'project' : 'plugin'} mode`);
 
-      // Set up file watching only if we're in a project or plugin directory
-      if (isProject || isPlugin) {
-        // Pass the rebuildAndRestart function as the onChange callback
-        await watchDirectory(cwd, rebuildAndRestart);
-
-        logger.success('Dev mode is active! The server will restart when files change.');
-        logger.success('Press Ctrl+C to exit');
-      } else {
-        logger.debug('Running in standalone mode without file watching.');
+      // Ensure initial build is performed
+      logger.info('Building project...');
+      try {
+        await buildProject(cwd, isPlugin);
+      } catch (error) {
+        logger.error(`Initial build failed: ${error.message}`);
+        logger.info('Continuing with dev mode anyway...');
       }
-    } catch (error) {
-      handleError(error);
     }
+
+    // Start the server initially
+    await startServer(cliArgs);
+
+    // Set up file watching only if we're in a project or plugin directory
+    if (isProject || isPlugin) {
+      // Pass the rebuildAndRestart function as the onChange callback
+      await watchDirectory(cwd, rebuildAndRestart);
+
+      logger.success('Dev mode is active! The server will restart when files change.');
+      logger.success('Press Ctrl+C to exit');
+    } else {
+      logger.debug('Running in standalone mode without file watching.');
+    }
+    // } catch (error) {
+    //   handleError(error);
+    // }
   });

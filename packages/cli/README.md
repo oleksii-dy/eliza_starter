@@ -209,7 +209,7 @@ bun run ./dist/index.js start --character ./src/characters/eliza.ts
 
 CLI
 
-`tsx ./src/index.ts  train`
+tsx ./src/index.ts train
 
 DEBUG=\* NODE_NO_WARNINGS=1 LOG_LEVEL=debug tsx ./src/index.ts train
 

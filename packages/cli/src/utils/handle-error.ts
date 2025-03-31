@@ -8,17 +8,17 @@ import { AGENT_RUNTIME_URL } from '../commands/agent';
  * it logs a default error message and exits.
  * @param {unknown} error - The error to be handled.
  */
-export function handleError(error: unknown) {
-  logger.error('An error occurred:', error);
-  if (error instanceof Error) {
-    logger.error('Error details:', error.message);
-    logger.error('Stack trace:', error.stack);
-  } else {
-    logger.error('Unknown error type:', typeof error);
-    logger.error('Error value:', error);
-  }
-  process.exit(1);
-}
+// export function handleError(error: unknown) {
+//   logger.error('An error occurred:', error);
+//   if (error instanceof Error) {
+//     logger.error('Error details:', error.message);
+//     logger.error('Stack trace:', error.stack);
+//   } else {
+//     logger.error('Unknown error type:', typeof error);
+//     logger.error('Error value:', error);
+//   }
+//   process.exit(1);
+// }
 
 export async function checkServer() {
   const red = '\x1b[38;5;196m';

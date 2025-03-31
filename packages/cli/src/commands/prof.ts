@@ -1,42 +1,15 @@
-import { parse } from 'csv-parse';
 import { buildProject } from '@/src/utils/build-project';
-import {
-  AgentRuntime,
-  type Character,
-  type IAgentRuntime,
-  type Plugin,
-  logger,
-  stringToUuid,
-  ChannelType,
-  encryptedCharacter,
-  Memory,
-  State,
-  createUniqueUuid,
-  validateUuid,
-} from '@elizaos/core';
+import { type IAgentRuntime, logger } from '@elizaos/core';
 
 import { Command } from 'commander';
-import fs from 'node:fs';
-import path, { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { character, character as defaultCharacter } from '../characters/eliza';
-import { AgentServer } from '../server/index';
 
-import { MyRequest, conversation, MyResponse } from '../server/api/abstract';
+//import { MyRequest, MyResponse } from '../server/api/abstract';
 
-import { jsonToCharacter, loadCharacterTryPath } from '../server/loader';
-import { loadConfig, saveConfig } from '../utils/config-manager.js';
-import { promptForEnvVars } from '../utils/env-prompt.js';
-import { configureDatabaseSettings, loadEnvironment } from '../utils/get-config';
-import { handleError } from '../utils/handle-error';
-import { installPlugin } from '../utils/install-plugin';
-import { displayBanner } from '../displayBanner';
+import { loadCharacterTryPath } from '../server/loader';
+//import { handleError } from '../utils/handle-error';
 
 import { createInterface } from 'node:readline';
 import { createReadStream } from 'node:fs';
-import { createWriteStream } from 'node:fs';
-import { once } from 'node:events';
-import { createServer } from 'node:http';
 
 //const __filename = fileURLToPath(import.meta.url);
 //const __dirname = path.dirname(__filename);
@@ -549,39 +522,39 @@ export const prof = new Command()
     console.log('Profile!');
     //displayBanner();
 
-    try {
-      // Build the project first unless skip-build is specified
-      if (options.build) {
-        await buildProject(process.cwd());
-      }
-
-      // Collect server options
-      const characterPath = options.character;
-
-      if (characterPath) {
-        options.characters = [];
-        try {
-          // if character path is a comma separated list, load all characters
-          // can be remote path also
-          if (characterPath.includes(',')) {
-            const characterPaths = characterPath.split(',');
-            for (const characterPath of characterPaths) {
-              logger.info(`Loading character from ${characterPath}`);
-              const characterData = await loadCharacterTryPath(characterPath);
-              options.characters.push(characterData);
-            }
-          }
-          await profileAgents(options);
-        } catch (error) {
-          logger.error(`Failed to load character: ${error}`);
-          process.exit(1);
-        }
-      } else {
-        await profileAgents(options);
-      }
-    } catch (error) {
-      handleError(error);
+    //try {
+    // Build the project first unless skip-build is specified
+    if (options.build) {
+      await buildProject(process.cwd());
     }
+
+    // Collect server options
+    const characterPath = options.character;
+
+    if (characterPath) {
+      options.characters = [];
+      try {
+        // if character path is a comma separated list, load all characters
+        // can be remote path also
+        if (characterPath.includes(',')) {
+          const characterPaths = characterPath.split(',');
+          for (const characterPath of characterPaths) {
+            logger.info(`Loading character from ${characterPath}`);
+            const characterData = await loadCharacterTryPath(characterPath);
+            options.characters.push(characterData);
+          }
+        }
+        await profileAgents(options);
+      } catch (error) {
+        logger.error(`Failed to load character: ${error}`);
+        process.exit(1);
+      }
+    } else {
+      await profileAgents(options);
+    }
+    // } catch (error) {
+    //   handleError(error);
+    // }
   });
 
 // This is the function that registers the command with the CLI

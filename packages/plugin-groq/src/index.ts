@@ -392,6 +392,7 @@ export const groqPlugin: Plugin = {
         presencePenalty = 0.7,
       }: GenerateTextParams
     ) => {
+      console.log('GROQ_LARGE_MODEL prompt DEBUG', prompt);
       const model =
         runtime.getSetting('GROQ_LARGE_MODEL') ?? runtime.getSetting('LARGE_MODEL') ?? 'gpt-4444o';
       const baseURL = getCloudflareGatewayBaseURL(runtime, 'groq');
