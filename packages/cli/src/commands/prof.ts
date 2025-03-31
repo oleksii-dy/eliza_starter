@@ -30,8 +30,15 @@ import { configureDatabaseSettings, loadEnvironment } from '../utils/get-config'
 import { handleError } from '../utils/handle-error';
 import { installPlugin } from '../utils/install-plugin';
 import { displayBanner } from '../displayBanner';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
+import { createInterface } from 'node:readline';
+import { createReadStream } from 'node:fs';
+import { createWriteStream } from 'node:fs';
+import { once } from 'node:events';
+import { createServer } from 'node:http';
+
+//const __filename = fileURLToPath(import.meta.url);
+//const __dirname = path.dirname(__filename);
 
 // Placeholder interfaces for external dependencies (to be replaced with actual definitions)
 interface LogReader {
@@ -90,8 +97,6 @@ class V8Profile implements Profile {
     separateSparkplugHandlers: boolean,
     useBigIntAddresses: boolean = false
   ) {
-    // Assume Profile is a base class with a constructor taking useBigIntAddresses
-    // super(useBigIntAddresses);
     const regexps: RegExp[] = [];
     if (!separateIc) regexps.push(V8Profile.IC_RE);
     if (!separateBytecodes) regexps.push(V8Profile.BYTECODES_RE);
@@ -159,6 +164,7 @@ abstract class CppEntriesProvider {
   protected parseAddr: (str: string) => bigint | number;
 
   public parseAddress(str: string): bigint | number {
+    console.log('Parse', str);
     return this.parseAddr(str);
   }
   protected parseHexAddr: (str: string) => bigint | number;
@@ -284,7 +290,6 @@ export class LinuxCppEntriesProvider extends CppEntriesProvider {
         this.targetRootFS + adjustedLibName.substring(adjustedLibName.lastIndexOf('/') + 1);
     }
 
-    // Placeholder for os.system calls (needs actual implementation)
     const osSystem = async (cmd: string, args: string[]): Promise<string> => '';
     try {
       this.symbols = [
@@ -438,6 +443,20 @@ export class TickProcessor implements LogReader {
 
   async processLogFile(fileName: string): Promise<void> {
     // Implementation would go here
+    // For example, read ttry {
+    const fileStream = createReadStream(fileName, { encoding: 'utf8' });
+    const rl = createInterface({
+      input: fileStream,
+      crlfDelay: Infinity, // Handle all line endings
+    });
+
+    for await (const line of rl) {
+      await this.processLogLine(line);
+    }
+
+    console.log(
+      `Processed ${fileName}: Total Ticks: ${this.ticks.total}, GC Ticks: ${this.ticks.gc}`
+    );
   }
 }
 
@@ -447,6 +466,30 @@ const profileAgents = async (options: { profile?: string }) => {
 
   // Load environment variables from project .env or .eliza/.env
   //await loadEnvironment();
+  const processor = new TickProcessor(
+    new LinuxCppEntriesProvider('nm', 'objdump', 'readelf', '', '', false), // Mocked tools
+    true,
+    true,
+    true,
+    true,
+    true, // Separate all categories
+    5,
+    false,
+    null,
+    0,
+    '',
+    null,
+    false,
+    false,
+    false,
+    null,
+    false,
+    false // Defaults
+  );
+
+  await processor.processLogFile(profile_file);
+  const profileData = processor['profile'].getFlatProfile(); // Access private for demo
+  console.log('Profile Data:', profileData);
 };
 
 export const prof = new Command()
