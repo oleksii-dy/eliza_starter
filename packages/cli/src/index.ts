@@ -18,6 +18,7 @@ import { publish } from './commands/publish';
 import { start } from './commands/start';
 import { train } from './commands/train';
 import { prof } from './commands/prof';
+import { cpuprof } from './commands/cpuprof';
 import { teeCommand as tee } from './commands/tee';
 import { test } from './commands/test';
 import { update } from './commands/update';
@@ -64,6 +65,7 @@ async function main() {
     .addCommand(start)
     .addCommand(train)
     .addCommand(prof)
+    .addCommand(cpuprof)
     .addCommand(update)
     .addCommand(test)
     .addCommand(env)

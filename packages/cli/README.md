@@ -222,3 +222,5 @@ strace -f -s 99999 -o strace.txt tsx ./src/index.ts train # 2>&1 | grep ^JSON lo
 node --prof ./dist/index.js train
 
 bun run build
+
+DEBUG=\* NODE_NO_WARNINGS=1 LOG_LEVEL=debug tsx ./src/index.ts prof --profile isolate-0x3e14ca10-229214-v8.log

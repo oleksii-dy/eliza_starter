@@ -1,3 +1,4 @@
+import { parse } from 'csv-parse';
 import { buildProject } from '@/src/utils/build-project';
 import {
   AgentRuntime,
@@ -80,6 +81,9 @@ interface ViewBuilder {
 
 // Main V8Profile class
 class V8Profile implements Profile {
+  private ticks: { nsSinceStart: number; vmState: number; stack: (bigint | number)[] }[] = [];
+  private groupedData: { [key: string]: any } = {}; // Recursive grouping storage
+
   private static IC_RE =
     /^(LoadGlobalIC: )|(Handler: )|(?:CallIC|LoadIC|StoreIC)|(?:Builtin: (?:Keyed)?(?:Load|Store)IC_)/;
   private static BYTECODES_RE = /^(BytecodeHandler: )/;
@@ -132,10 +136,12 @@ class V8Profile implements Profile {
     state: any
   ): void {}
   moveCode(from: bigint | number, to: bigint | number): void {}
-  recordTick(nsSinceStart: number, vmState: number, stack: (bigint | number)[]): void {}
-  getFlatProfile(): any {
-    return null;
+  recordTick(nsSinceStart: number, vmState: number, stack: (bigint | number)[]): void {
+    this.ticks.push({ nsSinceStart, vmState, stack });
   }
+  //getFlatProfile(): any {
+  //  return null;
+  //}
   getBottomUpProfile(): any {
     return null;
   }
@@ -147,6 +153,47 @@ class V8Profile implements Profile {
   // Example of adding a method with proper typing
   handleUnknownCode(operation: string, addr: bigint | number, opt_stackPos?: number): void {
     // Implementation would go here
+  }
+
+  recordCsvLine(fields: string[]): void {
+    const groupByField = (data: string[], index: number): any => {
+      if (index >= data.length) return data.join(','); // Leaf node: raw line
+      const key = data[index];
+      return { [key]: groupByField(data, index + 1) };
+    };
+
+    const type = fields[0];
+    if (!this.groupedData[type]) this.groupedData[type] = {};
+    const subGrouped = groupByField(fields.slice(1), 0);
+
+    // Merge recursively
+    const merge = (target: any, source: any) => {
+      for (const key in source) {
+        if (typeof source[key] === 'object' && key in target) {
+          merge(target[key], source[key]);
+        } else {
+          target[key] = source[key];
+        }
+      }
+    };
+    merge(this.groupedData[type], subGrouped);
+  }
+
+  getFlatProfile(): any {
+    const stateCounts: { [key: number]: number } = {};
+    let totalTime = 0;
+    for (const tick of this.ticks) {
+      stateCounts[tick.vmState] = (stateCounts[tick.vmState] || 0) + 1;
+      totalTime += tick.nsSinceStart;
+    }
+    return {
+      totalTicks: this.ticks.length,
+      totalTimeNs: totalTime,
+      stateBreakdown: Object.fromEntries(
+        Object.entries(stateCounts).map(([state, count]) => [VmStates[state], count])
+      ),
+      csvGroups: this.groupedData,
+    };
   }
 }
 
@@ -174,8 +221,8 @@ abstract class CppEntriesProvider {
   constructor(useBigIntAddresses: boolean = false) {
     this.parseAddr = useBigIntAddresses ? BigInt : parseInt;
     this.parseHexAddr = useBigIntAddresses
-      ? (str: string) => BigInt(parseInt(str, 16))
-      : (str: string) => parseInt(str, 16);
+      ? (str: string) => BigInt(parseInt(str))
+      : (str: string) => parseInt(str);
   }
 
   inRange(funcInfo: FuncInfo, start: bigint | number, end: bigint | number): boolean {
@@ -420,8 +467,8 @@ export class TickProcessor implements LogReader {
     const fields = line.split(/\s+/);
     let stack2 = fields.slice(2).map((addr) => this.cppEntriesProvider.parseAddress(addr));
 
-    const timestamp = parseInt(fields[0], 10);
-    const vmState = parseInt(fields[1], 10);
+    const timestamp = parseInt(fields[0]);
+    const vmState = parseInt(fields[1]);
     let stack = fields.slice(2).map((addr) => this.cppEntriesProvider.parseAddress(addr));
 
     // Record the tick in the profile
@@ -464,6 +511,8 @@ const profileAgents = async (options: { profile?: string }) => {
   let profile_file = options.profile;
   console.log('profile agents', profile_file);
 
+  let data = await decode(profile_file);
+  console.log(data);
   // Load environment variables from project .env or .eliza/.env
   //await loadEnvironment();
   const processor = new TickProcessor(
@@ -539,4 +588,145 @@ export const prof = new Command()
 export default function registerCommand(cli: Command) {
   console.log('registerCommand');
   return cli.addCommand(prof);
+}
+
+// Mocked V8 utilities (simplified from v8log modules)
+const parseString = (s: string) => s;
+const parseInt = (s: string) => Number.parseInt(s, 10);
+const parseAddress = (s: string) => Number.parseInt(s, 16); // No BigInt for now
+const argParsers = (...parsers: ((s: string) => any)[]) => parsers;
+const offsetOrEnd = (delimiter: string, text: string) => text.indexOf(delimiter);
+const readAllArgs = (parsers: ((s: string) => any)[], text: string, start: number) => {
+  const fields = text.slice(start).split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+  return parsers.map((parser, i) => (i < fields.length ? parser(fields[i]) : undefined));
+};
+const readAllArgsRaw = (text: string, start: number) => text.slice(start).split(',');
+
+// Parsers tailored to your log
+const parsers = {
+  profiler: argParsers(parseString, parseInt),
+  new: argParsers(parseString, parseAddress, parseInt),
+  'shared-library': argParsers(parseString, parseAddress, parseAddress, parseAddress),
+  tick: argParsers(parseAddress, parseInt, parseInt, parseAddress, parseInt), // 5 fields
+} as const;
+
+export async function decode(filePath: string) {
+  const meta: { [key: string]: any } = {};
+  const codes: any[] = [];
+  const ticks: any[] = [];
+  const memory: any[] = [];
+  const profiler: any[] = [];
+  const ignoredOps = new Set<string>();
+  const ignoredEntries: any[] = [];
+
+  const processLine = (buffer: string, sol: number, eol: number) => {
+    if (sol >= eol) return;
+
+    const line = buffer.slice(sol, eol);
+    const opEnd = offsetOrEnd(',', line);
+    const argsStart = opEnd + 1;
+    const op = buffer.slice(sol, sol + opEnd);
+
+    switch (op) {
+      case 'v8-version': {
+        const args = readAllArgsRaw(line, argsStart);
+        meta.version = {
+          major: args[0],
+          minor: args[1],
+          build: args[2],
+          patch: args[3],
+          extra: args[4],
+          unknown: args[5],
+        };
+        break;
+      }
+
+      case 'v8-platform': {
+        const [platform, extra] = readAllArgsRaw(line, argsStart);
+        meta.platform = { platform, extra };
+        break;
+      }
+
+      case 'profiler': {
+        const [action, sampleInterval] = readAllArgs(parsers[op], line, argsStart);
+        profiler.push({ action, sampleInterval });
+        break;
+      }
+
+      case 'shared-library': {
+        const [name, address, addressEnd, aslrSlide] = readAllArgs(parsers[op], line, argsStart);
+        codes.push({ op, address, size: addressEnd - address, name, aslrSlide });
+        break;
+      }
+
+      case 'shared-library-end': {
+        codes.push({ op });
+        break;
+      }
+
+      case 'new': {
+        const [type, address, size] = readAllArgs(parsers[op], line, argsStart);
+        memory.push({ op, type, address, size });
+        break;
+      }
+
+      case 'tick': {
+        const [pc, timestamp, vmState, tosOrExternalCallback, extra] = readAllArgs(
+          parsers[op],
+          line,
+          argsStart
+        );
+        ticks.push({ timestamp, vmState, pc, tosOrExternalCallback, extra });
+        break;
+      }
+
+      default:
+        ignoredOps.add(op);
+        ignoredEntries.push({ op, line });
+    }
+  };
+
+  const fileStream = createReadStream(filePath, { encoding: 'utf8' });
+  const rl = createInterface({ input: fileStream, crlfDelay: Infinity });
+
+  let tail = '';
+  let lineStartOffset = 0;
+
+  const t = Date.now();
+  for await (const chunk of rl) {
+    const chunkText = tail + chunk;
+    let eol = -1;
+    lineStartOffset = 0;
+
+    do {
+      eol = chunkText.indexOf('\n', lineStartOffset);
+      if (eol === -1) break;
+      if (eol === lineStartOffset) {
+        lineStartOffset = eol + 1;
+        continue;
+      }
+      processLine(chunkText, lineStartOffset, eol);
+      lineStartOffset = eol + 1;
+    } while (true);
+
+    tail = chunkText.slice(lineStartOffset);
+  }
+
+  // Process last line
+  processLine(tail, 0, tail.length);
+
+  const result = {
+    meta,
+    codes,
+    ticks,
+    memory,
+    profiler,
+    ignoredOps: [...ignoredOps],
+    ignoredEntries,
+  };
+
+  logger.info(`Parsed ${filePath} in ${Date.now() - t}ms`);
+  logger.debug(`Result: ${JSON.stringify(result, null, 2)}`);
+
+  return result;
 }
