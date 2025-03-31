@@ -146,16 +146,18 @@ export async function conversation(runtime: IAgentRuntime, roomId, entityId, use
   console.log('prompt', prompt);
   logger.debug('[SPEECH CONVERSATION] Using LLM for response prompt', prompt);
   const response = await runtime.useModel(ModelType.TEXT_LARGE, {
-    messages: [
-      {
-        role: 'system',
-        content: messageHandlerTemplate,
-      },
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
+    prompt: prompt,
+    system: messageHandlerTemplate,
+    // messages: [
+    //   {
+    //     role: 'system',
+    //     content: messageHandlerTemplate,
+    //   },
+    //   {
+    //     role: 'user',
+    //     content: prompt,
+    //   },
+    // ],
   });
 
   if (!response) {
@@ -184,25 +186,25 @@ export async function conversation(runtime: IAgentRuntime, roomId, entityId, use
 
   await runtime.processActions(memory, [responseMessage as Memory], state, async () => [memory]);
 
-  logger.debug('[SPEECH CONVERSATION] Generating speech response');
+  //  logger.debug('[SPEECH CONVERSATION] Generating speech response');
 
-  const speechResponse = await runtime.useModel(ModelType.TEXT_TO_SPEECH, text);
+  //  const speechResponse = await runtime.useModel(ModelType.TEXT_TO_SPEECH, text);
 
   // Convert to Buffer if not already a Buffer
-  const audioBuffer = Buffer.isBuffer(speechResponse)
-    ? speechResponse
-    : await new Promise<Buffer>((resolve, reject) => {
-        if (!(speechResponse instanceof Readable)) {
-          return reject(new Error('Unexpected response type from TEXT_TO_SPEECH model'));
-        }
+  // const audioBuffer = Buffer.isBuffer(speechResponse)
+  //   ? speechResponse
+  //   : await new Promise<Buffer>((resolve, reject) => {
+  //       if (!(speechResponse instanceof Readable)) {
+  //         return reject(new Error('Unexpected response type from TEXT_TO_SPEECH model'));
+  //       }
 
-        const chunks: Buffer[] = [];
-        speechResponse.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
-        speechResponse.on('end', () => resolve(Buffer.concat(chunks)));
-        speechResponse.on('error', (err) => reject(err));
-      });
+  //       const chunks: Buffer[] = [];
+  //       speechResponse.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+  //       speechResponse.on('end', () => resolve(Buffer.concat(chunks)));
+  //       speechResponse.on('error', (err) => reject(err));
+  //     });
 
-  logger.debug('[SPEECH CONVERSATION] Setting response headers');
+  // logger.debug('[SPEECH CONVERSATION] Setting response headers');
 
   // res.set({
   // 	'Content-Type': 'audio/mpeg',

@@ -1,7 +1,7 @@
 import { createGroq } from '@ai-sdk/groq';
 //import Groq from "groq-sdk";
 import type {
-  ImageDescriptionParams,
+  //ImageDescriptionParams,
   ModelTypeName,
   ObjectGenerationParams,
   Plugin,
