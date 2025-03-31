@@ -227,3 +227,6 @@ bun run build
 DEBUG=\* NODE_NO_WARNINGS=1 LOG_LEVEL=debug tsx ./src/index.ts prof --profile isolate-0x3e14ca10-229214-v8.log
 
 DEBUG=\* NODE_NO_WARNINGS=1 LOG_LEVEL=debug tsx ./src/index.ts cpuprof --profile ./CPU.20250328.185359.3772403.0.001.cpuprofile
+
+DEBUG=\* NODE_NO_WARNINGS=1 LOG_LEVEL=debug tsx ./src/index.ts cpuprof --profile ./CPU.20250331.153438.803523.0.001.cpuprofile > report.txt
+node --cpu-prof ./dist/index.js cpuprof --profile ./CPU.20250331.153438.803523.0.001.cpuprofile > report2.txt
