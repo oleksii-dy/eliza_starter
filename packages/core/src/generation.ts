@@ -1485,6 +1485,39 @@ export async function generateText({
                 throw new Error(errorMessage);
             }
         }
+
+        // Forceful IGNORE checking
+        if (response) {
+            const trimmedResponse = response.trim();
+            
+            // Check for standalone IGNORE
+            if (trimmedResponse === "IGNORE") {
+                elizaLogger.debug("Response contains standalone IGNORE - filtering out");
+                return "";
+            }
+
+            // Check for IGNORE in malformed or partial JSON
+            if (trimmedResponse.includes('"action":"IGNORE"') || 
+                trimmedResponse.includes("'action':'IGNORE'")) {
+                elizaLogger.debug("Response contains IGNORE action - filtering out");
+                return "";
+            }
+
+            // Check for JSON containing IGNORE
+            try {
+                // Only try to parse if it looks like JSON (starts with { or [)
+                if (trimmedResponse.startsWith('{') || trimmedResponse.startsWith('[')) {
+                    const jsonResponse = JSON.parse(trimmedResponse);
+                    if (JSON.stringify(jsonResponse).includes("IGNORE")) {
+                        elizaLogger.debug("Response contains JSON with IGNORE - filtering out");
+                        return "";
+                    }
+                }
+            } catch (e) {
+                // Not valid JSON, continue with normal response
+            }
+        }
+
         logGenerate(
             "text",
             runtime.agentId,
