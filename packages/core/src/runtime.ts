@@ -1381,6 +1381,7 @@ export class AgentRuntime implements IAgentRuntime {
       return;
     }
 
+    this.runtimeLogger.debug('service start', service);
     const serviceInstance = await service.start(this);
 
     // Add the service to the services map

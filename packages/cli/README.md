@@ -220,6 +220,7 @@ strace -f -s 99999 -o strace.txt tsx ./src/index.ts train # 2>&1 | grep ^JSON lo
 3768969 execve("/gnu/store/9nx4zhahn1y95clyrga28rnrjlrqrqyn-node-18.19.0/bin/node", ["/gnu/store/9nx4zhahn1y95clyrga28rnrjlrqrqyn-node-18.19.0/bin/node", "--require", "/home/mdupont/.local/share/pnpm/global/5/.pnpm/tsx@4.19.2/node_modules/tsx/dist/preflight.cjs", "--import", "file:///home/mdupont/.local/share/pnpm/global/5/.pnpm/tsx@4.19.2/node_modules/tsx/dist/loader.mjs", "./src/index.ts", "train"], 0x7ee354003410 /_ 64 vars _/ <unfinished ...>
 
 node --prof ./dist/index.js train
+node --cpu-prof ./dist/index.js train
 
 bun run build
 

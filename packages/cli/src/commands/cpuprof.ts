@@ -51,6 +51,12 @@ export function generateFunctionalCategoryReport(profile: Profile): ReportChunk 
     const { functionName, scriptId, url, lineNumber, columnNumber } = node.callFrame;
     let match;
 
+    //      if (!url.includes("eliza")) {
+    //	  return []
+    //      }
+    //      if (url.includes("node_modules")) {
+    //	  return []
+    //      }
     let url2 = url.replaceAll(
       'file:///mnt/data1/nix/time/2025/03/14/cloud-deployment-eliza/',
       'PRJ'
