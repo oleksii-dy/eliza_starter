@@ -20,8 +20,8 @@ The plugin requires these environment variables (can be set in .env file or char
   "OPENAI_BASE_URL": "optional_custom_endpoint",
   "OPENAI_SMALL_MODEL": "gpt-4o-mini",
   "OPENAI_LARGE_MODEL": "gpt-4o",
-  "EMBEDDING_MODEL": "text-embedding-3-small",
-  "EMBEDDING_DIMENSIONS": "1536"
+  "OPENAI_EMBEDDING_MODEL": "text-embedding-3-small",
+  "OPENAI_EMBEDDING_DIMENSIONS": "1536"
 }
 ```
 
@@ -33,8 +33,8 @@ OPENAI_API_KEY=your_openai_api_key
 OPENAI_BASE_URL=optional_custom_endpoint
 OPENAI_SMALL_MODEL=gpt-4o-mini
 OPENAI_LARGE_MODEL=gpt-4o
-EMBEDDING_MODEL=text-embedding-3-small
-EMBEDDING_DIMENSIONS=1536
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+OPENAI_EMBEDDING_DIMENSIONS=1536
 ```
 
 ### Configuration Options
@@ -43,8 +43,8 @@ EMBEDDING_DIMENSIONS=1536
 - `OPENAI_BASE_URL`: Custom API endpoint (default: https://api.openai.com/v1)
 - `OPENAI_SMALL_MODEL`: Defaults to GPT-4o Mini ("gpt-4o-mini")
 - `OPENAI_LARGE_MODEL`: Defaults to GPT-4o ("gpt-4o")
-- `EMBEDDING_MODEL`: Defaults to text-embedding-3-small ("text-embedding-3-small")
-- `EMBEDDING_DIMENSIONS`: Defaults to 1536 (1536)
+- `OPENAI_EMBEDDING_MODEL`: Defaults to text-embedding-3-small ("text-embedding-3-small")
+- `OPENAI_EMBEDDING_DIMENSIONS`: Defaults to 1536 (1536)
 
 The plugin provides these model classes:
 

@@ -64,8 +64,8 @@ export const openaiPlugin: Plugin = {
     OPENAI_LARGE_MODEL: process.env.OPENAI_LARGE_MODEL,
     SMALL_MODEL: process.env.SMALL_MODEL,
     LARGE_MODEL: process.env.LARGE_MODEL,
-    EMBEDDING_MODEL: process.env.EMBEDDING_MODEL,
-    EMBEDDING_DIMENSIONS: process.env.EMBEDDING_DIMENSIONS,
+    OPENAI_EMBEDDING_MODEL: process.env.OPENAI_EMBEDDING_MODEL,
+    OPENAI_EMBEDDING_DIMENSIONS: process.env.OPENAI_EMBEDDING_DIMENSIONS,
   },
   async init(config: Record<string, string>) {
     try {
@@ -118,7 +118,9 @@ export const openaiPlugin: Plugin = {
       runtime,
       params: TextEmbeddingParams | string | null
     ): Promise<number[]> => {
-      const embeddingDimension = parseInt(runtime.getSetting('EMBEDDING_DIMENSIONS') ?? '1536');
+      const embeddingDimension = parseInt(
+        runtime.getSetting('OPENAI_EMBEDDING_DIMENSIONS') ?? '1536'
+      );
       // Handle null input (initialization case)
       if (params === null) {
         logger.debug('Creating test embedding for initialization');
@@ -161,7 +163,7 @@ export const openaiPlugin: Plugin = {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: runtime.getSetting('EMBEDDING_MODEL') ?? 'text-embedding-3-small',
+            model: runtime.getSetting('OPENAI_EMBEDDING_MODEL') ?? 'text-embedding-3-small',
             input: text,
           }),
         });
