@@ -30,6 +30,8 @@ import { configureDatabaseSettings, loadEnvironment } from '../utils/get-config'
 //import { handleError } from '../utils/handle-error';
 import { installPlugin } from '../utils/install-plugin';
 import { displayBanner } from '../displayBanner';
+import { worldRouter } from '../server/api/world';
+import { UUID } from 'node:crypto';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -113,9 +115,12 @@ export async function trainAgent(
     dataDir?: string;
     postgresUrl?: string;
     isPluginTestMode?: boolean;
+    roomId?: UUID;
+    worldId?: UUID;
+    userId?: string;
   } = {}
 ): Promise<IAgentRuntime> {
-  console.log('trainAgent', character, server, options);
+  console.log('D112 trainAgent', character, server, options);
   character.id ??= stringToUuid(character.name);
 
   const encryptedChar = encryptedCharacter(character);
@@ -149,7 +154,8 @@ export async function trainAgent(
     try {
       // For local plugins, use regular import
       pluginModule = await import(plugin);
-      logger.debug(`Successfully loaded plugin ${plugin}`, pluginModule);
+      //logger.debug(`Successfully loaded plugin ${plugin}`, pluginModule);
+      logger.debug(`Successfully loaded plugin ${plugin}`);
     } catch (error) {
       logger.info(`Plugin ${plugin} not installed, installing into ${process.cwd()}...`);
       await installPlugin(plugin, process.cwd(), version);
@@ -243,13 +249,13 @@ export async function trainAgent(
     //...plugins,
     ...characterPlugins,
   ];
-  logger.debug('myplugins', myplugins);
+  logger.debug('myplugins', myplugins.length); // redacted leaking keys printing plugins
   const runtime = new AgentRuntime({
     character: encryptedChar,
     plugins: myplugins,
   });
 
-  logger.debug('RUNTIME', runtime);
+  //logger.debug('RUNTIME'); leaks  keys
 
   // if (init) {
   // await init(runtime);
@@ -270,9 +276,32 @@ export async function trainAgent(
   // report to console
   logger.debug(`trained ${runtime.character.name} as ${runtime.agentId}`);
 
-  const roomId = createUniqueUuid(runtime, 'default-room-training');
+  const roomId = options.roomId || createUniqueUuid(runtime, 'default-room-training');
+  const worldId = options.worldId || createUniqueUuid(runtime, 'default-world-training');
   const entityId = createUniqueUuid(runtime, 'Anon');
   const userName = 'User';
+
+  logger.info('Generating new tweet...');
+  // Ensure world exists first
+  console.log('Ensuring world exists', worldId);
+  await runtime.ensureWorldExists({
+    id: worldId,
+    name: `${runtime.character.name}'s Feed`,
+    agentId: runtime.agentId,
+    serverId: entityId,
+  });
+
+  // Ensure timeline room exists
+  console.log('Ensuring timeline room exists', roomId);
+  await runtime.ensureRoomExists({
+    id: roomId,
+    name: `${runtime.character.name}'s Feed`,
+    source: 'twitter',
+    type: ChannelType.FEED,
+    channelId: `${options.userId || 'User'}-home`,
+    serverId: options.userId || 'User',
+    worldId: worldId,
+  });
   // await runtime.ensureConnection({
   //   entityId: entityId,
   //   roomId: roomId,
@@ -313,13 +342,17 @@ export async function trainAgent(
   //   set: () => {},
   //   send: (data: any) => console.log('Response sent:', data),
   // };
+  if (!options.prompt) {
+    throw new Error('Prompt is required');
+  }
   let r = await conversation(
     runtime,
     roomId,
     entityId, // agentId,
     userName,
     //req, res
-    options.prompt ? options.prompt : 'Hello'
+    options.prompt,
+    worldId
   );
   //console.log(req, res, r);
 
@@ -441,7 +474,7 @@ const trainAgents = async (options: {
 
   // Set up server properties
   server.trainAgent = async (character) => {
-    logger.info(`training agent for character ${character.name}`);
+    logger.info(`D112 P5 training agent for character ${character.name}`);
 
     return trainAgent(character, server, options);
   };
@@ -604,7 +637,8 @@ const trainAgents = async (options: {
       character.plugins.push('@elizaos/plugin-local-ai');
     }
 
-    await trainAgent(character, server);
+    logger.warn('D112 p4, Training agent with custom character');
+    await trainAgent(character, server, options);
   } else {
     logger.debug('Train agents based on project, plugin, or custom configuration');
     if (isProject && projectModule?.default) {
@@ -631,7 +665,7 @@ const trainAgents = async (options: {
         const trainedAgents = [];
         for (const agent of agents) {
           try {
-            logger.debug(`training agent: ${agent.character.name}`);
+            logger.debug(`D112 P3 training agent: ${agent.character.name}`);
             const runtime = await trainAgent(
               agent.character,
               server,
@@ -647,14 +681,18 @@ const trainAgents = async (options: {
         }
 
         if (trainedAgents.length === 0) {
-          logger.warn('Failed to train any agents from project, falling back to custom character');
-          await trainAgent(defaultCharacter, server);
+          logger.warn(
+            'D112 p2, Failed to train any agents from project, falling back to custom character'
+          );
+          await trainAgent(defaultCharacter, server, options);
         } else {
           logger.debug(`Successfully trained ${trainedAgents.length} agents from project`);
         }
       } else {
-        logger.debug('Project found but no agents defined, falling back to custom character');
-        await trainAgent(defaultCharacter, server);
+        logger.debug(
+          'D112 P1, Project found but no agents defined, falling back to custom character'
+        );
+        await trainAgent(defaultCharacter, server, options);
       }
     } else if (isPlugin && pluginModule) {
       logger.debug(
@@ -689,15 +727,22 @@ const trainAgents = async (options: {
 
       // train the agent with the default character and our test plugin
       // We're in plugin test mode, so we should skip auto-loading embedding models
-      await trainAgent(defaultElizaCharacter, server, undefined, pluginsToLoad, {
-        isPluginTestMode: true,
-      });
+      logger.warn('D112 p0, Training agent with plugin');
+      await trainAgent(defaultElizaCharacter, server, options);
+
+      //undefined, pluginsToLoad, {
+      //isPluginTestMode: true,
+      //});
       logger.info('Character trained with plugin successfully');
     } else {
       logger.debug('When not in a project or plugin, load the default character with all plugins');
       const { character: defaultElizaCharacter } = await import('../characters/eliza');
-      logger.info('Using default Eliza character with all plugins for training');
-      await trainAgent(defaultElizaCharacter, server);
+      //  the other branches are not used.
+      logger.info(
+        'D112 p9 This is used Using default Eliza character with all plugins for training',
+        options
+      );
+      await trainAgent(defaultElizaCharacter, server, options);
     }
 
     // Display link to the client UI
@@ -746,12 +791,14 @@ export const train = new Command()
             options.characters.push(characterData);
           }
         }
+        logger.debug('D112 p11 train');
         await trainAgents(options);
       } catch (error) {
         logger.error(`Failed to load character: ${error}`);
         process.exit(1);
       }
     } else {
+      logger.debug('p10 train');
       await trainAgents(options);
     }
     // } catch (error) {

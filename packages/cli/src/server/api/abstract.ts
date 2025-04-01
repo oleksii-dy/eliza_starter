@@ -48,7 +48,14 @@ const agents: Map<UUID, IAgentRuntime> = new Map();
 //   //readonly pipe: (stream: Readable) => void;
 //   //readonly statusCode: number;
 // }
-export async function conversation(runtime: IAgentRuntime, roomId, entityId, userName, text) {
+export async function conversation(
+  runtime: IAgentRuntime,
+  roomId,
+  entityId,
+  userName,
+  text,
+  worldid
+) {
   //req: MyRequest, res: MyResponse) {
   // const agentId = validateUuid(req.params.agentId);
   // if (!agentId) {
@@ -96,6 +103,7 @@ export async function conversation(runtime: IAgentRuntime, roomId, entityId, use
   await runtime.ensureConnection({
     entityId,
     roomId,
+    worldId: worldid,
     userName: userName,
     name: userName,
     source: 'training',
@@ -143,7 +151,7 @@ export async function conversation(runtime: IAgentRuntime, roomId, entityId, use
     '[SPEECH CONVERSATION] Using LLM for response messageHandlerTemplate',
     messageHandlerTemplate
   );
-  console.log('prompt', prompt);
+  logger.debug('prompt', prompt);
   logger.debug('[SPEECH CONVERSATION] Using LLM for response prompt', prompt);
   const response = await runtime.useModel(ModelType.TEXT_LARGE, {
     prompt: prompt,

@@ -1,0 +1,1 @@
+select(.stack[] | contains("AgentRuntime.evaluate")) | {"message": (.inputArgs | join(" ")), "stack": (.stack | join(" | "))}]

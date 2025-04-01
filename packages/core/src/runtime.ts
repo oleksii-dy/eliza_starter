@@ -298,7 +298,7 @@ export class AgentRuntime implements IAgentRuntime {
    * @param plugin The plugin to register
    */
   async registerPlugin(plugin: Plugin): Promise<void> {
-    this.runtimeLogger.debug('Registering plugin', plugin);
+    this.runtimeLogger.debug('Registering plugin', plugin.name); // printing plugin exposes secrets
 
     if (!plugin) {
       this.runtimeLogger.error('*** registerPlugin plugin is undefined');
@@ -352,7 +352,7 @@ export class AgentRuntime implements IAgentRuntime {
     // Register plugin actions
     if (plugin.actions) {
       for (const action of plugin.actions) {
-        this.runtimeLogger.debug('Registering plugin action', action);
+        this.runtimeLogger.debug('Registering plugin action', action.name);
         this.registerAction(action);
       }
     }
