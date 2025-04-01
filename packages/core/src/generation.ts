@@ -292,10 +292,10 @@ function logGenerate(
         );
         elizaLogger.debug(`Found ${files.length} log files`);
 
-        if (files.length > 10) {
+        if (files.length > 100) {
             const oldFiles = files
                 .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
-                .slice(0, files.length - 10);
+                .slice(0, files.length - 100);
 
             elizaLogger.debug(
                 `Attempting to delete ${oldFiles.length} old files`
