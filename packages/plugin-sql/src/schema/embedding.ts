@@ -1,8 +1,8 @@
 import { sql } from 'drizzle-orm';
 import { check, foreignKey, index, pgTable, uuid, vector } from 'drizzle-orm/pg-core';
+import { VECTOR_DIMS } from '@elizaos/core';
 import { memoryTable } from './memory';
 import { numberTimestamp } from './types';
-import { VECTOR_DIMS } from '@elizaos/core';
 
 export const DIMENSION_MAP = {
   [VECTOR_DIMS.SMALL]: 'dim384',
