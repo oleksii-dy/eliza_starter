@@ -12,10 +12,10 @@ import {
   ModelType,
   type TokenizeTextParams,
   logger,
+  VECTOR_DIMS,
 } from '@elizaos/core';
 import { generateObject, generateText } from 'ai';
 import { type TiktokenModel, encodingForModel } from 'js-tiktoken';
-import { z } from 'zod';
 
 /**
  * Asynchronously tokenizes the given text based on the specified model and prompt.
@@ -120,7 +120,18 @@ export const openaiPlugin: Plugin = {
     ): Promise<number[]> => {
       const embeddingDimension = parseInt(
         runtime.getSetting('OPENAI_EMBEDDING_DIMENSIONS') ?? '1536'
-      );
+      ) as (typeof VECTOR_DIMS)[keyof typeof VECTOR_DIMS];
+
+      // Validate embedding dimension
+      if (!Object.values(VECTOR_DIMS).includes(embeddingDimension)) {
+        logger.error(
+          `Invalid embedding dimension: ${embeddingDimension}. Must be one of: ${Object.values(VECTOR_DIMS).join(', ')}`
+        );
+        throw new Error(
+          `Invalid embedding dimension: ${embeddingDimension}. Must be one of: ${Object.values(VECTOR_DIMS).join(', ')}`
+        );
+      }
+
       // Handle null input (initialization case)
       if (params === null) {
         logger.debug('Creating test embedding for initialization');
