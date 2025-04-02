@@ -21,12 +21,11 @@ describe('Wallet provider', () => {
   let walletProvider: WalletProvider;
   let pk: `0x${string}`;
   const customChains: Record<string, Chain> = {};
-  const chainName = 'myCustomChain';
 
   beforeAll(() => {
     pk = generatePrivateKey();
     // Add the custom chain to the customChains object
-    customChains[chainName] = customChain;
+    customChains['myCustomChain'] = customChain;
   });
 
   afterEach(() => {
@@ -121,8 +120,7 @@ describe('Wallet provider', () => {
       expect(bal).toEqual('0');
     });
     it('should return null if chain is not added', async () => {
-
-      const bal = await walletProvider.getWalletBalanceForChain(chainName);
+      const bal = await walletProvider.getWalletBalanceForChain('myCustomChain');
       expect(bal).toBe(null);
     });
   });
