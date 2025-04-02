@@ -118,3 +118,7 @@ flycheck_*.el
 packages/autodoc/text_objects/*
 /env
 pglite/*
+**/CPU.*.*.*.*.cpuprofile
+**/CPU.*.*.*.*.heapprofile
+**/CPU.*.*.*.*.goroutine
+

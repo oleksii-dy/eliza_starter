@@ -661,6 +661,12 @@ function collectTags(
   });
   return tagList;
 }
+
 function filter_facts(knownFacts: Memory[], tag: string, facts_cutoff: number): Memory[] {
-  throw new Error('Function not implemented.');
+  return knownFacts
+    .filter((fact) => {
+      const tags = fact.metadata?.tags || [];
+      return tags.includes(tag);
+    })
+    .slice(0, facts_cutoff);
 }

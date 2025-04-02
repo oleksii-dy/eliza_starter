@@ -14,6 +14,7 @@
     "build:cli": "turbo run build --filter=@elizaos/cli --no-cache",
     "build:twitter": "turbo run build --filter=@elizaos/plugin-twitter --no-cache",
     "build:core": "turbo run build --filter=@elizaos/core --no-cache",
+    "build:groq": "turbo run build --filter=@elizaos/plugin-groq --no-cache",
     "lint": "turbo run lint --filter=./packages/* && prettier --write . && prettier --check .",
     "pre-commit": "bun run scripts/pre-commit-lint.js",
     "release": "bun run build && bun lint && lerna publish --no-private --force-publish && bun lint",
