@@ -205,7 +205,7 @@ export class Semaphore {
  * @property {Plugin[]} plugins - The list of plugins to extend functionality.
  */
 export class AgentRuntime implements IAgentRuntime {
-  readonly #conversationLength = 32 as number;
+  readonly #conversationLength: number; // this should be a dynamic setting
   readonly agentId: UUID;
   readonly character: Character;
   public adapter!: IDatabaseAdapter;
@@ -213,6 +213,54 @@ export class AgentRuntime implements IAgentRuntime {
   readonly evaluators: Evaluator[] = [];
   readonly providers: Provider[] = [];
   readonly plugins: Plugin[] = [];
+  // getModelLimits(OBJECT_SMALL: string): unknown {
+  //   return {
+  //     OBJECT_SMALL,
+  //   };
+  // }
+  getModelLimits(modelId: string): unknown {
+    // Define the rate limits data based on the provided table
+    const modelLimits: {
+      [key: string]: {
+        rpm?: number;
+        rpd?: number;
+        tpm?: number;
+        tpd?: number;
+        ash?: number;
+        asd?: number;
+      };
+    } = {
+      'playai-tts': { rpm: 2, rpd: 500, tpm: 600, tpd: 2000 },
+      'playai-tts-arabic': { rpm: 2, rpd: 500, tpm: 600, tpd: 2000 },
+      'deepseek-r1-distill-llama-70b': { rpm: 30, rpd: 1000, tpm: 6000 },
+      'deepseek-r1-distill-qwen-32b': { rpm: 30, rpd: 1000, tpm: 6000 },
+      'distil-whisper-large-v3-en': { rpm: 20, rpd: 2000, ash: 7200, asd: 28800 },
+      'gemma2-9b-it': { rpm: 30, rpd: 14400, tpm: 15000, tpd: 500000 },
+      'llama-3.1-8b-instant': { rpm: 30, rpd: 14400, tpm: 6000, tpd: 500000 },
+      'llama-3.2-1b-preview': { rpm: 30, rpd: 7000, tpm: 7000, tpd: 500000 },
+      'llama-3.2-3b-preview': { rpm: 30, rpd: 7000, tpm: 7000, tpd: 500000 },
+      'llama-3.2-11b-vision-preview': { rpm: 30, rpd: 7000, tpm: 7000, tpd: 500000 },
+      'llama-3.2-90b-vision-preview': { rpm: 15, rpd: 3500, tpm: 7000, tpd: 250000 },
+      'llama-3.3-70b-specdec': { rpm: 30, rpd: 1000, tpm: 6000, tpd: 100000 },
+      'llama-3.3-70b-versatile': { rpm: 30, rpd: 1000, tpm: 6000, tpd: 100000 },
+      'llama-guard-3-8b': { rpm: 30, rpd: 14400, tpm: 15000, tpd: 500000 },
+      'llama3-8b-8192': { rpm: 30, rpd: 14400, tpm: 6000, tpd: 500000 },
+      'llama3-70b-8192': { rpm: 30, rpd: 14400, tpm: 6000, tpd: 500000 },
+      'mistral-saba-24b': { rpm: 30, rpd: 1000, tpm: 6000 },
+      'qwen-2.5-32b': { rpm: 30, rpd: 1000, tpm: 6000 },
+      'qwen-2.5-coder-32b': { rpm: 30, rpd: 1000, tpm: 6000 },
+      'qwen-qwq-32b': { rpm: 30, rpd: 1000, tpm: 6000 },
+      'whisper-large-v3': { rpm: 20, rpd: 2000, ash: 7200, asd: 28800 },
+      'whisper-large-v3-turbo': { rpm: 20, rpd: 2000, ash: 7200, asd: 28800 },
+    };
+
+    // Return the limits for the specified modelId, or an error object if not found
+    return modelLimits[modelId] || { error: `Model '${modelId}' not found` };
+  }
+
+  // getMemoryDepth() {
+  //   return 30;
+  // }
   events: Map<string, ((params: any) => Promise<void>)[]> = new Map();
   stateCache = new Map<
     UUID,
@@ -244,7 +292,9 @@ export class AgentRuntime implements IAgentRuntime {
     plugins?: Plugin[];
     fetch?: typeof fetch;
     adapter?: IDatabaseAdapter;
-    events?: { [key: string]: ((params: any) => void)[] };
+    events?: {
+      [key: string]: ((params: any) => void)[];
+    };
     ignoreBootstrap?: boolean;
   }) {
     // use the character id if it exists, otherwise use the agentId if it is passed in, otherwise use the character name
@@ -821,6 +871,7 @@ export class AgentRuntime implements IAgentRuntime {
   ): Promise<void> {
     for (const response of responses) {
       if (!response.content?.actions || response.content.actions.length === 0) {
+        this.runtimeLogger.debug('No action found in the response content.', response);
         this.runtimeLogger.warn('No action found in the response content.');
         continue;
       }
@@ -919,7 +970,7 @@ export class AgentRuntime implements IAgentRuntime {
     this.runtimeLogger.log('Evaluate', message);
     this.runtimeLogger.log('Evaluators', this.evaluators);
     const evaluatorPromises = this.evaluators.map(async (evaluator: Evaluator) => {
-      this.runtimeLogger.log('Evaluator', evaluator);
+      this.runtimeLogger.log('Evaluator1', evaluator);
       if (!evaluator.handler) {
         return null;
       }
@@ -955,12 +1006,14 @@ export class AgentRuntime implements IAgentRuntime {
 
     await Promise.all(
       evaluators.map(async (evaluator) => {
-        this.runtimeLogger.log('evaluator', evaluator);
+        this.runtimeLogger.log('evaluator2', evaluator);
 
         if (evaluator.handler) {
+          this.runtimeLogger.log('evaluator3 evaluator.handler', evaluator.handler);
+
           await evaluator.handler(this, message, state, {}, callback, responses);
 
-          this.runtimeLogger.log('evaluator', responses);
+          this.runtimeLogger.log('evaluator3 responses', responses);
 
           // log to database
           this.adapter.log({

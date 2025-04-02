@@ -554,6 +554,21 @@ export const groqPlugin: Plugin = {
     },
     [ModelType.OBJECT_SMALL]: async (runtime, params: ObjectGenerationParams) => {
       logger.debug('ModelType.OBJECT_SMALL.prompt:', params.prompt);
+
+      // Rough token estimation (e.g., 1 token ≈ 4 characters)
+      const promptLength = params.prompt.length;
+      const estimatedTokens = Math.ceil(promptLength / 4);
+      const tokenLimit = 6000; // Adjust based on your actual TPM limit
+
+      if (estimatedTokens > tokenLimit) {
+        logger.warn(`Prompt exceeds token limit: ${estimatedTokens} > ${tokenLimit}`);
+        throw new Error(
+          `Prompt too large: ${estimatedTokens} tokens exceed the ${tokenLimit} TPM limit. Please shorten your prompt.`
+        );
+      } else {
+        logger.debug(`Prompt under token limit: ${estimatedTokens} < ${tokenLimit}`);
+      }
+      logger.debug('ModelType.OBJECT_SMALL.params:', params);
       const baseURL = getCloudflareGatewayBaseURL(runtime, 'groq');
       const groq = createGroq({
         apiKey: runtime.getSetting('GROQ_API_KEY'),

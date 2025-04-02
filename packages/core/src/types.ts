@@ -750,6 +750,7 @@ export interface IDatabaseAdapter {
     end?: number;
   }): Promise<Memory[]>;
 
+  //getMemoryDepth(): number; // the count parameter of getMemories
   getMemoryById(id: UUID): Promise<Memory | null>;
 
   getMemoriesByIds(ids: UUID[], tableName?: string): Promise<Memory[]>;
@@ -961,7 +962,17 @@ export type CacheOptions = {
   expires?: number;
 };
 
+export type ModelLimits = {
+  rpm?: number;
+  rpd?: number;
+  tpm?: number;
+  tpd?: number;
+  ash?: number;
+  asd?: number;
+};
+
 export interface IAgentRuntime extends IDatabaseAdapter {
+  getModelLimits(modelId: string): ModelLimits;
   // Properties
   agentId: UUID;
   character: Character;
