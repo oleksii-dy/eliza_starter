@@ -284,12 +284,26 @@ export async function trainAgent(
   logger.info('Generating new tweet...');
   // Ensure world exists first
   console.log('Ensuring world exists', worldId);
-  await runtime.ensureWorldExists({
+
+  const world = {
     id: worldId,
     name: `${runtime.character.name}'s Feed`,
     agentId: runtime.agentId,
     serverId: entityId,
-  });
+    metadata: {
+      ownership: { ownerId: entityId },
+    },
+  };
+  await runtime.ensureWorldExists(world);
+  await runtime.updateWorld(world);
+
+  // // hack!
+  // await runtime.ensureWorldExists({
+  //   id: entityId,
+  //   name: `${runtime.character.name}'s Feed`,
+  //   agentId: runtime.agentId,
+  //   serverId: entityId,
+  // });
 
   // Ensure timeline room exists
   console.log('Ensuring timeline room exists', roomId);

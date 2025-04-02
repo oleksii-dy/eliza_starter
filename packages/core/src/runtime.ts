@@ -236,7 +236,11 @@ export class AgentRuntime implements IAgentRuntime {
       'deepseek-r1-distill-qwen-32b': { rpm: 30, rpd: 1000, tpm: 6000 },
       'distil-whisper-large-v3-en': { rpm: 20, rpd: 2000, ash: 7200, asd: 28800 },
       'gemma2-9b-it': { rpm: 30, rpd: 14400, tpm: 15000, tpd: 500000 },
+
+      // HACK - this is a hack to get around the fact that the model name OBJECT_SMALL is a reference
+      OBJECT_SMALL: { rpm: 30, rpd: 14400, tpm: 6000, tpd: 500000 },
       'llama-3.1-8b-instant': { rpm: 30, rpd: 14400, tpm: 6000, tpd: 500000 },
+
       'llama-3.2-1b-preview': { rpm: 30, rpd: 7000, tpm: 7000, tpd: 500000 },
       'llama-3.2-3b-preview': { rpm: 30, rpd: 7000, tpm: 7000, tpd: 500000 },
       'llama-3.2-11b-vision-preview': { rpm: 30, rpd: 7000, tpm: 7000, tpd: 500000 },
