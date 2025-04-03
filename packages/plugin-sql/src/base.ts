@@ -2029,32 +2029,37 @@ export abstract class BaseDrizzleAdapter<
    * @returns {Promise<boolean>} A Promise that resolves to a boolean indicating whether the cache value was set successfully.
    */
   async setCache<T>(key: string, value: T): Promise<boolean> {
+    if (value == undefined) {
+      throw Error('need a value 1');
+    }
+    console.log('SetCache', 'agentid', this.agentId, 'key', key, 'value', value);
     return this.withDatabase(async () => {
-      try {
-        await this.db.transaction(async (tx) => {
-          await tx
-            .insert(cacheTable)
-            .values({
-              key: key,
-              agentId: this.agentId,
+      //try {
+      await this.db.transaction(async (tx) => {
+        console.log('SetCache on conflict update', 'key', key, 'value', value);
+        await tx
+          .insert(cacheTable)
+          .values({
+            key: key,
+            agentId: this.agentId,
+            value: value,
+          })
+          .onConflictDoUpdate({
+            target: [cacheTable.key, cacheTable.agentId],
+            set: {
               value: value,
-            })
-            .onConflictDoUpdate({
-              target: [cacheTable.key, cacheTable.agentId],
-              set: {
-                value: value,
-              },
-            });
-        });
-        return true;
-      } catch (error) {
-        logger.error('Error setting cache', {
-          error: error instanceof Error ? error.message : String(error),
-          key: key,
-          agentId: this.agentId,
-        });
-        return false;
-      }
+            },
+          });
+      });
+      return true;
+      // } catch (error) {
+      //   logger.error('Error setting cache', {
+      //     error: error instanceof Error ? error.message : String(error),
+      //     key: key,
+      //     agentId: this.agentId,
+      //   });
+      //   return false;
+      // }
     });
   }
 

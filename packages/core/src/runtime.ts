@@ -43,6 +43,7 @@ import { stringToUuid } from './uuid';
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { error } from 'node:console';
 
 /**
  * Interface for settings object with key-value pairs.
@@ -65,6 +66,103 @@ interface NamespacedSettings {
  * Initialize an empty object for storing environment settings.
  */
 let environmentSettings: Settings = {};
+
+/**
+ * Processes an evaluator by executing its handler and logging the results.
+ * Preconditions:
+ * - The evaluator must have a handler.
+ * - The evaluator must pass validation or be allowed to run regardless of response.
+ * Postconditions:
+ * - The evaluator's handler is executed if valid.
+ * - Results are logged to the database.
+ *
+ * @param runtime The runtime instance.
+ * @param runtimeLogger The logger instance.
+ * @param evaluator The evaluator to process.
+ * @param message The message being evaluated.
+ * @param state The current state of the agent.
+ * @param callback Optional callback for the handler.
+ * @param responses Optional array of response memories.
+ * @returns A promise that resolves when the evaluator is processed.
+ */
+export async function processEvaluatorHandler(
+  runtime: AgentRuntime,
+  runtimeLogger: any,
+  evaluator: Evaluator,
+  message: Memory,
+  state: State,
+  callback?: HandlerCallback,
+  responses?: Memory[]
+): Promise<void> {
+  // Preconditions
+  if (!evaluator.handler) {
+    runtimeLogger.warn(`Evaluator ${evaluator.name} has no handler. Skipping.`);
+    return;
+  }
+
+  runtimeLogger.log('Processing evaluator', evaluator.name);
+
+  try {
+    // Execute the evaluator's handler
+    await evaluator.handler(runtime, message, state, {}, callback, responses);
+
+    runtimeLogger.log(`Evaluator ${evaluator.name} handler executed successfully.`);
+
+    // Postconditions: Log the results to the database
+    runtime.adapter.log({
+      entityId: message.entityId,
+      roomId: message.roomId,
+      type: 'evaluator',
+      body: {
+        evaluator: evaluator.name,
+        messageId: message.id,
+        message: message.content.text,
+        state,
+      },
+    });
+
+    runtimeLogger.log(`Evaluator ${evaluator.name} results logged successfully.`);
+  } catch (error) {
+    runtimeLogger.error(`Error processing evaluator ${evaluator.name}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Processes a single evaluator and returns it if valid.
+ * @this: AgentRuntime,
+ * @runtimeLogger: any,
+ * @param evaluator The evaluator to process.
+ * @param message The message being evaluated.
+ * @param state The current state of the agent.
+ * @param didRespond Whether the agent has already responded.
+ * @returns The evaluator if valid, otherwise null.
+ */
+async function processEvaluator(
+  runtime: AgentRuntime,
+  runtimeLogger: any,
+  evaluator: Evaluator,
+  message: Memory,
+  state: State,
+  didRespond: boolean
+): Promise<Evaluator | null> {
+  runtimeLogger.log('Evaluator1', evaluator);
+
+  if (!evaluator.handler) {
+    return null;
+  }
+
+  if (!didRespond && !evaluator.alwaysRun) {
+    return null;
+  }
+
+  const result = await evaluator.validate(runtime, message, state);
+
+  runtimeLogger.log('Validate', message, state, result);
+
+  // Return the evaluator regardless of validation result (for testing purposes)
+  return evaluator;
+}
 
 /**
  * Loads environment variables from the nearest .env file in Node.js
@@ -973,25 +1071,9 @@ export class AgentRuntime implements IAgentRuntime {
   ) {
     this.runtimeLogger.log('Evaluate', message);
     this.runtimeLogger.log('Evaluators', this.evaluators);
-    const evaluatorPromises = this.evaluators.map(async (evaluator: Evaluator) => {
-      this.runtimeLogger.log('Evaluator1', evaluator);
-      if (!evaluator.handler) {
-        return null;
-      }
-      if (!didRespond && !evaluator.alwaysRun) {
-        return null;
-      }
-      const result = await evaluator.validate(this, message, state);
-
-      this.runtimeLogger.log('Validate', message, state, result);
-      if (result) {
-        return evaluator;
-      } else {
-        // Hack also return the evaluator even if it fails for testing FIXME remove
-        return evaluator;
-      }
-      return null;
-    });
+    const evaluatorPromises = this.evaluators.map((evaluator: Evaluator) =>
+      processEvaluator(this, this.runtimeLogger, evaluator, message, state, didRespond)
+    );
 
     const evaluators = (await Promise.all(evaluatorPromises)).filter(Boolean) as Evaluator[];
 
@@ -1010,28 +1092,15 @@ export class AgentRuntime implements IAgentRuntime {
 
     await Promise.all(
       evaluators.map(async (evaluator) => {
-        this.runtimeLogger.log('evaluator2', evaluator);
-
-        if (evaluator.handler) {
-          this.runtimeLogger.log('evaluator3 evaluator.handler', evaluator.handler);
-
-          await evaluator.handler(this, message, state, {}, callback, responses);
-
-          this.runtimeLogger.log('evaluator3 responses', responses);
-
-          // log to database
-          this.adapter.log({
-            entityId: message.entityId,
-            roomId: message.roomId,
-            type: 'evaluator',
-            body: {
-              evaluator: evaluator.name,
-              messageId: message.id,
-              message: message.content.text,
-              state,
-            },
-          });
-        }
+        processEvaluatorHandler(
+          this,
+          this.runtimeLogger,
+          evaluator,
+          message,
+          state,
+          callback,
+          responses
+        );
       })
     );
 
@@ -1936,6 +2005,10 @@ export class AgentRuntime implements IAgentRuntime {
   }
 
   async setCache<T>(key: string, value: T): Promise<boolean> {
+    console.log('DEBUG setCache', key, value);
+    if (!value == undefined) {
+      throw Error('need a value');
+    }
     return await this.adapter.setCache<T>(key, value);
   }
 

@@ -230,3 +230,10 @@ DEBUG=\* NODE_NO_WARNINGS=1 LOG_LEVEL=debug tsx ./src/index.ts cpuprof --profile
 
 DEBUG=\* NODE_NO_WARNINGS=1 LOG_LEVEL=debug tsx ./src/index.ts cpuprof --profile ./CPU.20250331.153438.803523.0.001.cpuprofile > report.txt
 node --cpu-prof ./dist/index.js cpuprof --profile ./CPU.20250331.153438.803523.0.001.cpuprofile > report2.txt
+
+cd packages/cli
+
+bun run build:core
+bun run build:cli
+bun run build
+bun run train train > train_log.txt

@@ -389,6 +389,16 @@ async function process_reflection(
 }
 
 async function handler(runtime: IAgentRuntime, message: Memory, state?: State) {
+  const ret = await reflection_handler(runtime, message, state);
+  console.log(ret);
+  return ret;
+}
+
+async function reflection_handler(runtime: IAgentRuntime, message: Memory, state?: State) {
+  if (message.id == undefined) {
+    throw Error('message id cannot be null');
+  }
+
   const { agentId, roomId } = message;
 
   // Run all queries in parallel
@@ -425,6 +435,7 @@ async function handler(runtime: IAgentRuntime, message: Memory, state?: State) {
     reflections.push(reflection);
     await process_reflection(reflection, agentId, roomId, runtime, entities, existingRelationships);
   }
+  console.log('Message', message);
   await runtime.setCache<string>(`${message.roomId}-reflection-last-processed`, message.id);
 
   return reflections;
