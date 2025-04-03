@@ -102,6 +102,240 @@ export async function fetchMediaData(attachments: Media[]): Promise<MediaData[]>
   );
 }
 
+async function messageReceivedHandlerFunction(runtime, message, callback, onComplete) {
+  if (message.id == undefined) {
+    throw Error('undefined message id');
+  }
+  console.log('Message ID', message.id);
+  // Generate a new response ID
+  const responseId = v4();
+  // Get or create the agent-specific map
+  if (!latestResponseIds.has(runtime.agentId)) {
+    latestResponseIds.set(runtime.agentId, new Map<string, string>());
+  }
+  const agentResponses = latestResponseIds.get(runtime.agentId)!;
+
+  // Set this as the latest response ID for this agent+room
+  agentResponses.set(message.roomId, responseId);
+
+  // Generate a unique run ID for tracking this message handler execution
+  const runId = asUUID(v4());
+  const startTime = Date.now();
+
+  // Emit run started event
+  await runtime.emitEvent(EventType.RUN_STARTED, {
+    runtime,
+    runId,
+    messageId: message.id,
+    roomId: message.roomId,
+    entityId: message.entityId,
+    startTime,
+    status: 'started',
+    source: 'messageHandler',
+  });
+
+  // Set up timeout monitoring
+  //const timeoutDuration = 60 * 60 * 1000; // 1 hour
+  //let timeoutId: NodeJS.Timeout;
+
+  // const timeoutPromise = new Promise<never>((_, reject) => {
+  //   timeoutId = setTimeout(async () => {
+  //     await runtime.emitEvent(EventType.RUN_TIMEOUT, {
+  //       runtime,
+  //       runId,
+  //       messageId: message.id,
+  //       roomId: message.roomId,
+  //       entityId: message.entityId,
+  //       startTime,
+  //       status: 'timeout',
+  //       endTime: Date.now(),
+  //       duration: Date.now() - startTime,
+  //       error: 'Run exceeded 60 minute timeout',
+  //       source: 'messageHandler',
+  //     });
+  //     reject(new Error('Run exceeded 60 minute timeout'));
+  //   }, timeoutDuration);
+  // });
+
+  const processingPromise = (async () => {
+    processingPromiseHandler(
+      message,
+      runtime,
+      agentResponses,
+      responseId,
+      callback,
+      onComplete,
+      runId,
+      startTime
+    );
+  })();
+
+  //try {
+  //  await Promise.race([processingPromise, timeoutPromise]);
+  //} finally {
+  //  clearTimeout(timeoutId);
+  //}
+}
+
+async function processingPromiseHandler(
+  message,
+  runtime,
+  agentResponses,
+  responseId,
+  callback,
+  onComplete,
+  runId,
+  startTime
+) {
+  try {
+    if (message.entityId === runtime.agentId) {
+      throw new Error('Message is from the agent itself');
+    }
+
+    // First, save the incoming message
+    await Promise.all([
+      runtime.addEmbeddingToMemory(message),
+      runtime.createMemory(message, 'messages'),
+    ]);
+
+    const agentUserState = await runtime.getParticipantUserState(message.roomId, runtime.agentId);
+
+    if (
+      agentUserState === 'MUTED' &&
+      !message.content.text?.toLowerCase().includes(runtime.character.name.toLowerCase())
+    ) {
+      logger.debug('Ignoring muted room');
+      return;
+    }
+
+    let state = await runtime.composeState(message, [
+      'PROVIDERS',
+      'SHOULD_RESPOND',
+      'CHARACTER',
+      'RECENT_MESSAGES',
+      'ENTITIES',
+    ]);
+
+    const shouldRespondPrompt = composePromptFromState({
+      state,
+      template: runtime.character.templates?.shouldRespondTemplate || shouldRespondTemplate,
+    });
+
+    logger.debug(
+      `*** Should Respond Prompt for ${runtime.character.name} ***\n`,
+      shouldRespondPrompt
+    );
+
+    const response = await runtime.useModel(ModelType.TEXT_SMALL, {
+      prompt: shouldRespondPrompt,
+    });
+
+    logger.debug(`*** Should Respond Response for ${runtime.character.name} ***\n`, response);
+
+    const responseObject = parseJSONObjectFromText(response);
+
+    const providers = responseObject.providers as string[] | undefined;
+
+    const shouldRespond = responseObject?.action && responseObject.action === 'RESPOND';
+
+    state = await runtime.composeState(message, null, providers);
+
+    let responseMessages: Memory[] = [];
+
+    if (shouldRespond) {
+      const prompt = composePromptFromState({
+        state,
+        template: runtime.character.templates?.messageHandlerTemplate || messageHandlerTemplate,
+      });
+
+      let responseContent: Content | null = null;
+
+      // Retry if missing required fields
+      let retries = 0;
+      const maxRetries = 3;
+      while (retries < maxRetries && (!responseContent?.thought || !responseContent?.actions)) {
+        const response = await runtime.useModel(ModelType.TEXT_SMALL, {
+          prompt,
+        });
+
+        responseContent = parseJSONObjectFromText(response) as Content;
+
+        retries++;
+        if (!responseContent?.thought && !responseContent?.actions) {
+          logger.warn('*** Missing required fields, retrying... ***');
+        }
+      }
+
+      // Check if this is still the latest response ID for this agent+room
+      const currentResponseId = agentResponses.get(message.roomId);
+      if (currentResponseId !== responseId) {
+        logger.info(
+          `Response discarded - newer message being processed for agent: ${runtime.agentId}, room: ${message.roomId}`
+        );
+        return;
+      }
+
+      if (responseContent) {
+        responseContent.inReplyTo = createUniqueUuid(runtime, message.id);
+
+        responseMessages = [
+          {
+            id: asUUID(v4()),
+            entityId: runtime.agentId,
+            agentId: runtime.agentId,
+            content: responseContent,
+            roomId: message.roomId,
+            createdAt: Date.now(),
+          },
+        ];
+
+        callback(responseContent);
+      }
+
+      // Clean up the response ID
+      agentResponses.delete(message.roomId);
+      if (agentResponses.size === 0) {
+        latestResponseIds.delete(runtime.agentId);
+      }
+
+      await runtime.processActions(message, responseMessages, state, callback);
+    }
+    onComplete?.();
+    await runtime.evaluate(message, state, shouldRespond, callback, responseMessages);
+
+    // Emit run ended event on successful completion
+    await runtime.emitEvent(EventType.RUN_ENDED, {
+      runtime,
+      runId,
+      messageId: message.id,
+      roomId: message.roomId,
+      entityId: message.entityId,
+      startTime,
+      status: 'completed',
+      endTime: Date.now(),
+      duration: Date.now() - startTime,
+      source: 'messageHandler',
+    });
+  } catch (error) {
+    onComplete?.();
+    // Emit run ended event with error
+    await runtime.emitEvent(EventType.RUN_ENDED, {
+      runtime,
+      runId,
+      messageId: message.id,
+      roomId: message.roomId,
+      entityId: message.entityId,
+      startTime,
+      status: 'completed',
+      endTime: Date.now(),
+      duration: Date.now() - startTime,
+      error: error.message,
+      source: 'messageHandler',
+    });
+    throw error;
+  }
+}
+
 /**
  * Handles incoming messages and generates responses based on the provided runtime and message information.
  *
@@ -165,153 +399,16 @@ const messageReceivedHandler = async ({
   });
 
   const processingPromise = (async () => {
-    try {
-      if (message.entityId === runtime.agentId) {
-        throw new Error('Message is from the agent itself');
-      }
-
-      // First, save the incoming message
-      await Promise.all([
-        runtime.addEmbeddingToMemory(message),
-        runtime.createMemory(message, 'messages'),
-      ]);
-
-      const agentUserState = await runtime.getParticipantUserState(message.roomId, runtime.agentId);
-
-      if (
-        agentUserState === 'MUTED' &&
-        !message.content.text?.toLowerCase().includes(runtime.character.name.toLowerCase())
-      ) {
-        logger.debug('Ignoring muted room');
-        return;
-      }
-
-      let state = await runtime.composeState(message, [
-        'PROVIDERS',
-        'SHOULD_RESPOND',
-        'CHARACTER',
-        'RECENT_MESSAGES',
-        'ENTITIES',
-      ]);
-
-      const shouldRespondPrompt = composePromptFromState({
-        state,
-        template: runtime.character.templates?.shouldRespondTemplate || shouldRespondTemplate,
-      });
-
-      logger.debug(
-        `*** Should Respond Prompt for ${runtime.character.name} ***\n`,
-        shouldRespondPrompt
-      );
-
-      const response = await runtime.useModel(ModelType.TEXT_SMALL, {
-        prompt: shouldRespondPrompt,
-      });
-
-      logger.debug(`*** Should Respond Response for ${runtime.character.name} ***\n`, response);
-
-      const responseObject = parseJSONObjectFromText(response);
-
-      const providers = responseObject.providers as string[] | undefined;
-
-      const shouldRespond = responseObject?.action && responseObject.action === 'RESPOND';
-
-      state = await runtime.composeState(message, null, providers);
-
-      let responseMessages: Memory[] = [];
-
-      if (shouldRespond) {
-        const prompt = composePromptFromState({
-          state,
-          template: runtime.character.templates?.messageHandlerTemplate || messageHandlerTemplate,
-        });
-
-        let responseContent: Content | null = null;
-
-        // Retry if missing required fields
-        let retries = 0;
-        const maxRetries = 3;
-        while (retries < maxRetries && (!responseContent?.thought || !responseContent?.actions)) {
-          const response = await runtime.useModel(ModelType.TEXT_SMALL, {
-            prompt,
-          });
-
-          responseContent = parseJSONObjectFromText(response) as Content;
-
-          retries++;
-          if (!responseContent?.thought && !responseContent?.actions) {
-            logger.warn('*** Missing required fields, retrying... ***');
-          }
-        }
-
-        // Check if this is still the latest response ID for this agent+room
-        const currentResponseId = agentResponses.get(message.roomId);
-        if (currentResponseId !== responseId) {
-          logger.info(
-            `Response discarded - newer message being processed for agent: ${runtime.agentId}, room: ${message.roomId}`
-          );
-          return;
-        }
-
-        if (responseContent) {
-          responseContent.inReplyTo = createUniqueUuid(runtime, message.id);
-
-          responseMessages = [
-            {
-              id: asUUID(v4()),
-              entityId: runtime.agentId,
-              agentId: runtime.agentId,
-              content: responseContent,
-              roomId: message.roomId,
-              createdAt: Date.now(),
-            },
-          ];
-
-          callback(responseContent);
-        }
-
-        // Clean up the response ID
-        agentResponses.delete(message.roomId);
-        if (agentResponses.size === 0) {
-          latestResponseIds.delete(runtime.agentId);
-        }
-
-        await runtime.processActions(message, responseMessages, state, callback);
-      }
-      onComplete?.();
-      await runtime.evaluate(message, state, shouldRespond, callback, responseMessages);
-
-      // Emit run ended event on successful completion
-      await runtime.emitEvent(EventType.RUN_ENDED, {
-        runtime,
-        runId,
-        messageId: message.id,
-        roomId: message.roomId,
-        entityId: message.entityId,
-        startTime,
-        status: 'completed',
-        endTime: Date.now(),
-        duration: Date.now() - startTime,
-        source: 'messageHandler',
-      });
-    } catch (error) {
-      onComplete?.();
-      // Emit run ended event with error
-      await runtime.emitEvent(EventType.RUN_ENDED, {
-        runtime,
-        runId,
-        messageId: message.id,
-        roomId: message.roomId,
-        entityId: message.entityId,
-        startTime,
-        status: 'completed',
-        endTime: Date.now(),
-        duration: Date.now() - startTime,
-        error: error.message,
-        source: 'messageHandler',
-      });
-      throw error;
-    }
+    processingPromiseHandler(
+      message,
+      runtime,
+      agentResponses,
+      responseId,
+      callback,
+      onComplete,
+      runId,
+      startTime
+    );
   })();
 
   try {

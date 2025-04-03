@@ -40,6 +40,7 @@
     "build:core": "cd .. && bun run build:core",
     "build:groq": "cd .. && bun run build:groq",
     "build:sql": "cd .. && turbo run build --filter=@elizaos/plugin-sql --no-cache",
+    "build:all": "cd .. && turbo run build --filter=@elizaos/plugin-sql --filter=@elizaos/plugin-groq --filter=@elizaos/core --no-cache",
     "train": "bun run dist/index.js",
     "train-debug": "bun run --inspect-brk=192.168.1.90:6299 dist/index.js",
     "build": "tsup && bun run src/scripts/copy-client-dist.ts && bun run src/scripts/copy-templates.ts && bun run src/scripts/copy-drizzle.ts",

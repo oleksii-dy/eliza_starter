@@ -370,8 +370,10 @@ export async function trainAgent(
   );
   //console.log(req, res, r);
 
-  //  let uuid = 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6';
+  const messageId = options.roomId || createUniqueUuid(runtime, 'test-message-1');
+  //let uuid = createUniqueUuid()
   let message: Memory = {
+    id: messageId,
     entityId: entityId,
     content: {
       text: 'Post Tweet',

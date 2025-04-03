@@ -6,14 +6,13 @@ import { composePrompt } from '../prompts';
 import {
   type Entity,
   type Evaluator,
-  type IAgentRuntime,
   type Memory,
   type ModelLimits,
   ModelType,
   type State,
   type UUID,
 } from '../types';
-import { Relationship } from '@elizaos/core';
+import { AgentRuntime, Relationship } from '@elizaos/core';
 
 /**
  * Template string for generating Agent Reflection, Extracting Facts, and Relationships.
@@ -249,7 +248,7 @@ async function* generatePrompts(
   knownFacts: Memory[],
   entities: Entity[],
   existingRelationships: Relationship[],
-  runtime: IAgentRuntime,
+  runtime: AgentRuntime,
   reflectionTemplates: string[]
 ) {
   {
@@ -311,7 +310,7 @@ async function process_reflection(
   reflection: any,
   agentId: UUID,
   roomId: UUID,
-  runtime: IAgentRuntime,
+  runtime: AgentRuntime,
   entities: Entity[],
   existingRelationships: Relationship[]
 ) {
@@ -388,13 +387,14 @@ async function process_reflection(
   }
 }
 
-async function handler(runtime: IAgentRuntime, message: Memory, state?: State) {
+async function handler(runtime: AgentRuntime, message: Memory, state?: State) {
   const ret = await reflection_handler(runtime, message, state);
   console.log(ret);
   return ret;
 }
 
-async function reflection_handler(runtime: IAgentRuntime, message: Memory, state?: State) {
+async function reflection_handler(runtime: AgentRuntime, message: Memory, state?: State) {
+  console.log('Evaluate Mesage ID', message.id);
   if (message.id == undefined) {
     throw Error('message id cannot be null');
   }
@@ -418,7 +418,7 @@ async function reflection_handler(runtime: IAgentRuntime, message: Memory, state
   const reflections = [];
 
   const limits = runtime.getModelLimits(ModelType.OBJECT_SMALL);
-  logger.debug('limits', limits);
+  console.debug('limits', limits);
 
   for await (const reflection of generatePrompts(
     limits,
@@ -441,32 +441,34 @@ async function reflection_handler(runtime: IAgentRuntime, message: Memory, state
   return reflections;
 }
 
+async function validateFunction(runtime: AgentRuntime, message: Memory): Promise<boolean> {
+  const lastMessageId = await runtime.getCache<string>(
+    `${message.roomId}-reflection-last-processed`
+  );
+  const messages = await runtime.getMemories({
+    tableName: 'messages',
+    roomId: message.roomId,
+    count: runtime.getConversationLength(),
+  });
+
+  if (lastMessageId) {
+    const lastMessageIndex = messages.findIndex((msg) => msg.id === lastMessageId);
+    if (lastMessageIndex !== -1) {
+      messages.splice(0, lastMessageIndex + 1);
+    }
+  }
+
+  const reflectionInterval = Math.ceil(runtime.getConversationLength() / 4);
+
+  logger.debug('Reflection', reflectionInterval, messages, lastMessageId);
+
+  return messages.length > reflectionInterval;
+}
+
 export const reflectionEvaluator: Evaluator = {
   name: 'REFLECTION',
   similes: ['REFLECT', 'SELF_REFLECT', 'EVALUATE_INTERACTION', 'ASSESS_SITUATION'],
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-    const lastMessageId = await runtime.getCache<string>(
-      `${message.roomId}-reflection-last-processed`
-    );
-    const messages = await runtime.getMemories({
-      tableName: 'messages',
-      roomId: message.roomId,
-      count: runtime.getConversationLength(),
-    });
-
-    if (lastMessageId) {
-      const lastMessageIndex = messages.findIndex((msg) => msg.id === lastMessageId);
-      if (lastMessageIndex !== -1) {
-        messages.splice(0, lastMessageIndex + 1);
-      }
-    }
-
-    const reflectionInterval = Math.ceil(runtime.getConversationLength() / 4);
-
-    logger.debug('Reflection', reflectionInterval, messages, lastMessageId);
-
-    return messages.length > reflectionInterval;
-  },
+  validate: validateFunction,
   description:
     'Generate a self-reflective thought on the conversation, then extract facts and relationships between entities in the conversation.',
   handler,

@@ -1069,6 +1069,10 @@ export class AgentRuntime implements IAgentRuntime {
     callback?: HandlerCallback,
     responses?: Memory[]
   ) {
+    if (message.id == undefined) {
+      throw Error('message id cannot be null 2');
+    }
+    this.runtimeLogger.log('Evaluate Mesage ID', message.id);
     this.runtimeLogger.log('Evaluate', message);
     this.runtimeLogger.log('Evaluators', this.evaluators);
     const evaluatorPromises = this.evaluators.map((evaluator: Evaluator) =>
@@ -1085,6 +1089,7 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     this.runtimeLogger.log('Message', message);
+    this.runtimeLogger.log('Message ID:', message.id);
 
     state = await this.composeState(message, ['RECENT_MESSAGES', 'EVALUATORS']);
 

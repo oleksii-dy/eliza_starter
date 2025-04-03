@@ -249,6 +249,7 @@ export interface MessageExample {
  */
 export type Handler = (
   runtime: IAgentRuntime,
+  // runtimeLogger: any,
   message: Memory,
   state?: State,
   options?: { [key: string]: unknown },
