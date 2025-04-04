@@ -1,3 +1,5 @@
+require('source-map-support').install();
+
 import { RawSourceMap } from 'source-map';
 import { SourceNode } from 'source-map';
 
