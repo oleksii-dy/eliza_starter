@@ -7,6 +7,7 @@ import {
   type Memory,
   type UUID,
   createUniqueUuid,
+  instrument,
   logger,
   parseBooleanFromText,
   truncateToCompleteSentence,
@@ -273,6 +274,20 @@ export class TwitterPostClient {
     twitterUsername: string,
     mediaData?: MediaData[]
   ) {
+    const startTime = Date.now();
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'post_tweet',
+      event: 'post_tweet_start',
+      data: {
+        startTime,
+        textLength: tweetTextForPosting.length,
+        hasMedia: !!mediaData && mediaData.length > 0,
+        mediaCount: mediaData?.length || 0,
+      },
+    });
+
     try {
       logger.log('Posting new tweet:\n');
 
@@ -286,8 +301,37 @@ export class TwitterPostClient {
       const tweet = this.createTweetObject(result, client, twitterUsername);
 
       await this.processAndCacheTweet(runtime, client, tweet, roomId, rawTweetContent);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'post_tweet',
+        event: 'post_tweet_complete',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          tweetId: tweet.id,
+          tweetLength: tweetTextForPosting.length,
+          isNoteTweet: tweetTextForPosting.length > 280 - 1,
+          url: tweet.permanentUrl,
+        },
+      });
     } catch (error) {
       logger.error('Error sending tweet:');
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'post_tweet',
+        event: 'post_tweet_error',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          textLength: tweetTextForPosting.length,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      });
+
       throw error;
     }
   }
@@ -388,6 +432,20 @@ export class TwitterPostClient {
    * @returns {Promise<any>} The result from the Twitter API
    */
   private async postToTwitter(text: string, mediaData: MediaData[] = []): Promise<any> {
+    const startTime = Date.now();
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'api_post_tweet',
+      event: 'api_post_tweet_start',
+      data: {
+        startTime,
+        textLength: text.length,
+        hasMedia: mediaData.length > 0,
+        mediaCount: mediaData.length,
+      },
+    });
+
     try {
       // Check if this tweet is a duplicate of the last one
       const lastPost = await this.runtime.getCache<any>(
@@ -398,6 +456,20 @@ export class TwitterPostClient {
         const lastTweet = await this.client.getTweet(lastPost.id);
         if (lastTweet && lastTweet.text === text) {
           logger.warn('Tweet is a duplicate of the last post. Skipping to avoid duplicate.');
+
+          instrument.logEvent({
+            stage: 'twitter',
+            subStage: 'api_post_tweet',
+            event: 'api_post_tweet_duplicate',
+            data: {
+              startTime,
+              endTime: Date.now(),
+              duration: Date.now() - startTime,
+              textLength: text.length,
+              duplicateOfTweetId: lastPost.id,
+            },
+          });
+
           return null;
         }
       }
@@ -426,12 +498,56 @@ export class TwitterPostClient {
       const body = await result.json();
       if (!body?.data?.create_tweet?.tweet_results?.result) {
         logger.error('Error sending tweet; Bad response:', body);
+
+        instrument.logEvent({
+          stage: 'twitter',
+          subStage: 'api_post_tweet',
+          event: 'api_post_tweet_error',
+          data: {
+            startTime,
+            endTime: Date.now(),
+            duration: Date.now() - startTime,
+            textLength: text.length,
+            error: 'Bad response from Twitter API',
+            hasResponse: !!body,
+          },
+        });
+
         return null;
       }
 
-      return body.data.create_tweet.tweet_results.result;
+      const tweetResult = body.data.create_tweet.tweet_results.result;
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'api_post_tweet',
+        event: 'api_post_tweet_complete',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          textLength: text.length,
+          tweetId: tweetResult.rest_id || tweetResult.id_str || tweetResult.legacy?.id_str,
+        },
+      });
+
+      return tweetResult;
     } catch (error) {
       logger.error('Error posting to Twitter:', error);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'api_post_tweet',
+        event: 'api_post_tweet_error',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          textLength: text.length,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      });
+
       throw error;
     }
   }

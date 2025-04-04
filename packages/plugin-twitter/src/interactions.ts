@@ -9,6 +9,7 @@ import {
   ModelType,
   composePrompt,
   createUniqueUuid,
+  instrument,
   logger,
 } from '@elizaos/core';
 import type { ClientBase } from './base';
@@ -114,6 +115,17 @@ export class TwitterInteractionClient {
    * Asynchronously handles Twitter interactions by checking for mentions, processing tweets, and updating the last checked tweet ID.
    */
   async handleTwitterInteractions() {
+    const startTime = Date.now();
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'fetch_mentions',
+      event: 'fetch_mentions_start',
+      data: {
+        startTime,
+      },
+    });
+
     logger.log('Checking Twitter interactions');
 
     const twitterUsername = this.client.profile?.username;
@@ -147,6 +159,20 @@ export class TwitterInteractionClient {
         .sort((a, b) => a.id.localeCompare(b.id))
         .filter((tweet) => tweet.userId !== this.client.profile.id);
 
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'fetch_mentions',
+        event: 'fetch_mentions_complete',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          mentionCount: mentionCandidates.length,
+          uniqueTweetCount: uniqueTweetCandidates.length,
+          username: twitterUsername,
+        },
+      });
+
       // for each tweet candidate, handle the tweet
       for (const tweet of uniqueTweetCandidates) {
         if (!this.client.lastCheckedTweetId || BigInt(tweet.id) > this.client.lastCheckedTweetId) {
@@ -161,6 +187,19 @@ export class TwitterInteractionClient {
             continue;
           }
           logger.log('New Tweet found', tweet.permanentUrl);
+
+          const processMentionStartTime = Date.now();
+          instrument.logEvent({
+            stage: 'twitter',
+            subStage: 'process_mention',
+            event: 'process_mention_start',
+            data: {
+              startTime: processMentionStartTime,
+              tweetId: tweet.id,
+              url: tweet.permanentUrl,
+              username: tweet.username,
+            },
+          });
 
           const entityId = createUniqueUuid(
             this.runtime,
@@ -480,8 +519,38 @@ export class TwitterInteractionClient {
     message: Memory;
     thread: ClientTweet[];
   }) {
+    const startTime = Date.now();
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'handle_tweet',
+      event: 'handle_tweet_start',
+      data: {
+        startTime,
+        tweetId: tweet.id,
+        username: tweet.username,
+        hasThreadContext: thread.length > 0,
+        threadLength: thread.length,
+        hasPhotos: tweet.photos?.length > 0,
+        photoCount: tweet.photos?.length || 0,
+      },
+    });
+
     if (!message.content.text) {
       logger.log('Skipping Tweet with no text', tweet.id);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'handle_tweet',
+        event: 'handle_tweet_no_text',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          tweetId: tweet.id,
+        },
+      });
+
       return { text: '', actions: ['IGNORE'] };
     }
 
@@ -514,6 +583,16 @@ export class TwitterInteractionClient {
     } catch (error) {
       // Handle the error
       logger.error('Error Occured during describing image: ', error);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'handle_tweet',
+        event: 'image_description_error',
+        data: {
+          tweetId: tweet.id,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      });
     }
 
     const state = await this.runtime.composeState(message);
@@ -577,11 +656,38 @@ export class TwitterInteractionClient {
 
     // Create a callback for handling the response
     const callback: HandlerCallback = async (response: Content, tweetId?: string) => {
+      const replyStartTime = Date.now();
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'send_reply',
+        event: 'send_reply_start',
+        data: {
+          startTime: replyStartTime,
+          originalTweetId: tweet.id,
+          responseLength: response.text?.length || 0,
+        },
+      });
+
       try {
         const tweetToReplyTo = tweetId || tweet.id;
 
         if (this.isDryRun) {
           logger.info(`[DRY RUN] Would have replied to ${tweet.username} with: ${response.text}`);
+
+          instrument.logEvent({
+            stage: 'twitter',
+            subStage: 'send_reply',
+            event: 'send_reply_dry_run',
+            data: {
+              startTime: replyStartTime,
+              endTime: Date.now(),
+              duration: Date.now() - replyStartTime,
+              originalTweetId: tweet.id,
+              responseLength: response.text?.length || 0,
+            },
+          });
+
           return [];
         }
 
@@ -624,9 +730,38 @@ export class TwitterInteractionClient {
         // Save the response to memory
         await this.runtime.createMemory(responseMemory, 'messages');
 
+        instrument.logEvent({
+          stage: 'twitter',
+          subStage: 'send_reply',
+          event: 'send_reply_complete',
+          data: {
+            startTime: replyStartTime,
+            endTime: Date.now(),
+            duration: Date.now() - replyStartTime,
+            originalTweetId: tweet.id,
+            replyTweetId: responseId,
+            responseLength: response.text?.length || 0,
+          },
+        });
+
         return [responseMemory];
       } catch (error) {
         logger.error('Error replying to tweet:', error);
+
+        instrument.logEvent({
+          stage: 'twitter',
+          subStage: 'send_reply',
+          event: 'send_reply_error',
+          data: {
+            startTime: replyStartTime,
+            endTime: Date.now(),
+            duration: Date.now() - replyStartTime,
+            originalTweetId: tweet.id,
+            responseLength: response.text?.length || 0,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        });
+
         return [];
       }
     };
@@ -650,6 +785,19 @@ export class TwitterInteractionClient {
    * @returns {Promise<Tweet[]>} The conversation thread as an array of tweets.
    */
   async buildConversationThread(tweet: ClientTweet, maxReplies = 10): Promise<ClientTweet[]> {
+    const startTime = Date.now();
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'build_thread',
+      event: 'build_thread_start',
+      data: {
+        startTime,
+        tweetId: tweet.id,
+        maxReplies,
+      },
+    });
+
     const thread: ClientTweet[] = [];
     const visited: Set<string> = new Set();
 
@@ -746,6 +894,20 @@ export class TwitterInteractionClient {
 
     // Need to bind this prompt for the inner function
     await processThread.bind(this)(tweet, 0);
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'build_thread',
+      event: 'build_thread_complete',
+      data: {
+        startTime,
+        endTime: Date.now(),
+        duration: Date.now() - startTime,
+        tweetId: tweet.id,
+        maxReplies,
+        threadLength: thread.length,
+      },
+    });
 
     return thread;
   }

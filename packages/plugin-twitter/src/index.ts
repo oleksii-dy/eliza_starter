@@ -10,6 +10,7 @@ import {
   type UUID,
   type World,
   createUniqueUuid,
+  instrument,
   logger,
 } from '@elizaos/core';
 import spaceJoin from './actions/spaceJoin';
@@ -81,6 +82,18 @@ export class TwitterService extends Service {
     clientId: string,
     state: any
   ): Promise<TwitterClientInstance> {
+    const startTime = Date.now();
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'init',
+      event: 'init_start',
+      data: {
+        startTime,
+        clientId,
+      },
+    });
+
     if (runtime.getSetting('TWITTER_2FA_SECRET') === null) {
       runtime.setSetting('TWITTER_2FA_SECRET', undefined, false);
     }
@@ -89,6 +102,20 @@ export class TwitterService extends Service {
       const existingClient = this.getClient(clientId, runtime.agentId);
       if (existingClient) {
         logger.info(`Twitter client already exists for ${clientId}`);
+
+        instrument.logEvent({
+          stage: 'twitter',
+          subStage: 'init',
+          event: 'init_complete',
+          data: {
+            startTime,
+            endTime: Date.now(),
+            duration: Date.now() - startTime,
+            clientId,
+            reused: true,
+          },
+        });
+
         return existingClient;
       }
 
@@ -117,9 +144,38 @@ export class TwitterService extends Service {
       await this.emitServerJoinedEvent(runtime, client);
 
       logger.info(`Created Twitter client for ${clientId}`);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'init',
+        event: 'init_complete',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          clientId,
+          hasSpace: !!client.space,
+          username: client.client.profile?.username,
+        },
+      });
+
       return client;
     } catch (error) {
       logger.error(`Failed to create Twitter client for ${clientId}:`, error);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'init',
+        event: 'init_error',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          clientId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      });
+
       throw error;
     }
   }
