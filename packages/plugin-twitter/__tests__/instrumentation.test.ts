@@ -1,103 +1,102 @@
-import { test, expect, beforeEach, afterEach, afterAll } from 'bun:test';
-import { TwitterClientInstance } from '../index';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { TwitterClientInstance } from '../src/index';
 
-// We'll use a simpler testing approach - instead of trying to intercept all instrumentation calls,
-// we'll focus on verifying that the plugin's classes are properly initialized and usable
+// We'll use a focused approach to verify that instrumentation is properly implemented in key methods
 
-// Create mock runtime
-const mockRuntime = {
-  agentId: 'mock-agent-id',
-  getSetting: (key: string) => {
-    switch (key) {
-      case 'TWITTER_USERNAME':
-        return 'test_user';
-      case 'TWITTER_PASSWORD':
-        return 'test_password';
-      case 'TWITTER_ENABLE_POST_GENERATION':
-        return false;
-      case 'TWITTER_DRY_RUN':
-        return true;
-      default:
-        return null;
-    }
-  },
-  setSetting: () => {},
-  log: console.log,
-  error: console.error,
-  emitEvent: () => {},
-  ensureRoomExists: async () => {},
-  ensureWorldExists: async () => {},
-  ensureParticipantInRoom: async () => {},
-  ensureConnection: async () => {},
-  getCache: async () => null,
-  setCache: async () => {},
-  createMemory: async () => {},
-  getMemoryById: async () => null,
-  getModel: () => null,
-  composeState: async () => ({ values: {} }),
-  character: {
-    settings: {
-      twitter: {
-        spaces: {},
+describe('Twitter Plugin Instrumentation', () => {
+  // Create mock runtime
+  const mockRuntime = {
+    agentId: 'mock-agent-id',
+    getSetting: (key: string) => {
+      switch (key) {
+        case 'TWITTER_USERNAME':
+          return 'test_user';
+        case 'TWITTER_PASSWORD':
+          return 'test_password';
+        case 'TWITTER_ENABLE_POST_GENERATION':
+          return false;
+        case 'TWITTER_DRY_RUN':
+          return true;
+        default:
+          return null;
+      }
+    },
+    setSetting: () => {},
+    log: console.log,
+    error: console.error,
+    emitEvent: () => {},
+    ensureRoomExists: async () => {},
+    ensureWorldExists: async () => {},
+    ensureParticipantInRoom: async () => {},
+    ensureConnection: async () => {},
+    getCache: async () => null,
+    setCache: async () => {},
+    createMemory: async () => {},
+    getMemoryById: async () => null,
+    getModel: () => null,
+    composeState: async () => ({ values: {} }),
+    character: {
+      settings: {
+        twitter: {
+          spaces: {},
+        },
       },
     },
-  },
-};
+  };
 
-/**
- * Mock the client base for the TwitterPostClient
- */
-const mockClientBase = {
-  profile: {
-    id: 'mock-user-id',
-    username: 'test_user',
-    screenName: 'Test User',
-  },
-  twitterClient: {
-    sendTweet: async () => ({
-      json: async () => ({
-        data: {
-          create_tweet: {
-            tweet_results: {
-              result: {
-                rest_id: 'mock-tweet-id',
-                legacy: {
-                  full_text: 'This is a test tweet',
+  /**
+   * Mock the client base for the TwitterPostClient
+   */
+  const mockClientBase = {
+    profile: {
+      id: 'mock-user-id',
+      username: 'test_user',
+      screenName: 'Test User',
+    },
+    twitterClient: {
+      sendTweet: async () => ({
+        json: async () => ({
+          data: {
+            create_tweet: {
+              tweet_results: {
+                result: {
+                  rest_id: 'mock-tweet-id',
+                  legacy: {
+                    full_text: 'This is a test tweet',
+                  },
                 },
               },
             },
           },
+        }),
+      }),
+      getAudioSpaceById: async () => ({
+        participants: {
+          speakers: [],
+          listeners: [],
         },
       }),
-    }),
-    getAudioSpaceById: async () => ({
-      participants: {
-        speakers: [],
-        listeners: [],
-      },
-    }),
-  },
-  requestQueue: {
-    add: async (fn: Function) => fn(),
-  },
-  cacheTweet: async () => {},
-  cacheLatestCheckedTweetId: async () => {},
-  getTweet: async () => null,
-  saveRequestMessage: async () => {},
-  fetchSearchTweets: async () => ({ tweets: [], previous: null, next: null }),
-  runtime: mockRuntime,
-};
+    },
+    requestQueue: {
+      add: async (fn: Function) => fn(),
+    },
+    cacheTweet: async () => {},
+    cacheLatestCheckedTweetId: async () => {},
+    getTweet: async () => null,
+    saveRequestMessage: async () => {},
+    fetchSearchTweets: async () => ({ tweets: [], previous: null, next: null }),
+    runtime: mockRuntime,
+  };
 
-// Helper function to check if a method includes instrumentation
-function hasInstrumentation(methodFn: Function): boolean {
-  if (!methodFn) return false;
-  const src = methodFn.toString();
-  return src.includes('instrument') || src.includes('logEvent');
-}
+  // Helper function to check if a method includes instrumentation
+  function hasInstrumentation(methodFn: Function): boolean {
+    if (!methodFn) return false;
+    const src = methodFn.toString();
+    return src.includes('instrument') || src.includes('logEvent');
+  }
 
-// The test suite verifies that the Twitter client classes can be instantiated and their methods accessed
-test('Twitter instrumentation setup validation', async () => {
-  try {
+  // Test suite for instrumentation validation
+  test('should verify instrumentation coverage across client components', async () => {
     // Create the client instance
     const client = new TwitterClientInstance(mockRuntime as any, {});
 
@@ -201,13 +200,12 @@ test('Twitter instrumentation setup validation', async () => {
 
     // Validate space client if available
     if (client.space) {
-      expect(hasInstrumentation(client.space.startSpace)).toBe(true);
-      expect(hasInstrumentation(client.space.stopSpace)).toBe(true);
+      // Type assertion to avoid TypeScript errors
+      const spaceClient = client.space as any;
+      expect(hasInstrumentation(spaceClient.startSpace)).toBe(true);
+      expect(hasInstrumentation(spaceClient.stopSpace)).toBe(true);
     }
 
     console.log('\n✅ Twitter instrumentation validation completed successfully');
-  } catch (error) {
-    console.error('Test failed:', error);
-    throw error;
-  }
+  });
 });
