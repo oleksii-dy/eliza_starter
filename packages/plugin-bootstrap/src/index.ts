@@ -26,6 +26,7 @@ import {
   truncateToCompleteSentence,
   type UUID,
   type WorldPayload,
+  instrument,
 } from '@elizaos/core';
 import { v4 } from 'uuid';
 import { choiceAction } from './actions/choice';
@@ -85,27 +86,61 @@ const latestResponseIds = new Map<string, Map<string, string>>();
  * @returns {Promise<MediaData[]>} - A Promise that resolves with an array of MediaData objects.
  */
 export async function fetchMediaData(attachments: Media[]): Promise<MediaData[]> {
-  return Promise.all(
-    attachments.map(async (attachment: Media) => {
-      if (/^(http|https):\/\//.test(attachment.url)) {
-        // Handle HTTP URLs
-        const response = await fetch(attachment.url);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch file: ${attachment.url}`);
+  instrument.logEvent({
+    stage: 'media',
+    subStage: 'fetch',
+    event: 'fetch_media_data_start',
+    data: {
+      attachmentCount: attachments.length,
+    },
+  });
+
+  try {
+    const results = await Promise.all(
+      attachments.map(async (attachment: Media) => {
+        if (/^(http|https):\/\//.test(attachment.url)) {
+          // Handle HTTP URLs
+          const response = await fetch(attachment.url);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch file: ${attachment.url}`);
+          }
+          const mediaBuffer = Buffer.from(await response.arrayBuffer());
+          const mediaType = attachment.contentType || 'image/png';
+          return { data: mediaBuffer, mediaType };
         }
-        const mediaBuffer = Buffer.from(await response.arrayBuffer());
-        const mediaType = attachment.contentType || 'image/png';
-        return { data: mediaBuffer, mediaType };
-      }
-      // if (fs.existsSync(attachment.url)) {
-      //   // Handle local file paths
-      //   const mediaBuffer = await fs.promises.readFile(path.resolve(attachment.url));
-      //   const mediaType = attachment.contentType || 'image/png';
-      //   return { data: mediaBuffer, mediaType };
-      // }
-      throw new Error(`File not found: ${attachment.url}. Make sure the path is correct.`);
-    })
-  );
+        // if (fs.existsSync(attachment.url)) {
+        //   // Handle local file paths
+        //   const mediaBuffer = await fs.promises.readFile(path.resolve(attachment.url));
+        //   const mediaType = attachment.contentType || 'image/png';
+        //   return { data: mediaBuffer, mediaType };
+        // }
+        throw new Error(`File not found: ${attachment.url}. Make sure the path is correct.`);
+      })
+    );
+
+    instrument.logEvent({
+      stage: 'media',
+      subStage: 'fetch',
+      event: 'fetch_media_data_complete',
+      data: {
+        attachmentCount: attachments.length,
+        successCount: results.length,
+      },
+    });
+
+    return results;
+  } catch (error) {
+    instrument.logEvent({
+      stage: 'media',
+      subStage: 'fetch',
+      event: 'fetch_media_data_error',
+      data: {
+        attachmentCount: attachments.length,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
+    throw error;
+  }
 }
 
 /**
@@ -138,6 +173,20 @@ const messageReceivedHandler = async ({
   const runId = asUUID(v4());
   const startTime = Date.now();
 
+  instrument.logEvent({
+    stage: 'message',
+    subStage: 'handler',
+    event: 'message_handler_start',
+    data: {
+      runId: runId,
+      agentId: runtime.agentId,
+      messageId: message.id,
+      roomId: message.roomId,
+      entityId: message.entityId,
+      startTime,
+    },
+  });
+
   // Emit run started event
   await runtime.emitEvent(EventType.RUN_STARTED, {
     runtime,
@@ -156,6 +205,22 @@ const messageReceivedHandler = async ({
 
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(async () => {
+      instrument.logEvent({
+        stage: 'message',
+        subStage: 'handler',
+        event: 'message_handler_timeout',
+        data: {
+          runId: runId,
+          agentId: runtime.agentId,
+          messageId: message.id,
+          roomId: message.roomId,
+          entityId: message.entityId,
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+        },
+      });
+
       await runtime.emitEvent(EventType.RUN_TIMEOUT, {
         runtime,
         runId,
@@ -191,6 +256,18 @@ const messageReceivedHandler = async ({
         agentUserState === 'MUTED' &&
         !message.content.text?.toLowerCase().includes(runtime.character.name.toLowerCase())
       ) {
+        instrument.logEvent({
+          stage: 'message',
+          subStage: 'handler',
+          event: 'message_handler_muted',
+          data: {
+            runId: runId,
+            agentId: runtime.agentId,
+            messageId: message.id,
+            roomId: message.roomId,
+          },
+        });
+
         logger.debug('Ignoring muted room');
         return;
       }
@@ -317,6 +394,23 @@ const messageReceivedHandler = async ({
         source: 'messageHandler',
       });
     } catch (error) {
+      // At the end of the try block, add instrumentation for errors
+      instrument.logEvent({
+        stage: 'message',
+        subStage: 'handler',
+        event: 'message_handler_error',
+        data: {
+          runId: runId,
+          agentId: runtime.agentId,
+          messageId: message.id,
+          roomId: message.roomId,
+          error: error instanceof Error ? error.message : String(error),
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+        },
+      });
+
       onComplete?.();
       // Emit run ended event with error
       await runtime.emitEvent(EventType.RUN_ENDED, {
@@ -333,6 +427,22 @@ const messageReceivedHandler = async ({
         source: 'messageHandler',
       });
       throw error;
+    } finally {
+      // At the end of the function, before all the processing completes
+      instrument.logEvent({
+        stage: 'message',
+        subStage: 'handler',
+        event: 'message_handler_complete',
+        data: {
+          runId: runId,
+          agentId: runtime.agentId,
+          messageId: message.id,
+          roomId: message.roomId,
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+        },
+      });
     }
   })();
 

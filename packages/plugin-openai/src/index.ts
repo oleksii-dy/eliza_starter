@@ -13,6 +13,7 @@ import {
   type TokenizeTextParams,
   logger,
   VECTOR_DIMS,
+  instrument,
 } from '@elizaos/core';
 import { generateObject, generateText } from 'ai';
 import { type TiktokenModel, encodingForModel } from 'js-tiktoken';
@@ -25,13 +26,59 @@ import { type TiktokenModel, encodingForModel } from 'js-tiktoken';
  * @returns {number[]} - An array of tokens representing the encoded prompt.
  */
 async function tokenizeText(model: ModelTypeName, prompt: string) {
-  const modelName =
-    model === ModelType.TEXT_SMALL
-      ? (process.env.OPENAI_SMALL_MODEL ?? process.env.SMALL_MODEL ?? 'gpt-4o-mini')
-      : (process.env.LARGE_MODEL ?? 'gpt-4o');
-  const encoding = encodingForModel(modelName as TiktokenModel);
-  const tokens = encoding.encode(prompt);
-  return tokens;
+  const startTime = Date.now();
+
+  instrument.logEvent({
+    stage: 'openai',
+    subStage: 'tokenize',
+    event: 'tokenize_text_start',
+    data: {
+      model,
+      textLength: prompt.length,
+      startTime,
+    },
+  });
+
+  try {
+    const modelName =
+      model === ModelType.TEXT_SMALL
+        ? (process.env.OPENAI_SMALL_MODEL ?? process.env.SMALL_MODEL ?? 'gpt-4o-mini')
+        : (process.env.LARGE_MODEL ?? 'gpt-4o');
+    const encoding = encodingForModel(modelName as TiktokenModel);
+    const tokens = encoding.encode(prompt);
+
+    instrument.logEvent({
+      stage: 'openai',
+      subStage: 'tokenize',
+      event: 'tokenize_text_complete',
+      data: {
+        model,
+        modelName,
+        textLength: prompt.length,
+        tokenCount: tokens.length,
+        startTime,
+        endTime: Date.now(),
+        duration: Date.now() - startTime,
+      },
+    });
+
+    return tokens;
+  } catch (error) {
+    instrument.logEvent({
+      stage: 'openai',
+      subStage: 'tokenize',
+      event: 'tokenize_text_error',
+      data: {
+        model,
+        textLength: prompt.length,
+        error: error instanceof Error ? error.message : String(error),
+        startTime,
+        endTime: Date.now(),
+        duration: Date.now() - startTime,
+      },
+    });
+    throw error;
+  }
 }
 
 /**
@@ -42,12 +89,59 @@ async function tokenizeText(model: ModelTypeName, prompt: string) {
  * @returns {string} The detokenized text.
  */
 async function detokenizeText(model: ModelTypeName, tokens: number[]) {
-  const modelName =
-    model === ModelType.TEXT_SMALL
-      ? (process.env.OPENAI_SMALL_MODEL ?? process.env.SMALL_MODEL ?? 'gpt-4o-mini')
-      : (process.env.OPENAI_LARGE_MODEL ?? process.env.LARGE_MODEL ?? 'gpt-4o');
-  const encoding = encodingForModel(modelName as TiktokenModel);
-  return encoding.decode(tokens);
+  const startTime = Date.now();
+
+  instrument.logEvent({
+    stage: 'openai',
+    subStage: 'detokenize',
+    event: 'detokenize_text_start',
+    data: {
+      model,
+      tokenCount: tokens.length,
+      startTime,
+    },
+  });
+
+  try {
+    const modelName =
+      model === ModelType.TEXT_SMALL
+        ? (process.env.OPENAI_SMALL_MODEL ?? process.env.SMALL_MODEL ?? 'gpt-4o-mini')
+        : (process.env.OPENAI_LARGE_MODEL ?? process.env.LARGE_MODEL ?? 'gpt-4o');
+    const encoding = encodingForModel(modelName as TiktokenModel);
+    const text = encoding.decode(tokens);
+
+    instrument.logEvent({
+      stage: 'openai',
+      subStage: 'detokenize',
+      event: 'detokenize_text_complete',
+      data: {
+        model,
+        modelName,
+        tokenCount: tokens.length,
+        textLength: text.length,
+        startTime,
+        endTime: Date.now(),
+        duration: Date.now() - startTime,
+      },
+    });
+
+    return text;
+  } catch (error) {
+    instrument.logEvent({
+      stage: 'openai',
+      subStage: 'detokenize',
+      event: 'detokenize_text_error',
+      data: {
+        model,
+        tokenCount: tokens.length,
+        error: error instanceof Error ? error.message : String(error),
+        startTime,
+        endTime: Date.now(),
+        duration: Date.now() - startTime,
+      },
+    });
+    throw error;
+  }
 }
 
 /**
@@ -68,6 +162,17 @@ export const openaiPlugin: Plugin = {
     OPENAI_EMBEDDING_DIMENSIONS: process.env.OPENAI_EMBEDDING_DIMENSIONS,
   },
   async init(config: Record<string, string>) {
+    const startTime = Date.now();
+
+    instrument.logEvent({
+      stage: 'openai',
+      subStage: 'init',
+      event: 'plugin_init_start',
+      data: {
+        startTime,
+      },
+    });
+
     try {
       // const validatedConfig = await configSchema.parseAsync(config);
 
@@ -81,6 +186,18 @@ export const openaiPlugin: Plugin = {
         logger.warn(
           'OPENAI_API_KEY is not set in environment - OpenAI functionality will be limited'
         );
+
+        instrument.logEvent({
+          stage: 'openai',
+          subStage: 'init',
+          event: 'plugin_init_missing_api_key',
+          data: {
+            startTime,
+            endTime: Date.now(),
+            duration: Date.now() - startTime,
+          },
+        });
+
         // Return early without throwing an error
         return;
       }
@@ -105,6 +222,18 @@ export const openaiPlugin: Plugin = {
         // Continue execution instead of throwing
       }
     } catch (error) {
+      instrument.logEvent({
+        stage: 'openai',
+        subStage: 'init',
+        event: 'plugin_init_error',
+        data: {
+          error: error instanceof Error ? error.message : String(error),
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+        },
+      });
+
       // Convert to warning instead of error
       logger.warn(
         `OpenAI plugin configuration issue: ${error.errors
@@ -112,12 +241,35 @@ export const openaiPlugin: Plugin = {
           .join(', ')} - You need to configure the OPENAI_API_KEY in your environment variables`
       );
     }
+
+    instrument.logEvent({
+      stage: 'openai',
+      subStage: 'init',
+      event: 'plugin_init_complete',
+      data: {
+        startTime,
+        endTime: Date.now(),
+        duration: Date.now() - startTime,
+      },
+    });
   },
   models: {
     [ModelType.TEXT_EMBEDDING]: async (
       runtime,
       params: TextEmbeddingParams | string | null
     ): Promise<number[]> => {
+      const startTime = Date.now();
+
+      instrument.logEvent({
+        stage: 'openai',
+        subStage: 'embedding',
+        event: 'text_embedding_start',
+        data: {
+          startTime,
+          inputType: params === null ? 'null' : typeof params === 'string' ? 'string' : 'object',
+        },
+      });
+
       const embeddingDimension = parseInt(
         runtime.getSetting('OPENAI_EMBEDDING_DIMENSIONS') ?? '1536'
       ) as (typeof VECTOR_DIMS)[keyof typeof VECTOR_DIMS];
@@ -404,17 +556,35 @@ export const openaiPlugin: Plugin = {
     [ModelType.TRANSCRIPTION]: async (runtime, audioBuffer: Buffer) => {
       logger.log('audioBuffer', audioBuffer);
       const baseURL = runtime.getSetting('OPENAI_BASE_URL') ?? 'https://api.openai.com/v1';
-      const formData = new FormData();
 
-      formData.append('file', new File([audioBuffer], 'recording.mp3', { type: 'audio/mp3' }));
-      formData.append('model', 'whisper-1');
+      // Create a blob from the audioBuffer
+      const audioBlob = new Blob([audioBuffer], { type: 'audio/mp3' });
+
+      // Use a different approach to avoid FormData typing issues
+      // Create multipart form data manually
+      const boundary = `----WebKitFormBoundary${Math.random().toString(16).slice(2)}`;
+
+      const body = Buffer.concat([
+        Buffer.from(`--${boundary}\r\n`, 'utf8'),
+        Buffer.from(
+          'Content-Disposition: form-data; name="file"; filename="recording.mp3"\r\n',
+          'utf8'
+        ),
+        Buffer.from('Content-Type: audio/mp3\r\n\r\n', 'utf8'),
+        audioBuffer,
+        Buffer.from(`\r\n--${boundary}\r\n`, 'utf8'),
+        Buffer.from('Content-Disposition: form-data; name="model"\r\n\r\n', 'utf8'),
+        Buffer.from('whisper-1', 'utf8'),
+        Buffer.from(`\r\n--${boundary}--\r\n`, 'utf8'),
+      ]);
+
       const response = await fetch(`${baseURL}/audio/transcriptions`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${runtime.getSetting('OPENAI_API_KEY')}`,
-          // Note: Do not set a Content-Type header—letting fetch set it for FormData is best
+          'Content-Type': `multipart/form-data; boundary=${boundary}`,
         },
-        body: formData,
+        body: body,
       });
 
       logger.log('response', response);
