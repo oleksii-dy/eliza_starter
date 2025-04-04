@@ -1,5 +1,235 @@
+import { RawSourceMap } from 'source-map';
+import { SourceNode } from 'source-map';
+
+import { z } from 'zod';
+import { SourceMapConsumer } from 'source-map';
+
+// Define the schema for the source map
+const SourceMapSchema = z.object({
+  version: z.number(),
+  file: z.string().optional(),
+  sources: z.array(z.string()),
+  sourcesContent: z.array(z.string()).optional(),
+  names: z.array(z.string()),
+  mappings: z.string(),
+});
+
+// Define the type based on the schema
+type SourceMap = z.infer<typeof SourceMapSchema>;
+
+// Function to validate the source map using Zod
+function validateSourceMap(sourceMap: any): SourceMap {
+  return SourceMapSchema.parse(sourceMap);
+}
+
+// Function to read and parse the source map
+async function readSourceMap(sourceMapContent: string): Promise<void> {
+  // Parse the source map content as JSON
+  const sourceMapJson = JSON.parse(sourceMapContent);
+
+  // Validate the source map
+  const sourceMap = validateSourceMap(sourceMapJson);
+
+  // Create a SourceMapConsumer
+  //const consumer = await new SourceMapConsumer(sourceMap);
+
+  console.log(sourceMapContent);
+  //// Use the consumer to interact with the source map
+  //consumer.eachMapping((mapping) => {
+  //   console.log(`Generated Position: ${mapping.generatedLine}:${mapping.generatedColumn}`);
+  //   console.log(`Source: ${mapping.source}, Original Position: ${mapping.originalLine}:${mapping.originalColumn}`);
+  //   console.log(`Name: ${mapping.name}`);
+  // });
+
+  // // Destroy the consumer when done
+  // consumer.destroy();
+}
+
+//    const sourceMapContent = e.target.result as string;
+//await readSourceMap(sourceMapContent);
+
 import pino, { type LogFn, type DestinationStream } from 'pino';
 import pinoCaller from 'pino-caller';
+
+// Define the schema for IParsedCallSite
+const ParsedCallSiteSchema = z.object({
+  fileName: z.string().nullable(),
+  lineNumber: z.number().nullable(),
+  functionName: z.string().nullable(),
+  typeName: z.string().nullable(),
+  methodName: z.string().nullable(),
+  columnNumber: z.number().nullable(),
+  native: z.boolean().nullable(),
+});
+
+type IParsedCallSite = z.infer<typeof ParsedCallSiteSchema>;
+
+export function get(belowFn?: Function): NodeJS.CallSite[] {
+  const oldLimit = Error.stackTraceLimit;
+  Error.stackTraceLimit = Infinity;
+
+  const dummyObject = {};
+
+  const v8Handler = Error.prepareStackTrace;
+  Error.prepareStackTrace = function (dummyObject, v8StackTrace: NodeJS.CallSite[]) {
+    return v8StackTrace;
+  };
+  Error.captureStackTrace(dummyObject, belowFn || get);
+
+  const v8StackTrace = (dummyObject as any).stack;
+  Error.prepareStackTrace = v8Handler;
+  Error.stackTraceLimit = oldLimit;
+
+  return v8StackTrace;
+}
+
+export function parse(err: Error): IParsedCallSite[] {
+  if (!err.stack) {
+    return [];
+  }
+
+  const lines = err.stack.split('\n').slice(1);
+  return lines.map((line) => {
+    if (line.match(/^\s*[-]{4,}$/)) {
+      return createParsedCallSite({
+        fileName: line,
+        lineNumber: null,
+        functionName: null,
+        typeName: null,
+        methodName: null,
+        columnNumber: null,
+        native: null,
+      });
+    }
+
+    const lineMatch = line.match(/at (?:(.+?)\s+\()?(?:(.+?):(\d+)(?::(\d+))?|([^)]+))\)?/);
+    if (!lineMatch) {
+      return;
+    }
+
+    let object: string | null = null;
+    let method: string | null = null;
+    let functionName: string | null = null;
+    let typeName: string | null = null;
+    let methodName: string | null = null;
+    const isNative = lineMatch[5] === 'native';
+
+    if (lineMatch[1]) {
+      functionName = lineMatch[1];
+      let methodStart = functionName.lastIndexOf('.');
+      if (functionName[methodStart - 1] === '.') {
+        methodStart--;
+      }
+      if (methodStart > 0) {
+        object = functionName.substr(0, methodStart);
+        method = functionName.substr(methodStart + 1);
+        const objectEnd = object.indexOf('.Module');
+        if (objectEnd > 0) {
+          functionName = functionName.substr(objectEnd + 1);
+          object = object.substr(0, objectEnd);
+        }
+      }
+    }
+
+    if (method) {
+      typeName = object;
+      methodName = method;
+    }
+
+    if (method === '<anonymous>') {
+      methodName = null;
+      functionName = null;
+    }
+
+    const properties: IParsedCallSite = {
+      fileName: lineMatch[2] || null,
+      lineNumber: parseInt(lineMatch[3], 10) || null,
+      functionName: functionName,
+      typeName: typeName,
+      methodName: methodName,
+      columnNumber: parseInt(lineMatch[4], 10) || null,
+      native: isNative,
+    };
+
+    // Validate the properties using Zod schema
+    ParsedCallSiteSchema.parse(properties);
+
+    return createParsedCallSite(properties);
+  });
+  //.filter((callSite): callSite is IParsedCallSite => !!callSite);
+}
+
+class CallSite implements IParsedCallSite {
+  fileName: string | null;
+  lineNumber: number | null;
+  functionName: string | null;
+  typeName: string | null;
+  methodName: string | null;
+  columnNumber: number | null;
+  native: boolean | null;
+
+  constructor(properties: IParsedCallSite) {
+    for (const property in properties) {
+      this[property] = properties[property];
+    }
+  }
+
+  getThis(): string | null {
+    return null;
+  }
+
+  getTypeName(): string | null {
+    return this.typeName;
+  }
+
+  getFunctionName(): string | null {
+    return this.functionName;
+  }
+
+  getMethodName(): string | null {
+    return this.methodName;
+  }
+
+  getFileName(): string | null {
+    return this.fileName;
+  }
+
+  getLineNumber(): number | null {
+    return this.lineNumber;
+  }
+
+  getColumnNumber(): number | null {
+    return this.columnNumber;
+  }
+
+  getFunction(): Function | null {
+    return null;
+  }
+
+  getEvalOrigin(): string | null {
+    return null;
+  }
+
+  isTopLevel(): boolean {
+    return false;
+  }
+
+  isEval(): boolean {
+    return false;
+  }
+
+  isNative(): boolean {
+    return this.native || false;
+  }
+
+  isConstructor(): boolean {
+    return false;
+  }
+}
+
+function createParsedCallSite(properties: IParsedCallSite): CallSite {
+  return new CallSite(properties);
+}
 
 // function parseBooleanFromText(value: string | undefined | null): boolean {
 //   if (!value) return false;
