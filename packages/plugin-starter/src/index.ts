@@ -12,6 +12,7 @@ import {
   Service,
   type State,
   logger,
+  instrument,
 } from '@elizaos/core';
 import { z } from 'zod';
 
@@ -54,6 +55,15 @@ const helloWorldAction: Action = {
 
   validate: async (_runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
     // Always valid
+    instrument.logEvent({
+      stage: 'action',
+      subStage: 'validate',
+      event: 'hello_world_validate',
+      data: {
+        actionName: 'HELLO_WORLD',
+        messageId: _message.id,
+      },
+    });
     return true;
   },
 
@@ -68,6 +78,16 @@ const helloWorldAction: Action = {
     try {
       logger.info('Handling HELLO_WORLD action');
 
+      instrument.logEvent({
+        stage: 'action',
+        subStage: 'handler',
+        event: 'hello_world_handler_start',
+        data: {
+          actionName: 'HELLO_WORLD',
+          messageId: message.id,
+        },
+      });
+
       // Simple response content
       const responseContent: Content = {
         text: 'hello world!',
@@ -78,8 +98,29 @@ const helloWorldAction: Action = {
       // Call back with the hello world message
       await callback(responseContent);
 
+      instrument.logEvent({
+        stage: 'action',
+        subStage: 'handler',
+        event: 'hello_world_handler_complete',
+        data: {
+          actionName: 'HELLO_WORLD',
+          messageId: message.id,
+        },
+      });
+
       return responseContent;
     } catch (error) {
+      instrument.logEvent({
+        stage: 'action',
+        subStage: 'handler',
+        event: 'hello_world_handler_error',
+        data: {
+          actionName: 'HELLO_WORLD',
+          messageId: message.id,
+          error: error.message,
+        },
+      });
+
       logger.error('Error in HELLO_WORLD action:', error);
       throw error;
     }
@@ -117,6 +158,16 @@ const helloWorldProvider: Provider = {
     _message: Memory,
     _state: State
   ): Promise<ProviderResult> => {
+    instrument.logEvent({
+      stage: 'provider',
+      subStage: 'get',
+      event: 'hello_world_provider_get',
+      data: {
+        providerName: 'HELLO_WORLD_PROVIDER',
+        messageId: _message.id,
+      },
+    });
+
     return {
       text: 'I am a provider',
       values: {},
@@ -135,12 +186,34 @@ export class StarterService extends Service {
 
   static async start(runtime: IAgentRuntime) {
     logger.info(`*** Starting starter service - MODIFIED: ${new Date().toISOString()} ***`);
+
+    instrument.logEvent({
+      stage: 'service',
+      subStage: 'start',
+      event: 'starter_service_start',
+      data: {
+        serviceType: StarterService.serviceType,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
     const service = new StarterService(runtime);
     return service;
   }
 
   static async stop(runtime: IAgentRuntime) {
     logger.info('*** TESTING DEV MODE - STOP MESSAGE CHANGED! ***');
+
+    instrument.logEvent({
+      stage: 'service',
+      subStage: 'stop',
+      event: 'starter_service_stop',
+      data: {
+        serviceType: StarterService.serviceType,
+        timestamp: new Date().toISOString(),
+      },
+    });
+
     // get the service from the runtime
     const service = runtime.getService(StarterService.serviceType);
     if (!service) {
@@ -151,6 +224,16 @@ export class StarterService extends Service {
 
   async stop() {
     logger.info('*** THIRD CHANGE - TESTING FILE WATCHING! ***');
+
+    instrument.logEvent({
+      stage: 'service',
+      subStage: 'instance_stop',
+      event: 'starter_service_instance_stop',
+      data: {
+        serviceType: StarterService.serviceType,
+        timestamp: new Date().toISOString(),
+      },
+    });
   }
 }
 
@@ -162,6 +245,17 @@ export const starterPlugin: Plugin = {
   },
   async init(config: Record<string, string>) {
     logger.info('*** TESTING DEV MODE - PLUGIN MODIFIED AND RELOADED! ***');
+
+    instrument.logEvent({
+      stage: 'plugin',
+      subStage: 'init',
+      event: 'starter_plugin_init',
+      data: {
+        pluginName: 'plugin-starter',
+        timestamp: new Date().toISOString(),
+      },
+    });
+
     try {
       const validatedConfig = await configSchema.parseAsync(config);
 
@@ -169,7 +263,28 @@ export const starterPlugin: Plugin = {
       for (const [key, value] of Object.entries(validatedConfig)) {
         if (value) process.env[key] = value;
       }
+
+      instrument.logEvent({
+        stage: 'plugin',
+        subStage: 'init',
+        event: 'starter_plugin_init_success',
+        data: {
+          pluginName: 'plugin-starter',
+          timestamp: new Date().toISOString(),
+        },
+      });
     } catch (error) {
+      instrument.logEvent({
+        stage: 'plugin',
+        subStage: 'init',
+        event: 'starter_plugin_init_error',
+        data: {
+          pluginName: 'plugin-starter',
+          error: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString(),
+        },
+      });
+
       if (error instanceof z.ZodError) {
         throw new Error(
           `Invalid plugin configuration: ${error.errors.map((e) => e.message).join(', ')}`
