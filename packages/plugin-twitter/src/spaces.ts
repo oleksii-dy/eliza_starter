@@ -3,6 +3,7 @@ import {
   type IAgentRuntime,
   ModelType,
   createUniqueUuid,
+  instrument,
   logger,
 } from '@elizaos/core';
 import type { ClientBase } from './base';
@@ -221,6 +222,21 @@ export class TwitterSpaceClient {
   }
 
   public async startSpace(config: SpaceConfig) {
+    const startTime = Date.now();
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'space_create',
+      event: 'space_create_start',
+      data: {
+        startTime,
+        title: config.title,
+        description: config.description,
+        mode: config.mode,
+        record: config.record,
+      },
+    });
+
     logger.log('[Space] Starting a new Twitter Space...');
 
     try {
@@ -327,8 +343,41 @@ export class TwitterSpaceClient {
         await this.stopSpace();
         process.exit(0);
       });
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'space_create',
+        event: 'space_create_complete',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          spaceId: this.spaceId,
+          title: config.title,
+          url: spaceUrl,
+        },
+      });
     } catch (error) {
       logger.error('[Space] Error launching Space =>', error);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'space_create',
+        event: 'space_create_error',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          title: config.title,
+          error: error instanceof Error ? error.message : String(error),
+          errorType: error.code
+            ? error.code === 429
+              ? 'rate_limit'
+              : 'api_error'
+            : 'general_error',
+        },
+      });
+
       this.spaceStatus = SpaceActivity.IDLE;
       throw error;
     }
@@ -420,6 +469,21 @@ export class TwitterSpaceClient {
 
   private async acceptSpeaker(req: SpeakerRequest) {
     if (!this.currentSpace) return;
+
+    const startTime = Date.now();
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'space_accept_speaker',
+      event: 'space_accept_speaker_start',
+      data: {
+        startTime,
+        spaceId: this.spaceId,
+        userId: req.userId,
+        username: req.username,
+      },
+    });
+
     try {
       await this.currentSpace.approveSpeaker(req.userId, req.sessionUUID);
       this.activeSpeakers.push({
@@ -429,18 +493,105 @@ export class TwitterSpaceClient {
         startTime: Date.now(),
       });
       logger.log(`[Space] Speaker @${req.username} is now live`);
-    } catch (err) {
-      logger.error(`[Space] Error approving speaker @${req.username}:`, err);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'space_accept_speaker',
+        event: 'space_accept_speaker_complete',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          spaceId: this.spaceId,
+          userId: req.userId,
+          username: req.username,
+          activeSpeakerCount: this.activeSpeakers.length,
+        },
+      });
+    } catch (error) {
+      logger.error(`[Space] Error approving speaker @${req.username}:`, error);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'space_accept_speaker',
+        event: 'space_accept_speaker_error',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          spaceId: this.spaceId,
+          userId: req.userId,
+          username: req.username,
+          error: error instanceof Error ? error.message : String(error),
+          errorType: error.code
+            ? error.code === 429
+              ? 'rate_limit'
+              : 'api_error'
+            : 'general_error',
+        },
+      });
     }
   }
 
   private async removeSpeaker(userId: string) {
     if (!this.currentSpace) return;
+
+    const startTime = Date.now();
+    const speakerIndex = this.activeSpeakers.findIndex((s) => s.userId === userId);
+    const username = speakerIndex >= 0 ? this.activeSpeakers[speakerIndex].username : 'unknown';
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'space_remove_speaker',
+      event: 'space_remove_speaker_start',
+      data: {
+        startTime,
+        spaceId: this.spaceId,
+        userId,
+        username,
+      },
+    });
+
     try {
       await this.currentSpace.removeSpeaker(userId);
       logger.log(`[Space] Removed speaker userId=${userId}`);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'space_remove_speaker',
+        event: 'space_remove_speaker_complete',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          spaceId: this.spaceId,
+          userId,
+          username,
+          activeSpeakerCount: this.activeSpeakers.length - (speakerIndex >= 0 ? 1 : 0),
+        },
+      });
     } catch (error) {
       logger.error(`[Space] Error removing speaker userId=${userId} =>`, error);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'space_remove_speaker',
+        event: 'space_remove_speaker_error',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          spaceId: this.spaceId,
+          userId,
+          username,
+          error: error instanceof Error ? error.message : String(error),
+          errorType: error.code
+            ? error.code === 429
+              ? 'rate_limit'
+              : 'api_error'
+            : 'general_error',
+        },
+      });
     }
   }
 
@@ -468,11 +619,58 @@ export class TwitterSpaceClient {
 
   public async stopSpace() {
     if (!this.currentSpace || this.spaceStatus !== SpaceActivity.HOSTING) return;
+
+    const startTime = Date.now();
+    const spaceId = this.spaceId;
+    const duration = this.startedAt ? Date.now() - this.startedAt : 0;
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'space_stop',
+      event: 'space_stop_start',
+      data: {
+        startTime,
+        spaceId,
+        duration,
+      },
+    });
+
     try {
       logger.log('[Space] Stopping the current Space...');
       await this.currentSpace.stop();
-    } catch (err) {
-      logger.error('[Space] Error stopping Space =>', err);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'space_stop',
+        event: 'space_stop_complete',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          spaceId,
+          spaceDuration: duration,
+        },
+      });
+    } catch (error) {
+      logger.error('[Space] Error stopping Space =>', error);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'space_stop',
+        event: 'space_stop_error',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          spaceId,
+          error: error instanceof Error ? error.message : String(error),
+          errorType: error.code
+            ? error.code === 429
+              ? 'rate_limit'
+              : 'api_error'
+            : 'general_error',
+        },
+      });
     } finally {
       this.spaceStatus = SpaceActivity.IDLE;
       this.spaceId = undefined;
@@ -490,6 +688,18 @@ export class TwitterSpaceClient {
       return null;
     }
 
+    const startTime = Date.now();
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'space_join',
+      event: 'space_join_start',
+      data: {
+        startTime,
+        spaceId,
+      },
+    });
+
     this.spaceParticipant = new SpaceParticipant(this.client.twitterClient, {
       spaceId,
       debug: false,
@@ -502,9 +712,40 @@ export class TwitterSpaceClient {
         this.spaceId = spaceId;
         this.spaceStatus = SpaceActivity.PARTICIPATING;
 
+        instrument.logEvent({
+          stage: 'twitter',
+          subStage: 'space_join',
+          event: 'space_join_complete',
+          data: {
+            startTime,
+            endTime: Date.now(),
+            duration: Date.now() - startTime,
+            spaceId,
+          },
+        });
+
         return spaceId;
       } catch (error) {
         logger.error(`failed to join space ${error}`);
+
+        instrument.logEvent({
+          stage: 'twitter',
+          subStage: 'space_join',
+          event: 'space_join_error',
+          data: {
+            startTime,
+            endTime: Date.now(),
+            duration: Date.now() - startTime,
+            spaceId,
+            error: error instanceof Error ? error.message : String(error),
+            errorType: error.code
+              ? error.code === 429
+                ? 'rate_limit'
+                : 'api_error'
+              : 'general_error',
+          },
+        });
+
         return null;
       }
     }
@@ -572,11 +813,56 @@ export class TwitterSpaceClient {
 
   public async stopParticipant() {
     if (!this.spaceParticipant || this.spaceStatus !== SpaceActivity.PARTICIPATING) return;
+
+    const startTime = Date.now();
+    const spaceId = this.spaceId;
+
+    instrument.logEvent({
+      stage: 'twitter',
+      subStage: 'space_leave',
+      event: 'space_leave_start',
+      data: {
+        startTime,
+        spaceId,
+        participantStatus: this.participantStatus,
+      },
+    });
+
     try {
       logger.log('[SpaceParticipant] Stopping the current space participant...');
       await this.spaceParticipant.leaveSpace();
-    } catch (err) {
-      logger.error('[SpaceParticipant] Error stopping space participant =>', err);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'space_leave',
+        event: 'space_leave_complete',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          spaceId,
+        },
+      });
+    } catch (error) {
+      logger.error('[SpaceParticipant] Error stopping space participant =>', error);
+
+      instrument.logEvent({
+        stage: 'twitter',
+        subStage: 'space_leave',
+        event: 'space_leave_error',
+        data: {
+          startTime,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          spaceId,
+          error: error instanceof Error ? error.message : String(error),
+          errorType: error.code
+            ? error.code === 429
+              ? 'rate_limit'
+              : 'api_error'
+            : 'general_error',
+        },
+      });
     } finally {
       this.spaceStatus = SpaceActivity.IDLE;
       this.participantStatus = ParticipantActivity.LISTENER;
