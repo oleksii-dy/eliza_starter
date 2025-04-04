@@ -13,3 +13,4 @@ export * from './runtime';
 export * from './settings';
 export * from './uuid';
 export * from './audioUtils';
+export * from './instrumentation/instrumentation';
