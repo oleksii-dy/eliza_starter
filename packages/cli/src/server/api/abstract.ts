@@ -180,7 +180,7 @@ export async function conversation(
     return;
   }
 
-  logger.debug('[SPEECH CONVERSATION] Creating response memory');
+  logger.debug('[SPEECH CONVERSATION] Creating response memory', response);
 
   const responseMessage = {
     ...userMessage,
@@ -189,6 +189,7 @@ export async function conversation(
     agentId: runtime.agentId,
   };
 
+  logger.debug('[SPEECH CONVERSATION] Creating response responseMessage', responseMessage);
   await runtime.createMemory(responseMessage, 'messages');
   await runtime.evaluate(memory, state);
 

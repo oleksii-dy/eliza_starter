@@ -6,14 +6,11 @@ import type {
   ObjectGenerationParams,
   Plugin,
   TextEmbeddingParams,
+  DetokenizeTextParams,
+  GenerateTextParams,
+  TokenizeTextParams,
 } from '@elizaos/core';
-import {
-  type DetokenizeTextParams,
-  type GenerateTextParams,
-  ModelType,
-  type TokenizeTextParams,
-  logger,
-} from '@elizaos/core';
+import { ModelType, logger } from '@elizaos/core';
 import { generateObject, generateText } from 'ai';
 import { type TiktokenModel, encodingForModel } from 'js-tiktoken';
 import { z } from 'zod';
@@ -411,6 +408,9 @@ export const groqPlugin: Plugin = {
         presencePenalty: presencePenalty,
         stopSequences: stopSequences,
       });
+
+      logger.log('GROQ response:', openaiResponse);
+
       return openaiResponse;
     },
     [ModelType.IMAGE]: async (
