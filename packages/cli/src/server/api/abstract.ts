@@ -54,7 +54,9 @@ export async function conversation(
   entityId,
   userName,
   text,
-  worldid
+  worldid,
+  messageId,
+  createdAt
 ) {
   //req: MyRequest, res: MyResponse) {
   // const agentId = validateUuid(req.params.agentId);
@@ -110,7 +112,7 @@ export async function conversation(
     type: ChannelType.API,
   });
 
-  const messageId = createUniqueUuid(runtime, Date.now().toString());
+  //const messageId = createUniqueUuid(runtime, Date.now().toString());
   const content: Content = {
     text,
     attachments: [],
@@ -126,17 +128,20 @@ export async function conversation(
     agentId: runtime.agentId,
   };
 
-  const memory: Memory = {
-    id: messageId,
-    agentId: runtime.agentId,
-    entityId,
-    roomId,
-    content,
-    createdAt: Date.now(),
-  };
-
-  logger.debug('[SPEECH CONVERSATION] Creating memory');
-  await runtime.createMemory(memory, 'messages');
+  // lookup memory
+  let memory = await runtime.getMemoryById(messageId);
+  if (memory == null) {
+    memory = {
+      id: messageId,
+      agentId: runtime.agentId,
+      entityId,
+      roomId,
+      content,
+      createdAt: new Date(JSON.parse(createdAt)),
+    };
+    logger.debug('[SPEECH CONVERSATION] Creating memory');
+    await runtime.createMemory(memory, 'messages');
+  }
 
   logger.debug('[SPEECH CONVERSATION] Composing state');
   const state = await runtime.composeState(userMessage);

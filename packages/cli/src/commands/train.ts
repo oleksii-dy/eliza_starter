@@ -118,6 +118,9 @@ export async function trainAgent(
     roomId?: UUID;
     worldId?: UUID;
     userId?: string;
+    messageId?: UUID;
+    createdAt?: string;
+    //const messageId = createUniqueUuid(runtime, Date.now().toString());
   } = {}
 ): Promise<IAgentRuntime> {
   console.log('D112 trainAgent', character, server, options);
@@ -359,6 +362,8 @@ export async function trainAgent(
   if (!options.prompt) {
     throw new Error('Prompt is required');
   }
+  const messageId = options.messageId || createUniqueUuid(runtime, options.createdAt);
+
   let r = await conversation(
     runtime,
     roomId,
@@ -366,14 +371,16 @@ export async function trainAgent(
     userName,
     //req, res
     options.prompt,
-    worldId
+    worldId,
+    messageId,
+    options.createdAt
   );
   //console.log(req, res, r);
 
-  const messageId = options.roomId || createUniqueUuid(runtime, 'test-message-1');
+  const messageId2 = options.roomId || createUniqueUuid(runtime, 'test-message-1');
   //let uuid = createUniqueUuid()
   let message: Memory = {
-    id: messageId,
+    id: messageId2,
     entityId: entityId,
     content: {
       text: 'Post Tweet',
@@ -780,6 +787,8 @@ export const train = new Command()
   .option('--character <character>', 'Path or URL to character file to use instead of default')
   .option('--prompt <prompt>', 'Prompt to guide training', 'Adapt to the scenario.')
   .option('--prompt-file <file>', 'Path to file with prompt text')
+  .option('--message-id <id>', 'Message ID to use for training')
+  .option('--created-at <date>', 'Date to use for training', JSON.stringify(Date.now()))
   .option('--tools <tools>', 'Comma-separated list of tools (simulator, stressTest, enhancer)', '')
   .action(async (options) => {
     console.log('train!');

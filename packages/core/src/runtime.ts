@@ -1879,6 +1879,7 @@ export class AgentRuntime implements IAgentRuntime {
   }
 
   async createMemory(memory: Memory, tableName: string, unique?: boolean): Promise<UUID> {
+    console.log('Create Memory', memory);
     return await this.adapter.createMemory(memory, tableName, unique);
   }
 
