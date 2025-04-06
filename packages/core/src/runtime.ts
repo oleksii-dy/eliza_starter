@@ -1416,10 +1416,10 @@ export class AgentRuntime implements IAgentRuntime {
     // Fetch data from selected providers
     const providerData = await Promise.all(
       providersToGet.map(async (provider) => {
-        const start = Date.now();
+        //const start = Date.now();
         const result = await provider.get(this, message, cachedState);
-        const duration = Date.now() - start;
-        this.runtimeLogger.debug(`${provider.name} Provider took ${duration}ms to respond`);
+        //const duration = Date.now() - start;
+        //this.runtimeLogger.debug(`${provider.name} Provider took ${duration}ms to respond`);
         return {
           ...result,
           providerName: provider.name,
@@ -1589,10 +1589,10 @@ export class AgentRuntime implements IAgentRuntime {
     const response = await model(this, paramsWithRuntime);
 
     // Calculate elapsed time
-    const elapsedTime = performance.now() - startTime;
+    //    const elapsedTime = performance.now() - startTime;
 
     // Log timing
-    this.runtimeLogger.debug(`[useModel] ${modelKey} completed in ${elapsedTime.toFixed(2)}ms`);
+    //this.runtimeLogger.debug(`[useModel] ${modelKey} completed in ${elapsedTime.toFixed(2)}ms`);
 
     // Log response
     this.runtimeLogger.debug(

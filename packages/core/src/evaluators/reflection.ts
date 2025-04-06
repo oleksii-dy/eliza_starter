@@ -1,18 +1,61 @@
 import { z } from 'zod'; //import { z } from 'zod';
 import { resolveEntity } from './abstract';
 import { getEntityDetails } from '../entities';
-import logger from '../logger';
+
 import { composePrompt } from '../prompts';
-import {
-  type Entity,
-  type Evaluator,
-  type Memory,
-  type ModelLimits,
-  ModelType,
-  type State,
-  type UUID,
-} from '../types';
+import { type Entity, type Evaluator, type ModelLimits, ModelType, type State } from '../types';
 import { AgentRuntime, Relationship } from '@elizaos/core';
+
+import type { IAgentRuntime, Memory, UUID } from '@elizaos/core';
+import { logger } from '@elizaos/core';
+
+// Function to lookup an existing memory matching content and context
+async function lookupMemory(
+  runtime: IAgentRuntime,
+  roomId: UUID,
+  agentId: UUID,
+  content: { text: string; source?: string; channelType?: string },
+  limit: number = 50
+): Promise<Memory | null> {
+  const memories = await runtime.getMemories({
+    tableName: 'messages',
+    roomId,
+    count: limit,
+    unique: false, // Allow all matches to check exact content
+  });
+
+  const targetText = content.text.trim();
+  const matchingMemory = memories.find((mem) => {
+    try {
+      const memText = mem.content.text.trim();
+      // Handle JSON-wrapped content (e.g., from your snippet)
+      const memData = memText.startsWith('```json\n')
+        ? JSON.parse(memText.slice(7, -3))
+        : { text: memText };
+      const targetData = targetText.startsWith('```json\n')
+        ? JSON.parse(targetText.slice(7, -3))
+        : { text: targetText };
+
+      // Compare JSON content (thought, actions, providers) or raw text
+      if (typeof memData === 'object' && typeof targetData === 'object') {
+        return (
+          memData.thought === targetData.thought &&
+          JSON.stringify(memData.actions) === JSON.stringify(targetData.actions) &&
+          JSON.stringify(memData.providers) === JSON.stringify(targetData.providers)
+        );
+      }
+      return memText === targetText; // Fallback for plain text
+    } catch (e) {
+      logger.debug('[LOOKUP_MEMORY] Skipping malformed memory', { id: mem.id, error: e.message });
+      return false;
+    }
+  });
+
+  if (matchingMemory) {
+    logger.debug('[LOOKUP_MEMORY] Found matching memory', { id: matchingMemory.id });
+  }
+  return matchingMemory || null;
+}
 
 /**
  * Template string for generating Agent Reflection, Extracting Facts, and Relationships.

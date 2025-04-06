@@ -362,7 +362,7 @@ export const groqPlugin: Plugin = {
       logger.log('generating text');
       logger.log('PROMP357', prompt);
 
-      const { text: openaiResponse } = await generateText({
+      const response = await generateText({
         model: groq.languageModel(model),
         prompt: prompt,
         system: runtime.character.system ?? undefined,
@@ -372,8 +372,9 @@ export const groqPlugin: Plugin = {
         frequencyPenalty: frequency_penalty,
         presencePenalty: presence_penalty,
         stopSequences: stopSequences,
+        seed: 42,
       });
-
+      const { text: openaiResponse } = response;
       logger.log('RESP357', openaiResponse);
 
       return openaiResponse;
@@ -398,17 +399,20 @@ export const groqPlugin: Plugin = {
         fetch: runtime.fetch,
         baseURL,
       });
-      const { text: openaiResponse } = await generateText({
+      const response = await generateText({
         model: groq.languageModel(model),
         prompt: prompt,
         system: runtime.character.system ?? undefined,
         temperature: temperature,
         maxTokens: maxTokens,
+        seed: 42,
         frequencyPenalty: frequencyPenalty,
         presencePenalty: presencePenalty,
         stopSequences: stopSequences,
       });
+      const { text: openaiResponse } = response;
 
+      logger.log('GROQ response2:', response);
       logger.log('GROQ response:', openaiResponse);
 
       return openaiResponse;
