@@ -242,7 +242,7 @@ export const normalizeJsonString = (str: string) => {
 
     // "key": unquotedValue → "key": "unquotedValue"
     str = str.replace(
-      /("[\w\d_-]+")\s*: \s*(?!"|\[|\{)([\s\S]+?)(?=(,\s*"|\}$))/g,
+      /("[\w\d_-]+")\s*: \s*(?!"|\[|\{|null|true|false|\d+)([\s\S]+?)(?=(,\s*"|\}))/g,
       '$1: "$2"',
     );
 
@@ -253,7 +253,7 @@ export const normalizeJsonString = (str: string) => {
     );
 
     // "key": someWord → "key": "someWord"
-    str = str.replace(/("[\w\d_-]+")\s*:\s*([A-Za-z_]+)(?!["\w])/g, '$1: "$2"');
+    str = str.replace(/("[\w\d_-]+")\s*:\s*(?!null|false|true)([A-Za-z_]+)(?!["\w])/g, '$1: "$2"');
 
     // Replace adjacent quote pairs with a single double quote
     str = str.replace(/(?:"')|(?:'")/g, '"');
