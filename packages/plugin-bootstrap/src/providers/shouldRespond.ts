@@ -1,5 +1,5 @@
 import type { IAgentRuntime, Memory, Provider } from '@elizaos/core';
-import { addHeader } from '@elizaos/core';
+import { addHeader, ChannelType } from '@elizaos/core';
 import { type Config, adjectives, names, uniqueNamesGenerator } from 'unique-names-generator';
 
 // Configuration for name generation
@@ -76,6 +76,26 @@ const messageExamples = [
 // Response: STOP`,
 ];
 
+// Examples specifically for DM/private channels
+const dmMessageExamples = [
+  // In DMs, the agent should always respond when addressed directly
+  `// {{name1}}: Hey {{agentName}}, are you there?
+// Response: RESPOND`,
+
+  `// {{name1}}: can you help me with something?
+// Response: RESPOND`,
+
+  `// {{name1}}: Hello?
+// Response: RESPOND`,
+
+  // Still respect explicit stop requests
+  `// {{name1}}: {{agentName}} stop responding plz
+// Response: STOP`,
+
+  `// {{name1}}: I need some privacy
+// Response: STOP`,
+];
+
 /**
  * Represents a provider that generates response examples for the agent.
  * @type {Provider}
@@ -84,7 +104,7 @@ export const shouldRespondProvider: Provider = {
   name: 'SHOULD_RESPOND',
   description: 'Examples of when the agent should respond, ignore, or stop responding',
   position: -1,
-  get: async (runtime: IAgentRuntime, _message: Memory) => {
+  get: async (runtime: IAgentRuntime, message: Memory) => {
     // Get agent name
     const agentName = runtime.character.name;
 
@@ -93,8 +113,21 @@ export const shouldRespondProvider: Provider = {
     const name2 = uniqueNamesGenerator(nameConfig);
     const characterName = uniqueNamesGenerator(nameConfig);
 
-    // Shuffle the message examples array
-    const shuffledExamples = [...messageExamples].sort(() => 0.5 - Math.random()).slice(0, 7); // Use a subset of examples
+    // Check if we're in a DM/private channel
+    let isDirectMessage = false;
+    if (message.roomId) {
+      const room = await runtime.getRoom(message.roomId);
+      isDirectMessage =
+        room?.type === ChannelType.DM ||
+        room?.type === ChannelType.VOICE_DM ||
+        room?.type === ChannelType.SELF;
+    }
+
+    // Choose the appropriate examples based on channel type
+    const exampleSet = isDirectMessage ? dmMessageExamples : messageExamples;
+
+    // Shuffle the examples array
+    const shuffledExamples = [...exampleSet].sort(() => 0.5 - Math.random()).slice(0, 7); // Use a subset of examples
 
     // Replace placeholders with generated names
     const formattedExamples = shuffledExamples.map((example) => {
