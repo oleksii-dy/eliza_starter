@@ -1,6 +1,11 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import type { ObjectGenerationParams, GenerateTextParams, Plugin } from '@elizaos/core';
-import { ModelType, logger } from '@elizaos/core';
+import type {
+  IAgentRuntime,
+  ObjectGenerationParams,
+  GenerateTextParams,
+  Plugin,
+} from '@elizaos/core-plugin-v2';
+import { ModelType, logger } from '@elizaos/core-plugin-v2';
 import { generateText } from 'ai';
 import { extractAndParseJSON, ExtractedJSON, ensureReflectionProperties } from './utils';
 
