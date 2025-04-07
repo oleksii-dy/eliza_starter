@@ -1,3 +1,5 @@
+import { generateMemoryPivotTable } from '../server/api/pivot';
+
 import { buildProject } from '@/src/utils/build-project';
 import {
   AgentRuntime,
@@ -441,6 +443,9 @@ export async function trainAgent(
     roomId: roomId,
   });
   console.log('ALLMEMORIES', memories);
+
+  let pv = generateMemoryPivotTable(runtime, roomId, 100);
+  console.log('Pivot', pv);
 
   const iterator = createContentUUIDIterator(memories);
   for (const uuid of iterator) {
