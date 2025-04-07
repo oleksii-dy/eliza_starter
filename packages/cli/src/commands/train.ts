@@ -35,6 +35,76 @@ import { UUID } from 'node:crypto';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Custom UUID generator using SHA-256
+function generateContentUUID(content: string): string {
+  // For browser compatibility, you might want to use a different crypto library
+  // This example uses Node.js crypto
+  const crypto = require('crypto');
+
+  // Create SHA-256 hash of the content
+  const hash = crypto.createHash('sha256').update(content).digest('hex');
+
+  // Create UUID v5 using the hash
+  // Using a fixed namespace UUID (UUID for URLs)
+  const namespace = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+  return uuidV5(hash, namespace);
+}
+
+// UUID v5 implementation (you'd typically use a library like 'uuid')
+// Here's a simple version for demonstration
+function uuidV5(name: string, namespace: string): string {
+  const { v5 } = require('uuid');
+  return v5(name, namespace);
+}
+
+// Iterator class
+class ContentUUIDIterator implements Iterator<string> {
+  private messages: Memory[];
+  private index: number = 0;
+  private seenUUIDs: Set<string> = new Set();
+
+  constructor(messages: Memory[]) {
+    this.messages = messages;
+  }
+
+  next(): IteratorResult<string> {
+    while (this.index < this.messages.length) {
+      const message = this.messages[this.index];
+      this.index++;
+
+      const content = message.content?.text || '';
+      if (!content) {
+        continue;
+      }
+
+      const uuid = generateContentUUID(content);
+
+      if (!this.seenUUIDs.has(uuid)) {
+        this.seenUUIDs.add(uuid);
+        //console.log('UUID', uuid, 'Content', content);
+        console.log('Content', content);
+        return {
+          value: uuid,
+          done: false,
+        };
+      }
+    }
+
+    return {
+      value: undefined,
+      done: true,
+    };
+  }
+
+  // Make it iterable
+  [Symbol.iterator](): Iterator<string> {
+    return this;
+  }
+}
+function createContentUUIDIterator(messages: Memory[]): ContentUUIDIterator {
+  return new ContentUUIDIterator(messages);
+}
+
 //export const wait = (minTime = 1000, maxTime = 3000) => {
 //  const waitTime = Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
 //return new Promise((resolve) => setTimeout(resolve, waitTime));
@@ -363,6 +433,19 @@ export async function trainAgent(
     throw new Error('Prompt is required');
   }
   const messageId = options.messageId || createUniqueUuid(runtime, options.createdAt);
+
+  //
+  const memories = await runtime.getMemories({
+    //"tablename" :
+    tableName: 'messages',
+    roomId: roomId,
+  });
+  console.log('ALLMEMORIES', memories);
+
+  const iterator = createContentUUIDIterator(memories);
+  for (const uuid of iterator) {
+    console.log(uuid);
+  }
 
   let r = await conversation(
     runtime,
