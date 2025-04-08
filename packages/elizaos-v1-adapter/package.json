@@ -1,0 +1,33 @@
+{
+  "name": "elizaos-v1-adapter",
+  "version": "1.0.0",
+  "description": "Adapter for ElizaOS v1 plugins to work with ElizaOS v2 API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "prepare": "npm run build"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "peerDependencies": {
+    "elizaos-core-v2": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.5",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "@types/jest": "^29.5.0"
+  },
+  "keywords": [
+    "elizaos",
+    "adapter",
+    "v1",
+    "v2",
+    "compatibility"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
