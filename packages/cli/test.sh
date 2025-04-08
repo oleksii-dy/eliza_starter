@@ -1,3 +1,4 @@
+export NO_COLOR=1
 bun run build:all
 bun run build
 

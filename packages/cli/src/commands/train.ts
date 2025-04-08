@@ -442,10 +442,10 @@ export async function trainAgent(
     tableName: 'messages',
     roomId: roomId,
   });
-  console.log('ALLMEMORIES', memories);
+  //console.log('ALLMEMORIES', memories);
 
-  let pv = generateMemoryPivotTable(runtime, roomId, 100);
-  console.log('Pivot', pv);
+  let pv = await generateMemoryPivotTable(runtime, roomId, 100);
+  console.log('Pivot3', pv);
 
   const iterator = createContentUUIDIterator(memories);
   for (const uuid of iterator) {

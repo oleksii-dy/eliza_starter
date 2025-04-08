@@ -454,7 +454,7 @@ const effectiveLogLevel = 'trace'; //isDebugMode ? 'debug' : process?.env?.DEFAU
 const options = {
   level: effectiveLogLevel, // Use more restrictive level unless in debug mode
   customLevels,
-
+  colorize: false,
   hooks: {
     logMethod(inputArgs: [string | Record<string, unknown>, ...unknown[]], method: LogFn): void {
       const error = new Error();
