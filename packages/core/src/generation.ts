@@ -1483,26 +1483,101 @@ export async function splitChunks(
     return chunks;
 }
 
+function containsPartialUrl(text: string): boolean {
+    // Check for common URL patterns or fragments
+    return /https?:\/\/[^\s]*$/.test(text) || // URL at the end
+        /^[^\s]*\.[a-z]{2,}\//.test(text) || // Domain/path at beginning
+        /\b[a-z0-9]+(\.com|\.org|\.io|\.eth)\b/.test(text); // Common TLDs
+}
+
+/// The splitText tries to respect the chunkSize, but to maintain the semantic meaning of the text (eg. URLs) we can go over the chunkSize by 50%
 export function splitText(
     content: string,
     chunkSize: number,
     bleed: number
 ): string[] {
+    // try to split by double newlines
+    const paragraphs = content.split(/\n\s*\n/);
     const chunks: string[] = [];
-    let start = 0;
+    let currentChunk = "";
 
-    while (start < content.length) {
-        const end = Math.min(start + chunkSize, content.length);
-        // Ensure we're not creating empty or invalid chunks
-        if (end > start) {
-            chunks.push(content.substring(start, end));
+    for (const paragraph of paragraphs) {
+        const trimmedParagraph = paragraph.trim();
+
+        if (trimmedParagraph.length === 0) continue;
+
+        // if this paragraph fits in the current chunk, add it
+        if (currentChunk.length + trimmedParagraph.length <= chunkSize) {
+            currentChunk += (currentChunk.length > 0 ? "\n\n" : "") + trimmedParagraph;
+            continue;
         }
 
-        // Ensure forward progress while preventing infinite loops
-        start = Math.max(end - bleed, start + 1);
+        // if current chunk has content, flush it first
+        if (currentChunk.length > 0) {
+            // Check if current chunk ends with a partial URL or next paragraph starts with one
+            if (containsPartialUrl(currentChunk) || containsPartialUrl(trimmedParagraph)) {
+                // Try to combine them if they're not too large together
+                if (currentChunk.length + trimmedParagraph.length <= chunkSize * 1.5) {
+                    currentChunk += "\n\n" + trimmedParagraph;
+                    continue;
+                }
+            }
+
+            chunks.push(currentChunk.trim());
+            currentChunk = "";
+        }
+
+        // exceeds chunk size, split by sentences
+        if (trimmedParagraph.length > chunkSize) {
+            // sentence regex requires space/quote after punctuation to avoid splitting eg URLs, IPs, etc
+            const sentenceRegex = /[^.!?]+(?:[.!?](?:["']|\s|$))+/g;
+            const sentences = trimmedParagraph.match(sentenceRegex) || [trimmedParagraph];
+
+            for (const sentence of sentences) {
+                const trimmedSentence = sentence.trim();
+
+                if (trimmedSentence.length === 0) continue;
+
+                // If sentence fits in current chunk, add it
+                if (currentChunk.length + trimmedSentence.length <= chunkSize) {
+                    currentChunk += (currentChunk.length > 0 ? " " : "") + trimmedSentence;
+                } else {
+                    // content in the current chunk -> flush it
+                    if (currentChunk.length > 0) {
+                        // Check for URL splits again
+                        if (containsPartialUrl(currentChunk) || containsPartialUrl(trimmedSentence)) {
+                            // Try to keep sentences with URLs together if possible
+                            if (currentChunk.length + trimmedSentence.length <= chunkSize * 1.5) {
+                                currentChunk += " " + trimmedSentence;
+                                continue;
+                            }
+                        }
+
+                        chunks.push(currentChunk.trim());
+                        currentChunk = "";
+                    }
+
+                    // the sentence itself is longer than chunk size, just include it as its own chunk
+                    if (trimmedSentence.length > chunkSize) {
+                        chunks.push(trimmedSentence);
+                    } else {
+                        currentChunk = trimmedSentence;
+                    }
+                }
+            }
+        } else {
+            // is too large for current chunk but fits in a chunk by itself
+            chunks.push(trimmedParagraph);
+        }
     }
 
-    return chunks;
+    // add the last chunk if it has content
+    if (currentChunk.trim().length > 0) {
+        chunks.push(currentChunk.trim());
+    }
+
+    // If no chunks were created like the content is short just return content
+    return chunks.length > 0 ? chunks : [content];
 }
 
 /**
