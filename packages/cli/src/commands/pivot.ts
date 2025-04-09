@@ -171,6 +171,7 @@ function exportToCSV(fileName: string, data: any[], headers: string[]) {
     headers.join(','), // Header row
     ...data.map((entry) => headers.map((header) => entry[header] || '').join(',')), // Data rows
   ].join('\n');
+  console.log('exportToCSV debug2', fileName, csvContent);
   writeFileSync(fileName, csvContent);
 }
 export async function generateReports(
@@ -200,9 +201,14 @@ export async function generateReports(
   }));
 
   // Export to CSV files
-  exportToCSV('actions_report.csv', actionsReport, ['Action', 'Thought', 'Count']);
-  exportToCSV('providers_report.csv', providersReport, ['Provider', 'Thought', 'Count']);
-  exportToCSV('thoughts_report.csv', thoughtsReport, ['Thought', 'MetaThought', 'Count']);
+  const uuidname = roomId.toString();
+  exportToCSV(`actions_report${uuidname}.csv`, actionsReport, ['Action', 'Thought', 'Count']);
+  exportToCSV(`providers_report${uuidname}.csv`, providersReport, ['Provider', 'Thought', 'Count']);
+  exportToCSV(`thoughts_report${uuidname}.csv`, thoughtsReport, [
+    'Thought',
+    'MetaThought',
+    'Count',
+  ]);
 
   console.log('Reports generated successfully!');
 }
@@ -308,7 +314,7 @@ export async function pivotAgent(
     try {
       // For local plugins, use regular import
       pluginModule = await import(plugin);
-      //logger.debug(`Successfully loaded plugin ${plugin}`, pluginModule);
+
       logger.debug(`Successfully loaded plugin ${plugin}`);
     } catch (error) {
       logger.info(`Plugin ${plugin} not installed, installing into ${process.cwd()}...`);
@@ -322,7 +328,7 @@ export async function pivotAgent(
         // Try to import from the project's node_modules directory
         try {
           const projectNodeModulesPath = path.join(process.cwd(), 'node_modules', plugin);
-          logger.debug(`Attempting to import from project path: ${projectNodeModulesPath}`);
+          logger.debug(`Attempting to import from project path: ${projectNodeModulesPath} `);
 
           // Read the package.json to find the entry point
           const packageJsonPath = path.join(projectNodeModulesPath, 'package.json');
@@ -331,22 +337,22 @@ export async function pivotAgent(
             const entryPoint = packageJson.module || packageJson.main || 'dist/index.js';
             const fullEntryPath = path.join(projectNodeModulesPath, entryPoint);
 
-            logger.debug(`Found entry point in package.json: ${entryPoint}`);
-            logger.debug(`Importing from: ${fullEntryPath}`);
+            logger.debug(`Found entry point in package.json: ${entryPoint} `);
+            logger.debug(`Importing from: ${fullEntryPath} `);
 
             pluginModule = await import(fullEntryPath);
-            logger.debug(`Successfully loaded plugin from project node_modules: ${plugin}`);
+            logger.debug(`Successfully loaded plugin from project node_modules: ${plugin} `);
           } else {
             // Fallback to a common pattern if package.json doesn't exist
             const commonEntryPath = path.join(projectNodeModulesPath, 'dist/index.js');
-            logger.debug(`No package.json found, trying common entry point: ${commonEntryPath}`);
+            logger.debug(`No package.json found, trying common entry point: ${commonEntryPath} `);
             pluginModule = await import(commonEntryPath);
-            logger.debug(`Successfully loaded plugin from common entry point: ${plugin}`);
+            logger.debug(`Successfully loaded plugin from common entry point: ${plugin} `);
           }
         } catch (projectImportError) {
-          logger.error(`Failed to install plugin ${plugin}: ${importError}`);
+          logger.error(`Failed to install plugin ${plugin}: ${importError} `);
           logger.error(
-            `Also failed to import from project node_modules: ${projectImportError.message}`
+            `Also failed to import from project node_modules: ${projectImportError.message} `
           );
         }
       }
@@ -356,18 +362,18 @@ export async function pivotAgent(
     const functionName = `${plugin
       .replace('@elizaos/plugin-', '')
       .replace('@elizaos-plugins/', '')
-      .replace(/-./g, (x) => x[1].toUpperCase())}Plugin`; // Assumes plugin function is camelCased with Plugin suffix
+      .replace(/-./g, (x) => x[1].toUpperCase())} Plugin`; // Assumes plugin function is camelCased with Plugin suffix
 
     // Add detailed logging to debug plugin loading
-    logger.debug(`Looking for plugin export: ${functionName}`);
-    logger.debug(`Available exports: ${Object.keys(pluginModule).join(', ')}`);
-    logger.debug(`Has default export: ${!!pluginModule.default}`);
+    logger.debug(`Looking for plugin export: ${functionName} `);
+    logger.debug(`Available exports: ${Object.keys(pluginModule).join(', ')} `);
+    logger.debug(`Has default export: ${!!pluginModule.default} `);
 
     // Check if the plugin is available as a default export or named export
     const importedPlugin = pluginModule.default || pluginModule[functionName];
 
     if (importedPlugin) {
-      logger.debug(`Found plugin import : ${importedPlugin.name}`);
+      logger.debug(`Found plugin import : ${importedPlugin.name} `);
       characterPlugins.push(importedPlugin);
     } else {
       // Try more aggressively to find a suitable plugin export
@@ -382,18 +388,18 @@ export async function pivotAgent(
           potentialPlugin.name &&
           typeof potentialPlugin.init === 'function'
         ) {
-          logger.debug(`Found alternative plugin export under key: ${key}`);
+          logger.debug(`Found alternative plugin export under key: ${key} `);
           foundPlugin = potentialPlugin;
           break;
         }
       }
 
       if (foundPlugin) {
-        logger.debug(`Using alternative plugin: ${foundPlugin.name}`);
+        logger.debug(`Using alternative plugin: ${foundPlugin.name} `);
         characterPlugins.push(foundPlugin);
       } else {
         logger.warn(
-          `Could not find plugin export in ${plugin}. Available exports: ${Object.keys(pluginModule).join(', ')}`
+          `Could not find plugin export in ${plugin}. Available exports: ${Object.keys(pluginModule).join(', ')} `
         );
       }
     }
@@ -414,7 +420,7 @@ export async function pivotAgent(
 
   //logger.debug("server", server);
   // report to console
-  logger.debug(`pivoted ${runtime.character.name} as ${runtime.agentId}`);
+  logger.debug(`pivoted ${runtime.character.name} as ${runtime.agentId} `);
 
   //const roomId = options.roomId || createUniqueUuid(runtime, 'default-room-pivoting');
   //const worldId = options.worldId || createUniqueUuid(runtime, 'default-world-training');
@@ -427,7 +433,7 @@ export async function pivotAgent(
 
   // const world = {
   //   id: worldId,
-  //   name: `${runtime.character.name}'s Feed`,
+  //   name: `${ runtime.character.name } 's Feed`,
   //   agentId: runtime.agentId,
   //   serverId: entityId,
   //   metadata: {
