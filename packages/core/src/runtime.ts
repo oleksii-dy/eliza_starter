@@ -519,7 +519,7 @@ export class AgentRuntime implements IAgentRuntime {
     // Register plugin providers
     if (plugin.providers) {
       for (const provider of plugin.providers) {
-        console.log('provider', provider);
+        //console.log('provider', provider);
         this.registerContextProvider(provider);
       }
     }

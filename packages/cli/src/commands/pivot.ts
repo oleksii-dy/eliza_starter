@@ -34,6 +34,7 @@ import { installPlugin } from '../utils/install-plugin';
 import { displayBanner } from '../displayBanner';
 import { worldRouter } from '../server/api/world';
 import { UUID } from 'node:crypto';
+import { todo } from 'node:test';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -213,43 +214,47 @@ export async function generateReports(
   console.log('Reports generated successfully!');
 }
 
-async function reportWorld(runtime, world: any) {
-  console.log('WORLD', world);
-  const worldId = world.id;
-  console.log('WORLDID', worldId);
-
-  const rooms = await runtime.getRooms(worldId);
-  console.log('ALL ROOMS', rooms);
-  rooms.forEach(reportRoom.bind(null, runtime));
-}
-
 async function reportRoom(runtime, room: any) {
-  console.log('ROOM', room);
-  console.log('ROOM ID', room.id);
-  console.log('ROOM NAME', room.name);
-  console.log('ROOM SOURCE', room.source);
-  console.log('ROOM TYPE', room.type);
-  console.log('ROOM CHANNEL ID', room.channelId);
-  console.log('ROOM SERVER ID', room.serverId);
-  //console.log('ROOM CREATED AT', room.createdAt);
-  //console.log('ROOM UPDATED AT', room.updatedAt);
-
   const memories = await runtime.getMemories({
     //"tablename" :
     tableName: 'messages',
     roomId: room.id,
   });
-  console.log('ALLMEMORIES', memories);
+  //console.log('ALLMEMORIES', memories);
 
-  let pv = await generateMemoryPivotTable(runtime, room.id, 100);
-  console.log('Pivot3', pv);
-  generateReports(pv, runtime, room.id, 100);
-  // pivotTable,
-  // runtime: IAgentRuntime,
-  // roomId: UUID,
-  // cutoff: number,
-  // limit: number = 100
+  let pv = await generateMemoryPivotTable(runtime, room.id, 1000);
+  console.log('Pivot3', pv.length);
+
+  return { [room.id]: pv };
 }
+
+async function reportWorld(runtime, world: any) {
+  //console.log('WORLD', world);
+  const worldId = world.id;
+  //console.log('WORLDID', worldId);
+
+  const rooms = await runtime.getRooms(worldId);
+  //console.log('ALL ROOMS', rooms);
+  let rooms2 = rooms.map(reportRoom.bind(null, runtime));
+  return { [worldId]: rooms2 };
+}
+
+function todo(runtime: IAgentRuntime, worlds: any[]) {
+  console.log('TODO', runtime, worlds);
+  // for (const world of worlds) {
+  //   console.log('WORLD', world);
+  // }
+  let reports = await Promise.all(worlds.map(reportWorld.bind(null, runtime)));
+  for (const report of reports) {
+    console.log('Report357:', report);
+  }
+}
+
+// pivotTable,
+// runtime: IAgentRuntime,
+// roomId: UUID,
+// cutoff: number,
+// limit: number = 100
 
 /**
  * pivots an agent with the given character, agent server, initialization function, plugins, and options.
@@ -460,9 +465,21 @@ export async function pivotAgent(
   const worlds = await runtime.getAllWorlds();
 
   //  const worlds = await runtime.getWorld(worldId);
-  console.log('ALL WORLDS', worlds);
+  //console.log('ALL WORLDS', worlds);
 
-  worlds.map(reportWorld.bind(null, runtime));
+  todo(runtime, worlds);
+  // let total_rooms = []
+  // console.log('ROOM2', rooms2);
+  // for (const room of rooms2) {
+  //   console.log('ROOM', room);
+  //   //for (const dv of room) {
+  //   //  console.log('DV', dv);
+  //   //  total_rooms.push(dv);
+  //   //}
+  // }
+
+  //  console.log("total_rooms", (total_rooms))
+  //  generateReports(total_rooms, runtime, "0-0-0-0-0", 100);
 
   return runtime;
 }

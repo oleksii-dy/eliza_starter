@@ -231,7 +231,7 @@ export async function generateMemoryPivotTable(
       roomId,
       //createdAt: new Date(currentTime),
     }; //, 'messages');
-    console.log('mem', mem);
+    // console.log('mem', mem);
   }
 
   pivotTable.push(...timestepPivot);
@@ -246,7 +246,7 @@ export async function generateMemoryPivotTable(
   });
 
   //logger.info('[PIVOT_TABLE] Pivot table with timesteps', { entries: pivotTable.slice(0, 5) });
-  console.log('[PIVOT_TABLE] Pivot table with timesteps', { entries: pivotTable.slice(0, 5) });
-  console.log('[PIVOT_TABLE2] Pivot table with timesteps', pivotTable);
+  //console.log('[PIVOT_TABLE] Pivot table with timesteps', { entries: pivotTable.slice(0, 5) });
+  //console.log('[PIVOT_TABLE2] Pivot table with timesteps', pivotTable.length);
   return pivotTable;
 }
