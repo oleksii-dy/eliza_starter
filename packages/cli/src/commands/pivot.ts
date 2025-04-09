@@ -1,5 +1,5 @@
 import { generateMemoryPivotTable } from '../server/api/pivot';
-
+import { writeFileSync } from 'fs';
 import { buildProject } from '@/src/utils/build-project';
 import {
   AgentRuntime,
@@ -165,7 +165,47 @@ export async function promptForProjectPlugins(
     }
   }
 }
+function exportToCSV(fileName: string, data: any[], headers: string[]) {
+  console.log('exportToCSV debug', fileName, data, headers);
+  const csvContent = [
+    headers.join(','), // Header row
+    ...data.map((entry) => headers.map((header) => entry[header] || '').join(',')), // Data rows
+  ].join('\n');
+  writeFileSync(fileName, csvContent);
+}
+export async function generateReports(
+  pivotTable,
+  runtime: IAgentRuntime,
+  roomId: UUID,
+  cutoff: number,
+  limit: number = 100
+) {
+  // Extract subsets for reports
+  const actionsReport = pivotTable.map((entry) => ({
+    Action: entry.action,
+    Thought: entry.thought,
+    Count: entry.count,
+  }));
 
+  const providersReport = pivotTable.map((entry) => ({
+    Provider: entry.provider,
+    Thought: entry.thought,
+    Count: entry.count,
+  }));
+
+  const thoughtsReport = pivotTable.map((entry) => ({
+    Thought: entry.thought,
+    MetaThought: entry.metaThought,
+    Count: entry.count,
+  }));
+
+  // Export to CSV files
+  exportToCSV('actions_report.csv', actionsReport, ['Action', 'Thought', 'Count']);
+  exportToCSV('providers_report.csv', providersReport, ['Provider', 'Thought', 'Count']);
+  exportToCSV('thoughts_report.csv', thoughtsReport, ['Thought', 'MetaThought', 'Count']);
+
+  console.log('Reports generated successfully!');
+}
 /**
  * pivots an agent with the given character, agent server, initialization function, plugins, and options.
  *
@@ -195,7 +235,7 @@ export async function pivotAgent(
     //const messageId = createUniqueUuid(runtime, Date.now().toString());
   } = {}
 ): Promise<IAgentRuntime> {
-  console.log('D112 pivotAgent', character, server, options);
+  //console.log('D112 pivotAgent', character, server, options);
   character.id ??= stringToUuid(character.name);
 
   const encryptedChar = encryptedCharacter(character);
@@ -378,7 +418,8 @@ export async function pivotAgent(
   //console.log('ALLMEMORIES', memories);
 
   let pv = await generateMemoryPivotTable(runtime, roomId, 100);
-  console.log('Pivot3', pv);
+  //console.log('Pivot3', pv);
+  generateReports(pv);
 
   return runtime;
 }
@@ -450,14 +491,14 @@ const pivotAgents = async (options: {
   });
 
   // Set up server properties
-  server.pivotAgent = async (character) => {
-    logger.info(`D112 P5 pivoting agent for character ${character.name}`);
+  // server.pivotAgent = async (character) => {
+  //  logger.info(`D112 P5 pivoting agent for character ${character.name}`);
 
-    return pivotAgent(character, server, options);
-  };
-  server.stopAgent = (runtime: IAgentRuntime) => {
-    stopAgent(runtime, server);
-  };
+  //    return pivotAgent(character, server, options);
+  //};
+  //server.stopAgent = (runtime: IAgentRuntime) => {
+  //  stopAgent(runtime, server);
+  //};
   server.loadCharacterTryPath = loadCharacterTryPath;
   server.jsonToCharacter = jsonToCharacter;
 
