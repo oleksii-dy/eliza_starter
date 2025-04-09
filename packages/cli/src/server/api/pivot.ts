@@ -3,21 +3,21 @@ import { logger } from '@elizaos/core';
 
 interface PivotEntry {
   action: string;
-  providers: string[];
+  provider: string;
   thought: string;
   metaThought: string;
   entityIds: string[];
   count: number;
   memoryIds: string[];
-  earliestCreatedAt: number;
-  frequencyOverTime: { [date: string]: number };
-  uniqueProvidersCount: number;
+  //earliestCreatedAt: number;
+  //frequencyOverTime: { [date: string]: number };
+  //uniqueProvidersCount: number;
   //embedding: number[];
   //matrixEmbedding: number[];
   //clusterId: number;
   //timestep: number;
-  [key: `cluster_${number}`]: number;
-  [key: `dim_${number}`]: number;
+  //[key: `cluster_${number}`]: number;
+  //[key: `dim_${number}`]: number;
 }
 
 function clusterEmbeddings(embeddings: number[][], k: number = 3): number[] {
@@ -38,7 +38,7 @@ export async function generateMemoryPivotTable(
     roomId,
     count: limit,
     unique: false,
-    where: { createdAt: { $lte: cutoff } }, // Initial cutoff
+    //  where: { createdAt: { $lte: cutoff } }, // Initial cutoff
   });
 
   const pivotTable: PivotEntry[] = [];
@@ -153,41 +153,43 @@ export async function generateMemoryPivotTable(
     // const clusterId = thoughtToCluster.get(thought) || 0;
 
     for (const action of actions) {
-      const key = `${thought}|${action}|${JSON.stringify(providers)}`;
-      const entry = pivotMap.get(key) || {
-        action,
-        providers: providers.slice(),
-        thought,
-        metaThought: '',
-        entityIds: [],
-        count: 0,
-        memoryIds: [],
-        earliestCreatedAt: Infinity,
-        frequencyOverTime: {},
-        uniqueProvidersCount: 0,
-        //embedding,
-        matrixEmbedding: [],
-        //clusterId,
-        //timestep,
-      };
+      for (const provider of providers) {
+        const key = `${thought}|${action}|${providers}`;
+        const entry = pivotMap.get(key) || {
+          action,
+          provider: provider,
+          thought,
+          metaThought: '',
+          entityIds: [],
+          count: 0,
+          memoryIds: [],
+          earliestCreatedAt: Infinity,
+          frequencyOverTime: {},
+          uniqueProvidersCount: 0,
+          //embedding,
+          matrixEmbedding: [],
+          //clusterId,
+          //timestep,
+        };
 
-      entry.count += 1;
-      entry.memoryIds.push(memory.id);
-      entry.earliestCreatedAt = Math.min(entry.earliestCreatedAt, createdAt);
-      entry.frequencyOverTime[dateKey] = (entry.frequencyOverTime[dateKey] || 0) + 1;
-      if (!entry.entityIds.includes(entityId)) entry.entityIds.push(entityId);
+        entry.count += 1;
+        entry.memoryIds.push(memory.id);
+        //entry.earliestCreatedAt = Math.min(entry.earliestCreatedAt, createdAt);
+        //entry.frequencyOverTime[dateKey] = (entry.frequencyOverTime[dateKey] || 0) + 1;
+        if (!entry.entityIds.includes(entityId)) entry.entityIds.push(entityId);
 
-      const actionKey = action;
-      const providerSet = providerSets.get(actionKey) || new Set();
-      providerSet.add(JSON.stringify(providers));
-      providerSets.set(actionKey, providerSet);
-      entry.uniqueProvidersCount = providerSets.get(actionKey)!.size;
+        const actionKey = action;
+        //   const providerSet = providerSets.get(actionKey) || new Set();
+        //   providerSet.add(JSON.stringify(providers));
+        //   providerSets.set(actionKey, providerSet);
+        //   entry.uniqueProvidersCount = providerSets.get(actionKey)!.size;
 
-      //embedding.forEach((value, idx) => {
-      //    entry[`dim_${idx}` as const] = value;
-      //});
+        //embedding.forEach((value, idx) => {
+        //    entry[`dim_${idx}` as const] = value;
+        //});
 
-      pivotMap.set(key, entry);
+        pivotMap.set(key, entry);
+      }
     }
 
     //catch (e) {
@@ -201,23 +203,23 @@ export async function generateMemoryPivotTable(
     //    if (i !== entry.clusterId) entry[`cluster_${i}` as const] = 0;
     //}
 
-    entry.metaThought = `thought reflects ${entry.count} ${entry.action} actions from ${entry.providers.join(', ')}.`;
+    entry.metaThought = `thought reflects ${entry.count} ${entry.action} actions from ${entry.provider}.`;
     const matrixText = JSON.stringify({
       action: entry.action,
-      providers: entry.providers,
+      provider: entry.provider,
       thought: entry.thought,
       metaThought: entry.metaThought,
       count: entry.count,
       //clusterId: entry.clusterId,
       //timestep: entry.timestep,
     });
-    const matrixMem = await runtime.addEmbeddingToMemory({
-      entityId: roomId,
-      agentId: runtime.agentId,
-      content: { text: matrixText },
-      roomId,
-      //  createdAt: new Date(currentTime),
-    });
+    // const matrixMem = await runtime.addEmbeddingToMemory({
+    //     entityId: roomId,
+    //     agentId: runtime.agentId,
+    //     content: { text: matrixText },
+    //     roomId,
+    //     //  createdAt: new Date(currentTime),
+    // });
     // entry.matrixEmbedding = matrixMem.embedding || new Array(384).fill(0);
 
     //await runtime.createMemory(
@@ -240,7 +242,7 @@ export async function generateMemoryPivotTable(
     roomId,
     count: limit,
     unique: false,
-    where: { createdAt: { $lte: cutoff } }, // Pin to cutoff
+    //where: { createdAt: { $lte: cutoff } }, // Pin to cutoff
   });
 
   //logger.info('[PIVOT_TABLE] Pivot table with timesteps', { entries: pivotTable.slice(0, 5) });

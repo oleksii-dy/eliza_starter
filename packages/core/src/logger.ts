@@ -459,22 +459,17 @@ const options = {
     logMethod(inputArgs: [string | Record<string, unknown>, ...unknown[]], method: LogFn): void {
       const error = new Error();
       //	const stack = error.stack.replace("/mnt/data1/nix/time/","TIME")
-      const stack = error.stack
-        //.replaceAll('/mnt/data1/nix/time/2025/03/14/cloud-deployment-eliza', 'PRJ1')
-        //.replaceAll('/mnt/data1/nix/time/2025/03/14/cloud-deployment-eliza', 'PRJ2')
-        //.replaceAll('/mnt/data1/nix/time/', 'TIME')
-        .split('\n');
-      //.slice(3, -1);
+      //const stack = error.stack
+      //.replaceAll('/mnt/data1/nix/time/2025/03/14/cloud-deployment-eliza', 'PRJ1')
+      //.replaceAll('/mnt/data1/nix/time/2025/03/14/cloud-deployment-eliza', 'PRJ2')
+      //.replaceAll('/mnt/data1/nix/time/', 'TIME')
+      //  .split('\n');
+      //.slice(3, -4);
 
-      console.log(
-        'JSON',
-        //JSON.stringify(
-        {
-          inputArgs: inputArgs,
-          stack: stack,
-        }
-        //)
-      );
+      console.log('JSON', JSON.stringify({ inputArgs: inputArgs }));
+      //stack: stack,
+      //}
+      //)
       //console.log('DEBUGSTACK', stack);
     },
   },

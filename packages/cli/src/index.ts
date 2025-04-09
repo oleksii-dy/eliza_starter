@@ -17,6 +17,7 @@ import { project } from './commands/project';
 import { publish } from './commands/publish';
 import { start } from './commands/start';
 import { train } from './commands/train';
+import { pivot } from './commands/pivot';
 import { prof } from './commands/prof';
 import { cpuprof } from './commands/cpuprof';
 import { teeCommand as tee } from './commands/tee';
@@ -64,6 +65,7 @@ async function main() {
     .addCommand(tee)
     .addCommand(start)
     .addCommand(train)
+    .addCommand(pivot)
     .addCommand(prof)
     .addCommand(cpuprof)
     .addCommand(update)
