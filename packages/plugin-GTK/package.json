@@ -1,5 +1,5 @@
 {
-  "name": "@elizaos/plugin-GTK",
+  "name": "@elizaos/plugin-gtk",
   "description": "ElizaOS plugin for Sifchain GTK margin trading platform",
   "version": "1.0.0",
   "private": false,
@@ -9,7 +9,7 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "github:elizaos-plugins/plugin-GTK"
+    "url": "github:elizaos-plugins/plugin-gtk"
   },
   "exports": {
     "./package.json": "./package.json",

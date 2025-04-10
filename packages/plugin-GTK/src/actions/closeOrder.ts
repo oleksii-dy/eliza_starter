@@ -5,9 +5,22 @@ import {
   type IAgentRuntime,
   type Memory,
   type State,
-  logger,
+  elizaLogger,
+  generateObject,
 } from '@elizaos/core';
 import { GTKService } from '../service';
+import { z } from 'zod';
+import { composeContext } from '../utils';
+import { closeOrderTemplate } from '../templates';
+import { ModelClass } from '../core';
+
+
+// Define schema for close order parameters
+const CloseOrderSchema = z.object({
+  tradeId: z.number().describe('The ID of the trade/order to close')
+});
+
+type CloseOrderContent = z.infer<typeof CloseOrderSchema>;
 
 /**
  * Close Order Action
@@ -17,27 +30,57 @@ export const closeOrderAction: Action = {
   similes: ['EXIT_TRADE', 'CLOSE_POSITION', 'END_TRADE'],
   description: 'Closes an existing order/trade',
 
-  validate: async (_runtime: IAgentRuntime, message: Memory, _state: State): Promise<boolean> => {
-    const content = message.content.text?.toLowerCase() || '';
-    return content.includes('close') && content.includes('order');
+  validate: async (runtime: IAgentRuntime) => {
+    // Check if required plugin values are present
+    return !!(
+      runtime.getSetting('API_KEY') &&
+      runtime.getSetting('MNEMONIC') &&
+      (runtime.getSetting('NETWORK') || 'mainnet')
+    );
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    options: any,
+    state: State,
+    _options: Record<string, unknown>,
     callback: HandlerCallback,
-    _responses: Memory[]
   ) => {
     try {
-      logger.info('Handling CLOSE_ORDER action');
+      elizaLogger.info('Handling CLOSE_ORDER action');
       
-      // Extract trade ID from options
-      const { tradeId } = options || {};
+      // Compose context from state and template
+      const context = composeContext({
+        state,
+        template: closeOrderTemplate,
+        userMessage: message.content.text || '',
+      });
+
+      // Use LLM to extract parameters
+      const extractionResult = await generateObject({
+        runtime,
+        context,
+        modelClass: ModelClass.LARGE,
+        schema: CloseOrderSchema,
+      });
+
+      if (!extractionResult.object) {
+        const response: Content = {
+          text: 'Failed to extract trade details. Please provide a trade ID to close.',
+        };
+        callback(response);
+        return response;
+      }
+
+      const { tradeId } = extractionResult.object as CloseOrderContent;
       
+      // Validate extracted parameters
       if (!tradeId) {
-        throw new Error('Trade ID is required to close an order');
+        const response: Content = {
+          text: 'Please provide a trade ID to close. For example: "Close order #123"',
+        };
+        callback(response);
+        return response;
       }
 
       // Get GTK service and client
@@ -45,30 +88,30 @@ export const closeOrderAction: Action = {
       const client = gtkService.getClient();
 
       // Close the order
-      const result = await client.closeOrder(tradeId);
+      const closeResult = await client.closeOrder(tradeId);
 
       // Create response
       const responseContent: Content = {
-        text: result 
-          ? `Order #${tradeId} closed successfully! Transaction hash: ${result.transactionHash}` 
+        text: closeResult 
+          ? `Order #${tradeId} closed successfully! Transaction hash: ${closeResult.transactionHash}` 
           : `Failed to close order #${tradeId}`,
         actions: ['CLOSE_ORDER'],
         source: message.content.source,
-        data: result ? { transactionHash: result.transactionHash } : undefined
+        data: closeResult ? { transactionHash: closeResult.transactionHash } : undefined
       };
 
-      await callback(responseContent);
+      callback(responseContent);
       return responseContent;
     } catch (error) {
-      logger.error('Error in CLOSE_ORDER action:', error);
+      elizaLogger.error('Error in CLOSE_ORDER action:', error);
       
       const errorContent: Content = {
-        text: `Error closing order: ${error.message}`,
+        text: `Error closing order: ${error.message || String(error)}`,
         actions: ['CLOSE_ORDER'],
         source: message.content.source,
       };
       
-      await callback(errorContent);
+      callback(errorContent);
       return errorContent;
     }
   },
@@ -76,13 +119,13 @@ export const closeOrderAction: Action = {
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
           text: 'Close my trade with ID 123',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
           text: 'Order #123 closed successfully! Transaction hash: 0x123...',
           actions: ['CLOSE_ORDER'],
@@ -91,3 +134,4 @@ export const closeOrderAction: Action = {
     ],
   ],
 };
+

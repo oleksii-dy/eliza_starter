@@ -5,9 +5,21 @@ import {
   type IAgentRuntime,
   type Memory,
   type State,
-  logger,
+  elizaLogger,
+  generateObject,
 } from '@elizaos/core';
 import { GTKService } from '../service';
+import { z } from 'zod';
+import { composeContext } from '../utils';
+import { getTradeTemplate } from '../templates';
+import { ModelClass } from '../core';
+
+// Define schema for get trade parameters
+const GetTradeSchema = z.object({
+  tradeId: z.number().describe('The ID of the trade to retrieve details for')
+});
+
+type GetTradeContent = z.infer<typeof GetTradeSchema>;
 
 /**
  * Get Trade Action
@@ -17,27 +29,56 @@ export const getTradeAction: Action = {
   similes: ['TRADE_DETAILS', 'VIEW_TRADE', 'SHOW_TRADE'],
   description: 'Gets details of a specific trade by ID',
 
-  validate: async (_runtime: IAgentRuntime, message: Memory, _state: State): Promise<boolean> => {
-    const content = message.content.text?.toLowerCase() || '';
-    return content.includes('get') && content.includes('trade') && content.includes('id');
+  validate: async (runtime: IAgentRuntime) => {
+    // Check if required plugin values are present
+    return !!(
+      runtime.getSetting('API_KEY') &&
+      runtime.getSetting('MNEMONIC') &&
+      (runtime.getSetting('NETWORK') || 'mainnet')
+    );
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    options: any,
+    state: State,
+    _options: Record<string, unknown>,
     callback: HandlerCallback,
-    _responses: Memory[]
   ) => {
     try {
-      logger.info('Handling GET_TRADE action');
+      elizaLogger.info('Handling GET_TRADE action');
       
-      // Extract trade ID from options
-      const { tradeId } = options || {};
+      // Compose context from state and template
+      const context = composeContext({
+        state,
+        template: getTradeTemplate,
+        userMessage: message.content.text || '',
+      });
+
+      // Use LLM to extract parameters
+      const extractionResult = await generateObject({
+        runtime,
+        context,
+        modelClass: ModelClass.LARGE,
+        schema: GetTradeSchema,
+      });
+
+      if (!extractionResult?.object) {
+        const response: Content = {
+          text: 'Please provide a trade ID to view. For example: "Show me trade #123"',
+        };
+        callback(response);
+        return response;
+      }
+
+      const { tradeId } = extractionResult.object as GetTradeContent;
       
       if (!tradeId) {
-        throw new Error('Trade ID is required to get trade details');
+        const response: Content = {
+          text: 'Please provide a valid trade ID. For example: "Show me trade #123"',
+        };
+        callback(response);
+        return response;
       }
 
       // Get GTK service and client
@@ -45,7 +86,7 @@ export const getTradeAction: Action = {
       const client = gtkService.getClient();
 
       // Get trade details
-      const trade = await client.getTrade(tradeId);
+      const trade = await client.getTrade(Number(tradeId));
 
       // Create response
       let responseText: string;
@@ -70,21 +111,21 @@ export const getTradeAction: Action = {
         text: responseText,
         actions: ['GET_TRADE'],
         source: message.content.source,
-        data: { trade }
+        data: { trade, tradeId }
       };
 
-      await callback(responseContent);
+      callback(responseContent);
       return responseContent;
     } catch (error) {
-      logger.error('Error in GET_TRADE action:', error);
+      elizaLogger.error('Error in GET_TRADE action:', error);
       
       const errorContent: Content = {
-        text: `Error getting trade details: ${error.message}`,
+        text: `Error getting trade details: ${error.message || String(error)}`,
         actions: ['GET_TRADE'],
         source: message.content.source,
       };
       
-      await callback(errorContent);
+      callback(errorContent);
       return errorContent;
     }
   },
@@ -92,15 +133,15 @@ export const getTradeAction: Action = {
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
           text: 'Show me the details of trade ID 123',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
-          text: 'Trade #123 Details:\nType: LONG btc\nStatus: ACTIVE\nCollateral: 0.01 uusdc\nLeverage: 2x\nEntry Price: 45000\nCreated: 4/1/2023, 10:30:00 AM\nTrader: sif1abc...\nP&L: +0.005',
+          text: 'Trade #123 Details:\nType: LONG btc\nStatus: ACTIVE\nCollateral: 0.01 usdc\nLeverage: 2x\nEntry Price: 45000\nCreated: 4/1/2023, 10:30:00 AM\nTrader: sif1abc...\nP&L: +0.005',
           actions: ['GET_TRADE'],
         },
       },

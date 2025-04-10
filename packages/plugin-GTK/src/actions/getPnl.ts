@@ -5,10 +5,22 @@ import {
   type IAgentRuntime,
   type Memory,
   type State,
-  logger,
+  elizaLogger,
+  generateObject,
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { PnlTypeEnum } from '@sifchain/gtk-api';
+import { z } from 'zod';
+import { composeContext } from '../utils';
+import { pnlTemplate } from '../templates';
+import { ModelClass } from '../core';
+
+// Define schema for PnL parameters
+const PnlSchema = z.object({
+  pnlType: z.enum(['OVERALL', 'REALIZED', 'UNREALIZED']).default('OVERALL').describe('The type of PnL to retrieve')
+});
+
+type PnlContent = z.infer<typeof PnlSchema>;
 
 /**
  * Get PnL Action
@@ -18,26 +30,49 @@ export const getPnlAction: Action = {
   similes: ['PROFIT_LOSS', 'CALCULATE_PNL', 'TRADING_PERFORMANCE'],
   description: 'Gets the profit and loss information',
 
-  validate: async (_runtime: IAgentRuntime, message: Memory, _state: State): Promise<boolean> => {
-    const content = message.content.text?.toLowerCase() || '';
-    return content.includes('pnl') || (content.includes('profit') && content.includes('loss'));
+  validate: async (runtime: IAgentRuntime) => {
+    // Check if required plugin values are present
+    return !!(
+      runtime.getSetting('API_KEY') &&
+      runtime.getSetting('MNEMONIC') &&
+      (runtime.getSetting('NETWORK') || 'mainnet')
+    );
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    options: any,
+    state: State,
+    _options: Record<string, unknown>,
     callback: HandlerCallback,
-    _responses: Memory[]
   ) => {
     try {
-      logger.info('Handling GET_PNL action');
+      elizaLogger.info('Handling GET_PNL action');
       
-      // Extract parameters from options
-      const { 
-        pnlType = PnlTypeEnum.OVERALL
-      } = options || {};
+      // Compose context from state and template
+      const context = composeContext({
+        state,
+        template: pnlTemplate,
+        userMessage: message.content.text || '',
+      });
+
+      // Use LLM to extract parameters
+      const extractionResult = await generateObject({
+        runtime,
+        context,
+        modelClass: ModelClass.LARGE,
+        schema: PnlSchema,
+      });
+
+      // Determine PnL type
+      let pnlType = PnlTypeEnum.OVERALL;
+      const extractedPnlType = (extractionResult?.object as PnlContent)?.pnlType;
+      
+      if (extractedPnlType === 'REALIZED') {
+        pnlType = PnlTypeEnum.REALIZED;
+      } else if (extractedPnlType === 'UNREALIZED') {
+        pnlType = PnlTypeEnum.UNREALIZED;
+      }
 
       // Get GTK service and client
       const gtkService = runtime.getService('gtk') as GTKService;
@@ -61,21 +96,21 @@ export const getPnlAction: Action = {
         text: responseText,
         actions: ['GET_PNL'],
         source: message.content.source,
-        data: { pnl }
+        data: { pnl, pnlType }
       };
 
-      await callback(responseContent);
+      callback(responseContent);
       return responseContent;
     } catch (error) {
-      logger.error('Error in GET_PNL action:', error);
+      elizaLogger.error('Error in GET_PNL action:', error);
       
       const errorContent: Content = {
-        text: `Error getting PnL: ${error.message}`,
+        text: `Error getting PnL: ${error.message || String(error)}`,
         actions: ['GET_PNL'],
         source: message.content.source,
       };
       
-      await callback(errorContent);
+      callback(errorContent);
       return errorContent;
     }
   },
@@ -83,15 +118,15 @@ export const getPnlAction: Action = {
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
           text: 'What is my overall PnL?',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
-          text: 'OVERALL Profit & Loss:\nbtc: +0.05\neth: -0.02\nuusdc: +100',
+          text: 'OVERALL Profit & Loss:\nbtc: +0.05\neth: -0.02\nusdc: +100',
           actions: ['GET_PNL'],
         },
       },

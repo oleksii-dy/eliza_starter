@@ -1,7 +1,7 @@
 import { 
   type IAgentRuntime, 
   Service, 
-  logger 
+  elizaLogger,
 } from '@elizaos/core';
 import { 
   APIClientWrapper
@@ -22,14 +22,14 @@ export class GTKService extends Service {
   }
 
   static async start(runtime: IAgentRuntime) {
-    logger.info(`Starting GTK service`);
+    elizaLogger.info(`Starting GTK service`);
     const service = new GTKService(runtime);
     await service.initClient();
     return service;
   }
 
   static async stop(runtime: IAgentRuntime) {
-    logger.info('Stopping GTK service');
+    elizaLogger.info('Stopping GTK service');
     const service = runtime.getService(GTKService.serviceType);
     if (!service) {
       throw new Error('GTK service not found');
@@ -38,7 +38,7 @@ export class GTKService extends Service {
   }
 
   async stop() {
-    logger.info('GTK service stopped');
+    elizaLogger.info('GTK service stopped');
     this.apiClient = null;
   }
 
@@ -51,14 +51,14 @@ export class GTKService extends Service {
         throw new Error('Mnemonic is required to initialize GTK client');
       }
 
-      logger.info('Initializing GTK client...');
+      elizaLogger.info('Initializing GTK client...');
       const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
         prefix: "sif"
       });
       this.apiClient = await APIClientWrapper.create(wallet, "mainnet");
-      logger.info('GTK client initialized successfully');
+      elizaLogger.info('GTK client initialized successfully');
     } catch (error) {
-      logger.error('Failed to initialize GTK client:', error);
+      elizaLogger.error('Failed to initialize GTK client:', error);
       throw error;
     }
   }

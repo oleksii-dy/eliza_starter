@@ -5,10 +5,23 @@ import {
   type IAgentRuntime,
   type Memory,
   type State,
-  logger,
+  elizaLogger,
+  generateObject,
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { DEFAULT_COLLATERAL_TYPE } from '../constants';
+import { z } from 'zod';
+import { composeContext } from '../utils';
+import { topMatchTemplate } from '../templates';
+import { ModelClass } from '../core';
+
+// Define schema for top match parameters
+const TopMatchSchema = z.object({
+  collateralType: z.string().default(DEFAULT_COLLATERAL_TYPE).describe('The type of collateral to match'),
+  collateralAmount: z.number().default(10).describe('The amount of collateral to match')
+});
+
+type TopMatchContent = z.infer<typeof TopMatchSchema>;
 
 /**
  * Get Top Match Action
@@ -18,27 +31,43 @@ export const getTopMatchAction: Action = {
   similes: ['FIND_MATCH', 'LIQUIDITY_CHECK', 'MATCH_COLLATERAL'],
   description: 'Gets the top match amount for a given collateral type',
 
-  validate: async (_runtime: IAgentRuntime, message: Memory, _state: State): Promise<boolean> => {
-    const content = message.content.text?.toLowerCase() || '';
-    return content.includes('top') && content.includes('match');
+  validate: async (runtime: IAgentRuntime) => {
+    // Check if required plugin values are present
+    return !!(
+      runtime.getSetting('API_KEY') &&
+      runtime.getSetting('MNEMONIC') &&
+      (runtime.getSetting('NETWORK') || 'mainnet')
+    );
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    _state: State,
-    options: any,
+    state: State,
+    _options: Record<string, unknown>,
     callback: HandlerCallback,
-    _responses: Memory[]
   ) => {
     try {
-      logger.info('Handling GET_TOP_MATCH action');
+      elizaLogger.info('Handling GET_TOP_MATCH action');
       
-      // Extract parameters from options
-      const { 
-        collateralType = DEFAULT_COLLATERAL_TYPE,
-        collateralAmount = 10
-      } = options || {};
+      // Compose context from state and template
+      const context = composeContext({
+        state,
+        template: topMatchTemplate,
+        userMessage: message.content.text || '',
+      });
+
+      // Use LLM to extract parameters
+      const extractionResult = await generateObject({
+        runtime,
+        context,
+        modelClass: ModelClass.LARGE,
+        schema: TopMatchSchema,
+      });
+
+      // Extract collateral type and amount
+      const { collateralType = DEFAULT_COLLATERAL_TYPE, collateralAmount = 10 } = 
+        (extractionResult?.object as TopMatchContent) || {};
 
       // Get GTK service and client
       const gtkService = runtime.getService('gtk') as GTKService;
@@ -46,7 +75,7 @@ export const getTopMatchAction: Action = {
 
       // Get top match
       const topMatch = await client.getTopMatch(
-        collateralType, 
+        collateralType as any, 
         collateralAmount
       );
 
@@ -57,21 +86,21 @@ export const getTopMatchAction: Action = {
           : `No match found for ${collateralAmount} ${collateralType}`,
         actions: ['GET_TOP_MATCH'],
         source: message.content.source,
-        data: { topMatch }
+        data: { topMatch, collateralType, collateralAmount }
       };
 
-      await callback(responseContent);
+      callback(responseContent);
       return responseContent;
     } catch (error) {
-      logger.error('Error in GET_TOP_MATCH action:', error);
+      elizaLogger.error('Error in GET_TOP_MATCH action:', error);
       
       const errorContent: Content = {
-        text: `Error finding top match: ${error.message}`,
+        text: `Error finding top match: ${error.message || String(error)}`,
         actions: ['GET_TOP_MATCH'],
         source: message.content.source,
       };
       
-      await callback(errorContent);
+      callback(errorContent);
       return errorContent;
     }
   },
@@ -79,15 +108,15 @@ export const getTopMatchAction: Action = {
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
           text: 'Find the top match for 10 USDC',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{agent}}',
         content: {
-          text: 'Top match found: 15 USD for 10 uusdc',
+          text: 'Top match found: 15 USD for 10 USDC',
           actions: ['GET_TOP_MATCH'],
         },
       },
