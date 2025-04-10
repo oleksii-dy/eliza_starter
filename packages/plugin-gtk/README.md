@@ -9,7 +9,7 @@ This plugin provides a set of actions that allow ElizaOS to interact with the Si
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-GTK
+npm install @elizaos/plugin-gtk
 ```
 
 ## Configuration
