@@ -26,7 +26,7 @@ Example configuration in your ElizaOS agent:
 {
   "plugins": [
     {
-      "name": "@elizaos/plugin-GTK",
+      "name": "@elizaos/plugin-gtk",
       "config": {
         "API_KEY": "your-api-key",
         "MNEMONIC": "your-wallet-mnemonic",
@@ -175,18 +175,21 @@ The plugin is organized with the following structure:
 ```
 src/
 ├── actions/       # Individual action implementations
-│   ├── placeOrder.ts
-│   ├── closeOrder.ts
 │   ├── cancelOrder.ts
+│   ├── closeOrder.ts
 │   ├── getInterestRate.ts
-│   ├── getTrades.ts
-│   ├── getTrade.ts
+│   ├── getPnl.ts
 │   ├── getTopMatch.ts
-│   └── getPnl.ts
+│   ├── getTrade.ts
+│   ├── getTrades.ts
+│   ├── index.ts
+│   └── placeOrder.ts
 ├── constants/     # Constants used throughout the plugin
+├── core.ts        # Core plugin functionality
+├── index.ts       # Main plugin entry point
 ├── service.ts     # GTK service implementation
-├── types.ts       # Type definitions
-└── index.ts       # Main plugin entry point
+├── templates.ts   # Message templates
+└── utils.ts       # Utility functions
 ```
 
 This modular structure makes it easier to maintain and extend the plugin with new functionality.
