@@ -214,39 +214,32 @@ export async function generateReports(
   console.log('Reports generated successfully!');
 }
 
-async function reportRoom(runtime, room: any) {
+async function reportRoom(runtime: IAgentRuntime, room: any) {
   const memories = await runtime.getMemories({
-    //"tablename" :
     tableName: 'messages',
     roomId: room.id,
   });
-  //console.log('ALLMEMORIES', memories);
 
-  let pv = await generateMemoryPivotTable(runtime, room.id, 1000);
-  console.log('Pivot3', pv.length);
+  const pivotTable = await generateMemoryPivotTable(runtime, room.id, 1000);
+  console.log('Pivot Table Length:', pivotTable.length);
 
-  return { [room.id]: pv };
+  return { roomId: room.id, pivotTable };
 }
 
-async function reportWorld(runtime, world: any) {
-  //console.log('WORLD', world);
-  const worldId = world.id;
-  //console.log('WORLDID', worldId);
+async function reportWorld(runtime: IAgentRuntime, world: any) {
+  const rooms = await runtime.getRooms(world.id);
+  const roomReports = await Promise.all(rooms.map((room) => reportRoom(runtime, room)));
 
-  const rooms = await runtime.getRooms(worldId);
-  //console.log('ALL ROOMS', rooms);
-  let rooms2 = rooms.map(reportRoom.bind(null, runtime));
-  return { [worldId]: rooms2 };
+  return { worldId: world.id, roomReports };
 }
 
-function todo(runtime: IAgentRuntime, worlds: any[]) {
-  console.log('TODO', runtime, worlds);
-  // for (const world of worlds) {
-  //   console.log('WORLD', world);
-  // }
-  let reports = await Promise.all(worlds.map(reportWorld.bind(null, runtime)));
-  for (const report of reports) {
-    console.log('Report357:', report);
+async function generateReportsForWorlds(runtime: IAgentRuntime, worlds: any[]) {
+  // console.log('Generating Reports for Worlds:', worlds);
+
+  const worldReports = await Promise.all(worlds.map((world) => reportWorld(runtime, world)));
+
+  for (const worldReport of worldReports) {
+    console.log('World Report:', worldReport);
   }
 }
 
@@ -467,7 +460,7 @@ export async function pivotAgent(
   //  const worlds = await runtime.getWorld(worldId);
   //console.log('ALL WORLDS', worlds);
 
-  todo(runtime, worlds);
+  generateReportsForWorlds(runtime, worlds);
   // let total_rooms = []
   // console.log('ROOM2', rooms2);
   // for (const room of rooms2) {
