@@ -1,10 +1,9 @@
 import { logger } from '@elizaos/core';
-import { execa } from 'execa';
-import { getPluginVersion } from './registry';
-import { isGlobalInstallation, getPackageManager, executeInstallation } from './package-manager';
-import path from 'node:path';
 import fs from 'node:fs';
+import path from 'node:path';
 import { loadPluginModule } from './load-plugin';
+import { executeInstallation } from './package-manager';
+import { getPluginVersion } from './registry';
 
 /**
  * Get the CLI's installation directory when running globally
@@ -60,31 +59,43 @@ async function verifyPluginImport(repository: string, context: string): Promise<
 /**
  * Attempts to install a plugin in a specific directory
  * @param {string} repository - The plugin repository to install
- * @param {string} repoUrl - Cleaned repository URL
  * @param {string} versionString - Version string for installation
- * @param {boolean} useGlobalFlag - Whether to use the global flag
  * @param {string} directory - Directory to install in
  * @param {string} context - Description of the installation context for logging
  * @returns {boolean} - Whether the installation and import verification was successful
  */
 async function attemptInstallation(
   repository: string,
-  repoUrl: string,
   versionString: string,
-  useGlobalFlag: boolean,
   directory: string,
-  context: string
+  context: string,
+  options: {
+    tryNpm?: boolean;
+    tryGithub?: boolean;
+    tryMonorepo?: boolean;
+    monorepoBranch?: string;
+  } = {}
 ): Promise<boolean> {
   logger.info(`Attempting to install plugin ${context}...`);
 
   try {
-    // Use centralized installation function
-    await executeInstallation(repoUrl, versionString, useGlobalFlag, directory);
+    // Use centralized installation function which now returns success status and identifier
+    const installResult = await executeInstallation(repository, versionString, directory, options);
 
-    // Verify the installation worked
-    return await verifyPluginImport(repository, context);
+    // If installation failed, return false immediately
+    if (!installResult.success || !installResult.installedIdentifier) {
+      logger.warn(`Installation failed for plugin ${context}`);
+      return false;
+    }
+
+    // Installation succeeded, now verify the import using the correct identifier
+    logger.info(
+      `Installation successful for ${installResult.installedIdentifier}, verifying import...`
+    );
+    return await verifyPluginImport(installResult.installedIdentifier, context);
   } catch (installError) {
-    logger.warn(`Failed to install plugin ${context}: ${installError.message}`);
+    // Catch any unexpected errors during the process
+    logger.warn(`Error during installation attempt ${context}: ${installError.message}`);
     return false;
   }
 }
@@ -95,12 +106,14 @@ async function attemptInstallation(
  * @param {string} repository - The repository URL of the plugin to install.
  * @param {string} cwd - The current working directory where the plugin will be installed.
  * @param {string} version - The specific version of the plugin to install.
+ * @param {string} monorepoBranch - The specific branch to use for monorepo installation.
  * @returns {Promise<boolean>} - A Promise that resolves to true if the plugin is successfully installed, or false otherwise.
  */
 export async function installPlugin(
   repository: string,
   cwd: string,
-  version?: string
+  version?: string,
+  monorepoBranch?: string
 ): Promise<boolean> {
   // Mark this plugin as installed to ensure we don't get into an infinite loop
   logger.info(`Installing plugin: ${repository}`);
@@ -119,58 +132,65 @@ export async function installPlugin(
   }
 
   // Get installation context info
-  const isGlobal = isGlobalInstallation();
-  const cliDir = isGlobal ? getCliDirectory() : null;
+  const cliDir = getCliDirectory();
 
   // Get the version string for installation
   let versionString = '';
 
-  // If we have a version to look up in the registry
+  // If we have a version (tag or specific version)
   if (version) {
-    if (version.startsWith('v')) {
-      versionString = `@${version}`;
+    // Basic check if it looks like a git commit hash (e.g., 7+ hex characters)
+    const looksLikeGitHash = /^[a-f0-9]{7,}$/i.test(version);
+
+    if (looksLikeGitHash) {
+      // If the input itself looks like a hash, use #
+      versionString = `#${version}`;
     } else {
-      try {
-        const resolvedVersion = await getPluginVersion(repoUrl, version);
-        if (resolvedVersion) {
-          versionString = `#${resolvedVersion}`;
-        } else {
-          versionString = `@${version}`;
-        }
-      } catch (error) {
-        // Continue with the direct version if registry lookup fails
-        versionString = `@${version}`;
-      }
+      // Otherwise, assume it's an npm tag/version range and use @
+      // No need to call getPluginVersion here, just use the tag directly.
+      // The package manager will resolve the tag (@beta, @latest, @1.2.3)
+      versionString = `@${version}`;
     }
+    logger.debug(`Using version string: ${versionString} for package manager.`);
   }
 
-  // Attempt local installation first (preferred approach)
-  if (await attemptInstallation(repository, repoUrl, versionString, false, cwd, 'locally')) {
+  // Determine installation options based on input
+  let installOptions = {
+    tryNpm: true,
+    tryGithub: true,
+    tryMonorepo: true,
+    monorepoBranch,
+  };
+
+  // If installing a specific scoped package version/tag, prioritize npm ONLY
+  if (repository.startsWith('@') && version) {
+    installOptions = {
+      ...installOptions, // Keep monorepoBranch if passed
+      tryNpm: true,
+      tryGithub: false,
+      tryMonorepo: false,
+    };
+    logger.info(`Prioritizing npm install for ${repository}@${version}`);
+  }
+
+  // Try installation in the current directory with determined approaches
+  if (await attemptInstallation(repository, versionString, cwd, ':', installOptions)) {
     return true;
   }
 
-  // If local installation failed and we're running globally, try CLI directory installation
-  if (
-    isGlobal &&
-    cliDir &&
-    (await attemptInstallation(
-      repository,
-      repoUrl,
-      versionString,
-      false,
-      cliDir,
-      'in CLI directory'
-    ))
-  ) {
-    return true;
-  }
-
-  // Last resort: try global installation
-  if (
-    isGlobal &&
-    (await attemptInstallation(repository, repoUrl, versionString, true, cwd, 'globally'))
-  ) {
-    return true;
+  // If all local installations failed and we're running globally, try CLI directory installation
+  if (cliDir) {
+    if (
+      await attemptInstallation(
+        repository,
+        versionString,
+        cliDir,
+        'in CLI directory',
+        installOptions
+      )
+    ) {
+      return true;
+    }
   }
 
   // If we got here, all installation attempts failed
