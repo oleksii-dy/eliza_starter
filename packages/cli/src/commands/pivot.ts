@@ -229,7 +229,7 @@ async function reportRoom(runtime: IAgentRuntime, room: any) {
 async function reportWorld(runtime: IAgentRuntime, world: any) {
   const rooms = await runtime.getRooms(world.id);
   const roomReports = await Promise.all(rooms.map((room) => reportRoom(runtime, room)));
-
+  console.log('roomReports', world.id, roomReports);
   return { worldId: world.id, roomReports };
 }
 
@@ -425,7 +425,7 @@ export async function pivotAgent(
   const entityId = createUniqueUuid(runtime, 'Anon');
   const userName = 'User';
 
-  logger.info('Generating new tweet...');
+  logger.info('Generating Report');
   // Ensure world exists first
   //console.log('Ensuring world exists', worldId);
 
