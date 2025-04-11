@@ -229,26 +229,100 @@ async function reportRoom(runtime: IAgentRuntime, room: any) {
 async function reportWorld(runtime: IAgentRuntime, world: any) {
   const rooms = await runtime.getRooms(world.id);
   const roomReports = await Promise.all(rooms.map((room) => reportRoom(runtime, room)));
-  console.log('roomReports', world.id, roomReports);
+  console.log('roomReports2', world.id, roomReports);
   return { worldId: world.id, roomReports };
 }
 
-async function generateReportsForWorlds(runtime: IAgentRuntime, worlds: any[]) {
-  // console.log('Generating Reports for Worlds:', worlds);
+//async function generateReportsForWorlds(runtime: IAgentRuntime, worlds: any[]) {
+// console.log('Generating Reports for Worlds:', worlds);
 
-  const worldReports = await Promise.all(worlds.map((world) => reportWorld(runtime, world)));
+//for (const worldReport of worldReports) {
+//    console.log('World Report:', worldReport);
+// }
 
-  for (const worldReport of worldReports) {
-    console.log('World Report:', worldReport);
-  }
-}
+//return generateReportsForWorlds(runtime, worldReports);
+//generateReports(worldReports, runtime, worlds[0].id, 1000);
+//}
 
 // pivotTable,
 // runtime: IAgentRuntime,
 // roomId: UUID,
 // cutoff: number,
 // limit: number = 100
+// Interface for the pivot table entry in the World Report
+interface PivotTableEntry {
+  action: string;
+  provider: string;
+  thought: string;
+  metaThought: string;
+  entityIds: string[];
+  count: number;
+  memoryIds: string[];
+  earliestCreatedAt: number | 'Infinity';
+  frequencyOverTime: Record<string, any>;
+  uniqueProvidersCount: number;
+  matrixEmbedding: any[];
+}
 
+// Interface for a room report
+interface RoomReport {
+  roomId: string;
+  pivotTable: PivotTableEntry[];
+}
+
+// Interface for the World Report
+interface WorldReport {
+  worldId: string;
+  roomReports: RoomReport[];
+}
+
+// Interface for the flattened pivot table entry (from previous response)
+interface FlattenedPivotTableEntry {
+  worldId: string;
+  roomId: string;
+  action: string;
+  provider: string;
+  thought: string;
+  metaThought: string;
+  entityIds: string; // Joined array of entity IDs
+  count: number;
+  memoryIds: string; // Joined array of memory IDs
+  earliestCreatedAt: number | 'Infinity';
+  frequencyOverTime: string; // JSON-serialized
+  uniqueProvidersCount: number;
+  matrixEmbedding: string; // JSON-serialized
+}
+function flattenWorldReport(worldReport: WorldReport): FlattenedPivotTableEntry[] {
+  console.log('flattenWorldReport', worldReport);
+  const flattened: FlattenedPivotTableEntry[] = [];
+
+  // Iterate through each room report
+  for (const world of worldReport) {
+    for (const roomReport of world.roomReports) {
+      // Iterate through each pivot table entry in the room
+      for (const pivotEntry of roomReport.pivotTable) {
+        const flattenedEntry: FlattenedPivotTableEntry = {
+          worldId: worldReport.worldId,
+          roomId: roomReport.roomId,
+          action: pivotEntry.action,
+          provider: pivotEntry.provider,
+          thought: pivotEntry.thought,
+          metaThought: pivotEntry.metaThought,
+          entityIds: pivotEntry.entityIds.join(','), // Join array into string
+          count: pivotEntry.count,
+          memoryIds: pivotEntry.memoryIds.join(','), // Join array into string
+          earliestCreatedAt: pivotEntry.earliestCreatedAt,
+          frequencyOverTime: JSON.stringify(pivotEntry.frequencyOverTime), // Serialize object
+          uniqueProvidersCount: pivotEntry.uniqueProvidersCount,
+          matrixEmbedding: JSON.stringify(pivotEntry.matrixEmbedding), // Serialize array
+        };
+        flattened.push(flattenedEntry);
+      }
+    }
+  }
+
+  return flattened;
+}
 /**
  * pivots an agent with the given character, agent server, initialization function, plugins, and options.
  *
@@ -407,7 +481,9 @@ export async function pivotAgent(
     //...plugins,
     ...characterPlugins,
   ];
+
   logger.debug('myplugins', myplugins.length); // redacted leaking keys printing plugins
+
   const runtime = new AgentRuntime({
     character: encryptedChar,
     plugins: myplugins,
@@ -460,7 +536,10 @@ export async function pivotAgent(
   //  const worlds = await runtime.getWorld(worldId);
   //console.log('ALL WORLDS', worlds);
 
-  generateReportsForWorlds(runtime, worlds);
+  const worldReports = await Promise.all(worlds.map((world) => reportWorld(runtime, world)));
+
+  //let total_rooms = await generateReportsForWorlds(runtime, worlds);
+
   // let total_rooms = []
   // console.log('ROOM2', rooms2);
   // for (const room of rooms2) {
@@ -471,8 +550,9 @@ export async function pivotAgent(
   //   //}
   // }
 
-  //  console.log("total_rooms", (total_rooms))
-  //  generateReports(total_rooms, runtime, "0-0-0-0-0", 100);
+  let flat = flattenWorldReport(worldReports);
+  console.log('flat', flat);
+  generateReports(flat, runtime, '0-0-0-0-0', 100);
 
   return runtime;
 }
