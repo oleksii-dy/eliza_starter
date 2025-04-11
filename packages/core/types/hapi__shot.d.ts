@@ -1,1 +1,25 @@
-declare module '@hapi/shot';
+declare module '@hapi/shot' {
+    interface ShotRequestOptions {
+        method?: string;
+        url?: string;
+        headers?: Record<string, string>;
+        payload?: any;
+        remoteAddress?: string;
+    }
+
+    interface ShotResponse {
+        statusCode: number;
+        headers: Record<string, string>;
+        payload: string;
+        raw: {
+            req: any;
+            res: any;
+        };
+    }
+
+    function inject(dispatchFunc: (req: any, res: any) => void, options: ShotRequestOptions): Promise<ShotResponse>;
+
+    export = {
+        inject
+    };
+}
