@@ -335,21 +335,6 @@ export class DirectClient {
                 const shouldSuppressInitialMessage =
                     action?.suppressInitialMessage;
 
-                // action produced a new message, save to memory
-                if (message) {
-                    const messageId = stringToUuid(Date.now().toString());
-                    const responseMessage: Memory = {
-                        id: stringToUuid(messageId + "-" + runtime.agentId),
-                        ...userMessage,
-                        userId: runtime.agentId,
-                        content: message,
-                        embedding: getEmbeddingZeroVector(),
-                        createdAt: Date.now(),
-                    };
-
-                    await runtime.messageManager.createMemory(responseMessage);
-                }
-
                 if (!shouldSuppressInitialMessage) {
                     if (message) {
                         res.json([response, message]);
@@ -359,6 +344,18 @@ export class DirectClient {
                 } else {
                     if (message) {
                         res.json([message]);
+                        // action produced a new message, save to memory
+                        const messageId = stringToUuid(Date.now().toString());
+                        const responseMessage: Memory = {
+                            id: stringToUuid(messageId + "-" + runtime.agentId),
+                            ...userMessage,
+                            userId: runtime.agentId,
+                            content: message,
+                            embedding: getEmbeddingZeroVector(),
+                            createdAt: Date.now(),
+                        };
+
+                        await runtime.messageManager.createMemory(responseMessage);
                     } else {
                         res.json([]);
                     }
