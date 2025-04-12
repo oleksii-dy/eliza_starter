@@ -1,6 +1,3 @@
-import { composeContext, elizaLogger } from "@elizaos/core";
-import { generateMessageResponse, generateTrueOrFalse } from "@elizaos/core";
-import { booleanFooter, messageCompletionFooter } from "@elizaos/core";
 import {
     type Action,
     type ActionExample,
@@ -10,7 +7,13 @@ import {
     type Memory,
     ModelClass,
     type State,
-} from "@elizaos/core";
+    messageCompletionFooter,
+    generateMessageResponse,
+    generateTrueOrFalse,
+    composeContext,
+    booleanFooter,
+    elizaLogger,
+} from "@elizaos/core-plugin-v1";
 
 const maxContinuesInARow = 3;
 
