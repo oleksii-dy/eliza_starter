@@ -4,6 +4,7 @@ import {
   loadEnvConfig as coreLoadEnvConfig,
   hasEnvVariable as coreHasEnvVariable,
   settings as coreSettings,
+  getEnvVariable as coreGetEnvVariable,
 } from '@elizaos/core';
 import type { IAgentRuntime, State, Memory } from "./types.ts";
 
@@ -53,6 +54,7 @@ export function getEnvVariable(
     key: string,
     defaultValue?: string
 ): string | undefined {
+  return coreGetEnvVariable(key, defaultValue);
 }
 
 /**
