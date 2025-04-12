@@ -252,7 +252,7 @@ export class AgentRuntime implements IAgentRuntime {
      * @param adapter The adapter to register.
      */
     registerAdapter(adapter: Adapter) {
-      return this._runtime.registerAdapter(provider);
+      return this._runtime.registerAdapter(adapter);
     }
 
     /**
