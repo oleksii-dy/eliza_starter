@@ -14,6 +14,6 @@ export async function getProviders(
     runtime: IAgentRuntime,
     message: Memory,
     state?: State
-): string {
+) {
   return coreGetProviders(runtime, message, state);
 }
