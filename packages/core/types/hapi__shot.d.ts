@@ -23,3 +23,8 @@ declare module '@hapi/shot' {
         inject
     };
 }
+
+declare module '@hapi/shot' {
+  // Minimal type definitions for @hapi/shot
+  export function inject(handler: any, options: any): Promise<any>;
+}
