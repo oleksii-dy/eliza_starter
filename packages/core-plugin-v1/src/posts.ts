@@ -12,5 +12,5 @@ export const formatPosts = ({
     actors: Actor[];
     conversationHeader?: boolean;
 }) => {
-  return coreFormatPosts({ messags, actors, conversationHeader })
+  return coreFormatPosts({ messages, actors, conversationHeader })
 }
