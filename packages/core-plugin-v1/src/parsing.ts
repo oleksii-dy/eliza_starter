@@ -11,6 +11,7 @@ import {
   normalizeJsonString as coreNormalizeJsonString,
   cleanJsonResponse as coreCleanJsonResponse,
   parseActionResponseFromText as coreParseActionResponseFromText,
+  truncateToCompleteSentence as coreTruncateToCompleteSentence,
 } from '@elizaos/core';
 import type { ActionResponse } from "./types.ts";
 
