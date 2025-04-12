@@ -9,18 +9,9 @@ import {
   ModelType,
 } from '@elizaos/core';
 import { GTKService } from '../service';
-import { z } from 'zod';
 import { composeContext } from '../utils';
 import { closeOrderTemplate } from '../templates';
-import { ModelClass } from '../core';
-
-
-// Define schema for close order parameters
-const CloseOrderSchema = z.object({
-  tradeId: z.number().describe('The ID of the trade/order to close')
-});
-
-type CloseOrderContent = z.infer<typeof CloseOrderSchema>;
+import { CloseOrderSchema, type CloseOrderContent } from '../types';
 
 /**
  * Close Order Action

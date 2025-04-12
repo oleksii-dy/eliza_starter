@@ -9,16 +9,9 @@ import {
   ModelType,
 } from '@elizaos/core';
 import { GTKService } from '../service';
-import { z } from 'zod';
 import { composeContext } from '../utils';
 import { getTradeTemplate } from '../templates';
-
-// Define schema for get trade parameters
-const GetTradeSchema = z.object({
-  tradeId: z.number().describe('The ID of the trade to retrieve details for')
-});
-
-type GetTradeContent = z.infer<typeof GetTradeSchema>;
+import { GetTradeSchema, type GetTradeContent } from '../types';
 
 /**
  * Get Trade Action

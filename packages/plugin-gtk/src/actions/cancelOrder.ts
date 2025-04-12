@@ -9,16 +9,9 @@ import {
   ModelType,
 } from '@elizaos/core';
 import { GTKService } from '../service';
-import { z } from 'zod';
 import { composeContext } from '../utils';
 import { cancelOrderTemplate } from '../templates';
-
-// Define schema for cancel order parameters
-const CancelOrderSchema = z.object({
-  tradeId: z.number().describe('The ID of the trade/order to cancel')
-});
-
-type CancelOrderContent = z.infer<typeof CancelOrderSchema>;
+import { CancelOrderSchema, type CancelOrderContent } from '../types';
 
 /**
  * Cancel Order Action

@@ -10,16 +10,9 @@ import {
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { PnlTypeEnum } from '@sifchain/gtk-api';
-import { z } from 'zod';
 import { composeContext } from '../utils';
 import { pnlTemplate } from '../templates';
-
-// Define schema for PnL parameters
-const PnlSchema = z.object({
-  pnlType: z.enum(['OVERALL', 'REALIZED', 'UNREALIZED']).default('OVERALL').describe('The type of PnL to retrieve')
-});
-
-type PnlContent = z.infer<typeof PnlSchema>;
+import { PnlSchema, type PnlContent } from '../types';
 
 /**
  * Get PnL Action

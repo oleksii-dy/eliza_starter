@@ -10,17 +10,9 @@ import {
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { DEFAULT_COLLATERAL_TYPE } from '../constants';
-import { z } from 'zod';
 import { composeContext } from '../utils';
 import { topMatchTemplate } from '../templates';
-
-// Define schema for top match parameters
-const TopMatchSchema = z.object({
-  collateralType: z.string().default(DEFAULT_COLLATERAL_TYPE).describe('The type of collateral to match'),
-  collateralAmount: z.number().default(10).describe('The amount of collateral to match')
-});
-
-type TopMatchContent = z.infer<typeof TopMatchSchema>;
+import { TopMatchSchema, type TopMatchContent } from '../types';
 
 /**
  * Get Top Match Action

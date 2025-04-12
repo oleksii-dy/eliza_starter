@@ -10,17 +10,9 @@ import {
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { TradeDirectionEnum, TradeStatusEnum } from '@sifchain/gtk-api';
-import { z } from 'zod';
 import { composeContext } from '../utils';
 import { getTradesTemplate } from '../templates';
-
-// Define schema for get trades parameters
-const GetTradesSchema = z.object({
-  tradeDirection: z.enum(['LONG', 'SHORT']).optional().describe('Filter by trade direction'),
-  status: z.enum(['ACTIVE', 'COMPLETED', 'CANCELLED', 'LIQUIDATED']).optional().describe('Filter by trade status')
-});
-
-type GetTradesContent = z.infer<typeof GetTradesSchema>;
+import { GetTradesSchema, type GetTradesContent } from '../types';
 
 /**
  * Get Trades Action

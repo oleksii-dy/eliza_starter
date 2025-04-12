@@ -14,29 +14,9 @@ import {
   CollateralTokenType, 
   TargetTokenType 
 } from '@sifchain/gtk-api';
-import {
-  DEFAULT_COLLATERAL_TYPE,
-  DEFAULT_TARGET_TOKEN,
-  DEFAULT_LEVERAGE,
-  DEFAULT_COLLATERAL_AMOUNT
-} from '../constants';
-import { z } from 'zod';
 import { composeContext } from '../utils';
 import { placeOrderTemplate } from '../templates';
-
-// Define schema for place order parameters
-const PlaceOrderSchema = z.object({
-  tokenType: z.string().default(DEFAULT_COLLATERAL_TYPE).describe('The type of collateral token to use'),
-  tokenAmount: z.number().default(DEFAULT_COLLATERAL_AMOUNT).describe('The amount of collateral to use'),
-  targetTokenType: z.string().default(DEFAULT_TARGET_TOKEN).describe('The target token type'),
-  tradeDirection: z.enum(['LONG', 'SHORT']).default('LONG').describe('The direction of the trade'),
-  leverage: z.number().default(DEFAULT_LEVERAGE).describe('The leverage to use'),
-  stopLoss: z.number().optional().nullable().describe('Stop loss price level'),
-  takeProfit: z.number().optional().nullable().describe('Take profit price level'),
-  limitPrice: z.number().optional().nullable().describe('Limit price for the order')
-});
-
-type PlaceOrderContent = z.infer<typeof PlaceOrderSchema>;
+import { PlaceOrderSchema, type PlaceOrderContent } from '../types';
 
 /**
  * Place Order Action

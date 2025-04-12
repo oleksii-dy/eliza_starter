@@ -10,16 +10,9 @@ import {
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { DEFAULT_TARGET_TOKEN } from '../constants';
-import { z } from 'zod';
 import { composeContext } from '../utils';
 import { interestRateTemplate } from '../templates';
-
-// Define schema for interest rate parameters
-const InterestRateSchema = z.object({
-  targetTokenType: z.string().default(DEFAULT_TARGET_TOKEN).describe('The token type to get interest rate for')
-});
-
-type InterestRateContent = z.infer<typeof InterestRateSchema>;
+import { InterestRateSchema, type InterestRateContent, validTokenTypes, type ValidTokenType } from '../types';
 
 /**
  * Get Interest Rate Action
@@ -71,8 +64,7 @@ export const getInterestRateAction: Action = {
       const gtkService = runtime.getService('gtk') as GTKService;
       const client = gtkService.getClient();
       // Ensure targetTokenType is a valid token type
-      const validTokenTypes = ["btc", "atom", "eth", "icp", "trx", "sol", "near", "link", "doge", "avax", "matic", "fil", "sui", "wld", "apt", "xrp", "crv", "op", "ada", "arb", "bch", "etc", "sei", "bnb"];
-      const normalizedTokenType = targetTokenType.toLowerCase() as "btc" | "atom" | "eth" | "icp" | "trx" | "sol" | "near" | "link" | "doge" | "avax" | "matic" | "fil" | "sui" | "wld" | "apt" | "xrp" | "crv" | "op" | "ada" | "arb" | "bch" | "etc" | "sei" | "bnb";
+      const normalizedTokenType = targetTokenType.toLowerCase() as ValidTokenType;
 
       if (!validTokenTypes.includes(normalizedTokenType)) {
         throw new Error(`Invalid token type: ${targetTokenType}. Valid types are: ${validTokenTypes.join(', ')}`);
