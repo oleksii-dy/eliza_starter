@@ -6,14 +6,13 @@ import {
   type Memory,
   type State,
   elizaLogger,
-  generateObject,
+  ModelType,
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { TradeDirectionEnum, TradeStatusEnum } from '@sifchain/gtk-api';
 import { z } from 'zod';
 import { composeContext } from '../utils';
 import { getTradesTemplate } from '../templates';
-import { ModelClass } from '../core';
 
 // Define schema for get trades parameters
 const GetTradesSchema = z.object({
@@ -58,16 +57,17 @@ export const getTradesAction: Action = {
       });
 
       // Use LLM to extract parameters
-      const extractionResult = await generateObject({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-        schema: GetTradesSchema,
-      });
+      const extractedObject = await runtime.useModel(
+        ModelType.OBJECT_LARGE,
+        {
+          prompt: context,
+          schema: GetTradesSchema,
+        }
+      );
 
       // Extract parameters
       const { tradeDirection: extractedDirection, status: extractedStatus } = 
-        (extractionResult?.object as GetTradesContent) || {};
+        (extractedObject as GetTradesContent) || {};
       
       // Convert string enums to actual enum values
       let tradeDirection = undefined;

@@ -6,7 +6,7 @@ import {
   type Memory,
   type State,
   elizaLogger,
-  generateObject,
+  ModelType,
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { 
@@ -23,7 +23,6 @@ import {
 import { z } from 'zod';
 import { composeContext } from '../utils';
 import { placeOrderTemplate } from '../templates';
-import { ModelClass } from '../core';
 
 // Define schema for place order parameters
 const PlaceOrderSchema = z.object({
@@ -74,14 +73,15 @@ export const placeOrderAction: Action = {
       });
 
       // Use LLM to extract parameters
-      const extractionResult = await generateObject({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-        schema: PlaceOrderSchema,
-      });
+      const extractedObject = await runtime.useModel(
+        ModelType.OBJECT_LARGE,
+        {
+          prompt: context,
+          schema: PlaceOrderSchema,
+        }
+      );
 
-      if (!extractionResult.object) {
+      if (!extractedObject) {
         const response: Content = {
           text: 'Failed to extract order details. Please provide information like the token type, amount, and leverage.',
         };
@@ -89,17 +89,16 @@ export const placeOrderAction: Action = {
         return response;
       }
 
-      // Extract parameters with defaults
-      const {
-        tokenType = DEFAULT_COLLATERAL_TYPE,
-        tokenAmount = DEFAULT_COLLATERAL_AMOUNT,
-        targetTokenType = DEFAULT_TARGET_TOKEN,
-        tradeDirection = 'LONG',
-        leverage = DEFAULT_LEVERAGE,
-        stopLoss = null,
-        takeProfit = null,
-        limitPrice = null
-      } = extractionResult.object as PlaceOrderContent;
+      const { 
+        tokenType,
+        tokenAmount,
+        targetTokenType,
+        tradeDirection,
+        leverage,
+        stopLoss,
+        takeProfit,
+        limitPrice,
+      } = extractedObject as PlaceOrderContent;
 
       // Get GTK service and client
       const gtkService = runtime.getService('gtk') as GTKService;
@@ -148,13 +147,13 @@ export const placeOrderAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Place a long order for 0.01 BTC with 2x leverage',
+          text: 'Place an order for 0.1 BTC with 2x leverage using USDC collateral',
         },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'Order placed successfully! Transaction hash: 0x123...',
+          text: 'Order placed successfully! Order ID: 789',
           actions: ['PLACE_ORDER'],
         },
       },

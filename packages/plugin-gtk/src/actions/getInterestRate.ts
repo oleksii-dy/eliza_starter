@@ -6,14 +6,13 @@ import {
   type Memory,
   type State,
   elizaLogger,
-  generateObject,
+  ModelType,
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { DEFAULT_TARGET_TOKEN } from '../constants';
 import { z } from 'zod';
 import { composeContext } from '../utils';
 import { interestRateTemplate } from '../templates';
-import { ModelClass } from '../core';
 
 // Define schema for interest rate parameters
 const InterestRateSchema = z.object({
@@ -57,15 +56,16 @@ export const getInterestRateAction: Action = {
       });
 
       // Use LLM to extract parameters
-      const extractionResult = await generateObject({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-        schema: InterestRateSchema,
-      });
+      const extractedObject = await runtime.useModel(
+        ModelType.OBJECT_LARGE,
+        {
+          prompt: context,
+          schema: InterestRateSchema,
+        }
+      );
 
       // Get token type, default to BTC if not specified
-      const targetTokenType = (extractionResult?.object as InterestRateContent)?.targetTokenType || DEFAULT_TARGET_TOKEN;
+      const targetTokenType = (extractedObject as InterestRateContent)?.targetTokenType || DEFAULT_TARGET_TOKEN;
 
       // Get GTK service and client
       const gtkService = runtime.getService('gtk') as GTKService;

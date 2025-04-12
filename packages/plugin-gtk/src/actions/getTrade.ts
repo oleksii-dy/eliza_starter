@@ -6,13 +6,12 @@ import {
   type Memory,
   type State,
   elizaLogger,
-  generateObject,
+  ModelType,
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { z } from 'zod';
 import { composeContext } from '../utils';
 import { getTradeTemplate } from '../templates';
-import { ModelClass } from '../core';
 
 // Define schema for get trade parameters
 const GetTradeSchema = z.object({
@@ -56,14 +55,15 @@ export const getTradeAction: Action = {
       });
 
       // Use LLM to extract parameters
-      const extractionResult = await generateObject({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-        schema: GetTradeSchema,
-      });
+      const extractedObject = await runtime.useModel(
+        ModelType.OBJECT_LARGE,
+        {
+          prompt: context,
+          schema: GetTradeSchema,
+        }
+      );
 
-      if (!extractionResult?.object) {
+      if (!extractedObject) {
         const response: Content = {
           text: 'Please provide a trade ID to view. For example: "Show me trade #123"',
         };
@@ -71,7 +71,7 @@ export const getTradeAction: Action = {
         return response;
       }
 
-      const { tradeId } = extractionResult.object as GetTradeContent;
+      const { tradeId } = extractedObject as GetTradeContent;
       
       if (!tradeId) {
         const response: Content = {

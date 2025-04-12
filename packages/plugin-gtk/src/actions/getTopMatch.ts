@@ -6,14 +6,13 @@ import {
   type Memory,
   type State,
   elizaLogger,
-  generateObject,
+  ModelType,
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { DEFAULT_COLLATERAL_TYPE } from '../constants';
 import { z } from 'zod';
 import { composeContext } from '../utils';
 import { topMatchTemplate } from '../templates';
-import { ModelClass } from '../core';
 
 // Define schema for top match parameters
 const TopMatchSchema = z.object({
@@ -58,16 +57,17 @@ export const getTopMatchAction: Action = {
       });
 
       // Use LLM to extract parameters
-      const extractionResult = await generateObject({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-        schema: TopMatchSchema,
-      });
+      const extractedObject = await runtime.useModel(
+        ModelType.OBJECT_LARGE,
+        {
+          prompt: context,
+          schema: TopMatchSchema,
+        }
+      );
 
       // Extract collateral type and amount
       const { collateralType = DEFAULT_COLLATERAL_TYPE, collateralAmount = 10 } = 
-        (extractionResult?.object as TopMatchContent) || {};
+        (extractedObject as TopMatchContent) || {};
 
       // Get GTK service and client
       const gtkService = runtime.getService('gtk') as GTKService;

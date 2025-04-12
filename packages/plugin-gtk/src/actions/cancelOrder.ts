@@ -6,13 +6,12 @@ import {
   type Memory,
   type State,
   elizaLogger,
-  generateObject,
+  ModelType,
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { z } from 'zod';
 import { composeContext } from '../utils';
 import { cancelOrderTemplate } from '../templates';
-import { ModelClass } from '../core';
 
 // Define schema for cancel order parameters
 const CancelOrderSchema = z.object({
@@ -55,15 +54,16 @@ export const cancelOrderAction: Action = {
         userMessage: message.content.text || '',
       });
 
-      // Use LLM to extract parameters (this uses our custom implementation)
-      const result = await generateObject({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-        schema: CancelOrderSchema,
-      });
+      // Use LLM to extract parameters using the actual generateObject from 'ai'
+      const extractedObject = await runtime.useModel(
+        ModelType.OBJECT_LARGE,
+        {
+          prompt: context,
+          schema: CancelOrderSchema, 
+        }
+      );
 
-      if (!result.object) {
+      if (!extractedObject) {
         const response: Content = {
           text: 'Failed to extract trade details. Please provide a trade ID to cancel.',
         };
@@ -71,7 +71,7 @@ export const cancelOrderAction: Action = {
         return response;
       }
 
-      const { tradeId } = result.object as CancelOrderContent;
+      const { tradeId } = extractedObject as CancelOrderContent;
       
       // Validate extracted parameters
       if (!tradeId) {
@@ -120,13 +120,13 @@ export const cancelOrderAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Cancel my pending trade with ID 456',
+          text: 'Abort trade #789',
         },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'Order #456 cancelled successfully! Transaction hash: 0x456...',
+          text: 'Order #789 cancelled successfully! Transaction hash: 0x789...',
           actions: ['CANCEL_ORDER'],
         },
       },

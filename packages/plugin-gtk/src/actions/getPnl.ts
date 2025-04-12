@@ -6,14 +6,13 @@ import {
   type Memory,
   type State,
   elizaLogger,
-  generateObject,
+  ModelType,
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { PnlTypeEnum } from '@sifchain/gtk-api';
 import { z } from 'zod';
 import { composeContext } from '../utils';
 import { pnlTemplate } from '../templates';
-import { ModelClass } from '../core';
 
 // Define schema for PnL parameters
 const PnlSchema = z.object({
@@ -57,16 +56,17 @@ export const getPnlAction: Action = {
       });
 
       // Use LLM to extract parameters
-      const extractionResult = await generateObject({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-        schema: PnlSchema,
-      });
+      const extractedObject = await runtime.useModel(
+        ModelType.OBJECT_LARGE,
+        {
+          prompt: context,
+          schema: PnlSchema,
+        }
+      );
 
       // Determine PnL type
       let pnlType = PnlTypeEnum.OVERALL;
-      const extractedPnlType = (extractionResult?.object as PnlContent)?.pnlType;
+      const extractedPnlType = (extractedObject as PnlContent)?.pnlType;
       
       if (extractedPnlType === 'REALIZED') {
         pnlType = PnlTypeEnum.REALIZED;

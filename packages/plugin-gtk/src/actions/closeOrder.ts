@@ -6,7 +6,7 @@ import {
   type Memory,
   type State,
   elizaLogger,
-  generateObject,
+  ModelType,
 } from '@elizaos/core';
 import { GTKService } from '../service';
 import { z } from 'zod';
@@ -56,15 +56,16 @@ export const closeOrderAction: Action = {
         userMessage: message.content.text || '',
       });
 
-      // Use LLM to extract parameters
-      const extractionResult = await generateObject({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-        schema: CloseOrderSchema,
-      });
+      // Use runtime.useModel for parameter extraction
+      const extractedObject = await runtime.useModel(
+        ModelType.OBJECT_LARGE, 
+        {
+          prompt: context,
+          schema: CloseOrderSchema, 
+        }
+      );
 
-      if (!extractionResult.object) {
+      if (!extractedObject) {
         const response: Content = {
           text: 'Failed to extract trade details. Please provide a trade ID to close.',
         };
@@ -72,7 +73,8 @@ export const closeOrderAction: Action = {
         return response;
       }
 
-      const { tradeId } = extractionResult.object as CloseOrderContent;
+      // Cast the result directly
+      const { tradeId } = extractedObject as CloseOrderContent;
       
       // Validate extracted parameters
       if (!tradeId) {
