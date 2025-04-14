@@ -25,4 +25,9 @@ declare module '@hapi/shot' {
 
     // Minimal type definitions for @hapi/shot
     export function inject(handler: any, options: any): Promise<any>;
+
+    // This is a minimal declaration file to satisfy TypeScript
+    // It doesn't need to be complete, just enough to prevent compilation errors
+    const shot: any;
+    export default shot;
 } 

@@ -191,7 +191,7 @@ importers:
         version: 29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.20)(@types/node@22.14.1)(typescript@5.6.3))
       ts-jest:
         specifier: ^29.2.6
-        version: 29.3.1(@babel/core@7.26.10)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.10))(esbuild@0.25.2)(jest@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.20)(@types/node@22.14.1)(typescript@5.6.3)))(typescript@5.6.3)
+        version: 29.3.1(@babel/core@7.26.10)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.10))(jest@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.20)(@types/node@22.14.1)(typescript@5.6.3)))(typescript@5.6.3)
 
   client:
     dependencies:
@@ -511,6 +511,9 @@ importers:
       '@elizaos/core':
         specifier: workspace:^
         version: link:../core
+      '@types/hapi__shot':
+        specifier: ^6.0.0
+        version: 6.0.0
       agent-twitter-client:
         specifier: 0.0.18
         version: 0.0.18(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -520,6 +523,15 @@ importers:
       glob:
         specifier: 11.0.0
         version: 11.0.0
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
+      whatwg-url:
+        specifier: 7.1.0
+        version: 7.1.0
+      zod:
+        specifier: ^3.24.2
+        version: 3.24.2
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.1.3
@@ -27582,7 +27594,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  ts-jest@29.3.1(@babel/core@7.26.10)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.10))(esbuild@0.25.2)(jest@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.20)(@types/node@22.14.1)(typescript@5.6.3)))(typescript@5.6.3):
+  ts-jest@29.3.1(@babel/core@7.26.10)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.10))(jest@29.7.0(@types/node@22.14.1)(ts-node@10.9.2(@swc/core@1.11.20)(@types/node@22.14.1)(typescript@5.6.3)))(typescript@5.6.3):
     dependencies:
       bs-logger: 0.2.6
       ejs: 3.1.10
@@ -27601,7 +27613,6 @@ snapshots:
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
       babel-jest: 29.7.0(@babel/core@7.26.10)
-      esbuild: 0.25.2
 
   ts-mixer@6.0.4: {}
 
