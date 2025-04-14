@@ -1,4 +1,6 @@
 import { DirectClient } from "@elizaos/client-direct";
+import TwitterClientInterface from "@elizaos-plugins/client-twitter";
+
 import {
     type Adapter,
     AgentRuntime,
@@ -20,6 +22,7 @@ import {
     validateCharacterConfig,
 } from "@elizaos/core";
 import { defaultCharacter } from "./defaultCharacter.ts";
+// import { mainCharacter } from "../mainCharacter.ts";
 
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import JSON5 from 'json5';
@@ -370,37 +373,49 @@ export async function loadCharacters(
 }
 
 async function handlePluginImporting(plugins: string[]) {
+    // Only process if there are plugins to import
     if (plugins.length > 0) {
-        // this logging should happen before calling, so we can include important context
-        //elizaLogger.info("Plugins are: ", plugins);
+        // Import all plugins in parallel
         const importedPlugins = await Promise.all(
             plugins.map(async (plugin) => {
                 try {
-                    const importedPlugin:Plugin = await import(plugin);
+                    // Dynamically import the plugin with proper typing
+                    const importedModule = await import(plugin) as {
+                        default?: any;
+                        [key: string]: any;
+                    };
+                    
+                    // Construct the expected function name from the plugin path
+                    // Example: "@elizaos/plugin-example" -> "examplePlugin"
                     const functionName =
                         plugin
                             .replace("@elizaos/plugin-", "")
                             .replace("@elizaos-plugins/plugin-", "")
                             .replace(/-./g, (x) => x[1].toUpperCase()) +
-                        "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
-                    if (!importedPlugin[functionName] && !importedPlugin.default) {
-                      elizaLogger.warn(plugin, 'does not have an default export or', functionName)
+                        "Plugin";
+
+                    // Check if the plugin has either a default export or the named export
+                    if (!importedModule[functionName] && !importedModule.default) {
+                        elizaLogger.warn(plugin, 'does not have a default export or', functionName);
                     }
-                    return {...(
-                        importedPlugin.default || importedPlugin[functionName]
-                    ), npmName: plugin };
+
+                    // Return the plugin with its npm name attached
+                    return {
+                        ...(importedModule.default || importedModule[functionName]),
+                        npmName: plugin
+                    };
                 } catch (importError) {
-                    console.error(
-                        `Failed to import plugin: ${plugin}`,
-                        importError
-                    );
-                    return false; // Return null for failed imports
+                    // Log and handle import errors
+                    console.error(`Failed to import plugin: ${plugin}`, importError);
+                    return false;
                 }
             })
-        )
-        // remove plugins that failed to load, so agent can try to start
+        );
+
+        // Filter out any failed imports
         return importedPlugins.filter(p => !!p);
     } else {
+        // Return empty array if no plugins provided
         return [];
     }
 }
@@ -594,23 +609,34 @@ export async function initializeClients(
     // each client can only register once
     // and if we want two we can explicitly support it
     const clients: ClientInstance[] = [];
-    // const clientTypes = clients.map((c) => c.name);
-    // elizaLogger.log("initializeClients", clientTypes, "for", character.name);
+    
+    elizaLogger.info(`Starting client initialization for character: ${character.name}`);
+    elizaLogger.info(`Available plugins: ${JSON.stringify(character.plugins?.map(p => p.npmName))}`);
 
     if (character.plugins?.length > 0) {
         for (const plugin of character.plugins) {
+            elizaLogger.info(`Processing plugin: ${plugin.npmName}`);
             if (plugin.clients) {
+                elizaLogger.info(`Found clients in plugin ${plugin.npmName}: ${JSON.stringify(plugin.clients.map(c => c.name))}`);
                 for (const client of plugin.clients) {
-                    const startedClient = await client.start(runtime);
-                    elizaLogger.debug(
-                        `Initializing client: ${client.name}`
-                    );
-                    clients.push(startedClient);
+                    try {
+                        elizaLogger.info(`Attempting to start client: ${client.name}`);
+                        const startedClient = await client.start(runtime);
+                        elizaLogger.success(`Successfully started client: ${client.name}`);
+                        clients.push(startedClient);
+                    } catch (error) {
+                        elizaLogger.error(`Failed to start client ${client.name}:`, error);
+                    }
                 }
+            } else {
+                elizaLogger.warn(`Plugin ${plugin.npmName} has no clients defined`);
             }
         }
+    } else {
+        elizaLogger.warn('No plugins found in character configuration');
     }
 
+    elizaLogger.info(`Client initialization complete. Total clients started: ${clients.length}`);
     return clients;
 }
 

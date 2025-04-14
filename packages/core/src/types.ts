@@ -869,6 +869,9 @@ export type Character = {
 
     /** Optional client-specific config */
     clientConfig?: {
+        twitter?: {
+            targetUsers?: string[];
+        };
         discord?: {
             shouldIgnoreBotMessages?: boolean;
             shouldIgnoreDirectMessages?: boolean;

@@ -1,0 +1,127 @@
+ WARN  Unsupported engine: wanted: {"node":"23.3.0"} (current: {"node":"v22.11.0","pnpm":"9.15.0"})
+
+> eliza@ start /Users/nitzansaar/Desktop/aiAgents/eliza2
+> pnpm --filter "@elizaos/agent" start --isRoot "--characters=characters/tommy.character.json"
+
+.                                        |  WARN  Unsupported engine: wanted: {"node":"23.3.0"} (current: {"node":"v22.11.0","pnpm":"9.15.0"})
+docs                                     |  WARN  Unsupported engine: wanted: {"node":"23.3.0"} (current: {"node":"v22.11.0","pnpm":"9.15.0"})
+
+> @elizaos/agent@0.25.9 start /Users/nitzansaar/Desktop/aiAgents/eliza2/agent
+> node --loader ts-node/esm src/index.ts "--isRoot" "--characters=characters/tommy.character.json"
+
+(node:9183) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("ts-node/esm", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:9183) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[2025-04-12 02:21:22] [32mINFO[39m: [36mLoading embedding settings:[39m
+    USE_OPENAI_EMBEDDING: ""
+    USE_OLLAMA_EMBEDDING: ""
+    OLLAMA_EMBEDDING_MODEL: "mxbai-embed-large"
+(node:9183) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+[2025-04-12 02:21:22] [34mDEBUG[39m: [36mLoading character settings:[39m
+    ARGV: [
+      "/Users/nitzansaar/.nvm/versions/node/v22.11.0/bin/node",
+      "/Users/nitzansaar/Desktop/aiAgents/eliza2/agent/src/index.ts",
+      "--isRoot",
+      "--characters=characters/tommy.character.json"
+    ]
+    CWD: "/Users/nitzansaar/Desktop/aiAgents/eliza2/agent"
+[2025-04-12 02:21:22] [37mLOG[39m: [36mLoaded .env file from: /Users/nitzansaar/Desktop/aiAgents/eliza2/.env[39m
+[2025-04-12 02:21:22] [32mINFO[39m: [36mParsed settings:[39m
+    USE_OPENAI_EMBEDDING: ""
+    USE_OPENAI_EMBEDDING_TYPE: "string"
+    USE_OLLAMA_EMBEDDING: ""
+    USE_OLLAMA_EMBEDDING_TYPE: "string"
+    OLLAMA_EMBEDDING_MODEL: "mxbai-embed-large"
+[2025-04-12 02:21:22] [37mLOG[39m: [36mDirectClient constructor[39m
+[2025-04-12 02:21:22] [34mDEBUG[39m: [36mTrying paths:[39m
+    0: {
+      "path": "characters/tommy.character.json",
+      "exists": false
+    }
+    1: {
+      "path": "/Users/nitzansaar/Desktop/aiAgents/eliza2/agent/characters/tommy.character.json",
+      "exists": false
+    }
+    2: {
+      "path": "/Users/nitzansaar/Desktop/aiAgents/eliza2/agent/agent/characters/tommy.character.json",
+      "exists": false
+    }
+    3: {
+      "path": "/Users/nitzansaar/Desktop/aiAgents/eliza2/agent/src/characters/tommy.character.json",
+      "exists": false
+    }
+    4: {
+      "path": "/Users/nitzansaar/Desktop/aiAgents/eliza2/agent/src/characters/tommy.character.json",
+      "exists": false
+    }
+    5: {
+      "path": "/Users/nitzansaar/Desktop/aiAgents/eliza2/agent/characters/tommy.character.json",
+      "exists": false
+    }
+    6: {
+      "path": "/Users/nitzansaar/Desktop/aiAgents/eliza2/characters/tommy.character.json",
+      "exists": true
+    }
+[2025-04-12 02:21:23] [32mINFO[39m: [36mTommy Trojan loaded plugins: [
+    "@elizaos/plugin-twitter"
+][39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mSuccessfully loaded character from: /Users/nitzansaar/Desktop/aiAgents/eliza2/characters/tommy.character.json[39m
+[2025-04-12 02:21:23] [37mLOG[39m: [36mCreating runtime for character Tommy Trojan[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Initializing AgentRuntime with options:[39m
+    character: "Tommy Trojan"
+    modelProvider: "openai"
+    characterModelProvider: "openai"
+[2025-04-12 02:21:23] [34mDEBUG[39m: [36m[AgentRuntime] Process working directory: /Users/nitzansaar/Desktop/aiAgents/eliza2/agent[39m
+[2025-04-12 02:21:23] [34mDEBUG[39m: [36m[AgentRuntime] Process knowledgeRoot: /Users/nitzansaar/Desktop/aiAgents/eliza2/characters/knowledge[39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mAgent ID: 59ecbde9-578e-0151-b061-e015509205cd[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Setting Model Provider:[39m
+    characterModelProvider: "openai"
+    optsModelProvider: "openai"
+    finalSelection: "openai"
+[2025-04-12 02:21:23] [32mINFO[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Selected model provider: openai[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Selected image model provider: openai[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Selected image vision model provider: openai[39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Registering action: POST_TWEET[39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Registering action: CONTINUE[39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Registering action: FOLLOW_ROOM[39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Registering action: UNFOLLOW_ROOM[39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Registering action: IGNORE[39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Registering action: NONE[39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Registering action: MUTE_ROOM[39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mTommy Trojan(59ecbde9-578e-0151-b061-e015509205cd) - Registering action: UNMUTE_ROOM[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36mInitializing SQLite database at /Users/nitzansaar/Desktop/aiAgents/eliza2/agent/data/db.sqlite...[39m
+[2025-04-12 02:21:23] [37mLOG[39m: [36msqlite-vec extensions loaded successfully.[39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mSuccessfully connected to SQLite database[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36mUsing Database Cache...[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36m[RAG Check] RAG Knowledge enabled: false[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36m[RAG Check] Knowledge items:[39m
+    0: "USC history and deep lore"
+    1: "Trojan rivalries and epic wins"
+    2: "Where to find the best campus vibes"
+    3: "USC fight songs and hype moments"
+    4: "Academic flexes and trailblazing research"
+    5: "Everything that makes the Trojan Family elite"
+[2025-04-12 02:21:23] [32mINFO[39m: [36m[RAG Cleanup] Starting cleanup of deleted knowledge files[39m
+[2025-04-12 02:21:23] [34mDEBUG[39m: [36m[Cleanup] Starting knowledge cleanup process, agent:  59ecbde9-578e-0151-b061-e015509205cd[39m
+[2025-04-12 02:21:23] [34mDEBUG[39m: [36m[Cleanup] Knowledge root path: /Users/nitzansaar/Desktop/aiAgents/eliza2/characters/knowledge[39m
+[2025-04-12 02:21:23] [34mDEBUG[39m: [36m[Knowledge List] Fetching all entries for agent: 59ecbde9-578e-0151-b061-e015509205cd[39m
+[2025-04-12 02:21:23] [34mDEBUG[39m: [36m[Knowledge List] Found 0 entries[39m
+[2025-04-12 02:21:23] [34mDEBUG[39m: [36m[Cleanup] Found 0 parent documents to check[39m
+[2025-04-12 02:21:23] [34mDEBUG[39m: [36m[Cleanup] Finished knowledge cleanup process[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36m[RAG Cleanup] Cleanup complete[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36mStarting client initialization for character: Tommy Trojan[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36mAvailable plugins: ["@elizaos/plugin-twitter"][39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36mProcessing plugin: @elizaos/plugin-twitter[39m
+[2025-04-12 02:21:23] [33mWARN[39m: [36mPlugin @elizaos/plugin-twitter has no clients defined[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36mClient initialization complete. Total clients started: 0[39m
+[2025-04-12 02:21:23] [34mDEBUG[39m: [36mStarted Tommy Trojan as 59ecbde9-578e-0151-b061-e015509205cd[39m
+[2025-04-12 02:21:23] [33mWARN[39m: [36mPort 3000 is in use, trying 3001[39m
+[2025-04-12 02:21:23] [33mWARN[39m: [36mPort 3001 is in use, trying 3002[39m
+[2025-04-12 02:21:23] [33mWARN[39m: [36mPort 3002 is in use, trying 3003[39m
+[2025-04-12 02:21:23] [33mWARN[39m: [36mServer started on alternate port 3003[39m
+[2025-04-12 02:21:23] [32mINFO[39m: [36mRun `pnpm start:client` to start the client and visit the outputted URL (http://localhost:5173) to chat with your agents. When running multiple agents, use client with different port `SERVER_PORT=3001 pnpm start:client`[39m
+[2025-04-12 02:21:23] [37mSUCCESS[39m: [36mREST API bound to 0.0.0.0:3003. If running locally, access it at http://localhost:3003.[39m
+[2025-04-12 02:23:35] [37mLOG[39m: [36mReceived shutdown signal, closing server...[39m
+[2025-04-12 02:23:35] [37mSUCCESS[39m: [36mServer closed successfully[39m
