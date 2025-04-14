@@ -246,7 +246,6 @@
       "version": "1.0.0-beta.27",
       "dependencies": {
         "@elizaos/core-plugin-v2": "1.0.0-beta.27",
-        "@types/hapi__shot": "^6.0.0",
         "buffer": "^6.0.3",
         "crypto-browserify": "^3.12.1",
         "dotenv": "16.4.5",
@@ -291,7 +290,6 @@
       "version": "1.0.0-beta.27",
       "dependencies": {
         "@elizaos/core": "1.0.0-beta.27",
-        "@types/hapi__shot": "^6.0.0",
         "buffer": "^6.0.3",
         "crypto-browserify": "^3.12.1",
         "dotenv": "16.4.5",
@@ -2767,8 +2765,6 @@
     "@types/gtag.js": ["@types/gtag.js@0.0.12", "", {}, "sha512-YQV9bUsemkzG81Ea295/nF/5GijnD2Af7QhEofh7xu+kvCN6RdodgNwwGWXB5GMI3NoyvQo0odNctoH/qLMIpg=="],
 
     "@types/hapi": ["@types/hapi@18.0.14", "", { "dependencies": { "@types/boom": "*", "@types/catbox": "*", "@types/iron": "*", "@types/mimos": "*", "@types/node": "*", "@types/podium": "*", "@types/shot": "*", "joi": "^17.3.0" } }, "sha512-/AlCHpOTzHOX7WYGlQAhL75Ca5gsm0S6X7mkW6RWW06e4Eot6xPm76qGXPHagVrpfs8qTKJdysJah/Uhtr8ojw=="],
-
-    "@types/hapi__shot": ["@types/hapi__shot@6.0.0", "", { "dependencies": { "@hapi/shot": "*" } }, "sha512-CUxk0AEQRpIT2cx7EYXkqaXm60LP46ZyEhr/7uov7D/ZLysA5DKkfBtPIYnoWvn8qfcFV/7YHLd3U9gThuhb0A=="],
 
     "@types/hast": ["@types/hast@3.0.4", "", { "dependencies": { "@types/unist": "*" } }, "sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ=="],
 
