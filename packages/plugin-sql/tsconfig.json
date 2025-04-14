@@ -18,6 +18,7 @@
     "checkJs": false,
     "noEmitOnError": false,
     "moduleDetection": "force",
+    "typeRoots": ["./node_modules/@types"],
     "allowArbitraryExtensions": true,
     "baseUrl": ".",
     "paths": {
