@@ -595,49 +595,7 @@ export async function generateText({
                 const openai = createOpenAI({
                     apiKey,
                     baseURL: endpoint,
-                    fetch: async (
-                        input: RequestInfo | URL,
-                        init?: RequestInit
-                    ): Promise<Response> => {
-                        const url =
-                            typeof input === "string"
-                                ? input
-                                : input.toString();
-                        const chain_id =
-                            runtime.getSetting("ETERNALAI_CHAIN_ID") || "45762";
-
-                        const options: RequestInit = { ...init };
-                        if (options?.body) {
-                            const body = JSON.parse(options.body as string);
-                            body.chain_id = chain_id;
-                            options.body = JSON.stringify(body);
-                        }
-
-                        const fetching = await runtime.fetch(url, options);
-
-                        if (
-                            parseBooleanFromText(
-                                runtime.getSetting("ETERNALAI_LOG")
-                            )
-                        ) {
-                            elizaLogger.info(
-                                "Request data: ",
-                                JSON.stringify(options, null, 2)
-                            );
-                            const clonedResponse = fetching.clone();
-                            try {
-                                clonedResponse.json().then((data) => {
-                                    elizaLogger.info(
-                                        "Response data: ",
-                                        JSON.stringify(data, null, 2)
-                                    );
-                                });
-                            } catch (e) {
-                                elizaLogger.debug(e);
-                            }
-                        }
-                        return fetching;
-                    },
+                    fetch: runtime.fetch,
                 });
 
                 let system_prompt =
@@ -662,9 +620,15 @@ export async function generateText({
                     elizaLogger.error(e);
                 }
 
+                // Prepare the request with chain_id
+                const chain_id = runtime.getSetting("ETERNALAI_CHAIN_ID") || "45762";
+                
+                // Add chain_id to context as a special marker for EternalAI
+                const contextWithChainId = `[chain_id: ${chain_id}]\n${context}`;
+
                 const { text: openaiResponse } = await aiGenerateText({
                     model: openai.languageModel(model),
-                    prompt: context,
+                    prompt: contextWithChainId,
                     system: system_prompt,
                     temperature: temperature,
                     maxTokens: max_response_length,
