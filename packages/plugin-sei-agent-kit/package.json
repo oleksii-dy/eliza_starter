@@ -1,0 +1,38 @@
+{
+    "name": "@elizaos/plugin-sei-agent-kit",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "dependencies": {
+        "@cosmjs/stargate": "^0.32.2",
+        "@elizaos/core": "workspace:*",
+        "@sei-js/evm": "^2.0.0",
+        "ethers": "^6.0.0",
+        "node-cache": "5.1.2",
+        "sei-agent-kit": "^0.0.1",
+        "tsup": "8.3.5",
+        "ws": "^8.18.0"
+    },
+    "scripts": {
+        "build": "tsup --format esm --dts",
+        "lint": "eslint . --fix",
+        "test": "vitest run"
+    },
+    "peerDependencies": {
+        "form-data": "4.0.1",
+        "whatwg-url": "7.1.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
