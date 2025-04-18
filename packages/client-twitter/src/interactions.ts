@@ -41,6 +41,16 @@ Recent interactions between {{agentName}} and other users:
 
 {{recentPosts}}
 
+# About Tweet Author:
+{{#tweetAuthor}}
+Bio: {{bio}}
+Followers: {{followerCount}}
+Following: {{followingCount}}
+Total Tweets: {{tweetCount}}
+Location: {{location}}
+Website: {{website}}
+{{/tweetAuthor}}
+
 # TASK: Generate a post/reply in the voice, style and perspective of {{agentName}} (@{{twitterUserName}}) while using the thread of tweets as additional context:
 
 Current Post:
@@ -313,7 +323,6 @@ export class TwitterInteractionClient {
         thread: Tweet[];
     }) {
         if (tweet.userId === this.client.profile.id) {
-            // console.log("skipping tweet from bot itself", tweet.id);
             // Skip processing if the tweet is from the bot itself
             return;
         }
@@ -326,8 +335,8 @@ export class TwitterInteractionClient {
         elizaLogger.log("Processing Tweet: ", tweet.id);
         const formatTweet = (tweet: Tweet) => {
             return `  ID: ${tweet.id}
-  From: ${tweet.name} (@${tweet.username})
-  Text: ${tweet.text}`;
+From: ${tweet.name} (@${tweet.username})
+Text: ${tweet.text}`;
         };
         const currentPost = formatTweet(tweet);
 
@@ -349,7 +358,7 @@ export class TwitterInteractionClient {
         elizaLogger.debug("formattedConversation: ", formattedConversation);
 
         const imageDescriptionsArray = [];
-        try{
+        try {
             elizaLogger.debug('Getting images');
             for (const photo of tweet.photos) {
                 elizaLogger.debug(photo.url);
@@ -361,18 +370,24 @@ export class TwitterInteractionClient {
                 imageDescriptionsArray.push(description);
             }
         } catch (error) {
-    // Handle the error
-    elizaLogger.error("Error Occured during describing image: ", error);
-}
+            elizaLogger.error("Error Occurred during describing image: ", error);
+        }
 
-
-
+        // Fetch user profile data
+        let tweetAuthor = null;
+        try {
+            tweetAuthor = await this.client.fetchUserProfile(tweet.userId);
+            elizaLogger.debug("Fetched tweet author profile:", tweetAuthor);
+        } catch (error) {
+            elizaLogger.error("Error fetching tweet author profile:", error);
+        }
 
         let state = await this.runtime.composeState(message, {
             twitterClient: this.client.twitterClient,
             twitterUserName: this.client.twitterConfig.TWITTER_USERNAME,
             currentPost,
             formattedConversation,
+            tweetAuthor,
             imageDescriptions: imageDescriptionsArray.length > 0
             ? `\nImages in Tweet:\n${imageDescriptionsArray.map((desc, i) =>
               `Image ${i + 1}: Title: ${desc.title}\nDescription: ${desc.description}`).join("\n\n")}`:""
