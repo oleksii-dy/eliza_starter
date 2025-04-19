@@ -104,3 +104,73 @@ export const compressImage = (
     reader.readAsDataURL(file);
   });
 };
+
+/**
+ * Converts a File to a base64 string
+ * @param file The file to convert
+ * @returns Promise resolving to a base64 string representation of the file
+ */
+export const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        resolve(reader.result.toString());
+      } else {
+        reject(new Error('Failed to convert file to base64'));
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+/**
+ * Processes an array of Files to create Media attachments suitable for sending.
+ * Currently uses base64 data URLs.
+ * @param files Array of files to process
+ * @returns Promise resolving to an array of Media-like objects
+ */
+export const processFilesToMedia = async (files: File[]): Promise<any[]> => {
+  const mediaAttachments = [];
+
+  for (const file of files) {
+    try {
+      // Optionally compress images before converting to base64
+      let base64Data: string;
+      if (file.type.startsWith('image/') && file.size > 1024 * 1024) {
+        // Example: Compress images > 1MB
+        console.log(`Compressing image: ${file.name}`);
+        try {
+          base64Data = await compressImage(file, 1024); // Compress to max 1024px
+        } catch (compError) {
+          console.error(`Failed to compress image ${file.name}, using original.`, compError);
+          base64Data = await fileToBase64(file);
+        }
+      } else {
+        base64Data = await fileToBase64(file);
+      }
+
+      mediaAttachments.push({
+        // Note: Using client-side randomUUID for the initial object.
+        // The backend processAttachments should ideally generate/use its own stable IDs if needed before storage.
+        id: randomUUID(),
+        url: base64Data, // The base64 data URL
+        title: file.name,
+        source: 'user_upload',
+        contentType: file.type,
+        description: `File uploaded by user: ${file.name}`,
+        text: '', // Backend will extract text if applicable (e.g., from text files)
+        metadata: {
+          // Add original size maybe?
+          originalSize: file.size,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to process file:', file.name, error);
+      // Optionally add an error marker or skip the file
+    }
+  }
+
+  return mediaAttachments;
+};

@@ -495,6 +495,9 @@ export type Media = {
 
   /** Content type */
   contentType?: string;
+
+  /** Optional metadata (e.g., storage reference, size) */
+  metadata?: { [key: string]: any };
 };
 
 export enum ChannelType {

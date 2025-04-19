@@ -8,7 +8,7 @@ import { ChatInput } from '@/components/ui/chat/chat-input';
 import { ChatMessageList } from '@/components/ui/chat/chat-message-list';
 import { USER_NAME } from '@/constants';
 import { useMessages } from '@/hooks/use-query-hooks';
-import SocketIOManager from '@/lib/socketio-manager';
+import socketIOManager from '@/lib/socketio-manager';
 import { cn, getEntityId, moment, randomUUID } from '@/lib/utils';
 import { WorldManager } from '@/lib/world-manager';
 import type { IAttachment } from '@/types';
@@ -18,12 +18,23 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@radix-ui/r
 import clientLogger from '@/lib/logger';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { ChevronRight, PanelRight, Paperclip, Send, X } from 'lucide-react';
+import {
+  ChevronRight,
+  File,
+  FileAudio,
+  FileImage,
+  FileText,
+  FileVideo,
+  PanelRight,
+  Paperclip,
+  Send,
+  X,
+} from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import AIWriter from 'react-aiwriter';
 import { AudioRecorder } from './audio-recorder';
 import CopyButton from './copy-button';
-import { Avatar, AvatarImage } from './ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { Badge } from './ui/badge';
 import ChatTtsButton from './ui/chat/chat-tts-button';
 import { useAutoScroll } from './ui/chat/hooks/useAutoScroll';
@@ -40,9 +51,18 @@ type ExtraContentFields = {
 
 type ContentWithUser = Content & ExtraContentFields;
 
+// Helper function to determine file icon based on file type
+function getFileIcon(fileType: string) {
+  if (fileType.startsWith('image/')) return FileImage;
+  if (fileType.startsWith('audio/')) return FileAudio;
+  if (fileType.startsWith('video/')) return FileVideo;
+  if (fileType.includes('text')) return FileText;
+  return File;
+}
+
 const MemoizedMessageContent = React.memo(MessageContent);
 
-function MessageContent({
+export function MessageContent({
   message,
   agentId,
   shouldAnimate,
@@ -56,7 +76,9 @@ function MessageContent({
       <ChatBubbleMessage
         isLoading={message.isLoading}
         {...(message.name === USER_NAME ? { variant: 'sent' } : {})}
-        {...(!message.text ? { className: 'bg-transparent' } : {})}
+        {...(!message.text && !message.attachments?.length
+          ? { className: 'bg-transparent p-0' }
+          : {})}
       >
         {message.name !== USER_NAME && (
           <div className="w-full">
@@ -112,7 +134,7 @@ function MessageContent({
             </div>
           </div>
         ))}
-        {message.text && message.createdAt && (
+        {(message.text || message.attachments?.length > 0) && message.createdAt && (
           <ChatBubbleTimestamp timestamp={moment(message.createdAt).format('LT')} />
         )}
       </ChatBubbleMessage>
@@ -154,7 +176,7 @@ export default function Page({
   showDetails: boolean;
   toggleDetails: () => void;
 }) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [input, setInput] = useState('');
   const [messageProcessing, setMessageProcessing] = useState<boolean>(false);
   const [inputDisabled, setInputDisabled] = useState<boolean>(false);
@@ -169,8 +191,7 @@ export default function Page({
 
   const { data: messages = [] } = useMessages(agentId, roomId);
 
-  const socketIOManager = SocketIOManager.getInstance();
-
+  // The imported socketIOManager is already an instance
   const animatedMessageIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -181,6 +202,18 @@ export default function Page({
     socketIOManager.joinRoom(roomId);
 
     console.log(`[Chat] Joined room ${roomId} with entityId ${entityId}`);
+
+    // Setup a reconnection check
+    const checkConnection = () => {
+      if (!socketIOManager.isConnected) {
+        console.log('[Chat] Detected socket disconnect, attempting to reconnect...');
+        // Don't reinitialize here, just join the room
+        socketIOManager.joinRoom(roomId);
+      }
+    };
+
+    // Check connection status periodically (less frequently to avoid excessive logs)
+    const connectionInterval = setInterval(checkConnection, 30000);
 
     const handleMessageBroadcasting = (data: ContentWithUser) => {
       console.log('[Chat] Received message broadcast:', data);
@@ -218,20 +251,33 @@ export default function Page({
         ['messages', agentId, roomId, worldId],
         (old: ContentWithUser[] = []) => {
           console.log('[Chat] Current messages:', old?.length || 0);
-          // Check if this message is already in the list (avoid duplicates)
-          const isDuplicate = old.some(
-            (msg) =>
-              msg.text === newMessage.text &&
-              msg.name === newMessage.name &&
-              Math.abs((msg.createdAt || 0) - (newMessage.createdAt || 0)) < 5000 // Within 5 seconds
-          );
+
+          // Check for duplicates more carefully, handling both local echoes and server responses
+          const isDuplicate = old.some((msg) => {
+            // First check if this is a duplicate by matching IDs
+            if (msg.id === newMessage.id) {
+              return true;
+            }
+
+            // Then check by content and timing for a broader match
+            const sameContent = msg.text === newMessage.text;
+            const sameSender = msg.name === newMessage.name;
+            const closeTimestamp =
+              Math.abs((msg.createdAt || 0) - (newMessage.createdAt || 0)) < 5000; // Within 5 seconds
+
+            // Local echo check - if this is a server response for a message we already showed locally
+            const isServerResponse =
+              !data._isLocalEcho && sameContent && sameSender && closeTimestamp;
+
+            return isServerResponse;
+          });
 
           if (isDuplicate) {
             console.log('[Chat] Skipping duplicate message');
             return old;
           }
 
-          // Add a unique animation ID for immediate feedback
+          // Add animation ID for immediate feedback
           const newMessageId =
             typeof newMessage.id === 'string' ? newMessage.id : String(newMessage.id);
           animatedMessageIdRef.current = newMessageId;
@@ -239,9 +285,6 @@ export default function Page({
           return [...old, newMessage];
         }
       );
-
-      // Remove the redundant state update that was causing render loops
-      // setInput(prev => prev + '');
     };
 
     const handleMessageComplete = (data: any) => {
@@ -268,8 +311,10 @@ export default function Page({
       socketIOManager.leaveRoom(roomId);
       msgHandler.detach();
       completeHandler.detach();
+      // Clear the reconnection interval
+      clearInterval(connectionInterval);
     };
-  }, [roomId, agentId, entityId, queryClient, socketIOManager]);
+  }, [roomId, agentId, entityId, queryClient, worldId]);
 
   // Handle control messages
   useEffect(() => {
@@ -343,50 +388,33 @@ export default function Page({
 
   const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input || messageProcessing) return;
+    if ((!input && selectedFiles.length === 0) || messageProcessing) return;
 
     const messageId = randomUUID();
 
-    // Always add the user's message immediately to the UI before sending it to the server
-    const userMessage: ContentWithUser = {
+    // Convert selected files to attachments if any
+    const attachments =
+      selectedFiles.length > 0
+        ? selectedFiles.map((file) => ({
+            url: URL.createObjectURL(file),
+            title: file.name,
+            type: file.type,
+          }))
+        : undefined;
+
+    // No longer needed - socketIOManager will handle the local update
+    // Instead, directly send the message to the server which will handle both local and remote updates
+    console.log('[Chat] Sending message via socketIOManager:', {
+      messageId,
       text: input,
-      name: USER_NAME,
-      createdAt: Date.now(),
-      senderId: entityId,
-      senderName: USER_NAME,
-      roomId: roomId,
-      source: CHAT_SOURCE,
-      id: messageId, // Add a unique ID for React keys and duplicate detection
-    };
-
-    console.log('[Chat] Adding user message to UI:', userMessage);
-
-    // Update the local message list first for immediate feedback
-    queryClient.setQueryData(
-      ['messages', agentId, roomId, worldId],
-      (old: ContentWithUser[] = []) => {
-        // Check if exact same message exists already to prevent duplicates
-        const exists = old.some(
-          (msg) =>
-            msg.text === userMessage.text &&
-            msg.name === USER_NAME &&
-            Math.abs((msg.createdAt || 0) - userMessage.createdAt) < 1000
-        );
-
-        if (exists) {
-          console.log('[Chat] Skipping duplicate user message');
-          return old;
-        }
-
-        return [...old, userMessage];
-      }
-    );
+      fileCount: selectedFiles.length,
+    });
 
     // Send the message to the server/agent
-    socketIOManager.sendMessage(input, roomId, CHAT_SOURCE);
+    socketIOManager.sendMessage(input, roomId, CHAT_SOURCE, selectedFiles);
 
     setMessageProcessing(true);
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setInput('');
     formRef.current?.reset();
   };
@@ -398,10 +426,21 @@ export default function Page({
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file?.type.startsWith('image/')) {
-      setSelectedFile(file);
+    const files = e.target.files;
+    if (files && files.length) {
+      const imageFiles = Array.from(files).filter((file) => file.type.startsWith('image/'));
+      if (imageFiles.length) {
+        setSelectedFiles((prev) => [...prev, ...imageFiles]);
+      }
     }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveAllFiles = () => {
+    setSelectedFiles([]);
   };
 
   return (
@@ -415,6 +454,7 @@ export default function Page({
             <AvatarImage
               src={agentData?.settings?.avatar ? agentData?.settings?.avatar : '/elizaos-icon.png'}
             />
+            <AvatarFallback>{agentData?.name?.[0] || 'A'}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
@@ -485,7 +525,7 @@ export default function Page({
                     variant={isUser ? 'sent' : 'received'}
                     className={`flex flex-row items-end gap-2 ${isUser ? 'flex-row-reverse' : ''}`}
                   >
-                    {message.text && !isUser && (
+                    {!isUser && (message.text || message.attachments?.length > 0) && (
                       <Avatar className="size-8 border rounded-full select-none mb-2">
                         <AvatarImage
                           src={
@@ -496,6 +536,7 @@ export default function Page({
                                 : '/elizaos-icon.png'
                           }
                         />
+                        <AvatarFallback>{agentData?.name?.[0] || 'A'}</AvatarFallback>
                       </Avatar>
                     )}
 
@@ -517,27 +558,51 @@ export default function Page({
               onSubmit={handleSendMessage}
               className="relative rounded-md border bg-card"
             >
-              {selectedFile ? (
-                <div className="p-3 flex">
-                  <div className="relative rounded-md border p-2">
+              {selectedFiles.length > 0 && (
+                <div className="p-3 flex flex-wrap gap-2">
+                  {selectedFiles.map((file, index) => {
+                    const FileIcon = getFileIcon(file.type);
+                    return (
+                      <div key={index} className="relative rounded-md border p-2">
+                        <Button
+                          onClick={() => handleRemoveFile(index)}
+                          className="absolute -right-2 -top-2 size-[22px] ring-2 ring-background"
+                          variant="outline"
+                          size="icon"
+                        >
+                          <X className="size-3" />
+                        </Button>
+                        {file.type.startsWith('image/') ? (
+                          <img
+                            alt={file.name}
+                            src={URL.createObjectURL(file)}
+                            height="100%"
+                            width="100%"
+                            className="aspect-square object-contain w-16"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center w-16 h-16">
+                            <FileIcon className="size-6 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground truncate max-w-16 mt-1">
+                              {file.name}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {selectedFiles.length > 1 && (
                     <Button
-                      onClick={() => setSelectedFile(null)}
-                      className="absolute -right-2 -top-2 size-[22px] ring-2 ring-background"
-                      variant="outline"
-                      size="icon"
+                      onClick={handleRemoveAllFiles}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 mt-2"
                     >
-                      <X />
+                      Clear all
                     </Button>
-                    <img
-                      alt="Selected file"
-                      src={URL.createObjectURL(selectedFile)}
-                      height="100%"
-                      width="100%"
-                      className="aspect-square object-contain w-16"
-                    />
-                  </div>
+                  )}
                 </div>
-              ) : null}
+              )}
               <ChatInput
                 ref={inputRef}
                 onKeyDown={handleKeyDown}
@@ -573,6 +638,7 @@ export default function Page({
                         onChange={handleFileChange}
                         accept="image/*"
                         className="hidden"
+                        multiple
                       />
                     </div>
                   </TooltipTrigger>
@@ -585,7 +651,7 @@ export default function Page({
                   onChange={(newInput: string) => setInput(newInput)}
                 />
                 <Button
-                  disabled={messageProcessing}
+                  disabled={messageProcessing || (!input.trim() && selectedFiles.length === 0)}
                   type="submit"
                   size="sm"
                   className="ml-auto gap-1.5 h-[30px]"

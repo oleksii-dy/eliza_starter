@@ -1,5 +1,12 @@
-import type { IAgentRuntime, UUID } from '@elizaos/core';
-import { createUniqueUuid, logger as Logger, logger } from '@elizaos/core';
+import type { IAgentRuntime, UUID, Media } from '@elizaos/core';
+import {
+  createUniqueUuid,
+  logger as Logger,
+  logger,
+  EventType,
+  ChannelType,
+  SOCKET_MESSAGE_TYPE,
+} from '@elizaos/core';
 import * as bodyParser from 'body-parser';
 import cors from 'cors';
 import express from 'express';
@@ -8,11 +15,11 @@ import type { AgentServer } from '..';
 import { agentRouter } from './agent';
 import { teeRouter } from './tee';
 import { Server as SocketIOServer } from 'socket.io';
-import { SOCKET_MESSAGE_TYPE, EventType, ChannelType } from '@elizaos/core';
 import http from 'node:http';
 import crypto from 'node:crypto';
 import { worldRouter } from './world';
 import { envRouter } from './env';
+import { processAttachments, resolveAttachmentReferences } from '../utils'; // Import attachment utils
 
 // Custom levels from @elizaos/core logger
 const LOG_LEVELS = {
@@ -56,19 +63,25 @@ export function setupSocketIO(
       origin: '*',
       methods: ['GET', 'POST'],
     },
+    // Increase payload size limit for base64 data URLs
+    maxHttpBufferSize: 20 * 1024 * 1024, // 20MB limit (adjust as needed)
   });
 
   // Handle socket connections
   io.on('connection', (socket) => {
-    const { agentId, roomId } = socket.handshake.query as { agentId: string; roomId: string };
+    // Log immediately upon connection attempt
+    logger.info(`[SocketIO] Connection received from socket ID: ${socket.id}`);
 
-    logger.debug('Socket connected', { agentId, roomId, socketId: socket.id });
-
-    // Join the specified room
-    if (roomId) {
-      socket.join(roomId);
-      logger.debug(`Socket ${socket.id} joined room ${roomId}`);
-    }
+    // -- REMOVE or COMMENT OUT reliance on handshake query for initial joining --
+    // const { agentId, roomId } = socket.handshake.query as { agentId: string; roomId: string };
+    // logger.debug('Socket connected (handshake query - may be unreliable)', { agentId, roomId, socketId: socket.id });
+    //
+    // // Join the specified room - Defer this action until explicit ROOM_JOINING message
+    // if (roomId) {
+    //   socket.join(roomId);
+    //   logger.debug(`Socket ${socket.id} joined room ${roomId} based on handshake query`);
+    // }
+    // -------------------------------------------------------------------------
 
     // Handle messages from clients
     socket.on('message', async (messageData) => {
@@ -80,12 +93,27 @@ export function setupSocketIO(
         const worldId = payload.worldId;
         const senderId = payload.senderId;
 
+        // Basic validation: Ensure message has text or attachments
+        if (
+          (!payload.message || !payload.message.trim()) &&
+          (!payload.attachments || payload.attachments.length === 0)
+        ) {
+          logger.warn(`Received message without text or attachments. Ignoring.`, {
+            senderId,
+            roomId: socketRoomId,
+          });
+          // Optionally send an error back to the client
+          socket.emit('messageError', {
+            error: 'Message must contain text or attachments.',
+            messageId: payload.messageId,
+          });
+          return; // Stop processing
+        }
+
         // Get all agents in this room
         const agentsInRoom = roomParticipants.get(socketRoomId) || new Set([socketRoomId as UUID]);
 
         for (const agentId of agentsInRoom) {
-          // Find the primary agent for this room (for simple 1:1 chats)
-          // In more complex implementations, we'd have a proper room management system
           const agentRuntime = agents.get(agentId);
 
           if (!agentRuntime) {
@@ -93,22 +121,16 @@ export function setupSocketIO(
             continue;
           }
 
-          // Ensure the sender and recipient are different agents
+          // Ensure the sender and recipient are different agents (prevents agent talking to itself)
           if (senderId === agentId) {
             logger.debug(`Message sender and recipient are the same agent (${agentId}), ignoring.`);
             continue;
           }
 
-          if (!payload.message || !payload.message.length) {
-            logger.warn(`no message found`);
-            continue;
-          }
           const entityId = createUniqueUuid(agentRuntime, senderId);
-
           const uniqueRoomId = createUniqueUuid(agentRuntime, socketRoomId);
           const source = payload.source;
           try {
-            // Ensure connection between entity and room (just like Discord)
             await agentRuntime.ensureConnection({
               entityId: entityId,
               roomId: uniqueRoomId,
@@ -121,171 +143,208 @@ export function setupSocketIO(
               worldId: worldId,
             });
 
-            // Create unique message ID
-            const messageId = crypto.randomUUID() as UUID;
+            // Process attachments: save data, update metadata, remove data URL
+            let processedAttachments: Media[] = [];
+            if (
+              payload.attachments &&
+              Array.isArray(payload.attachments) &&
+              payload.attachments.length > 0
+            ) {
+              try {
+                processedAttachments = await processAttachments(payload.attachments, agentRuntime);
+                logger.info(
+                  `Processed ${processedAttachments.length} attachments, ${processedAttachments.filter((a) => a.metadata?.storageRef).length} stored locally.`
+                );
+              } catch (procError) {
+                logger.error(`Error processing incoming attachments: ${procError.message}`, {
+                  procError,
+                  senderId,
+                  roomId: socketRoomId,
+                });
+                // Send error back to client and stop processing this message
+                socket.emit('messageError', {
+                  error: 'Failed to process attachments.',
+                  messageId: payload.messageId,
+                });
+                return;
+              }
+            }
 
-            // Create message object for the agent
+            const messageId = (payload.messageId as UUID) || (crypto.randomUUID() as UUID);
+
+            // Create message object for the agent runtime
             const newMessage = {
               id: messageId,
               entityId: entityId,
               agentId: agentRuntime.agentId,
               roomId: uniqueRoomId,
               content: {
-                text: payload.message,
+                text: payload.message || '', // Allow empty text if attachments exist
                 source: `${source}:${payload.senderName}`,
+                attachments: processedAttachments, // Use processed attachments (URL is null if stored)
               },
               metadata: {
                 entityName: payload.senderName,
+                type: 'message', // Explicitly set metadata type
               },
               createdAt: Date.now(),
             };
 
-            // No need to save the message here, the bootstrap handler will do it
-            // Let the messageReceivedHandler in bootstrap.ts handle the memory creation
-
-            // Define callback for agent responses (pattern matching Discord's approach)
             const callback = async (content) => {
               try {
-                // Log the content object we received
                 logger.debug('Callback received content:', {
                   contentType: typeof content,
                   contentKeys: content ? Object.keys(content) : 'null',
-                  content: JSON.stringify(content),
+                  hasAttachments: !!content?.attachments?.length,
                 });
 
-                // Make sure we have inReplyTo set correctly
+                // Resolve storage references back to data URLs before broadcasting
+                if (content.attachments && Array.isArray(content.attachments)) {
+                  try {
+                    content.attachments = await resolveAttachmentReferences(
+                      content.attachments,
+                      agentRuntime
+                    );
+                    logger.debug(`Resolved attachments for broadcasting`, {
+                      count: content.attachments.length,
+                      hasDataUrls: content.attachments.some(
+                        (a) => a.url && a.url.startsWith('data:')
+                      ),
+                    });
+                  } catch (resolveError) {
+                    logger.error(
+                      `Error resolving attachments for broadcast: ${resolveError.message}`,
+                      { resolveError, messageId: content.inReplyTo }
+                    );
+                    // If resolution fails, filter out attachments that couldn't be resolved
+                    content.attachments = content.attachments.filter(
+                      (a) => !(a.metadata as any)?.resolveError
+                    );
+                  }
+                }
+
                 if (messageId && !content.inReplyTo) {
                   content.inReplyTo = messageId;
                 }
 
-                // Prepare broadcast data - more direct and explicit
-                // Only include required fields to avoid schema validation issues
+                // Prepare broadcast data
                 const broadcastData: Record<string, any> = {
                   senderId: agentRuntime.agentId,
                   senderName: agentRuntime.character.name,
                   text: content.text || '',
-                  roomId: socketRoomId,
+                  roomId: socketRoomId, // Use the original socket room ID for broadcast
                   createdAt: Date.now(),
                   source,
+                  id: crypto.randomUUID(), // Give broadcast message its own ID
+                  inReplyTo: messageId, // Link it back to the user message
                 };
 
-                // Add optional fields only if they exist in the original content
                 if (content.thought) broadcastData.thought = content.thought;
                 if (content.actions) broadcastData.actions = content.actions;
+                if (content.attachments) broadcastData.attachments = content.attachments; // Add resolved attachments
 
-                // Log exact broadcast data
                 logger.debug(`Broadcasting message to room ${socketRoomId}`, {
                   room: socketRoomId,
                   clients: io.sockets.adapter.rooms.get(socketRoomId)?.size || 0,
                   messageText: broadcastData.text?.substring(0, 50),
+                  attachmentCount: broadcastData.attachments?.length || 0,
                 });
 
-                logger.debug('Broadcasting data:', JSON.stringify(broadcastData));
-
-                // Send to specific room first
+                // Send to specific room
                 io.to(socketRoomId).emit('messageBroadcast', broadcastData);
+                // logger.debug('Also broadcasting to all clients as fallback'); // Maybe remove this? Might cause duplicates.
+                // io.emit('messageBroadcast', broadcastData);
 
-                // Also send to all connected clients as a fallback
-                logger.debug('Also broadcasting to all clients as fallback');
-                io.emit('messageBroadcast', broadcastData);
-
-                // Create memory for the response message (matching Discord's pattern)
-                const memory = {
-                  id: crypto.randomUUID() as UUID,
-                  entityId: agentRuntime.agentId,
+                // Create memory for the agent's response message
+                const responseMemory = {
+                  id: broadcastData.id as UUID, // Use same ID as broadcast message
+                  entityId: agentRuntime.agentId, // Agent is the entity
                   agentId: agentRuntime.agentId,
                   content: {
-                    ...content,
+                    ...content, // Includes text, thought, actions, attachments (with storageRefs)
                     inReplyTo: messageId,
                     channelType: ChannelType.DM,
                     source: `${source}:agent`,
                   },
-                  roomId: uniqueRoomId,
-                  createdAt: Date.now(),
+                  roomId: uniqueRoomId, // Use the internal unique room ID
+                  createdAt: broadcastData.createdAt,
+                  metadata: {
+                    // Add metadata for the response message
+                    type: 'message',
+                    source: 'agent_response',
+                  },
                 };
 
-                // Log the memory object we're creating
-                logger.debug('Memory object for response:', {
-                  memoryId: memory.id,
-                  contentKeys: Object.keys(memory.content),
+                logger.debug('Creating memory for agent response:', {
+                  memoryId: responseMemory.id,
+                  contentKeys: Object.keys(responseMemory.content),
+                  attachmentCount: responseMemory.content.attachments?.length || 0,
+                  hasStorageRefs: responseMemory.content.attachments?.some(
+                    (a) => a.metadata?.storageRef
+                  ),
                 });
 
-                // Save the memory for the response
-                await agentRuntime.createMemory(memory, 'messages');
+                await agentRuntime.createMemory(responseMemory, 'messages');
 
-                // Return content for bootstrap's processing
-                logger.debug('Returning content directly');
-                return [content];
+                // Return content for bootstrap processing (if any)
+                logger.debug('Callback finished.');
+                return [content]; // Not sure if this return is actually used anymore
               } catch (error) {
-                logger.error('Error in socket message callback:', error);
+                logger.error('Error in socket message callback:', { error, messageId });
+                // Send error notification to client?
+                socket.emit('messageError', {
+                  error: 'Agent failed to process response.',
+                  messageId: messageId,
+                });
                 return [];
               }
             };
 
-            // Log the message and runtime details before calling emitEvent
-            logger.debug('Emitting MESSAGE_RECEIVED with:', {
+            logger.debug('Emitting MESSAGE_RECEIVED event to agent runtime', {
               messageId: newMessage.id,
               entityId: newMessage.entityId,
-              agentId: newMessage.agentId,
-              text: newMessage.content.text,
-              callbackType: typeof callback,
+              textLength: newMessage.content.text?.length,
+              attachmentCount: newMessage.content.attachments?.length || 0,
             });
-
-            // Monkey-patch the emitEvent method to log its arguments
-            const originalEmitEvent = agentRuntime.emitEvent;
-            agentRuntime.emitEvent = function (eventType, payload) {
-              logger.debug('emitEvent called with eventType:', eventType);
-              logger.debug('emitEvent payload structure:', {
-                hasRuntime: !!payload.runtime,
-                hasMessage: !!payload.message,
-                hasCallback: !!payload.callback,
-                callbackType: typeof payload.callback,
-              });
-              return originalEmitEvent.call(this, eventType, payload);
-            };
 
             // Emit message received event to trigger agent's message handler
             agentRuntime.emitEvent(EventType.MESSAGE_RECEIVED, {
               runtime: agentRuntime,
               message: newMessage,
-              callback,
-              onComplete: () => {
-                io.emit('messageComplete', {
-                  roomId: socketRoomId,
-                  agentId,
-                  senderId,
-                });
-              },
+              callback: callback, // Pass the callback to handle the response
             });
           } catch (error) {
-            logger.error('Error processing message:', error);
+            logger.error('Error handling socket message:', {
+              error,
+              socketId: socket.id,
+              agentId,
+              roomId: socketRoomId,
+            });
+            // Notify client of the error
+            socket.emit('messageError', {
+              error: 'Internal server error handling message.',
+              messageId: payload.messageId,
+            });
+          }
+        } // end for agentId in agentsInRoom
+      } else {
+        logger.warn('Received unhandled message type:', { type: messageData.type });
+      }
+    }); // end socket.on('message')
+
+    // Handle socket disconnections
+    socket.on('disconnect', () => {
+      logger.debug('Socket disconnected', { socketId: socket.id, agentId, roomId });
+      // Clean up room participants map if needed
+      if (socketRoomId && agentId) {
+        const agentsSet = roomParticipants.get(socketRoomId);
+        if (agentsSet) {
+          agentsSet.delete(agentId as UUID);
+          if (agentsSet.size === 0) {
+            roomParticipants.delete(socketRoomId);
           }
         }
-      } else if (messageData.type === SOCKET_MESSAGE_TYPE.ROOM_JOINING) {
-        const payload = messageData.payload;
-        const roomId = payload.roomId;
-        const agentIds = payload.agentIds;
-
-        roomParticipants.set(roomId, new Set());
-
-        agentIds?.forEach((agentId: UUID) => {
-          if (agents.has(agentId as UUID)) {
-            // Add agent to room participants
-            roomParticipants.get(roomId)!.add(agentId as UUID);
-            logger.debug(`Agent ${agentId} joined room ${roomId}`);
-          }
-        });
-        logger.debug('roomParticipants', roomParticipants);
-
-        logger.debug(`Client ${socket.id} joining room ${roomId}`);
       }
-    });
-
-    // Handle disconnections
-    socket.on('disconnect', () => {
-      logger.debug('Socket disconnected', { socketId: socket.id });
-      // Note: We're not removing agents from rooms on disconnect
-      // as they should remain participants even when not connected
     });
   });
 
