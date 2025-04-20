@@ -41,6 +41,8 @@ RUN apt-get update && \
 
 RUN npm install -g bun@1.2.5 turbo@2.3.3
 
+RUN apt-get update && apt-get install -y pciutils
+
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/turbo.json ./
 COPY --from=builder /app/tsconfig.json ./
