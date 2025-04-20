@@ -73,9 +73,15 @@ importers:
       csv-parse:
         specifier: 5.6.0
         version: 5.6.0
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.5.0
       langdetect:
         specifier: ^0.2.1
         version: 0.2.1
+      lumaai:
+        specifier: ^1.7.3
+        version: 1.7.3(encoding@0.1.13)
       ollama-ai-provider:
         specifier: 0.16.1
         version: 0.16.1(zod@3.24.1)
@@ -523,6 +529,9 @@ importers:
       glob:
         specifier: 11.0.0
         version: 11.0.0
+      lumaai:
+        specifier: ^1.0.0
+        version: 1.7.3(encoding@0.1.13)
       node-fetch:
         specifier: ^3.3.2
         version: 3.3.2
@@ -8858,6 +8867,9 @@ packages:
     resolution: {integrity: sha512-28vvUnnKQ/dBwiCQtwJw7QauYnE7yd2Cyp4tTTJpvglX4EMpbflcdBgrgToX2j71B3YvugK/NH3BGUk+E/p/Fw==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  lumaai@1.7.3:
+    resolution: {integrity: sha512-n/GN8cshvZxRbqc1sD09QRAC9v3ikp3SAJS1qfM+jTiT9FCZ7lDIyihauBj4jnY1061ivgRkpcNyhu0JxulDrg==}
 
   lunr-languages@1.14.0:
     resolution: {integrity: sha512-hWUAb2KqM3L7J5bcrngszzISY4BxrXn/Xhbb9TTCJYEGqlR1nG67/M14sp09+PTIRklobrn57IAxcdcO/ZFyNA==}
@@ -20945,7 +20957,7 @@ snapshots:
 
   dotenv-expand@11.0.7:
     dependencies:
-      dotenv: 16.4.7
+      dotenv: 16.5.0
 
   dotenv@16.4.5: {}
 
@@ -23795,6 +23807,18 @@ snapshots:
   lucide-react@0.469.0(react@19.1.0):
     dependencies:
       react: 19.1.0
+
+  lumaai@1.7.3(encoding@0.1.13):
+    dependencies:
+      '@types/node': 18.19.86
+      '@types/node-fetch': 2.6.12
+      abort-controller: 3.0.0
+      agentkeepalive: 4.6.0
+      form-data-encoder: 1.7.2
+      formdata-node: 4.4.1
+      node-fetch: 2.7.0(encoding@0.1.13)
+    transitivePeerDependencies:
+      - encoding
 
   lunr-languages@1.14.0: {}
 
