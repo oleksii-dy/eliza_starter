@@ -388,7 +388,6 @@ Text: ${tweet.text}`;
                 imageDescriptionsArray.push(description);
             }
         } catch (error) {
-        } catch (error) {
             elizaLogger.error("Error Occurred during describing image: ", error);
         }
 
