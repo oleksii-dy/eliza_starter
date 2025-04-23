@@ -37,6 +37,9 @@ importers:
       '@0glabs/0g-ts-sdk':
         specifier: 0.2.1
         version: 0.2.1(bufferutil@4.0.9)(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)
+      '@ai-sdk/gaimin':
+        specifier: file:packages/gaimin
+        version: file:packages/gaimin(zod@3.24.1)
       '@coinbase/coinbase-sdk':
         specifier: 0.10.0
         version: 0.10.0(bufferutil@4.0.9)(typescript@5.6.3)(utf-8-validate@5.0.10)(zod@3.24.1)
@@ -589,7 +592,33 @@ importers:
         version: 5.6.3
 
   packages/dynamic-imports: {}
-
+    packages/gaimin:
+      dependencies:
+        '@ai-sdk/provider':
+          specifier: 1.0.6
+          version: 1.0.6
+        '@ai-sdk/provider-utils':
+          specifier: 2.1.6
+          version: 2.1.6(zod@3.23.8)
+      devDependencies:
+        '@types/node':
+          specifier: ^18
+          version: 18.19.76
+        rimraf:
+          specifier: ^5.0.0
+          version: 5.0.10
+        tsup:
+          specifier: ^8
+          version: 8.3.5(@swc/core@1.11.4(@swc/helpers@0.5.15))(jiti@1.21.7)(postcss@8.5.3)(typescript@5.6.3)(yaml@2.7.0)
+        typescript:
+          specifier: 5.6.3
+          version: 5.6.3
+        vitest:
+          specifier: ^2.1.5
+          version: 2.1.9(@types/node@18.19.76)(terser@5.39.0)
+        zod:
+          specifier: 3.23.8
+          version: 3.23.8
   packages/plugin-bootstrap:
     dependencies:
       '@elizaos/core':

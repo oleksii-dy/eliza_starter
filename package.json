@@ -91,7 +91,8 @@
     "pnpm": "9.15.7",
     "sharp": "0.33.5",
     "ws": "8.18.0",
-    "zod": "3.24.2"
+    "zod": "3.24.2",
+    "@ai-sdk/gaimin": "file:packages/gaimin"
   },
   "packageManager": "pnpm@9.15.7",
   "workspaces": [

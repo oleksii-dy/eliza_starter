@@ -49,6 +49,42 @@ export const models: Models = {
             },
         },
     },
+    [ModelProviderName.GAIMIN]: {
+        endpoint: settings.GAIMIN_API_URL || "https://api.cloud.gaimin.io/ai/text-2-text/api/chat",
+        model: {
+            [ModelClass.SMALL]: {
+                name: settings.GAIMIN_MODEL || "llama3.2",
+                stop: [],
+                maxInputTokens: 8192,
+                maxOutputTokens: 2048,
+                frequency_penalty: 0.4,
+                presence_penalty: 0.4,
+                temperature: 0.7,
+            },
+            [ModelClass.MEDIUM]: {
+                name: settings.GAIMIN_MODEL || "llama3.2:3b",
+                stop: [],
+                maxInputTokens: 8192,
+                maxOutputTokens: 2048,
+                frequency_penalty: 0.4,
+                presence_penalty: 0.4,
+                temperature: 0.7,
+            },
+            [ModelClass.LARGE]: {
+                name: settings.GAIMIN_MODEL || "llama3.2:3b",
+                stop: [],
+                maxInputTokens: 8192,
+                maxOutputTokens: 2048,
+                frequency_penalty: 0.4,
+                presence_penalty: 0.4,
+                temperature: 0.7,
+            },
+            [ModelClass.EMBEDDING]: {
+                name: settings.EMBEDDING_GAIMIN_MODEL || "llama3.2:3b",
+                dimensions: 1024,
+            },
+        },
+    },
     [ModelProviderName.ETERNALAI]: {
         endpoint: settings.ETERNALAI_URL,
         model: {

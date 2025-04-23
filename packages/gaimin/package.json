@@ -1,0 +1,57 @@
+{
+    "name": "@ai-sdk/gaimin",
+    "version": "1.0.0",
+    "private": true,
+    "license": "Apache-2.0",
+    "sideEffects": false,
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+      "dist/**/*",
+      "CHANGELOG.md"
+    ],
+    "exports": {
+      "./package.json": "./package.json",
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.mjs",
+        "require": "./dist/index.js"
+      }
+    },
+    "dependencies": {
+      "@ai-sdk/provider": "1.0.1",
+      "@ai-sdk/provider-utils": "2.0.2"
+    },
+    "devDependencies": {
+      "@types/node": "^18",
+      "tsup": "^8",
+      "typescript": "5.6.3",
+      "zod": "3.23.8",
+      "rimraf": "^5.0.0",
+      "vitest": "^2.1.5"
+    },
+    "peerDependencies": {
+      "zod": "^3.0.0"
+    },
+    "engines": {
+      "node": ">=18"
+    },
+    "publishConfig": {
+      "access": "public"
+    },
+    "keywords": [
+      "ai"
+    ],
+    "scripts": {
+      "build": "tsup src/index.ts",
+      "build:watch": "tsup --watch",
+      "clean": "rimraf dist",
+      "lint": "eslint \"./**/*.ts*\"",
+      "type-check": "tsc --noEmit",
+      "prettier-check": "prettier --check \"./**/*.ts*\"",
+      "test": "pnpm test:node && pnpm test:edge",
+      "test:edge": "vitest --config vitest.edge.config.js --run",
+      "test:node": "vitest --config vitest.node.config.js --run"
+    }
+  }

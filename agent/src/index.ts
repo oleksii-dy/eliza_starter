@@ -578,7 +578,11 @@ export function getTokenForProvider(
                 character.settings?.secrets?.NEARAI_API_KEY ||
                 settings.NEARAI_API_KEY
             );
-
+        case ModelProviderName.GAIMIN:
+            return (
+                    character.settings?.secrets?.GAIMIN_API_KEY ||
+                    settings.GAIMIN_API_KEY
+            );
         default:
             const errorMessage = `Failed to get token - unsupported model provider: ${provider}`;
             elizaLogger.error(errorMessage);

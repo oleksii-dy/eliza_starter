@@ -554,6 +554,91 @@ export async function generateText({
             case ModelProviderName.NINETEEN_AI:
             case ModelProviderName.AKASH_CHAT_API:
             case ModelProviderName.LMSTUDIO:
+            case ModelProviderName.GAIMIN: {
+                elizaLogger.debug("Initializing GAIMIN model");
+                const gaiminApiKey = runtime.getSetting("GAIMIN_API_KEY") as string;
+                const gaiminApiURL = runtime.getSetting("GAIMIN_API_URL") as string;
+                const gaiminModel = runtime.getSetting("GAIMIN_MODEL") as string;
+            
+                if (!gaiminApiKey) {
+                    throw new Error("GAIMIN-API-KEY is not set");
+                }
+            
+                try {
+                    elizaLogger.debug(`Generating text with GAIMIN: ${gaiminModel}`);
+                    elizaLogger.debug( `System prompt before API request:
+                    '${runtime.character.system}', Default prompt: '${settings.SYSTEM_PROMPT}'`
+                    );
+            
+                    const systemPrompt = runtime.character.system?.trim() ||
+                        settings.SYSTEM_PROMPT?.trim() || "You are a helpful AI assistant.";
+                    
+                    if (!systemPrompt) {
+                        throw new Error("System prompt is missing and cannot be empty");                                              
+                    }
+            
+                    const messages = [
+                        {
+                            role: 'system',
+                            content: systemPrompt
+                        },
+                        {
+                            role: 'user',
+                            content: context?.trim() || "Hello"
+                        }
+                    ];
+            
+                    elizaLogger.debug("GAIMIN API request body:", JSON.stringify({
+                        model: gaiminModel,
+                        messages: messages,
+                        stream: false,
+                        temperature: temperature || 0.7,
+                        max_tokens: max_response_length || 2048
+                    }, null, 2));
+            
+                    const response = await fetch(gaiminApiURL ||
+                        "https://api.cloud.gaimin.io/ai/text-2-text/api/chat", {
+                        
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-KEY': gaiminApiKey
+                        },
+                        body: JSON.stringify({
+                            model: gaiminModel,
+                            messages: messages,
+                            stream: false,
+                            temperature: temperature || 0.7,
+                            max_tokens: max_response_length || 2048
+                        })
+                    });
+            
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        elizaLogger.error(`GAIMIN API error: ${response.status} - ${errorText}`);
+                        throw new Error(`GAIMIN API returned ${response.status}: ${errorText}`);
+                    }
+            
+                    const responseData = await response.json();
+                    elizaLogger.debug("GAIMIN API JSON Response:", responseData);
+            
+                    const assistantResponse = responseData.message?.content ||
+                        responseData.choices?.[0]?.message?.content || "";
+            
+                    if (!assistantResponse) {
+                        throw new Error("GAIMIN API response is missing 'message.content'");
+                    }
+            
+                    elizaLogger.debug("Successfully generated text with GAIMIN");
+                    return assistantResponse;
+            
+                } catch (error) {
+                    elizaLogger.error(`Error generating text with GAIMIN: ${error}`);
+                    throw error;
+                }
+            
+                break;
+            }
             case ModelProviderName.NEARAI: {
                 elizaLogger.debug(
                     "Initializing OpenAI model with Cloudflare check"
