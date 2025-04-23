@@ -1,53 +1,61 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
-import { createTraceRouter } from '../src/server/api/trace';
 import express from 'express';
+import { createTraceRouter } from '../src/server/api/trace';
 import { UUID } from '@elizaos/core';
-
-// Mock data
-const mockLogs = [
-  {
-    id: '123e4567-e89b-12d3-a456-426614174002',
-    entityId: '123e4567-e89b-12d3-a456-426614174001',
-    type: 'trace',
-    timestamp: Date.now(),
-    body: {
-      duration: 100,
-      attributes: { test: 'value' },
-      events: [
-        {
-          name: 'event1',
-          timestamp: Date.now(),
-          attributes: { eventAttr: 'value' },
-        },
-      ],
-      status: { code: 0, message: 'success' },
-      parentSpanId: null,
-    },
-  },
-  {
-    id: '123e4567-e89b-12d3-a456-426614174003',
-    entityId: '123e4567-e89b-12d3-a456-426614174001',
-    type: 'trace',
-    timestamp: Date.now() + 50,
-    body: {
-      duration: 50,
-      attributes: { test: 'child' },
-      events: [],
-      status: { code: 0 },
-      parentSpanId: '123e4567-e89b-12d3-a456-426614174002',
-    },
-  },
-];
 
 // Mock database adapter
 const mockDb = {
   getLogs: async ({ entityId, type }: { entityId: UUID; type: string }) => {
-    if (entityId === '123e4567-e89b-12d3-a456-426614174001' && type === 'trace') {
-      return mockLogs;
-    }
-    if (entityId === '123e4567-e89b-12d3-a456-426614174999' && type === 'trace') {
+    // Simulate database error for specific traceId
+    if (entityId === '123e4567-e89b-12d3-a456-426614174999') {
       throw new Error('Database error');
     }
+
+    // Return mock data for valid traceId
+    if (entityId === '123e4567-e89b-12d3-a456-426614174001') {
+      return [
+        {
+          id: '123e4567-e89b-12d3-a456-426614174002' as UUID,
+          entityId: '123e4567-e89b-12d3-a456-426614174001' as UUID,
+          body: {
+            name: 'parent-span',
+            startTime: 1234567890,
+            endTime: 1234567990,
+            attributes: { key1: 'value1' },
+            events: [
+              {
+                name: 'event1',
+                time: 1234567895,
+                attributes: { key2: 'value2' },
+              },
+            ],
+            status: { code: 0, message: 'OK' },
+            parentSpanId: null,
+          },
+        },
+        {
+          id: '123e4567-e89b-12d3-a456-426614174003' as UUID,
+          entityId: '123e4567-e89b-12d3-a456-426614174001' as UUID,
+          body: {
+            name: 'child-span',
+            startTime: 1234567891,
+            endTime: 1234567895,
+            attributes: { key3: 'value3' },
+            events: [
+              {
+                name: 'event2',
+                time: 1234567893,
+                attributes: { key4: 'value4' },
+              },
+            ],
+            status: { code: 0, message: 'OK' },
+            parentSpanId: '123e4567-e89b-12d3-a456-426614174002',
+          },
+        },
+      ];
+    }
+
+    // Return empty array for non-existent traceId
     return [];
   },
 };
@@ -98,47 +106,77 @@ describe('Trace API', () => {
     // Verify parent span
     const parentSpan = data.resourceSpans[0].scopeSpans[0].spans[0];
     expect(parentSpan).toMatchObject({
-      traceId: traceId,
-      spanId: mockLogs[0].id,
-      name: mockLogs[0].type,
-      kind: 1, // INTERNAL
-      startTimeUnixNano: mockLogs[0].timestamp * 1000000,
-      endTimeUnixNano: (mockLogs[0].timestamp + mockLogs[0].body.duration) * 1000000,
-      attributes: Object.entries(mockLogs[0].body.attributes).map(([key, value]) => ({
-        key,
-        value: { stringValue: String(value) },
-      })),
-      events: mockLogs[0].body.events.map((event) => ({
-        timeUnixNano: event.timestamp * 1000000,
-        name: event.name,
-        attributes: Object.entries(event.attributes).map(([key, value]) => ({
-          key,
-          value: { stringValue: String(value) },
-        })),
-      })),
+      traceId: '123e4567-e89b-12d3-a456-426614174001',
+      spanId: '123e4567-e89b-12d3-a456-426614174002',
+      name: 'parent-span',
+      kind: 1,
+      startTimeUnixNano: 1234567890000000,
+      endTimeUnixNano: 1234567990000000,
+      attributes: [
+        {
+          key: 'key1',
+          value: {
+            stringValue: 'value1',
+          },
+        },
+      ],
+      events: [
+        {
+          name: 'event1',
+          timeUnixNano: 1234567895000000,
+          attributes: [
+            {
+              key: 'key2',
+              value: {
+                stringValue: 'value2',
+              },
+            },
+          ],
+        },
+      ],
       status: {
-        code: mockLogs[0].body.status.code,
-        message: mockLogs[0].body.status.message,
+        code: 0,
+        message: 'OK',
       },
+      parentSpanId: null,
     });
 
     // Verify child span
     const childSpan = data.resourceSpans[0].scopeSpans[0].spans[1];
     expect(childSpan).toMatchObject({
-      traceId: traceId,
-      spanId: mockLogs[1].id,
-      name: mockLogs[1].type,
-      kind: 1, // INTERNAL
-      startTimeUnixNano: mockLogs[1].timestamp * 1000000,
-      endTimeUnixNano: (mockLogs[1].timestamp + mockLogs[1].body.duration) * 1000000,
-      attributes: Object.entries(mockLogs[1].body.attributes).map(([key, value]) => ({
-        key,
-        value: { stringValue: String(value) },
-      })),
-      events: mockLogs[1].body.events,
+      traceId: '123e4567-e89b-12d3-a456-426614174001',
+      spanId: '123e4567-e89b-12d3-a456-426614174003',
+      name: 'child-span',
+      kind: 1,
+      startTimeUnixNano: 1234567891000000,
+      endTimeUnixNano: 1234567895000000,
+      attributes: [
+        {
+          key: 'key3',
+          value: {
+            stringValue: 'value3',
+          },
+        },
+      ],
+      events: [
+        {
+          name: 'event2',
+          timeUnixNano: 1234567893000000,
+          attributes: [
+            {
+              key: 'key4',
+              value: {
+                stringValue: 'value4',
+              },
+            },
+          ],
+        },
+      ],
       status: {
-        code: mockLogs[1].body.status.code,
+        code: 0,
+        message: 'OK',
       },
+      parentSpanId: '123e4567-e89b-12d3-a456-426614174002',
     });
 
     // Verify parent-child relationship

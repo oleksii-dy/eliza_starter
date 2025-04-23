@@ -1,35 +1,36 @@
 import express, { Request, Response, Router } from 'express';
 import { logger } from '@elizaos/core';
-import { UUID } from '@elizaos/core';
+import { UUID, validateUuid } from '@elizaos/core';
 import { createDatabaseAdapter } from '@elizaos/plugin-sql';
 
 /**
- * Interface for a database adapter that can retrieve trace data
+ * Adapter interface for retrieving trace data from the database.
+ * This is used to abstract the database implementation details from the API.
  */
-interface TraceDataAdapter {
+type TraceDataAdapter = {
   getLogs: (params: { entityId: UUID; type: string }) => Promise<
     Array<{
-      id: string;
-      entityId: string;
-      type: string;
-      timestamp: number;
+      id: UUID;
+      entityId: UUID;
       body: {
-        duration?: number;
-        attributes?: Record<string, any>;
-        events?: Array<{
+        name: string;
+        startTime: number;
+        endTime: number;
+        attributes: Record<string, any>;
+        events: Array<{
           name: string;
-          timestamp: number;
+          time: number;
           attributes: Record<string, any>;
         }>;
-        status?: {
+        status: {
           code: number;
-          message?: string;
+          message: string;
         };
-        parentSpanId?: string | null;
+        parentSpanId: string | null;
       };
     }>
   >;
-}
+};
 
 /**
  * Interface representing a trace span in OpenTelemetry format
@@ -52,6 +53,12 @@ interface TraceSpan {
     message?: string;
   };
 }
+
+/**
+ * Default agent ID used for the trace router when no specific agent is provided.
+ * This agent is used to store and retrieve trace data.
+ */
+const DEFAULT_TRACE_AGENT_ID = '123e4567-e89b-12d3-a456-426614174002' as UUID;
 
 /**
  * Creates an Express router for handling trace-related API endpoints
@@ -119,7 +126,8 @@ export const createTraceRouter = (db: TraceDataAdapter): Router => {
     });
 
     // Validate traceId format
-    if (!isValidUUID(traceId)) {
+    const validatedTraceId = validateUuid(traceId);
+    if (!validatedTraceId) {
       logger.warn('Invalid trace ID format', {
         traceId,
         method: 'GET',
@@ -133,7 +141,7 @@ export const createTraceRouter = (db: TraceDataAdapter): Router => {
     try {
       // Get trace data
       const logs = await db.getLogs({
-        entityId: traceId as UUID,
+        entityId: validatedTraceId,
         type: 'trace',
       });
 
@@ -153,11 +161,15 @@ export const createTraceRouter = (db: TraceDataAdapter): Router => {
         .map((log) => ({
           traceId: log.entityId,
           spanId: log.id,
-          name: log.type,
-          startTime: log.timestamp,
-          endTime: log.timestamp + (log.body.duration || 0),
+          name: log.body.name,
+          startTime: log.body.startTime,
+          endTime: log.body.endTime,
           attributes: log.body.attributes || {},
-          events: log.body.events || [],
+          events: log.body.events.map((event) => ({
+            name: event.name,
+            timestamp: event.time,
+            attributes: event.attributes || {},
+          })),
           status: log.body.status || { code: 0 },
           parentSpanId: log.body.parentSpanId,
         }))
@@ -235,15 +247,14 @@ export const createTraceRouter = (db: TraceDataAdapter): Router => {
   return router;
 };
 
-// Create the default router instance with the default database adapter
-const defaultDb = createDatabaseAdapter({}, '123e4567-e89b-12d3-a456-426614174002' as UUID);
-await defaultDb.init();
-export const traceRouter = createTraceRouter(defaultDb);
-
 /**
- * Helper function to validate UUID format
+ * Creates and initializes the trace router with a database adapter.
+ * This should be called during application startup.
+ *
+ * @returns The initialized trace router
  */
-function isValidUUID(uuid: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(uuid);
+export async function initializeTraceRouter(): Promise<Router> {
+  const db = createDatabaseAdapter({}, DEFAULT_TRACE_AGENT_ID);
+  await db.init();
+  return createTraceRouter(db);
 }
