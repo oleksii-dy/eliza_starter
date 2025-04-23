@@ -1,5 +1,5 @@
 import { getEmbeddingModelSettings, getEndpoint } from "./models.ts";
-import { IAgentRuntime, ModelProviderName } from "./types.ts";
+import { type IAgentRuntime, ModelProviderName } from "./types.ts";
 import settings from "./settings.ts";
 import elizaLogger from "./logger.ts";
 import LocalEmbeddingModelManager from "./localembeddingManager.ts";
@@ -116,7 +116,7 @@ async function getRemoteEmbedding(
         return data?.data?.[0].embedding;
     } catch (e) {
         elizaLogger.error("Full error details:", e);
-        throw e;
+        //throw e;
     }
 }
 
@@ -201,8 +201,8 @@ export async function embed(runtime: IAgentRuntime, input: string) {
     }
 
     // Check cache first
-    const cachedEmbedding = await retrieveCachedEmbedding(runtime, input);
-    if (cachedEmbedding) return cachedEmbedding;
+    //const cachedEmbedding = await retrieveCachedEmbedding(runtime, input);
+    //if (cachedEmbedding) return cachedEmbedding;
 
     const config = getEmbeddingConfig();
     const isNode = typeof process !== "undefined" && process.versions?.node;

@@ -1,7 +1,8 @@
 import {
     parseBooleanFromText,
-    IAgentRuntime,
+    type IAgentRuntime,
     ActionTimelineType,
+    elizaLogger,
 } from "@elizaos/core";
 import { z, ZodError } from "zod";
 
@@ -65,6 +66,7 @@ export const twitterEnvSchema = z.object({
         .optional()
         .default(''),
     */
+    ENABLE_TWITTER_POST_GENERATION: z.boolean(),
     POST_INTERVAL_MIN: z.number().int(),
     POST_INTERVAL_MAX: z.number().int(),
     ENABLE_ACTION_PROCESSING: z.boolean(),
@@ -75,6 +77,8 @@ export const twitterEnvSchema = z.object({
     ACTION_TIMELINE_TYPE: z
         .nativeEnum(ActionTimelineType)
         .default(ActionTimelineType.ForYou),
+    TWITTER_PROXY_URL: z.string().optional(),
+    TWITTER_LOCAL_ADDRESS: z.string().optional(),
 });
 
 export type TwitterConfig = z.infer<typeof twitterEnvSchema>;
@@ -98,7 +102,7 @@ function safeParseInt(
     defaultValue: number
 ): number {
     if (!value) return defaultValue;
-    const parsed = parseInt(value, 10);
+    const parsed = Number.parseInt(value, 10);
     return isNaN(parsed) ? defaultValue : Math.max(1, parsed);
 }
 
@@ -173,6 +177,14 @@ export async function validateTwitterConfig(
                     process.env.TWITTER_TARGET_USERS
             ),
 
+            // bool
+            ENABLE_TWITTER_POST_GENERATION:
+                parseBooleanFromText(
+                    runtime.getSetting("ENABLE_TWITTER_POST_GENERATION") ||
+                        process.env.ENABLE_TWITTER_POST_GENERATION
+                ) ?? true,
+
+
             // int in minutes
             POST_INTERVAL_MIN: safeParseInt(
                 runtime.getSetting("POST_INTERVAL_MIN") ||
@@ -223,6 +235,15 @@ export async function validateTwitterConfig(
             ACTION_TIMELINE_TYPE:
                 runtime.getSetting("ACTION_TIMELINE_TYPE") ||
                 process.env.ACTION_TIMELINE_TYPE,
+
+            TWITTER_PROXY_URL:
+                (runtime.getSetting("TWITTER_PROXY_URL") ||
+                    process.env.TWITTER_PROXY_URL) ??
+                "",
+
+            TWITTER_LOCAL_ADDRESS:
+                runtime.getSetting("TWITTER_LOCAL_ADDRESS") ||
+                process.env.TWITTER_LOCAL_ADDRESS,
         };
 
         return twitterEnvSchema.parse(twitterConfig);
@@ -231,10 +252,16 @@ export async function validateTwitterConfig(
             const errorMessages = error.errors
                 .map((err) => `${err.path.join(".")}: ${err.message}`)
                 .join("\n");
+            elizaLogger.error(
+                `Twitter configuration validation failed:\n${errorMessages}`
+            );
+            /*
             throw new Error(
                 `X/Twitter configuration validation failed:\n${errorMessages}`
             );
+            */
         }
-        throw error;
+        //throw error;
+        return {};
     }
 }

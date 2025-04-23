@@ -1,12 +1,12 @@
 import {
-    Content,
-    HandlerCallback,
-    IAgentRuntime,
-    Memory,
+    type Content,
+    type HandlerCallback,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
     ServiceType,
-    State,
-    UUID,
+    type State,
+    type UUID,
     composeContext,
     composeRandomUser,
     elizaLogger,
@@ -14,15 +14,15 @@ import {
     generateMessageResponse,
     stringToUuid,
     generateShouldRespond,
-    ITranscriptionService,
-    ISpeechService,
+    type ITranscriptionService,
+    type ISpeechService,
 } from "@elizaos/core";
 import {
-    AudioPlayer,
-    AudioReceiveStream,
+    type AudioPlayer,
+    type AudioReceiveStream,
     NoSubscriberBehavior,
     StreamType,
-    VoiceConnection,
+    type VoiceConnection,
     VoiceConnectionStatus,
     createAudioPlayer,
     createAudioResource,
@@ -31,18 +31,18 @@ import {
     entersState,
 } from "@discordjs/voice";
 import {
-    BaseGuildVoiceChannel,
+    type BaseGuildVoiceChannel,
     ChannelType,
-    Client,
-    Guild,
-    GuildMember,
-    VoiceChannel,
-    VoiceState,
+    type Client,
+    type Guild,
+    type GuildMember,
+    type VoiceChannel,
+    type VoiceState,
 } from "discord.js";
 import EventEmitter from "events";
 import prism from "prism-media";
-import { Readable, pipeline } from "stream";
-import { DiscordClient } from "./index.ts";
+import { type Readable, pipeline } from "stream";
+import type { DiscordClient } from "./index.ts";
 import {
     discordShouldRespondTemplate,
     discordVoiceHandlerTemplate,
@@ -57,8 +57,8 @@ export class AudioMonitor {
     private readable: Readable;
     private buffers: Buffer[] = [];
     private maxSize: number;
-    private lastFlagged: number = -1;
-    private ended: boolean = false;
+    private lastFlagged = -1;
+    private ended = false;
 
     constructor(
         readable: Readable,
@@ -139,7 +139,7 @@ export class AudioMonitor {
 }
 
 export class VoiceManager extends EventEmitter {
-    private processingVoice: boolean = false;
+    private processingVoice = false;
     private transcriptionTimeout: NodeJS.Timeout | null = null;
     private userStates: Map<
         string,
@@ -264,8 +264,15 @@ export class VoiceManager extends EventEmitter {
                         elizaLogger.log(
                             "Disconnection confirmed - cleaning up..." + e
                         );
-                        connection.destroy();
-                        this.connections.delete(channel.id);
+                        try {
+                          connection.destroy();
+                          this.connections.delete(channel.id);
+                        } catch (e2) {
+                            // Seems to be a real disconnect, destroy and cleanup
+                            elizaLogger.log(
+                                "Clean up failed - already closed...", e2
+                            );
+                        }
                     }
                 } else if (
                     newState.status === VoiceConnectionStatus.Destroyed
@@ -326,9 +333,13 @@ export class VoiceManager extends EventEmitter {
             });
         } catch (error) {
             elizaLogger.log("Failed to establish voice connection:", error);
-            connection.destroy();
-            this.connections.delete(channel.id);
-            throw error;
+            try {
+              connection.destroy();
+              this.connections.delete(channel.id);
+            } catch (e) {
+              elizaLogger.log("error cleaning up connect:", e);
+            }
+            //throw error;
         }
     }
 
@@ -439,8 +450,12 @@ export class VoiceManager extends EventEmitter {
     leaveChannel(channel: BaseGuildVoiceChannel) {
         const connection = this.connections.get(channel.id);
         if (connection) {
-            connection.destroy();
-            this.connections.delete(channel.id);
+            try {
+              connection.destroy();
+              this.connections.delete(channel.id);
+            } catch(e) {
+              elizaLogger.log("Failed to destroy voice connection:", error);
+            }
         }
 
         // Stop monitoring all members in this channel
@@ -875,7 +890,7 @@ export class VoiceManager extends EventEmitter {
         const response = await generateMessageResponse({
             runtime: this.runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
         });
 
         response.source = "discord";
@@ -1087,8 +1102,13 @@ export class VoiceManager extends EventEmitter {
         const connection = this.getVoiceConnection(interaction.guildId as any);
 
         if (!connection) {
-            await interaction.reply("Not currently in a voice channel.");
-            return;
+            try {
+                await interaction.reply("Not currently in a voice channel.");
+                return;
+            } catch (e) {
+                console.error('client-discord:handleLeaveChannelCommand', e)
+                return;
+            }
         }
 
         try {

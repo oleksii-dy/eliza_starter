@@ -1,23 +1,24 @@
 import {
-    Content,
-    IAgentRuntime,
-    IImageDescriptionService,
-    Memory,
-    State,
-    UUID,
+    type Content,
+    type IAgentRuntime,
+    type IImageDescriptionService,
+    type Memory,
+    type State,
+    type UUID,
     getEmbeddingZeroVector,
     elizaLogger,
     stringToUuid,
     ActionTimelineType,
 } from "@elizaos/core";
 import {
-    QueryTweetsResponse,
+    type QueryTweetsResponse,
     Scraper,
     SearchMode,
-    Tweet,
+    type Tweet,
 } from "agent-twitter-client";
 import { EventEmitter } from "events";
-import { TwitterConfig } from "./environment.ts";
+import type { TwitterConfig } from "./environment.ts";
+import { Agent, fetch as undiciFetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
 export function extractAnswer(text: string): string {
     const startIndex = text.indexOf("Answer: ") + 8;
@@ -40,7 +41,7 @@ type TwitterProfile = {
 
 class RequestQueue {
     private queue: (() => Promise<any>)[] = [];
-    private processing: boolean = false;
+    private processing = false;
 
     async add<T>(request: () => Promise<T>): Promise<T> {
         return new Promise((resolve, reject) => {
@@ -65,7 +66,9 @@ class RequestQueue {
         while (this.queue.length > 0) {
             const request = this.queue.shift()!;
             try {
-                await request();
+                await request().catch((e) => {
+                    console.error("client.twitter.base - request err", e);
+                });
             } catch (error) {
                 console.error("Error processing request:", error);
                 this.queue.unshift(request);
@@ -88,6 +91,94 @@ class RequestQueue {
     }
 }
 
+let lastStart = Date.now();
+
+function doLogin(username, cb, proxyUrl?: string, localAddress?: string) {
+    const ts = Date.now();
+    const since = ts - lastStart;
+    elizaLogger.log("last twitter scrapper created", since, "ms ago");
+    const delay = 5 * 1000;
+    if (since > delay) {
+        let agent, proxyAgent;
+
+        // Add proxy configuration if TWITTER_PROXY_URL exists
+        if (proxyUrl) {
+            elizaLogger.log("Using proxy", proxyUrl);
+            const url = new URL(proxyUrl);
+            const username = url.username;
+            const password = url.password;
+
+            // Strip auth from URL if present
+            url.username = "";
+            url.password = "";
+
+            const agentOptions: any = {
+                uri: url.toString(),
+                requestTls: {
+                    rejectUnauthorized: false,
+                },
+            };
+
+            // Add Basic auth if credentials exist
+            if (username && password) {
+                agentOptions.token = `Basic ${Buffer.from(
+                    `${username}:${password}`
+                ).toString("base64")}`;
+            }
+            proxyAgent = new ProxyAgent(agentOptions);
+        }
+        if (localAddress) {
+            elizaLogger.log("Using local address", localAddress);
+            agent = new Agent({
+                localAddress,
+            });
+        }
+        try {
+            const twitterClient = new Scraper({
+                fetch: undiciFetch,
+                transform: {
+                    request: (input: any, init: any) => {
+                        if (proxyAgent || agent) {
+                            return [
+                                input,
+                                { ...init, dispatcher: proxyAgent ?? agent },
+                            ];
+                        }
+                        return [input, init];
+                    },
+                },
+            });
+
+            ClientBase._twitterClients[username] = twitterClient;
+            lastStart = ts;
+            cb(twitterClient);
+        } catch (e) {
+            elizaLogger.error("Error creating twitter client", e);
+        }
+    } else {
+        elizaLogger.log("Delaying twitter scrapper creation for", username);
+        setTimeout(() => {
+            doLogin(username, cb);
+        }, delay);
+    }
+}
+
+export function getScraper(
+    username: string,
+    proxyUrl?: string,
+    localAddress?: string,
+    reload: boolean = false
+): Promise<Scraper> {
+    return new Promise((resolve) => {
+        if (ClientBase._twitterClients[username] && !reload) {
+            const twitterClient = ClientBase._twitterClients[username];
+            resolve(twitterClient);
+        } else {
+            doLogin(username, resolve, proxyUrl, localAddress);
+        }
+    });
+}
+
 export class ClientBase extends EventEmitter {
     static _twitterClients: { [accountIdentifier: string]: Scraper } = {};
     twitterClient: Scraper;
@@ -96,7 +187,7 @@ export class ClientBase extends EventEmitter {
     directions: string;
     lastCheckedTweetId: bigint | null = null;
     imageDescriptionService: IImageDescriptionService;
-    temperature: number = 0.5;
+    temperature = 0.5;
 
     requestQueue: RequestQueue = new RequestQueue();
 
@@ -142,17 +233,112 @@ export class ClientBase extends EventEmitter {
         );
     }
 
+    /**
+     * Parse the raw tweet data into a standardized Tweet object.
+     */
+    private parseTweet(raw: any, depth = 0, maxDepth = 3): Tweet {
+        // If we've reached maxDepth, don't parse nested quotes/retweets further
+        const canRecurse = depth < maxDepth;
+
+        const quotedStatus = raw.quoted_status_result?.result && canRecurse
+            ? this.parseTweet(raw.quoted_status_result.result, depth + 1, maxDepth)
+            : undefined;
+
+        const retweetedStatus = raw.retweeted_status_result?.result && canRecurse
+            ? this.parseTweet(raw.retweeted_status_result.result, depth + 1, maxDepth)
+            : undefined;
+
+        const t: Tweet = {
+            bookmarkCount:
+                raw.bookmarkCount ?? raw.legacy?.bookmark_count ?? undefined,
+            conversationId:
+                raw.conversationId ?? raw.legacy?.conversation_id_str,
+            hashtags: raw.hashtags ?? raw.legacy?.entities?.hashtags ?? [],
+            html: raw.html,
+            id: raw.id ?? raw.rest_id ?? raw.id_str ?? undefined,
+            inReplyToStatus: raw.inReplyToStatus,
+            inReplyToStatusId:
+                raw.inReplyToStatusId ??
+                raw.legacy?.in_reply_to_status_id_str ??
+                undefined,
+            isQuoted: raw.legacy?.is_quote_status === true,
+            isPin: raw.isPin,
+            isReply: raw.isReply,
+            isRetweet: raw.legacy?.retweeted === true,
+            isSelfThread: raw.isSelfThread,
+            language: raw.legacy?.lang,
+            likes: raw.legacy?.favorite_count ?? 0,
+            name:
+                raw.name ??
+                raw?.user_results?.result?.legacy?.name ??
+                raw.core?.user_results?.result?.legacy?.name,
+            mentions: raw.mentions ?? raw.legacy?.entities?.user_mentions ?? [],
+            permanentUrl:
+                raw.permanentUrl ??
+                (raw.core?.user_results?.result?.legacy?.screen_name &&
+                 raw.rest_id
+                    ? `https://x.com/${raw.core?.user_results?.result?.legacy?.screen_name}/status/${raw.rest_id}`
+                    : undefined),
+            photos:
+                raw.photos ??
+                (raw.legacy?.entities?.media
+                    ?.filter((media: any) => media.type === "photo")
+                    .map((media: any) => ({
+                        id: media.id_str,
+                        url: media.media_url_https,
+                        alt_text: media.alt_text,
+                    })) || []),
+            place: raw.place,
+            poll: raw.poll ?? null,
+            quotedStatus,
+            quotedStatusId:
+                raw.quotedStatusId ?? raw.legacy?.quoted_status_id_str ?? undefined,
+            quotes: raw.legacy?.quote_count ?? 0,
+            replies: raw.legacy?.reply_count ?? 0,
+            retweets: raw.legacy?.retweet_count ?? 0,
+            retweetedStatus,
+            retweetedStatusId: raw.legacy?.retweeted_status_id_str ?? undefined,
+            text: raw.text ?? raw.legacy?.full_text ?? undefined,
+            thread: raw.thread || [],
+            timeParsed: raw.timeParsed
+                ? new Date(raw.timeParsed)
+                : raw.legacy?.created_at
+                ? new Date(raw.legacy?.created_at)
+                : undefined,
+            timestamp:
+                raw.timestamp ??
+                (raw.legacy?.created_at
+                    ? new Date(raw.legacy.created_at).getTime() / 1000
+                    : undefined),
+            urls: raw.urls ?? raw.legacy?.entities?.urls ?? [],
+            userId: raw.userId ?? raw.legacy?.user_id_str ?? undefined,
+            username:
+                raw.username ??
+                raw.core?.user_results?.result?.legacy?.screen_name ??
+                undefined,
+            videos:
+                raw.videos ??
+                (raw.legacy?.entities?.media
+                    ?.filter((media: any) => media.type === "video") ?? []),
+            views: raw.views?.count ? Number(raw.views.count) : 0,
+            sensitiveContent: raw.sensitiveContent,
+        };
+
+        return t;
+    }
+
     constructor(runtime: IAgentRuntime, twitterConfig: TwitterConfig) {
         super();
         this.runtime = runtime;
         this.twitterConfig = twitterConfig;
+
+        // Store proxy URL statically so it's available to doLogin
+        const proxyUrl = twitterConfig.TWITTER_PROXY_URL;
+        const localAddress = twitterConfig.TWITTER_LOCAL_ADDRESS;
         const username = twitterConfig.TWITTER_USERNAME;
-        if (ClientBase._twitterClients[username]) {
-            this.twitterClient = ClientBase._twitterClients[username];
-        } else {
-            this.twitterClient = new Scraper();
-            ClientBase._twitterClients[username] = this.twitterClient;
-        }
+        getScraper(username, proxyUrl, localAddress).then((tc) => {
+            this.twitterClient = tc;
+        });
 
         this.directions =
             "- " +
@@ -167,12 +353,27 @@ export class ClientBase extends EventEmitter {
         const email = this.twitterConfig.TWITTER_EMAIL;
         let retries = this.twitterConfig.TWITTER_RETRY_LIMIT;
         const twitter2faSecret = this.twitterConfig.TWITTER_2FA_SECRET;
+        // if twitter says its bad, trust twitter
+        retries = 1; // mee.fun, lets no hammer this, it should work or not
 
         if (!username) {
             throw new Error("Twitter username not configured");
         }
 
-        const cachedCookies = await this.getCachedCookies(username);
+        const authToken = this.runtime.getSetting("TWITTER_COOKIES_AUTH_TOKEN");
+        const ct0 = this.runtime.getSetting("TWITTER_COOKIES_CT0");
+        const guestId = this.runtime.getSetting("TWITTER_COOKIES_GUEST_ID");
+
+        const createTwitterCookies = (authToken: string, ct0: string, guestId: string) =>
+        authToken && ct0 && guestId
+            ? [
+                { key: 'auth_token', value: authToken, domain: '.twitter.com' },
+                { key: 'ct0', value: ct0, domain: '.twitter.com' },
+                { key: 'guest_id', value: guestId, domain: '.twitter.com' },
+            ]
+            : null;
+
+        const cachedCookies = await this.getCachedCookies(username) || createTwitterCookies(authToken, ct0, guestId);
 
         if (cachedCookies) {
             elizaLogger.info("Using cached cookies");
@@ -194,6 +395,7 @@ export class ClientBase extends EventEmitter {
                         twitter2faSecret
                     );
                     if (await this.twitterClient.isLoggedIn()) {
+                        lastStart = Date.now();
                         // fresh login, store new cookies
                         elizaLogger.info("Successfully logged in.");
                         elizaLogger.info("Caching cookies");
@@ -205,7 +407,9 @@ export class ClientBase extends EventEmitter {
                     }
                 }
             } catch (error) {
-                elizaLogger.error(`Login attempt failed: ${error.message}`);
+                elizaLogger.error(
+                    `${this.runtime.character.name}(${this.runtime.agentId}): Login attempt failed: ${error.message} for twitter @${username}`
+                );
             }
 
             retries--;
@@ -217,7 +421,8 @@ export class ClientBase extends EventEmitter {
                 elizaLogger.error(
                     "Max retries reached. Exiting login process."
                 );
-                throw new Error("Twitter login failed after maximum retries.");
+                //throw new Error("Twitter login failed after maximum retries.");
+                return;
             }
 
             await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -225,24 +430,23 @@ export class ClientBase extends EventEmitter {
         // Initialize Twitter profile
         this.profile = await this.fetchProfile(username);
 
-        if (this.profile) {
-            elizaLogger.log("Twitter user ID:", this.profile.id);
-            elizaLogger.log(
-                "Twitter loaded:",
-                JSON.stringify(this.profile, null, 10)
-            );
-            // Store profile info for use in responses
-            this.runtime.character.twitterProfile = {
-                id: this.profile.id,
-                username: this.profile.username,
-                screenName: this.profile.screenName,
-                bio: this.profile.bio,
-                nicknames: this.profile.nicknames,
-            };
-        } else {
-            throw new Error("Failed to load profile");
+        if (!this.profile) {
+            elizaLogger.error("cl-tw::init - profile did not load");
+            return false;
         }
-
+        elizaLogger.log("Twitter user ID:", this.profile.id);
+        elizaLogger.log(
+            "Twitter loaded:",
+            JSON.stringify(this.profile, null, 10)
+        );
+        // Store profile info for use in responses
+        this.runtime.character.twitterProfile = {
+            id: this.profile.id,
+            username: this.profile.username,
+            screenName: this.profile.screenName,
+            bio: this.profile.bio,
+            nicknames: this.profile.nicknames,
+        };
         await this.loadLatestCheckedTweetId();
         await this.populateTimeline();
     }
@@ -253,7 +457,8 @@ export class ClientBase extends EventEmitter {
             this.profile.id,
             count
         );
-        return homeTimeline.tweets;
+        // Use parseTweet on each tweet
+        return homeTimeline.tweets.map((t) => this.parseTweet(t));
     }
 
     /**
@@ -268,57 +473,11 @@ export class ClientBase extends EventEmitter {
             ? await this.twitterClient.fetchFollowingTimeline(count, [])
             : await this.twitterClient.fetchHomeTimeline(count, []);
 
-        elizaLogger.debug(homeTimeline, { depth: Infinity });
+        elizaLogger.debug(homeTimeline, { depth: Number.POSITIVE_INFINITY });
         const processedTimeline = homeTimeline
             .filter((t) => t.__typename !== "TweetWithVisibilityResults") // what's this about?
-            .map((tweet) => {
-                //console.log("tweet is", tweet);
-                const obj = {
-                    id: tweet.id,
-                    name:
-                        tweet.name ?? tweet?.user_results?.result?.legacy.name,
-                    username:
-                        tweet.username ??
-                        tweet.core?.user_results?.result?.legacy.screen_name,
-                    text: tweet.text ?? tweet.legacy?.full_text,
-                    inReplyToStatusId:
-                        tweet.inReplyToStatusId ??
-                        tweet.legacy?.in_reply_to_status_id_str ??
-                        null,
-                    timestamp:
-                        new Date(tweet.legacy?.created_at).getTime() / 1000,
-                    createdAt:
-                        tweet.createdAt ??
-                        tweet.legacy?.created_at ??
-                        tweet.core?.user_results?.result?.legacy.created_at,
-                    userId: tweet.userId ?? tweet.legacy?.user_id_str,
-                    conversationId:
-                        tweet.conversationId ??
-                        tweet.legacy?.conversation_id_str,
-                    permanentUrl: `https://x.com/${tweet.core?.user_results?.result?.legacy?.screen_name}/status/${tweet.rest_id}`,
-                    hashtags: tweet.hashtags ?? tweet.legacy?.entities.hashtags,
-                    mentions:
-                        tweet.mentions ?? tweet.legacy?.entities.user_mentions,
-                    photos:
-                        tweet.legacy?.entities?.media
-                            ?.filter((media) => media.type === "photo")
-                            .map((media) => ({
-                                id: media.id_str,
-                                url: media.media_url_https, // Store media_url_https as url
-                                alt_text: media.alt_text,
-                            })) || [],
-                    thread: tweet.thread || [],
-                    urls: tweet.urls ?? tweet.legacy?.entities.urls,
-                    videos:
-                        tweet.videos ??
-                        tweet.legacy?.entities.media?.filter(
-                            (media) => media.type === "video"
-                        ) ??
-                        [],
-                };
-                //console.log("obj is", obj);
-                return obj;
-            });
+            .map((tweet) => this.parseTweet(tweet));
+
         //elizaLogger.debug("process homeTimeline", processedTimeline);
         return processedTimeline;
     }
@@ -334,34 +493,9 @@ export class ClientBase extends EventEmitter {
                 ? await this.twitterClient.fetchFollowingTimeline(count, [])
                 : await this.twitterClient.fetchHomeTimeline(count, []);
 
+        // Parse, filter out self-tweets, limit to count
         return homeTimeline
-            .map((tweet) => ({
-                id: tweet.rest_id,
-                name: tweet.core?.user_results?.result?.legacy?.name,
-                username: tweet.core?.user_results?.result?.legacy?.screen_name,
-                text: tweet.legacy?.full_text,
-                inReplyToStatusId: tweet.legacy?.in_reply_to_status_id_str,
-                timestamp: new Date(tweet.legacy?.created_at).getTime() / 1000,
-                userId: tweet.legacy?.user_id_str,
-                conversationId: tweet.legacy?.conversation_id_str,
-                permanentUrl: `https://twitter.com/${tweet.core?.user_results?.result?.legacy?.screen_name}/status/${tweet.rest_id}`,
-                hashtags: tweet.legacy?.entities?.hashtags || [],
-                mentions: tweet.legacy?.entities?.user_mentions || [],
-                photos:
-                    tweet.legacy?.entities?.media
-                        ?.filter((media) => media.type === "photo")
-                        .map((media) => ({
-                            id: media.id_str,
-                            url: media.media_url_https, // Store media_url_https as url
-                            alt_text: media.alt_text,
-                        })) || [],
-                thread: tweet.thread || [],
-                urls: tweet.legacy?.entities?.urls || [],
-                videos:
-                    tweet.legacy?.entities?.media?.filter(
-                        (media) => media.type === "video"
-                    ) || [],
-            }))
+            .map((tweet) => this.parseTweet(tweet))
             .filter((tweet) => tweet.username !== agentUsername) // do not perform action on self-tweets
             .slice(0, count);
         // TODO: Once the 'count' parameter is fixed in the 'fetchTimeline' method of the 'agent-twitter-client',
@@ -465,7 +599,7 @@ export class ClientBase extends EventEmitter {
                     const userId =
                         tweet.userId === this.profile.id
                             ? this.runtime.agentId
-                            : stringToUuid(tweet.userId);
+                            : stringToUuid("" + tweet.userId);
 
                     if (tweet.userId === this.profile.id) {
                         await this.runtime.ensureConnection(
@@ -476,6 +610,7 @@ export class ClientBase extends EventEmitter {
                             "twitter"
                         );
                     } else {
+                        // ensure connection to this agent runtime in this room
                         await this.runtime.ensureConnection(
                             userId,
                             roomId,
@@ -512,6 +647,12 @@ export class ClientBase extends EventEmitter {
                         );
                         break;
                     }
+                    // handled by ensureConnection
+                    //await this.runtime.ensureRoomExists(roomId)
+                    // shouldn't need this
+                    //await this.runtime.ensureUserExists(userId, tweet.username)
+                    // postgres needs the user to exist before you can add a participant
+                    //await this.ensureParticipantExists(this.runtime.agentId, this.runtime.agentId);
 
                     await this.runtime.messageManager.createMemory({
                         id: stringToUuid(tweet.id + "-" + this.runtime.agentId),
@@ -598,7 +739,7 @@ export class ClientBase extends EventEmitter {
             const userId =
                 tweet.userId === this.profile.id
                     ? this.runtime.agentId
-                    : stringToUuid(tweet.userId);
+                    : stringToUuid("" + tweet.userId);
 
             if (tweet.userId === this.profile.id) {
                 await this.runtime.ensureConnection(
@@ -623,7 +764,7 @@ export class ClientBase extends EventEmitter {
                 url: tweet.permanentUrl,
                 source: "twitter",
                 inReplyTo: tweet.inReplyToStatusId
-                    ? stringToUuid(tweet.inReplyToStatusId)
+                    ? stringToUuid("" + tweet.inReplyToStatusId)
                     : undefined,
             } as Content;
 
@@ -687,13 +828,17 @@ export class ClientBase extends EventEmitter {
     }
 
     async loadLatestCheckedTweetId(): Promise<void> {
-        const latestCheckedTweetId =
-            await this.runtime.cacheManager.get<string>(
-                `twitter/${this.profile.username}/latest_checked_tweet_id`
-            );
+        try {
+            const latestCheckedTweetId =
+                await this.runtime.cacheManager.get<string>(
+                    `twitter/${this.profile.username}/latest_checked_tweet_id`
+                );
 
-        if (latestCheckedTweetId) {
-            this.lastCheckedTweetId = BigInt(latestCheckedTweetId);
+            if (latestCheckedTweetId) {
+                this.lastCheckedTweetId = BigInt(latestCheckedTweetId);
+            }
+        } catch (e) {
+            elizaLogger.error("cl-tw::loadLatestCheckedTweetId - err", e);
         }
     }
 
@@ -769,7 +914,7 @@ export class ClientBase extends EventEmitter {
             return profile;
         } catch (error) {
             console.error("Error fetching Twitter profile:", error);
-            throw error;
+            //throw error;
         }
     }
 

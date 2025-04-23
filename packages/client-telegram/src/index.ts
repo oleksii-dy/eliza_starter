@@ -1,5 +1,5 @@
 import { elizaLogger } from "@elizaos/core";
-import { Client, IAgentRuntime } from "@elizaos/core";
+import type { Client, IAgentRuntime } from "@elizaos/core";
 import { TelegramClient } from "./telegramClient.ts";
 import { validateTelegramConfig } from "./environment.ts";
 
@@ -19,8 +19,39 @@ export const TelegramClientInterface: Client = {
         );
         return tg;
     },
-    stop: async (_runtime: IAgentRuntime) => {
-        elizaLogger.warn("Telegram client does not support stopping yet");
+    validate: async (token) => {
+      try {
+        console.log('telegram token', token, `https://api.telegram.org/bot${token}/getMe`)
+        const response = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+        if (!response.ok) {
+            elizaLogger.error('Invalid telegram token1:', response.statusText);
+            return { success: false, message: response.statusText };
+        }
+        const data = await response.json();
+        elizaLogger.log('data', data)
+        if (data["ok"]) {
+            return { success: true, message: '' };
+        } else {
+            elizaLogger.error('Invalid telegram token2:', data["description"]);
+            return { success: false, message: data["description"] };
+        }
+      } catch (error) {
+          // maybe don't log error.message as it may have secret in it
+          elizaLogger.error('Error verifying telegram token:', error.message);
+          return { success: false, message: error.message };
+      }
+    },
+    stop: async (runtime: IAgentRuntime) => {
+        const telegram = runtime.clients.telegram
+        if (telegram) {
+            try {
+                await telegram.stop().catch(e => {
+                  console.error('failed to stop telegram', e)
+                });
+            } catch(e) {
+                console.error('failed to stop telegram', e)
+            }
+        }
     },
 };
 

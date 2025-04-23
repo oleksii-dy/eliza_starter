@@ -1,13 +1,13 @@
-import { Context, Telegraf } from "telegraf";
+import { type Context, Telegraf } from "telegraf";
 import { message } from "telegraf/filters";
-import { IAgentRuntime, elizaLogger } from "@elizaos/core";
+import { type IAgentRuntime, elizaLogger } from "@elizaos/core";
 import { MessageManager } from "./messageManager.ts";
 import { getOrCreateRecommenderInBe } from "./getOrCreateRecommenderInBe.ts";
 
 export class TelegramClient {
     private bot: Telegraf<Context>;
     private runtime: IAgentRuntime;
-    private messageManager: MessageManager;
+    public messageManager: MessageManager;
     private backend;
     private backendToken;
     private tgTrader;
@@ -21,7 +21,26 @@ export class TelegramClient {
             },
         };
         this.runtime = runtime;
-        this.bot = new Telegraf(botToken,this.options);
+        this.bot = new Telegraf(botToken, this.options);
+
+        // Global error handler for all updates
+        this.bot.catch((err: Error, ctx: Context) => {
+          elizaLogger.error(`Error while handling update ${ctx.update.update_id}:`, err);
+          // Optionally notify yourself or log to a service
+          // ctx.telegram.sendMessage(ADMIN_ID, `Error: ${err.message}`);
+        });
+
+        // Error handling middleware
+        this.bot.use(async (ctx, next) => {
+          try {
+            await next();
+          } catch (err) {
+            console.error('Error in middleware:', err);
+            // Optionally send an error message to the user
+            await ctx.reply('Sorry, something went wrong').catch(elizaLogger.error);
+          }
+        });
+
         this.messageManager = new MessageManager(this.bot, this.runtime);
         this.backend = runtime.getSetting("BACKEND_URL");
         this.backendToken = runtime.getSetting("BACKEND_TOKEN");
@@ -42,16 +61,26 @@ export class TelegramClient {
     }
 
     private async initializeBot(): Promise<void> {
-        this.bot.launch({ dropPendingUpdates: true });
-        elizaLogger.log(
-            "✨ Telegram bot successfully launched and is running!"
-        );
+        try {
+            this.bot.launch({ dropPendingUpdates: true }).catch(e => {
+                elizaLogger.error('client-telegram::initializeBot - launch err', e)
+            });
+            elizaLogger.log(
+                "✨ Telegram bot successfully launched and is running!"
+            );
 
-        const botInfo = await this.bot.telegram.getMe();
-        this.bot.botInfo = botInfo;
-        elizaLogger.success(`Bot username: @${botInfo.username}`);
+            const botInfo = await this.bot.telegram.getMe().catch(e => {
+                elizaLogger.error('client-telegram::initializeBot - getMe err', e)
+            });
+            if (botInfo) {
+                this.bot.botInfo = botInfo;
+                elizaLogger.success(`Bot username: @${botInfo.username}`);
+                this.messageManager.bot = this.bot;
+            }
 
-        this.messageManager.bot = this.bot;
+        } catch(e) {
+            elizaLogger.error('tg::initializeBot - error', e)
+        }
     }
 
     private async isGroupAuthorized(ctx: Context): Promise<boolean> {
@@ -196,9 +225,19 @@ export class TelegramClient {
     }
 
     public async stop(): Promise<void> {
+        if (!this.bot) {
+          elizaLogger.warn("Telegram bot not started...");
+          return;
+        }
         elizaLogger.log("Stopping Telegram bot...");
-        //await 
-            this.bot.stop();
+        try {
+          //await
+            this.bot.stop().catch(e => {
+              console.error('failed to stop telegram', e)
+            });
+        } catch(e) {
+          console.error('failed to stop telegram', e)
+        }
         elizaLogger.log("Telegram bot stopped");
     }
 }

@@ -3,16 +3,16 @@ import { composeContext, elizaLogger } from "@elizaos/core";
 import { generateMessageResponse, generateText } from "@elizaos/core";
 import { messageCompletionFooter } from "@elizaos/core";
 import {
-    Content,
-    HandlerCallback,
-    IAgentRuntime,
-    IImageDescriptionService,
+    type Content,
+    type HandlerCallback,
+    type IAgentRuntime,
+    type IImageDescriptionService,
     ModelClass,
     ServiceType,
-    State,
+    type State,
 } from "@elizaos/core";
 import { stringToUuid } from "@elizaos/core";
-import { ClientBase } from "./base";
+import type { ClientBase } from "./base";
 import { buildConversationThread, sendTweet, wait } from "./utils.ts";
 
 const twitterSearchTemplate =
@@ -52,22 +52,28 @@ export class TwitterSearchClient {
         this.client = client;
         this.runtime = runtime;
         this.twitterUsername = this.client.twitterConfig.TWITTER_USERNAME;
+        this.running = false;
     }
 
     async start() {
+        this.running = true;
         this.engageWithSearchTermsLoop();
     }
 
+    async stop() {
+        this.running = false;
+    }
+
     private engageWithSearchTermsLoop() {
-        this.engageWithSearchTerms().then();
-        const randomMinutes = Math.floor(Math.random() * (120 - 60 + 1)) + 60;
-        elizaLogger.log(
-            `Next twitter search scheduled in ${randomMinutes} minutes`
-        );
-        setTimeout(
-            () => this.engageWithSearchTermsLoop(),
-            randomMinutes * 60 * 1000
-        );
+        if (!this.running) return;
+        this.engageWithSearchTerms().then(() => {
+            const randomMinutes = (Math.floor(Math.random() * (120 - 60 + 1)) + 60);
+            elizaLogger.log(`Next twitter search scheduled in ${randomMinutes} minutes`);
+            setTimeout(
+                () => this.engageWithSearchTermsLoop(),
+                randomMinutes * 60 * 1000
+            );
+        });
     }
 
     private async engageWithSearchTerms() {
@@ -208,6 +214,7 @@ export class TwitterSearchClient {
             if (!message.content.text) {
                 elizaLogger.warn("Returning: No response text found");
                 return;
+                // return { text: "", action: "IGNORE" };
             }
 
             // Fetch replies and retweets
@@ -284,7 +291,7 @@ export class TwitterSearchClient {
                         response,
                         message.roomId,
                         this.twitterUsername,
-                        tweetId
+                        selectedTweet.id
                     );
                     return memories;
                 };

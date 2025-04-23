@@ -2,18 +2,18 @@ import {
     getEmbeddingZeroVector,
     stringToUuid,
     elizaLogger,
-    Character,
-    Client as ElizaClient,
-    IAgentRuntime,
+    type Character,
+    type Client as ElizaClient,
+    type IAgentRuntime,
 } from "@elizaos/core";
 import {
     Client,
     Events,
     GatewayIntentBits,
-    Guild,
-    MessageReaction,
+    type Guild,
+    type MessageReaction,
     Partials,
-    User,
+    type User,
 } from "discord.js";
 import { EventEmitter } from "events";
 import chat_with_attachments from "./actions/chat_with_attachments.ts";
@@ -64,7 +64,13 @@ export class DiscordClient extends EventEmitter {
         this.messageManager = new MessageManager(this, this.voiceManager);
 
         this.client.once(Events.ClientReady, this.onClientReady.bind(this));
-        this.client.login(this.apiToken);
+        try {
+          this.client.login(this.apiToken).catch(e => {
+            console.error('discord login error', e)
+          });
+        } catch(e) {
+          console.error('discord login error', e)
+        }
 
         this.setupEventListeners();
 
@@ -402,6 +408,25 @@ export function startDiscord(runtime: IAgentRuntime) {
 
 export const DiscordClientInterface: ElizaClient = {
     start: async (runtime: IAgentRuntime) => new DiscordClient(runtime),
+    validate: async (token) => {
+      try {
+          const response = await fetch('https://discord.com/api/v10/users/@me', {
+              headers: {
+                  Authorization: `Bot ${token}`
+              }
+          });
+
+          if (response.ok) {
+              return { success: true, message: ""};
+          } else {
+              elizaLogger.error(`Invalid discord token: ${response.status} ${response.statusText}`);
+              return { success: false, message: response.statusText };
+          }
+      } catch (error) {
+          elizaLogger.error('Error validating discord token:', error);
+          return { success: false, message: error };
+      }
+    },
     stop: async (runtime: IAgentRuntime) => {
         try {
             // stop it

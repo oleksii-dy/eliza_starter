@@ -5,13 +5,13 @@ import pg from "pg";
 type Pool = pg.Pool;
 
 import {
-    Account,
-    Actor,
+    type Account,
+    type Actor,
     DatabaseAdapter,
     EmbeddingProvider,
-    GoalStatus,
-    Participant,
-    RAGKnowledgeItem,
+    type GoalStatus,
+    type Participant,
+    type RAGKnowledgeItem,
     elizaLogger,
     getEmbeddingConfig,
     type Goal,
@@ -22,7 +22,7 @@ import {
 } from "@elizaos/core";
 import fs from "fs";
 import path from "path";
-import {
+import type {
     QueryConfig,
     QueryConfigValues,
     QueryResult,
@@ -38,11 +38,11 @@ export class PostgresDatabaseAdapter
     implements IDatabaseCacheAdapter
 {
     private pool: Pool;
-    private readonly maxRetries: number = 3;
-    private readonly baseDelay: number = 1000; // 1 second
-    private readonly maxDelay: number = 10000; // 10 seconds
-    private readonly jitterMax: number = 1000; // 1 second
-    private readonly connectionTimeout: number = 5000; // 5 seconds
+    private readonly maxRetries: number = 30;
+    private readonly baseDelay: number = 10000; // 1 second
+    private readonly maxDelay: number = 100000; // 10 seconds
+    private readonly jitterMax: number = 10000; // 1 second
+    private readonly connectionTimeout: number = 50000; // 5 seconds
 
     constructor(connectionConfig: any) {
         super({
@@ -104,6 +104,7 @@ export class PostgresDatabaseAdapter
             try {
                 return await operation();
             } catch (error) {
+                console.log('postgres operation error', error)
                 lastError = error as Error;
 
                 if (attempt < this.maxRetries) {
@@ -137,9 +138,11 @@ export class PostgresDatabaseAdapter
                                 : String(error),
                         totalAttempts: attempt,
                     });
+                    /*
                     throw error instanceof Error
                         ? error
                         : new Error(String(error));
+                    */
                 }
             }
         }
@@ -171,7 +174,8 @@ export class PostgresDatabaseAdapter
                         ? reconnectError.message
                         : String(reconnectError),
             });
-            throw reconnectError;
+            //throw reconnectError;
+            this.handlePoolError(error)
         }
     }
 
@@ -209,53 +213,66 @@ export class PostgresDatabaseAdapter
         await this.testConnection();
 
         const client = await this.pool.connect();
-        try {
-            await client.query("BEGIN");
 
-            // Set application settings for embedding dimension
-            const embeddingConfig = getEmbeddingConfig();
-            if (embeddingConfig.provider === EmbeddingProvider.OpenAI) {
-                await client.query("SET app.use_openai_embedding = 'true'");
-                await client.query("SET app.use_ollama_embedding = 'false'");
-                await client.query("SET app.use_gaianet_embedding = 'false'");
-            } else if (embeddingConfig.provider === EmbeddingProvider.Ollama) {
-                await client.query("SET app.use_openai_embedding = 'false'");
-                await client.query("SET app.use_ollama_embedding = 'true'");
-                await client.query("SET app.use_gaianet_embedding = 'false'");
-            } else if (embeddingConfig.provider === EmbeddingProvider.GaiaNet) {
-                await client.query("SET app.use_openai_embedding = 'false'");
-                await client.query("SET app.use_ollama_embedding = 'false'");
-                await client.query("SET app.use_gaianet_embedding = 'true'");
-            } else {
-                await client.query("SET app.use_openai_embedding = 'false'");
-                await client.query("SET app.use_ollama_embedding = 'false'");
+        // check for rooms
+        const { rows } = await client.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_name = 'rooms'
+            );
+        `);
+
+        if (!rows[0].exists) {
+            elizaLogger.log('postgresql - checking schema')
+            try {
+                await client.query("BEGIN");
+
+                // Set application settings for embedding dimension
+                const embeddingConfig = getEmbeddingConfig();
+                if (embeddingConfig.provider === EmbeddingProvider.OpenAI) {
+                    await client.query("SET app.use_openai_embedding = 'true'");
+                    await client.query("SET app.use_ollama_embedding = 'false'");
+                    await client.query("SET app.use_gaianet_embedding = 'false'");
+                } else if (embeddingConfig.provider === EmbeddingProvider.Ollama) {
+                    await client.query("SET app.use_openai_embedding = 'false'");
+                    await client.query("SET app.use_ollama_embedding = 'true'");
+                    await client.query("SET app.use_gaianet_embedding = 'false'");
+                } else if (embeddingConfig.provider === EmbeddingProvider.GaiaNet) {
+                    await client.query("SET app.use_openai_embedding = 'false'");
+                    await client.query("SET app.use_ollama_embedding = 'false'");
+                    await client.query("SET app.use_gaianet_embedding = 'true'");
+                } else {
+                    await client.query("SET app.use_openai_embedding = 'false'");
+                    await client.query("SET app.use_ollama_embedding = 'false'");
+                    await client.query("SET app.use_gaianet_embedding = 'false'");
+                }
+
+                // Check if schema already exists (check for a core table)
+                const { rows } = await client.query(`
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables
+                        WHERE table_name = 'rooms'
+                    );
+                `);
+
+                if (!rows[0].exists || !(await this.validateVectorSetup())) {
+                    elizaLogger.info(
+                        "Applying database schema - tables or vector extension missing"
+                    );
+                    const schema = fs.readFileSync(
+                        path.resolve(__dirname, "../schema.sql"),
+                        "utf8"
+                    );
+                    await client.query(schema);
+                }
+
+                await client.query("COMMIT");
+            } catch (error) {
+                await client.query("ROLLBACK");
+                throw error;
+            } finally {
+                client.release();
             }
-
-            // Check if schema already exists (check for a core table)
-            const { rows } = await client.query(`
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables
-                    WHERE table_name = 'rooms'
-                );
-            `);
-
-            if (!rows[0].exists || !(await this.validateVectorSetup())) {
-                elizaLogger.info(
-                    "Applying database schema - tables or vector extension missing"
-                );
-                const schema = fs.readFileSync(
-                    path.resolve(__dirname, "../schema.sql"),
-                    "utf8"
-                );
-                await client.query(schema);
-            }
-
-            await client.query("COMMIT");
-        } catch (error) {
-            await client.query("ROLLBACK");
-            throw error;
-        } finally {
-            client.release();
         }
     }
 
@@ -275,12 +292,15 @@ export class PostgresDatabaseAdapter
             return true;
         } catch (error) {
             elizaLogger.error("Database connection test failed:", error);
+            /*
             throw new Error(
                 `Failed to connect to database: ${(error as Error).message}`
             );
+            */
         } finally {
             if (client) client.release();
         }
+        return false;
     }
 
     async cleanup(): Promise<void> {
@@ -436,6 +456,7 @@ export class PostgresDatabaseAdapter
                 });
                 return true;
             } catch (error) {
+                console.log('postgres:createAccount - error', error)
                 elizaLogger.error("Error creating account:", {
                     error:
                         error instanceof Error ? error.message : String(error),
@@ -512,6 +533,33 @@ export class PostgresDatabaseAdapter
         }, "getMemoryById");
     }
 
+    async getMemoriesByIds(
+        memoryIds: UUID[],
+        tableName?: string
+    ): Promise<Memory[]> {
+        return this.withDatabase(async () => {
+            if (memoryIds.length === 0) return [];
+            const placeholders = memoryIds.map((_, i) => `$${i + 1}`).join(",");
+            let sql = `SELECT * FROM memories WHERE id IN (${placeholders})`;
+            const queryParams: any[] = [...memoryIds];
+
+            if (tableName) {
+                sql += ` AND type = $${memoryIds.length + 1}`;
+                queryParams.push(tableName);
+            }
+
+            const { rows } = await this.pool.query(sql, queryParams);
+
+            return rows.map((row) => ({
+                ...row,
+                content:
+                    typeof row.content === "string"
+                        ? JSON.parse(row.content)
+                        : row.content,
+            }));
+        }, "getMemoriesByIds");
+    }
+
     async createMemory(memory: Memory, tableName: string): Promise<void> {
         return this.withDatabase(async () => {
             elizaLogger.debug("PostgresAdapter createMemory:", {
@@ -562,6 +610,10 @@ export class PostgresDatabaseAdapter
         match_count: number;
         unique: boolean;
     }): Promise<Memory[]> {
+        if (!params.embedding) {
+            elizaLogger.error('postgres::searchMemories - no embedding')
+            return []
+        }
         return await this.searchMemoriesByEmbedding(params.embedding, {
             match_threshold: params.match_threshold,
             count: params.match_count,
@@ -988,32 +1040,31 @@ export class PostgresDatabaseAdapter
                     WITH content_text AS (
                         SELECT
                             embedding,
-                            COALESCE(
-                                content->$2->>$3,
+                            SUBSTR(COALESCE(
+                                content->>$2,
                                 ''
-                            ) as content_text
+                            ), 1, 255) as content_text
                         FROM memories
-                        WHERE type = $4
-                        AND content->$2->>$3 IS NOT NULL
+                        WHERE type = $3
+                        AND content->>$2 IS NOT NULL
                     )
                     SELECT
                         embedding,
                         levenshtein(
-                            $1,
+                            SUBSTR($1, 1, 255),
                             content_text
                         ) as levenshtein_score
                     FROM content_text
                     WHERE levenshtein(
-                        $1,
+                        SUBSTR($1, 1, 255),
                         content_text
-                    ) <= $6  -- Add threshold check
+                    ) <= $5
                     ORDER BY levenshtein_score
-                    LIMIT $5
+                    LIMIT $4
                 `;
 
                 const { rows } = await this.pool.query(sql, [
                     opts.query_input,
-                    opts.query_field_name,
                     opts.query_field_sub_name,
                     opts.query_table_name,
                     opts.query_match_count,
@@ -1296,7 +1347,7 @@ export class PostgresDatabaseAdapter
             }
 
             const { rows } = await this.pool.query(sql, [tableName, roomId]);
-            return parseInt(rows[0].count);
+            return Number.parseInt(rows[0].count);
         }, "countMemories");
     }
 
