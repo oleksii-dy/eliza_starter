@@ -1491,7 +1491,7 @@ export class AgentRuntime implements IAgentRuntime {
       await this.adapter.createRoom({
         id,
         name,
-        agentId,
+        agentId: agentId || this.agentId,
         source,
         type,
         channelId,
