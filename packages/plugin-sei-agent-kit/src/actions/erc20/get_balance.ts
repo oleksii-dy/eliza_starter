@@ -23,7 +23,7 @@ function isBalanceContent(
     runtime: IAgentRuntime,
     content: any
 ): content is BalanceContent {
-    elizaLogger.log("Content for transfer", content);
+    elizaLogger.log("Content for get balance", content);
     return (
         typeof content.ticker === "string"
     );
@@ -49,7 +49,7 @@ Look for phrases like:
 - "Show me my [TOKEN] balance"
 - "[TOKEN] balance"
 
-If the user asks about their SEI token or native token balance (using phrases like "SEI balance", "native token", etc), return 'null' for the ticker. 
+If the user asks about their SEI token or native token balance (using phrases like "SEI balance", "native token", etc), return 'null' as a string for the ticker.
 Important: Never use 'SEI' as the ticker.
 
 If the user mentions multiple tokens, focus on the most recently mentioned one.
@@ -66,13 +66,13 @@ export const getBalanceERC20Action: Action = {
         return true;
     },
     handler: async (
-        runtime: IAgentRuntime, 
-        message: Memory, 
+        runtime: IAgentRuntime,
+        message: Memory,
         state: State,
-        options: Record<string, unknown>, 
+        options: Record<string, unknown>,
         callback: HandlerCallback): Promise<boolean> => {
         elizaLogger.log("Getting balance");
-        
+
         const seiAgentKit = await getSeiAgentKit(runtime);
         // const config = await validateSeiConfig(runtime);
 
@@ -80,33 +80,43 @@ export const getBalanceERC20Action: Action = {
 
 
         try {
-            // Compose transfer context
+            // Compose get balance context
             const getBalanceContext = composeContext({
                 state,
                 template: getBalanceTemplate,
             });
 
-            // Generate transfer content
+            // Generate get balance content
             const content = await generateObjectDeprecated({
                 runtime,
                 context: getBalanceContext,
                 modelClass: ModelClass.LARGE,
             });
 
-            // Validate transfer content
+            // Validate get balance content
             if (!isBalanceContent(runtime, content)) {
                 elizaLogger.error("Invalid content for GET_BALANCE action.");
                 if (callback) {
                     callback({
-                        text: "Unable to process transfer request. Invalid content provided.",
-                        content: { error: "Invalid transfer content" },
+                        text: "Unable to process get balance request. Invalid content provided.",
+                        content: { error: "Invalid get balance content" },
                     });
                 }
                 return false;
             }
             console.log("\n\nContent:", content);
-            if (content.ticker != "null") {
+            if (content.ticker != "null" && content.ticker != null) {
                 const tokenAddress = await seiAgentKit.getTokenAddressFromTicker(content.ticker);
+                if (!tokenAddress) {
+                    elizaLogger.error(`Token address not found for ticker ${content.ticker} on sei`);
+                    if (callback) {
+                        callback({
+                            text: `Unable to process get balance request. Token address not found for ticker ${content.ticker} on sei`,
+                        });
+                    }
+                    return false;
+                }
+
                 const response = await seiAgentKit.getERC20Balance(tokenAddress);
                 elizaLogger.success(`The balance of your wallet is ${response} ${content.ticker}`);
                 if (callback) {
@@ -115,7 +125,7 @@ export const getBalanceERC20Action: Action = {
                     });
                 }
                 return true;
-                
+
             } else {
                 const response = await seiAgentKit.getERC20Balance();
                 elizaLogger.success(`The balance of your wallet is ${response} SEI`);

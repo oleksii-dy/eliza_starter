@@ -67,3 +67,5 @@ export const seiAgentkitPlugin: Plugin = {
     evaluators: [],
     providers: [],
 };
+
+export default seiAgentkitPlugin;
