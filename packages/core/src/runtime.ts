@@ -574,20 +574,14 @@ export class AgentRuntime implements IAgentRuntime {
         } else {
           span.addEvent('agent_entity_exists');
         }
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        span.recordException(error as Error);
-        span.setStatus({ code: SpanStatusCode.ERROR, message: errorMsg });
-        this.runtimeLogger.error(`Failed to create agent entity: ${errorMsg}`);
-        throw error;
-      }
 
-      // Create room for the agent and register all plugins in parallel
-      try {
+        // Create room for the agent and register all plugins in parallel
         span.addEvent('creating_room_and_registering_plugins');
+        const roomId = stringToUuid(agentEntity.id);
         await Promise.all([
           this.ensureRoomExists({
-            id: this.agentId,
+            id: roomId,
+            agentId: agentEntity.id,
             name: this.character.name,
             source: 'self',
             type: ChannelType.SELF,
@@ -595,21 +589,13 @@ export class AgentRuntime implements IAgentRuntime {
           ...pluginRegistrationPromises,
         ]);
         span.addEvent('room_created_and_plugins_registered');
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        span.recordException(error as Error);
-        span.setStatus({ code: SpanStatusCode.ERROR, message: errorMsg });
-        this.runtimeLogger.error(`Failed to initialize: ${errorMsg}`);
-        throw error;
-      }
 
-      // Add agent as participant in its own room
-      try {
+        // Add agent as participant in its own room
         span.addEvent('adding_agent_as_participant');
         // No need to transform agent ID
-        const participants = await this.adapter.getParticipantsForRoom(this.agentId);
+        const participants = await this.adapter.getParticipantsForRoom(roomId);
         if (!participants.includes(this.agentId)) {
-          const added = await this.adapter.addParticipant(this.agentId, this.agentId);
+          const added = await this.adapter.addParticipant(agentEntity.id, roomId);
           if (!added) {
             const errorMsg = `Failed to add agent ${this.agentId} as participant to its own room`;
             span.setStatus({ code: SpanStatusCode.ERROR, message: errorMsg });
@@ -626,7 +612,7 @@ export class AgentRuntime implements IAgentRuntime {
         const errorMsg = error instanceof Error ? error.message : String(error);
         span.recordException(error as Error);
         span.setStatus({ code: SpanStatusCode.ERROR, message: errorMsg });
-        this.runtimeLogger.error(`Failed to add agent as participant: ${errorMsg}`);
+        this.runtimeLogger.error(`Failed to initialize: ${errorMsg}`);
         throw error;
       }
 
@@ -1489,13 +1475,23 @@ export class AgentRuntime implements IAgentRuntime {
    * @returns The room ID of the room between the agent and the user.
    * @throws An error if the room cannot be created.
    */
-  async ensureRoomExists({ id, name, source, type, channelId, serverId, worldId, metadata }: Room) {
+  async ensureRoomExists({
+    id,
+    name,
+    agentId,
+    source,
+    type,
+    channelId,
+    serverId,
+    worldId,
+    metadata,
+  }: Room) {
     const room = await this.adapter.getRoom(id);
     if (!room) {
       await this.adapter.createRoom({
         id,
         name,
-        agentId: this.agentId,
+        agentId,
         source,
         type,
         channelId,
@@ -1883,7 +1879,9 @@ export class AgentRuntime implements IAgentRuntime {
         span.addEvent('model_response', { response: JSON.stringify(response, safeReplacer()) }); // Log processed response
 
         // Log timing (keep debug log if useful)
-        this.runtimeLogger.debug(`[useModel] ${modelKey} completed in ${Number(elapsedTime.toFixed(2)).toLocaleString()}ms`);
+        this.runtimeLogger.debug(
+          `[useModel] ${modelKey} completed in ${Number(elapsedTime.toFixed(2)).toLocaleString()}ms`
+        );
 
         // Log response (keep debug log if useful)
         this.runtimeLogger.debug(
