@@ -1014,7 +1014,7 @@ export class AgentRuntime implements IAgentRuntime {
     ): Promise<void> {
         for (const response of responses) {
             if (!response.content?.action) {
-                elizaLogger.warn("No action found in the response content.");
+                elizaLogger.warn(" in the response content.");
                 continue;
             }
 
@@ -1060,7 +1060,7 @@ export class AgentRuntime implements IAgentRuntime {
 
             if (!action) {
                 elizaLogger.error(
-                    "No action found for",
+                    " for",
                     response.content.action,
                 );
                 continue;

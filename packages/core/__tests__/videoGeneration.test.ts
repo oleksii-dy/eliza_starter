@@ -1,4 +1,4 @@
-import type { IAgentRuntime, Memory, State } from "../types.ts";
+import type { IAgentRuntime, Memory, State } from "../src/types.ts";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // Mock the fetch function
@@ -36,7 +36,7 @@ const mockVideoGenerationPlugin = {
                         });
 
                         // Check if there's an API error
-                        const fetchResponse = await global.fetch();
+                        const fetchResponse = await global.fetch("https://api.example.com/video");
                         if (!fetchResponse.ok) {
                             callback({
                                 text: "Video generation failed: API Error",
