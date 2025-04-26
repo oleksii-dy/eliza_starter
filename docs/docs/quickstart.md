@@ -4,17 +4,63 @@ sidebar_position: 2
 
 # Quickstart Guide
 
+## Choose Your Development Path
+
+Before getting started, choose the path that matches your goals:
+
+### Path 1: Building AI Agents (Framework Users)
+
+If you want to create and deploy AI agents using Eliza:
+
+1. Install the Eliza CLI:
+
+```bash
+npm install -g elizaos
+```
+
+2. Create a new agent:
+
+```bash
+elizaos start my-agent
+```
+
+3. Follow the interactive setup guide
+
+This is the recommended path for most users. You'll be able to:
+
+-   Create custom AI agents quickly
+-   Use pre-built character templates
+-   Deploy to various platforms
+-   No need to clone the main repository
+
+### Path 2: Core Development (Contributors)
+
+If you want to contribute to Eliza's core development:
+
+1. Follow the prerequisites setup below
+2. Clone the full repository
+3. Set up the development environment
+
+Choose this path if you want to:
+
+-   Improve Eliza's core functionality
+-   Fix bugs in the framework
+-   Add new features
+-   Contribute to documentation
+
+The rest of this guide covers both paths, with clear indicators for which instructions apply to each.
+
 ## Prerequisites
 
 Before getting started with Eliza, ensure you have:
 
-- [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (using [nvm](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) is recommended)
-- [pnpm 9+](https://pnpm.io/installation)
-- Git for version control
-- A code editor ([VS Code](https://code.visualstudio.com/), [Cursor](https://cursor.com/) or [VSCodium](https://vscodium.com) recommended)
-- Python (mainly for installing NPM)
-- (Optional) FFmpeg (for audio/video handling)
-- (Optional) [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) (for GPU acceleration)
+-   [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (using [nvm](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) is recommended)
+-   [pnpm 9+](https://pnpm.io/installation)
+-   Git for version control
+-   A code editor ([VS Code](https://code.visualstudio.com/), [Cursor](https://cursor.com/) or [VSCodium](https://vscodium.com) recommended)
+-   Python (mainly for installing NPM)
+-   (Optional) FFmpeg (for audio/video handling)
+-   (Optional) [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) (for GPU acceleration)
 
 > On Windows? See here before continuing to make life easier: [WSL setup guide](/docs/guides/wsl)
 
@@ -41,13 +87,13 @@ cd eliza
 ./scripts/start.sh
 ```
 
-
 3. Using Docker
 
 Prerequisites:
-- A Linux-based server (Ubuntu/Debian recommended)
-- Git installed
-- [Docker](https://docs.docker.com/get-started/get-docker/)
+
+-   A Linux-based server (Ubuntu/Debian recommended)
+-   Git installed
+-   [Docker](https://docs.docker.com/get-started/get-docker/)
 
 ```bash
 git clone git@github.com:elizaOS/eliza.git
@@ -69,13 +115,16 @@ docker-compose up
 ```
 
 #### Permission Issues
+
 ```
 sudo chmod +x scripts/start.sh  # Linux/macOS
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser  # Windows
 ```
 
 #### Package Issues
+
 > Note: Always verify scripts before running it
+
 ```
 ## Linux
 sudo apt update
@@ -89,11 +138,12 @@ brew update
 ```
 
 #### Node.js Issues
-- Ensure Node.js 23.3.0 is installed
-- Use `node -v` to check version
-- Consider using [nvm](https://github.com/nvm-sh/nvm) to manage Node versions
-- Use `--skip-nvm` for system Node
-- Check PATH configuration
+
+-   Ensure Node.js 23.3.0 is installed
+-   Use `node -v` to check version
+-   Consider using [nvm](https://github.com/nvm-sh/nvm) to manage Node versions
+-   Use `--skip-nvm` for system Node
+-   Check PATH configuration
 
 If you see Sharp-related errors, try this:
 
@@ -104,6 +154,7 @@ pnpm install --include=optional sharp
 If you see errors about better-sqlite3, try `pnpm rebuild better-sqlite3` or go into `node_modules/better-sqlite3` and run `pnpm i`
 
 You can also add a postinstall script in your `package.json` if you want to automate this:
+
 ```json
 scripts: {
     "postinstall": "npm rebuild better-sqlite3"
@@ -119,10 +170,11 @@ pnpm env use --global 23.3.0
 #### Docker issues
 
 Some tips on cleaning your working directory before rebuilding:
-- List all docker images: `sudo docker images`
-- Reomove all Docker images: `docker rmi -f $(docker images -aq)`
-- Remove all build cache: `docker builder prune -a -f`
-- Verify cleanup: `docker system df`
+
+-   List all docker images: `sudo docker images`
+-   Reomove all Docker images: `docker rmi -f $(docker images -aq)`
+-   Remove all build cache: `docker builder prune -a -f`
+-   Verify cleanup: `docker system df`
 </details>
 
 ---
@@ -138,14 +190,17 @@ cd eliza
 
 :::tip
 If you're planning on doing development, we suggest using the code on the develop branch:
+
 ```bash
 git checkout develop
 ```
 
 From the main repo you can also download [sample character files](https://github.com/elizaos/characters) this way:
+
 ```bash
 git submodule update --init
 ```
+
 :::
 
 Install the dependencies
@@ -216,17 +271,16 @@ $ npx elizaos plugins list
 
 Here's a sample list of plugins you can check out!
 
-| plugin name | Description |
-| ----------- | ----------- |
-| [`@elizaos/plugin-llama`](https://github.com/elizaos-plugins/plugin-llama) | Run LLM models on your local machine
-| [`@elizaos/client-twitter`](https://github.com/elizaos-plugins/client-twitter) | Twitter bot integration
-| [`@elizaos/client-discord`](https://github.com/elizaos-plugins/client-discord) | Discord bot integration
-| [`@elizaos/client-telegram`](https://github.com/elizaos-plugins/client-telegram) | Telegram integration
-| [`@elizaos/plugin-image`](https://github.com/elizaos-plugins/plugin-image) | Image processing and analysis
-| [`@elizaos/plugin-video`](https://github.com/elizaos-plugins/plugin-video) | Video processing capabilities
-| [`@elizaos/plugin-browser`](https://github.com/elizaos-plugins/plugin-browser) | Web scraping capabilities
-| [`@elizaos/plugin-pdf`](https://github.com/elizaos-plugins/plugin-pdf) | PDF processing
-
+| plugin name                                                                      | Description                          |
+| -------------------------------------------------------------------------------- | ------------------------------------ |
+| [`@elizaos/plugin-llama`](https://github.com/elizaos-plugins/plugin-llama)       | Run LLM models on your local machine |
+| [`@elizaos/client-twitter`](https://github.com/elizaos-plugins/client-twitter)   | Twitter bot integration              |
+| [`@elizaos/client-discord`](https://github.com/elizaos-plugins/client-discord)   | Discord bot integration              |
+| [`@elizaos/client-telegram`](https://github.com/elizaos-plugins/client-telegram) | Telegram integration                 |
+| [`@elizaos/plugin-image`](https://github.com/elizaos-plugins/plugin-image)       | Image processing and analysis        |
+| [`@elizaos/plugin-video`](https://github.com/elizaos-plugins/plugin-video)       | Video processing capabilities        |
+| [`@elizaos/plugin-browser`](https://github.com/elizaos-plugins/plugin-browser)   | Web scraping capabilities            |
+| [`@elizaos/plugin-pdf`](https://github.com/elizaos-plugins/plugin-pdf)           | PDF processing                       |
 
 Here's how to import and register plugins in your character file:
 
@@ -256,7 +310,6 @@ nano .env
 
 This option allows you finer grain control over which character uses what resources and is required if you want multiple agents but using different keys. For example:
 
-
 ```typescript
 {
   "name": "eliza",
@@ -279,7 +332,7 @@ Watch the commas to make sure it's valid json! Here's a few more config tips:
 2. Create a bot and get your token
 3. Add bot to your server using OAuth2 URL generator
 4. Set `DISCORD_API_TOKEN` and `DISCORD_APPLICATION_ID` in your `.env`
-</details>
+ </details>
 
 <details>
 <summary>Twitter Integration</summary>
@@ -293,6 +346,7 @@ TWITTER_EMAIL=    # Account email
 ```
 
 **Important:** Log in to the [Twitter Developer Portal](https://developer.twitter.com) and enable the "Automated" label for your account to avoid being flagged as inauthentic.
+
 </details>
 
 <details>
@@ -304,32 +358,33 @@ TWITTER_EMAIL=    # Account email
 ```bash
 TELEGRAM_BOT_TOKEN=your_token_here
 ```
+
 </details>
-
-
-
 
 ### GPU Acceleration
 
 If you have a Nvidia GPU you can enable CUDA support. First ensure CUDA Toolkit, cuDNN, and cuBLAS are first installed, then: `npx --no node-llama-cpp source download --gpu cuda`
-
-
 
 ---
 
 ## FAQ
 
 ### What's the difference between eliza and eliza-starter?
+
 Eliza-starter is a lightweight version for simpler setups, while the main eliza repository includes all advanced features and a web client.
 
 ### How do I fix build/installation issues?
+
 Use Node v23.3.0, run `pnpm clean`, then `pnpm install --no-frozen-lockfile`, followed by `pnpm build`. If issues persist, checkout the latest stable tag.
 
 ### What are the minimum system requirements?
+
 8GB RAM recommended for build process. For deployment, a t2.large instance on AWS with 20GB storage running Ubuntu is the minimum tested configuration.
 
 ### How do I fix "Exit Status 1" errors?
+
 If you see `triggerUncaughtException` errors, try:
+
 1. Add dependencies to workspace root
 2. Add dependencies to specific packages
 3. Clean and rebuild

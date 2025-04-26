@@ -2,6 +2,31 @@
 
 First off, thank you for considering contributing to elizaOS! We welcome improvements and contributions.
 
+## Framework Users vs Core Contributors
+
+Before proceeding, understand which type of contribution you want to make:
+
+### Framework Users
+
+If you're building AI agents with Eliza and want to contribute:
+
+-   Share your character files and templates
+-   Document successful use cases
+-   Report bugs you encounter
+-   Suggest improvements based on your experience
+-   Join our community discussions
+
+### Core Contributors
+
+If you want to improve Eliza's core functionality:
+
+-   Follow the development setup below
+-   Work on core features and bug fixes
+-   Improve documentation and tests
+-   Enhance the framework's architecture
+
+The rest of this guide focuses on core development contributions.
+
 ## Contribution License Agreement
 
 By contributing to elizaOS, you agree that your contributions will be licensed under the MIT License. This means:
@@ -39,22 +64,22 @@ By contributing to elizaOS, you agree that your contributions will be licensed u
 
 ### Git Commit Messages
 
-- Use the present tense ("Add feature" not "Added feature")
-- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-- Limit the first line to 72 characters or less
-- Reference issues and pull requests liberally after the first line
+-   Use the present tense ("Add feature" not "Added feature")
+-   Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
+-   Limit the first line to 72 characters or less
+-   Reference issues and pull requests liberally after the first line
 
 ### JavaScript Styleguide
 
-- All JavaScript must adhere to [JavaScript Standard Style](https://standardjs.com/).
+-   All JavaScript must adhere to [JavaScript Standard Style](https://standardjs.com/).
 
 ### TypeScript Styleguide
 
-- All TypeScript must adhere to [TypeScript Standard Style](https://github.com/standard/ts-standard).
+-   All TypeScript must adhere to [TypeScript Standard Style](https://github.com/standard/ts-standard).
 
 ### Documentation Styleguide
 
-- Use [Markdown](https://daringfireball.net/projects/markdown/) for documentation.
+-   Use [Markdown](https://daringfireball.net/projects/markdown/) for documentation.
 
 ## Additional Notes
 
@@ -62,10 +87,10 @@ By contributing to elizaOS, you agree that your contributions will be licensed u
 
 This section lists the title prefix we use to help us track and manage pull requests. These prefixes must be lower case
 
-- `fix` - Issues that fixes bugs.
-- `feat` - New feature, updates or improvements.
-- `docs` - Issues or pull requests related to documentation.
-- `chore` - General repo maintenance
+-   `fix` - Issues that fixes bugs.
+-   `feat` - New feature, updates or improvements.
+-   `docs` - Issues or pull requests related to documentation.
+-   `chore` - General repo maintenance
 
 Please place a colon follow by a space (`: `) in your PR title
 
@@ -73,20 +98,20 @@ Please place a colon follow by a space (`: `) in your PR title
 
 This section lists the labels we use to help us track and manage issues and pull requests.
 
-- `bug` - Issues that are bugs.
-- `enhancement` - Issues that are feature requests.
-- `documentation` - Issues or pull requests related to documentation.
-- `good first issue` - Good for newcomers.
+-   `bug` - Issues that are bugs.
+-   `enhancement` - Issues that are feature requests.
+-   `documentation` - Issues or pull requests related to documentation.
+-   `good first issue` - Good for newcomers.
 
 ## Getting Help
 
-- Join [Development Discord](https://discord.gg/elizaOS)
-- Join [DAO Discord](https://discord.gg/ai16z)
-- Check [FAQ](faq.md)
-- Create GitHub issues
+-   Join [Development Discord](https://discord.gg/elizaOS)
+-   Join [DAO Discord](https://discord.gg/ai16z)
+-   Check [FAQ](faq.md)
+-   Create GitHub issues
 
 ## Additional Resources
 
-- [Local Development Guide](guides/local-development.md)
-- [Configuration Guide](guides/configuration.md)
-- [API Documentation](api)
+-   [Local Development Guide](guides/local-development.md)
+-   [Configuration Guide](guides/configuration.md)
+-   [API Documentation](api)

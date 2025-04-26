@@ -11,32 +11,56 @@ _As seen powering [@DegenSpartanAI](https://x.com/degenspartanai) and [@aixvc_ag
 
 Eliza is a powerful multi-agent simulation framework designed to create, deploy, and manage autonomous AI agents. Built with TypeScript, it provides a flexible and extensible platform for developing intelligent agents that can interact across multiple platforms while maintaining consistent personalities and knowledge.
 
-- [Technical Report (Whitepaper)](https://arxiv.org/pdf/2501.06781)
-- [Examples (Awesome Eliza)](https://github.com/thejoven/awesome-eliza)
+-   [Technical Report (Whitepaper)](https://arxiv.org/pdf/2501.06781)
+-   [Examples (Awesome Eliza)](https://github.com/thejoven/awesome-eliza)
+
+## Choose Your Path
+
+There are two main ways to work with Eliza:
+
+### 1. Building AI Agents (Framework Users)
+
+If you want to create and deploy AI agents:
+
+-   Use our simplified setup with `elizaos start`
+-   No need to clone the main repository
+-   Focus on creating character files
+-   Perfect for building chatbots, assistants, and social media agents
+
+### 2. Core Development (Contributors)
+
+If you want to improve Eliza itself:
+
+-   Clone the full monorepo
+-   Set up the development environment
+-   Help enhance core functionality
+-   Contribute to documentation and testing
+
+Choose the path that matches your goals. The rest of this documentation will guide you accordingly.
 
 ## Key Features
 
-- **Platform Integration**: Clients for Discord, X (Twitter), Telegram, and many others
-- **Flexible Model Support**: Deepseek, Ollama, Grok, OpenAI, Anthropic, Gemini, LLama, etc.
-- **Character System**: Create diverse agents using [characterfiles](https://github.com/elizaOS/characterfile)
-- **Multi-Agent Architecture**: Manage multiple unique AI personalities simultaneously
-- **Memory Management**: Easily ingest and interact with documents using RAG
-- **Media Processing**: PDF, URLs, Audio transcription, Video processing, Image analysis, Conversation summarization
-- **Technical Foundation**:
-    - 100% TypeScript implementation
-    - Modular architecture
-    - Highly extensible action and plugin system
-    - Custom client support
-    - Comprehensive API
+-   **Platform Integration**: Clients for Discord, X (Twitter), Telegram, and many others
+-   **Flexible Model Support**: Deepseek, Ollama, Grok, OpenAI, Anthropic, Gemini, LLama, etc.
+-   **Character System**: Create diverse agents using [characterfiles](https://github.com/elizaOS/characterfile)
+-   **Multi-Agent Architecture**: Manage multiple unique AI personalities simultaneously
+-   **Memory Management**: Easily ingest and interact with documents using RAG
+-   **Media Processing**: PDF, URLs, Audio transcription, Video processing, Image analysis, Conversation summarization
+-   **Technical Foundation**:
+    -   100% TypeScript implementation
+    -   Modular architecture
+    -   Highly extensible action and plugin system
+    -   Custom client support
+    -   Comprehensive API
 
 ## Use Cases
 
 Eliza can be used to create:
 
-- **AI Assistants**: Customer support agents, Community moderators, Personal assistants
-- **Social Media Personas**: Automated content creators, Brand representatives, Influencers
-- **Knowledge Workers**: Research assistants, Content analysts, Document processors
-- **Interactive Characters**: Role-playing characters, Educational tutors, Entertainment bots
+-   **AI Assistants**: Customer support agents, Community moderators, Personal assistants
+-   **Social Media Personas**: Automated content creators, Brand representatives, Influencers
+-   **Knowledge Workers**: Research assistants, Content analysts, Document processors
+-   **Interactive Characters**: Role-playing characters, Educational tutors, Entertainment bots
 
 ## Architecture
 
@@ -57,9 +81,9 @@ For a more detailed guide, check out our [Quickstart Guide](./quickstart.md) to 
 
 ### Prerequisites
 
-- [Python 2.7+](https://www.python.org/downloads/)
-- [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-- [pnpm](https://pnpm.io/installation)
+-   [Python 2.7+](https://www.python.org/downloads/)
+-   [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+-   [pnpm](https://pnpm.io/installation)
 
 > **Note for Windows Users:** [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install-manual) is required.
 
@@ -92,14 +116,14 @@ For detailed instructions on using the start script, including character managem
 
 Eliza is backed by an active community of developers and users:
 
-- [**Open Source**](https://github.com/elizaos/eliza): Contribute to the project on GitHub
-- [**Examples**](https://github.com/elizaos/characters): Ready-to-use character templates and implementations
-- [**Support**](https://discord.gg/elizaos): Active communityfor troubleshooting and discussion
+-   [**Open Source**](https://github.com/elizaos/eliza): Contribute to the project on GitHub
+-   [**Examples**](https://github.com/elizaos/characters): Ready-to-use character templates and implementations
+-   [**Support**](https://discord.gg/elizaos): Active communityfor troubleshooting and discussion
 
 Join us in building the future of autonomous AI agents with Eliza!
 
 ## Next Steps
 
-- [Create Your First Agent](../quickstart)
-- [Understand Core Concepts](../core/agents)
-- [Explore Advanced Features](./guides/advanced.md)
+-   [Create Your First Agent](../quickstart)
+-   [Understand Core Concepts](../core/agents)
+-   [Explore Advanced Features](./guides/advanced.md)

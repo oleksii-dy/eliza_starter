@@ -2,6 +2,30 @@
 
 First off, thank you for considering contributing to Eliza! We welcome contributions from everyone, regardless of experience level.
 
+## Are You a Framework User or Core Contributor?
+
+Before proceeding, it's important to understand which path you're taking:
+
+### Framework Users (Building AI Agents)
+
+If you want to **build and deploy AI agents using Eliza**:
+
+-   Use `elizaos start` command to create new agents
+-   Follow our [Quickstart Guide](docs/docs/quickstart.md) for agent development
+-   No need to clone the main repository
+-   Focus on creating character files and configurations
+
+### Core Contributors (Improving Eliza)
+
+If you want to **contribute to Eliza's core development**:
+
+-   Clone the full monorepo
+-   Follow the setup instructions below
+-   Help improve Eliza's core functionality
+-   Contribute to documentation and tests
+
+Choose the path that best matches your goals. The rest of this guide focuses on core contributors.
+
 ## Contribution License Agreement
 
 By contributing to Eliza, you agree that your contributions will be licensed under the MIT License. This means:
@@ -15,10 +39,10 @@ By contributing to Eliza, you agree that your contributions will be licensed und
 
 We believe in the power of the OODA Loop - a decision-making framework that emphasizes speed and adaptability. OODA stands for:
 
-- **Observe**: Gather information and insights about the project, the community, and the broader AI ecosystem.
-- **Orient**: Analyze your observations to identify opportunities for contribution and improvement.
-- **Decide**: Choose a course of action based on your analysis. This could be proposing a new feature, fixing a bug, or creating content.
-- **Act**: Execute your decision and share your work with the community.
+-   **Observe**: Gather information and insights about the project, the community, and the broader AI ecosystem.
+-   **Orient**: Analyze your observations to identify opportunities for contribution and improvement.
+-   **Decide**: Choose a course of action based on your analysis. This could be proposing a new feature, fixing a bug, or creating content.
+-   **Act**: Execute your decision and share your work with the community.
 
 ## How to Contribute
 
@@ -48,22 +72,22 @@ We believe in the power of the OODA Loop - a decision-making framework that emph
 
 ### Git Commit Messages
 
-- Use the present tense ("Add feature" not "Added feature")
-- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-- Limit the first line to 72 characters or less
-- Reference issues and pull requests liberally after the first line
+-   Use the present tense ("Add feature" not "Added feature")
+-   Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
+-   Limit the first line to 72 characters or less
+-   Reference issues and pull requests liberally after the first line
 
 ### JavaScript Styleguide
 
-- All JavaScript must adhere to [JavaScript Standard Style](https://standardjs.com/).
+-   All JavaScript must adhere to [JavaScript Standard Style](https://standardjs.com/).
 
 ### TypeScript Styleguide
 
-- All TypeScript must adhere to [TypeScript Standard Style](https://github.com/standard/ts-standard).
+-   All TypeScript must adhere to [TypeScript Standard Style](https://github.com/standard/ts-standard).
 
 ### Documentation Styleguide
 
-- Use [Markdown](https://daringfireball.net/projects/markdown/) for documentation.
+-   Use [Markdown](https://daringfireball.net/projects/markdown/) for documentation.
 
 ## Additional Notes
 
@@ -71,22 +95,22 @@ We believe in the power of the OODA Loop - a decision-making framework that emph
 
 This section lists the labels we use to help us track and manage issues and pull requests.
 
-- `bug` - Issues that are bugs.
-- `enhancement` - Issues that are feature requests.
-- `documentation` - Issues or pull requests related to documentation.
-- `good first issue` - Good for newcomers.
+-   `bug` - Issues that are bugs.
+-   `enhancement` - Issues that are feature requests.
+-   `documentation` - Issues or pull requests related to documentation.
+-   `good first issue` - Good for newcomers.
 
 ## Getting Help
 
-- Join [Discord](https://discord.gg/ai16z)
-- Check [FAQ](docs/docs/faq.md)
-- Create [GitHub issues](https://github.com/elizaOS/eliza/issues)
+-   Join [Discord](https://discord.gg/ai16z)
+-   Check [FAQ](docs/docs/faq.md)
+-   Create [GitHub issues](https://github.com/elizaOS/eliza/issues)
 
 ## Additional Resources
 
-- [Local Development Guide](docs/docs/guides/local-development.md)
-- [Configuration Guide](docs/docs/guides/configuration.md)
-- [API Documentation](docs/api)
+-   [Local Development Guide](docs/docs/guides/local-development.md)
+-   [Configuration Guide](docs/docs/guides/configuration.md)
+-   [API Documentation](docs/api)
 
 ## Contributor Guide
 
@@ -102,19 +126,19 @@ In the interest of fostering an open and welcoming environment, we as contributo
 
 Examples of behavior that contributes to creating a positive environment include:
 
-- Using welcoming and inclusive language
-- Being respectful of differing viewpoints and experiences
-- Gracefully accepting constructive criticism
-- Focusing on what is best for the community
-- Showing empathy towards other community members
+-   Using welcoming and inclusive language
+-   Being respectful of differing viewpoints and experiences
+-   Gracefully accepting constructive criticism
+-   Focusing on what is best for the community
+-   Showing empathy towards other community members
 
 Examples of unacceptable behavior include:
 
-- The use of sexualized language or imagery and unwelcome sexual attention or advances
-- Trolling, insulting/derogatory comments, and personal or political attacks
-- Public or private harassment
-- Publishing others' private information without explicit permission
-- Other conduct which could reasonably be considered inappropriate in a professional setting
+-   The use of sexualized language or imagery and unwelcome sexual attention or advances
+-   Trolling, insulting/derogatory comments, and personal or political attacks
+-   Public or private harassment
+-   Publishing others' private information without explicit permission
+-   Other conduct which could reasonably be considered inappropriate in a professional setting
 
 #### Our Responsibilities
 
