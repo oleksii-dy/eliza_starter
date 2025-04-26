@@ -1,0 +1,21 @@
+import { customType } from 'drizzle-orm/mysql-core';
+
+/**
+ * Represents a custom type for converting a number to a timestamp string and vice versa.
+ * @param {Object} options - The options for the custom type.
+ * @param {Function} options.dataType - A function that returns the data type as "timestamp".
+ * @param {Function} options.toDriver - A function that converts a number to a timestamp string using the Date object's toISOString method.
+ * @param {Function} options.fromDriver - A function that converts a timestamp string to a number using the Date object's getTime method.
+ * @returns {Object} - The custom type for number to timestamp conversion.
+ */
+export const numberTimestamp = customType<{ data: number; driverData: string }>({
+  dataType() {
+    return 'timestampz';
+  },
+  toDriver(value: number): string {
+    return new Date(value).toISOString();
+  },
+  fromDriver(value: string): number {
+    return new Date(value).getTime();
+  },
+});
