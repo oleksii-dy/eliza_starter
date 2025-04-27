@@ -28,15 +28,9 @@ export const memoryTable = mysqlTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     content: json('content').$type<Content>().notNull(),
-    entityId: varchar('entityId', { length: 36 }).references(() => entityTable.id, {
-      onDelete: 'cascade',
-    }),
-    agentId: varchar('agentId', { length: 36 }).references(() => agentTable.id, {
-      onDelete: 'cascade',
-    }),
-    roomId: varchar('roomId', { length: 36 }).references(() => roomTable.id, {
-      onDelete: 'cascade',
-    }),
+    entityId: varchar('entityId', { length: 36 }),
+    agentId: varchar('agentId', { length: 36 }),
+    roomId: varchar('roomId', { length: 36 }),
     unique: boolean('unique').default(true).notNull(),
     metadata: json('metadata')
       .$type<MemoryMetadata>()
@@ -51,7 +45,7 @@ export const memoryTable = mysqlTable(
       foreignColumns: [roomTable.id],
     }).onDelete('cascade'),
     foreignKey({
-      name: 'fk_user',
+      name: 'fk_memories_entityId',
       columns: [table.entityId],
       foreignColumns: [entityTable.id],
     }).onDelete('cascade'),

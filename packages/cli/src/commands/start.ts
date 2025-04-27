@@ -385,6 +385,8 @@ export async function startAgent(
       }
     }
 
+    console.log('MY_ENV', env);
+
     return env as RuntimeSettings;
   }
 

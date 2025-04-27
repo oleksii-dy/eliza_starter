@@ -37,12 +37,12 @@ export const participantTable = mysqlTable(
     index('idx_participants_user').on(table.entityId),
     index('idx_participants_room').on(table.roomId),
     foreignKey({
-      name: 'fk_room',
+      name: 'fk_participant_room',
       columns: [table.roomId],
       foreignColumns: [roomTable.id],
     }).onDelete('cascade'),
     foreignKey({
-      name: 'fk_user',
+      name: 'fk_participants_entityId',
       columns: [table.entityId],
       foreignColumns: [entityTable.id],
     }).onDelete('cascade'),

@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   mysql:
-    image: mysql:9.0.0 # first GA that ships the VECTOR column type  :contentReference[oaicite:0]{index=0}
+    image: mysql:8.0
     container_name: mysql-vector
     restart: unless-stopped
 

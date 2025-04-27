@@ -1,4 +1,5 @@
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { logger } from '@elizaos/core';
 import { drizzle } from 'drizzle-orm/mysql2';
@@ -12,6 +13,7 @@ import type { IDatabaseClientManager } from '../types';
  */
 export class MySql2ConnectionManager implements IDatabaseClientManager<mysql.Pool> {
   private pool: mysql.Pool;
+  private readonly connectionString: string;
   private isShuttingDown = false;
   private readonly connectionTimeout: number = 5000;
 
@@ -20,16 +22,10 @@ export class MySql2ConnectionManager implements IDatabaseClientManager<mysql.Poo
    * @param {string} connectionString - The connection string used to connect to the database.
    */
   constructor(connectionString: string) {
-    // TODO: see if we need this.
-    const defaultConfig = {
-      waitForConnections: true,
-      connectionLimit: 20,
-      queueLimit: 0,
-      connectTimeout: this.connectionTimeout,
-    };
-
+    console.log('##### FOR POOOL connectionString', connectionString);
+    this.connectionString = connectionString;
     // Create a pool using mysql2's createPool function
-    this.pool = mysql.createPool(connectionString);
+    this.pool = mysql.createPool(this.connectionString);
 
     // mysql2 has a slightly different event system compared to node-postgres
     // Here we listen for errors on connections from the pool
@@ -58,10 +54,13 @@ export class MySql2ConnectionManager implements IDatabaseClientManager<mysql.Poo
     try {
       await this.pool.end();
 
-      // Create a new pool
+      // Create a new pool using the original connection string
       this.pool = mysql.createPool({
-        uri: (this.pool.config as any).connectionConfig?.uri,
+        uri: this.connectionString,
         connectTimeout: this.connectionTimeout,
+        waitForConnections: true,
+        connectionLimit: 20,
+        queueLimit: 0,
       });
 
       await this.testConnection();
@@ -189,26 +188,75 @@ export class MySql2ConnectionManager implements IDatabaseClientManager<mysql.Poo
    * @returns {Promise<void>} A Promise that resolves once the migrations are completed successfully.
    */
   async runMigrations(): Promise<void> {
+    let connection: mysql.Connection | null = null;
     try {
-      // Get a dedicated connection for migrations (recommended by Drizzle)
-      const connection = await mysql.createConnection({
-        uri: (this.pool.config as any).connectionConfig?.uri,
-      });
+      // Get a dedicated connection for migrations using the original connection string
+      connection = await mysql.createConnection(this.connectionString);
 
       const db = drizzle(connection);
 
+      // --- Find the package root dynamically ---
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
+      const packageRoot = findPackageRoot(__dirname);
+      const migrationsPath = path.join(packageRoot, 'drizzle', 'migrations');
+      logger.debug(`Resolved migrations path: ${migrationsPath}`); // Add logging
+      // --- End find package root ---
 
       await migrate(db, {
-        migrationsFolder: path.resolve(__dirname, '../drizzle/migrations'),
+        migrationsFolder: migrationsPath, // Use the dynamically found path
       });
 
       // Close the connection after migration is complete
-      await connection.end();
+      if (connection) {
+        await connection.end();
+      }
     } catch (error) {
       logger.error('Failed to run database migrations (mysql):', error);
+      // Ensure connection is closed even on error
+      if (connection) {
+        try {
+          await connection.end();
+        } catch (closeError) {
+          logger.error('Failed to close migration connection after error:', closeError);
+        }
+      }
       throw error;
     }
+  }
+}
+
+/**
+ * Finds the root directory of the package containing the given directory.
+ * Walks up the directory tree looking for package.json.
+ * @param startDir The directory to start searching from.
+ * @returns The path to the package root directory.
+ * @throws Error if package.json is not found.
+ */
+function findPackageRoot(startDir: string): string {
+  let currentDir = startDir;
+  while (true) {
+    const packageJsonPath = path.join(currentDir, 'package.json');
+    try {
+      // Check if package.json exists and is a file
+      if (fs.statSync(packageJsonPath).isFile()) {
+        // Make sure the package name is correct (optional but safer)
+        // const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        // if (pkg.name === '@elizaos/plugin-mysql') { // Or whatever the actual package name is
+        return currentDir;
+        // }
+      }
+    } catch (err) {
+      // Ignore errors (e.g., permission denied, file not found)
+    }
+
+    const parentDir = path.dirname(currentDir);
+    if (parentDir === currentDir) {
+      // Reached the filesystem root without finding the correct package.json
+      throw new Error(
+        `Could not find package root containing package.json starting from ${startDir}`
+      );
+    }
+    currentDir = parentDir;
   }
 }

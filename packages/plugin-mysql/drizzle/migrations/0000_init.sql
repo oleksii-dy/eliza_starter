@@ -1,12 +1,8 @@
-CREATE EXTENSION IF NOT EXISTS vector;
---> statement-breakpoint				
-CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
---> statement-breakpoint
 CREATE TABLE `agents` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
 	`enabled` boolean NOT NULL DEFAULT true,
-	`createdAt` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`updatedAt` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`name` varchar(255),
 	`username` varchar(255),
 	`system` text,
@@ -28,8 +24,8 @@ CREATE TABLE `cache` (
 	`key` varchar(255) NOT NULL,
 	`agentId` varchar(36) NOT NULL,
 	`value` json NOT NULL,
-	`createdAt` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`expiresAt` timestampz,
+	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`expiresAt` timestamp,
 	CONSTRAINT `cache_id` PRIMARY KEY(`id`),
 	CONSTRAINT `cache_key_agent_unique` UNIQUE(`key`,`agentId`)
 );
@@ -43,14 +39,14 @@ CREATE TABLE `components` (
 	`sourceEntityId` varchar(36),
 	`type` varchar(50) NOT NULL,
 	`data` json DEFAULT ('{}'),
-	`createdAt` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT `components_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
 CREATE TABLE `embeddings` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
 	`memory_id` varchar(36),
-	`created_at` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`dim_384` json,
 	`dim_512` json,
 	`dim_768` json,
@@ -63,7 +59,7 @@ CREATE TABLE `embeddings` (
 CREATE TABLE `entities` (
 	`id` varchar(36) NOT NULL,
 	`agentId` varchar(36) NOT NULL,
-	`createdAt` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`names` json DEFAULT ('[]'),
 	`metadata` json DEFAULT ('{}'),
 	CONSTRAINT `entities_id` PRIMARY KEY(`id`),
@@ -72,7 +68,7 @@ CREATE TABLE `entities` (
 --> statement-breakpoint
 CREATE TABLE `logs` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
-	`createdAt` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`entityId` varchar(36) NOT NULL,
 	`body` json NOT NULL,
 	`type` varchar(50) NOT NULL,
@@ -83,7 +79,7 @@ CREATE TABLE `logs` (
 CREATE TABLE `memories` (
 	`id` varchar(36) NOT NULL,
 	`type` varchar(50) NOT NULL,
-	`createdAt` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`content` json NOT NULL,
 	`entityId` varchar(36),
 	`agentId` varchar(36),
@@ -95,7 +91,7 @@ CREATE TABLE `memories` (
 --> statement-breakpoint
 CREATE TABLE `participants` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
-	`createdAt` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`entityId` varchar(36),
 	`roomId` varchar(36),
 	`agentId` varchar(36),
@@ -105,7 +101,7 @@ CREATE TABLE `participants` (
 --> statement-breakpoint
 CREATE TABLE `relationships` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
-	`createdAt` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`sourceEntityId` varchar(36) NOT NULL,
 	`targetEntityId` varchar(36) NOT NULL,
 	`agentId` varchar(36) NOT NULL,
@@ -125,7 +121,7 @@ CREATE TABLE `rooms` (
 	`name` varchar(255),
 	`metadata` json DEFAULT ('{}'),
 	`channelId` varchar(255),
-	`createdAt` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT `rooms_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -135,7 +131,7 @@ CREATE TABLE `worlds` (
 	`name` varchar(255) NOT NULL,
 	`metadata` json DEFAULT ('{}'),
 	`serverId` varchar(255) NOT NULL,
-	`createdAt` timestampz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT `worlds_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -164,19 +160,16 @@ ALTER TABLE `embeddings` ADD CONSTRAINT `fk_embedding_memory` FOREIGN KEY (`memo
 ALTER TABLE `entities` ADD CONSTRAINT `entities_agentId_agents_id_fk` FOREIGN KEY (`agentId`) REFERENCES `agents`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `logs` ADD CONSTRAINT `logs_entityId_entities_id_fk` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `logs` ADD CONSTRAINT `logs_roomId_rooms_id_fk` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `logs` ADD CONSTRAINT `fk_room` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `logs` ADD CONSTRAINT `fk_user` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `memories` ADD CONSTRAINT `memories_entityId_entities_id_fk` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `memories` ADD CONSTRAINT `memories_agentId_agents_id_fk` FOREIGN KEY (`agentId`) REFERENCES `agents`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `memories` ADD CONSTRAINT `memories_roomId_rooms_id_fk` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `logs` ADD CONSTRAINT `fk_log_room` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `logs` ADD CONSTRAINT `fk_logs_entityId` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `memories` ADD CONSTRAINT `fk_room` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `memories` ADD CONSTRAINT `fk_user` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `memories` ADD CONSTRAINT `fk_memories_entityId` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `memories` ADD CONSTRAINT `fk_agent` FOREIGN KEY (`agentId`) REFERENCES `agents`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `participants` ADD CONSTRAINT `participants_entityId_entities_id_fk` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `participants` ADD CONSTRAINT `participants_roomId_rooms_id_fk` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `participants` ADD CONSTRAINT `participants_agentId_agents_id_fk` FOREIGN KEY (`agentId`) REFERENCES `agents`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `participants` ADD CONSTRAINT `fk_room` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `participants` ADD CONSTRAINT `fk_user` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `participants` ADD CONSTRAINT `fk_participant_room` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `participants` ADD CONSTRAINT `fk_participants_entityId` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `relationships` ADD CONSTRAINT `relationships_sourceEntityId_entities_id_fk` FOREIGN KEY (`sourceEntityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `relationships` ADD CONSTRAINT `relationships_targetEntityId_entities_id_fk` FOREIGN KEY (`targetEntityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `relationships` ADD CONSTRAINT `relationships_agentId_agents_id_fk` FOREIGN KEY (`agentId`) REFERENCES `agents`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

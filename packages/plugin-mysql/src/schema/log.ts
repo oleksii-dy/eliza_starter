@@ -32,12 +32,12 @@ export const logTable = mysqlTable(
   },
   (table) => [
     foreignKey({
-      name: 'fk_room',
+      name: 'fk_log_room',
       columns: [table.roomId],
       foreignColumns: [roomTable.id],
     }).onDelete('cascade'),
     foreignKey({
-      name: 'fk_user',
+      name: 'fk_logs_entityId',
       columns: [table.entityId],
       foreignColumns: [entityTable.id],
     }).onDelete('cascade'),

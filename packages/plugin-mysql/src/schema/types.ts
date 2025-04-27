@@ -10,7 +10,7 @@ import { customType } from 'drizzle-orm/mysql-core';
  */
 export const numberTimestamp = customType<{ data: number; driverData: string }>({
   dataType() {
-    return 'timestampz';
+    return 'timestamp';
   },
   toDriver(value: number): string {
     return new Date(value).toISOString();
