@@ -1,20 +1,39 @@
-# Ignore node_modules from the build context
-node_modules
-
-# Ignore logs and temporary files
-*.log
-*.tmp
-.DS_Store
-
-# Ignore Git files and metadata
+# Git
+.git
 .gitignore
+
+# Node
+node_modules
+**/node_modules
+npm-debug.log*
+yarn-error.log
+
+# Build artifacts
+dist
+**/dist
+build
+**/build
+.next
+out
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile*
+docker-compose.yml
+.dockerignore
+
+# Environment / Config
+.env*
+!/.env.example
+
+# Logs
+*.log
+logs/
 
 # Ignore IDE and editor config files
 .vscode
 .idea
 *.swp
-
-# Ignore build artifacts from the host
-dist
-build
-.env
