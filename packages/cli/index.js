@@ -6,7 +6,7 @@ const fs = require('fs')
 const { Command } = require('commander')
 const program = new Command()
 const { version } = require('./package.json')
-
+const JSON5 = require('json5')
 
 const pluginPkgPath = (pluginRepo) => {
   const parts = pluginRepo.split('/')
@@ -30,12 +30,39 @@ const pluginsCmd = new Command()
   .name('plugins')
   .description('manage elizaOS plugins')
 
+let metadata = {}
+
 async function getPlugins() {
   const resp = await fetch('https://raw.githubusercontent.com/elizaos-plugins/registry/refs/heads/main/index.json')
-  return await resp.json();
+  const mostlyJson = await resp.text();
+  const jsonLike = []
+  for(const l of mostlyJson.split('\n')) {
+    if (l.match(/""/)) {
+      const parts = l.split(/:/, 2)
+      const noLQte = parts[1].substr(2)
+      const parts2 = noLQte.substr(0, noLQte.length -2).split('/', 2)
+      metadata[parts2[0]] = parts2[1].split(/,\W*/)
+    } else {
+      jsonLike.push(l)
+    }
+  }
+  const json = jsonLike.join("\n")
+  const plugins = JSON5.parse(json)
+  return plugins
 }
 
-
+function remoteBranchExists(repoDir, branchName) {
+  try {
+    const output = execSync(`git ls-remote --heads origin`, {
+      cwd: repoDir,
+      encoding: 'utf-8',
+    });
+    return output.includes(`refs/heads/${branchName}`);
+  } catch (err) {
+    console.error('Failed to check remote branches:', err);
+    return false;
+  }
+}
 
 pluginsCmd
   .command('list')
@@ -46,6 +73,7 @@ pluginsCmd
   .action(async (opts) => {
     try {
       const plugins = await getPlugins()
+      //console.log('metadata', metadata)
       const pluginNames = Object.keys(plugins)
         .filter(name => !opts.type || name.includes(opts.type))
         .sort()
@@ -108,6 +136,36 @@ pluginsCmd
       // submodule init & update?
     }
 
+    // branch detection
+    const x1Compat = remoteBranchExists(pkgPath, '0.x')
+    if (x1Compat) {
+      // switch branches
+      console.log('Checking out 0.x branch') // log for education
+      const gitOutput = execSync('git checkout 0.x', { stdio: 'pipe', cwd: pkgPath }).toString().trim();
+    } else {
+      // sniff main
+      const packageJsonPath = pkgPath + '/package.json'
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
+
+      let isV2 = false
+      for(const d in packageJson.dependencies) {
+        if (d.match(/core-plugin-v2/)) {
+          isV2 = true
+        }
+      }
+
+      if (isV2) {
+        console.error('Plugin', plugin, 'not compatible with 0.x, deleting', pkgPath)
+        //const gitOutput = execSync('git clone https://github.com/' + repoData[1] + ' ' + pkgPath, { stdio: 'pipe' }).toString().trim();
+        try {
+          fs.rmSync(pkgPath, { recursive: true, force: true });
+        } catch (err) {
+          console.error('Error removing package plugin directory:', err);
+        }
+        return
+      }
+    }
+
     // we need to check for dependencies
 
     // Read the current package.json
@@ -117,7 +175,7 @@ pluginsCmd
     const updateDependencies = (deps) => {
       if (!deps) return false
       let changed = false
-      const okPackages = ['@elizaos/client-direct', '@elizaos/core', '@elizaos/plugin-bootstrap']
+      const okPackages = ['@elizaos/client-direct', '@elizaos/core', '@elizaos/core-plugin-v1', '@elizaos/plugin-bootstrap']
       for (const dep in deps) {
         if (okPackages.indexOf(dep) !== -1) continue // skip these, they're fine
         // do we want/need to perserve local packages like core?
@@ -155,15 +213,17 @@ pluginsCmd
     // # pnpm add @elizaos/core@workspace:* --filter ./packages/client-twitter
 
     // ok this can be an issue if it's referencing a plugin it couldn't be
-    console.log('Making sure plugin has access to @elizaos/core')
-    const pluginAddCoreOutput = execSync('pnpm add @elizaos/core@workspace:* --filter ./packages/' + namePart, { cwd: elizaOSroot, stdio: 'pipe' }).toString().trim();
+    console.log('Making sure plugin has access to @elizaos/core-plugin-v1')
+    try {
+      const pluginAddCoreOutput = execSync('pnpm add @elizaos/core-plugin-v1@workspace:* --filter ./packages/' + namePart, { cwd: elizaOSroot, stdio: 'pipe' }).toString().trim();
+    } catch(e) {
+      console.error('pluginAddCoreOutput error', e)
+    }
 
+    // is this needed? if we want it to be assumed and hard coded but might not work with npm
     if (packageJson.name !== '@elizaos-plugins/' + namePart) {
-      // Update the name field
       packageJson.name = '@elizaos-plugins/' + namePart
       console.log('Updating plugins package.json name to', packageJson.name)
-
-      // Write the updated package.json back to disk
       fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
     }
 
@@ -186,6 +246,7 @@ pluginsCmd
     console.log('Remember to add it to your character file\'s plugin field: ["' + pluginName + '"]')
   })
 
+// doesn't remove dependencies because can't tell if they're in use
 pluginsCmd
   .command('remove')
   .alias('delete')
