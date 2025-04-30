@@ -14,7 +14,6 @@ import {
 import axios from "axios";
 
 const NEWS_API_URL = "https://newsdata.io/api/1/news";
-const API_KEY = "pub_83816be44a5325806e3e242785c01ce92c500";
 
 export const newsHandlerTemplate = `# Task: Summarize the following news article into a concise tweet (under 280 characters).
 Focus on the key points and make it engaging.
@@ -39,10 +38,14 @@ export const fetchNewsAction: Action = {
         callback: HandlerCallback
     ) => {
         try {
+            const apiKey = runtime.getSetting("NEWS_API_KEY");
+            if (!apiKey) {
+                throw new Error("News API key not configured");
+            }
             // Fetch news articles
             const response = await axios.get(NEWS_API_URL, {
                 params: {
-                    apikey: API_KEY,
+                    apikey: apiKey,
                     q: "crypto",
                     size: 10
                 }
