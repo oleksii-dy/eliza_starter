@@ -12,6 +12,7 @@ import {
     type State,
 } from "@elizaos/core";
 import axios from "axios";
+import { TaylorTwitterClient } from "../twitter.ts";
 
 const COOKIE_API_URL = "https://api.cookie-api.com/api/crypto";
 
@@ -96,6 +97,11 @@ export const fetchTokenAction: Action = {
                 text: summary.text,
                 action: "FETCH_TOKEN"
             };
+
+            // Post the token update to Twitter
+            const twitterClient = new TaylorTwitterClient();
+            await twitterClient.start(runtime);
+            await twitterClient.postUpdate(summary.text);
 
             await callback(responseContent);
             return responseContent;

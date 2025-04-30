@@ -12,6 +12,7 @@ import {
     type State,
 } from "@elizaos/core";
 import axios from "axios";
+import { TaylorTwitterClient } from "../twitter.ts";
 
 const NEWS_API_URL = "https://newsdata.io/api/1/news";
 
@@ -38,7 +39,7 @@ export const fetchNewsAction: Action = {
         callback: HandlerCallback
     ) => {
         try {
-            const apiKey = runtime.getSetting("NEWS_API_KEY");
+            const apiKey = runtime.getSetting("NEWSDATA_API_KEY");
             if (!apiKey) {
                 throw new Error("News API key not configured");
             }
@@ -58,7 +59,11 @@ export const fetchNewsAction: Action = {
             const articles = response.data.results;
             const summaries: string[] = [];
 
-            // Generate summaries for each article
+            // Initialize Twitter client
+            const twitterClient = new TaylorTwitterClient();
+            await twitterClient.start(runtime);
+
+            // Generate summaries for each article and post to Twitter
             for (const article of articles) {
                 const context = composeContext({
                     state: {
@@ -77,6 +82,13 @@ export const fetchNewsAction: Action = {
 
                 if (summary.text && summary.text.length <= 280) {
                     summaries.push(summary.text);
+                    // Post each summary as a separate tweet
+                    try {
+                        await twitterClient.postUpdate(summary.text);
+                        elizaLogger.success("[FETCH_NEWS] Successfully posted tweet:", summary.text.substring(0, 50) + "...");
+                    } catch (tweetError) {
+                        elizaLogger.error("[FETCH_NEWS] Error posting tweet:", tweetError);
+                    }
                 }
             }
 

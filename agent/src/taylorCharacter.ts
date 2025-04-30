@@ -7,7 +7,11 @@ export const taylorCharacter: Character = {
     plugins: [taylorPlugin],
     modelProvider: ModelProviderName.OPENAI,
     settings: {
-        secrets: {},
+        secrets: {
+            TWITTER_USERNAME: "",
+            TWITTER_PASSWORD: "",
+            TWITTER_EMAIL: ""
+        },
         voice: {
             model: "en_US-hfc_female-medium",
         },
