@@ -19,9 +19,9 @@ import {
     stringToUuid,
     validateCharacterConfig,
 } from "@elizaos/core";
-import { defaultCharacter } from "./defaultCharacter.ts";
+import { taylorCharacter } from "./taylorCharacter.ts";
 
-import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
+import { taylorPlugin } from "@elizaos/plugin-taylor";
 import JSON5 from 'json5';
 
 import fs from "fs";
@@ -363,7 +363,7 @@ export async function loadCharacters(
 
     if (loadedCharacters.length === 0) {
         elizaLogger.info("No characters found, using default character");
-        loadedCharacters.push(defaultCharacter);
+        loadedCharacters.push(taylorCharacter);
     }
 
     return loadedCharacters;
@@ -626,7 +626,7 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
-            bootstrapPlugin,
+            taylorPlugin,
         ]
             .flat()
             .filter(Boolean),
@@ -833,7 +833,7 @@ const startAgents = async () => {
     let serverPort = Number.parseInt(settings.SERVER_PORT || "3000");
     const args = parseArguments();
     const charactersArg = args.characters || args.character;
-    let characters = [defaultCharacter];
+    let characters = [taylorCharacter];
 
     if ((charactersArg) || hasValidRemoteUrls()) {
         characters = await loadCharacters(charactersArg);
