@@ -22,7 +22,6 @@ export class MySql2ConnectionManager implements IDatabaseClientManager<mysql.Poo
    * @param {string} connectionString - The connection string used to connect to the database.
    */
   constructor(connectionString: string) {
-    console.log('##### FOR POOOL connectionString', connectionString);
     this.connectionString = connectionString;
     // Create a pool using mysql2's createPool function
     this.pool = mysql.createPool(this.connectionString);

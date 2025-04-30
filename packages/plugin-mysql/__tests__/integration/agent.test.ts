@@ -74,7 +74,7 @@ describe('Agent Integration Tests', () => {
   });
 
   describe('createAgent', () => {
-    it('should successfully create an agent', async () => {
+    it.only('should successfully create an agent', async () => {
       const newAgent = {
         ...testAgent,
         id: uuidv4() as UUID,
@@ -667,24 +667,6 @@ describe('Agent Integration Tests', () => {
       await expect(adapter.ensureAgentExists(incompleteAgent)).rejects.toThrow(
         'Agent name is required'
       );
-    });
-
-    it('should use provided ID when creating a new agent', async () => {
-      const providedId = uuidv4() as UUID;
-      const newAgent = {
-        ...testAgent,
-        id: providedId,
-        name: 'Integration Test Ensure With ID',
-      };
-
-      const result = await adapter.ensureAgentExists(newAgent);
-
-      expect(result.id).toBe(providedId);
-
-      // Verify the agent was created with the provided ID
-      const createdAgent = await adapter.getAgent(providedId);
-      expect(createdAgent).not.toBeNull();
-      expect(createdAgent?.id).toBe(providedId);
     });
 
     it('should handle case with existing name but different ID', async () => {

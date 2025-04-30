@@ -13,7 +13,13 @@ export const numberTimestamp = customType<{ data: number; driverData: string }>(
     return 'timestamp';
   },
   toDriver(value: number): string {
-    return new Date(value).toISOString();
+    // Convert number timestamp to Date object
+    const date = new Date(value);
+    // Get ISO string (UTC): YYYY-MM-DDTHH:mm:ss.sssZ
+    const isoString = date.toISOString();
+    // Format for MySQL: YYYY-MM-DD HH:mm:ss
+    // Replace 'T' with space, take first 19 chars (removes .sssZ)
+    return isoString.replace('T', ' ').slice(0, 19);
   },
   fromDriver(value: string): number {
     return new Date(value).getTime();

@@ -267,9 +267,16 @@ export abstract class BaseDrizzleAdapter<
         // Convert from Core type to Drizzle schema type
         const drizzleAgent = mapToAgentRow(agent);
 
-        await this.db.transaction(async (tx) => {
-          await tx.insert(agentTable).values(drizzleAgent);
+        console.log('drizzleAgent', drizzleAgent);
+
+        let result = await this.db.transaction(async (tx) => {
+          console.log('inserting agent', drizzleAgent);
+          let res = await tx.insert(agentTable).values(drizzleAgent);
+          console.log('res', res);
+          return res;
         });
+
+        console.log('result from db', result);
 
         logger.debug('Agent created successfully:', {
           agentId: agent.id,
@@ -290,48 +297,61 @@ export abstract class BaseDrizzleAdapter<
    * Updates an agent in the database with the provided agent ID and data.
    * @param {UUID} agentId - The unique identifier of the agent to update.
    * @param {Partial<Agent>} agent - The partial agent object containing the fields to update.
-   * @returns {Promise<boolean>} - A boolean indicating if the agent was successfully updated.
+   * @returns {Promise<boolean>} - A boolean indicating if the agent update operation was attempted (does not guarantee rows were affected due to original design).
    */
   async updateAgent(agentId: UUID, agent: Partial<Agent>): Promise<boolean> {
     return this.withDatabase(async () => {
       try {
         return await this.db.transaction(async (tx) => {
-          // Update agentInfo
-          const agentInfo: Partial<InsertAgent> = mapToAgentRow(agent);
+          // Prepare basic agent info update, excluding settings initially
+          const agentInfo: Partial<InsertAgent> = { ...mapToAgentRow(agent) };
+          delete agentInfo.settings; // Remove settings, we'll handle it next
 
-          // Delete settings from agentInfo if they exist, as we'll handle them separately
-          if ('settings' in agentInfo) {
-            delete agentInfo.settings;
+          // Calculate merged settings if settings are provided in the update
+          let finalSettings: Agent['settings'] | undefined;
+          if (agent.settings !== undefined) {
+            // Fetch current settings and merge them with updates
+            finalSettings = await this.mergeAgentSettings(tx, agentId, agent.settings);
+            // Include the merged settings in the main update object
+            // Drizzle/mysql2 should handle JSON serialization here
+            agentInfo.settings = finalSettings;
+          } else {
+            // If settings are not being updated, we don't include them in the set clause
           }
 
-          // Set updatedAt
-          agentInfo.updatedAt = Date.now();
-
-          // First update everything except settings
+          // Perform a single update call with all changes if there's anything to update
           if (Object.keys(agentInfo).length > 0) {
+            // Note: MySQL update doesn't easily return affected rows count here without raw SQL or specific driver features.
+            // We execute the update. If it throws, the catch block handles it.
+            // If it doesn't throw, we assume the *intent* to update was processed.
             await tx
               .update(agentTable)
               .set(agentInfo)
               .where(sql`${agentTable.id} = ${agentId}`);
+
+            // Log if settings were involved, as their update is the primary focus
+            if (agent.settings !== undefined) {
+              logger.debug('Attempted agent settings update.', { agentId });
+            }
+          } else if (Object.keys(agent).length === 0) {
+            // Handle case where empty object was passed, no update needed.
+            logger.debug('UpdateAgent: Empty update object received, no action taken.', {
+              agentId,
+            });
           }
 
-          // Then update settings if needed
-          if (agent.settings !== undefined) {
-            const mergedSettings = await this.mergeAgentSettings(tx, agentId, agent.settings);
-
-            await tx
-              .update(agentTable)
-              .set({ settings: mergedSettings, updatedAt: Date.now() })
-              .where(sql`${agentTable.id} = ${agentId}`);
-          }
+          // Original logic returned true even if the agent didn't exist or wasn't modified.
+          // Maintaining that behavior to align with existing tests for now.
           return true;
         });
       } catch (error) {
+        console.log('Error updating agent:', error);
         logger.error('Error updating agent:', {
           error: error instanceof Error ? error.message : String(error),
           agentId,
           agent,
         });
+        // Ensure false is returned on error
         return false;
       }
     }, 'updateAgent');
@@ -352,19 +372,34 @@ export abstract class BaseDrizzleAdapter<
     updatedSettings: Partial<Agent['settings']> | undefined
   ): Promise<Agent['settings']> {
     // First get the current agent data
-    const currentAgent = await tx
-      .select()
+    const currentAgentResult = await tx
+      .select({ settings: agentTable.settings }) // Select only settings
       .from(agentTable)
       .where(sql`${agentTable.id} = ${agentId}`)
       .limit(1);
 
-    if (!currentAgent || currentAgent.length === 0) {
-      return updatedSettings || {};
+    // If agent doesn't exist, return the updated settings as the new settings
+    if (!currentAgentResult || currentAgentResult.length === 0) {
+      logger.warn('mergeAgentSettings: Agent not found, returning provided settings.', { agentId });
+      // Ensure we return an empty object if updatedSettings is undefined or null
+      return updatedSettings ? this.deepMergeSettings({}, updatedSettings) : {};
     }
 
-    const currentSettings = currentAgent[0].settings || {};
+    // Drizzle might return settings as string or object, ensure it's an object
+    const currentSettingsRaw = currentAgentResult[0].settings;
+    let currentSettings: Record<string, any>;
+    if (typeof currentSettingsRaw === 'string') {
+      try {
+        currentSettings = JSON.parse(currentSettingsRaw || '{}');
+      } catch (e) {
+        logger.error('Failed to parse current agent settings JSON', { agentId, error: e });
+        currentSettings = {};
+      }
+    } else {
+      currentSettings = currentSettingsRaw || {};
+    }
 
-    // If no updates, return current settings
+    // If no updates provided, return current settings
     if (!updatedSettings) {
       return currentSettings;
     }
@@ -1787,22 +1822,19 @@ export abstract class BaseDrizzleAdapter<
   }: Room): Promise<UUID> {
     return this.withDatabase(async () => {
       const newRoomId = id || v4();
-      await this.db
-        .insert(roomTable)
-        .values(
-          mapToRoomRow({
-            id: newRoomId,
-            name,
-            agentId,
-            source,
-            type,
-            channelId,
-            serverId,
-            worldId,
-            metadata,
-          })
-        )
-        .onConflictDoNothing({ target: roomTable.id });
+      await this.db.insert(roomTable).values(
+        mapToRoomRow({
+          id: newRoomId,
+          name,
+          agentId,
+          source,
+          type,
+          channelId,
+          serverId,
+          worldId,
+          metadata,
+        })
+      );
       return newRoomId as UUID;
     }, 'createRoom');
   }
@@ -1865,21 +1897,18 @@ export abstract class BaseDrizzleAdapter<
       try {
         const participantId = v4() as UUID;
 
-        await this.db
-          .insert(participantTable)
-          .values(
-            mapToParticipantRow({
-              id: participantId,
-              entity: {
-                id: entityId,
-                names: [], // Minimal Entity to satisfy type checker
-                agentId: this.agentId,
-              },
-              roomId,
+        await this.db.insert(participantTable).values(
+          mapToParticipantRow({
+            id: participantId,
+            entity: {
+              id: entityId,
+              names: [], // Minimal Entity to satisfy type checker
               agentId: this.agentId,
-            })
-          )
-          .onConflictDoNothing();
+            },
+            roomId,
+            agentId: this.agentId,
+          })
+        );
 
         return true;
       } catch (error) {
@@ -2245,8 +2274,7 @@ export abstract class BaseDrizzleAdapter<
           await tx
             .insert(cacheTable)
             .values(drizzleCache)
-            .onConflictDoUpdate({
-              target: [cacheTable.key, cacheTable.agentId],
+            .onDuplicateKeyUpdate({
               set: {
                 value: value,
                 expiresAt: expiresAt,
@@ -2255,6 +2283,7 @@ export abstract class BaseDrizzleAdapter<
         });
         return true;
       } catch (error) {
+        console.log('Error setting cache:', error);
         logger.error('Error setting cache', {
           error: error instanceof Error ? error.message : String(error),
           key: key,
