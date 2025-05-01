@@ -442,7 +442,7 @@
     },
     "packages/plugin-mysql": {
       "name": "@elizaos/plugin-mysql",
-      "version": "1.0.0-beta.37",
+      "version": "1.0.0-beta.41",
       "dependencies": {
         "@elizaos/core": "^1.0.0-beta.37",
         "drizzle-kit": "^0.30.4",

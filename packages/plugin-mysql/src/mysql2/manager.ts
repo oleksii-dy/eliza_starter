@@ -212,15 +212,6 @@ export class MySql2ConnectionManager implements IDatabaseClientManager<mysql.Poo
       }
     } catch (error) {
       logger.error('Failed to run database migrations (mysql):', error);
-      // Ensure connection is closed even on error
-      if (connection) {
-        try {
-          await connection.end();
-        } catch (closeError) {
-          logger.error('Failed to close migration connection after error:', closeError);
-        }
-      }
-      throw error;
     }
   }
 }

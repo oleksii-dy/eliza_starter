@@ -55,6 +55,7 @@ export function createDatabaseAdapter(
   },
   agentId: UUID
 ): IDatabaseAdapter {
+  logger.debug('Creating MySQL database adapter with config:', config);
   if (config.mysqlUrl) {
     if (!globalSingletons.mysqlConnectionManager) {
       globalSingletons.mysqlConnectionManager = new MySql2ConnectionManager(config.mysqlUrl);
@@ -85,6 +86,8 @@ const mysqlPlugin: Plugin = {
     const config = {
       mysqlUrl: runtime.getSetting('MYSQL_URL'),
     };
+
+    logger.debug('MySQL config:', config);
 
     try {
       const db = createDatabaseAdapter(config, runtime.agentId);
