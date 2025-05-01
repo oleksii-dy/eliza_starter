@@ -710,7 +710,7 @@ Optional NFT prompt
 
 > `optional` **extends**: `string`[]
 
-Optinal Parent characters to inherit information from
+Optional Parent characters to inherit information from
 
 ### twitterSpaces?
 
