@@ -40,13 +40,8 @@ describe('Cache Integration Tests', () => {
     adapter = new MySql2DatabaseAdapter(testAgentId, connectionManager);
     await adapter.init();
 
-    console.log('cacheTestAgentSettings', cacheTestAgentSettings);
-
     // Ensure the test agent exists
     await adapter.createAgent(cacheTestAgentSettings);
-
-    const fetchedAgent = await adapter.getAgent(testAgentId);
-    console.log('fetchedAgent', fetchedAgent);
   }, 5000);
 
   afterAll(async () => {
@@ -85,12 +80,10 @@ describe('Cache Integration Tests', () => {
       const { key, value } = testCacheEntries.stringValue;
 
       const result = await adapter.setCache(key, value);
-      console.log('result', result);
 
       expect(result).toBe(true);
 
       const dbResult = await adapter.getCache(key);
-      console.log('dbResult', dbResult);
       expect(dbResult).toBe(value);
     });
 

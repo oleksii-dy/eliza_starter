@@ -47,12 +47,12 @@ CREATE TABLE `embeddings` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
 	`memory_id` varchar(36),
 	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`dim_384` json,
-	`dim_512` json,
-	`dim_768` json,
-	`dim_1024` json,
-	`dim_1536` json,
-	`dim_3072` json,
+	`dim_384` vector(384),
+	`dim_512` vector(512),
+	`dim_768` vector(768),
+	`dim_1024` vector(1024),
+	`dim_1536` vector(1536),
+	`dim_3072` vector(3072),
 	CONSTRAINT `embeddings_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint

@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "22ea90ba-9c71-476e-b849-326192e50b0c",
+  "id": "401e9fae-d5a9-4f3b-8548-6638bbdf90b9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "agents": {
@@ -377,42 +377,42 @@
         },
         "dim_384": {
           "name": "dim_384",
-          "type": "json",
+          "type": "vector(384)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
         "dim_512": {
           "name": "dim_512",
-          "type": "json",
+          "type": "vector(512)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
         "dim_768": {
           "name": "dim_768",
-          "type": "json",
+          "type": "vector(768)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
         "dim_1024": {
           "name": "dim_1024",
-          "type": "json",
+          "type": "vector(1024)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
         "dim_1536": {
           "name": "dim_1536",
-          "type": "json",
+          "type": "vector(1536)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
         "dim_3072": {
           "name": "dim_3072",
-          "type": "json",
+          "type": "vector(3072)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

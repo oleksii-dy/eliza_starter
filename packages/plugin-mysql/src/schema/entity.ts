@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { json, mysqlTable, text, unique, varchar } from 'drizzle-orm/mysql-core';
+import { json, mysqlTable, unique, varchar } from 'drizzle-orm/mysql-core';
 import { agentTable } from './agent';
 import { numberTimestamp } from './types';
 import { InferSelectModel, InferInsertModel } from 'drizzle-orm';

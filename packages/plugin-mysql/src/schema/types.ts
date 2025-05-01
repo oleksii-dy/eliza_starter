@@ -1,4 +1,5 @@
 import { customType } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm'; // Import sql
 
 /**
  * Represents a custom type for converting a number to a timestamp string and vice versa.
@@ -23,5 +24,48 @@ export const numberTimestamp = customType<{ data: number; driverData: string }>(
   },
   fromDriver(value: string): number {
     return new Date(value).getTime();
+  },
+});
+
+/**
+ * Custom Drizzle type for MySQL's native VECTOR(N) type.
+ * - Represents VECTOR(N) in SQL.
+ * - Expects/provides Buffer for the driver (mysql2) representing Float32Array.
+ * - Maps to number[] in application code.
+ */
+export const mysqlVectorNative = customType<{
+  data: number[]; // How we use it in JS/TS
+  driverData: Buffer; // What mysql2 driver gives/expects for VECTOR
+  config: { dimensions: number }; // Required config to generate SQL
+  notNull: false;
+  default: false;
+}>({
+  dataType(config) {
+    if (!config?.dimensions) {
+      throw new Error('Vector dimensions must be provided in config');
+    }
+    // Generates the SQL type string e.g., "VECTOR(384)"
+    return `vector(${config.dimensions})`;
+  },
+  // map driver value (Array) -> number[]
+  fromDriver(value: unknown): number[] {
+    // Check if the received value is a valid array of numbers
+    if (Array.isArray(value) && value.length > 0 && value.every((v) => typeof v === 'number')) {
+      return value as number[]; // Cast and return the array
+    } else {
+      // Return empty array if it's not a valid array (or handle error appropriately)
+      return [];
+    }
+  },
+  // map application number[] -> SQL fragment for VECTOR
+  toDriver(value: number[]) {
+    if (!Array.isArray(value) || value.length === 0) {
+      // Return SQL NULL. Adjust if the column cannot be NULL.
+      return sql`NULL`;
+    }
+    // Convert number[] to JSON string '[num1, num2, ...]'
+    const vectorString = JSON.stringify(value);
+    // Return the SQL fragment using MySQL's STRING_TO_VECTOR function
+    return sql`STRING_TO_VECTOR(${vectorString})`;
   },
 });

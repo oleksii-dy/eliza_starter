@@ -267,16 +267,9 @@ export abstract class BaseDrizzleAdapter<
         // Convert from Core type to Drizzle schema type
         const drizzleAgent = mapToAgentRow(agent);
 
-        console.log('drizzleAgent', drizzleAgent);
-
-        let result = await this.db.transaction(async (tx) => {
-          console.log('inserting agent', drizzleAgent);
-          let res = await tx.insert(agentTable).values(drizzleAgent);
-          console.log('res', res);
-          return res;
+        await this.db.transaction(async (tx) => {
+          return await tx.insert(agentTable).values(drizzleAgent);
         });
-
-        console.log('result from db', result);
 
         logger.debug('Agent created successfully:', {
           agentId: agent.id,
@@ -345,7 +338,6 @@ export abstract class BaseDrizzleAdapter<
           return true;
         });
       } catch (error) {
-        console.log('Error updating agent:', error);
         logger.error('Error updating agent:', {
           error: error instanceof Error ? error.message : String(error),
           agentId,
@@ -1408,15 +1400,15 @@ export abstract class BaseDrizzleAdapter<
   }
 
   /**
-   * Asynchronously searches for memories in the database based on the provided parameters.
+   * Asynchronously searches for memories in the database based on the provided parameters using raw SQL.
    * @param {number[]} embedding - The embedding to search for.
    * @param {Object} params - The parameters for searching for memories.
-   * @param {number} [params.match_threshold] - The threshold for the cosine distance.
+   * @param {number} [params.match_threshold] - The threshold for the cosine similarity (0-1).
    * @param {number} [params.count] - The maximum number of memories to retrieve.
    * @param {UUID} [params.roomId] - The ID of the room to search for memories in.
    * @param {boolean} [params.unique] - Whether to retrieve unique memories only.
-   * @param {string} [params.tableName] - The name of the table to search for memories in.
-   * @returns {Promise<Memory[]>} A Promise that resolves to an array of memories.
+   * @param {string} params.tableName - The name of the table (memory type) to search for memories in.
+   * @returns {Promise<Memory[]>} A Promise that resolves to an array of memories with similarity scores.
    */
   async searchMemoriesByEmbedding(
     embedding: number[],
@@ -1430,53 +1422,117 @@ export abstract class BaseDrizzleAdapter<
   ): Promise<Memory[]> {
     return this.withDatabase(async () => {
       const cleanVector = embedding.map((n) => (Number.isFinite(n) ? Number(n.toFixed(6)) : 0));
+      const queryVectorString = JSON.stringify(cleanVector);
+      const count = params.count ?? 10;
 
-      const similarity = sql<number>`1 - (${cosineDistance(
-        embeddingTable[this.embeddingDimension],
-        cleanVector
-      )})`;
+      // Get the schema key (e.g., 'dim768')
+      const drizzleKey = this.embeddingDimension;
+      // Convert to the actual DB column name (e.g., 'dim_768')
+      const dbColumnName = drizzleKey.replace('dim', 'dim_');
+      const embeddingColumnName = sql.raw(dbColumnName); // Use the correct DB column name
 
-      const conditions = [eq(memoryTable.type, params.tableName)];
+      // Base parts of the query
+      const selectCols = sql`
+        m.id, m.type, m.createdAt, m.content, m.entityId, m.agentId, m.roomId, m.unique, m.metadata,
+        e.${embeddingColumnName} as embedding_vector,
+        (1 - (e.${embeddingColumnName} <=> STRING_TO_VECTOR(${queryVectorString}))) as similarity
+      `;
+      const fromClause = sql`FROM ${memoryTable} m INNER JOIN ${embeddingTable} e ON m.id = e.memory_id`;
 
-      if (params.unique) {
-        conditions.push(eq(memoryTable.unique, true));
-      }
-
-      conditions.push(eq(memoryTable.agentId, this.agentId));
+      // Build WHERE conditions dynamically and safely
+      const conditions = [
+        sql`m.type = ${params.tableName}`,
+        sql`m.agentId = ${this.agentId}`,
+        // Ensure the target dimension column is not null for the comparison
+        sql`e.${embeddingColumnName} IS NOT NULL`,
+      ];
 
       if (params.roomId) {
-        conditions.push(eq(memoryTable.roomId, params.roomId));
+        conditions.push(sql`m.roomId = ${params.roomId}`);
+      }
+      if (params.unique) {
+        conditions.push(sql`m.unique = true`);
+      }
+      if (params.match_threshold !== undefined) {
+        // Add the similarity threshold check directly in WHERE
+        const similarityCondition = sql`(1 - (e.${embeddingColumnName} <=> STRING_TO_VECTOR(${queryVectorString}))) >= ${params.match_threshold}`;
+        conditions.push(similarityCondition);
       }
 
-      if (params.match_threshold) {
-        conditions.push(gte(similarity, params.match_threshold));
-      }
+      const whereClause = sql`WHERE ${sql.join(conditions, sql` AND `)}`;
 
-      const results = await this.db
-        .select({
-          memory: memoryTable,
-          similarity,
-          embedding: embeddingTable[this.embeddingDimension],
-        })
-        .from(embeddingTable)
-        .innerJoin(memoryTable, eq(memoryTable.id, embeddingTable.memoryId))
-        .where(and(...conditions))
-        .orderBy(desc(similarity))
-        .limit(params.count ?? 10);
+      // Order and Limit
+      const orderByClause = sql`ORDER BY similarity DESC`;
+      const limitClause = sql`LIMIT ${count}`;
 
-      return results.map((row) => {
-        // Use mapping function to convert to core Memory type
-        const memory = mapToMemory(row.memory);
+      // Construct the full raw query using the sql tag
+      const rawQuery = sql`
+        SELECT ${selectCols}
+        ${fromClause}
+        ${whereClause}
+        ${orderByClause}
+        ${limitClause}
+      `;
 
-        // Add embedding and similarity score
-        if (row.embedding) {
-          memory.embedding = Array.from(row.embedding);
+      // Define the expected row structure
+      type QueryResultRow = {
+        id: string;
+        type: string;
+        createdAt: number | Date | string; // Adjust based on driver return type
+        content: string | object;
+        entityId: string | null;
+        agentId: string | null;
+        roomId: string | null;
+        unique: boolean | number; // Adjust based on driver return type
+        metadata: string | object;
+        embedding_vector: number[];
+        similarity: number;
+      };
+
+      try {
+        const results = await this.db.execute<QueryResultRow>(rawQuery);
+
+        // --- START EDIT ---
+        // Check if results is an array and has at least one element which is also an array (the data rows)
+        if (Array.isArray(results) && results.length > 0 && Array.isArray(results[0])) {
+          const dataRows = results[0] as QueryResultRow[]; // Get the actual data rows array
+
+          // Manually map results to Memory[]
+          return dataRows.map((row) => {
+            const content = typeof row.content === 'string' ? JSON.parse(row.content) : row.content;
+            const metadata =
+              typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata;
+            const unique = Boolean(row.unique); // Convert TINYINT(1) to boolean
+
+            const memory: Memory = {
+              id: row.id as UUID,
+              content: content,
+              entityId: (row.entityId as UUID) ?? undefined,
+              agentId: (row.agentId as UUID) ?? undefined,
+              roomId: (row.roomId as UUID) ?? undefined,
+              unique: unique,
+              metadata: metadata,
+              embedding: row.embedding_vector ? Array.from(row.embedding_vector) : undefined,
+              // Handle potential BigInt from database and ensure it's a number
+              similarity:
+                typeof row.similarity === 'bigint' ? Number(row.similarity) : row.similarity,
+            };
+            return memory;
+          });
+        } else {
+          // Handle unexpected results format or empty results
+          logger.warn('Unexpected format or empty result from raw memory search:', { results });
+          return [];
         }
-        memory.similarity = row.similarity;
-
-        return memory;
-      });
-    }, 'searchMemoriesByEmbedding');
+        // --- END EDIT ---
+      } catch (error) {
+        logger.error('Error executing raw memory search:', {
+          error: error instanceof Error ? error.message : String(error),
+          // Avoid logging the full query/vector string directly in production
+        });
+        throw error;
+      }
+    }, 'searchMemoriesByEmbedding [Raw]');
   }
 
   /**
@@ -1489,68 +1545,76 @@ export abstract class BaseDrizzleAdapter<
     memory: Memory & { metadata?: MemoryMetadata },
     tableName: string
   ): Promise<UUID> {
-    logger.debug('DrizzleAdapter createMemory:', {
-      memoryId: memory.id,
-      embeddingLength: memory.embedding?.length,
-      contentLength: memory.content?.text?.length,
-    });
-
-    const memoryId = memory.id ?? (v4() as UUID);
-
-    const existing = await this.getMemoryById(memoryId);
-    if (existing) {
-      logger.debug('Memory already exists, skipping creation:', {
-        memoryId,
+    try {
+      logger.debug('DrizzleAdapter createMemory:', {
+        memoryId: memory.id,
+        embeddingLength: memory.embedding?.length,
+        contentLength: memory.content?.text?.length,
       });
-      return memoryId;
-    }
 
-    let isUnique = true;
-    if (memory.embedding && Array.isArray(memory.embedding)) {
-      const similarMemories = await this.searchMemoriesByEmbedding(memory.embedding, {
-        tableName,
-        roomId: memory.roomId,
-        match_threshold: 0.95,
-        count: 1,
-      });
-      isUnique = similarMemories.length === 0;
-    }
+      const memoryId = memory.id ?? (v4() as UUID);
 
-    // Prepare the memory object with proper types and defaults
-    const memoryData: Partial<Memory> = {
-      ...memory,
-      id: memoryId,
-      unique: memory.unique ?? isUnique,
-    };
-
-    // Convert to database format using the mapping function
-    const memoryRow = mapToMemoryRow(memoryData, tableName);
-
-    await this.db.transaction(async (tx) => {
-      await tx.insert(memoryTable).values(memoryRow);
-
-      if (memory.embedding && Array.isArray(memory.embedding)) {
-        const cleanVector = memory.embedding.map((n) =>
-          Number.isFinite(n) ? Number(n.toFixed(6)) : 0
-        );
-
-        // Create embedding using the proper type system
-        const embeddingData: Partial<Embedding> = {
-          id: v4() as UUID,
-          memoryId: memoryId,
-          createdAt: memory.createdAt ?? Date.now(),
-        };
-
-        // Set the vector in the appropriate dimension field
-        embeddingData[this.embeddingDimension] = cleanVector;
-
-        // Convert to database format and insert
-        const drizzleEmbedding = mapToEmbeddingRow(embeddingData);
-        await tx.insert(embeddingTable).values([drizzleEmbedding]);
+      const existing = await this.getMemoryById(memoryId);
+      if (existing) {
+        logger.debug('Memory already exists, skipping creation:', {
+          memoryId,
+        });
+        return memoryId;
       }
-    });
 
-    return memoryId;
+      let isUnique = true;
+      if (memory.embedding && Array.isArray(memory.embedding)) {
+        const similarMemories = await this.searchMemoriesByEmbedding(memory.embedding, {
+          tableName,
+          roomId: memory.roomId,
+          match_threshold: 0.95,
+          count: 1,
+        });
+        isUnique = similarMemories.length === 0;
+      }
+
+      // Prepare the memory object with proper types and defaults
+      const memoryData: Partial<Memory> = {
+        ...memory,
+        id: memoryId,
+        unique: memory.unique ?? isUnique,
+      };
+
+      // Convert to database format using the mapping function
+      const memoryRow = mapToMemoryRow(memoryData, tableName);
+
+      await this.db.transaction(async (tx) => {
+        await tx.insert(memoryTable).values(memoryRow);
+
+        if (memory.embedding && Array.isArray(memory.embedding)) {
+          const cleanVector = memory.embedding.map((n) =>
+            Number.isFinite(n) ? Number(n.toFixed(6)) : 0
+          );
+
+          // Create embedding using the proper type system
+          const embeddingData: Partial<Embedding> = {
+            id: v4() as UUID,
+            memoryId: memoryId,
+            createdAt: memory.createdAt ?? Date.now(),
+          };
+
+          // Set the vector in the appropriate dimension field
+          embeddingData[this.embeddingDimension] = cleanVector;
+
+          // Convert to database format and insert
+          const drizzleEmbedding = mapToEmbeddingRow(embeddingData);
+          await tx.insert(embeddingTable).values(drizzleEmbedding);
+        }
+      });
+
+      return memoryId;
+    } catch (error) {
+      logger.error('Error creating memory:', {
+        error: error instanceof Error ? error.message : String(error),
+        memoryId: memory.id,
+      });
+      throw error;
+    }
   }
 
   /**
@@ -1691,7 +1755,8 @@ export abstract class BaseDrizzleAdapter<
       .where(
         and(
           eq(memoryTable.agentId, this.agentId),
-          sql`${memoryTable.metadata}->>'documentId' = ${documentId}`
+          // Use JSON_EXTRACT for potentially better compatibility
+          sql`JSON_UNQUOTE(JSON_EXTRACT(${memoryTable.metadata}, '$."documentId"')) = ${documentId}`
         )
       );
 
@@ -1822,19 +1887,23 @@ export abstract class BaseDrizzleAdapter<
   }: Room): Promise<UUID> {
     return this.withDatabase(async () => {
       const newRoomId = id || v4();
-      await this.db.insert(roomTable).values(
-        mapToRoomRow({
-          id: newRoomId,
-          name,
-          agentId,
-          source,
-          type,
-          channelId,
-          serverId,
-          worldId,
-          metadata,
-        })
-      );
+      await this.db
+        .insert(roomTable)
+        .values(
+          mapToRoomRow({
+            id: newRoomId,
+            name,
+            agentId,
+            source,
+            type,
+            channelId,
+            serverId,
+            worldId,
+            metadata,
+          })
+        )
+        // TODO: see if this is the best way to handle this
+        .onDuplicateKeyUpdate({ set: { id: newRoomId } });
       return newRoomId as UUID;
     }, 'createRoom');
   }
@@ -1931,18 +2000,16 @@ export abstract class BaseDrizzleAdapter<
   async removeParticipant(entityId: UUID, roomId: UUID): Promise<boolean> {
     return this.withDatabase(async () => {
       try {
-        const result = await this.db
+        await this.db
           .delete(participantTable)
-          .where(and(eq(participantTable.entityId, entityId), eq(participantTable.roomId, roomId)))
-          .returning();
+          .where(and(eq(participantTable.entityId, entityId), eq(participantTable.roomId, roomId)));
 
-        const removed = result.length > 0;
-        logger.debug(`Participant ${removed ? 'removed' : 'not found'}:`, {
+        logger.debug(`Participant removed:`, {
           entityId,
           roomId,
         });
 
-        return removed;
+        return true;
       } catch (error) {
         logger.error('Failed to remove participant:', {
           error: error instanceof Error ? error.message : String(error),
@@ -2199,12 +2266,12 @@ export abstract class BaseDrizzleAdapter<
 
         // Filter by tags if provided
         if (params.tags && params.tags.length > 0) {
-          // Filter by tags - find tasks that have ALL of the specified tags
-          // Using @> operator which checks if left array contains all elements from right array
-          const tagParams = params.tags.map((tag) => `'${tag.replace(/'/g, "''")}'`).join(', ');
-          query = query.where(
-            sql`${relationshipTable.tags} @> ARRAY[${sql.raw(tagParams)}]::text[]`
+          // Using JSON_CONTAINS to check if the tags JSON array contains all specified tags
+          const tagConditions = params.tags.map(
+            (tag) => sql`JSON_CONTAINS(${relationshipTable.tags}, ${JSON.stringify(tag)})`
           );
+          // Combine all tag conditions with AND
+          query = query.where(and(...tagConditions));
         }
 
         const results = await query;
@@ -2283,7 +2350,6 @@ export abstract class BaseDrizzleAdapter<
         });
         return true;
       } catch (error) {
-        console.log('Error setting cache:', error);
         logger.error('Error setting cache', {
           error: error instanceof Error ? error.message : String(error),
           key: key,
@@ -2409,12 +2475,13 @@ export abstract class BaseDrizzleAdapter<
       if (!taskRow.createdAt) taskRow.createdAt = new Date();
       if (!taskRow.updatedAt) taskRow.updatedAt = new Date();
 
-      const result = await this.db
-        .insert(taskTable)
-        .values(taskRow)
-        .returning({ id: taskTable.id });
+      await this.db.insert(taskTable).values(taskRow);
 
-      return result[0].id;
+      // Return the ID that was passed in, as MySQL insert doesn't reliably return it via Drizzle standard API
+      if (!task.id) {
+        logger.warn('Task ID is missing during creation, cannot return ID.');
+      }
+      return task.id as UUID;
     }, 'createTask');
   }
 
@@ -2434,9 +2501,11 @@ export abstract class BaseDrizzleAdapter<
 
       if (params.tags && params.tags.length > 0) {
         // Filter by tags - find tasks that have ALL of the specified tags
-        // Using @> operator which checks if left array contains all elements from right array
+        // Using JSON_CONTAINS for MySQL compatibility
         const tagParams = params.tags.map((tag) => `'${tag.replace(/'/g, "''")}'`).join(', ');
-        query = query.where(sql`${taskTable.tags} @> ARRAY[${sql.raw(tagParams)}]::text[]`);
+        query = query.where(
+          sql`JSON_CONTAINS(${taskTable.tags}, JSON_ARRAY(${sql.raw(tagParams)}))`
+        );
       }
 
       const result = await query;

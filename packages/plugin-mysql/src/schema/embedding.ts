@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
-import { check, foreignKey, index, json, mysqlTable, varchar } from 'drizzle-orm/mysql-core';
+import { foreignKey, index, mysqlTable, varchar } from 'drizzle-orm/mysql-core';
+import { mysqlVectorNative } from './types';
 import { VECTOR_DIMS } from '@elizaos/core';
 import { memoryTable } from './memory';
 import { numberTimestamp } from './types';
@@ -17,10 +18,8 @@ export const DIMENSION_MAP = {
 
 /**
  * Definition of the embeddings table in the database.
- * Contains columns for ID, Memory ID, Creation Timestamp, and multiple vector dimensions.
- *
- * Note: MySQL doesn't have a native vector type, so we're using JSON to store vectors.
- * Vector search functionality will need to be implemented at the application level.
+ * Contains columns for ID, Memory ID, Creation Timestamp, and multiple vector dimensions
+ * stored in JSON columns using a custom type for handling.
  */
 export const embeddingTable = mysqlTable(
   'embeddings',
@@ -33,13 +32,13 @@ export const embeddingTable = mysqlTable(
     createdAt: numberTimestamp('created_at')
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    // MySQL doesn't have a vector type, using JSON arrays instead
-    dim384: json('dim_384').$type<number[]>(),
-    dim512: json('dim_512').$type<number[]>(),
-    dim768: json('dim_768').$type<number[]>(),
-    dim1024: json('dim_1024').$type<number[]>(),
-    dim1536: json('dim_1536').$type<number[]>(),
-    dim3072: json('dim_3072').$type<number[]>(),
+    // Use the custom type for each dimension column
+    dim384: mysqlVectorNative('dim_384', { dimensions: 384 }),
+    dim512: mysqlVectorNative('dim_512', { dimensions: 512 }),
+    dim768: mysqlVectorNative('dim_768', { dimensions: 768 }),
+    dim1024: mysqlVectorNative('dim_1024', { dimensions: 1024 }),
+    dim1536: mysqlVectorNative('dim_1536', { dimensions: 1536 }),
+    dim3072: mysqlVectorNative('dim_3072', { dimensions: 3072 }),
   },
   (table) => [
     // MySQL doesn't support check constraints in the same way as PostgreSQL

@@ -74,7 +74,7 @@ describe('Agent Integration Tests', () => {
   });
 
   describe('createAgent', () => {
-    it.only('should successfully create an agent', async () => {
+    it('should successfully create an agent', async () => {
       const newAgent = {
         ...testAgent,
         id: uuidv4() as UUID,
