@@ -91,7 +91,7 @@ export class UserEnvironment {
     try {
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
-      const packageJsonPath = path.resolve(__dirname, '../../package.json');
+      const packageJsonPath = path.resolve(__dirname, '../package.json');
 
       if (!existsSync(packageJsonPath)) {
         throw new Error(`CLI package.json not found at ${packageJsonPath}`);
