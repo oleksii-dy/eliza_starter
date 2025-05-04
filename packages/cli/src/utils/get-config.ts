@@ -1,10 +1,10 @@
 import { promises as fs, existsSync } from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import dotenv from 'dotenv';
 import { z } from 'zod';
 import prompts from 'prompts';
 import { logger, stringToUuid } from '@elizaos/core';
+import { UserEnvironment } from './user-environment';
 
 // Database config schemas
 const postgresConfigSchema = z.object({
@@ -45,8 +45,13 @@ export function isValidPostgresUrl(url: string): boolean {
  * Gets the standard Eliza directories
  * @returns Object containing standard directory paths
  */
-export function getElizaDirectories() {
-  const homeDir = os.homedir();
+export async function getElizaDirectories() {
+  const userEnv = UserEnvironment.getInstance();
+  const envInfo = await userEnv.getInfo();
+  const homeDir = envInfo.os.homedir;
+
+  logger.debug('[Config] Using home directory:', homeDir);
+
   const elizaDir = path.join(homeDir, '.eliza');
   const elizaDbDir = path.join(elizaDir, 'projects', stringToUuid(process.cwd()), 'db');
   const envFilePath = path.join(elizaDir, '.env');
@@ -86,7 +91,7 @@ async function ensureFile(filePath: string) {
  * @returns The eliza directories object
  */
 export async function ensureElizaDir() {
-  const dirs = getElizaDirectories();
+  const dirs = await getElizaDirectories();
   await ensureDir(dirs.elizaDir);
   return dirs;
 }
@@ -319,8 +324,7 @@ export async function resolveConfigPaths(cwd: string, config: RawConfig) {
  */
 export async function loadEnvironment(projectDir: string = process.cwd()): Promise<void> {
   const projectEnvPath = path.join(projectDir, '.env');
-  const globalEnvDir = path.join(os.homedir(), '.eliza');
-  const globalEnvPath = path.join(globalEnvDir, '.env');
+  const { elizaDir: globalEnvDir, envFilePath: globalEnvPath } = await getElizaDirectories();
 
   // First try loading from project directory
   if (existsSync(projectEnvPath)) {
@@ -337,5 +341,7 @@ export async function loadEnvironment(projectDir: string = process.cwd()): Promi
   // Ensure global env directory and file exist
   await ensureDir(globalEnvDir);
   await ensureFile(globalEnvPath);
-  await fs.writeFile(globalEnvPath, '# Global environment variables for Eliza\n', { encoding: 'utf8' })
+  await fs.writeFile(globalEnvPath, '# Global environment variables for Eliza\n', {
+    encoding: 'utf8',
+  });
 }

@@ -1,5 +1,5 @@
 import { handleError } from '@/src/utils/handle-error';
-import { stringToUuid } from '@elizaos/core';
+import { stringToUuid, logger } from '@elizaos/core';
 import { Command } from 'commander';
 import dotenv from 'dotenv';
 import { existsSync } from 'node:fs';
@@ -9,6 +9,7 @@ import path from 'node:path';
 import prompts from 'prompts';
 import { rimraf } from 'rimraf';
 import colors from 'yoctocolors';
+import { UserEnvironment } from '../utils/user-environment';
 
 // Path to store the custom env path setting in the config.json file
 const CONFIG_FILE = path.join(os.homedir(), '.eliza', 'config.json');
@@ -180,37 +181,44 @@ async function writeEnvFile(filePath: string, envVars: Record<string, string>): 
  * List all environment variables from both global and local .env files
  */
 async function listEnvVars(): Promise<void> {
+  const userEnv = UserEnvironment.getInstance();
+  const envInfo = await userEnv.getInfo();
   const globalEnvPath = await getGlobalEnvPath();
   const localEnvPath = getLocalEnvPath();
 
-  const globalEnvVars = await parseEnvFile(globalEnvPath);
-  const localEnvVars = localEnvPath ? await parseEnvFile(localEnvPath) : {};
+  // Display system information
+  console.info(colors.bold('\nSystem Information:'));
+  console.info(`  Platform: ${colors.cyan(envInfo.os.platform)} (${envInfo.os.release})`);
+  console.info(`  Architecture: ${colors.cyan(envInfo.os.arch)}`);
+  console.info(`  CLI Version: ${colors.cyan(envInfo.cli.version)}`);
+  console.info(
+    `  Package Manager: ${colors.cyan(envInfo.packageManager.name)}${envInfo.packageManager.version ? ` v${envInfo.packageManager.version}` : ''}`
+  );
 
-  const customPath = await getCustomEnvPath();
-  const globalEnvLabel = customPath
-    ? `Global environment variables (custom path: ${customPath})`
-    : 'Global environment variables (.eliza/.env)';
+  console.info(colors.bold('\nGlobal Environment Variables:'));
+  console.info(`Path: ${globalEnvPath}`);
 
-  console.info(colors.bold(`\n${globalEnvLabel}:`));
-  if (Object.keys(globalEnvVars).length === 0) {
+  if (!existsSync(globalEnvPath)) {
     console.info('  No global environment variables set');
   } else {
+    const globalEnvVars = await parseEnvFile(globalEnvPath);
     for (const [key, value] of Object.entries(globalEnvVars)) {
       console.info(`  ${colors.green(key)}: ${maskedValue(value)}`);
     }
   }
 
   if (localEnvPath) {
-    console.info(colors.bold('\nLocal environment variables (.env):'));
-    if (Object.keys(localEnvVars).length === 0) {
+    console.info(colors.bold('\nLocal Environment Variables:'));
+    console.info(`Path: ${localEnvPath}`);
+
+    if (!existsSync(localEnvPath)) {
       console.info('  No local environment variables set');
     } else {
+      const localEnvVars = await parseEnvFile(localEnvPath);
       for (const [key, value] of Object.entries(localEnvVars)) {
         console.info(`  ${colors.green(key)}: ${maskedValue(value)}`);
       }
     }
-  } else {
-    console.info(colors.bold('\nNo local .env file found in the current directory'));
   }
 
   console.info('\n');

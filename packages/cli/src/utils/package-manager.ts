@@ -3,6 +3,7 @@ import process from 'node:process';
 import { execa } from 'execa';
 import type { ExecaChildProcess, ExecaReturnValue } from 'execa';
 import { logger } from '@elizaos/core';
+import { UserEnvironment } from './user-environment';
 
 // DO NOT USE IT FOR PLUGIN INSTALLATION
 /**
@@ -47,17 +48,14 @@ export function isRunningViaBunx(): boolean {
 
 /**
  * Determine which package manager should be used
- * @returns {string} - The package manager to use ('npm' or 'bun')
+ * @returns {Promise<string>} - The package manager to use ('npm', 'yarn', 'pnpm', or 'bun')
  */
-export function getPackageManager(): string {
-  if (isRunningViaNpx()) {
-    return 'npm';
-  } else if (isRunningViaBunx()) {
-    return 'bun';
-  }
+export async function getPackageManager(): Promise<string> {
+  const userEnv = UserEnvironment.getInstance();
+  const envInfo = await userEnv.getInfo();
 
-  // Default to bun if we can't determine
-  return 'bun';
+  logger.debug('[PackageManager] Detecting package manager');
+  return envInfo.packageManager.name === 'unknown' ? 'bun' : envInfo.packageManager.name;
 }
 
 /**
@@ -96,7 +94,7 @@ export async function executeInstallation(
   } = { tryNpm: true, tryGithub: true, tryMonorepo: false }
 ): Promise<{ success: boolean; installedIdentifier: string | null }> {
   // Determine which package manager to use
-  const packageManager = getPackageManager();
+  const packageManager = await getPackageManager();
   const installCommand = getInstallCommand(packageManager, false);
 
   logger.info(`Attempting to install package: ${packageName} using ${packageManager}`);
