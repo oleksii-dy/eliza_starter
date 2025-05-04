@@ -120,9 +120,6 @@ export async function installPlugin(
   // Get installation context info
   const cliDir = getCliDirectory();
 
-  // Let package manager handle version format
-  const versionString = versionSpecifier ? `@${versionSpecifier}` : '';
-
   // Simplified installation options
   const installOptions = {
     tryNpm: true,
@@ -134,7 +131,7 @@ export async function installPlugin(
   };
 
   // Try installation in the current directory with determined approaches
-  if (await attemptInstallation(packageName, versionString, cwd, ':', installOptions)) {
+  if (await attemptInstallation(packageName, versionSpecifier || '', cwd, ':', installOptions)) {
     return true;
   }
 
@@ -143,7 +140,7 @@ export async function installPlugin(
     if (
       await attemptInstallation(
         packageName,
-        versionString,
+        versionSpecifier || '',
         cliDir,
         'in CLI directory',
         installOptions

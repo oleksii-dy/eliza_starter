@@ -1,13 +1,12 @@
 import { handleError } from '@/src/utils/handle-error';
+import { logHeader } from '@/src/utils/helpers';
 import { installPlugin } from '@/src/utils/install-plugin';
 import { getPluginRepository } from '@/src/utils/registry/index';
 import { logger } from '@elizaos/core';
 import { Command } from 'commander';
 import { execa } from 'execa';
-import path from 'node:path';
 import fs from 'node:fs';
-import { logHeader } from '@/src/utils/helpers';
-import { isRunningViaNpx } from '@/src/utils/package-manager';
+import path from 'node:path';
 import { getVersion } from '../utils/displayBanner';
 
 // --- Helper Functions ---
@@ -164,6 +163,7 @@ plugins
     'Branch to install from when using monorepo source',
     'v2-develop'
   )
+  .option('-t, --tag <tagname>', 'Specify a tag to install (e.g., beta)')
   .action(async (plugin, opts) => {
     const cwd = process.cwd();
     const pkgData = readPackageJson(cwd);
@@ -222,7 +222,7 @@ plugins
       }
 
       console.info(`Installing ${repo}...`);
-      success = await installPlugin(repo, cwd, undefined, opts.branch);
+      success = await installPlugin(repo, cwd, opts.tag, opts.branch);
 
       if (success) {
         console.log(`Successfully installed ${repo}`);
