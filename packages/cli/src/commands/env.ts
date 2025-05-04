@@ -178,7 +178,9 @@ async function writeEnvFile(filePath: string, envVars: Record<string, string>): 
 }
 
 /**
- * List all environment variables from both global and local .env files
+ * Displays system information and lists environment variables from global and local `.env` files.
+ *
+ * Prints platform, architecture, CLI version, and package manager details, followed by environment variables from the global and local scopes with sensitive values masked. Indicates if no variables are set and provides a link to the web UI for editing.
  */
 async function listEnvVars(): Promise<void> {
   const userEnv = UserEnvironment.getInstance();
