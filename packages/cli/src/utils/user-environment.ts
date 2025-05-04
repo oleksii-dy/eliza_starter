@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { logger } from '@elizaos/core';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 
 // Types
 interface OSInfo {
@@ -34,6 +34,7 @@ interface PathInfo {
   envFilePath: string;
   configPath: string;
   pluginsDir: string;
+  monorepoRoot: string | null;
 }
 
 interface EnvInfo {
@@ -200,15 +201,51 @@ export class UserEnvironment {
   /**
    * Gets all environment information
    */
+  /**
+   * Finds the monorepo root by traversing upwards from a starting directory,
+   * looking for a marker directory ('packages/core').
+   *
+   * @param startDir The directory to start searching from.
+   * @returns The path to the monorepo root if found, otherwise null.
+   */
+  private findMonorepoRoot(startDir: string): string | null {
+    let currentDir = path.resolve(startDir);
+    while (true) {
+      const corePackagePath = path.join(currentDir, 'packages', 'core');
+      if (existsSync(corePackagePath)) {
+        // Check if 'packages/core' itself exists and is a directory
+        try {
+          const stats = statSync(corePackagePath);
+          if (stats.isDirectory()) {
+            return currentDir; // Found the root containing 'packages/core'
+          }
+        } catch (e) {
+          // Ignore errors like permission denied, continue search
+        }
+      }
+
+      const parentDir = path.dirname(currentDir);
+      if (parentDir === currentDir) {
+        // Reached the filesystem root
+        return null;
+      }
+      currentDir = parentDir;
+    }
+  }
+
   private async getPathInfo(): Promise<PathInfo> {
     const homedir = os.homedir();
     const elizaDir = path.join(homedir, '.eliza');
+    const monorepoRoot = this.findMonorepoRoot(process.cwd());
+
+    logger.debug('[UserEnvironment] Detected monorepo root:', monorepoRoot || 'Not in monorepo');
 
     return {
       elizaDir,
       envFilePath: path.join(elizaDir, '.env'),
       configPath: path.join(elizaDir, 'config.json'),
       pluginsDir: path.join(elizaDir, 'plugins'),
+      monorepoRoot,
     };
   }
 
