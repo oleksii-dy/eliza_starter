@@ -5,6 +5,7 @@ import * as semver from 'semver';
 import { fileURLToPath } from 'node:url';
 import { logger } from '@elizaos/core';
 import { existsSync, statSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 
 // Types
 interface OSInfo {
@@ -184,12 +185,25 @@ export class UserEnvironment {
       );
     }
 
-    const cliPath = process.argv[1];
-    const isGlobal =
-      cliPath?.includes('/usr/local/') ||
-      cliPath?.includes('/usr/bin/') ||
-      process.env.NODE_ENV === 'global' ||
-      (cliPath && process.cwd().indexOf(path.dirname(cliPath)) !== 0);
+    const packageName = '@elizaos/cli'; // Define package name
+    let isGlobalCheck = false;
+    try {
+      // Check if running via npx/bunx first, as these might trigger global check falsely
+      if (!isNpx && !isBunx) {
+        // Execute `npm ls -g --depth=0 <packageName>`.
+        // If the package is installed globally, the command succeeds (exit code 0).
+        // If not, it fails (non-zero exit code), triggering the catch block.
+        // Use stdio: 'ignore' to suppress output.
+        execSync(`npm ls -g --depth=0 ${packageName}`, { stdio: 'ignore' });
+        isGlobalCheck = true;
+      }
+    } catch (error) {
+      // npm ls exits with error if package not found globally
+      isGlobalCheck = false;
+    }
+
+    // Combine npm check with NODE_ENV check
+    const isGlobal = isGlobalCheck || process.env.NODE_ENV === 'global';
 
     return {
       name: detectedPM,
@@ -200,9 +214,6 @@ export class UserEnvironment {
     };
   }
 
-  /**
-   * Gets all environment information
-   */
   /**
    * Finds the monorepo root by traversing upwards from a starting directory,
    * looking for a marker directory ('packages/core').
