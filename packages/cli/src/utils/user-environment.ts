@@ -35,6 +35,7 @@ interface PathInfo {
   configPath: string;
   pluginsDir: string;
   monorepoRoot: string | null;
+  packageJsonPath: string;
 }
 
 interface EnvInfo {
@@ -233,7 +234,7 @@ export class UserEnvironment {
     }
   }
 
-  private async getPathInfo(): Promise<PathInfo> {
+  public async getPathInfo(): Promise<PathInfo> {
     const homedir = os.homedir();
     const elizaDir = path.join(homedir, '.eliza');
     const monorepoRoot = this.findMonorepoRoot(process.cwd());
@@ -246,6 +247,7 @@ export class UserEnvironment {
       configPath: path.join(elizaDir, 'config.json'),
       pluginsDir: path.join(elizaDir, 'plugins'),
       monorepoRoot,
+      packageJsonPath: path.join(process.cwd(), 'package.json'),
     };
   }
 
@@ -286,5 +288,81 @@ export class UserEnvironment {
    */
   public clearCache(): void {
     this.cachedInfo = null;
+  }
+
+  /**
+   * Gets the version of a specified package from monorepo, local dependencies, or npm
+   */
+  public async getPackageVersion(packageName: string): Promise<string> {
+    try {
+      const { monorepoRoot } = await this.getPathInfo();
+
+      // Try monorepo first if available
+      if (monorepoRoot) {
+        const monoRepoPackagePath = path.join(
+          monorepoRoot,
+          'packages',
+          packageName.replace('@elizaos/', ''),
+          'package.json'
+        );
+
+        if (existsSync(monoRepoPackagePath)) {
+          const packageJson = JSON.parse(await fs.readFile(monoRepoPackagePath, 'utf8'));
+          if (packageJson.version) return packageJson.version;
+        }
+      }
+
+      // Check CLI package dependencies
+      const cliInfo = await this.getCLIInfo();
+      const cliDir = path.dirname(cliInfo.path);
+      const cliPackagePath = path.join(cliDir, 'package.json');
+
+      if (existsSync(cliPackagePath)) {
+        const packageJson = JSON.parse(await fs.readFile(cliPackagePath, 'utf8'));
+        if (packageJson.dependencies?.[packageName]) {
+          return packageJson.dependencies[packageName].replace('^', '');
+        }
+      }
+
+      // Try npm as last resort
+      try {
+        const { execa } = await import('execa');
+        const { stdout } = await execa('npm', ['view', packageName, 'version']);
+        if (stdout?.trim()) {
+          logger.info(`Found latest version of ${packageName} from npm: ${stdout.trim()}`);
+          return stdout.trim();
+        }
+      } catch (npmError) {
+        logger.warn(`Could not get latest version from npm: ${npmError}`);
+      }
+
+      return '0.25.9'; // Default fallback
+    } catch (error) {
+      logger.warn(`Error getting package version for ${packageName}: ${error}`);
+      return '0.25.9';
+    }
+  }
+
+  /**
+   * Get local packages available in the monorepo
+   */
+  public async getLocalPackages(): Promise<string[]> {
+    const { monorepoRoot } = await this.getPathInfo();
+    if (!monorepoRoot) return [];
+
+    try {
+      const packagesDirEntries = await fs.readdir(path.join(monorepoRoot, 'packages'), {
+        withFileTypes: true,
+      });
+
+      const pluginPackages = packagesDirEntries
+        .filter((entry) => entry.isDirectory() && entry.name.startsWith('plugin-'))
+        .map((entry) => `@elizaos/${entry.name}`);
+
+      return pluginPackages;
+    } catch (error) {
+      logger.warn(`Error getting local packages: ${error}`);
+      return [];
+    }
   }
 }
