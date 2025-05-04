@@ -2,17 +2,9 @@ name: Eliza CLI Tests
 
 on:
   push:
-    paths:
-      - 'packages/cli/**'
-      - 'packages/core/**'
-      - 'packages/plugin-bootstrap/**'
-      - '.github/workflows/cli-tests.yml'
   pull_request:
-    paths:
-      - 'packages/cli/**'
-      - 'packages/core/**'
-      - 'packages/plugin-bootstrap/**'
-      - '.github/workflows/cli-tests.yml'
+    branches:
+      - 'v2-develop'
 
 jobs:
   test:

@@ -122,7 +122,23 @@ function getSetting(
  */
 function getBaseURL(runtime: IAgentRuntime): string {
   const defaultBaseURL = getSetting(runtime, 'OPENAI_BASE_URL', 'https://api.openai.com/v1');
+  logger.debug(`[OpenAI] Default base URL: ${defaultBaseURL}`);
   return getProviderBaseURL(runtime, 'openai', defaultBaseURL);
+}
+
+/**
+ * Retrieves the OpenAI API base URL for embeddings, falling back to the general base URL.
+ *
+ * @returns The resolved base URL for OpenAI embedding requests.
+ */
+function getEmbeddingBaseURL(runtime: IAgentRuntime): string {
+  const embeddingURL = getSetting(runtime, 'OPENAI_EMBEDDING_URL');
+  if (embeddingURL) {
+    logger.debug(`[OpenAI] Using specific embedding base URL: ${embeddingURL}`);
+    return embeddingURL;
+  }
+  logger.debug('[OpenAI] Falling back to general base URL for embeddings.');
+  return getBaseURL(runtime);
 }
 
 /**
@@ -214,6 +230,7 @@ async function generateObjectByModelType(
 ): Promise<JSONValue> {
   const openai = createOpenAIClient(runtime);
   const modelName = getModelFn(runtime);
+  logger.log(`[OpenAI] Using ${modelType} model: ${modelName}`);
   const temperature = params.temperature ?? 0;
   const schemaPresent = !!params.schema;
 
@@ -430,6 +447,7 @@ export const openaiPlugin: Plugin = {
     SMALL_MODEL: process.env.SMALL_MODEL,
     LARGE_MODEL: process.env.LARGE_MODEL,
     OPENAI_EMBEDDING_MODEL: process.env.OPENAI_EMBEDDING_MODEL,
+    OPENAI_EMBEDDING_URL: process.env.OPENAI_EMBEDDING_URL,
     OPENAI_EMBEDDING_DIMENSIONS: process.env.OPENAI_EMBEDDING_DIMENSIONS,
   },
   async init(_config, runtime) {
@@ -481,6 +499,11 @@ export const openaiPlugin: Plugin = {
         10
       ) as (typeof VECTOR_DIMS)[keyof typeof VECTOR_DIMS];
 
+      // Added log for specific embedding model
+      logger.debug(
+        `[OpenAI] Using embedding model: ${embeddingModelName} with dimension: ${embeddingDimension}`
+      );
+
       if (!Object.values(VECTOR_DIMS).includes(embeddingDimension)) {
         const errorMsg = `Invalid embedding dimension: ${embeddingDimension}. Must be one of: ${Object.values(VECTOR_DIMS).join(', ')}`;
         logger.error(errorMsg);
@@ -521,7 +544,7 @@ export const openaiPlugin: Plugin = {
       return startLlmSpan(runtime, 'LLM.embedding', attributes, async (span) => {
         span.addEvent('llm.prompt', { 'prompt.content': text });
 
-        const baseURL = getBaseURL(runtime);
+        const embeddingBaseURL = getEmbeddingBaseURL(runtime);
         const apiKey = getApiKey(runtime);
 
         if (!apiKey) {
@@ -533,7 +556,7 @@ export const openaiPlugin: Plugin = {
         }
 
         try {
-          const response = await fetch(`${baseURL}/embeddings`, {
+          const response = await fetch(`${embeddingBaseURL}/embeddings`, {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${apiKey}`,
@@ -587,6 +610,14 @@ export const openaiPlugin: Plugin = {
               'llm.usage.prompt_tokens': data.usage.prompt_tokens,
               'llm.usage.total_tokens': data.usage.total_tokens,
             });
+            
+            const usage = {
+              promptTokens: data.usage.prompt_tokens,
+              completionTokens: 0,
+              totalTokens: data.usage.total_tokens
+            };
+            
+            emitModelUsageEvent(runtime, ModelType.TEXT_EMBEDDING, text, usage);
           }
 
           logger.log(`Got valid embedding with length ${embedding.length}`);
@@ -627,7 +658,7 @@ export const openaiPlugin: Plugin = {
       const openai = createOpenAIClient(runtime);
       const modelName = getSmallModel(runtime);
 
-      logger.log('generating text');
+      logger.log(`[OpenAI] Using TEXT_SMALL model: ${modelName}`);
       logger.log(prompt);
 
       const attributes = {
@@ -687,7 +718,7 @@ export const openaiPlugin: Plugin = {
       const openai = createOpenAIClient(runtime);
       const modelName = getLargeModel(runtime);
 
-      logger.log('generating text');
+      logger.log(`[OpenAI] Using TEXT_LARGE model: ${modelName}`);
       logger.log(prompt);
 
       const attributes = {
@@ -744,6 +775,8 @@ export const openaiPlugin: Plugin = {
       const n = params.n || 1;
       const size = params.size || '1024x1024';
       const prompt = params.prompt;
+      const modelName = 'dall-e-3'; // Default DALL-E model
+      logger.log(`[OpenAI] Using IMAGE model: ${modelName}`);
 
       const attributes = {
         'llm.vendor': 'OpenAI',
@@ -819,6 +852,7 @@ export const openaiPlugin: Plugin = {
       let imageUrl: string;
       let promptText: string | undefined;
       const modelName = 'gpt-4o-mini';
+      logger.log(`[OpenAI] Using IMAGE_DESCRIPTION model: ${modelName}`);
       const maxTokens = 300;
 
       if (typeof params === 'string') {
@@ -921,6 +955,15 @@ export const openaiPlugin: Plugin = {
               'llm.usage.completion_tokens': typedResult.usage.completion_tokens,
               'llm.usage.total_tokens': typedResult.usage.total_tokens,
             });
+            
+            emitModelUsageEvent(runtime, ModelType.IMAGE_DESCRIPTION, 
+              typeof params === 'string' ? params : params.prompt || '',
+              {
+                promptTokens: typedResult.usage.prompt_tokens,
+                completionTokens: typedResult.usage.completion_tokens,
+                totalTokens: typedResult.usage.total_tokens
+              }
+            );
           }
           if (typedResult.choices?.[0]?.finish_reason) {
             span.setAttribute('llm.response.finish_reason', typedResult.choices[0].finish_reason);
@@ -964,6 +1007,7 @@ export const openaiPlugin: Plugin = {
       logger.log('audioBuffer', audioBuffer);
 
       const modelName = 'whisper-1';
+      logger.log(`[OpenAI] Using TRANSCRIPTION model: ${modelName}`);
       const attributes = {
         'llm.vendor': 'OpenAI',
         'llm.request.type': 'transcription',
@@ -1043,13 +1087,15 @@ export const openaiPlugin: Plugin = {
       });
     },
     [ModelType.TEXT_TO_SPEECH]: async (runtime: IAgentRuntime, text: string) => {
+      const ttsModelName = getSetting(runtime, 'OPENAI_TTS_MODEL', 'gpt-4o-mini-tts');
       const attributes = {
         'llm.vendor': 'OpenAI',
         'llm.request.type': 'tts',
-        'llm.request.model': getSetting(runtime, 'OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
+        'llm.request.model': ttsModelName,
         'input.text.length': text.length,
       };
       return startLlmSpan(runtime, 'LLM.tts', attributes, async (span) => {
+        logger.log(`[OpenAI] Using TEXT_TO_SPEECH model: ${ttsModelName}`);
         span.addEvent('llm.prompt', { 'prompt.content': text });
         try {
           const speechStream = await fetchTextToSpeech(runtime, text);
