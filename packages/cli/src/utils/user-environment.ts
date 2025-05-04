@@ -1,6 +1,7 @@
 import os from 'node:os';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import * as semver from 'semver';
 import { fileURLToPath } from 'node:url';
 import { logger } from '@elizaos/core';
 import { existsSync, statSync } from 'node:fs';
@@ -319,8 +320,17 @@ export class UserEnvironment {
 
       if (existsSync(cliPackagePath)) {
         const packageJson = JSON.parse(await fs.readFile(cliPackagePath, 'utf8'));
-        if (packageJson.dependencies?.[packageName]) {
-          return packageJson.dependencies[packageName].replace('^', '');
+        const versionRange = packageJson.dependencies?.[packageName];
+        if (versionRange) {
+          const minVer = semver.minVersion(versionRange);
+          if (minVer) {
+            return minVer.version; // Use the parsed minimum version
+          } else {
+            logger.warn(
+              `Could not parse semver range '${versionRange}' for package ${packageName}. Falling back to original string.`
+            );
+            return versionRange; // Fallback to original string if parsing fails
+          }
         }
       }
 
