@@ -163,7 +163,7 @@ plugins
     'Branch to install from when using monorepo source',
     'v2-develop'
   )
-  .option('-t, --tag <tagname>', 'Specify a tag to install (e.g., beta)')
+  .option('-T, --tag <tagname>', 'Specify a tag to install (e.g., beta)')
   .action(async (plugin, opts) => {
     const cwd = process.cwd();
     const pkgData = readPackageJson(cwd);
