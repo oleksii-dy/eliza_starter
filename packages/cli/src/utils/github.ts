@@ -533,7 +533,11 @@ export async function getAuthenticatedUser(token: string): Promise<GitHubUserRes
 }
 
 /**
- * Get GitHub credentials from env or prompt the user
+ * Retrieves GitHub credentials from the environment, registry, or user prompt.
+ *
+ * Attempts to obtain a valid GitHub username and personal access token by first checking environment variables, then a stored registry, and finally prompting the user if necessary. Validates the token before returning credentials.
+ *
+ * @returns An object containing the GitHub username and token if valid credentials are found or provided, otherwise `null`.
  */
 export async function getGitHubCredentials(): Promise<{
   username: string;
@@ -640,7 +644,9 @@ export async function getGitHubCredentials(): Promise<{
 }
 
 /**
- * Save GitHub credentials to the .env file
+ * Saves the provided GitHub username and token to the `.env` file in the user's `.eliza` directory.
+ *
+ * Updates or adds the `GITHUB_USERNAME` and `GITHUB_TOKEN` entries in the file and sets them in the current process environment.
  */
 export async function saveGitHubCredentials(username: string, token: string): Promise<void> {
   const userEnv = UserEnvironment.getInstance();

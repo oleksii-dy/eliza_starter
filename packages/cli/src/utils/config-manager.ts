@@ -15,7 +15,9 @@ interface AgentConfig {
 }
 
 /**
- * Path to the config file
+ * Retrieves the file path to the agent's configuration file.
+ *
+ * @returns A promise that resolves to the absolute path of the configuration file.
  */
 export async function getConfigFilePath(): Promise<string> {
   const userEnv = UserEnvironment.getInstance();
@@ -24,8 +26,9 @@ export async function getConfigFilePath(): Promise<string> {
 }
 
 /**
- * Load the agent configuration if it exists
- * If no configuration exists, return a default empty configuration
+ * Loads the agent configuration from disk, returning a default configuration if the file does not exist or cannot be read.
+ *
+ * @returns The loaded {@link AgentConfig} object, or a default configuration if loading fails.
  */
 export async function loadConfig(): Promise<AgentConfig> {
   try {
@@ -50,7 +53,12 @@ export async function loadConfig(): Promise<AgentConfig> {
 }
 
 /**
- * Save the agent configuration to disk
+ * Saves the agent configuration object to disk, updating its last updated timestamp.
+ *
+ * @param config - The agent configuration to save.
+ *
+ * @remark
+ * If the target directory does not exist, it is created. Errors during saving are logged but not thrown.
  */
 export async function saveConfig(config: AgentConfig): Promise<void> {
   try {
@@ -74,7 +82,10 @@ export async function saveConfig(config: AgentConfig): Promise<void> {
 }
 
 /**
- * Check if a plugin's requirements are met
+ * Checks whether the required environment variables for a plugin are valid.
+ *
+ * @param pluginName - The name of the plugin to validate.
+ * @returns An object indicating if the environment is valid and a message describing the result.
  */
 export async function checkPluginRequirements(pluginName: string): Promise<{
   valid: boolean;
@@ -84,7 +95,9 @@ export async function checkPluginRequirements(pluginName: string): Promise<{
 }
 
 /**
- * Get the status of each plugin's environment variables
+ * Retrieves the environment variable validation status for each plugin listed in the agent configuration.
+ *
+ * @returns A record mapping plugin names to a boolean indicating whether their required environment variables are valid.
  */
 export async function getPluginStatus(): Promise<Record<string, boolean>> {
   const configPath = await getConfigFilePath();

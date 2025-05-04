@@ -47,8 +47,11 @@ export function isRunningViaBunx(): boolean {
 }
 
 /**
- * Determine which package manager should be used
- * @returns {Promise<string>} - The package manager to use ('npm', 'yarn', 'pnpm', or 'bun')
+ * Detects and returns the preferred package manager for the current environment.
+ *
+ * @returns A promise that resolves to the name of the package manager to use: 'npm', 'yarn', 'pnpm', or 'bun'.
+ *
+ * @remark Defaults to 'bun' if the package manager cannot be determined.
  */
 export async function getPackageManager(): Promise<string> {
   const userEnv = UserEnvironment.getInstance();
@@ -74,12 +77,15 @@ export function getInstallCommand(packageManager: string, isGlobal: boolean): st
 }
 
 /**
- * Execute a package installation using the appropriate package manager and settings
- * @param {string} packageName - The package to install
- * @param {string} versionOrTag - Version or tag to install (optional)
- * @param {string} directory - Directory to install in
- * @param {Object} options - Additional installation options
- * @returns {Promise<{ success: boolean; installedIdentifier: string | null }>} - The result of the installation
+ * Installs a package using the appropriate package manager, attempting multiple strategies if necessary.
+ *
+ * Tries to install the specified package from the npm registry, GitHub repositories, or a monorepo, based on the provided options and available sources. Handles normalization of plugin package names and supports version or tag specification.
+ *
+ * @param packageName - The name of the package to install. Can be a scoped package, organization/repo, or plugin name.
+ * @param versionOrTag - Optional version or tag to install. If omitted, installs the latest version.
+ * @param directory - The directory in which to run the installation.
+ * @param options - Optional settings to control which installation strategies to attempt and monorepo details.
+ * @returns A promise resolving to an object indicating whether installation succeeded and the installed package identifier, or null if all methods failed.
  */
 export async function executeInstallation(
   packageName: string,

@@ -42,8 +42,9 @@ export function isValidPostgresUrl(url: string): boolean {
 }
 
 /**
- * Gets the standard Eliza directories
- * @returns Object containing standard directory paths
+ * Retrieves the standard directory paths used by Eliza for configuration and database storage.
+ *
+ * @returns An object containing the user's home directory, the Eliza configuration directory, the Eliza database directory for the current project, and the path to the Eliza `.env` file.
  */
 export async function getElizaDirectories() {
   const userEnv = UserEnvironment.getInstance();
@@ -87,8 +88,9 @@ async function ensureFile(filePath: string) {
 }
 
 /**
- * Ensures the .eliza directory exists
- * @returns The eliza directories object
+ * Ensures the Eliza configuration directory exists and returns standard Eliza directory paths.
+ *
+ * @returns An object containing paths for the user's home directory, the Eliza configuration directory, the Eliza database directory, and the `.env` file.
  */
 export async function ensureElizaDir() {
   const dirs = await getElizaDirectories();
@@ -314,13 +316,11 @@ export async function resolveConfigPaths(cwd: string, config: RawConfig) {
  * Load environment variables, trying project .env first, then global ~/.eliza/.env
  */
 /**
- * Loads environment variables from either the project directory or global config.
- * If the .env file is found in the project directory, it will be loaded.
- * If not found in the project directory, it will try to load from the global config.
- * If neither exist, it will create the global .env file with a default comment.
+ * Loads environment variables from a project-specific or global `.env` file, creating the global file if neither exists.
  *
- * @param {string} projectDir - The directory where the project is located (default: process.cwd()).
- * @returns {Promise<void>} A Promise that resolves once the environment variables are loaded or created.
+ * If a `.env` file is present in the project directory, its variables are loaded. Otherwise, the function attempts to load from the global Eliza configuration. If neither file exists, a global `.env` file is created with a default comment.
+ *
+ * @param projectDir - The directory to search for a project-specific `.env` file. Defaults to the current working directory.
  */
 export async function loadEnvironment(projectDir: string = process.cwd()): Promise<void> {
   const projectEnvPath = path.join(projectDir, '.env');
