@@ -20,8 +20,7 @@ interface AgentConfig {
  * @returns A promise that resolves to the absolute path of the configuration file.
  */
 export async function getConfigFilePath(): Promise<string> {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
   return envInfo.paths.configPath;
 }
 

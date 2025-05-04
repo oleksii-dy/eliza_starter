@@ -47,8 +47,7 @@ export function isValidPostgresUrl(url: string): boolean {
  * @returns An object containing the user's home directory, the Eliza configuration directory, the Eliza database directory for the current project, and the path to the Eliza `.env` file.
  */
 export async function getElizaDirectories() {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
   const homeDir = envInfo.os.homedir;
 
   logger.debug('[Config] Using home directory:', homeDir);

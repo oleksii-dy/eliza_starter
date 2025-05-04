@@ -60,17 +60,14 @@ export interface UserEnvironmentInfo {
  * Uses singleton pattern to cache results.
  */
 export class UserEnvironment {
-  private static instance: UserEnvironment;
-  private cachedInfo: UserEnvironmentInfo | null = null;
+  public static readonly getInstance = () => UserEnvironment.instance;
+
+  public static readonly getInstanceInfo = () => UserEnvironment.instance.getInfo();
+
+  private static readonly instance: UserEnvironment = new UserEnvironment();
+  private cachedInfo: { [key: string]: UserEnvironmentInfo } = {}; // Cache per directory
 
   private constructor() {}
-
-  public static getInstance(): UserEnvironment {
-    if (!UserEnvironment.instance) {
-      UserEnvironment.instance = new UserEnvironment();
-    }
-    return UserEnvironment.instance;
-  }
 
   /**
    * Gets operating system information
@@ -123,9 +120,13 @@ export class UserEnvironment {
 
   /**
    * Detects the active package manager
+   * @param directory Optional directory to check for lock files. Defaults to process.cwd().
    */
-  private async getPackageManagerInfo(): Promise<PackageManagerInfo> {
+  private async getPackageManagerInfo(directory?: string): Promise<PackageManagerInfo> {
     logger.debug('[UserEnvironment] Detecting package manager');
+
+    const targetDir = directory || process.cwd();
+    logger.debug(`[UserEnvironment] Checking for lock files in: ${targetDir}`);
 
     const isNpx =
       process.env.npm_execpath?.includes('npx') ||
@@ -149,10 +150,11 @@ export class UserEnvironment {
     let version: string | null = null;
 
     try {
-      // Check lock files
+      // Check lock files in the target directory
       for (const [file, pm] of Object.entries(lockFiles)) {
-        if (existsSync(path.join(process.cwd(), file))) {
+        if (existsSync(path.join(targetDir, file))) {
           detectedPM = pm as PackageManagerInfo['name'];
+          logger.debug(`[UserEnvironment] Detected ${pm} from lock file: ${file}`);
           break;
         }
       }
@@ -268,22 +270,24 @@ export class UserEnvironment {
     return { ...process.env } as EnvInfo;
   }
 
-  public async getInfo(): Promise<UserEnvironmentInfo> {
-    if (this.cachedInfo) {
-      return this.cachedInfo;
+  public async getInfo(directory?: string): Promise<UserEnvironmentInfo> {
+    const cacheKey = directory || 'cwd'; // Use directory or 'cwd' as cache key
+
+    if (this.cachedInfo[cacheKey]) {
+      return this.cachedInfo[cacheKey];
     }
 
-    logger.debug('[UserEnvironment] Gathering environment information');
+    logger.debug(`[UserEnvironment] Gathering environment information for directory: ${cacheKey}`);
 
     const [os, cli, packageManager, paths, env] = await Promise.all([
       this.getOSInfo(),
       this.getCLIInfo(),
-      this.getPackageManagerInfo(),
+      this.getPackageManagerInfo(directory), // Pass directory here
       this.getPathInfo(),
       this.getEnvInfo(),
     ]);
 
-    this.cachedInfo = {
+    const info = {
       os,
       cli,
       packageManager,
@@ -292,14 +296,16 @@ export class UserEnvironment {
       env,
     };
 
-    return this.cachedInfo;
+    this.cachedInfo[cacheKey] = info; // Store info using cache key
+
+    return info;
   }
 
   /**
    * Clears the cached information
    */
   public clearCache(): void {
-    this.cachedInfo = null;
+    this.cachedInfo = {};
   }
 
   /**

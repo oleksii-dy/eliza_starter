@@ -8,8 +8,7 @@ import { UserEnvironment } from './user-environment';
  * @returns {Promise<boolean>} True if the 'packages/core' directory is found in an ancestor directory, false otherwise.
  */
 export async function isElizaMonorepoContext(): Promise<boolean> {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
   return envInfo.paths.monorepoRoot !== null;
 }
 
@@ -20,7 +19,6 @@ export async function isElizaMonorepoContext(): Promise<boolean> {
  * @returns {Promise<string | null>} The absolute path to the monorepo root, or null if not found.
  */
 export async function getMonorepoRoot(): Promise<string | null> {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
   return envInfo.paths.monorepoRoot;
 }

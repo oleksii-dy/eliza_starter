@@ -183,8 +183,7 @@ async function writeEnvFile(filePath: string, envVars: Record<string, string>): 
  * Prints platform, architecture, CLI version, and package manager details, followed by environment variables from the global and local scopes with sensitive values masked. Indicates if no variables are set and provides a link to the web UI for editing.
  */
 async function listEnvVars(): Promise<void> {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
   const globalEnvPath = await getGlobalEnvPath();
   const localEnvPath = getLocalEnvPath();
 

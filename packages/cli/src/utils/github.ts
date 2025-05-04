@@ -543,8 +543,7 @@ export async function getGitHubCredentials(): Promise<{
   username: string;
   token: string;
 } | null> {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
 
   logger.debug('[GitHub] Checking for credentials');
 
@@ -649,8 +648,7 @@ export async function getGitHubCredentials(): Promise<{
  * Updates or adds the `GITHUB_USERNAME` and `GITHUB_TOKEN` entries in the file and sets them in the current process environment.
  */
 export async function saveGitHubCredentials(username: string, token: string): Promise<void> {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
   const { elizaDir, envFilePath } = envInfo.paths;
 
   logger.debug('[GitHub] Saving credentials');

@@ -10,8 +10,7 @@ import { UserEnvironment } from './user-environment';
  * @remark Defaults to 'bun' if the package manager cannot be determined.
  */
 export async function getPackageManager(): Promise<string> {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
 
   logger.debug('[PackageManager] Detecting package manager');
   return envInfo.packageManager.name === 'unknown' ? 'bun' : envInfo.packageManager.name;
@@ -22,8 +21,7 @@ export async function getPackageManager(): Promise<string> {
  * @returns {boolean} - Whether the CLI is globally installed
  */
 export async function isGlobalInstallation(): Promise<boolean> {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
   return envInfo.packageManager.global;
 }
 
@@ -32,8 +30,7 @@ export async function isGlobalInstallation(): Promise<boolean> {
  * @returns {boolean} - Whether we're running through npx
  */
 export async function isRunningViaNpx(): Promise<boolean> {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
   return envInfo.packageManager.isNpx;
 }
 
@@ -42,8 +39,7 @@ export async function isRunningViaNpx(): Promise<boolean> {
  * @returns {boolean} - Whether we're running through bunx
  */
 export async function isRunningViaBunx(): Promise<boolean> {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
   return envInfo.packageManager.isBunx;
 }
 

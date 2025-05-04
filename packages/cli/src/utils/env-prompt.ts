@@ -132,8 +132,7 @@ const ENV_VAR_CONFIGS: Record<string, EnvVarConfig[]> = {
  * @returns A promise that resolves to the full path of the environment file.
  */
 export async function getEnvFilePath(): Promise<string> {
-  const userEnv = UserEnvironment.getInstance();
-  const envInfo = await userEnv.getInfo();
+  const envInfo = await UserEnvironment.getInstanceInfo();
   return envInfo.paths.envFilePath;
 }
 
@@ -260,8 +259,7 @@ async function promptForEnvVar(config: EnvVarConfig): Promise<string | null> {
 
   // Expand tilde in paths for database directory
   if (config.key === 'PGLITE_DATA_DIR' && value && value.startsWith('~')) {
-    const userEnv = UserEnvironment.getInstance();
-    const envInfo = await userEnv.getInfo();
+    const envInfo = await UserEnvironment.getInstanceInfo();
     return value.replace(/^~/, envInfo.os.homedir);
   }
 
