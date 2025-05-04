@@ -166,10 +166,9 @@ plugins
   )
   .action(async (plugin, opts) => {
     const cwd = process.cwd();
-    const isNpx = isRunningViaNpx();
     const pkgData = readPackageJson(cwd);
 
-    if (!isNpx && !pkgData) {
+    if (!pkgData) {
       logger.error(
         'Command must be run inside an Eliza project directory (no package.json found).'
       );
@@ -177,42 +176,9 @@ plugins
     }
 
     try {
-      if (pkgData) {
-        const installedPluginName = findPluginPackageName(plugin, pkgData.allDependencies);
-        if (installedPluginName) {
-          logger.info(`Plugin "${installedPluginName}" is already added to this project.`);
-          process.exit(0);
-        }
-      }
-
-      if (isNpx) {
-        const pluginName = normalizePluginNameForDisplay(plugin);
-        const cliVersion = getVersion();
-        let versionTag = '@latest';
-        if (cliVersion.includes('alpha')) {
-          versionTag = '@alpha';
-        } else if (cliVersion.includes('beta')) {
-          versionTag = '@beta';
-        }
-
-        console.log(`cliVersion: ${cliVersion}`);
-        console.log(`versionTag: ${versionTag}`);
-
-        const npmCommand = `bun add @elizaos/${pluginName}${versionTag}`;
-        const gitCommand = `bun add git+https://github.com/elizaos/${pluginName}.git`;
-        const monorepoCommand = `bun add git+https://github.com/elizaos/eliza.git#${opts.branch}&subdirectory=packages/${pluginName}`;
-
-        const boldCyan = '\x1b[1;36m';
-        const bold = '\x1b[1m';
-        const reset = '\x1b[0m';
-
-        console.log(`\n📦 ${bold}To install ${pluginName}, try one of these commands:${reset}\n`);
-        console.log(`Option 1 (npm registry):\n  ${boldCyan}${npmCommand}${reset}\n`);
-        console.log(`Option 2 (dedicated GitHub repo):\n  ${boldCyan}${gitCommand}${reset}\n`);
-        console.log(
-          `Option 3 (monorepo subdirectory, branch: ${opts.branch}):\n  ${boldCyan}${monorepoCommand}${reset}\n`
-        );
-
+      const installedPluginName = findPluginPackageName(plugin, pkgData.allDependencies);
+      if (installedPluginName) {
+        logger.info(`Plugin "${installedPluginName}" is already added to this project.`);
         process.exit(0);
       }
 
@@ -314,26 +280,6 @@ plugins
   .action(async (plugin, _opts) => {
     try {
       const cwd = process.cwd();
-      const isNpx = isRunningViaNpx();
-
-      if (isNpx) {
-        const pluginName = normalizePluginNameForDisplay(plugin);
-        const packageName = `@elizaos/${pluginName}`;
-
-        const removeCommand = `bun remove ${packageName} && rm -rf ${pluginName}`;
-
-        const boldCyan = '\x1b[1;36m';
-        const bold = '\x1b[1m';
-        const reset = '\x1b[0m';
-
-        console.log(
-          `\n[x] ${bold}To remove ${pluginName}, you need to manually run this command:${reset}\n`
-        );
-        console.log(`  ${boldCyan}${removeCommand}${reset}\n`);
-        console.log('Copy and paste the above command into your terminal to remove the plugin.\n');
-
-        process.exit(0);
-      }
 
       const pkgData = readPackageJson(cwd);
       if (!pkgData) {
