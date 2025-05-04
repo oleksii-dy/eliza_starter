@@ -110,9 +110,6 @@ export async function setupPgLite(): Promise<void> {
   const { elizaDir, elizaDbDir, envFilePath } = dirs;
 
   try {
-    // Ensure eliza directory exists
-    await ensureDir(elizaDir);
-
     // Ensure the PGLite database directory exists
     await ensureDir(elizaDbDir);
     logger.debug('[PGLite] Created database directory:', elizaDbDir);
