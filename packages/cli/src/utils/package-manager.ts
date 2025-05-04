@@ -1,50 +1,6 @@
-import path from 'node:path';
-import process from 'node:process';
-import { execa } from 'execa';
-import type { ExecaChildProcess, ExecaReturnValue } from 'execa';
 import { logger } from '@elizaos/core';
+import { execa } from 'execa';
 import { UserEnvironment } from './user-environment';
-
-// DO NOT USE IT FOR PLUGIN INSTALLATION
-/**
- * Check if the CLI is running from a global installation
- * @returns {boolean} - Whether the CLI is globally installed
- */
-export function isGlobalInstallation(): boolean {
-  const cliPath = process.argv[1];
-  return (
-    cliPath.includes('/usr/local/') ||
-    cliPath.includes('/usr/bin/') ||
-    process.env.NODE_ENV === 'global' ||
-    process.cwd().indexOf(path.dirname(cliPath)) !== 0
-  );
-}
-
-/**
- * Check if we're running via npx
- * @returns {boolean} - Whether we're running through npx
- */
-export function isRunningViaNpx(): boolean {
-  // Check if we're running from npx cache directory or if NPX_COMMAND is set
-  return (
-    process.env.npm_execpath?.includes('npx') ||
-    process.argv[1]?.includes('npx') ||
-    process.env.NPX_COMMAND !== undefined
-  );
-}
-
-/**
- * Check if we're running via bunx
- * @returns {boolean} - Whether we're running through bunx
- */
-export function isRunningViaBunx(): boolean {
-  // Check if we're running through bunx
-  return (
-    process.argv[1]?.includes('bunx') ||
-    process.env.BUN_INSTALL === '1' ||
-    process.argv[0]?.includes('bun')
-  );
-}
 
 /**
  * Detects and returns the preferred package manager for the current environment.
@@ -59,6 +15,36 @@ export async function getPackageManager(): Promise<string> {
 
   logger.debug('[PackageManager] Detecting package manager');
   return envInfo.packageManager.name === 'unknown' ? 'bun' : envInfo.packageManager.name;
+}
+
+/**
+ * Check if the CLI is running from a global installation
+ * @returns {boolean} - Whether the CLI is globally installed
+ */
+export async function isGlobalInstallation(): Promise<boolean> {
+  const userEnv = UserEnvironment.getInstance();
+  const envInfo = await userEnv.getInfo();
+  return envInfo.packageManager.global;
+}
+
+/**
+ * Check if we're running via npx
+ * @returns {boolean} - Whether we're running through npx
+ */
+export async function isRunningViaNpx(): Promise<boolean> {
+  const userEnv = UserEnvironment.getInstance();
+  const envInfo = await userEnv.getInfo();
+  return envInfo.packageManager.isNpx;
+}
+
+/**
+ * Check if we're running via bunx
+ * @returns {boolean} - Whether we're running through bunx
+ */
+export async function isRunningViaBunx(): Promise<boolean> {
+  const userEnv = UserEnvironment.getInstance();
+  const envInfo = await userEnv.getInfo();
+  return envInfo.packageManager.isBunx;
 }
 
 /**
