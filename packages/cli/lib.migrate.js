@@ -38,7 +38,7 @@ function buildPluginFromDir(pluginDir) {
 
 // Migrate all references in a single plugin
 function migratePlugin(plugin) {
-  console.log(`\nMigrating ${plugin.name}...`);
+  console.log(`Checking ${plugin.name} source code for version compatibility`);
   const results = {
     files: 0,
     packageJson: false,
@@ -161,7 +161,7 @@ function migratePlugin(plugin) {
       console.log(`  ⚠️ Remove node_modules and reinstall dependencies to complete migration`);
     }
   } else {
-    console.log(`  ⚠️ No changes made to this plugin - manual inspection recommended`);
+    //console.log(`  ⚠️ No changes made to this plugin - manual inspection recommended`);
   }
 
   return results;
