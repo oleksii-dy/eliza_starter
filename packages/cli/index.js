@@ -8,6 +8,8 @@ const program = new Command()
 const { version } = require('./package.json')
 const JSON5 = require('json5')
 
+const { buildPluginFromDir, migratePlugin } = require('./lib.migrate')
+
 const pluginPkgPath = (pluginRepo) => {
   const parts = pluginRepo.split('/')
   const elizaOSroot = pathUtil.resolve(__dirname, '../..')
@@ -15,10 +17,26 @@ const pluginPkgPath = (pluginRepo) => {
   return pkgPath
 }
 
-const isPluginInstalled = (pluginRepo) => {
-  const pkgPath = pluginPkgPath(pluginRepo)
-  const packageJsonPath = pkgPath + '/package.json'
-  return fs.existsSync(packageJsonPath)
+const packagedPlugins = ['cli', '@elizaos/client-direct', '@elizaos/core',
+  '@elizaos/core-plugin-v1', 'dynamic-imports', '@elizaos/plugin-bootstrap']
+
+const getInstalledPackages = (baseDir) => {
+  const dirs = fs.readdirSync(baseDir, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name)
+
+  const packageNames = []
+
+  for (const dir of dirs) {
+    const pkgPath = pathUtil.join(baseDir, dir, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'))
+      if (pkg.name) {
+        packageNames.push(pkg.name)
+      }
+    }
+  }
+  return packageNames
 }
 
 program
@@ -78,9 +96,20 @@ pluginsCmd
         .filter(name => !opts.type || name.includes(opts.type))
         .sort()
 
+      const elizaOSroot = pathUtil.resolve(__dirname, '../..')
+      const installled = getInstalledPackages(elizaOSroot + '/packages')
+      const installedPlugins = installled.filter(p => !packagedPlugins.includes(p))
+      //console.log('installled', installled)
+
       console.info("\nAvailable plugins:")
       for (const plugin of pluginNames) {
-        console.info(` ${isPluginInstalled(plugins[plugin]) ? '✅' : '  '}  ${plugin} `)
+        // isPluginInstalled(plugins[plugin])
+        console.info(` ${installled.includes(plugin) ? '✅' : '  '}  ${plugin} `)
+      }
+      for(const plugin of installedPlugins) {
+        if (!pluginNames.includes(plugin)) {
+          console.info(` ✅  ${plugin} (Not in registry)`)
+        }
       }
       console.info("")
     } catch (error) {
@@ -106,8 +135,12 @@ pluginsCmd
     const plugins = await getPlugins()
 
     // ensure prefix
-    const pluginName = '@elizaos-plugins/' + plugin.replace(/^@elizaos-plugins\//, '')
-    const namePart = pluginName.replace(/^@elizaos-plugins\//, '')
+    //const pluginName = '@elizaos-plugins/' + plugin.replace(/^@elizaos-plugins\//, '')
+    //const namePart = pluginName.replace(/^@elizaos-plugins\//, '')
+    const nameParts = plugin.split('/', 2)
+    //console.log('nameParts', nameParts)
+    const namePart = nameParts[1]
+    const pluginName = plugin
     const elizaOSroot = pathUtil.resolve(__dirname, '../..')
 
     let repo = ''
@@ -189,22 +222,34 @@ pluginsCmd
       return changed
     }
 
+    /*
     // normalize @elizaos => @elizaos-plugins
     if (updateDependencies(packageJson.dependencies)) {
       console.log('updating plugin\'s package.json to not use @elizos/ for dependencies')
       fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n")
       // I don't think will cause the lockfile from getting out of date
     }
+    */
+    const installled = getInstalledPackages(elizaOSroot + '/packages')
+    //console.log('installled', installled)
+    const installedPlugins = installled.filter(p => !packagedPlugins.includes(p))
+
     //console.log('packageJson', packageJson.dependencies)
     for(const d in packageJson.dependencies) {
-      if (d.match(/@elizaos-plugins/)) {
+      // if it's not installed and it's in the registry
+      if (!installedPlugins.includes(d)) {
         // do we have this plugin?
-        console.log('attempting installation of dependency', d)
-        try {
-          const pluginAddDepOutput = execSync('npx elizaos plugins add ' + d, { cwd: elizaOSroot, stdio: 'pipe' }).toString().trim();
-          //console.log('pluginAddDepOutput', pluginAddDepOutput)
-        } catch (e) {
-          console.error('pluginAddDepOutput error', e)
+        if (Object.keys(plugins).includes(d)) {
+          // install from registry
+          console.log('attempting installation of dependency', d)
+          try {
+            const pluginAddDepOutput = execSync('npx elizaos plugins add ' + d, { cwd: elizaOSroot, stdio: 'pipe' }).toString().trim();
+            //console.log('pluginAddDepOutput', pluginAddDepOutput)
+          } catch (e) {
+            console.error('pluginAddDepOutput error', e)
+          }
+        //} else {
+          // maybe pnpm i call? I think pnpm will take care of these
         }
       }
     }
@@ -215,7 +260,7 @@ pluginsCmd
     // ok this can be an issue if it's referencing a plugin it couldn't be
     console.log('Making sure plugin has access to @elizaos/core-plugin-v1')
     try {
-      const pluginAddCoreOutput = execSync('pnpm add @elizaos/core-plugin-v1@workspace:* --filter ./packages/' + namePart, { cwd: elizaOSroot, stdio: 'pipe' }).toString().trim();
+      const pluginAddCoreOutput = execSync('pnpm add @elizaos/core-plugin-v1@workspace:* --filter ./packages/' + plugin, { cwd: elizaOSroot, stdio: 'pipe' }).toString().trim();
     } catch(e) {
       console.error('pluginAddCoreOutput error', e)
     }
@@ -241,6 +286,11 @@ pluginsCmd
       }
     }
 
+    // now take care of anything inside the source
+    const pluginObj = buildPluginFromDir(pkgPath)
+    //console.log('pluginObj', pluginObj)
+    migratePlugin(pluginObj)
+
     console.log(plugin, 'attempted installation is complete')
     // can't add to char file because we don't know which character
     console.log('Remember to add it to your character file\'s plugin field: ["' + pluginName + '"]')
@@ -256,8 +306,11 @@ pluginsCmd
   .argument("<plugin>", "plugin name")
   .action(async (plugin, opts) => {
     // ensure prefix
-    const pluginName = '@elizaos-plugins/' + plugin.replace(/^@elizaos-plugins\//, '')
-    const namePart = pluginName.replace(/^@elizaos-plugins\//, '')
+    //const pluginName = '@elizaos-plugins/' + plugin.replace(/^@elizaos-plugins\//, '')
+    const nameParts = plugin.split('/', 2)
+    //console.log('nameParts', nameParts)
+    const namePart = nameParts[1]
+    const pluginName = plugin
     const elizaOSroot = pathUtil.resolve(__dirname, '../..')
     const pkgPath = elizaOSroot + '/packages/' + namePart
     const plugins = await getPlugins()
