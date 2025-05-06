@@ -103,7 +103,6 @@ pluginsCmd
 
       console.info("\nAvailable plugins:")
       for (const plugin of pluginNames) {
-        // isPluginInstalled(plugins[plugin])
         console.info(` ${installled.includes(plugin) ? '✅' : '  '}  ${plugin} `)
       }
       for(const plugin of installedPlugins) {
@@ -135,10 +134,7 @@ pluginsCmd
     const plugins = await getPlugins()
 
     // ensure prefix
-    //const pluginName = '@elizaos-plugins/' + plugin.replace(/^@elizaos-plugins\//, '')
-    //const namePart = pluginName.replace(/^@elizaos-plugins\//, '')
     const nameParts = plugin.split('/', 2)
-    //console.log('nameParts', nameParts)
     const namePart = nameParts[1]
     const pluginName = plugin
     const elizaOSroot = pathUtil.resolve(__dirname, '../..')
@@ -231,7 +227,6 @@ pluginsCmd
     }
     */
     const installled = getInstalledPackages(elizaOSroot + '/packages')
-    //console.log('installled', installled)
     const installedPlugins = installled.filter(p => !packagedPlugins.includes(p))
 
     //console.log('packageJson', packageJson.dependencies)
@@ -288,7 +283,6 @@ pluginsCmd
 
     // now take care of anything inside the source
     const pluginObj = buildPluginFromDir(pkgPath)
-    //console.log('pluginObj', pluginObj)
     migratePlugin(pluginObj)
 
     console.log(plugin, 'attempted installation is complete')
@@ -306,9 +300,7 @@ pluginsCmd
   .argument("<plugin>", "plugin name")
   .action(async (plugin, opts) => {
     // ensure prefix
-    //const pluginName = '@elizaos-plugins/' + plugin.replace(/^@elizaos-plugins\//, '')
     const nameParts = plugin.split('/', 2)
-    //console.log('nameParts', nameParts)
     const namePart = nameParts[1]
     const pluginName = plugin
     const elizaOSroot = pathUtil.resolve(__dirname, '../..')
@@ -319,7 +311,6 @@ pluginsCmd
     if (namePart === 'plugin-trustdb') {
       repo = 'elizaos-plugins/plugin-trustdb'
     } else {
-      //console.log('loaded', plugins.length, plugins)
       const repoData = plugins[pluginName]?.split(':')
       if (!repoData) {
         console.error('Plugin', pluginName, 'not found')
