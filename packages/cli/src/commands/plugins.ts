@@ -137,6 +137,7 @@ export const pluginsCommand = plugins
         '@elizaos/plugin-s3-storage',
         '@elizaos/plugin-video-understanding',
         '@elizaos/plugin-venice',
+        '@elizaos/plugin-morpheus',
       ];
 
       const availablePlugins = hardcodedPlugins

@@ -34,6 +34,7 @@ export function usePlugins() {
         '@elizaos/plugin-s3-storage',
         '@elizaos/plugin-video-understanding',
         '@elizaos/plugin-venice',
+        '@elizaos/plugin-morpheus',
       ];
     },
   });
