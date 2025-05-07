@@ -302,7 +302,13 @@ export class DirectClient {
                     return;
                 }
 
-                // save response to memory
+                // Check if we should suppress the initial message
+                const action = runtime.actions.find(
+                    (a) => a.name === response.action
+                );
+                const shouldSuppressInitialMessage =
+                    action?.suppressInitialMessage;
+
                 const responseMessage: Memory = {
                     id: stringToUuid(messageId + "-" + runtime.agentId),
                     ...userMessage,
@@ -312,7 +318,10 @@ export class DirectClient {
                     createdAt: Date.now(),
                 };
 
-                await runtime.messageManager.createMemory(responseMessage);
+                if (!shouldSuppressInitialMessage) {
+                    // save response to memory
+                    await runtime.messageManager.createMemory(responseMessage);
+                }
 
                 state = await runtime.updateRecentMessageState(state);
 
@@ -330,12 +339,20 @@ export class DirectClient {
 
                 await runtime.evaluate(memory, state);
 
-                // Check if we should suppress the initial message
-                const action = runtime.actions.find(
-                    (a) => a.name === response.action
-                );
-                const shouldSuppressInitialMessage =
-                    action?.suppressInitialMessage;
+                if (message) {
+                    // action produced a new message, save to memory
+                    const messageId = stringToUuid(Date.now().toString());
+                    const responseMessage: Memory = {
+                        id: stringToUuid(messageId + "-" + runtime.agentId),
+                        ...userMessage,
+                        userId: runtime.agentId,
+                        content: message,
+                        embedding: getEmbeddingZeroVector(),
+                        createdAt: Date.now(),
+                    };
+
+                    await runtime.messageManager.createMemory(responseMessage);
+                }
 
                 if (!shouldSuppressInitialMessage) {
                     if (message) {
