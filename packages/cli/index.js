@@ -7,6 +7,7 @@ const { Command } = require('commander')
 const program = new Command()
 const { version } = require('./package.json')
 const JSON5 = require('json5')
+const axios = require('axios')
 
 const { buildPluginFromDir, migratePlugin } = require('./lib.migrate')
 
@@ -51,8 +52,10 @@ const pluginsCmd = new Command()
 let metadata = {}
 
 async function getPlugins() {
-  const resp = await fetch('https://raw.githubusercontent.com/elizaos-plugins/registry/refs/heads/main/index.json')
-  const mostlyJson = await resp.text();
+  //const resp = await fetch('https://raw.githubusercontent.com/elizaos-plugins/registry/refs/heads/main/index.json')
+  //const mostlyJson = await resp.text();
+  const resp = await axios.get('https://raw.githubusercontent.com/elizaos-plugins/registry/refs/heads/main/index.json')
+  const mostlyJson = resp.data
   const jsonLike = []
   for(const l of mostlyJson.split('\n')) {
     if (l.match(/""/)) {
