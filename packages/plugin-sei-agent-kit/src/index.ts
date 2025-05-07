@@ -1,33 +1,24 @@
 import type { Plugin } from "@elizaos/core";
 
-import { getBalanceERC20Action } from "./actions/erc20/get_balance.js";
-import { getBalanceERC721Action } from "./actions/erc721/get_balance.js";
-import { transferERC20Action } from "./actions/erc20/transfer.js";
-import { transferERC721Action } from "./actions/erc721/transfer.js";
-import { mintERC721Action } from "./actions/erc721/mint.js";
-
-// Import new Symphony actions
-import { symphonySwapAction } from "./actions/symphony/swap.js";
-
-// Import new Silo actions
-import { siloStakeAction } from "./actions/silo/stake.js";
-import { siloUnstakeAction } from "./actions/silo/unstake.js";
-
-// Import new DexScreener actions
-import { dexscreenerGetTokenAddressAction } from "./actions/dexscreener/get_token_address.js";
-
-
-// Import Takara actions
-import { mintTakaraAction } from "./actions/takara/mint.js";
-import { borrowTakaraAction } from "./actions/takara/borrow.js";
-import { repayTakaraAction } from "./actions/takara/repay.js";
-import { redeemTakaraAction } from "./actions/takara/redeem.js";
-import { getRedeemableAmountAction } from "./actions/takara/get_redeemable_amount.js";
-import { getBorrowBalanceAction } from "./actions/takara/get_borrow_balance.js";
-
-// Import DragonSwap actions
-import { addDragonSwapLiquidityAction } from "./actions/dragonswap/add_liquidity.js";
-import { removeDragonSwapLiquidityAction } from "./actions/dragonswap/remove_liquidity.js";
+import { 
+    getBalanceERC20Action,
+    getBalanceERC721Action,
+    transferERC20Action,
+    transferERC721Action,
+    mintERC721Action,
+    symphonySwapAction,
+    siloStakeAction,
+    siloUnstakeAction,
+    dexscreenerGetTokenAddressAction,
+    mintTakaraAction,
+    borrowTakaraAction,
+    repayTakaraAction,
+    redeemTakaraAction,
+    getRedeemableAmountAction,
+    getBorrowBalanceAction,
+    addDragonSwapLiquidityAction,
+    removeDragonSwapLiquidityAction
+} from "./actions";
 
 export const seiAgentkitPlugin: Plugin = {
     name: "sei",
