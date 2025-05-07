@@ -964,19 +964,6 @@ const startAgents = async () => {
     const charactersArg = args.characters || args.character;
     let characters = [defaultCharacter];
 
-<<<<<<< HEAD
-    if ((charactersArg) || hasValidRemoteUrls()) {
-        characters = await loadCharacters(charactersArg);
-    }
-
-    try {
-        for (const character of characters) {
-            const processedCharacter = await handlePostCharacterLoaded(character);
-            await startAgent(processedCharacter, directClient);
-        }
-    } catch (error) {
-        elizaLogger.error("Error starting agents:", error);
-=======
     /*
     if (process.env.IQ_WALLET_ADDRESS && process.env.IQSOlRPC) {
         characters = await loadCharacterFromOnchain();
@@ -989,17 +976,17 @@ const startAgents = async () => {
         characters = await loadCharacters(charactersArg);
     }
 
-    // Normalize characters for injectable plugins
-    characters = await Promise.all(characters.map(normalizeCharacter));
+    // Normalize characters for injectable plugins (plugin-di related)
+    //characters = await Promise.all(characters.map(normalizeCharacter));
 
     console.log('starting', characters.length, 'characters')
     for (const character of characters) {
       try {
+        const processedCharacter = await handlePostCharacterLoaded(character);
         startAgent(character, directClient);
       } catch (error) {
         console.error("Error starting agent:", character.name, error);
       }
->>>>>>> 4d3de8fc495b19ca272f3c70a5e0aa70e22dcee4
     }
     console.log('start command issued for', characters.length, 'characters')
 
