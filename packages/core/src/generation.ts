@@ -1582,7 +1582,7 @@ export function splitText(content: string, chunkSize: number, bleed: number): st
         // if current chunk has content, flush it first
         if (currentChunk.length > 0) {
             // Check if current chunk ends with a partial URL or next paragraph starts with one
-            if (containsPartialUrl(currentChunk) || containsPartialUrl(trimmedParagraph)) {
+            if (containsPartialUrl(currentChunk.trim()) || containsPartialUrl(trimmedParagraph)) {
                 // Try to combine them if they're not too large together
                 if (currentChunk.length + trimmedParagraph.length <= chunkSize * 1.5) {
                     currentChunk += "\n\n" + trimmedParagraph;
