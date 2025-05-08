@@ -1,5 +1,5 @@
 # Eliza 🤖
-
+[![id](https://img.shields.io/badge/lang-Indonesian-red.svg)](README_IND.md)
 <div align="center">
   <img src="/docs/static/img/eliza_banner.jpg" alt="Banner Eliza" width="100%" />
 </div>
