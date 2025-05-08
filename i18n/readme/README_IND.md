@@ -1,3 +1,4 @@
+[![id](https://img.shields.io/badge/lang-Indonesian-red.svg)](README_IND.md)
 # Eliza 🤖
 
 <div align="center">
