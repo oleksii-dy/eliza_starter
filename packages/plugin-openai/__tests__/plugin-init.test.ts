@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach, assert } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { openaiPlugin } from '../src/index'
-import { ModelType, ServiceType } from '@elizaos/core'
 
 describe('OpenAI Plugin Initialization', () => {
   const mockCommandFns = {}

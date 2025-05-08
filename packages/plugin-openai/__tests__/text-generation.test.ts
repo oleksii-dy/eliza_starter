@@ -178,8 +178,6 @@ describe('Text Generation Operations', () => {
       const result = await tokenizerDecodeFn(mockRuntime, params)
       
       expect(typeof result).toBe('string')
-      // Don't check for specific text, as the actual mock returns a different value
-      expect(typeof result).toBe('string')
     })
   })
 })
