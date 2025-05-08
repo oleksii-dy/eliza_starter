@@ -293,11 +293,13 @@ export const publish = new Command()
   .option('-r, --registry <registry>', 'target registry', 'elizaOS/registry')
   .option('-n, --npm', 'publish to npm instead of GitHub', false)
   .option('-t, --test', 'test publish process without making changes', false)
-  .option(
-    '-px, --platform <platform>',
-    'specify platform compatibility (node, browser, universal)',
-    'universal'
-  )
+  // Temporarily disabled platform option - multi-platform functionality is not fully implemented yet
+  // Will be re-enabled in a future update. All plugins use 'universal' platform for now.
+  // .option(
+  //   '-px, --platform <platform>',
+  //   'specify platform compatibility (node, browser, universal)',
+  //   'universal'
+  // )
   .option('-d, --dry-run', 'generate registry files locally without publishing', false)
   .option('-sr, --skip-registry', 'skip publishing to the registry', false)
   .hook('preAction', async () => {
@@ -434,16 +436,19 @@ export const publish = new Command()
 
       // Validate platform option
       const validPlatforms = ['node', 'browser', 'universal'];
-      if (opts.platform && !validPlatforms.includes(opts.platform)) {
-        console.error(
-          `Invalid platform: ${opts.platform}. Valid options are: ${validPlatforms.join(', ')}`
-        );
-        process.exit(1);
-      }
+      // Platform option is temporarily disabled, hardcoding to 'universal'
+      const platform = 'universal';
+      // Previous validation logic is no longer needed since we're hardcoding the platform
+      // if (opts.platform && !validPlatforms.includes(opts.platform)) {
+      //   console.error(
+      //     `Invalid platform: ${opts.platform}. Valid options are: ${validPlatforms.join(', ')}`
+      //   );
+      //   process.exit(1);
+      // }
 
       // Add packageType and platform to package.json for publishing
       packageJson.packageType = detectedType;
-      packageJson.platform = opts.platform;
+      packageJson.platform = platform; // Using hardcoded 'universal' value
 
       // Preserve agentConfig if it exists or create it
       if (!packageJson.agentConfig) {
@@ -523,7 +528,7 @@ export const publish = new Command()
         registry: opts.registry,
         username: credentials.username,
         useNpm: opts.npm,
-        platform: opts.platform,
+        platform: 'universal', // Hardcoded to 'universal' as platform option is temporarily disabled
       };
       await saveRegistrySettings(settings);
 
