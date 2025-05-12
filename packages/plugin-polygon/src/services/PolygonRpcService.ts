@@ -1,4 +1,4 @@
-import { Service, IAgentRuntime, logger } from '@elizaos/core';
+import { Service, type IAgentRuntime, logger } from '@elizaos/core';
 import {
   ethers,
   JsonRpcProvider,
@@ -15,18 +15,14 @@ import {
   MaxUint256, // Import MaxUint256 for approval checks
 } from 'ethers'; // Assuming ethers v6+
 
-// Use require for JSON ABIs as a workaround for import issues
-const StakeManagerABI = '{}';
-//require('../abi/StakeManager.json');
-const ValidatorShareABI = '{}';
-//require('../abi/ValidatorShare.json');
-const RootChainManagerABI = '{}';
-//require('../abi/RootChainManager.json'); // Added RootChainManager ABI
-const Erc20ABI = '{}';
-//require('../abi/ERC20.json'); // Added ERC20 ABI (for approve/allowance)
+// Import JSON ABIs
+import StakeManagerABI from '../contracts/StakeManagerABI.json';
+import ValidatorShareABI from '../contracts/ValidatorShareABI.json';
+import RootChainManagerABI from '../contracts/RootChainManagerABI.json';
+import Erc20ABI from '../contracts/ERC20ABI.json';
 
 // Re-import GasService components
-import { getGasPriceEstimates, GasPriceEstimates } from './GasService';
+import { getGasPriceEstimates, type GasPriceEstimates } from './GasService';
 
 // Minimal ERC20 ABI fragment for balanceOf
 const ERC20_ABI_BALANCEOF = [
@@ -84,10 +80,6 @@ export class PolygonRpcService extends Service {
   private stakeManagerContractL1: Contract | null = null; // Added for L1 StakeManager
   private rootChainManagerContractL1: Contract | null = null; // Added RootChainManager instance
 
-  constructor(runtime?: IAgentRuntime) {
-    super(runtime);
-  }
-
   private async initializeProviders(): Promise<void> {
     if (this.l1Provider && this.l2Provider && this.rootChainManagerContractL1) {
       return;
@@ -144,7 +136,7 @@ export class PolygonRpcService extends Service {
   }
 
   static async start(runtime: IAgentRuntime): Promise<PolygonRpcService> {
-    logger.info(`Starting PolygonRpcService...`);
+    logger.info('Starting PolygonRpcService...');
     const service = new PolygonRpcService(runtime);
     await service.initializeProviders();
     return service;
@@ -508,7 +500,10 @@ export class PolygonRpcService extends Service {
       const maxFeePerGas = gasEstimates.estimatedBaseFee + maxPriorityFeePerGas;
 
       // 3. Estimate Gas Limit
-      const gasLimit = await signer.estimateGas({ ...txData, value: amountWei });
+      const gasLimit = await signer.estimateGas({
+        ...txData,
+        value: amountWei,
+      });
       const gasLimitBuffered = (gasLimit * 120n) / 100n; // Add 20% buffer
 
       // 4. Construct Full Transaction
@@ -532,10 +527,11 @@ export class PolygonRpcService extends Service {
 
       // 7. Return Hash (Consider adding wait option later)
       return txResponse.hash;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error(`Delegation to validator ${validatorId} failed:`, error);
       // Add more specific error handling (insufficient funds, etc.)
-      throw new Error(`Delegation failed: ${error.message || error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Delegation failed: ${errorMessage}`);
     }
   }
 

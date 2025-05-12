@@ -9,7 +9,7 @@ import {
   composePromptFromState,
   ModelType,
   type ActionExample,
-  TemplateType,
+  type TemplateType,
 } from '@elizaos/core';
 // import { type Chain, polygon as polygonChain, mainnet as ethereumChain } from 'viem/chains'; // Chains managed by Provider
 import {
@@ -24,7 +24,7 @@ import {
 } from 'viem';
 // import { privateKeyToAccount } from 'viem/accounts'; // Handled by Provider
 
-import { WalletProvider, initWalletProvider } from '../providers/PolygonWalletProvider';
+import { type WalletProvider, initWalletProvider } from '../providers/PolygonWalletProvider';
 
 // Minimal ABI for OZ Governor propose function
 const governorProposeAbi = [

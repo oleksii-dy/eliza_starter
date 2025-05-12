@@ -5,7 +5,7 @@ import {
   type Provider,
   type ProviderResult,
   logger,
-  Service,
+  type Service,
 } from '@elizaos/core';
 import { z } from 'zod';
 import { ethers } from 'ethers';
@@ -19,14 +19,14 @@ import { getValidatorInfoAction } from './actions/getValidatorInfo';
 import { getDelegatorInfoAction } from './actions/getDelegatorInfo';
 import { withdrawRewardsAction } from './actions/withdrawRewards';
 import { bridgeDepositAction } from './actions/bridgeDeposit';
-import { IPolygonWalletContext, WalletProvider } from './providers/PolygonWalletProvider';
+import { WalletProvider } from './providers/PolygonWalletProvider';
 import {
   PolygonRpcService,
-  ValidatorInfo,
-  DelegatorInfo,
+  type ValidatorInfo,
+  type DelegatorInfo,
   ValidatorStatus,
 } from './services/PolygonRpcService';
-import { getGasPriceEstimates, GasPriceEstimates } from './services/GasService';
+import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService';
 
 // --- Configuration Schema --- //
 const configSchema = z.object({

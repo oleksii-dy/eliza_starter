@@ -1,5 +1,4 @@
 {
-  "extends": "@elizaos/tsconfig/base.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "packages/plugin-polygon/src",
