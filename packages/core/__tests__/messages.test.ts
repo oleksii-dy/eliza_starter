@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test, vi } from 'vitest';
+import { beforeAll, describe, expect, it, test, vi } from 'vitest';
 import { formatEntities, getEntityDetails } from '../src/entities';
 import { formatMessages, formatTimestamp } from '../src/prompts';
 import type {
@@ -36,41 +36,6 @@ describe('Messages Library', () => {
       },
     ];
   });
-
-  // test("getEntityDetails should return entities based on roomId", async () => {
-  // 	const roomId: UUID = "123e4567-e89b-12d3-a456-426614174001" as UUID;
-
-  // 	// Using vi.mocked() type assertion instead of jest.Mock casting
-  // 	vi.mocked(
-  // 		runtime.getParticipantsForRoom,
-  // 	).mockResolvedValue([entityId]);
-  // 	vi.mocked(runtime.getEntityById).mockResolvedValue({
-  // 		id: entityId,
-  // 		names: ["Test User"],
-  // 		agentId: "123e4567-e89b-12d3-a456-426614174001" as UUID,
-  // 	});
-  // 	vi.mocked(runtime.getRoom).mockResolvedValue({
-  // 		id: roomId,
-  // 		name: "Test Room",
-  // 		participants: [entityId],
-  // 		source: "test",
-  // 		type: ChannelType.GROUP,
-  // 		channelId: "test",
-  // 		serverId: "test",
-  // 		worldId: "test" as UUID,
-  // 	} as Room);
-  // 	vi.mocked(runtime.getEntitiesForRoom).mockResolvedValue([{
-  // 		id: entityId,
-  // 		names: ["Test User"],
-  // 		agentId: "123e4567-e89b-12d3-a456-426614174001" as UUID,
-  // 		components: []
-  // 	}]);
-
-  // 	const result = await getEntityDetails({ runtime, roomId });
-
-  // 	expect(result.length).toBeGreaterThan(0);
-  // 	expect(result[0].name).toBe("Test User");
-  // });
 
   test('formatEntities should format entities into a readable string', () => {
     const formattedEntities = formatEntities({ entities });
@@ -197,80 +162,16 @@ describe('Messages', () => {
     },
   ];
 
-  // describe("getEntityDetails", () => {
-  // 	it("should retrieve actor details from database", async () => {
-  // 		const mockRuntime = {
-  // 			getParticipantsForRoom: vi
-  // 				.fn()
-  // 				.mockResolvedValue([mockEntities[0].id, mockEntities[1].id]),
-  // 			getEntityById: vi.fn().mockImplementation((id) => {
-  // 				const actor = mockEntities.find((a) => a.id === id);
-  // 				return Promise.resolve(actor);
-  // 			}),
-  // 			getRoom: vi.fn().mockResolvedValue({
-  // 				id: "123e4567-e89b-12d3-a456-426614174009" as UUID,
-  // 				name: "Test Room",
-  // 				participants: [mockEntities[0].id, mockEntities[1].id],
-  // 				source: "test",
-  // 			type: ChannelType.GROUP,
-  // 			channelId: "test",
-  // 			serverId: "test",
-  // 				worldId: "test" as UUID,
-  // 			} as Room),
-  // 			getEntitiesForRoom: vi.fn().mockResolvedValue(mockEntities),
-  // 		};
-
-  // 		const entities = await getEntityDetails({
-  // 			runtime: mockRuntime as any,
-  // 			roomId: "123e4567-e89b-12d3-a456-426614174009" as UUID,
-  // 		});
-
-  // 		expect(entities).toHaveLength(2);
-  // 		expect(entities[0].name).toBe("Alice");
-  // 		expect(entities[1].name).toBe("Bob");
-  // 		expect(
-  // 			mockRuntime.getParticipantsForRoom,
-  // 		).toHaveBeenCalled();
-  // 	});
-
-  // 	it("should filter out null entities", async () => {
-  // 		const invalidId = "123e4567-e89b-12d3-a456-426614174012" as UUID;
-  // 		const mockRuntime = {
-  // 			getParticipantsForRoom: vi
-  // 				.fn()
-  // 				.mockResolvedValue([mockEntities[0].id, invalidId]),
-  // 			getEntityById: vi.fn().mockImplementation((id) => {
-  // 				const actor = mockEntities.find((a) => a.id === id);
-  // 				return Promise.resolve(actor || null);
-  // 			}),
-  // 			getRoom: vi.fn().mockResolvedValue({
-  // 				id: "123e4567-e89b-12d3-a456-426614174009" as UUID,
-  // 				name: "Test Room",
-  // 				participants: [mockEntities[0].id, mockEntities[1].id],
-  // 				source: "test",
-  // 			type: ChannelType.GROUP,
-  // 			channelId: "test",
-  // 			serverId: "test",
-  // 				worldId: "test" as UUID,
-  // 			} as Room),
-  // 			getEntitiesForRoom: vi.fn().mockResolvedValue(mockEntities),
-  // 		};
-
-  // 		const entities = await getEntityDetails({
-  // 			runtime: mockRuntime as any,
-  // 			roomId: "123e4567-e89b-12d3-a456-426614174009" as UUID,
-  // 		});
-
-  // 		expect(entities).toHaveLength(1);
-  // 		expect(entities[0].name).toBe("Alice");
-  // 	});
-  // });
+ 
 
   describe('formatEntities', () => {
     it('should format entities with complete details', () => {
       const formatted = formatEntities({ entities: mockEntities });
-      expect(formatted).toContain('Alice\nID:');
-      expect(formatted).toContain('Bob\nID:');
+      // Updated to match current implementation which wraps names in quotes
+      expect(formatted).toContain('"Alice"');
+      expect(formatted).toContain('ID: 123e4567-e89b-12d3-a456-426614174006');
+      expect(formatted).toContain('"Bob"');
+      expect(formatted).toContain('ID: 123e4567-e89b-12d3-a456-426614174007');
     });
 
     it('should handle entities without details', () => {
@@ -282,7 +183,9 @@ describe('Messages', () => {
         },
       ];
       const formatted = formatEntities({ entities: actorsWithoutDetails });
-      expect(formatted).toContain('Charlie\nID:');
+      // Updated to match current implementation which wraps names in quotes
+      expect(formatted).toContain('"Charlie"');
+      expect(formatted).toContain('ID: 123e4567-e89b-12d3-a456-426614174013');
     });
 
     it('should handle empty entities array', () => {
