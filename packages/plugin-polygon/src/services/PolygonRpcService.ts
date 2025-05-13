@@ -1,4 +1,4 @@
-import { Service, IAgentRuntime, logger } from '@elizaos/core';
+import { Service, type IAgentRuntime, logger } from '@elizaos/core';
 import {
   ethers,
   JsonRpcProvider,
@@ -16,17 +16,17 @@ import {
 } from 'ethers'; // Assuming ethers v6+
 
 // Use require for JSON ABIs as a workaround for import issues
-const StakeManagerABI = '{}';
+const StakeManagerABI = '[]'; // Changed from "{}"
 //require('../abi/StakeManager.json');
-const ValidatorShareABI = '{}';
+const ValidatorShareABI = '[]'; // Changed from "{}"
 //require('../abi/ValidatorShare.json');
-const RootChainManagerABI = '{}';
+const RootChainManagerABI = '[]'; // Changed from "{}"
 //require('../abi/RootChainManager.json'); // Added RootChainManager ABI
-const Erc20ABI = '{}';
+const Erc20ABI = '[]'; // Changed from "{}"
 //require('../abi/ERC20.json'); // Added ERC20 ABI (for approve/allowance)
 
 // Re-import GasService components
-import { getGasPriceEstimates, GasPriceEstimates } from './GasService';
+import { getGasPriceEstimates, type GasPriceEstimates } from './GasService';
 
 // Minimal ERC20 ABI fragment for balanceOf
 const ERC20_ABI_BALANCEOF = [
@@ -120,7 +120,7 @@ export class PolygonRpcService extends Service {
         StakeManagerABI,
         this.l1Provider
       );
-      await this.stakeManagerContractL1.currentEpoch(); // Test connection
+      await this.stakeManagerContractL1.currentEpoch(); // Test connection - COMMENT OUT FOR GasService tests until abis are replaced
       logger.info('StakeManager L1 contract instance created and connection verified.');
 
       this.rootChainManagerContractL1 = new Contract(
@@ -197,6 +197,16 @@ export class PolygonRpcService extends Service {
       throw new Error('RootChainManager L1 contract is not initialized.');
     }
     return this.rootChainManagerContractL1;
+  }
+
+  // --- Public Method to Get L2 Provider ---
+  public getL2Provider(): EthersProvider {
+    const provider = this.getProvider('L2'); // Use the existing private method internally
+    if (!provider) {
+      // Should ideally not happen if service is started correctly
+      throw new Error('L2 Provider not initialized in PolygonRpcService.');
+    }
+    return provider;
   }
 
   // --- Helper: Get Signer-Aware ValidatorShare Contract ---
@@ -508,7 +518,10 @@ export class PolygonRpcService extends Service {
       const maxFeePerGas = gasEstimates.estimatedBaseFee + maxPriorityFeePerGas;
 
       // 3. Estimate Gas Limit
-      const gasLimit = await signer.estimateGas({ ...txData, value: amountWei });
+      const gasLimit = await signer.estimateGas({
+        ...txData,
+        value: amountWei,
+      });
       const gasLimitBuffered = (gasLimit * 120n) / 100n; // Add 20% buffer
 
       // 4. Construct Full Transaction
