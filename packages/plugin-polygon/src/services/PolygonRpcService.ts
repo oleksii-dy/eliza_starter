@@ -112,7 +112,7 @@ export class PolygonRpcService extends Service {
         StakeManagerABI,
         this.l1Provider
       );
-      await this.stakeManagerContractL1.currentEpoch(); // Test connection
+      await this.stakeManagerContractL1.validatorThreshold(); // Test connection
       logger.info('StakeManager L1 contract instance created and connection verified.');
 
       this.rootChainManagerContractL1 = new Contract(

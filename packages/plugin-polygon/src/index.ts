@@ -6,6 +6,7 @@ import {
   type ProviderResult,
   logger,
   type Service,
+  elizaLogger,
 } from '@elizaos/core';
 import { z } from 'zod';
 import { ethers } from 'ethers';
@@ -19,7 +20,11 @@ import { getValidatorInfoAction } from './actions/getValidatorInfo';
 import { getDelegatorInfoAction } from './actions/getDelegatorInfo';
 import { withdrawRewardsAction } from './actions/withdrawRewards';
 import { bridgeDepositAction } from './actions/bridgeDeposit';
-import { WalletProvider } from './providers/PolygonWalletProvider';
+import {
+  WalletProvider,
+  initWalletProvider,
+  polygonWalletProvider,
+} from './providers/PolygonWalletProvider';
 import {
   PolygonRpcService,
   type ValidatorInfo,
@@ -83,19 +88,46 @@ const polygonActions: Action[] = [
       const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
       if (!rpcService) throw new Error('PolygonRpcService not available');
 
-      // TODO: Determine the correct way to get the agent's address.
-      // It might come from runtime context, another service, or require the provider differently.
-      const agentAddress = runtime.getSetting('AGENT_ADDRESS'); // Example placeholder
-      if (!agentAddress) throw new Error('Could not determine agent address');
+      try {
+        // Initialize the wallet provider to get the agent's address
+        const polygonWalletProvider = await initWalletProvider(runtime);
+        if (!polygonWalletProvider) {
+          throw new Error(
+            'Failed to initialize PolygonWalletProvider - check that PRIVATE_KEY is configured correctly'
+          );
+        }
+        const agentAddress = polygonWalletProvider.getAddress();
+        if (!agentAddress) throw new Error('Could not determine agent address from provider');
 
-      logger.info(`Fetching MATIC balance for address: ${agentAddress}`);
-      const balanceWei = await rpcService.getNativeBalance(agentAddress);
-      const balanceMatic = ethers.formatEther(balanceWei);
-      return {
-        text: `Your MATIC balance (${agentAddress}): ${balanceMatic}`,
-        actions: ['GET_MATIC_BALANCE'],
-        data: { address: agentAddress, balanceWei: balanceWei.toString(), balanceMatic },
-      };
+        logger.info(`Fetching MATIC balance for address: ${agentAddress}`);
+        // Use getBalance for L2 MATIC balance
+        const balanceWei = await rpcService.getBalance(agentAddress, 'L2');
+        elizaLogger.info(`Balance: ${balanceWei}`);
+        const balanceMatic = ethers.formatEther(balanceWei);
+        return {
+          text: `Your MATIC balance (${agentAddress}): ${balanceMatic}`,
+          actions: ['GET_MATIC_BALANCE'],
+          data: {
+            address: agentAddress,
+            balanceWei: balanceWei.toString(),
+            balanceMatic,
+          },
+        };
+      } catch (error) {
+        logger.error('Error getting MATIC balance:', error);
+        // Provide a more user-friendly error message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const userMessage = errorMessage.includes('private key')
+          ? 'There was an issue with the wallet configuration. Please ensure PRIVATE_KEY is correctly set.'
+          : `Error retrieving MATIC balance: ${errorMessage}`;
+
+        return {
+          text: userMessage,
+          success: false,
+          actions: ['GET_MATIC_BALANCE'],
+          error: errorMessage,
+        };
+      }
     },
     examples: [],
   },
@@ -304,8 +336,7 @@ const polygonActions: Action[] = [
       const amountWei = parseBigIntString(amountWeiStr, 'deposit');
 
       logger.info(
-        `Action: Bridging ${amountWeiStr} Wei of ${tokenAddressL1} to L2` +
-          (recipientAddressL2 ? ` for ${recipientAddressL2}` : '')
+        `Action: Bridging ${amountWeiStr} Wei of ${tokenAddressL1} to L2${recipientAddressL2 ? ` for ${recipientAddressL2}` : ''}`
       );
       const txHash = await rpcService.bridgeDeposit(tokenAddressL1, amountWei, recipientAddressL2);
 
@@ -356,7 +387,105 @@ const polygonActions: Action[] = [
 ];
 
 // --- Define Providers --- //
-const polygonProviders: Provider[] = [WalletProvider];
+
+/**
+ * Provider to fetch and display Polygon-specific info like address, balance, gas.
+ */
+const polygonProviderInfo: Provider = {
+  name: 'Polygon Provider Info',
+  async get(runtime: IAgentRuntime, _message, state): Promise<ProviderResult> {
+    try {
+      // 1. Initialize WalletProvider to get address
+      const polygonWalletProvider = await initWalletProvider(runtime);
+      if (!polygonWalletProvider) {
+        throw new Error(
+          'Failed to initialize PolygonWalletProvider - check PRIVATE_KEY configuration'
+        );
+      }
+      const agentAddress = polygonWalletProvider.getAddress();
+      if (!agentAddress) throw new Error('Could not determine agent address from provider');
+
+      // 2. Get PolygonRpcService instance (should be already started)
+      const polygonRpcService = runtime.getService<PolygonRpcService>(
+        PolygonRpcService.serviceType
+      );
+      if (!polygonRpcService) {
+        throw new Error('PolygonRpcService not available or not started');
+      }
+
+      // 3. Get L2 (Polygon) MATIC balance
+      const maticBalanceWei = await polygonRpcService.getBalance(agentAddress, 'L2');
+      const maticBalanceFormatted = ethers.formatEther(maticBalanceWei);
+
+      // 4. Get Gas price info
+      const gasEstimates = await getGasPriceEstimates(runtime);
+
+      const agentName = state?.agentName || 'The agent';
+
+      // 5. Format the text output
+      let text = `${agentName}'s Polygon Status:\\n`;
+      text += `  Wallet Address: ${agentAddress}\\n`;
+      text += `  MATIC Balance: ${maticBalanceFormatted} MATIC\\n`;
+      text += '  Current Gas Prices (Max Priority Fee Per Gas - Gwei):\\n';
+      const safeLowGwei = gasEstimates.safeLow?.maxPriorityFeePerGas
+        ? ethers.formatUnits(gasEstimates.safeLow.maxPriorityFeePerGas, 'gwei')
+        : 'N/A';
+      const averageGwei = gasEstimates.average?.maxPriorityFeePerGas
+        ? ethers.formatUnits(gasEstimates.average.maxPriorityFeePerGas, 'gwei')
+        : 'N/A';
+      const fastGwei = gasEstimates.fast?.maxPriorityFeePerGas
+        ? ethers.formatUnits(gasEstimates.fast.maxPriorityFeePerGas, 'gwei')
+        : 'N/A';
+      const baseFeeGwei = gasEstimates.estimatedBaseFee
+        ? ethers.formatUnits(gasEstimates.estimatedBaseFee, 'gwei')
+        : 'N/A';
+
+      text += `    - Safe Low: ${safeLowGwei}\\n`;
+      text += `    - Average:  ${averageGwei}\\n`; // Adjusted name to average
+      text += `    - Fast:     ${fastGwei}\\n`;
+      text += `  Estimated Base Fee (Gwei): ${baseFeeGwei}\\n`;
+
+      return {
+        text,
+        data: {
+          address: agentAddress,
+          maticBalance: maticBalanceFormatted,
+          gasEstimates: {
+            safeLowGwei,
+            averageGwei,
+            fastGwei,
+            baseFeeGwei,
+          },
+        },
+        values: {
+          // Provide raw values or formatted strings as needed
+          address: agentAddress,
+          maticBalance: maticBalanceFormatted,
+          gas_safe_low_gwei: safeLowGwei,
+          gas_average_gwei: averageGwei, // Changed key name
+          gas_fast_gwei: fastGwei,
+          gas_base_fee_gwei: baseFeeGwei,
+        },
+      };
+    } catch (error) {
+      logger.error('Error getting Polygon provider info:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // Create a more user-friendly message based on the error
+      const userMessage = errorMessage.includes('private key')
+        ? 'There was an issue with the wallet configuration. Please ensure PRIVATE_KEY is correctly set.'
+        : `Error getting Polygon provider info: ${errorMessage}`;
+
+      return {
+        text: userMessage,
+        data: { error: errorMessage },
+        values: { error: errorMessage },
+      };
+    }
+  },
+};
+
+const polygonProviders: Provider[] = [polygonWalletProvider, polygonProviderInfo];
 
 // --- Define Services --- //
 const polygonServices: (typeof Service)[] = [PolygonRpcService];
@@ -375,7 +504,7 @@ export const polygonPlugin: Plugin = {
   },
 
   // Initialization logic
-  async init(config: Record<string, any>, runtime: IAgentRuntime) {
+  async init(config: Record<string, unknown>, runtime: IAgentRuntime) {
     logger.info(`Initializing plugin: ${this.name}`);
     try {
       // Validate configuration
