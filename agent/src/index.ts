@@ -48,6 +48,8 @@ import createGoatPlugin from "@elizaos/plugin-goat";
 // import { availPlugin } from "@elizaos/plugin-avail";
 // import { avalanchePlugin } from "@elizaos/plugin-avalanche";
 import { binancePlugin } from "@elizaos/plugin-binance";
+import { seiAgentkitPlugin } from "@elizaos/plugin-sei-agent-kit";
+
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -788,6 +790,11 @@ export async function createAgent(
             getSecret(character, "COINGECKO_PRO_API_KEY")
                 ? coingeckoPlugin
                 : null,
+            getSecret(character, "SEI_PRIVATE_KEY") &&
+            getSecret(character, "SEI_RPC_URL") &&
+            getSecret(character, "OPENAI_API_KEY")
+                ? seiAgentkitPlugin
+                : null,
             getSecret(character, "EVM_PROVIDER_URL") ? goatPlugin : null,
             // getSecret(character, "ABSTRACT_PRIVATE_KEY")
             //     ? abstractPlugin
@@ -819,10 +826,10 @@ export async function createAgent(
             // getSecret(character, "AVALANCHE_PRIVATE_KEY")
             //     ? avalanchePlugin
             //     : null,
-            getSecret(character, "ECHOCHAMBERS_API_URL") &&
-            getSecret(character, "ECHOCHAMBERS_API_KEY")
-                ? echoChambersPlugin
-                : null,
+            // getSecret(character, "ECHOCHAMBERS_API_URL") &&
+            // getSecret(character, "ECHOCHAMBERS_API_KEY")
+            //     ? echoChambersPlugin
+            //     : null,
             // getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
             // getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
             getSecret(character, "GIPHY_API_KEY") ? giphyPlugin : null,
