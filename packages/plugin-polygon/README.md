@@ -1,17 +1,90 @@
-# ElizaOS Plugin
+# ElizaOS Polygon Plugin
 
-This is an ElizaOS plugin built with the official plugin starter template.
+This plugin provides integration with the Polygon blockchain network, allowing ElizaOS to interact with both Ethereum (L1) and Polygon (L2) networks.
+
+## Features
+
+- Account and balance management on both Ethereum and Polygon
+- Token interactions (MATIC and ERC20 tokens)
+- Governance interactions (proposals, voting, delegation)
+- Staking operations (validators, delegation, rewards)
+- Bridge operations between L1 and L2
+- Block and transaction information retrieval
+
+## Configuration
+
+The plugin requires the following configuration parameters:
+
+| Parameter          | Description                                 | Required | Default                                                               |
+| ------------------ | ------------------------------------------- | -------- | --------------------------------------------------------------------- |
+| `ETHEREUM_RPC_URL` | Ethereum (L1) JSON-RPC endpoint URL         | No       | https://mainnet.infura.io/v3/acc75dee85124d4db03ba3b3a9a9e3ab         |
+| `POLYGON_RPC_URL`  | Polygon (L2) JSON-RPC endpoint URL          | No       | https://polygon-mainnet.infura.io/v3/acc75dee85124d4db03ba3b3a9a9e3ab |
+| `PRIVATE_KEY`      | Private key for transaction signing         | Yes      | None                                                                  |
+| `POLYGONSCAN_KEY`  | PolygonScan API key for gas estimations     | Yes      | None                                                                  |
+| `GOVERNOR_ADDRESS` | Address of the governance contract          | No       | None                                                                  |
+| `TOKEN_ADDRESS`    | Address of the governance token contract    | No       | None                                                                  |
+| `TIMELOCK_ADDRESS` | Address of the timelock controller contract | No       | None                                                                  |
+
+### RPC URL Configuration
+
+The plugin now includes default RPC URLs for both Ethereum and Polygon networks. These defaults will be used if you don't provide your own URLs. However, for production use, it's recommended to provide your own RPC URLs to ensure reliable performance.
+
+You can obtain RPC URLs from providers like:
+
+- [Infura](https://infura.io/)
+- [Alchemy](https://www.alchemy.com/)
+- [QuickNode](https://www.quicknode.com/)
+- [Ankr](https://www.ankr.com/)
+
+## Recent Updates
+
+### TypeScript Fixes (June 2024)
+
+- Fixed TypeScript errors in the `PolygonRpcProvider` implementation
+- Updated contract interaction methods to use `readContract` instead of `getContract` for better type safety
+- Streamlined ethers.js imports to only include necessary types
+- Improved error handling in RPC methods
+- Added proper typing for ERC20 ABIs with `as const`
+
+## Usage
+
+Once configured, the plugin provides various actions for interacting with the Polygon network:
+
+### Basic Information
+
+- `GET_L2_BLOCK_NUMBER` - Get the current block number on Polygon
+- `GET_L2_BLOCK_DETAILS` - Get detailed information about a specific block
+- `GET_TRANSACTION_DETAILS` - Get detailed information about a specific transaction
+- `GET_NATIVE_BALANCE` - Get MATIC balance for an address
+- `GET_ERC20_BALANCE` - Get token balance for an address
+
+### Transactions
+
+- `TRANSFER_POLYGON` - Transfer MATIC or tokens on Polygon
+- `BRIDGE_DEPOSIT` - Deposit assets from Ethereum to Polygon
+
+### Staking and Governance
+
+- `GET_VALIDATOR_INFO` - Get information about a validator
+- `GET_DELEGATOR_INFO` - Get information about a delegator
+- `DELEGATE_POLYGON` - Delegate MATIC to a validator
+- `WITHDRAW_REWARDS` - Withdraw staking rewards
+- `PROPOSE_GOVERNANCE` - Create a governance proposal
+- `VOTE_GOVERNANCE` - Vote on a governance proposal
+- `GET_GOVERNANCE_INFO` - Get information about governance proposals
+- `GET_VOTING_POWER` - Get voting power for an address
 
 ## Development
 
+To build the plugin:
+
 ```bash
-# Start development with hot-reloading
-npm run dev
-
-# Build the plugin
 npm run build
+```
 
-# Test the plugin
+To run tests:
+
+```bash
 npm run test
 ```
 
