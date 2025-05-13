@@ -5,44 +5,25 @@ import {
   type IAgentRuntime,
   type Memory,
   type State,
-  logger,
+  logger as coreLogger,
   composePromptFromState,
   ModelType,
-  type TemplateType,
 } from '@elizaos/core';
 import { formatUnits, Wallet } from 'ethers';
 import { PolygonRpcService } from '../services/PolygonRpcService';
+import { getDelegatorInfoTemplate } from '../templates';
+import { ValidationError, ServiceError, formatErrorMessage, parseErrorMessage } from '../errors';
 
-// Define input schema for the LLM-extracted parameters
+// Define input schema for the LLM-extracted parameters (matches JSON output from template)
 interface DelegatorParams {
-  validatorId: number;
-  delegatorAddress?: string; // Optional, will default to agent's address
+  validatorId?: number; // Make optional to catch errors from LLM more gracefully
+  delegatorAddress?: string;
+  error?: string; // To catch error messages from LLM
 }
-
-// Define template for LLM parameter extraction
-const delegatorTemplate = {
-  name: 'Get Delegator Info',
-  description: 'Extracts parameters for retrieving staking information about a delegator.',
-  parameters: {
-    type: 'object',
-    properties: {
-      validatorId: {
-        type: 'number',
-        description: 'The ID of the validator to check delegation for.',
-      },
-      delegatorAddress: {
-        type: 'string',
-        description:
-          "Optional: The address of the delegator. If not provided, the agent's own address will be used.",
-      },
-    },
-    required: ['validatorId'],
-  },
-};
 
 export const getDelegatorInfoAction: Action = {
   name: 'GET_DELEGATOR_INFO',
-  similes: ['QUERY_STAKE', 'DELEGATOR_DETAILS', 'GET_MY_STAKE'],
+  similes: ['QUERY_STAKE', 'DELEGATOR_DETAILS', 'GET_MY_STAKE', 'GET_L1_DELEGATOR_INFO'],
   description:
     'Retrieves staking information for a specific delegator address (defaults to agent wallet).',
 
@@ -51,32 +32,32 @@ export const getDelegatorInfoAction: Action = {
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    logger.debug('Validating GET_DELEGATOR_INFO action...');
+    coreLogger.debug('Validating GET_DELEGATOR_INFO action...');
 
-    // Check for required settings
     const requiredSettings = [
       'PRIVATE_KEY',
-      'ETHEREUM_RPC_URL', // L1 RPC needed for delegator info
-      'POLYGON_RPC_URL', // L2 RPC for completeness
+      'ETHEREUM_RPC_URL',
+      'POLYGON_RPC_URL',
       'POLYGON_PLUGINS_ENABLED',
     ];
 
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
-        logger.error(`Required setting ${setting} not configured for GET_DELEGATOR_INFO action.`);
+        coreLogger.error(
+          `Required setting ${setting} not configured for GET_DELEGATOR_INFO action.`
+        );
         return false;
       }
     }
 
-    // Verify PolygonRpcService is available
     try {
       const service = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
       if (!service) {
-        logger.error('PolygonRpcService not initialized.');
+        coreLogger.error('PolygonRpcService not initialized.');
         return false;
       }
     } catch (error: unknown) {
-      logger.error('Error accessing PolygonRpcService during validation:', error);
+      coreLogger.error('Error accessing PolygonRpcService during validation:', error);
       return false;
     }
 
@@ -91,118 +72,178 @@ export const getDelegatorInfoAction: Action = {
     callback: HandlerCallback | undefined,
     _responses: Memory[] | undefined
   ) => {
-    logger.info('Handling GET_DELEGATOR_INFO action for message:', message.id);
+    coreLogger.info('Handling GET_DELEGATOR_INFO action for message:', message.id);
 
     try {
-      // Get the PolygonRpcService
       const polygonService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
       if (!polygonService) {
-        throw new Error('PolygonRpcService not available');
+        throw new ServiceError('PolygonRpcService not available', PolygonRpcService.serviceType);
       }
 
-      // Extract parameters using LLM
       const prompt = composePromptFromState({
         state,
-        template: delegatorTemplate as unknown as TemplateType,
+        template: getDelegatorInfoTemplate,
       });
 
-      const modelResponse = await runtime.useModel(ModelType.LARGE, { prompt });
       let params: DelegatorParams;
 
       try {
-        const responseText = modelResponse || '';
-        const jsonString = responseText.replace(/^```json\n?|\n?```$/g, '');
-        params = JSON.parse(jsonString);
-      } catch (error: unknown) {
-        logger.error(
-          'Failed to parse LLM response for delegator parameters:',
-          modelResponse,
-          error
-        );
-        throw new Error('Could not understand delegator parameters.');
-      }
+        // First try using OBJECT_LARGE model type for structured output
+        try {
+          // The plugin-evm approach is to directly use ModelType.OBJECT_LARGE
+          // and handle any potential errors in the catch block
+          params = (await runtime.useModel(ModelType.OBJECT_LARGE, {
+            prompt,
+          })) as DelegatorParams;
+          coreLogger.debug('[GET_DELEGATOR_INFO_ACTION] Parsed LLM parameters:', params);
 
-      if (params.validatorId === undefined) {
-        throw new Error('Validator ID parameter not extracted properly.');
-      }
+          // Check if the model returned an error field
+          if (params.error) {
+            coreLogger.error('[GET_DELEGATOR_INFO_ACTION] LLM returned an error:', params.error);
+            throw new ValidationError(params.error);
+          }
+        } catch (error) {
+          // If OBJECT_LARGE fails, fall back to TEXT_LARGE and manual parsing
+          coreLogger.debug(
+            '[GET_DELEGATOR_INFO_ACTION] OBJECT_LARGE model failed, falling back to TEXT_LARGE and manual parsing',
+            error instanceof Error ? error : undefined
+          );
 
-      // If delegatorAddress wasn't specified, use the agent's address
-      let delegatorAddress = params.delegatorAddress;
-      if (!delegatorAddress) {
-        // Get the agent's address from the private key
-        const privateKey = runtime.getSetting('PRIVATE_KEY');
-        if (!privateKey) {
-          throw new Error('Private key not available');
+          const textResponse = await runtime.useModel(ModelType.LARGE, {
+            prompt,
+          });
+          coreLogger.debug('[GET_DELEGATOR_INFO_ACTION] Raw text response from LLM:', textResponse);
+
+          params = await extractParamsFromText(textResponse);
         }
 
-        // Create a wallet from the private key to get the address
-        const wallet = new Wallet(privateKey);
-        delegatorAddress = wallet.address;
-        logger.debug(`Using agent's address as delegator: ${delegatorAddress}`);
-      }
+        // Validate the extracted parameters
+        if (
+          typeof params.validatorId !== 'number' ||
+          params.validatorId <= 0 ||
+          !Number.isInteger(params.validatorId)
+        ) {
+          coreLogger.error(
+            '[GET_DELEGATOR_INFO_ACTION] Invalid or missing validatorId from LLM:',
+            params.validatorId
+          );
+          throw new ValidationError(
+            `Validator ID not found or invalid. Received: ${params.validatorId}. Please provide a positive integer. `
+          );
+        }
 
-      logger.debug('Delegator parameters:', {
-        validatorId: params.validatorId,
-        delegatorAddress,
-      });
+        const validatorId = params.validatorId;
+        let delegatorAddress = params.delegatorAddress;
 
-      // Get delegator information
-      const delegatorInfo = await polygonService.getDelegatorInfo(
-        params.validatorId,
-        delegatorAddress
-      );
+        if (!delegatorAddress) {
+          const privateKey = runtime.getSetting('PRIVATE_KEY');
+          if (!privateKey) {
+            throw new ServiceError(
+              'Private key not available to determine agent wallet address.',
+              'PRIVATE_KEY'
+            );
+          }
+          const wallet = new Wallet(privateKey);
+          delegatorAddress = wallet.address;
+          coreLogger.info(
+            `[GET_DELEGATOR_INFO_ACTION] No delegatorAddress provided, using agent's wallet: ${delegatorAddress}`
+          );
+        }
 
-      if (!delegatorInfo) {
-        throw new Error(
-          `No delegation found for address ${delegatorAddress} with validator ID ${params.validatorId}.`
+        coreLogger.info(
+          `GET_DELEGATOR_INFO: Fetching info for V:${validatorId} / D:${delegatorAddress}...`
         );
+
+        const delegatorInfo = await polygonService.getDelegatorInfo(validatorId, delegatorAddress);
+
+        if (!delegatorInfo) {
+          const notFoundMsg = `No delegation found for address ${delegatorAddress} with validator ID ${validatorId}.`;
+          coreLogger.warn(notFoundMsg);
+          throw new ValidationError(notFoundMsg);
+        }
+
+        const delegatedMatic = formatUnits(delegatorInfo.delegatedAmount, 18);
+        const pendingRewardsMatic = formatUnits(delegatorInfo.pendingRewards, 18);
+
+        const responseMsg = `Delegation Info for address ${delegatorAddress} with validator ${validatorId}:\n- Delegated Amount: ${delegatedMatic} MATIC\n- Pending Rewards: ${pendingRewardsMatic} MATIC`;
+
+        coreLogger.info(`Retrieved delegator info for V:${validatorId} / D:${delegatorAddress}`);
+
+        const responseContent: Content = {
+          text: responseMsg,
+          actions: ['GET_DELEGATOR_INFO'],
+          source: message.content.source,
+          data: {
+            validatorId,
+            delegatorAddress,
+            delegation: {
+              delegatedAmount: delegatorInfo.delegatedAmount.toString(),
+              delegatedAmountFormatted: delegatedMatic,
+              pendingRewards: delegatorInfo.pendingRewards.toString(),
+              pendingRewardsFormatted: pendingRewardsMatic,
+            },
+            success: true,
+          },
+          success: true,
+        };
+
+        if (callback) {
+          await callback(responseContent);
+        }
+        return responseContent;
+      } catch (error: unknown) {
+        const parsedErrorObj = parseErrorMessage(error);
+        coreLogger.error(
+          'Error in GET_DELEGATOR_INFO handler:',
+          parsedErrorObj.message,
+          error instanceof Error ? error : parsedErrorObj
+        );
+
+        const formattedError = formatErrorMessage(
+          'GET_DELEGATOR_INFO',
+          parsedErrorObj.message,
+          parsedErrorObj.details || undefined
+        );
+
+        const errorContent: Content = {
+          text: `Error retrieving delegator information: ${formattedError}`,
+          actions: ['GET_DELEGATOR_INFO'],
+          source: message.content.source,
+          data: {
+            success: false,
+            error: formattedError,
+          },
+          success: false,
+        };
+
+        if (callback) {
+          await callback(errorContent);
+        }
+        return errorContent;
       }
-
-      // Format amounts as human-readable MATIC
-      const delegatedMatic = formatUnits(delegatorInfo.delegatedAmount, 18);
-      const pendingRewardsMatic = formatUnits(delegatorInfo.pendingRewards, 18);
-
-      // Prepare response message
-      const responseMsg = `Delegation Info for address ${delegatorAddress} with validator ${params.validatorId}:
-- Delegated Amount: ${delegatedMatic} MATIC
-- Pending Rewards: ${pendingRewardsMatic} MATIC`;
-
-      logger.info(
-        `Retrieved delegator info for address ${delegatorAddress} with validator ${params.validatorId}`
+    } catch (error: unknown) {
+      const parsedErrorObj = parseErrorMessage(error);
+      coreLogger.error(
+        'Error in GET_DELEGATOR_INFO handler:',
+        parsedErrorObj.message,
+        error instanceof Error ? error : parsedErrorObj
       );
 
-      // Format the response content
-      const responseContent: Content = {
-        text: responseMsg,
+      const formattedError = formatErrorMessage(
+        'GET_DELEGATOR_INFO',
+        parsedErrorObj.message,
+        parsedErrorObj.details || undefined
+      );
+
+      const errorContent: Content = {
+        text: `Error retrieving delegator information: ${formattedError}`,
         actions: ['GET_DELEGATOR_INFO'],
         source: message.content.source,
         data: {
-          validatorId: params.validatorId,
-          delegatorAddress,
-          delegation: {
-            delegatedAmount: delegatorInfo.delegatedAmount.toString(),
-            delegatedAmountFormatted: delegatedMatic,
-            pendingRewards: delegatorInfo.pendingRewards.toString(),
-            pendingRewardsFormatted: pendingRewardsMatic,
-          },
+          success: false,
+          error: formattedError,
         },
-      };
-
-      if (callback) {
-        await callback(responseContent);
-      }
-      return responseContent;
-    } catch (error: unknown) {
-      // Handle errors
-      const errMsg = error instanceof Error ? error.message : String(error);
-      logger.error('Error in GET_DELEGATOR_INFO handler:', errMsg, error);
-
-      // Format error response
-      const errorContent: Content = {
-        text: `Error retrieving delegator information: ${errMsg}`,
-        actions: ['GET_DELEGATOR_INFO'],
-        source: message.content.source,
-        data: { success: false, error: errMsg },
+        success: false,
       };
 
       if (callback) {
@@ -239,3 +280,75 @@ export const getDelegatorInfoAction: Action = {
     ],
   ],
 };
+
+// Helper function to extract parameters from text response (including XML format)
+async function extractParamsFromText(responseText: string): Promise<DelegatorParams> {
+  coreLogger.debug('Raw responseText:', responseText);
+
+  // First try to extract as JSON
+  try {
+    // Look for JSON code blocks
+    const jsonMatch = responseText.match(/```(?:json)?\s*({[\s\S]*?})\s*```/);
+    if (jsonMatch?.[1]) {
+      const result = JSON.parse(jsonMatch[1]);
+      coreLogger.debug('Extracted from JSON block:', result);
+      return result;
+    }
+
+    // Look for plain JSON
+    if (responseText.trim().startsWith('{') && responseText.trim().endsWith('}')) {
+      const result = JSON.parse(responseText);
+      coreLogger.debug('Extracted from plain JSON:', result);
+      return result;
+    }
+  } catch (jsonError) {
+    coreLogger.debug('Could not parse response as JSON', jsonError);
+  }
+
+  // Direct approach: look for validator numbers and addresses
+  // Look for any mention of validator followed by a number
+  const validatorPattern = /validator\s+(?:id\s+)?(\d+)|validator[^\d]*?(\d+)|validator.*?(\d+)/i;
+  const validatorMatch = responseText.match(validatorPattern);
+
+  // Look for Ethereum addresses
+  const addressPattern = /(0x[a-fA-F0-9]{40})/i;
+  const addressMatch = responseText.match(addressPattern);
+
+  coreLogger.debug('Validator match:', validatorMatch);
+  coreLogger.debug('Address match:', addressMatch);
+
+  const params: DelegatorParams = {};
+
+  // Extract validator ID from any of the captured groups
+  if (validatorMatch) {
+    // Find the first non-undefined group (the actual number)
+    const numberGroup = validatorMatch.slice(1).find((g) => g !== undefined);
+    if (numberGroup) {
+      params.validatorId = Number.parseInt(numberGroup, 10);
+      coreLogger.debug(`Extracted validatorId ${params.validatorId} from text`);
+    }
+  }
+
+  if (addressMatch?.[1]) {
+    params.delegatorAddress = addressMatch[1];
+    coreLogger.debug(`Extracted delegatorAddress ${params.delegatorAddress} from text`);
+  }
+
+  // If we managed to extract a validator ID, return the params
+  if (params.validatorId) {
+    return params;
+  }
+
+  // Last resort: extract any number from the text as a potential validator ID
+  const anyNumberMatch = responseText.match(/\b(\d+)\b/);
+  if (anyNumberMatch?.[1]) {
+    const potentialId = Number.parseInt(anyNumberMatch[1], 10);
+    coreLogger.debug(`Extracted potential validatorId ${potentialId} from text as last resort`);
+    return { validatorId: potentialId };
+  }
+
+  // If we can't extract parameters
+  return {
+    error: 'Could not extract validator ID from the response. Please provide a valid validator ID.',
+  };
+}

@@ -93,37 +93,72 @@ export function formatErrorMessage(action: string, message: string, details?: st
   return formattedMessage;
 }
 
+interface ParsedError {
+  message: string;
+  details?: string;
+}
+
 /**
  * Helper function to parse error objects from different sources
- * Attempts to extract the most useful error message from various error formats
+ * Attempts to extract the most useful error message and details from various error formats.
+ * Always returns an object with a message and optional details.
  */
-export function parseErrorMessage(error: unknown): string {
+export function parseErrorMessage(error: unknown): ParsedError {
   if (error instanceof Error) {
-    return error.message;
+    // For standard Error objects, message is primary, stack could be details
+    return { message: error.message, details: error.stack };
   }
 
   if (typeof error === 'string') {
-    return error;
+    return { message: error }; // Simple string error
   }
 
   if (typeof error === 'object' && error !== null) {
-    // Try to handle common error shapes
+    let message = 'Unknown object error';
+    let details: string | undefined;
+
+    // Try to handle common error shapes from RPC calls or other libraries
     if ('message' in error && typeof error.message === 'string') {
-      return error.message;
+      message = error.message;
     }
 
     if ('reason' in error && typeof error.reason === 'string') {
-      return error.reason;
+      message = error.reason; // Often used in ethers.js errors
     }
 
-    if ('error' in error && typeof error.error === 'object' && error.error !== null) {
-      if ('message' in error.error && typeof error.error.message === 'string') {
-        return error.error.message;
+    if ('data' in error && typeof error.data === 'string') {
+      details = error.data; // E.g., revert reason from ethers
+    } else if ('stack' in error && typeof error.stack === 'string') {
+      details = error.stack;
+    }
+
+    // Check for nested error objects (common in some RPC error wrappers)
+    if (
+      message === 'Unknown object error' &&
+      'error' in error &&
+      typeof error.error === 'object' &&
+      error.error !== null
+    ) {
+      const nestedError = error.error as Record<string, unknown>; // Type assertion
+      if ('message' in nestedError && typeof nestedError.message === 'string') {
+        message = nestedError.message;
+      }
+      if ('data' in nestedError && typeof nestedError.data === 'string') {
+        details = `${details ? `${details}; ` : ''}${nestedError.data}`;
       }
     }
 
-    return JSON.stringify(error);
+    // If still default message, try to stringify the object as a last resort for details
+    if (message === 'Unknown object error') {
+      try {
+        details = JSON.stringify(error);
+      } catch (e) {
+        details = 'Unserializable error object';
+      }
+    }
+
+    return { message, details };
   }
 
-  return 'Unknown error';
+  return { message: 'Unknown error' }; // Fallback for truly unknown types
 }

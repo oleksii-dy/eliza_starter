@@ -5,12 +5,12 @@ import {
   type IAgentRuntime,
   type Memory,
   type State,
-  logger,
+  logger as coreLogger,
   composePromptFromState,
   ModelType,
   type TemplateType,
 } from '@elizaos/core';
-import { formatUnits } from 'ethers';
+import { formatUnits } from 'viem'; // Changed from ethers to viem
 import { PolygonRpcService, ValidatorStatus } from '../services/PolygonRpcService';
 import {
   ValidationError,
@@ -19,31 +19,68 @@ import {
   formatErrorMessage,
   parseErrorMessage,
 } from '../errors';
+import { getValidatorInfoTemplate } from '../templates';
 
 // Define input schema for the LLM-extracted parameters
 interface ValidatorParams {
   validatorId: number;
+  error?: string; // To catch error messages from LLM
 }
 
-// Define template for LLM parameter extraction
-const validatorTemplate = {
-  name: 'Get Validator Info',
-  description: 'Extracts parameters for retrieving information about a Polygon validator.',
-  parameters: {
-    type: 'object',
-    properties: {
-      validatorId: {
-        type: 'number',
-        description: 'The ID of the validator to get information about.',
-      },
-    },
-    required: ['validatorId'],
-  },
-};
+// Helper function to attempt extraction of validator ID from text or XML
+async function attemptParamExtraction(responseText: string): Promise<ValidatorParams> {
+  coreLogger.debug('Raw responseText for extraction:', responseText);
+
+  // First try to extract as JSON
+  try {
+    // Look for JSON code blocks
+    const jsonMatch = responseText.match(/```(?:json)?\s*({[\s\S]*?})\s*```/);
+    if (jsonMatch?.[1]) {
+      const params = JSON.parse(jsonMatch[1]);
+      coreLogger.debug(`Extracted params from JSON code block: ${JSON.stringify(params)}`);
+      return params;
+    }
+
+    // Try JSON without code blocks
+    if (responseText.trim().startsWith('{') && responseText.trim().endsWith('}')) {
+      const params = JSON.parse(responseText.trim());
+      coreLogger.debug(`Extracted params from plain JSON: ${JSON.stringify(params)}`);
+      return params;
+    }
+  } catch (jsonError) {
+    coreLogger.debug('Failed to parse as JSON, trying direct extraction');
+  }
+
+  // Direct approach - look for validator number mentions anywhere in the text
+  const validatorPattern = /validator\s+(?:id\s+)?(\d+)|validator[^\d]*?(\d+)|validator.*?(\d+)/i;
+  const validatorMatch = responseText.match(validatorPattern);
+
+  coreLogger.debug('Validator match:', validatorMatch);
+
+  if (validatorMatch) {
+    // Find the first non-undefined group (the actual number)
+    const numberGroup = validatorMatch.slice(1).find((g) => g !== undefined);
+    if (numberGroup) {
+      const validatorId = Number.parseInt(numberGroup, 10);
+      coreLogger.debug(`Extracted validatorId ${validatorId} from text pattern match`);
+      return { validatorId };
+    }
+  }
+
+  // Last resort: extract any number from the text as a potential validator ID
+  const anyNumberMatch = responseText.match(/\b(\d+)\b/);
+  if (anyNumberMatch?.[1]) {
+    const validatorId = Number.parseInt(anyNumberMatch[1], 10);
+    coreLogger.debug(`Found potential validatorId ${validatorId} from text as last resort`);
+    return { validatorId };
+  }
+
+  throw new ValidationError('Could not extract validator ID from response');
+}
 
 export const getValidatorInfoAction: Action = {
   name: 'GET_VALIDATOR_INFO',
-  similes: ['QUERY_VALIDATOR', 'VALIDATOR_DETAILS'],
+  similes: ['QUERY_VALIDATOR', 'VALIDATOR_DETAILS', 'GET_L1_VALIDATOR_INFO'],
   description: 'Retrieves information about a specific Polygon validator.',
 
   validate: async (
@@ -51,7 +88,7 @@ export const getValidatorInfoAction: Action = {
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    logger.debug('Validating GET_VALIDATOR_INFO action...');
+    coreLogger.debug('Validating GET_VALIDATOR_INFO action...');
 
     // Check for required settings
     const requiredSettings = [
@@ -63,7 +100,9 @@ export const getValidatorInfoAction: Action = {
 
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
-        logger.error(`Required setting ${setting} not configured for GET_VALIDATOR_INFO action.`);
+        coreLogger.error(
+          `Required setting ${setting} not configured for GET_VALIDATOR_INFO action.`
+        );
         return false;
       }
     }
@@ -76,7 +115,7 @@ export const getValidatorInfoAction: Action = {
       }
     } catch (error: unknown) {
       const errorMsg = parseErrorMessage(error);
-      logger.error('Error accessing PolygonRpcService during validation:', error);
+      coreLogger.error('Error accessing PolygonRpcService during validation:', error);
       return false;
     }
 
@@ -91,7 +130,7 @@ export const getValidatorInfoAction: Action = {
     callback: HandlerCallback | undefined,
     _responses: Memory[] | undefined
   ) => {
-    logger.info('Handling GET_VALIDATOR_INFO action for message:', message.id);
+    coreLogger.info('Handling GET_VALIDATOR_INFO action for message:', message.id);
 
     try {
       // Get the PolygonRpcService
@@ -100,46 +139,84 @@ export const getValidatorInfoAction: Action = {
         throw new ServiceError('PolygonRpcService not available', 'PolygonRpcService');
       }
 
-      // Extract parameters using LLM
+      // Extract parameters using template prompt
       const prompt = composePromptFromState({
         state,
-        template: validatorTemplate as unknown as TemplateType,
+        template: getValidatorInfoTemplate,
       });
 
-      const modelResponse = await runtime.useModel(ModelType.LARGE, { prompt });
       let params: ValidatorParams;
 
       try {
-        const responseText = modelResponse || '';
-        const jsonString = responseText.replace(/^```json\n?|\n?```$/g, '');
-        params = JSON.parse(jsonString);
+        // First try using OBJECT_LARGE model type for structured output
+        try {
+          // The plugin-evm approach is to directly use ModelType.OBJECT_LARGE
+          // and handle any potential errors in the catch block
+          params = (await runtime.useModel(ModelType.OBJECT_LARGE, {
+            prompt,
+          })) as ValidatorParams;
+          coreLogger.debug('[GET_VALIDATOR_INFO_ACTION] Parsed LLM parameters:', params);
+
+          // Check if the model returned an error field
+          if (params.error) {
+            throw new ValidationError(params.error);
+          }
+        } catch (error) {
+          // If OBJECT_LARGE fails, fall back to TEXT_LARGE
+          coreLogger.debug(
+            '[GET_VALIDATOR_INFO_ACTION] OBJECT_LARGE model failed, falling back to TEXT_LARGE',
+            error instanceof Error ? error : undefined
+          );
+
+          const responseText = await runtime.useModel(ModelType.LARGE, {
+            prompt,
+          });
+          coreLogger.debug('[GET_VALIDATOR_INFO_ACTION] Raw text response from LLM:', responseText);
+
+          // Extract parameters from text
+          params = await attemptParamExtraction(responseText);
+        }
+
+        // Validate params after extraction
+        if (params.validatorId === undefined) {
+          throw new ValidationError('Validator ID parameter not extracted properly');
+        }
+
+        if (typeof params.validatorId !== 'number' || params.validatorId <= 0) {
+          throw new ValidationError(
+            `Invalid validator ID: ${params.validatorId}. Must be a positive integer.`
+          );
+        }
+
+        coreLogger.debug('Validator parameters:', params);
       } catch (error: unknown) {
         const errorMsg = parseErrorMessage(error);
-        logger.error(
+        coreLogger.error(
           'Failed to parse LLM response for validator parameters:',
-          modelResponse,
+          error instanceof Error ? error.message : String(error),
           error
         );
-        throw new ValidationError(
-          formatErrorMessage(
+
+        const errorContent: Content = {
+          text: formatErrorMessage(
             'Parameter extraction',
-            'Could not understand validator parameters',
-            errorMsg
-          )
-        );
-      }
+            'Could not understand validator parameters. Please provide a valid validator ID (number).',
+            errorMsg.details || undefined
+          ),
+          actions: ['GET_VALIDATOR_INFO'],
+          source: message.content?.source,
+          data: {
+            success: false,
+            error: 'Invalid validator ID parameter',
+          },
+          success: false,
+        };
 
-      if (params.validatorId === undefined) {
-        throw new ValidationError('Validator ID parameter not extracted properly');
+        if (callback) {
+          await callback(errorContent);
+        }
+        return errorContent;
       }
-
-      if (typeof params.validatorId !== 'number' || params.validatorId <= 0) {
-        throw new ValidationError(
-          `Invalid validator ID: ${params.validatorId}. Must be a positive integer.`
-        );
-      }
-
-      logger.debug('Validator parameters:', params);
 
       // Get validator information
       try {
@@ -164,6 +241,7 @@ export const getValidatorInfoAction: Action = {
         const statusLabel = statusLabels[validatorInfo.status] || 'Unknown';
 
         // Format total stake as human-readable MATIC
+        // viem formatUnits takes bigint and number directly, no need for .toString()
         const totalStakeMatic = formatUnits(validatorInfo.totalStake, 18);
 
         // Prepare response message
@@ -174,7 +252,7 @@ export const getValidatorInfoAction: Action = {
 - Signer Address: ${validatorInfo.signerAddress}
 - Contract Address: ${validatorInfo.contractAddress}`;
 
-        logger.info(`Retrieved validator info for validator ID ${params.validatorId}`);
+        coreLogger.info(`Retrieved validator info for validator ID ${params.validatorId}`);
 
         // Format the response content
         const responseContent: Content = {
@@ -201,45 +279,67 @@ export const getValidatorInfoAction: Action = {
         }
         return responseContent;
       } catch (error: unknown) {
-        // Check if this is already one of our custom errors
-        if (
-          error instanceof ContractError ||
-          error instanceof ValidationError ||
-          error instanceof ServiceError
-        ) {
-          throw error;
-        }
-
-        // Otherwise wrap in a ContractError
         const errorMsg = parseErrorMessage(error);
-        throw new ContractError(
-          formatErrorMessage(
+        coreLogger.error(
+          `Error getting validator info: ${errorMsg.message}`,
+          error instanceof Error ? error : undefined
+        );
+
+        const errorContent: Content = {
+          text: formatErrorMessage(
             'Validator info retrieval',
             `Failed to get validator #${params.validatorId} info from Ethereum L1`,
-            errorMsg
+            errorMsg.details || undefined
           ),
-          'STAKE_MANAGER_ADDRESS_L1',
-          'validators'
-        );
+          actions: ['GET_VALIDATOR_INFO'],
+          source: message.content?.source,
+          data: {
+            success: false,
+            error: `Failed to retrieve validator ${params.validatorId} info: ${errorMsg.message}`,
+            STAKE_MANAGER_ADDRESS_L1: true,
+            method: 'validators',
+          },
+          success: false,
+        };
+
+        if (callback) {
+          await callback(errorContent);
+        }
+        return errorContent;
       }
     } catch (error: unknown) {
-      // Handle errors
-      let errMsg: string;
+      const parsedErrorObj = parseErrorMessage(error);
+      coreLogger.error(`Error in GET_VALIDATOR_INFO handler: ${parsedErrorObj.message}`);
 
-      if (error instanceof Error) {
-        errMsg = error.message;
-      } else {
-        errMsg = parseErrorMessage(error);
+      if (parsedErrorObj.details) {
+        coreLogger.error(`Details: ${parsedErrorObj.details}`);
       }
 
-      logger.error('Error in GET_VALIDATOR_INFO handler:', errMsg, error);
+      if (error instanceof Error) {
+        coreLogger.error('Original error object for stack trace:', error);
+      } else if (typeof error === 'object' && error !== null) {
+        // If it was an object but not an Error instance, and we haven't logged details yet
+        // or want to see the full object structure.
+        if (!parsedErrorObj.details) {
+          coreLogger.error('Raw error object (stringified):', JSON.stringify(error));
+        }
+      }
 
-      // Format error response
+      const formattedError = formatErrorMessage(
+        'GET_VALIDATOR_INFO',
+        parsedErrorObj.message,
+        parsedErrorObj.details || undefined
+      );
+
       const errorContent: Content = {
-        text: `Error retrieving validator information: ${errMsg}`,
+        text: `Error retrieving validator information: ${formattedError}`,
         actions: ['GET_VALIDATOR_INFO'],
         source: message.content.source,
-        data: { success: false, error: errMsg },
+        data: {
+          success: false,
+          error: formattedError,
+        },
+        success: false,
       };
 
       if (callback) {

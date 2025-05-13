@@ -6,23 +6,27 @@ import {
   type Memory,
   type State,
   logger,
-  composePromptFromState,
+  composePrompt,
   ModelType,
+  composePromptFromState,
   parseJSONObjectFromText,
 } from '@elizaos/core';
+import { ethers, parseUnits } from 'ethers';
 import { PolygonRpcService } from '../services/PolygonRpcService';
-import { withdrawRewardsTemplate } from '../templates';
+import { delegateL1Template } from '../templates';
 import { parseErrorMessage } from '../errors';
 
 // Define input schema for the LLM-extracted parameters
-interface WithdrawRewardsParams {
+interface DelegateL1Params {
   validatorId?: number;
+  amountWei?: string; // Amount in smallest unit (Wei)
   error?: string;
 }
 
 // Helper function to extract params from text if LLM fails
-function extractParamsFromText(text: string): Partial<WithdrawRewardsParams> {
-  const params: Partial<WithdrawRewardsParams> = {};
+// This is a simplified example; a more robust regex might be needed.
+function extractParamsFromText(text: string): Partial<DelegateL1Params> {
+  const params: Partial<DelegateL1Params> = {};
 
   // Extract validator ID (positive integer)
   const validatorIdMatch = text.match(/validator(?: id)?\\s*[:#]?\\s*(\\d+)/i);
@@ -33,47 +37,54 @@ function extractParamsFromText(text: string): Partial<WithdrawRewardsParams> {
     }
   }
 
+  // Extract amount (e.g., "10", "5.5", "100 MATIC", "0.25 ether")
+  // This regex looks for a number (int or float) optionally followed by "MATIC", "ETH", or "ether"
+  const amountMatch = text.match(/(\\d*\\.?\\d+)\\s*(?:MATIC|ETH|ether)?/i);
+  if (amountMatch?.[1]) {
+    try {
+      // Convert to Wei. Assumes 18 decimal places for MATIC/ETH.
+      params.amountWei = parseUnits(amountMatch[1], 18).toString();
+    } catch (e) {
+      logger.warn(`Could not parse amount from text: ${amountMatch[1]}`, e);
+    }
+  }
+
   return params;
 }
 
-export const withdrawRewardsAction: Action = {
-  name: 'WITHDRAW_REWARDS',
-  similes: ['CLAIM_STAKING_REWARDS', 'CLAIM_REWARDS', 'COLLECT_REWARDS'],
-  description: 'Withdraws accumulated staking rewards from a Polygon validator.',
-
+export const delegateL1Action: Action = {
+  name: 'DELEGATE_L1',
+  similes: ['STAKE_MATIC_L1', 'BOND_MATIC_L1', 'DELEGATE_POLYGON', 'STAKE_MATIC'],
+  description: 'Delegates (stakes) MATIC tokens to a validator on the Ethereum L1 for Polygon.',
   validate: async (
     runtime: IAgentRuntime,
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    logger.debug('Validating WITHDRAW_REWARDS action...');
+    logger.debug('Validating DELEGATE_L1 action...');
 
     const requiredSettings = [
       'PRIVATE_KEY',
-      'ETHEREUM_RPC_URL', // L1 RPC needed for rewards withdrawal
+      'ETHEREUM_RPC_URL', // L1 RPC needed for delegation
     ];
-
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
-        logger.error(`Required setting ${setting} not configured for WITHDRAW_REWARDS action.`);
+        logger.error(`Required setting ${setting} not configured for DELEGATE_L1 action.`);
         return false;
       }
     }
-
     try {
       const service = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
       if (!service) {
-        logger.error('PolygonRpcService not initialized for WITHDRAW_REWARDS.');
+        logger.error('PolygonRpcService not initialized for DELEGATE_L1.');
         return false;
       }
     } catch (error: unknown) {
-      logger.error('Error accessing PolygonRpcService during WITHDRAW_REWARDS validation:', error);
+      logger.error('Error accessing PolygonRpcService during DELEGATE_L1 validation:', error);
       return false;
     }
-
     return true;
   },
-
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
@@ -82,9 +93,9 @@ export const withdrawRewardsAction: Action = {
     callback: HandlerCallback | undefined,
     _recentMessages: Memory[] | undefined
   ) => {
-    logger.info('Handling WITHDRAW_REWARDS action for message:', message.id);
+    logger.info('Handling DELEGATE_L1 action for message:', message.id);
     const rawMessageText = message.content.text || '';
-    let params: WithdrawRewardsParams | null = null;
+    let params: DelegateL1Params | null = null;
 
     try {
       const polygonService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
@@ -94,7 +105,7 @@ export const withdrawRewardsAction: Action = {
 
       const prompt = composePromptFromState({
         state,
-        template: withdrawRewardsTemplate,
+        template: delegateL1Template,
       });
 
       // Try using parseJSONObjectFromText with TEXT_SMALL model
@@ -103,56 +114,59 @@ export const withdrawRewardsAction: Action = {
           prompt,
         });
 
-        params = parseJSONObjectFromText(result) as WithdrawRewardsParams;
-        logger.debug('WITHDRAW_REWARDS: Extracted params via TEXT_SMALL:', params);
+        params = parseJSONObjectFromText(result) as DelegateL1Params;
+        logger.debug('DELEGATE_L1: Extracted params via TEXT_SMALL:', params);
 
         // Check if the model response contains an error
         if (params.error) {
-          logger.warn(`WITHDRAW_REWARDS: Model responded with error: ${params.error}`);
+          logger.warn(`DELEGATE_L1: Model responded with error: ${params.error}`);
           throw new Error(params.error);
         }
       } catch (e) {
         logger.warn(
-          'WITHDRAW_REWARDS: Failed to parse JSON from model response, trying manual extraction',
+          'DELEGATE_L1: Failed to parse JSON from model response, trying manual extraction',
           e
         );
 
         // Fallback to manual extraction from raw message text
         const manualParams = extractParamsFromText(rawMessageText);
-        if (manualParams.validatorId) {
+        if (manualParams.validatorId && manualParams.amountWei) {
           params = {
             validatorId: manualParams.validatorId,
+            amountWei: manualParams.amountWei,
           };
-          logger.debug('WITHDRAW_REWARDS: Extracted params via manual text parsing:', params);
+          logger.debug('DELEGATE_L1: Extracted params via manual text parsing:', params);
         } else {
-          throw new Error('Could not determine validator ID from the message.');
+          throw new Error('Could not determine validator ID or amount from the message.');
         }
       }
 
       // Validate the extracted parameters
-      if (!params?.validatorId) {
-        throw new Error('Validator ID is missing after extraction attempts.');
+      if (!params?.validatorId || !params.amountWei) {
+        throw new Error('Validator ID or amount is missing after extraction attempts.');
       }
 
-      const { validatorId } = params;
-      logger.debug(`WITHDRAW_REWARDS parameters: validatorId: ${validatorId}`);
+      const { validatorId, amountWei } = params;
+      logger.debug(`DELEGATE_L1 parameters: validatorId: ${validatorId}, amountWei: ${amountWei}`);
 
-      // Call the service to withdraw rewards
-      // TODO: Currently a placeholder - implement actual withdrawal when PolygonRpcService supports it
-      // const txHash = await polygonService.withdrawRewards(validatorId);
-      const txHash = `0x_withdraw_rewards_placeholder_${validatorId}`;
+      // Convert the amount to BigInt for the service
+      const amountBigInt = BigInt(amountWei);
+      const txHash = await polygonService.delegate(validatorId, amountBigInt);
+      const amountFormatted = ethers.formatEther(amountWei);
 
-      const successMsg = `Successfully initiated withdrawal of rewards from validator ${validatorId}. Transaction hash: ${txHash}`;
+      const successMsg = `Successfully initiated delegation of ${amountFormatted} MATIC to validator ${validatorId}. Transaction hash: ${txHash}`;
       logger.info(successMsg);
 
       const responseContent: Content = {
         text: successMsg,
-        actions: ['WITHDRAW_REWARDS'],
+        actions: ['DELEGATE_L1'],
         source: message.content.source,
         data: {
           transactionHash: txHash,
           status: 'pending',
           validatorId: validatorId,
+          amountDelegatedMatic: amountFormatted,
+          amountDelegatedWei: amountWei,
         },
       };
 
@@ -162,11 +176,11 @@ export const withdrawRewardsAction: Action = {
       return responseContent;
     } catch (error: unknown) {
       const parsedError = parseErrorMessage(error);
-      logger.error('Error in WITHDRAW_REWARDS handler:', parsedError);
+      logger.error('Error in DELEGATE_L1 handler:', parsedError);
 
       const errorContent: Content = {
-        text: `Error withdrawing rewards: ${parsedError.message}`,
-        actions: ['WITHDRAW_REWARDS'],
+        text: `Error delegating MATIC (L1): ${parsedError.message}`,
+        actions: ['DELEGATE_L1'],
         source: message.content.source,
         data: {
           success: false,
@@ -181,13 +195,12 @@ export const withdrawRewardsAction: Action = {
       return errorContent;
     }
   },
-
   examples: [
     [
       {
         name: 'user',
         content: {
-          text: 'Withdraw my staking rewards from validator 123',
+          text: 'I want to delegate 10 MATIC to validator 123 on L1',
         },
       },
     ],
@@ -195,7 +208,7 @@ export const withdrawRewardsAction: Action = {
       {
         name: 'user',
         content: {
-          text: 'Claim rewards from Polygon validator ID 42',
+          text: 'Stake 5.5 MATIC with the Polygon validator ID 42 for L1 staking',
         },
       },
     ],

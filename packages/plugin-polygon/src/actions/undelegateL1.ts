@@ -10,19 +10,22 @@ import {
   ModelType,
   parseJSONObjectFromText,
 } from '@elizaos/core';
+import { parseUnits } from 'ethers';
 import { PolygonRpcService } from '../services/PolygonRpcService';
-import { withdrawRewardsTemplate } from '../templates';
+import { parseBigIntString } from '../utils';
+import { undelegateL1Template } from '../templates';
 import { parseErrorMessage } from '../errors';
 
 // Define input schema for the LLM-extracted parameters
-interface WithdrawRewardsParams {
+interface UndelegateL1Params {
   validatorId?: number;
+  sharesAmountWei?: string;
   error?: string;
 }
 
 // Helper function to extract params from text if LLM fails
-function extractParamsFromText(text: string): Partial<WithdrawRewardsParams> {
-  const params: Partial<WithdrawRewardsParams> = {};
+function extractParamsFromText(text: string): Partial<UndelegateL1Params> {
+  const params: Partial<UndelegateL1Params> = {};
 
   // Extract validator ID (positive integer)
   const validatorIdMatch = text.match(/validator(?: id)?\\s*[:#]?\\s*(\\d+)/i);
@@ -33,29 +36,40 @@ function extractParamsFromText(text: string): Partial<WithdrawRewardsParams> {
     }
   }
 
+  // Extract shares amount (e.g., "10", "5.5", "100 shares", "0.25 validator shares")
+  const sharesMatch = text.match(/(\\d*\\.?\\d+)\\s*(?:shares?|validator shares?)?/i);
+  if (sharesMatch?.[1]) {
+    try {
+      // Convert to Wei. Assumes 18 decimal places for shares.
+      params.sharesAmountWei = parseUnits(sharesMatch[1], 18).toString();
+    } catch (e) {
+      logger.warn(`Could not parse shares amount from text: ${sharesMatch[1]}`, e);
+    }
+  }
+
   return params;
 }
 
-export const withdrawRewardsAction: Action = {
-  name: 'WITHDRAW_REWARDS',
-  similes: ['CLAIM_STAKING_REWARDS', 'CLAIM_REWARDS', 'COLLECT_REWARDS'],
-  description: 'Withdraws accumulated staking rewards from a Polygon validator.',
+export const undelegateL1Action: Action = {
+  name: 'UNDELEGATE_L1',
+  similes: ['UNBOND_L1', 'WITHDRAW_STAKE_L1', 'UNDELEGATE_POLYGON'],
+  description: 'Initiates undelegation (unbonding) of Validator Shares on Ethereum L1.',
 
   validate: async (
     runtime: IAgentRuntime,
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    logger.debug('Validating WITHDRAW_REWARDS action...');
+    logger.debug('Validating UNDELEGATE_L1 action...');
 
     const requiredSettings = [
       'PRIVATE_KEY',
-      'ETHEREUM_RPC_URL', // L1 RPC needed for rewards withdrawal
+      'ETHEREUM_RPC_URL', // L1 RPC needed for undelegation
     ];
 
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
-        logger.error(`Required setting ${setting} not configured for WITHDRAW_REWARDS action.`);
+        logger.error(`Required setting ${setting} not configured for UNDELEGATE_L1 action.`);
         return false;
       }
     }
@@ -63,11 +77,11 @@ export const withdrawRewardsAction: Action = {
     try {
       const service = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
       if (!service) {
-        logger.error('PolygonRpcService not initialized for WITHDRAW_REWARDS.');
+        logger.error('PolygonRpcService not initialized for UNDELEGATE_L1.');
         return false;
       }
     } catch (error: unknown) {
-      logger.error('Error accessing PolygonRpcService during WITHDRAW_REWARDS validation:', error);
+      logger.error('Error accessing PolygonRpcService during UNDELEGATE_L1 validation:', error);
       return false;
     }
 
@@ -82,19 +96,19 @@ export const withdrawRewardsAction: Action = {
     callback: HandlerCallback | undefined,
     _recentMessages: Memory[] | undefined
   ) => {
-    logger.info('Handling WITHDRAW_REWARDS action for message:', message.id);
+    logger.info('Handling UNDELEGATE_L1 action for message:', message.id);
     const rawMessageText = message.content.text || '';
-    let params: WithdrawRewardsParams | null = null;
+    let params: UndelegateL1Params | null = null;
 
     try {
-      const polygonService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!polygonService) {
+      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
+      if (!rpcService) {
         throw new Error('PolygonRpcService not available');
       }
 
       const prompt = composePromptFromState({
         state,
-        template: withdrawRewardsTemplate,
+        template: undelegateL1Template,
       });
 
       // Try using parseJSONObjectFromText with TEXT_SMALL model
@@ -103,56 +117,59 @@ export const withdrawRewardsAction: Action = {
           prompt,
         });
 
-        params = parseJSONObjectFromText(result) as WithdrawRewardsParams;
-        logger.debug('WITHDRAW_REWARDS: Extracted params via TEXT_SMALL:', params);
+        params = parseJSONObjectFromText(result) as UndelegateL1Params;
+        logger.debug('UNDELEGATE_L1: Extracted params via TEXT_SMALL:', params);
 
         // Check if the model response contains an error
         if (params.error) {
-          logger.warn(`WITHDRAW_REWARDS: Model responded with error: ${params.error}`);
+          logger.warn(`UNDELEGATE_L1: Model responded with error: ${params.error}`);
           throw new Error(params.error);
         }
       } catch (e) {
         logger.warn(
-          'WITHDRAW_REWARDS: Failed to parse JSON from model response, trying manual extraction',
+          'UNDELEGATE_L1: Failed to parse JSON from model response, trying manual extraction',
           e
         );
 
         // Fallback to manual extraction from raw message text
         const manualParams = extractParamsFromText(rawMessageText);
-        if (manualParams.validatorId) {
+        if (manualParams.validatorId && manualParams.sharesAmountWei) {
           params = {
             validatorId: manualParams.validatorId,
+            sharesAmountWei: manualParams.sharesAmountWei,
           };
-          logger.debug('WITHDRAW_REWARDS: Extracted params via manual text parsing:', params);
+          logger.debug('UNDELEGATE_L1: Extracted params via manual text parsing:', params);
         } else {
-          throw new Error('Could not determine validator ID from the message.');
+          throw new Error('Could not determine validator ID or shares amount from the message.');
         }
       }
 
       // Validate the extracted parameters
-      if (!params?.validatorId) {
-        throw new Error('Validator ID is missing after extraction attempts.');
+      if (!params?.validatorId || !params.sharesAmountWei) {
+        throw new Error('Validator ID or shares amount is missing after extraction attempts.');
       }
 
-      const { validatorId } = params;
-      logger.debug(`WITHDRAW_REWARDS parameters: validatorId: ${validatorId}`);
+      const { validatorId, sharesAmountWei } = params;
+      logger.debug(
+        `UNDELEGATE_L1 parameters: validatorId: ${validatorId}, sharesAmountWei: ${sharesAmountWei}`
+      );
 
-      // Call the service to withdraw rewards
-      // TODO: Currently a placeholder - implement actual withdrawal when PolygonRpcService supports it
-      // const txHash = await polygonService.withdrawRewards(validatorId);
-      const txHash = `0x_withdraw_rewards_placeholder_${validatorId}`;
+      // Convert the shares amount to BigInt for the service
+      const sharesAmountBigInt = parseBigIntString(sharesAmountWei, 'shares');
+      const txHash = await rpcService.undelegate(validatorId, sharesAmountBigInt);
 
-      const successMsg = `Successfully initiated withdrawal of rewards from validator ${validatorId}. Transaction hash: ${txHash}`;
+      const successMsg = `Undelegation transaction sent to L1: ${txHash}. Unbonding period applies.`;
       logger.info(successMsg);
 
       const responseContent: Content = {
         text: successMsg,
-        actions: ['WITHDRAW_REWARDS'],
+        actions: ['UNDELEGATE_L1'],
         source: message.content.source,
         data: {
           transactionHash: txHash,
           status: 'pending',
           validatorId: validatorId,
+          sharesAmountWei: sharesAmountWei,
         },
       };
 
@@ -162,11 +179,11 @@ export const withdrawRewardsAction: Action = {
       return responseContent;
     } catch (error: unknown) {
       const parsedError = parseErrorMessage(error);
-      logger.error('Error in WITHDRAW_REWARDS handler:', parsedError);
+      logger.error('Error in UNDELEGATE_L1 handler:', parsedError);
 
       const errorContent: Content = {
-        text: `Error withdrawing rewards: ${parsedError.message}`,
-        actions: ['WITHDRAW_REWARDS'],
+        text: `Error undelegating MATIC (L1): ${parsedError.message}`,
+        actions: ['UNDELEGATE_L1'],
         source: message.content.source,
         data: {
           success: false,
@@ -187,7 +204,7 @@ export const withdrawRewardsAction: Action = {
       {
         name: 'user',
         content: {
-          text: 'Withdraw my staking rewards from validator 123',
+          text: 'I want to undelegate 10 shares from validator 123 on L1',
         },
       },
     ],
@@ -195,7 +212,7 @@ export const withdrawRewardsAction: Action = {
       {
         name: 'user',
         content: {
-          text: 'Claim rewards from Polygon validator ID 42',
+          text: 'Unstake 5.5 validator shares from the Polygon validator ID 42',
         },
       },
     ],

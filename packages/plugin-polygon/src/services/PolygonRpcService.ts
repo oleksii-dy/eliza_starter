@@ -371,19 +371,19 @@ export class PolygonRpcService extends Service {
 
       // Parse the result struct (adjust indices/names based on ABI)
       const status = result.status as ValidatorStatus; // Cast to enum
-      const commissionRate = Number(result.commissionRate) / 10000; // Assuming rate is stored * 10000
-      const totalStake = BigInt(result.totalStake.toString()); // Assuming totalStake includes self+delegated
+      // const commissionRate = Number(result.commissionRate) / 10000; // TODO: commissionRate not in ABI's validators struct
+      const totalStake = BigInt(result.amount.toString()); // 'amount' from ABI seems to be total stake
 
       const info: ValidatorInfo = {
         status: status,
         totalStake: totalStake,
-        commissionRate: commissionRate,
+        commissionRate: 0, // TODO: Set to 0 or fetch differently, not in 'validators' struct
         signerAddress: result.signer,
         activationEpoch: BigInt(result.activationEpoch.toString()),
         deactivationEpoch: BigInt(result.deactivationEpoch.toString()),
-        jailEndEpoch: BigInt(result.jailEndEpoch.toString()),
+        jailEndEpoch: BigInt(result.jailTime.toString()), // 'jailTime' from ABI
         contractAddress: result.contractAddress, // ValidatorShare contract address
-        lastRewardUpdateEpoch: BigInt(result.lastRewardUpdateEpoch.toString()),
+        lastRewardUpdateEpoch: 0n, // TODO: Set to 0 or fetch differently, not in 'validators' struct
         // Add other fields as needed
       };
       return info;
@@ -553,8 +553,9 @@ export class PolygonRpcService extends Service {
     const contract = await this._getValidatorShareContract(validatorId);
 
     try {
-      // 1. Prepare Transaction Data (Verify function name: sellVoucher_new or similar)
-      const txData = await contract.sellVoucher_new.populateTransaction(sharesAmountWei, 0n); // _maxStakeToBurn = 0
+      // 1. Prepare Transaction Data (Verify function name: sellVoucher or similar)
+      // Using sellVoucher(uint256 _amount, uint256 _minClaimAmount)
+      const txData = await contract.sellVoucher.populateTransaction(sharesAmountWei, 0n); // _minClaimAmount = 0
 
       // 2. Get Gas Estimates
       if (!this.runtime) throw new Error('Runtime context needed for gas estimation');
@@ -897,7 +898,9 @@ export class PolygonRpcService extends Service {
     try {
       const rootChainManager = this.getRootChainManagerContract();
       // Call the `lastChildBlock()` view function (Verify exact name from ABI)
-      const lastBlockBigInt: BigNumberish = await rootChainManager.lastChildBlock();
+      // TODO: 'lastChildBlock' function not found in provided RootChainManagerABI.json.
+      // const lastBlockBigInt: BigNumberish = await rootChainManager.lastChildBlock();
+      const lastBlockBigInt: BigNumberish = BigInt(0); // Placeholder
       const lastBlock = BigInt(lastBlockBigInt.toString());
       logger.info(`Last L2 block checkpointed on L1: ${lastBlock}`);
       return lastBlock;
@@ -913,6 +916,12 @@ export class PolygonRpcService extends Service {
    * @returns A promise resolving to true if the block is checkpointed, false otherwise.
    */
   async isL2BlockCheckpointed(l2BlockNumber: number | bigint): Promise<boolean> {
+    // TODO: This function depends on getLastCheckpointedL2Block, which has an ABI issue.
+    logger.warn(
+      'isL2BlockCheckpointed is currently non-functional due to missing lastChildBlock in ABI.'
+    );
+    return false;
+    /*
     const targetBlock = BigInt(l2BlockNumber.toString()); // Ensure bigint for comparison
     logger.debug(`Checking if L2 block ${targetBlock} is checkpointed on L1...`);
     try {
@@ -931,5 +940,6 @@ export class PolygonRpcService extends Service {
       // Or return false / specific error state depending on desired behavior
       // return false;
     }
+    */
   }
 }
