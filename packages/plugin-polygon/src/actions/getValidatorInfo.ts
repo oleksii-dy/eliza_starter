@@ -288,8 +288,7 @@ export const getValidatorInfoAction: Action = {
         const errorContent: Content = {
           text: formatErrorMessage(
             'Validator info retrieval',
-            `Failed to get validator #${params.validatorId} info from Ethereum L1`,
-            errorMsg.details || undefined
+            `Failed to get validator #${params.validatorId} info from Ethereum L1`
           ),
           actions: ['GET_VALIDATOR_INFO'],
           source: message.content?.source,

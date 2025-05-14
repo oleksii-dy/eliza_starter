@@ -199,11 +199,7 @@ export const getDelegatorInfoAction: Action = {
           error instanceof Error ? error : parsedErrorObj
         );
 
-        const formattedError = formatErrorMessage(
-          'GET_DELEGATOR_INFO',
-          parsedErrorObj.message,
-          parsedErrorObj.details || undefined
-        );
+        const formattedError = formatErrorMessage('GET_DELEGATOR_INFO', parsedErrorObj.message);
 
         const errorContent: Content = {
           text: `Error retrieving delegator information: ${formattedError}`,
