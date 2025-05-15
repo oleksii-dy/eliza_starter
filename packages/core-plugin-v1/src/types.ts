@@ -630,6 +630,8 @@ export type ClientInstance = {
  * Client interface for platform connections
  */
 export type Client = {
+    runtime?: any;
+
     /** Client name */
     name: string;
 
@@ -637,7 +639,14 @@ export type Client = {
     config?: { [key: string]: any };
 
     /** Start client connection */
-    start: (runtime: IAgentRuntime) => Promise<ClientInstance>;
+    // needs to be able to fail to start
+    start: (runtime: IAgentRuntime) => Promise<ClientInstance | false>;
+
+    /** validate config */
+    validate?: (any) => Promise<{ success: boolean; message: string }>;
+
+    /** Stop client connection */
+    //stop?: (runtime: IAgentRuntime) => Promise<unknown>;
 };
 
 /**
