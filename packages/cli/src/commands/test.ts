@@ -432,7 +432,7 @@ const runAgentTests = async (options: {
 // Create command that can be imported directly
 export const test = new Command()
   .name('test')
-  .description('Run tests for Eliza agent plugins')
+  .description('Run tests for Eliza projects, plugins and agents')
   .option('-p, --port <port>', 'Port to listen on', (val) => parseInt(val, 10))
   .option('-pl, --plugin <name>', 'Name of plugin to test')
   .option('-sp, --skip-plugins', 'Skip plugin tests')
