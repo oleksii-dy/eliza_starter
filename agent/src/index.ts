@@ -873,7 +873,7 @@ async function findDatabaseAdapter(runtime: AgentRuntime) {
     // if not found, default to sqlite
     if (adapters.length === 0) {
         const sqliteAdapterPlugin = await import(
-            "@elizaos-plugins/adapter-sqlite"
+            "@elizaos/adapter-postgres"
         );
         const sqliteAdapterPluginDefault = sqliteAdapterPlugin.default;
         adapter = sqliteAdapterPluginDefault.adapters[0];
@@ -1027,15 +1027,15 @@ const startAgents = async () => {
     //characters = await Promise.all(characters.map(normalizeCharacter));
 
     console.log('starting', characters.length, 'characters')
-    try {
-        for (const character of characters) {
-            const processedCharacter = await handlePostCharacterLoaded(
-                character
-            );
-            await startAgent(processedCharacter, directClient);
-        }
-    } catch (error) {
+    for (const character of characters) {
+      try {
+        const processedCharacter = await handlePostCharacterLoaded(
+            character
+        );
+        await startAgent(processedCharacter, directClient);
+      } catch (error) {
         console.error("Error starting agent:", character.name, error);
+      }
     }
     console.log('start command issued for', characters.length, 'characters')
 
