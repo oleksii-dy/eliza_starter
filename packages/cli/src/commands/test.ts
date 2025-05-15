@@ -270,7 +270,7 @@ const runAgentTests = async (options: {
     console.info('Starting server...');
     try {
       await server.start(serverPort);
-      console.info('Server started successfully');
+      console.info(`Server started successfully on port ${serverPort}`);
     } catch (error) {
       console.error('Error starting server:', error);
       if (error instanceof Error) {
@@ -433,9 +433,7 @@ const runAgentTests = async (options: {
 export const test = new Command()
   .name('test')
   .description('Run tests for Eliza agent plugins')
-  .addOption(
-    new Option('-p, --port <port>', 'Port to listen on').argParser((val) => Number.parseInt(val))
-  )
+  .option('-p, --port <port>', 'Port to listen on', (val) => parseInt(val, 10))
   .option('-pl, --plugin <name>', 'Name of plugin to test')
   .option('-sp, --skip-plugins', 'Skip plugin tests')
   .option('-spt, --skip-project-tests', 'Skip project tests')
