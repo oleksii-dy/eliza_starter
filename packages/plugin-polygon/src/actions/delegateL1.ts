@@ -54,8 +54,9 @@ function extractParamsFromText(text: string): Partial<DelegateL1Params> {
 
 export const delegateL1Action: Action = {
   name: 'DELEGATE_L1',
-  similes: ['STAKE_MATIC_L1', 'BOND_MATIC_L1', 'DELEGATE_POLYGON', 'STAKE_MATIC'],
-  description: 'Delegates (stakes) MATIC tokens to a validator on the Ethereum L1 for Polygon.',
+  similes: ['STAKE_L1_MATIC', 'DELEGATE_TO_VALIDATOR_L1', 'STAKE_ON_ETHEREUM_L1'],
+  description:
+    'Delegates (stakes) MATIC/POL tokens to a specified Polygon validator on the Ethereum L1 network.',
   validate: async (
     runtime: IAgentRuntime,
     _message: Memory,
@@ -66,6 +67,7 @@ export const delegateL1Action: Action = {
     const requiredSettings = [
       'PRIVATE_KEY',
       'ETHEREUM_RPC_URL', // L1 RPC needed for delegation
+      'POLYGON_PLUGINS_ENABLED', // Ensure main plugin toggle is on
     ];
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {

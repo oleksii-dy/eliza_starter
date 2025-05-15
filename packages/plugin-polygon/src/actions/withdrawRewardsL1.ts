@@ -37,25 +37,26 @@ function extractParamsFromText(text: string): Partial<WithdrawRewardsParams> {
 }
 
 export const withdrawRewardsAction: Action = {
-  name: 'WITHDRAW_REWARDS',
-  similes: ['CLAIM_STAKING_REWARDS', 'CLAIM_REWARDS', 'COLLECT_REWARDS'],
-  description: 'Withdraws accumulated staking rewards from a Polygon validator.',
+  name: 'WITHDRAW_REWARDS_L1',
+  similes: ['CLAIM_L1_STAKING_REWARDS', 'COLLECT_VALIDATOR_REWARDS_L1'],
+  description: 'Withdraws accumulated staking rewards from a Polygon validator on Ethereum L1.',
 
   validate: async (
     runtime: IAgentRuntime,
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    logger.debug('Validating WITHDRAW_REWARDS action...');
+    logger.debug('Validating WITHDRAW_REWARDS_L1 action...');
 
     const requiredSettings = [
       'PRIVATE_KEY',
       'ETHEREUM_RPC_URL', // L1 RPC needed for rewards withdrawal
+      'POLYGON_PLUGINS_ENABLED',
     ];
 
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
-        logger.error(`Required setting ${setting} not configured for WITHDRAW_REWARDS action.`);
+        logger.error(`Required setting ${setting} not configured for WITHDRAW_REWARDS_L1 action.`);
         return false;
       }
     }
@@ -63,11 +64,14 @@ export const withdrawRewardsAction: Action = {
     try {
       const service = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
       if (!service) {
-        logger.error('PolygonRpcService not initialized for WITHDRAW_REWARDS.');
+        logger.error('PolygonRpcService not initialized for WITHDRAW_REWARDS_L1.');
         return false;
       }
     } catch (error: unknown) {
-      logger.error('Error accessing PolygonRpcService during WITHDRAW_REWARDS validation:', error);
+      logger.error(
+        'Error accessing PolygonRpcService during WITHDRAW_REWARDS_L1 validation:',
+        error
+      );
       return false;
     }
 
@@ -82,7 +86,7 @@ export const withdrawRewardsAction: Action = {
     callback: HandlerCallback | undefined,
     _recentMessages: Memory[] | undefined
   ) => {
-    logger.info('Handling WITHDRAW_REWARDS action for message:', message.id);
+    logger.info('Handling WITHDRAW_REWARDS_L1 action for message:', message.id);
     const rawMessageText = message.content.text || '';
     let params: WithdrawRewardsParams | null = null;
 
@@ -104,16 +108,16 @@ export const withdrawRewardsAction: Action = {
         });
 
         params = parseJSONObjectFromText(result) as WithdrawRewardsParams;
-        logger.debug('WITHDRAW_REWARDS: Extracted params via TEXT_SMALL:', params);
+        logger.debug('WITHDRAW_REWARDS_L1: Extracted params via TEXT_SMALL:', params);
 
         // Check if the model response contains an error
         if (params.error) {
-          logger.warn(`WITHDRAW_REWARDS: Model responded with error: ${params.error}`);
+          logger.warn(`WITHDRAW_REWARDS_L1: Model responded with error: ${params.error}`);
           throw new Error(params.error);
         }
       } catch (e) {
         logger.warn(
-          'WITHDRAW_REWARDS: Failed to parse JSON from model response, trying manual extraction',
+          'WITHDRAW_REWARDS_L1: Failed to parse JSON from model response, trying manual extraction',
           e
         );
 
@@ -123,7 +127,7 @@ export const withdrawRewardsAction: Action = {
           params = {
             validatorId: manualParams.validatorId,
           };
-          logger.debug('WITHDRAW_REWARDS: Extracted params via manual text parsing:', params);
+          logger.debug('WITHDRAW_REWARDS_L1: Extracted params via manual text parsing:', params);
         } else {
           throw new Error('Could not determine validator ID from the message.');
         }
@@ -135,19 +139,17 @@ export const withdrawRewardsAction: Action = {
       }
 
       const { validatorId } = params;
-      logger.debug(`WITHDRAW_REWARDS parameters: validatorId: ${validatorId}`);
+      logger.debug(`WITHDRAW_REWARDS_L1 parameters: validatorId: ${validatorId}`);
 
       // Call the service to withdraw rewards
-      // TODO: Currently a placeholder - implement actual withdrawal when PolygonRpcService supports it
-      // const txHash = await polygonService.withdrawRewards(validatorId);
-      const txHash = `0x_withdraw_rewards_placeholder_${validatorId}`;
+      const txHash = await polygonService.withdrawRewards(validatorId);
 
-      const successMsg = `Successfully initiated withdrawal of rewards from validator ${validatorId}. Transaction hash: ${txHash}`;
+      const successMsg = `Successfully initiated withdrawal of rewards from validator ${validatorId} on L1. Transaction hash: ${txHash}`;
       logger.info(successMsg);
 
       const responseContent: Content = {
         text: successMsg,
-        actions: ['WITHDRAW_REWARDS'],
+        actions: ['WITHDRAW_REWARDS_L1'],
         source: message.content.source,
         data: {
           transactionHash: txHash,
@@ -162,11 +164,11 @@ export const withdrawRewardsAction: Action = {
       return responseContent;
     } catch (error: unknown) {
       const parsedError = parseErrorMessage(error);
-      logger.error('Error in WITHDRAW_REWARDS handler:', parsedError);
+      logger.error('Error in WITHDRAW_REWARDS_L1 handler:', parsedError);
 
       const errorContent: Content = {
         text: `Error withdrawing rewards: ${parsedError.message}`,
-        actions: ['WITHDRAW_REWARDS'],
+        actions: ['WITHDRAW_REWARDS_L1'],
         source: message.content.source,
         data: {
           success: false,

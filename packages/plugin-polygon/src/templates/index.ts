@@ -134,3 +134,85 @@ If no valid validator ID is found, or if the user\'s intent is unclear, you MUST
 }
 \`\`\`
 `;
+
+export const restakeRewardsL1Template = `You are an AI assistant. Your task is to extract the validator ID from the user\'s message for a restake rewards operation on L1.
+The validator ID must be a positive integer.
+
+Review the recent messages:
+<recent_messages>
+{{recentMessages}}
+</recent_messages>
+
+Based on the conversation, identify the validator ID for which to restake rewards.
+
+Respond with a JSON markdown block containing only the extracted validator ID.
+The JSON should have this structure:
+\`\`\`json
+{
+    "validatorId": number
+}
+\`\`\`
+
+If no valid validator ID is found, or if the user\'s intent is unclear, you MUST respond with the following JSON structure:
+\`\`\`json
+{
+    "error": "Validator ID not found or invalid. Please specify a positive integer for the validator ID."
+}
+\`\`\`
+`;
+
+export const getPolygonGasEstimatesTemplate = `You are an AI assistant. Your task is to determine if the user is asking for Polygon gas estimates.
+
+Review the recent messages:
+<recent_messages>
+{{recentMessages}}
+</recent_messages>
+
+Based on the conversation, determine if the user is requesting information about gas prices or gas estimates on the Polygon network.
+
+Respond with a JSON markdown block indicating whether to retrieve gas estimates.
+The JSON should have this structure:
+\`\`\`json
+{
+    "getGasEstimates": boolean
+}
+\`\`\`
+
+If the user's intent is unclear or unrelated to Polygon gas estimates, you MUST respond with the following JSON structure:
+\`\`\`json
+{
+    "error": "It's unclear if you're asking for Polygon gas estimates. Please clarify your request."
+}
+\`\`\`
+`;
+
+export const bridgeDepositPolygonTemplate = `You are an AI assistant. Your task is to extract parameters for a bridge deposit from L1 to Polygon.
+
+Review the recent messages:
+<recent_messages>
+{{recentMessages}}
+</recent_messages>
+
+Based on the conversation, extract the following parameters:
+- tokenAddressL1: The L1 token address (string starting with 0x)
+- amountWei: The amount to bridge in Wei (string, positive integer)
+- recipientAddressL2 (optional): The recipient address on L2 (string starting with 0x)
+
+Respond with a JSON markdown block containing only the extracted values.
+The JSON should have this structure:
+\`\`\`json
+{
+    "tokenAddressL1": string,
+    "amountWei": string,
+    "recipientAddressL2"?: string
+}
+\`\`\`
+If 'recipientAddressL2' is not mentioned by the user, omit it from the JSON.
+
+If the required parameters (tokenAddressL1 and amountWei) are not found or invalid, you MUST respond with the following JSON structure:
+\`\`\`json
+{
+    "error": "Missing or invalid parameters. Please provide a valid token address (starting with 0x) and amount in Wei (as a string)."
+}
+\`\`\`
+`;

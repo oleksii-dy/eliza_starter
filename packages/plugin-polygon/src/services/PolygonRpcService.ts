@@ -688,7 +688,7 @@ export class PolygonRpcService extends Service {
         );
         throw new Error(`Reward withdrawal transaction failed (Hash: ${withdrawTxHash})`);
       }
-      logger.info(`Withdrawal transaction confirmed.`);
+      logger.info('Withdrawal transaction confirmed.');
 
       // 4. Delegate the withdrawn amount (which equals the previously fetched pendingRewards)
       logger.info(
@@ -736,7 +736,7 @@ export class PolygonRpcService extends Service {
       // Approval (if sent) is confirmed within the helper
 
       // 2. Prepare depositFor transaction data
-      logger.debug(`Preparing depositFor transaction...`);
+      logger.debug('Preparing depositFor transaction...');
       const depositData = ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [amountWei]);
       const txData = await rootChainManager.depositFor.populateTransaction(
         userAddress,

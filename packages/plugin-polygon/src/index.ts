@@ -18,7 +18,7 @@ import { proposeGovernanceAction } from './actions/proposeGovernance';
 import { voteGovernanceAction } from './actions/voteGovernance';
 import { getValidatorInfoAction } from './actions/getValidatorInfo';
 import { getDelegatorInfoAction } from './actions/getDelegatorInfo';
-import { withdrawRewardsAction } from './actions/withdrawRewards';
+import { withdrawRewardsAction } from './actions/withdrawRewardsL1';
 import { bridgeDepositAction } from './actions/bridgeDeposit';
 import { getL2BlockNumberAction } from './actions/getL2BlockNumber';
 import { getMaticBalanceAction } from './actions/getMaticBalance';

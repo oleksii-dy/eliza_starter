@@ -52,8 +52,9 @@ function extractParamsFromText(text: string): Partial<UndelegateL1Params> {
 
 export const undelegateL1Action: Action = {
   name: 'UNDELEGATE_L1',
-  similes: ['UNBOND_L1', 'WITHDRAW_STAKE_L1', 'UNDELEGATE_POLYGON'],
-  description: 'Initiates undelegation (unbonding) of Validator Shares on Ethereum L1.',
+  similes: ['UNSTAKE_L1_SHARES', 'UNBOND_VALIDATOR_SHARES_L1', 'SELL_VALIDATOR_SHARES_L1'],
+  description:
+    'Initiates undelegation (unbonding) of Validator Shares from a Polygon validator on Ethereum L1.',
 
   validate: async (
     runtime: IAgentRuntime,
@@ -65,6 +66,7 @@ export const undelegateL1Action: Action = {
     const requiredSettings = [
       'PRIVATE_KEY',
       'ETHEREUM_RPC_URL', // L1 RPC needed for undelegation
+      'POLYGON_PLUGINS_ENABLED', // Ensure main plugin toggle is on
     ];
 
     for (const setting of requiredSettings) {
@@ -182,7 +184,7 @@ export const undelegateL1Action: Action = {
       logger.error('Error in UNDELEGATE_L1 handler:', parsedError);
 
       const errorContent: Content = {
-        text: `Error undelegating MATIC (L1): ${parsedError.message}`,
+        text: `Error undelegating shares (L1): ${parsedError.message}`,
         actions: ['UNDELEGATE_L1'],
         source: message.content.source,
         data: {

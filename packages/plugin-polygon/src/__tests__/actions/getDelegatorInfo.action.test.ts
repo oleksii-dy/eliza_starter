@@ -319,7 +319,7 @@ describe('getDelegatorInfoAction', () => {
 
       expect(mockGetDelegatorInfo).not.toHaveBeenCalled();
       const expectedErrorText =
-        "Error retrieving delegator information: GET_DELEGATOR_INFO failed: Cannot read properties of null (reading 'match').";
+        "Error retrieving delegator information: GET_DELEGATOR_INFO failed: Cannot read properties of null (reading 'match')";
       const expectedErrorInDetails = "TypeError: Cannot read properties of null (reading 'match')";
 
       if (result && typeof result === 'object' && 'text' in result) {
@@ -405,8 +405,8 @@ describe('getDelegatorInfoAction', () => {
       });
 
       const expectedOriginalErrorMsg =
-        'Private key not available to determine agent wallet address.';
-      const expectedErrorText = `Error retrieving delegator information: GET_DELEGATOR_INFO failed: ${expectedOriginalErrorMsg}.`;
+        'Private key not available to determine agent wallet address';
+      const expectedErrorText = `Error retrieving delegator information: GET_DELEGATOR_INFO failed: ${expectedOriginalErrorMsg}`;
       const expectedErrorInDetails = `ServiceError: ${expectedOriginalErrorMsg}`;
 
       const result = await getDelegatorInfoAction.handler(
@@ -454,8 +454,8 @@ describe('getDelegatorInfoAction', () => {
         return null;
       });
 
-      const originalErrorMsg = `No delegation found for address ${specificDelegatorAddress} with validator ID ${specificValidatorId}.`;
-      const expectedErrorText = `Error retrieving delegator information: GET_DELEGATOR_INFO failed: ${originalErrorMsg}.`;
+      const originalErrorMsg = `No delegation found for address ${specificDelegatorAddress} with validator ID ${specificValidatorId}`;
+      const expectedErrorText = `Error retrieving delegator information: GET_DELEGATOR_INFO failed: ${originalErrorMsg}`;
       const expectedErrorInDetails = `ValidationError: ${originalErrorMsg}`;
 
       const result = await getDelegatorInfoAction.handler(
@@ -495,7 +495,7 @@ describe('getDelegatorInfoAction', () => {
       const serviceErrorMsg = 'Service connection failed';
       mockGetDelegatorInfo.mockRejectedValue(new Error(serviceErrorMsg));
 
-      const expectedErrorText = `Error retrieving delegator information: GET_DELEGATOR_INFO failed: ${serviceErrorMsg}.`;
+      const expectedErrorText = `Error retrieving delegator information: GET_DELEGATOR_INFO failed: ${serviceErrorMsg}`;
       const expectedErrorInDetails = `Error: ${serviceErrorMsg}`;
 
       const result = await getDelegatorInfoAction.handler(
