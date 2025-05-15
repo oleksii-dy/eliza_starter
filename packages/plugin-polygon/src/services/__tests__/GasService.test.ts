@@ -18,12 +18,6 @@ describe('GasService - Integration Tests', () => {
   let fullyConfiguredRuntime: IAgentRuntime;
 
   beforeAll(async () => {
-    // Log all environment variables available in this scope for debugging
-    console.log(
-      'GasService.test.ts beforeAll: process.env contents:',
-      JSON.stringify(process.env, null, 2)
-    );
-
     // Essential ENV checks
     if (
       !process.env.POLYGONSCAN_KEY ||
