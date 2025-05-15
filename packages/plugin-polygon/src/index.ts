@@ -19,6 +19,7 @@ import { getValidatorInfoAction } from './actions/getValidatorInfo';
 import { getDelegatorInfoAction } from './actions/getDelegatorInfo';
 import { withdrawRewardsAction } from './actions/withdrawRewards';
 import { bridgeDepositAction } from './actions/bridgeDeposit';
+import { bridgeERC20Action } from './actions/bridgeERC20Action';
 import { getBlockNumberAction, getBlockDetailsAction } from './actions/getBlockInfo';
 import { getTransactionDetailsAction } from './actions/getTransactionInfo';
 import { getNativeBalanceAction, getErc20BalanceAction } from './actions/getBalanceInfo';
@@ -29,6 +30,7 @@ import { WalletProvider } from './providers/PolygonWalletProvider';
 import { PolygonRpcService } from './services/PolygonRpcService';
 import { GovernanceService } from './services/GovernanceService';
 import { getGasPriceEstimates, GasPriceEstimates } from './services/GasService';
+import { PolygonBridgeService } from './services/PolygonBridgeService';
 
 // Import our custom formatters
 import { formatUnits } from './utils/formatters';
@@ -69,6 +71,7 @@ const polygonActions: Action[] = [
   getValidatorInfoAction,
   getDelegatorInfoAction,
   bridgeDepositAction,
+  bridgeERC20Action,
   getCheckpointStatusAction,
   proposeGovernanceAction,
   voteGovernanceAction,
@@ -189,7 +192,11 @@ class PolygonPlugin implements Plugin {
   }
   
   getServices(): (typeof Service)[] {
-    const polygonServices: (typeof Service)[] = [PolygonRpcService, GovernanceService];
+    const polygonServices: (typeof Service)[] = [
+      PolygonRpcService, 
+      GovernanceService,
+      PolygonBridgeService
+    ];
     return polygonServices;
   }
 }

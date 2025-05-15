@@ -10,6 +10,8 @@ This plugin provides integration with the Polygon blockchain network, allowing E
 - Staking operations (validators, delegation, rewards)
 - Bridge operations between L1 and L2
 - Block and transaction information retrieval
+- **L1 to L2 token bridging** - Transfer tokens between Ethereum and Polygon
+- Gas price estimation
 
 ## Configuration
 
@@ -74,6 +76,47 @@ Once configured, the plugin provides various actions for interacting with the Po
 - `GET_GOVERNANCE_INFO` - Get information about governance proposals
 - `GET_VOTING_POWER` - Get voting power for an address
 
+## Bridging Ethereum to Polygon
+
+The plugin supports bridging ERC20 tokens from Ethereum (L1) to Polygon (L2) using the official Polygon Bridge protocol.
+
+### Using bridgeDeposit function
+
+The `PolygonBridgeService` provides a `bridgeDeposit()` function that handles the complete bridge process:
+
+```typescript
+// Initialize the bridge service
+const bridgeService = runtime.getService<PolygonBridgeService>(PolygonBridgeService.serviceType);
+
+// Bridge tokens from L1 to L2
+const result = await bridgeService.bridgeDeposit(
+  '0xTokenAddressOnL1', // L1 ERC20 token address
+  1000000000000000000n, // Amount in wei (1 token with 18 decimals)
+  '0xRecipientAddressOnL2' // Optional: defaults to sender
+);
+
+console.log(`Bridge deposit initiated! Transaction: ${result.depositTxHash}`);
+```
+
+The function handles:
+
+1. Approval of token spending by the RootChainManager contract
+2. Deposit of tokens from L1 to L2
+3. Gas estimation and transaction management
+
+This is the recommended approach for programmatic bridging of tokens to Polygon.
+
+### Bridge ERC20 Action
+
+The `BRIDGE_ERC20_TO_POLYGON` action provides a user-friendly interface for bridging tokens:
+
+Examples:
+
+- "Bridge 5 USDC from Ethereum to Polygon"
+- "Send 0.5 POL to my Polygon address"
+
+The action will extract the token address, amount, and optional recipient from the user input.
+
 ## Development
 
 To build the plugin:
@@ -84,61 +127,6 @@ npm run build
 
 To run tests:
 
-```bash
-npm run test
 ```
 
-## Publishing
-
-Before publishing your plugin to the ElizaOS registry, ensure you meet these requirements:
-
-1. **GitHub Repository**
-
-   - Create a public GitHub repository for this plugin
-   - Add the 'elizaos-plugins' topic to the repository
-   - Use 'main' as the default branch
-
-2. **Required Assets**
-
-   - Add images to the `images/` directory:
-     - `logo.jpg` (400x400px square, <500KB)
-     - `banner.jpg` (1280x640px, <1MB)
-
-3. **Publishing Process**
-
-   ```bash
-   # Check if your plugin meets all registry requirements
-   npx elizaos plugin publish --test
-
-   # Publish to the registry
-   npx elizaos plugin publish
-   ```
-
-After publishing, your plugin will be submitted as a pull request to the ElizaOS registry for review.
-
-## Configuration
-
-The `agentConfig` section in `package.json` defines the parameters your plugin requires:
-
-```json
-"agentConfig": {
-  "pluginType": "elizaos:plugin:1.0.0",
-  "pluginParameters": {
-    "API_KEY": {
-      "type": "string",
-      "description": "API key for the service"
-    }
-  }
-}
 ```
-
-Customize this section to match your plugin's requirements.
-
-## Documentation
-
-Provide clear documentation about:
-
-- What your plugin does
-- How to use it
-- Required API keys or credentials
-- Example usage

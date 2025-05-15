@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "NodeNext",
+    "module": "ESNext",
     "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -11,9 +11,7 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
-    "sourceMap": true,
-    "outDir": "./dist"
+    "sourceMap": true
   },
-  "exclude": ["**/*.test.ts", "dist", "node_modules"],
-  "include": ["src/**/*.ts", "src/**/*.d.ts"]
-}
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+} 

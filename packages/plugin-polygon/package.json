@@ -45,15 +45,28 @@
   "scripts": {
     "start": "elizaos start",
     "test-with-cli": "cd ../cli && bun run build && cd ../plugin-starter && elizaos test",
-    "dev": "elizaos dev",
+    "dev": "tsup --watch",
     "build": "tsup",
-    "lint": "prettier --write ./src",
+    "lint": "eslint \"src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:legacy": "vitest run src/tests",
+    "test:rpc": "node test-scripts/rpc-check.js",
+    "test:plugin": "node test-scripts/plugin-init.js",
+    "test:bridge": "node test-scripts/bridge-transaction-test.js",
+    "test:bridge-tx": "vitest run src/tests/bridge-transaction.test.ts",
+    "test:encoding": "node test-scripts/deposit-encoding-test.js",
+    "test:standalone": "node standalone-test.js",
+    "test:all": "npm run test:bridge && npm run test:encoding && npm run test:standalone",
+    "typecheck": "tsc --noEmit",
     "publish": "elizaos plugin publish",
     "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src"
+    "format:check": "prettier --check ./src",
+    "coverage": "vitest run --coverage",
+    "clean": "rm -rf dist node_modules .turbo"
   },
   "publishConfig": {
     "access": "public"

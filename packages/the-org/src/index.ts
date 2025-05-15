@@ -10,6 +10,9 @@ import liaison from './liaison';
 import projectManager from './projectManager';
 import socialMediaManager from './socialMediaManager';
 
+// Import the Polygon plugin to ensure it's registered in the system
+import '@elizaos/plugin-polygon';
+
 /**
  * Checks if all required environment variables for an agent are available
  * @param agent The agent to check
