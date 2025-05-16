@@ -1,4 +1,4 @@
-name: Eliza CLI Tests
+name: Message Agent Integration Test
 
 on:
   push:
