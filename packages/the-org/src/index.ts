@@ -2,12 +2,12 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '../../.env' });
 
 import { logger, ProjectAgent } from '@elizaos/core';
-import communityManager from './communityManager';
-import devRel from './devRel';
-import investmentManager from './investmentManager';
-import liaison from './liaison';
-import projectManager from './projectManager';
-import socialMediaManager from './socialMediaManager';
+// import communityManager from './communityManager';
+// import devRel from './devRel';
+// import investmentManager from './investmentManager';
+// import liaison from './liaison';
+// import projectManager from './projectManager';
+// import socialMediaManager from './socialMediaManager';
 
 /**
  * Checks if all required environment variables for an agent are available
@@ -54,15 +54,15 @@ function hasRequiredEnvVars(agent: ProjectAgent): boolean {
 
 // Define which agents you want to enable
 const enabledAgents = [
-  devRel,
-  communityManager,
-  investmentManager,
-  liaison,
-  projectManager,
-  socialMediaManager,
+  // devRel,
+  // communityManager,
+  // investmentManager,
+  // liaison,
+  // projectManager,
+  // socialMediaManager,
 ];
 
-const availableAgents = enabledAgents.filter(hasRequiredEnvVars);
+const availableAgents = enabledAgents; // .filter(hasRequiredEnvVars);
 
 // Log the filtering results with accurate counts
 if (enabledAgents.length === 0) {

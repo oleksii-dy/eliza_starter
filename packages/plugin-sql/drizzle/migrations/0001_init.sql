@@ -1,8 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS vector;
---> statement-breakpoint
-CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
---> statement-breakpoint
-
 CREATE TABLE "agents" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"enabled" boolean DEFAULT true NOT NULL,
@@ -11,7 +6,7 @@ CREATE TABLE "agents" (
 	"name" text NOT NULL,
 	"username" text,
 	"system" text DEFAULT '',
-	"bio" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"bio" jsonb DEFAULT '[]'::jsonb,
 	"message_examples" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"post_examples" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"topics" jsonb DEFAULT '[]'::jsonb NOT NULL,

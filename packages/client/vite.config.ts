@@ -50,7 +50,6 @@ export default defineConfig(({ mode }): CustomUserConfig => {
       // Add empty shims for Node.js globals
       global: 'globalThis',
       process: '{}',
-      Buffer: '{}',
     },
     optimizeDeps: {
       exclude: ['@elizaos/core'],
@@ -68,7 +67,7 @@ export default defineConfig(({ mode }): CustomUserConfig => {
       cssMinify: true,
       sourcemap: true,
       rollupOptions: {
-        external: ['@elizaos/core', 'cloudflare:sockets'],
+        external: ['cloudflare:sockets'],
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],

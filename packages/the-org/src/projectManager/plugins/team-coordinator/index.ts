@@ -35,14 +35,6 @@ export const teamCoordinatorPlugin: Plugin = {
     try {
       logger.info('Initializing Team Coordinator plugin...');
 
-      // Register the services
-      logger.info('Registering TeamUpdateTrackerService...');
-      await runtime.registerService(TeamUpdateTrackerService);
-
-      // Register and start the CheckIn service
-      logger.info('Registering CheckInService...');
-      await runtime.registerService(CheckInService);
-
       // Register tasks
       logger.info('Registering team coordinator tasks...');
       await registerTasks(runtime);
@@ -57,26 +49,4 @@ export const teamCoordinatorPlugin: Plugin = {
   services: [TeamUpdateTrackerService, CheckInService],
 };
 
-export function initialize(runtime: IAgentRuntime) {
-  // Initialize services
-  new CheckInService(runtime);
-  // new ScheduleService(runtime);
-
-  // Return actions
-  return {
-    actions: [
-      // checkInFormatAction,
-      recordCheckInAction,
-      teamMemberUpdatesAction,
-      listCheckInSchedules,
-      generateReport,
-      addTeamMemberAction,
-      listTeamMembersAction,
-      updatesFormatAction,
-    ],
-  };
-}
-
-export default {
-  initialize,
-};
+export default teamCoordinatorPlugin;

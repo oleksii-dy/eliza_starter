@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import {
   logger,
   type Action,
@@ -7,9 +5,10 @@ import {
   type IAgentRuntime,
   type OnboardingConfig,
   type ProjectAgent,
-  createUniqueUuid,
 } from '@elizaos/core';
 import dotenv from 'dotenv';
+import fs from 'node:fs';
+import path from 'node:path';
 import { initCharacter } from '../init';
 
 const imagePath = path.resolve('./src/projectManager/assets/portrait.jpg');
@@ -379,57 +378,12 @@ const config: OnboardingConfig = {
 
 // Import our plugins for Jimmy
 import { plugins } from './plugins';
-import { fetchDiscordChannels } from './plugins/team-coordinator/services/TeamUpdateTrackerService';
 export const projectManager: ProjectAgent = {
   character,
   plugins,
   init: async (runtime: IAgentRuntime) => {
     // First initialize the character with config
     await initCharacter({ runtime, config: config });
-
-    // Then register all plugins with the character
-    // This ensures plugins are registered after character initialization
-    logger.info('Registering Project Manager plugins...');
-
-    // Custom function to force register an action by first removing any existing one with the same name
-    const forceRegisterAction = (action: Action) => {
-      // Since there's no official unregisterAction method, we need to modify the runtime actions array directly
-      if (runtime.actions) {
-        // First check if the action already exists
-        const existingActionIndex = runtime.actions.findIndex((a) => a.name === action.name);
-        if (existingActionIndex >= 0) {
-          // Remove the existing action with the same name
-          logger.info(`Removing existing action: ${action.name}`);
-          runtime.actions.splice(existingActionIndex, 1);
-        }
-
-        // Now register the action (will be added to the actions array)
-        logger.info(`Force registering action: ${action.name}`);
-        runtime.registerAction(action);
-      }
-    };
-
-    // Register plugins and force register their actions
-    for (const plugin of plugins) {
-      logger.info(`Registering plugin: ${plugin.name}`);
-
-      // Save the plugin's actions to register manually
-      const pluginActions = plugin.actions ? [...plugin.actions] : [];
-
-      // Create a modified plugin without actions to avoid duplicate registration
-      const pluginWithoutActions = {
-        ...plugin,
-        actions: undefined, // Remove actions from the plugin
-      };
-
-      // Register the plugin without actions
-      runtime.registerPlugin(pluginWithoutActions);
-
-      // Now force register each action from the plugin manually
-      for (const action of pluginActions) {
-        forceRegisterAction(action);
-      }
-    }
   },
 };
 

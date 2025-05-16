@@ -48,7 +48,7 @@ function createRealRuntime(): IAgentRuntime {
     character: {
       name: 'Test Character',
       system: 'You are a helpful assistant for testing.',
-      plugins: [],
+      plugins: ['@elizaos/plugin-sql'],
       settings: {},
     },
     getSetting: (key: string) => null,

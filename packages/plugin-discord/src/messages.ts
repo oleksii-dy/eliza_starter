@@ -78,7 +78,6 @@ export class MessageManager {
     ) {
       return;
     }
-
     const entityId = createUniqueUuid(this.runtime, message.author.id);
 
     const userName = message.author.bot

@@ -86,7 +86,8 @@ Example task outputs:
 
 Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
 Your response should be 1, 2, or 3 sentences (choose the length at random).
-Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than 280. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.
+You do not have to continue old patterns, feel free to ignore past posts.
+Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than 280. No emojis. Use \\n\\n (double new line) between statements if there are multiple statements in your response.
 
 Your output should be formatted in XML like this:
 <response>

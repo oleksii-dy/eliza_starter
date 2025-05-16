@@ -448,16 +448,16 @@ export class AgentRuntime implements IAgentRuntime {
         }
       }
 
-      if (plugin.services) {
-        span.addEvent('registering_services');
-        for (const service of plugin.services) {
-          if (this.isInitialized) {
-            await this.registerService(service);
-          } else {
-            this.servicesInitQueue.add(service);
-          }
-        }
-      }
+      // if (plugin.services) {
+      //   span.addEvent('registering_services');
+      //   for (const service of plugin.services) {
+      //     if (this.isInitialized) {
+      //       await this.registerService(service);
+      //     } else {
+      //       this.servicesInitQueue.add(service);
+      //     }
+      //   }
+      // }
 
       span.addEvent('plugin_registration_complete');
     });
@@ -1880,11 +1880,9 @@ export class AgentRuntime implements IAgentRuntime {
         // Add the service to the services map
         this.services.set(serviceType, serviceInstance);
 
-        // --- NEW: Check for and call static send handler registration ---
         if (typeof (service as any).registerSendHandlers === 'function') {
           (service as any).registerSendHandlers(this, serviceInstance);
         }
-        // --- END NEW ---
 
         span.addEvent('service_registered');
         this.runtimeLogger.debug(
@@ -2696,6 +2694,7 @@ export class AgentRuntime implements IAgentRuntime {
    * @param handler - The SendHandlerFunction to register.
    */
   registerSendHandler(source: string, handler: SendHandlerFunction): void {
+    console.trace('registerSendHandler', source, handler);
     if (this.sendHandlers.has(source)) {
       this.runtimeLogger.warn(
         `Send handler for source '${source}' already registered. Overwriting.`

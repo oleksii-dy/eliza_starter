@@ -895,16 +895,6 @@ export class TelegramService extends Service {
     }
   }
 
-  static registerSendHandlers(runtime: IAgentRuntime, serviceInstance: TelegramService) {
-    if (serviceInstance) {
-      runtime.registerSendHandler(
-        'telegram',
-        serviceInstance.handleSendMessage.bind(serviceInstance)
-      );
-      logger.info('[Telegram] Registered send handler.');
-    }
-  }
-
   async handleSendMessage(
     runtime: IAgentRuntime,
     target: TargetInfo,

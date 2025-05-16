@@ -39,23 +39,23 @@ export const initCharacter = async ({
   providers?: Provider[];
   evaluators?: Evaluator[];
 }): Promise<void> => {
-  if (actions) {
-    for (const action of actions) {
-      runtime.registerAction(action);
-    }
-  }
+  // if (actions) {
+  //   for (const action of actions) {
+  //     runtime.registerAction(action);
+  //   }
+  // }
 
-  if (providers) {
-    for (const provider of providers) {
-      runtime.registerProvider(provider);
-    }
-  }
+  // if (providers) {
+  //   for (const provider of providers) {
+  //     runtime.registerProvider(provider);
+  //   }
+  // }
 
-  if (evaluators) {
-    for (const evaluator of evaluators) {
-      runtime.registerEvaluator(evaluator);
-    }
-  }
+  // if (evaluators) {
+  //   for (const evaluator of evaluators) {
+  //     runtime.registerEvaluator(evaluator);
+  //   }
+  // }
 
   // Register runtime events
   runtime.registerEvent('DISCORD_WORLD_JOINED', async (params: { server: Guild }) => {
