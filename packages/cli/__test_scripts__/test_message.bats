@@ -1,8 +1,6 @@
 #!/usr/bin/env bats
 
 setup_file() {
-  export TEST_SERVER_PORT=3000
-  export TEST_SERVER_URL="http://localhost:$TEST_SERVER_PORT"
   export TEST_TMP_DIR="$(mktemp -d /var/tmp/eliza-test-message-XXXXXX)"
   export MODEL_DIR="$HOME/.eliza/models"
 
@@ -45,14 +43,14 @@ setup_file() {
   done
 
   echo "[DEBUG] Server log will be: $TEST_TMP_DIR/server.log"
-  echo "Starting ElizaOS server on port $TEST_SERVER_PORT..."
+  echo "Starting ElizaOS server..."
   LOG_LEVEL=debug PGLITE_DATA_DIR="$TEST_TMP_DIR/pglite" \
-    $ELIZAOS_CMD start --port "$TEST_SERVER_PORT" >"$TEST_TMP_DIR/server.log" 2>&1 &
+    $ELIZAOS_CMD start >"$TEST_TMP_DIR/server.log" 2>&1 &
   SERVER_PID=$!
 
   echo "Waiting for agent list command to succeed (checking if agent running)..."
   for i in {1..12}; do
-    run $ELIZAOS_CMD agent --remote-url "$TEST_SERVER_URL" list
+    run $ELIZAOS_CMD agent list
     if [ "$status" -eq 0 ]; then
       echo "Agent list succeeded!"
       break
@@ -73,7 +71,7 @@ setup_file() {
   ELIZA_AGENT_ID=""
 
   echo "Attempting to get Eliza Agent ID using 'agent list' CLI..."
-  run $ELIZAOS_CMD agent --remote-url "$TEST_SERVER_URL" list
+  run $ELIZAOS_CMD agent list
 
   echo "--- 'agent list' command details ---"
   echo "Status: $status"
@@ -179,7 +177,7 @@ teardown_file() {
   # Using printf for safer JSON string construction with variables
   printf -v payload '{"entityId":"31c75add-3a49-4bb1-ad40-92c6b4c39558","roomId":"%s","source":"client_chat","text":"Can you help with creating a new channel for agent-dev-school?","channelType":"API"}' "$ELIZA_AGENT_ID"
 
-  run curl -s -X POST -H "Content-Type: application/json" -d "$payload" "$TEST_SERVER_URL/api/agents/$ELIZA_AGENT_ID/message"
+  run curl -s -X POST -H "Content-Type: application/json" -d "$payload" "http://localhost:3000/api/agents/$ELIZA_AGENT_ID/message"
 
   [ "$status" -eq 0 ]
   [[ "$output" == *'"thought":'* ]]
