@@ -9,7 +9,7 @@ import {
   composePromptFromState,
   ModelType,
   type ActionExample,
-  TemplateType,
+  parseJSONObjectFromText,
 } from '@elizaos/core';
 import {
   createWalletClient,
@@ -25,10 +25,11 @@ import {
   stringToHex,
   type Transport,
   type Account,
+  type Chain,
+  type Log,
 } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
-
-import { WalletProvider, initWalletProvider } from '../providers/PolygonWalletProvider';
+import { type WalletProvider, initWalletProvider } from '../providers/PolygonWalletProvider';
+import { executeGovernanceActionTemplate } from '../templates';
 
 // Minimal ABI for OZ Governor execute function
 const governorExecuteAbi = [
@@ -55,54 +56,76 @@ interface ExecuteGovernanceParams {
   description: string; // Full description, hash calculated by runner
 }
 
-interface Transaction {
+interface ExecuteTransaction {
   hash: `0x${string}`;
-  from: Address;
-  to: Address;
-  value: bigint;
+  from: `0x${string}`;
+  to: `0x${string}`;
+  value: bigint; // This is the total value sent with the execute call, could be > 0
   chainId: number;
   data?: Hex;
-  logs?: any[];
+  logs?: Log[];
+  descriptionHash: Hex;
 }
 
-const executeGovernanceTemplate = {
-  name: 'Execute Governance Proposal',
-  description:
-    'Generates parameters to execute a queued governance proposal. // Respond with a valid JSON object containing the extracted parameters.',
-  parameters: {
-    type: 'object',
-    properties: {
-      chain: { type: 'string', description: 'Blockchain name (e.g., polygon).' },
-      governorAddress: { type: 'string', description: 'Address of the Governor contract.' },
-      targets: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array of target contract addresses.',
-      },
-      values: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array of ETH values (strings) for proposal actions.',
-      },
-      calldatas: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array of hex-encoded calldata for each action.',
-      },
-      description: { type: 'string', description: 'The full text description of the proposal.' },
-    },
-    required: ['chain', 'governorAddress', 'targets', 'values', 'calldatas', 'description'],
-  },
-};
+// Helper function to extract params from text
+function extractExecuteGovernanceParamsFromText(text: string): Partial<ExecuteGovernanceParams> {
+  const params: Partial<ExecuteGovernanceParams> = {};
+  logger.debug(`Attempting to extract ExecuteGovernanceParams from text: "${text}"`);
+
+  // Reuse extraction logic similar to propose/queue
+  const chainMatch = text.match(/\b(?:on\s+|chain\s*[:\-]?\s*)(\w+)/i);
+  if (chainMatch?.[1]) params.chain = chainMatch[1].toLowerCase();
+
+  const governorMatch = text.match(/\b(?:governor\s*(?:address\s*)?[:\-]?\s*)(0x[a-fA-F0-9]{40})/i);
+  if (governorMatch?.[1]) params.governorAddress = governorMatch[1] as Address;
+
+  const targetsRgx = /\btargets?\s*[:\-]?\s*\[?((?:0x[a-fA-F0-9]{40}(?:\s*,\s*|\s+)?)+)\]?/i;
+  const targetsMatch = text.match(targetsRgx);
+  if (targetsMatch?.[1]) {
+    params.targets = targetsMatch[1]
+      .split(/[\s,]+/)
+      .filter((t) => /^0x[a-fA-F0-9]{40}$/.test(t)) as Address[];
+  }
+
+  const valuesRgx = /\bvalues?\s*[:\-]?\s*\[?((?:\d+(?:\.\d+)?(?:\s*,\s*|\s+)?)+)\]?/i;
+  const valuesMatch = text.match(valuesRgx);
+  if (valuesMatch?.[1]) {
+    params.values = valuesMatch[1].split(/[\s,]+/).filter((v) => /^\d+(?:\.\d+)?$/.test(v));
+  }
+
+  const calldatasRgx = /\bcalldatas?\s*[:\-]?\s*\[?((?:0x[a-fA-F0-9]+(?:\s*,\s*|\s+)?)+)\]?/i;
+  const calldatasMatch = text.match(calldatasRgx);
+  if (calldatasMatch?.[1]) {
+    params.calldatas = calldatasMatch[1]
+      .split(/[\s,]+/)
+      .filter((c) => /^0x[a-fA-F0-9]+$/.test(c)) as Hex[];
+  }
+
+  const descriptionMatch = text.match(
+    /\b(?:desc(?:ription)?\s*[:\-]?\s*)(?:(?:['"“](.+?)['"”])|(.*?)(?:\s*\b(?:chain|governor|targets|values|calldatas)\b|$))/i
+  );
+  if (descriptionMatch) {
+    params.description = (descriptionMatch[1] || descriptionMatch[2])?.trim();
+  }
+
+  logger.debug('Manually extracted ExecuteGovernanceParams:', params);
+  return params;
+}
 
 class PolygonExecuteGovernanceActionRunner {
   constructor(private walletProvider: WalletProvider) {}
 
-  async execute(params: ExecuteGovernanceParams): Promise<Transaction> {
+  async execute(params: ExecuteGovernanceParams): Promise<ExecuteTransaction> {
     const walletClient = this.walletProvider.getWalletClient(params.chain);
     const publicClient = this.walletProvider.getPublicClient(params.chain);
     const chainConfig = this.walletProvider.getChainConfigs(params.chain);
 
+    if (!walletClient.account) {
+      throw new Error('Wallet client account is not available.');
+    }
+    const senderAddress = walletClient.account.address;
+
+    // Sum of values in the proposal actions, as execute itself can be payable.
     const executeCallValue =
       params.values.length > 0
         ? params.values.map((v) => BigInt(v)).reduce((a, b) => a + b, BigInt(0))
@@ -114,7 +137,7 @@ class PolygonExecuteGovernanceActionRunner {
       functionName: 'execute',
       args: [
         params.targets,
-        params.values.map((v) => BigInt(v)),
+        params.values.map((v) => BigInt(v)), // Individual values for each target action
         params.calldatas,
         descriptionHash,
       ],
@@ -125,31 +148,32 @@ class PolygonExecuteGovernanceActionRunner {
 
     try {
       const kzg = {
-        blobToKzgCommitment: (_blob: any) => {
+        blobToKzgCommitment: (_blob: unknown) => {
           throw new Error('KZG not impl.');
         },
-        computeBlobKzgProof: (_blob: any, _commit: any) => {
+        computeBlobKzgProof: (_blob: unknown, _commit: unknown) => {
           throw new Error('KZG not impl.');
         },
       };
       const hash = await walletClient.sendTransaction({
-        account: walletClient.account!,
+        account: senderAddress,
         to: params.governorAddress,
-        value: executeCallValue,
+        value: executeCallValue, // Total value for the transaction, if Governor's execute is payable
         data: txData,
-        chain: chainConfig,
+        chain: chainConfig as Chain, // Ensure correct type for viem
         kzg,
       });
       logger.info(`Execute transaction sent. Hash: ${hash}. Waiting for receipt...`);
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       return {
         hash,
-        from: walletClient.account!.address,
+        from: senderAddress,
         to: params.governorAddress,
         value: executeCallValue,
         data: txData,
         chainId: chainConfig.id,
-        logs: receipt.logs as any[],
+        logs: receipt.logs as Log[],
+        descriptionHash,
       };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
@@ -162,7 +186,7 @@ class PolygonExecuteGovernanceActionRunner {
 export const executeGovernanceAction: Action = {
   name: 'EXECUTE_GOVERNANCE_POLYGON',
   similes: ['POLYGON_GOV_EXECUTE', 'RUN_POLYGON_PROPOSAL'],
-  description: 'Executes a queued governance proposal on Polygon.',
+  description: 'Executes a queued governance proposal on Polygon or other EVM chains.',
   validate: async (runtime: IAgentRuntime, _m: Memory, _s: State | undefined): Promise<boolean> => {
     logger.debug('Validating EXECUTE_GOVERNANCE_POLYGON action...');
     const checks = [
@@ -188,52 +212,122 @@ export const executeGovernanceAction: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     state: State | undefined,
-    _o: any,
-    cb: HandlerCallback | undefined,
-    _rs: Memory[] | undefined
+    _options: unknown,
+    callback: HandlerCallback | undefined,
+    _responses: Memory[] | undefined
   ) => {
     logger.info('Handling EXECUTE_GOVERNANCE_POLYGON for message:', message.id);
+    const rawMessageText = message.content.text || '';
+    let extractedParams: (Partial<ExecuteGovernanceParams> & { error?: string }) | null = null;
+
     try {
       const walletProvider = await initWalletProvider(runtime);
       const actionRunner = new PolygonExecuteGovernanceActionRunner(walletProvider);
+
       const prompt = composePromptFromState({
         state,
-        template: executeGovernanceTemplate as unknown as TemplateType,
+        template: executeGovernanceActionTemplate,
       });
-      const modelResponse = await runtime.useModel(ModelType.LARGE, { prompt });
-      let paramsJson;
+
+      const modelResponse = await runtime.useModel(ModelType.TEXT_SMALL, {
+        prompt,
+      });
+
       try {
-        const responseText = modelResponse || '';
-        const jsonString = responseText.replace(/^```json(\\r?\\n)?|(\\r?\\n)?```$/g, '');
-        paramsJson = JSON.parse(jsonString);
-      } catch (e) {
-        logger.error('Failed to parse LLM response for execute params:', modelResponse, e);
-        throw new Error('Could not understand execute parameters.');
+        const parsed = parseJSONObjectFromText(modelResponse);
+        if (parsed) {
+          extractedParams = parsed as Partial<ExecuteGovernanceParams> & {
+            error?: string;
+          };
+        }
+        logger.debug(
+          'EXECUTE_GOVERNANCE_POLYGON: Extracted params via TEXT_SMALL:',
+          extractedParams
+        );
+
+        if (extractedParams?.error) {
+          logger.warn(
+            `EXECUTE_GOVERNANCE_POLYGON: Model responded with error: ${extractedParams.error}`
+          );
+          throw new Error(extractedParams.error);
+        }
+      } catch (e: unknown) {
+        const errorMsg = e instanceof Error ? e.message : String(e);
+        logger.warn(
+          `EXECUTE_GOVERNANCE_POLYGON: Failed to parse JSON from model response or model returned error (Proceeding to manual extraction): ${errorMsg}`
+        );
       }
+
       if (
-        !paramsJson.chain ||
-        !paramsJson.governorAddress ||
-        !paramsJson.targets ||
-        !paramsJson.values ||
-        !paramsJson.calldatas ||
-        !paramsJson.description
+        !extractedParams ||
+        extractedParams.error ||
+        !extractedParams.chain ||
+        !extractedParams.governorAddress ||
+        !extractedParams.targets ||
+        !extractedParams.values ||
+        !extractedParams.calldatas ||
+        !extractedParams.description
       ) {
-        throw new Error('Incomplete execute parameters extracted.');
+        logger.info(
+          'EXECUTE_GOVERNANCE_POLYGON: Model extraction insufficient or failed, attempting manual parameter extraction.'
+        );
+        const manualParams = extractExecuteGovernanceParamsFromText(rawMessageText);
+
+        if (extractedParams && !extractedParams.error) {
+          extractedParams = {
+            chain: extractedParams.chain || manualParams.chain,
+            governorAddress: extractedParams.governorAddress || manualParams.governorAddress,
+            targets:
+              extractedParams.targets && extractedParams.targets.length > 0
+                ? extractedParams.targets
+                : manualParams.targets,
+            values:
+              extractedParams.values && extractedParams.values.length > 0
+                ? extractedParams.values
+                : manualParams.values,
+            calldatas:
+              extractedParams.calldatas && extractedParams.calldatas.length > 0
+                ? extractedParams.calldatas
+                : manualParams.calldatas,
+            description: extractedParams.description || manualParams.description,
+          };
+        } else {
+          extractedParams = manualParams;
+        }
+        logger.debug(
+          'EXECUTE_GOVERNANCE_POLYGON: Params after manual extraction attempt:',
+          extractedParams
+        );
       }
-      const executeParams: ExecuteGovernanceParams = {
-        chain: paramsJson.chain as string,
-        governorAddress: paramsJson.governorAddress as Address,
-        targets: paramsJson.targets as Address[],
-        values: paramsJson.values as string[],
-        calldatas: paramsJson.calldatas as Hex[],
-        description: paramsJson.description as string,
-      };
-      logger.debug('Execute governance parameters:', executeParams);
+
+      if (
+        !extractedParams?.chain ||
+        !extractedParams.governorAddress ||
+        !extractedParams.targets ||
+        !(extractedParams.targets.length > 0) ||
+        !extractedParams.values ||
+        !(extractedParams.values.length > 0) || // Values can be empty if executeCallValue is 0
+        !extractedParams.calldatas ||
+        !(extractedParams.calldatas.length > 0) ||
+        !extractedParams.description
+      ) {
+        logger.error(
+          'EXECUTE_GOVERNANCE_POLYGON: Incomplete parameters after all extraction attempts.',
+          extractedParams
+        );
+        throw new Error(
+          'Incomplete or invalid execute parameters extracted. Required: chain, governorAddress, targets, values, calldatas, description.'
+        );
+      }
+
+      const executeParams = extractedParams as ExecuteGovernanceParams;
+
+      logger.debug('Execute governance parameters for runner:', executeParams);
       const txResult = await actionRunner.execute(executeParams);
-      const successMsg = `Successfully executed proposal on ${executeParams.chain} for governor ${executeParams.governorAddress} (Desc: "${executeParams.description}"). TxHash: ${txResult.hash}`;
+      const successMsg = `Successfully executed proposal on ${executeParams.chain} for governor ${executeParams.governorAddress} (Desc: "${executeParams.description}", DescHash: ${txResult.descriptionHash}). TxHash: ${txResult.hash}`;
       logger.info(successMsg);
-      if (cb) {
-        await cb({
+      if (callback) {
+        await callback({
           text: successMsg,
           content: { success: true, ...txResult },
           actions: ['EXECUTE_GOVERNANCE_POLYGON'],
@@ -244,8 +338,8 @@ export const executeGovernanceAction: Action = {
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
       logger.error('Error in EXECUTE_GOVERNANCE_POLYGON handler:', errMsg, error);
-      if (cb) {
-        await cb({
+      if (callback) {
+        await callback({
           text: `Error executing proposal: ${errMsg}`,
           actions: ['EXECUTE_GOVERNANCE_POLYGON'],
           source: message.content.source,
@@ -259,7 +353,7 @@ export const executeGovernanceAction: Action = {
       {
         name: 'user',
         content: {
-          text: "Execute the queued proposal 'Test Prop E1' on Polygon governor 0xGov. Targets:[0xT1], Values:[0], Calldatas:[0xCD1].",
+          text: "Execute the queued proposal 'Test Prop E1' on Polygon governor 0xGov. Chain: polygon. Targets:[0xT1], Values:[0], Calldatas:[0xCD1]. Description: Test Description for E1.",
         },
       },
     ],

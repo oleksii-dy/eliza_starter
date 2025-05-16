@@ -26,6 +26,9 @@ import { getPolygonGasEstimatesAction } from './actions/getPolygonGasEstimates';
 import { undelegateL1Action } from './actions/undelegateL1';
 import { restakeRewardsL1Action } from './actions/restakeRewardsL1';
 import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed';
+import { heimdallVoteAction } from './actions/heimdallVoteAction';
+import { heimdallSubmitProposalAction } from './actions/heimdallSubmitProposalAction';
+import { heimdallTransferTokensAction } from './actions/heimdallTransferTokensAction';
 
 import {
   WalletProvider,
@@ -38,6 +41,7 @@ import {
   type DelegatorInfo,
   ValidatorStatus,
 } from './services/PolygonRpcService';
+import { HeimdallService } from './services/HeimdallService';
 import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService';
 import { parseBigIntString } from './utils'; // Import from utils
 
@@ -47,6 +51,7 @@ const configSchema = z.object({
   ETHEREUM_RPC_URL: z.string().url('Invalid Ethereum RPC URL').min(1),
   PRIVATE_KEY: z.string().min(1, 'Private key is required'),
   POLYGONSCAN_KEY: z.string().min(1, 'PolygonScan API Key is required'),
+  HEIMDALL_RPC_URL: z.string().url('Invalid Heimdall RPC URL').min(1).optional(),
 });
 
 // Infer the type from the schema
@@ -69,6 +74,9 @@ const polygonActions: Action[] = [
   withdrawRewardsAction,
   restakeRewardsL1Action,
   isL2BlockCheckpointedAction,
+  heimdallVoteAction,
+  heimdallSubmitProposalAction,
+  heimdallTransferTokensAction,
 ];
 
 // --- Define Providers --- //
@@ -174,7 +182,7 @@ const polygonProviderInfo: Provider = {
 const polygonProviders: Provider[] = [polygonWalletProvider, polygonProviderInfo];
 
 // --- Define Services --- //
-const polygonServices: (typeof Service)[] = [PolygonRpcService];
+const polygonServices: (typeof Service)[] = [PolygonRpcService, HeimdallService];
 
 // --- Plugin Definition --- //
 export const polygonPlugin: Plugin = {
@@ -187,6 +195,7 @@ export const polygonPlugin: Plugin = {
     ETHEREUM_RPC_URL: process.env.ETHEREUM_RPC_URL,
     PRIVATE_KEY: process.env.PRIVATE_KEY,
     POLYGONSCAN_KEY: process.env.POLYGONSCAN_KEY,
+    HEIMDALL_RPC_URL: process.env.HEIMDALL_RPC_URL,
   },
 
   // Initialization logic

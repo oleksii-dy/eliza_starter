@@ -1,6 +1,6 @@
 {
   "name": "@elizaos/plugin-polygon",
-  "description": "Plugin starter for elizaOS",
+  "description": "Polygon integration for ElizaOS",
   "version": "1.0.0-beta.40",
   "private": true,
   "type": "module",
@@ -24,6 +24,9 @@
     "dist"
   ],
   "dependencies": {
+    "@cosmjs/proto-signing": "^0.32.3",
+    "@cosmjs/stargate": "^0.32.3",
+    "cosmjs-types": "^0.9.0",
     "@elizaos/cli": "workspace:*",
     "@elizaos/core": "workspace:*",
     "@elizaos/plugin-tee": "workspace:*",
@@ -35,9 +38,12 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/node": "^20.5.9",
     "tsup": "8.4.0",
     "typescript": "5.8.2",
-    "prettier": "3.5.3"
+    "prettier": "3.5.3",
+    "vitest": "^2.0.0",
+    "@vitest/coverage-v8": "^2.0.0"
   },
   "scripts": {
     "start": "elizaos start",
@@ -45,7 +51,7 @@
     "dev": "elizaos dev",
     "build": "tsup",
     "lint": "prettier --write ./src",
-    "test": "elizaos test",
+    "test": "vitest test",
     "publish": "elizaos plugin publish",
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src"

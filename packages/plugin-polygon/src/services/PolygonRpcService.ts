@@ -591,9 +591,10 @@ export class PolygonRpcService extends Service {
 
       // 7. Return Hash
       return txResponse.hash;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error(`Undelegation from validator ${validatorId} failed:`, error);
-      throw new Error(`Undelegation failed: ${error.message || error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Undelegation failed: ${errorMessage}`);
     }
   }
 
@@ -646,9 +647,10 @@ export class PolygonRpcService extends Service {
 
       // 7. Return Hash
       return txResponse.hash;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error(`Reward withdrawal from validator ${validatorId} failed:`, error);
-      throw new Error(`Reward withdrawal failed: ${error.message || error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Reward withdrawal failed: ${errorMessage}`);
     }
   }
 
@@ -697,9 +699,10 @@ export class PolygonRpcService extends Service {
       const delegateTxHash = await this.delegate(validatorId, rewardsToRestake);
 
       return delegateTxHash; // Return the hash of the second (delegate) transaction
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error(`Restake operation for validator ${validatorId} failed:`, error);
-      throw new Error(`Restake failed: ${error.message || error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Restake failed: ${errorMessage}`);
     }
   }
 
@@ -778,9 +781,10 @@ export class PolygonRpcService extends Service {
 
       // 8. Return Hash of the deposit transaction
       return txResponse.hash;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error(`Bridge deposit for token ${tokenAddressL1} failed:`, error);
-      throw new Error(`Bridge deposit failed: ${error.message || error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Bridge deposit failed: ${errorMessage}`);
     }
   }
 
@@ -881,9 +885,10 @@ export class PolygonRpcService extends Service {
       logger.info(`Broadcasting L1 approve transaction for token ${tokenContract.target}...`);
       const txResponse = await this.sendRawTransaction(signedTx, 'L1');
       return txResponse.hash;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error(`ERC20 approve transaction failed for token ${tokenContract.target}:`, error);
-      throw new Error(`Approval failed: ${error.message || error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Approval failed: ${errorMessage}`);
     }
   }
 
