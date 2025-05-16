@@ -47,9 +47,15 @@ jobs:
       - name: Clean eliza projects cache
         run: rm -rf ~/.eliza/projects
 
+      - name: Restore Eliza models cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.eliza/models
+          key: ${{ runner.os }}-eliza-models
+
       - name: Make test scripts executable
         run: chmod +x packages/cli/__test_scripts__/*.bats packages/cli/__test_scripts__/*.sh
 
       - name: Run CLI shell tests
-        run: ./run_all_bats.sh
+        run: bats ./test_message.bats
         working-directory: packages/cli/__test_scripts__
