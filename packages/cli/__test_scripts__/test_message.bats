@@ -47,9 +47,6 @@ setup_file() {
   echo "[DEBUG] Server log will be: $TEST_TMP_DIR/server.log"
   echo "Starting ElizaOS server on port $TEST_SERVER_PORT..."
   LOG_LEVEL=debug PGLITE_DATA_DIR="$TEST_TMP_DIR/pglite" \
-    LOCAL_SMALL_MODEL="${LOCAL_SMALL_MODEL}" \
-    LOCAL_LARGE_MODEL="${LOCAL_LARGE_MODEL}" \
-    LOCAL_EMBEDDING_MODEL="${LOCAL_EMBEDDING_MODEL}" \
     $ELIZAOS_CMD start --port "$TEST_SERVER_PORT" >"$TEST_TMP_DIR/server.log" 2>&1 &
   SERVER_PID=$!
 

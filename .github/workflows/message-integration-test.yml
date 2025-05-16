@@ -45,7 +45,7 @@ jobs:
         run: npm install -g bats
 
       - name: Clean eliza projects cache
-        run: rm -rf ~/.eliza/projects
+        run: rm -rf ~/.eliza/projects ~/.eliza/.env
 
       - name: Restore Eliza models cache
         uses: actions/cache@v3
