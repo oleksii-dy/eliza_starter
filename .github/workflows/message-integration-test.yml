@@ -56,6 +56,6 @@ jobs:
       - name: Make test scripts executable
         run: chmod +x packages/cli/__test_scripts__/*.bats packages/cli/__test_scripts__/*.sh
 
-      - name: Run CLI shell tests
+      - name: Run Message Agent Integration Test
         run: bats ./test_message.bats
         working-directory: packages/cli/__test_scripts__
