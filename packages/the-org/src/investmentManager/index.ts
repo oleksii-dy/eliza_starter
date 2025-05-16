@@ -44,7 +44,8 @@ const character: Character = {
     '@elizaos/plugin-pdf',
     '@elizaos/plugin-video-understanding',
     '@elizaos/plugin-bootstrap',
-    '@elizaos/plugin-solana',
+    '@elizaos-plugins/plugin-trader',
+    '@elizaos-plugins/plugin-jupiter',
   ],
   settings: {
     secrets: {
@@ -536,7 +537,7 @@ export const investmentManager: ProjectAgent = {
   plugins: [
     //degenTraderPlugin,
     //degenIntelPlugin, // has to be after trader for buy/sell signals to be enabled
-    autofunTraderPlugin,
+    // autofunTraderPlugin,
     //autofunPlugin, // has to be after trader for buy/sell signals to be enabled
     // communityInvestorPlugin,
   ],
