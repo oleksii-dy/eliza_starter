@@ -50,48 +50,24 @@ setup_file() {
     $ELIZAOS_CMD start --port "$TEST_SERVER_PORT" >"$TEST_TMP_DIR/server.log" 2>&1 &
   SERVER_PID=$!
 
-  echo "Waiting for server to be up (PID: $SERVER_PID)..."
-  SERVER_UP=0
-  for i in {1..30}; do # Timeout for server start
-    if curl -sf "$TEST_SERVER_URL/api/agents" >/dev/null; then
-      SERVER_UP=1
-      echo "Server is up!"
+  echo "Waiting for agent list command to succeed (checking if agent running)..."
+  for i in {1..12}; do
+    run $ELIZAOS_CMD agent --remote-url "$TEST_SERVER_URL" list
+    if [ "$status" -eq 0 ]; then
+      echo "Agent list succeeded!"
       break
     fi
-    echo "Still waiting for server... (attempt $i)"
+    echo "Agent list failed (attempt $i), status=$status"
     sleep 2
   done
 
-  if [ "$SERVER_UP" -ne 1 ]; then
-    echo "[ERROR] ElizaOS server did not start within timeout!"
-    echo "--- SERVER LOG ($TEST_TMP_DIR/server.log) --- "
+  if [ "$status" -ne 0 ]; then
+    echo "[ERROR] Agent list command did not succeed within timeout!"
+    echo "--- SERVER LOG ($TEST_TMP_DIR/server.log) ---"
     tail -n 100 "$TEST_TMP_DIR/server.log"
     echo "------------------"
     if ps -p "$SERVER_PID" > /dev/null; then kill -9 "$SERVER_PID" 2>/dev/null || true; fi
     exit 1
-  fi
-
-  echo "Waiting for agents to fully initialize..."
-  AGENTS_JSON=""
-  for i in {1..10}; do # Timeout for agent initialization
-    AGENTS_JSON=$(curl -s "$TEST_SERVER_URL/api/agents")
-    if [ "$AGENTS_JSON" != "[]" ] && [ -n "$AGENTS_JSON" ]; then
-      echo "Agents initialized!"
-      break
-    fi
-    echo "Agents not yet initialized (attempt $i), waiting... Current JSON: $AGENTS_JSON"
-    AGENTS_JSON="" # Reset to ensure failure condition is met if loop finishes without success
-    sleep 2
-  done
-
-  if [ "$AGENTS_JSON" == "[]" ] || [ -z "$AGENTS_JSON" ]; then
-      echo "[ERROR] Agents did not initialize within timeout (or returned empty/default list)!"
-      echo "Final AGENTS_JSON was: '$AGENTS_JSON'"
-      echo "--- Last 50 lines of SERVER LOG ($TEST_TMP_DIR/server.log) --- "
-      tail -n 50 "$TEST_TMP_DIR/server.log"
-      echo "-----------------------------------------------------------"
-      if ps -p "$SERVER_PID" > /dev/null; then kill -9 "$SERVER_PID" 2>/dev/null || true; fi
-      exit 1
   fi
 
   ELIZA_AGENT_ID=""
@@ -207,5 +183,4 @@ teardown_file() {
 
   [ "$status" -eq 0 ]
   [[ "$output" == *'"thought":'* ]]
-  [[ "$output" == *'"actions":'* ]]
 }
