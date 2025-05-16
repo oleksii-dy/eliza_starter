@@ -5,6 +5,7 @@ import viteCompression from 'vite-plugin-compression';
 // @ts-ignore:next-line
 // @ts-ignore:next-line
 import type { ViteUserConfig } from 'vitest/config'; // Import Vitest config type for test property
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // https://vite.dev/config/
 
@@ -36,6 +37,7 @@ export default defineConfig(({ mode }): CustomUserConfig => {
   return {
     plugins: [
       react() as unknown as Plugin,
+      nodePolyfills() as unknown as Plugin,
       viteCompression({
         algorithm: 'brotliCompress',
         ext: '.br',
@@ -52,7 +54,6 @@ export default defineConfig(({ mode }): CustomUserConfig => {
       process: '{}',
     },
     optimizeDeps: {
-      exclude: ['@elizaos/core'],
       esbuildOptions: {
         define: {
           global: 'globalThis',
@@ -93,6 +94,7 @@ export default defineConfig(({ mode }): CustomUserConfig => {
     resolve: {
       alias: {
         '@': '/src',
+        '@elizaos/core': path.resolve(__dirname, '../core/src/index.ts'),
       },
     },
     logLevel: 'error', // Only show errors, not warnings
