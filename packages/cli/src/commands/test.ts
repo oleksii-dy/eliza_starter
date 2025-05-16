@@ -433,7 +433,13 @@ const runAgentTests = async (options: {
 export const test = new Command()
   .name('test')
   .description('Run tests for Eliza projects, plugins and agents')
-  .option('-p, --port <port>', 'Port to listen on', (val) => parseInt(val, 10))
+  .option('-p, --port <port>', 'Port to listen on', (val) => {
+    const parsedVal = parseInt(val, 10);
+    if (isNaN(parsedVal) || parsedVal <= 0) {
+      throw new Error(`Invalid port: ${val}. Port must be a positive number.`);
+    }
+    return parsedVal;
+  })
   .option('-pl, --plugin <name>', 'Name of plugin to test')
   .option('-sp, --skip-plugins', 'Skip plugin tests')
   .option('-spt, --skip-project-tests', 'Skip project tests')
