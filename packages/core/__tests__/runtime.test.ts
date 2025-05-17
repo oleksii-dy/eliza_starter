@@ -15,6 +15,12 @@ import type {
   UUID,
 } from '../src/types';
 import { v4 as uuidv4 } from 'uuid';
+import { mkdirSync, statSync } from 'fs';
+import { existsSync } from 'fs';
+import path from 'path';
+import os from 'os';
+import { PGlite } from '@electric-sql/pglite';
+import { Pool } from 'pg';
 const stringToUuid = (id: string): UUID => id as UUID;
 
 // --- Mocks ---
@@ -113,7 +119,16 @@ const mockDatabaseAdapter: IDatabaseAdapter = {
   deleteTask: vi.fn().mockResolvedValue(undefined),
   updateMemory: vi.fn().mockResolvedValue(true), // Added missing method from previous example
   getLogs: vi.fn().mockResolvedValue([]), // Added missing method from previous example
-  deleteLog: vi.fn().mockResolvedValue(undefined), // Added missing method from previous example
+  deleteLog: vi.fn().mockResolvedValue(undefined),
+  getConnection: function (): Promise<PGlite | Pool> {
+    throw new Error('Function not implemented.');
+  },
+  removeWorld: function (id: UUID): Promise<void> {
+    throw new Error('Function not implemented.');
+  },
+  deleteRoomsByServerId: function (serverId: UUID): Promise<void> {
+    throw new Error('Function not implemented.');
+  },
 };
 
 // Mock action creator (matches your example)
@@ -150,11 +165,43 @@ const createMockState = (text = '', values = {}, data = {}): State => ({
   text,
 });
 
+// check if ~/.eliza exists
+// Assumes 'os', 'path', 'existsSync', 'mkdirSync', 'statSync' from 'fs' are imported/available in the file scope.
+const elizaConfigDirPath = path.join(os.homedir(), '.eliza');
+
+try {
+  // Check if the path exists
+  if (existsSync(elizaConfigDirPath)) {
+    // If it exists, verify it's a directory
+    const stats = statSync(elizaConfigDirPath);
+    if (!stats.isDirectory()) {
+      // If it's not a directory, this is a problem for the expected setup.
+      throw new Error(
+        `The path ${elizaConfigDirPath} exists but is not a directory. Please remove or rename it to ensure tests can run correctly.`
+      );
+    }
+    // If it exists and is a directory, no action needed.
+  } else {
+    // If it doesn't exist, create it.
+    // recursive: true ensures that if any parent directory of .eliza (within home) was missing, it would be created.
+    // For ~/.eliza, it primarily ensures .eliza itself is created.
+    mkdirSync(elizaConfigDirPath, { recursive: true });
+  }
+} catch (e) {
+  // Catch any error during the process (e.g., permissions issues, os.homedir() failure, statSync/mkdirSync failure)
+  const error = e as Error; // Type assertion for better error handling/logging
+  console.error(
+    `Critical setup error: Failed to ensure the directory ${elizaConfigDirPath} exists. Error: ${error.message}`
+  );
+  // Re-throw the error to halt test execution, as this directory might be essential.
+  throw error;
+}
+
 // Mock Character
 const mockCharacter: Character = {
   id: stringToUuid(uuidv4()),
   name: 'Test Character',
-  plugins: ['@elizaos/plugin-sql'],
+  plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai'],
   username: 'test',
   bio: ['Test bio'],
   messageExamples: [], // Ensure required fields are present
@@ -171,9 +218,12 @@ const mockCharacter: Character = {
 
 // --- Test Suite ---
 
-describe('AgentRuntime (Non-Instrumented Baseline)', () => {
+describe('AgentRuntime (Non-Instrumented Baseline)', async () => {
   let runtime: AgentRuntime;
   let agentId: UUID;
+
+  const openaiPlugin = await import('@elizaos/plugin-openai');
+  const sqlPlugin = await import('@elizaos/plugin-sql');
 
   beforeEach(() => {
     vi.clearAllMocks(); // Vitest equivalent of clearAllMocks
@@ -182,6 +232,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
     // Instantiate runtime correctly, passing adapter in options object
     runtime = new AgentRuntime({
       character: mockCharacter,
+      plugins: [openaiPlugin.default, sqlPlugin.default as any],
       agentId: agentId,
       adapter: mockDatabaseAdapter, // Correct way to pass adapter
       // No plugins passed here by default, tests can pass them if needed
@@ -386,7 +437,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
       const modelHandler = vi.fn().mockResolvedValue({ result: 'success' });
       const modelType = ModelType.TEXT_LARGE;
 
-      runtime.registerModel(modelType, modelHandler);
+      runtime.registerModel(modelType, modelHandler, 'openai');
 
       const params = { prompt: 'test prompt', someOption: true };
       const result = await runtime.useModel(modelType, params);
