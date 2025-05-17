@@ -5,8 +5,8 @@ setup() {
   export ELIZAOS_CMD="${ELIZAOS_CMD:-bun run "$(cd ../dist && pwd)/index.js"}"
   export TEST_SERVER_PORT=3000
   # Use same 3B model for both small and medium Local AI models
-  export LOCAL_SMALL_MODEL="DeepHermes-3-Llama-3-3B-Preview-q4.gguf"
-  export LOCAL_MEDIUM_MODEL="DeepHermes-3-Llama-3-3B-Preview-q4.gguf"
+  export LOCAL_SMALL_MODEL="Qwen3-0.6B-Q4_0.gguf"
+  export LOCAL_MEDIUM_MODEL="Qwen3-0.6B-Q4_0.gguf"
   LOG_LEVEL=debug PGLITE_DATA_DIR="$TEST_TMP_DIR/pglite" PORT=$TEST_SERVER_PORT $ELIZAOS_CMD start --character "$BATS_TEST_DIRNAME/test-characters/ada.json" >"$TEST_TMP_DIR/server.log" 2>&1 &
   SERVER_PID=$!
   READY=0
