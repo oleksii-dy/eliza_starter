@@ -3,7 +3,8 @@ import { Command, Option } from 'commander';
 import { execa } from 'execa';
 import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
+import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -91,9 +92,9 @@ async function determineProjectType(): Promise<{ isProject: boolean; isPlugin: b
   let isProject = false;
   let isPlugin = false;
 
-  if (fs.existsSync(packageJsonPath)) {
+  if (existsSync(packageJsonPath)) {
     try {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
 
       // Log package info for debugging
       console.info(`Package name: ${packageJson.name}`);
@@ -140,8 +141,8 @@ async function determineProjectType(): Promise<{ isProject: boolean; isPlugin: b
       // If still not identified, check if it has src/index.ts with a Project export
       if (!isProject && !isPlugin) {
         const indexPath = path.join(cwd, 'src', 'index.ts');
-        if (fs.existsSync(indexPath)) {
-          const indexContent = fs.readFileSync(indexPath, 'utf-8');
+        if (existsSync(indexPath)) {
+          const indexContent = await fs.readFile(indexPath, 'utf-8');
           if (
             indexContent.includes('export const project') ||
             (indexContent.includes('export default') && indexContent.includes('Project'))
@@ -187,7 +188,7 @@ async function watchDirectory(dir: string, onChange: () => void): Promise<void> 
 
     // Use a simpler approach - watch the src directory directly
     const srcDir = path.join(absoluteDir, 'src');
-    const dirToWatch = fs.existsSync(srcDir) ? srcDir : absoluteDir;
+    const dirToWatch = existsSync(srcDir) ? srcDir : absoluteDir;
 
     console.info(`Actually watching directory: ${dirToWatch}`);
 
@@ -213,7 +214,7 @@ async function watchDirectory(dir: string, onChange: () => void): Promise<void> 
     // Manually find TypeScript files to verify we should be watching them
     const findTsFiles = (dir: string): string[] => {
       let results: string[] = [];
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      const entries = readdirSync(dir, { withFileTypes: true });
 
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);

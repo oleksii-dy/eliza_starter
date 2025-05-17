@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import os from 'node:os';
 import {
   type DeployOptions,
@@ -19,10 +19,10 @@ import { Command } from 'commander';
  * Parses environment variables from given values and a file.
  * @param {string[]} envs - Array of environment variable strings.
  * @param {string} envFile - Path to a file containing environment variables.
- * @returns {Env[]} Array of objects with key-value pairs representing the environment variables.
+ * @returns {Promise<Env[]>} Promise resolving to an array of key-value pairs representing the environment variables.
  */
 
-const parseEnv = (envs: string[], envFile: string): Env[] => {
+const parseEnv = async (envs: string[], envFile: string): Promise<Env[]> => {
   // Process environment variables
   const envVars: Record<string, string> = {};
   if (envs) {
@@ -37,7 +37,13 @@ const parseEnv = (envs: string[], envFile: string): Env[] => {
   }
 
   if (envFile) {
-    const envFileContent = fs.readFileSync(envFile, 'utf8');
+    let envFileContent = '';
+    try {
+      envFileContent = await fs.readFile(envFile, 'utf8');
+    } catch (error) {
+      console.error(`Failed to read ${envFile}: ${(error as Error).message}`);
+      envFileContent = '';
+    }
     for (const line of envFileContent.split('\n')) {
       if (line.includes('=')) {
         const [key, value] = line.split('=');
@@ -92,7 +98,7 @@ const deployCommand = new Command()
   .option('-e, --env <env...>', 'Specify environment variables in the form of KEY=VALUE')
   .option('--env-file <envFile>', 'Specify a file containing environment variables')
   .option('--debug', 'Enable debug mode to print more information', false)
-  .action((options: DeployOptions) => {
+  .action(async (options: DeployOptions) => {
     if (!options.type || options.type !== 'phala') {
       console.error('Error: The --type option is required. Currently only phala is supported.');
       process.exit(1);
@@ -113,7 +119,7 @@ const deployCommand = new Command()
     }
 
     // Process environment variables
-    options.envs = parseEnv(options.env || [], options.envFile || '');
+    options.envs = await parseEnv(options.env || [], options.envFile || '');
 
     deploy(options);
   });
@@ -154,14 +160,14 @@ const upgradeCommand = new Command()
   .option('-e, --env <env...>', 'Specify environment variables in the form of KEY=VALUE')
   .option('--env-file <envFile>', 'Specify a file containing environment variables')
   .option('-c, --compose <compose>', 'Specify the docker compose file to be deployed')
-  .action((options: UpgradeOptions) => {
+  .action(async (options: UpgradeOptions) => {
     if (!options.compose) {
       console.error('Error: The --compose option is required.');
       process.exit(1);
     }
 
     // Process environment variables
-    options.envs = parseEnv(options.env || [], options.envFile || '');
+    options.envs = await parseEnv(options.env || [], options.envFile || '');
 
     upgrade(options);
   });

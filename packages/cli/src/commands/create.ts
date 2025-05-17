@@ -9,7 +9,7 @@ import {
   setupPgLite,
 } from '@/src/utils';
 import { Command } from 'commander';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import prompts from 'prompts';
@@ -216,12 +216,16 @@ export const create = new Command()
 
       while (depth < maxDepth && currentPath.includes(path.sep)) {
         if (existsSync(currentPath)) {
-          const env = readFileSync(currentPath, 'utf8');
-          const envVars = env.split('\n').filter((line) => line.trim() !== '');
-          const postgresUrlLine = envVars.find((line) => line.startsWith('POSTGRES_URL='));
-          if (postgresUrlLine) {
-            postgresUrl = postgresUrlLine.split('=')[1].trim();
-            break;
+          try {
+            const env = await fs.readFile(currentPath, 'utf8');
+            const envVars = env.split('\n').filter((line) => line.trim() !== '');
+            const postgresUrlLine = envVars.find((line) => line.startsWith('POSTGRES_URL='));
+            if (postgresUrlLine) {
+              postgresUrl = postgresUrlLine.split('=')[1].trim();
+              break;
+            }
+          } catch (error) {
+            console.error(`Failed to read ${currentPath}: ${(error as Error).message}`);
           }
         }
 

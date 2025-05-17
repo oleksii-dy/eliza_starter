@@ -2,7 +2,7 @@ import { buildProject, handleError, runBunCommand } from '@/src/utils';
 import { displayBanner as showBanner } from '@/src/utils';
 import { Command } from 'commander';
 import { execa } from 'execa';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,7 +17,7 @@ import {
 import { logger } from '@elizaos/core';
 
 // Function to get the package version
-function getVersion(): string {
+async function getVersion(): Promise<string> {
   // For ESM modules we need to use import.meta.url instead of __dirname
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
@@ -31,7 +31,7 @@ function getVersion(): string {
     console.warn(`Warning: package.json not found at ${packageJsonPath}`);
   } else {
     try {
-      const packageJsonContent = readFileSync(packageJsonPath, 'utf8');
+      const packageJsonContent = await fs.readFile(packageJsonPath, 'utf8');
       const packageJson = JSON.parse(packageJsonContent);
       version = packageJson.version || '0.0.0';
     } catch (error) {
@@ -151,7 +151,7 @@ async function updateDependencies(
   );
 
   // Get the current CLI version (for informational purposes)
-  const currentCliVersion = getVersion();
+  const currentCliVersion = await getVersion();
   console.info(`Current CLI version: ${currentCliVersion}`);
 
   try {
@@ -338,14 +338,14 @@ async function updateDependencies(
 /**
  * Check if the current directory is likely a plugin directory
  */
-function checkIfPluginDir(dir: string): boolean {
+async function checkIfPluginDir(dir: string): Promise<boolean> {
   const packageJsonPath = path.join(dir, 'package.json');
   if (!existsSync(packageJsonPath)) {
     return false;
   }
 
   try {
-    const packageJsonContent = readFileSync(packageJsonPath, 'utf8');
+    const packageJsonContent = await fs.readFile(packageJsonPath, 'utf8');
     const packageJson = JSON.parse(packageJsonContent);
     if (packageJson.name?.startsWith('@elizaos/plugin-')) {
       return true;
@@ -365,7 +365,7 @@ function checkIfPluginDir(dir: string): boolean {
 export async function performCliUpdate(): Promise<boolean> {
   try {
     // get the current version
-    const currentVersion = getVersion();
+    const currentVersion = await getVersion();
 
     // Get the time data for all published versions to find the most recent
     const { stdout } = await execa('npm', ['view', '@elizaos/cli', 'time', '--json']);
@@ -508,7 +508,7 @@ export const update = new Command()
         const cwd = process.cwd();
 
         // Determine if we're in a project or plugin directory
-        const isPlugin = checkIfPluginDir(cwd);
+        const isPlugin = await checkIfPluginDir(cwd);
         console.info(`Detected ${isPlugin ? 'plugin' : 'project'} directory`);
 
         if (options.check) {
