@@ -1,55 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import PolygonPlugin from '../../src/index';
-import { mockRuntime } from '../mocks/core-mock';
+import { mockRuntime } from '../../vitest.setup';
 
-// Mock all the service implementations
-vi.mock('../../src/services/PolygonRpcService', () => {
-  return {
-    PolygonRpcService: {
-      serviceType: 'polygonRpc',
-      start: vi.fn().mockResolvedValue({
-        serviceType: 'polygonRpc',
-        capabilityDescription: 'Provides RPC functionality for Polygon networks',
-      }),
-    },
-  };
-});
-
-vi.mock('../../src/services/PolygonBridgeService', () => {
-  return {
-    PolygonBridgeService: {
-      serviceType: 'polygonBridge',
-      start: vi.fn().mockResolvedValue({
-        serviceType: 'polygonBridge',
-        capabilityDescription: 'Provides bridging functionality between Ethereum (L1) and Polygon (L2)',
-      }),
-    },
-  };
-});
-
-vi.mock('../../src/services/GovernanceService', () => {
-  return {
-    GovernanceService: {
-      serviceType: 'polygonGovernance',
-      start: vi.fn().mockResolvedValue({
-        serviceType: 'polygonGovernance',
-        capabilityDescription: 'Provides governance functionality for Polygon',
-      }),
-    },
-  };
-});
-
-vi.mock('../../src/services/GasService', () => {
-  return {
-    GasService: {
-      serviceType: 'polygonGas',
-      start: vi.fn().mockResolvedValue({
-        serviceType: 'polygonGas',
-        capabilityDescription: 'Provides gas price estimation for Polygon transactions',
-      }),
-    },
-  };
-});
+// Import mocks from centralized setup
+import '../../vitest.setup';
 
 describe('Polygon Plugin Integration', () => {
   beforeEach(() => {
@@ -136,7 +90,7 @@ describe('Polygon Plugin Integration', () => {
       // This verifies our bridge action is registered
       const actionNames = vi.mocked(mockRuntime.registerAction).mock.calls.map(call => call[0]);
       
-      expect(actionNames).toContain('BRIDGE_ERC20_TO_POLYGON');
+      expect(actionNames).toContain('BRIDGE_DEPOSIT_POLYGON');
       expect(actionNames.some(name => name.includes('BALANCE'))).toBe(true);
       expect(actionNames.some(name => name.includes('TRANSACTION'))).toBe(true);
     });

@@ -1,8 +1,8 @@
-import { type Action, logger } from '@elizaos/core';
+import { type Action, logger, type IAgentRuntime } from '@elizaos/core';
 import { z } from 'zod';
-import { formatUnits } from '../utils/formatters';
-import { GovernanceService } from '../services/GovernanceService';
-import { type Address } from '../types';
+import { formatUnits } from '../utils/formatters.js';
+import { GovernanceService } from '../services/GovernanceService.js';
+import { type Address } from '../types.js';
 
 /**
  * Action to get governance information from Polygon
@@ -12,67 +12,79 @@ export const getGovernanceInfoAction: Action = {
   description: 'Gets governance information from Polygon, including token details and governance settings.',
   
   // Define examples
-  examples: [],
+  examples: [
+    "What is the current governance information on Polygon?",
+    "Show me the governance token details and settings",
+    "Get the governance parameters for Polygon"
+  ],
   
   // Validation function
-  validate: async () => true,
-  
-  // Actual handler function that performs the operation
-  handler: async (runtime, message, state, options) => {
-    // Get Governance service
-    const governanceService = runtime.getService<GovernanceService>(GovernanceService.serviceType);
-    if (!governanceService) throw new Error('GovernanceService not available');
-    
-    logger.info('Fetching governance information');
-    
+  validate: async (options: any, runtime: IAgentRuntime) => {
     try {
-      // Get token info and governance settings in parallel
-      const [tokenInfo, governanceSettings] = await Promise.all([
-        governanceService.getTokenInfo(),
-        governanceService.getGovernanceSettings()
-      ]);
+      // Check if governance contract addresses are set
+      const governorAddress = runtime.getSetting('GOVERNOR_ADDRESS');
+      if (!governorAddress) {
+        return 'GOVERNOR_ADDRESS setting is required to get governance information';
+      }
       
-      // Format the values for display
-      const formattedTotalSupply = formatUnits(tokenInfo.totalSupply, tokenInfo.decimals);
-      const formattedVotingDelay = formatUnits(governanceSettings.votingDelay, 0);
-      const formattedVotingPeriod = formatUnits(governanceSettings.votingPeriod, 0);
-      const formattedProposalThreshold = formatUnits(governanceSettings.proposalThreshold, tokenInfo.decimals);
-      const formattedQuorum = formatUnits(governanceSettings.quorum, tokenInfo.decimals);
+      return true;
+    } catch (error) {
+      logger.error('Validation error:', error);
+      return 'Invalid governance options';
+    }
+  },
+  
+  execute: async (options: any, runtime: IAgentRuntime) => {
+    try {
+      logger.info('Getting governance information from Polygon');
       
-      // Create human-readable response
-      const text = `Governance Information:\n\n` +
-        `Token: ${tokenInfo.name} (${tokenInfo.symbol})\n` +
-        `Total Supply: ${formattedTotalSupply} ${tokenInfo.symbol}\n` +
-        `Decimals: ${tokenInfo.decimals}\n\n` +
-        `Governance Settings:\n` +
-        `Voting Delay: ${formattedVotingDelay} blocks\n` +
-        `Voting Period: ${formattedVotingPeriod} blocks\n` +
-        `Proposal Threshold: ${formattedProposalThreshold} ${tokenInfo.symbol}\n` +
-        `Quorum: ${formattedQuorum} ${tokenInfo.symbol}`;
+      // Get the governance service
+      const governanceService = runtime.getService(GovernanceService.serviceType) as GovernanceService;
+      if (!governanceService) {
+        throw new Error('GovernanceService not available');
+      }
+      
+      // Get token info
+      logger.info('Fetching governance token information');
+      const tokenInfo = await governanceService.getTokenInfo();
+      
+      // Get governance settings
+      logger.info('Fetching governance settings');
+      const governanceSettings = await governanceService.getGovernanceSettings();
+      
+      // Format values for readability
+      const formattedSettings = {
+        votingDelay: Number(governanceSettings.votingDelay),
+        votingPeriod: Number(governanceSettings.votingPeriod),
+        proposalThreshold: formatUnits(governanceSettings.proposalThreshold, tokenInfo.decimals),
+        quorum: formatUnits(governanceSettings.quorum, tokenInfo.decimals),
+      };
+      
+      // Format token info
+      const formattedTokenInfo = {
+        name: tokenInfo.name,
+        symbol: tokenInfo.symbol,
+        decimals: tokenInfo.decimals,
+        totalSupply: formatUnits(tokenInfo.totalSupply, tokenInfo.decimals),
+      };
+      
+      logger.info(`Governance token: ${formattedTokenInfo.name} (${formattedTokenInfo.symbol})`);
+      logger.info(`Total supply: ${formattedTokenInfo.totalSupply} ${formattedTokenInfo.symbol}`);
+      logger.info(`Voting delay: ${formattedSettings.votingDelay} blocks`);
+      logger.info(`Voting period: ${formattedSettings.votingPeriod} blocks`);
       
       return {
-        text,
         actions: ['GET_GOVERNANCE_INFO'],
         data: {
-          tokenInfo: {
-            ...tokenInfo,
-            formattedTotalSupply
-          },
-          governanceSettings: {
-            ...governanceSettings,
-            formattedVotingDelay,
-            formattedVotingPeriod,
-            formattedProposalThreshold,
-            formattedQuorum
-          }
+          token: formattedTokenInfo,
+          governance: formattedSettings
         }
       };
     } catch (error) {
-      logger.error('Error fetching governance information:', error);
+      logger.error('Error getting governance information:', error);
       return {
-        text: `Error fetching governance information: ${error.message}`,
         actions: ['GET_GOVERNANCE_INFO'],
-        data: { error: error.message }
+        data: { error: error instanceof Error ? error.message : String(error) }
       };
     }
   },
@@ -86,74 +98,94 @@ export const getVotingPowerAction: Action = {
   description: 'Gets voting power for an address on Polygon governance.',
   
   // Define examples
-  examples: [],
+  examples: [
+    "What is my voting power on Polygon governance?",
+    "Show me the voting power for address 0x1234567890abcdef1234567890abcdef12345678",
+    "How many votes does 0x1234567890abcdef1234567890abcdef12345678 have?"
+  ],
   
   // Validation function
-  validate: async (options?: Record<string, any>) => {
-    // Check if address is provided and valid
-    if (!options?.address) {
-      return false;
+  validate: async (options: any, runtime: IAgentRuntime) => {
+    try {
+      // Check if governance contract addresses are set
+      const governorAddress = runtime.getSetting('GOVERNOR_ADDRESS');
+      if (!governorAddress) {
+        return 'GOVERNOR_ADDRESS setting is required to get voting power';
+      }
+      
+      // Check if address is provided and valid
+      if (!options?.address) {
+        // If no address provided, check if we have a default address
+        const defaultAddress = runtime.getSetting('DEFAULT_ADDRESS');
+        if (!defaultAddress) {
+          return 'Address is required to get voting power';
+        }
+      }
+      
+      // If address is provided, validate format
+      if (options?.address) {
+        const address = options.address as string;
+        if (typeof address !== 'string' || !address.match(/^0x[a-fA-F0-9]{40}$/)) {
+          return 'Invalid address format';
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      logger.error('Validation error:', error);
+      return 'Invalid voting power options';
     }
-    
-    const address = options.address as string;
-    if (typeof address !== 'string' || !address.match(/^0x[a-fA-F0-9]{40}$/)) {
-      return false;
-    }
-    
-    return true;
   },
   
-  // Actual handler function that performs the operation
-  handler: async (runtime, message, state, options) => {
-    // Get Governance service
-    const governanceService = runtime.getService<GovernanceService>(GovernanceService.serviceType);
-    if (!governanceService) throw new Error('GovernanceService not available');
-    
-    // Get address from options or use agent's address
-    let targetAddress = options?.address as Address;
-    if (!targetAddress) {
-      targetAddress = runtime.getSetting('AGENT_ADDRESS') as Address;
-      if (!targetAddress) throw new Error('Address not provided and agent address not found');
-    }
-    
-    logger.info(`Fetching voting power for address: ${targetAddress}`);
-    
+  execute: async (options: any, runtime: IAgentRuntime) => {
     try {
-      // Get token info, voting power and token balance in parallel
-      const [tokenInfo, votingPower, tokenBalance] = await Promise.all([
-        governanceService.getTokenInfo(),
-        governanceService.getVotingPower(targetAddress),
-        governanceService.getTokenBalance(targetAddress)
+      // Get address from options or default
+      let address = options?.address as Address;
+      if (!address) {
+        address = runtime.getSetting('DEFAULT_ADDRESS') as Address;
+        logger.info(`Using default address: ${address}`);
+      } else {
+        logger.info(`Getting voting power for address: ${address}`);
+      }
+      
+      // Get the governance service
+      const governanceService = runtime.getService(GovernanceService.serviceType) as GovernanceService;
+      if (!governanceService) {
+        throw new Error('GovernanceService not available');
+      }
+      
+      // Get token info for decimals
+      logger.info('Fetching governance token information');
+      const tokenInfo = await governanceService.getTokenInfo();
+      
+      // Get voting power and token balance
+      logger.info(`Fetching voting power for ${address}`);
+      const [votingPower, tokenBalance] = await Promise.all([
+        governanceService.getVotingPower(address),
+        governanceService.getTokenBalance(address)
       ]);
       
-      // Format the values for display
+      // Format values
       const formattedVotingPower = formatUnits(votingPower, tokenInfo.decimals);
       const formattedTokenBalance = formatUnits(tokenBalance, tokenInfo.decimals);
       
-      // Create human-readable response
-      const text = `Voting Power for ${targetAddress}:\n\n` +
-        `Token: ${tokenInfo.name} (${tokenInfo.symbol})\n` +
-        `Token Balance: ${formattedTokenBalance} ${tokenInfo.symbol}\n` +
-        `Voting Power: ${formattedVotingPower} votes`;
+      logger.info(`Voting power: ${formattedVotingPower} votes`);
+      logger.info(`Token balance: ${formattedTokenBalance} ${tokenInfo.symbol}`);
       
       return {
-        text,
         actions: ['GET_VOTING_POWER'],
         data: {
-          address: targetAddress,
-          tokenInfo,
-          votingPower: votingPower.toString(),
-          tokenBalance: tokenBalance.toString(),
-          formattedVotingPower,
-          formattedTokenBalance
+          address,
+          votingPower: formattedVotingPower,
+          tokenBalance: formattedTokenBalance,
+          symbol: tokenInfo.symbol
         }
       };
     } catch (error) {
-      logger.error(`Error fetching voting power for ${targetAddress}:`, error);
+      logger.error('Error getting voting power:', error);
       return {
-        text: `Error fetching voting power: ${error.message}`,
         actions: ['GET_VOTING_POWER'],
-        data: { error: error.message }
+        data: { error: error instanceof Error ? error.message : String(error) }
       };
     }
   },

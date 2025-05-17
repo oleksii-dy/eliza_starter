@@ -1,80 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WalletProvider } from '../../src/providers/PolygonWalletProvider';
-import { elizaLogger } from '../mocks/core-mock';
+import { 
+  elizaLogger,
+  mockL1PublicClient,
+  mockL1WalletClient,
+  mockTestClient
+} from '../../vitest.setup';
 
 // Import the mocked functions from vitest.setup.ts
 import { createPublicClient, createWalletClient, createTestClient } from 'viem';
 
-// Mock node-cache
-vi.mock('node-cache', () => {
-  return {
-    default: vi.fn().mockImplementation(() => ({
-      get: vi.fn().mockReturnValue(null),
-      set: vi.fn(),
-    }))
-  };
-});
-
-// Mock viem
-vi.mock('viem', () => {
-  return {
-    createPublicClient: vi.fn(),
-    createWalletClient: vi.fn(),
-    createTestClient: vi.fn(),
-    formatUnits: vi.fn().mockReturnValue('2.0'),
-  };
-});
-
-// Mock viem/accounts
-vi.mock('viem/accounts', () => {
-  return {
-    privateKeyToAccount: vi.fn().mockReturnValue({
-      address: '0xUserAddress',
-      signMessage: vi.fn(),
-      signTransaction: vi.fn(),
-      signTypedData: vi.fn(),
-    }),
-  };
-});
-
-// Mock viem/chains
-vi.mock('viem/chains', () => {
-  return {
-    mainnet: {
-      id: 1,
-      name: 'Ethereum',
-      network: 'mainnet',
-      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-      rpcUrls: {
-        default: { http: ['https://ethereum-rpc.com'] },
-      },
-    },
-    polygon: {
-      id: 137,
-      name: 'Polygon',
-      network: 'polygon',
-      nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
-      rpcUrls: {
-        default: { http: ['https://polygon-rpc.com'] },
-      },
-    },
-    hardhat: {
-      id: 31337,
-      name: 'Hardhat',
-      network: 'hardhat',
-      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-      rpcUrls: {
-        default: { http: ['http://127.0.0.1:8545'] },
-      },
-    },
-  };
-});
-
 describe('PolygonWalletProvider', () => {
   let provider: WalletProvider;
-  let mockPublicClient: any;
-  let mockWalletClient: any;
-  let mockTestClient: any;
   
   const mockPrivateKey = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
   const mockUserAddress = '0xUserAddress';
@@ -82,29 +19,24 @@ describe('PolygonWalletProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Setup mock clients
-    mockPublicClient = {
-      getBalance: vi.fn().mockResolvedValue(BigInt(2000000000000000000)), // 2 ETH/MATIC
-    };
-    
-    mockWalletClient = {
-      account: { address: mockUserAddress },
-    };
-    
-    mockTestClient = {
-      account: { address: mockUserAddress },
-    };
-    
-    // Configure the mock functions
-    (createPublicClient as any).mockReturnValue(mockPublicClient);
-    (createWalletClient as any).mockReturnValue(mockWalletClient);
+    // Configure the mock functions to use our standardized mocks
+    (createPublicClient as any).mockReturnValue(mockL1PublicClient);
+    (createWalletClient as any).mockReturnValue(mockL1WalletClient);
     (createTestClient as any).mockReturnValue(mockTestClient);
     
     // Initialize the provider with private key
     provider = new WalletProvider(mockPrivateKey);
     
-    // Add account property for testing
-    provider.account = { address: mockUserAddress };
+    // Add account property for testing with type assertion
+    (provider as any).account = { 
+      address: mockUserAddress,
+      sign: vi.fn(),
+      experimental_signAuthorization: vi.fn(),
+      signMessage: vi.fn(),
+      signTransaction: vi.fn(),
+      signTypedData: vi.fn(),
+      type: 'local'
+    };
   });
 
   afterEach(() => {
@@ -131,8 +63,16 @@ describe('PolygonWalletProvider', () => {
       };
       
       const walletProviderWithChains = new WalletProvider(mockPrivateKey, customChains);
-      // Add account property for testing
-      walletProviderWithChains.account = { address: '0xUserAddress' };
+      // Add account property for testing with type assertion
+      (walletProviderWithChains as any).account = { 
+        address: '0xUserAddress',
+        sign: vi.fn(),
+        experimental_signAuthorization: vi.fn(),
+        signMessage: vi.fn(),
+        signTransaction: vi.fn(),
+        signTypedData: vi.fn(),
+        type: 'local'
+      };
       
       expect(walletProviderWithChains.chains.testnet).toBeDefined();
       expect(walletProviderWithChains.chains.testnet.id).toBe(80001);
@@ -141,20 +81,20 @@ describe('PolygonWalletProvider', () => {
 
   describe('Client getters', () => {
     it('should get public client for a chain', () => {
-      vi.spyOn(provider, 'getPublicClient').mockReturnValue(mockPublicClient);
+      vi.spyOn(provider, 'getPublicClient').mockReturnValue(mockL1PublicClient as unknown as any);
       const publicClient = provider.getPublicClient('mainnet');
       expect(publicClient).toBeDefined();
     });
 
     it('should get wallet client for a chain', () => {
-      vi.spyOn(provider, 'getWalletClient').mockReturnValue(mockWalletClient);
+      vi.spyOn(provider, 'getWalletClient').mockReturnValue(mockL1WalletClient as unknown as any);
       const walletClient = provider.getWalletClient('mainnet');
       expect(walletClient).toBeDefined();
       expect(walletClient.account?.address).toBe('0xUserAddress');
     });
 
     it('should get test client', () => {
-      vi.spyOn(provider, 'getTestClient').mockReturnValue(mockTestClient);
+      vi.spyOn(provider, 'getTestClient').mockReturnValue(mockTestClient as unknown as any);
       const testClient = provider.getTestClient();
       expect(testClient).toBeDefined();
     });

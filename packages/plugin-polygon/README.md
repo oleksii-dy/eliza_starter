@@ -106,14 +106,15 @@ The function handles:
 
 This is the recommended approach for programmatic bridging of tokens to Polygon.
 
-### Bridge ERC20 Action
+### Bridge Deposit Action
 
-The `BRIDGE_ERC20_TO_POLYGON` action provides a user-friendly interface for bridging tokens:
+The `BRIDGE_DEPOSIT_POLYGON` action provides a user-friendly interface for bridging tokens:
 
 Examples:
 
 - "Bridge 5 USDC from Ethereum to Polygon"
 - "Send 0.5 POL to my Polygon address"
+- "Transfer 10 LINK tokens from Ethereum to Polygon address 0x1234..."
 
 The action will extract the token address, amount, and optional recipient from the user input.
 

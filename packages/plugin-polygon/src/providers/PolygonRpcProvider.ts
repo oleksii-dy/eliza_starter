@@ -18,33 +18,9 @@ import { privateKeyToAccount } from 'viem/accounts';
 import * as viemChains from 'viem/chains';
 import { elizaLogger, type IAgentRuntime } from '@elizaos/core';
 
-import { type NetworkType, type SupportedChain, type BlockIdentifier } from '../types';
-import { DEFAULT_RPC_URLS } from '../config';
-
-// Minimal ERC20 ABI for common token operations
-export const ERC20_ABI = [
-  {
-    constant: true,
-    inputs: [{ name: '_owner', type: 'address' }],
-    name: 'balanceOf',
-    outputs: [{ name: 'balance', type: 'uint256' }],
-    type: 'function',
-  },
-  {
-    constant: true,
-    inputs: [],
-    name: 'decimals',
-    outputs: [{ name: '', type: 'uint8' }],
-    type: 'function',
-  },
-  {
-    constant: true,
-    inputs: [],
-    name: 'symbol',
-    outputs: [{ name: '', type: 'string' }],
-    type: 'function',
-  }
-] as const;
+import { type NetworkType, type SupportedChain, type BlockIdentifier } from '../types.js';
+import { DEFAULT_RPC_URLS, CACHE_EXPIRY } from '../config.js';
+import { ERC20_ABI } from '../constants/abis.js';
 
 /**
  * Provider for managing RPC clients for both Ethereum (L1) and Polygon (L2) networks.
@@ -69,7 +45,7 @@ export class PolygonRpcProvider {
 
   // Cache for response data with expiry times
   private cache: Map<string, { data: any; timestamp: number }> = new Map();
-  private defaultCacheExpiry = 60000; // 1 minute in ms
+  private defaultCacheExpiry = CACHE_EXPIRY.DEFAULT; // Use centralized cache expiry settings
 
   /**
    * Creates a new PolygonRpcProvider with connections to both L1 and L2 networks.
@@ -169,7 +145,7 @@ export class PolygonRpcProvider {
    */
   async getBlockNumber(network: NetworkType = 'L2'): Promise<number> {
     const cacheKey = `blockNumber:${network}`;
-    const cached = this.getCached(cacheKey, 12000); // Shorter cache time for block numbers (12s)
+    const cached = this.getCached(cacheKey, CACHE_EXPIRY.BLOCK_NUMBER); // Use centralized cache expiry
     
     if (cached !== undefined) {
       return cached;
@@ -187,7 +163,7 @@ export class PolygonRpcProvider {
    */
   async getBlock(blockIdentifier: BlockIdentifier, network: NetworkType = 'L2'): Promise<any> {
     const cacheKey = `block:${network}:${blockIdentifier}`;
-    const cached = this.getCached(cacheKey);
+    const cached = this.getCached(cacheKey, CACHE_EXPIRY.BLOCK);
     
     if (cached !== undefined) {
       return cached;
@@ -211,7 +187,7 @@ export class PolygonRpcProvider {
    */
   async getTransaction(hash: Hash, network: NetworkType = 'L2'): Promise<any> {
     const cacheKey = `tx:${network}:${hash}`;
-    const cached = this.getCached(cacheKey);
+    const cached = this.getCached(cacheKey, CACHE_EXPIRY.TRANSACTION);
     
     if (cached !== undefined) {
       return cached;
@@ -233,7 +209,7 @@ export class PolygonRpcProvider {
    */
   async getTransactionReceipt(hash: Hash, network: NetworkType = 'L2'): Promise<any> {
     const cacheKey = `txReceipt:${network}:${hash}`;
-    const cached = this.getCached(cacheKey);
+    const cached = this.getCached(cacheKey, CACHE_EXPIRY.TRANSACTION);
     
     if (cached !== undefined) {
       return cached;
@@ -255,7 +231,7 @@ export class PolygonRpcProvider {
    */
   async getNativeBalance(address: Address, network: NetworkType = 'L2'): Promise<bigint> {
     const cacheKey = `balance:${network}:${address}`;
-    const cached = this.getCached(cacheKey, 30000); // 30-second cache for balances
+    const cached = this.getCached(cacheKey, CACHE_EXPIRY.BALANCE);
     
     if (cached !== undefined) {
       return cached;
@@ -273,7 +249,7 @@ export class PolygonRpcProvider {
    */
   async getErc20Balance(tokenAddress: Address, holderAddress: Address, network: NetworkType = 'L2'): Promise<bigint> {
     const cacheKey = `erc20:${network}:${tokenAddress}:${holderAddress}`;
-    const cached = this.getCached(cacheKey, 30000); // 30-second cache for token balances
+    const cached = this.getCached(cacheKey, CACHE_EXPIRY.BALANCE);
     
     if (cached !== undefined) {
       return cached;
@@ -303,7 +279,7 @@ export class PolygonRpcProvider {
    */
   async getErc20Metadata(tokenAddress: Address, network: NetworkType = 'L2'): Promise<{ symbol: string; decimals: number }> {
     const cacheKey = `erc20Meta:${network}:${tokenAddress}`;
-    const cached = this.getCached(cacheKey);
+    const cached = this.getCached(cacheKey, CACHE_EXPIRY.TOKEN_METADATA);
     
     if (cached !== undefined) {
       return cached;

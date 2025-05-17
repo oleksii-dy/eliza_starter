@@ -1,29 +1,13 @@
 import { Service, IAgentRuntime, logger } from '@elizaos/core';
-import { Contract, Wallet, JsonRpcProvider } from 'ethers';
-import { PolygonRpcService } from './PolygonRpcService';
-import { getGasPriceEstimates } from './GasService';
-import { CONTRACT_ADDRESSES } from '../config';
+import { Contract, Wallet, JsonRpcProvider, ContractTransactionResponse } from 'ethers';
+import { PolygonRpcService } from './PolygonRpcService.js';
+import { getGasPriceEstimates } from './GasService.js';
+import { CONTRACT_ADDRESSES } from '../config.js';
+import { formatWei } from '../utils/formatters.js';
 
 // Import ABIs
 import ERC20ABI from '../contracts/ERC20ABI.json';
 import RootChainManagerABI from '../contracts/RootChainManagerABI.json';
-
-/**
- * Interface for ERC20 contract interaction
- */
-interface ERC20Contract extends Contract {
-  allowance(owner: string, spender: string): Promise<bigint>;
-  approve(spender: string, amount: bigint, options?: any): Promise<any>;
-  balanceOf(owner: string): Promise<bigint>;
-}
-
-/**
- * Interface for RootChainManager contract interaction
- */
-interface RootChainManagerContract extends Contract {
-  depositFor(user: string, rootToken: string, depositData: string): Promise<any>;
-  depositEtherFor(user: string): Promise<any>;
-}
 
 /**
  * Result of a bridge deposit operation
@@ -45,7 +29,7 @@ export class PolygonBridgeService extends Service {
 
   private l1Provider: JsonRpcProvider | null = null;
   private l1Signer: Wallet | null = null;
-  private rootChainManagerContract: RootChainManagerContract | null = null;
+  private rootChainManagerContract: Contract | null = null;
   private rpcService: PolygonRpcService | null = null;
 
   constructor(runtime?: IAgentRuntime) {
@@ -81,7 +65,7 @@ export class PolygonBridgeService extends Service {
         CONTRACT_ADDRESSES.ROOT_CHAIN_MANAGER_ADDRESS_L1,
         RootChainManagerABI,
         this.l1Signer
-      ) as RootChainManagerContract;
+      );
 
       logger.info('PolygonBridgeService initialized successfully');
     } catch (error) {
@@ -91,17 +75,9 @@ export class PolygonBridgeService extends Service {
   }
 
   /**
-   * Formats an amount in wei to a human-readable format
-   */
-  private formatWei(wei: bigint): string {
-    // Simple conversion to ether with 18 decimals
-    return (Number(wei) / 1e18).toString();
-  }
-
-  /**
    * Initializes an ERC20 contract instance with signer
    */
-  private getERC20Contract(tokenAddress: string): ERC20Contract {
+  private getERC20Contract(tokenAddress: string): Contract {
     if (!this.l1Signer) {
       throw new Error('L1 signer not initialized');
     }
@@ -110,7 +86,7 @@ export class PolygonBridgeService extends Service {
       tokenAddress,
       ERC20ABI,
       this.l1Signer
-    ) as ERC20Contract;
+    );
   }
 
   /**
@@ -126,7 +102,7 @@ export class PolygonBridgeService extends Service {
     }
 
     const tokenContract = this.getERC20Contract(tokenAddress);
-    const signerAddress = await this.l1Signer.address;
+    const signerAddress = this.l1Signer.address;
     
     // Check current allowance
     const currentAllowance = await tokenContract.allowance(
@@ -136,7 +112,7 @@ export class PolygonBridgeService extends Service {
     
     // Skip approval if already approved for sufficient amount
     if (currentAllowance >= amount) {
-      logger.info(`Approval already exists for ${this.formatWei(amount)} tokens`);
+      logger.info(`Approval already exists for ${formatWei(amount)} tokens`);
       return "0x0000000000000000000000000000000000000000000000000000000000000000";
     }
     
@@ -147,12 +123,12 @@ export class PolygonBridgeService extends Service {
     }
     
     // Execute the approve transaction
-    logger.info(`Approving ${this.formatWei(amount)} tokens for RootChainManager contract...`);
+    logger.info(`Approving ${formatWei(amount)} tokens for RootChainManager contract...`);
     const tx = await tokenContract.approve(
       CONTRACT_ADDRESSES.ROOT_CHAIN_MANAGER_ADDRESS_L1,
       amount,
       options
-    );
+    ) as ContractTransactionResponse;
     
     // Add defensive check for tx object
     if (!tx || typeof tx !== 'object') {
@@ -206,165 +182,126 @@ export class PolygonBridgeService extends Service {
       skipConfirmation: false
     };
     
-    const opts = { ...defaultOptions, ...options };
+    // Merge with provided options
+    const { approvalTimeoutMs, gasPriceMultiplier, skipConfirmation } = {
+      ...defaultOptions,
+      ...options
+    };
     
-    // Validate input parameters
-    if (!tokenAddressL1 || !tokenAddressL1.startsWith('0x')) {
-      throw new Error('Invalid token address: must be a valid Ethereum address starting with 0x');
+    if (!this.l1Signer || !this.rootChainManagerContract) {
+      throw new Error('Bridge service not properly initialized');
     }
     
-    if (amountWei <= 0n) {
-      throw new Error('Invalid amount: must be greater than 0');
+    // Validate parameters
+    if (!tokenAddressL1 || !tokenAddressL1.startsWith('0x') || tokenAddressL1.length !== 42) {
+      throw new Error('Invalid token address');
     }
     
-    if (recipientAddressL2 && !recipientAddressL2.startsWith('0x')) {
-      throw new Error('Invalid recipient address: must be a valid Ethereum address starting with 0x');
+    if (!amountWei || amountWei <= BigInt(0)) {
+      throw new Error('Invalid amount');
     }
     
-    // Initialize services if not already done
-    if (!this.rootChainManagerContract || !this.l1Signer) {
+    // If recipient not provided, use the sender's address
+    const recipient = recipientAddressL2 || this.l1Signer.address;
+    
+    // Validate recipient address
+    if (!recipient || !recipient.startsWith('0x') || recipient.length !== 42) {
+      throw new Error('Invalid recipient address');
+    }
+    
+    // Get gas price estimates if multiplier is provided
+    let gasPrice: bigint | undefined = undefined;
+    if (gasPriceMultiplier !== 1.0) {
       try {
-        await this.initializeService();
+        const estimates = await getGasPriceEstimates();
+        const baseFee = estimates.estimatedBaseFee;
+        const priorityFee = estimates.fast.maxPriorityFeePerGas;
+        
+        // Calculate total gas price with multiplier
+        if (baseFee && priorityFee) {
+          const baseGasPrice = baseFee + priorityFee;
+          gasPrice = BigInt(Math.floor(Number(baseGasPrice) * gasPriceMultiplier));
+          logger.info(`Using custom gas price: ${gasPrice} wei (${gasPriceMultiplier}x multiplier)`);
+        }
       } catch (error) {
-        throw new Error(`Failed to initialize bridge service: ${error instanceof Error ? error.message : String(error)}`);
+        logger.warn('Failed to get gas price estimates, using default gas price', error);
       }
     }
-    
-    if (!this.rootChainManagerContract || !this.l1Signer) {
-      throw new Error('Bridge service initialization failed');
-    }
-    
-    const signerAddress = this.l1Signer.address;
-    const recipient = recipientAddressL2 || signerAddress;
-    
-    logger.info(`Starting L1->L2 bridge deposit of ${this.formatWei(amountWei)} tokens from ${tokenAddressL1} to ${recipient}`);
-    
-    // Get gas price estimates for L1
-    let gasPrice: bigint | undefined;
     
     try {
-      const gasEstimates = await getGasPriceEstimates(this.runtime!);
+      // Step 1: Approve the RootChainManager to spend tokens
+      let approvalTxHash: string | undefined;
       
-      // Use fast gas price if available, otherwise use fallback
-      if (gasEstimates.fast?.maxPriorityFeePerGas) {
-        // Add estimated base fee to priority fee for total gas price
-        const baseFee = gasEstimates.estimatedBaseFee || 0n;
-        gasPrice = gasEstimates.fast.maxPriorityFeePerGas + baseFee;
-      } else if (gasEstimates.fallbackGasPrice) {
-        gasPrice = gasEstimates.fallbackGasPrice;
-      }
-      
-      // Apply gas price multiplier if specified
-      if (gasPrice && opts.gasPriceMultiplier !== 1.0) {
-        gasPrice = BigInt(Math.floor(Number(gasPrice) * opts.gasPriceMultiplier));
-      }
-      
-      logger.info(`Using gas price: ${gasPrice ? gasPrice.toString() : 'default'} wei`);
-    } catch (error) {
-      logger.warn(`Failed to get gas price estimates: ${error instanceof Error ? error.message : String(error)}`);
-      logger.info('Proceeding with default gas price');
-      // Continue without specific gas price, will use network default
-    }
-    
-    // Step 1: Approve tokens if needed
-    let approvalTxHash: string;
-    try {
-      logger.info(`Initiating approval for ${this.formatWei(amountWei)} tokens from ${tokenAddressL1}`);
-      
-      // Create a promise with timeout for the approval
-      const approvalPromise = this.approveERC20(tokenAddressL1, amountWei, gasPrice);
-      
-      if (opts.approvalTimeoutMs > 0) {
+      try {
+        // Set a timeout for the approval process
+        const approvalPromise = this.approveERC20(tokenAddressL1, amountWei, gasPrice);
+        
         // Create a timeout promise
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error(`Approval transaction timed out after ${opts.approvalTimeoutMs}ms`)), 
-            opts.approvalTimeoutMs);
+          setTimeout(() => reject(new Error('Approval transaction timed out')), approvalTimeoutMs);
         });
         
-        // Race the approval against the timeout
+        // Race the promises
         approvalTxHash = await Promise.race([approvalPromise, timeoutPromise]);
-      } else {
-        approvalTxHash = await approvalPromise;
+        
+        // If the hash is the zero hash, it means no approval was needed
+        if (approvalTxHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+          approvalTxHash = undefined;
+        }
+      } catch (error) {
+        logger.error('Token approval failed:', error);
+        throw new Error(`Token approval failed: ${error.message}`);
       }
       
-      if (approvalTxHash !== "0x0000000000000000000000000000000000000000000000000000000000000000") {
-        logger.info(`Approval transaction confirmed: ${approvalTxHash}`);
-      } else {
-        logger.info('Approval was not needed (sufficient allowance already exists)');
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('timed out')) {
-        throw error; // Re-throw timeout errors
-      }
-      throw new Error(`Token approval failed: ${error instanceof Error ? error.message : String(error)}`);
-    }
-    
-    // Step 2: Prepare deposit data (ABI-encoded token amount)
-    const depositData = '0x' + amountWei.toString(16).padStart(64, '0');
-    
-    // Step 3: Execute deposit transaction
-    let depositTx;
-    try {
-      logger.info(`Depositing ${this.formatWei(amountWei)} tokens to Polygon...`);
+      // Step 2: Encode the deposit data (amount as hex)
+      // The deposit data should be a hex string of 32 bytes (64 hex chars + '0x' prefix)
+      const depositData = '0x' + amountWei.toString(16).padStart(64, '0');
       
-      // Get gas price info for logging only
+      // Step 3: Execute the deposit transaction
+      logger.info(`Depositing ${formatWei(amountWei)} tokens to Polygon...`);
+      
+      // Prepare transaction options
+      const depositOptions: any = {};
       if (gasPrice) {
-        logger.info(`Gas price estimate for deposit: ${gasPrice} wei`);
+        depositOptions.gasPrice = gasPrice;
       }
       
-      // Call depositFor with standard arguments
-      depositTx = await this.rootChainManagerContract.depositFor(
+      // Execute the deposit transaction
+      const depositTx = await this.rootChainManagerContract.depositFor(
         recipient,
         tokenAddressL1,
-        depositData
-      );
-      
-      // Add defensive check for depositTx
-      if (!depositTx || typeof depositTx !== 'object') {
-        throw new Error('Invalid transaction response from depositFor method');
-      }
-      
-      // Add defensive check for depositTx.hash
-      if (!depositTx.hash) {
-        throw new Error('Transaction hash missing from depositFor response');
-      }
+        depositData,
+        depositOptions
+      ) as ContractTransactionResponse;
       
       logger.info(`Deposit transaction submitted: ${depositTx.hash}`);
-    } catch (error) {
-      throw new Error(`Failed to submit deposit transaction: ${error instanceof Error ? error.message : String(error)}`);
-    }
-    
-    // Wait for confirmation if not skipped
-    if (!opts.skipConfirmation) {
-      try {
-        // Add defensive check for depositTx.wait
-        if (!depositTx.wait || typeof depositTx.wait !== 'function') {
-          throw new Error('Transaction wait method not available');
+      
+      // Wait for confirmation if not skipped
+      if (!skipConfirmation) {
+        try {
+          const receipt = await depositTx.wait();
+          if (!receipt || receipt.status !== 1) {
+            throw new Error(`Deposit transaction failed: ${depositTx.hash}`);
+          }
+          logger.info(`Deposit transaction confirmed: ${depositTx.hash}`);
+        } catch (error) {
+          logger.error('Deposit transaction failed:', error);
+          throw new Error(`Deposit transaction failed: ${error.message}`);
         }
-        
-        const depositReceipt = await depositTx.wait();
-        
-        if (!depositReceipt || depositReceipt.status !== 1) {
-          throw new Error(`Deposit transaction failed: ${depositTx.hash}`);
-        }
-        
-        logger.info(`Deposit transaction confirmed: ${depositTx.hash}`);
-      } catch (error) {
-        throw new Error(`Deposit transaction failed or confirmation error: ${error instanceof Error ? error.message : String(error)}`);
       }
+      
+      // Return the result
+      return {
+        approvalTxHash,
+        depositTxHash: depositTx.hash,
+        tokenAddress: tokenAddressL1,
+        amount: amountWei,
+        recipientAddress: recipient
+      };
+    } catch (error) {
+      logger.error('Bridge deposit failed:', error);
+      throw error;
     }
-    
-    logger.info(`Tokens bridged to Polygon. Please allow 20-30 minutes for tokens to appear on L2.`);
-    
-    return {
-      approvalTxHash: approvalTxHash !== "0x0000000000000000000000000000000000000000000000000000000000000000" 
-        ? approvalTxHash 
-        : undefined,
-      depositTxHash: depositTx.hash,
-      tokenAddress: tokenAddressL1,
-      amount: amountWei,
-      recipientAddress: recipient
-    };
   }
 
   static async start(runtime: IAgentRuntime): Promise<PolygonBridgeService> {
@@ -375,10 +312,11 @@ export class PolygonBridgeService extends Service {
   }
 
   static async stop(runtime: IAgentRuntime): Promise<void> {
-    logger.info(`Stopping PolygonBridgeService...`);
+    logger.info('Stopping PolygonBridgeService...');
   }
 
   async stop(): Promise<void> {
+    logger.info('PolygonBridgeService instance stopped.');
     this.l1Provider = null;
     this.l1Signer = null;
     this.rootChainManagerContract = null;

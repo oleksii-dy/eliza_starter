@@ -4,21 +4,24 @@ import {
   ContractTransactionReceipt,
   ContractTransactionResponse
 } from 'ethers';
-import { logger } from '@elizaos/core';
 import { Address } from 'viem';
 
-// ABI fragments for the necessary contract interactions
-import ERC20ABI from '../contracts/ERC20ABI.json';
-import RootChainManagerABI from '../contracts/RootChainManagerABI.json';
+// Import ABIs from centralized location
+import { ERC20ABI, RootChainManagerABI } from '../constants/abis.js';
 
-// Contract addresses
-import { CONTRACT_ADDRESSES } from '../config';
+// Import from centralized config
+import { CONTRACT_ADDRESSES, TIMEOUTS } from '../config.js';
 
-// Define interfaces for contract interactions
-interface ERC20Contract extends Contract {
-  allowance(owner: string, spender: string): Promise<bigint>;
-  approve(spender: string, amount: bigint, options?: any): Promise<ContractTransactionResponse>;
+// Create a simple logger interface
+interface Logger {
+  info(message: string, ...args: any[]): void;
+  error(message: string, ...args: any[]): void;
+  warn(message: string, ...args: any[]): void;
+  debug(message: string, ...args: any[]): void;
 }
+
+// Use console as default logger
+const logger: Logger = console;
 
 /**
  * Initializes an ethers Contract instance with signer for the RootChainManager
@@ -41,12 +44,12 @@ export function initRootChainManagerContract(signer: Wallet): Contract {
  * @param signer L1 signer instance (ethers Wallet)
  * @returns Signer-aware ERC20 contract instance
  */
-export function initERC20Contract(tokenAddress: string, signer: Wallet): ERC20Contract {
+export function initERC20Contract(tokenAddress: string, signer: Wallet): Contract {
   return new Contract(
     tokenAddress,
     ERC20ABI,
     signer
-  ) as ERC20Contract;
+  );
 }
 
 /**
@@ -59,7 +62,7 @@ export function initERC20Contract(tokenAddress: string, signer: Wallet): ERC20Co
  * @returns Transaction receipt for the approval transaction
  */
 export async function approveERC20(
-  tokenContract: ERC20Contract,
+  tokenContract: Contract,
   spender: string,
   amount: bigint,
   gasPriceWei?: bigint
@@ -68,7 +71,7 @@ export async function approveERC20(
     logger.info(`Approving ${amount.toString()} tokens for RootChainManager contract...`);
     
     // Get the current allowance
-    const signerAddress = await tokenContract.runner.getAddress();
+    const signerAddress = await tokenContract.getAddress();
     const currentAllowance = await tokenContract.allowance(signerAddress, spender);
     
     // Skip approval if already approved for sufficient amount
@@ -84,10 +87,10 @@ export async function approveERC20(
     }
     
     // Execute the approve transaction
-    const tx = await tokenContract.approve(spender, amount, options);
+    const tx = await tokenContract.approve(spender, amount, options) as ContractTransactionResponse;
     logger.info(`Approval transaction submitted: ${tx.hash}`);
     
-    // Wait for the transaction to be confirmed
+    // Wait for the transaction to be confirmed with timeout
     const receipt = await tx.wait();
     
     if (!receipt || receipt.status !== 1) {
@@ -112,7 +115,7 @@ export async function approveERC20(
  * @returns True if approved for the requested amount or more
  */
 export async function hasApprovedERC20(
-  tokenContract: ERC20Contract,
+  tokenContract: Contract,
   owner: string,
   spender: string,
   amount: bigint

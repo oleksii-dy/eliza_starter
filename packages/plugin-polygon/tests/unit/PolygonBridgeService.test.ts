@@ -1,128 +1,26 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mockRuntime } from '../mocks/core-mock';
+import { 
+  mockRuntime, 
+  mockApprovalTx, 
+  mockDepositTx, 
+  mockERC20Contract, 
+  mockRootChainManagerContract,
+  mockRpcProvider
+} from '../../vitest.setup';
 import { CONTRACT_ADDRESSES } from '../../src/config';
 
 // Import the service directly
 import { PolygonBridgeService } from '../../src/services/PolygonBridgeService';
 import * as GasService from '../../src/services/GasService';
 
-// Mock contract instances and responses
+// These variables are used throughout the tests
 const mockAllowanceValue = BigInt(0);
 const mockApprovalTxHash = '0xApprovalTxHash';
 const mockDepositTxHash = '0xDepositErc20TxHash';
 const mockSenderAddress = '0xUserAddress';
 
-// Create more robust mock transaction objects
-const mockApprovalTx = {
-  hash: mockApprovalTxHash,
-  wait: vi.fn().mockResolvedValue({
-    status: 1,
-    transactionHash: mockApprovalTxHash
-  })
-};
-
-const mockDepositTx = {
-  hash: mockDepositTxHash,
-  wait: vi.fn().mockResolvedValue({
-    status: 1,
-    transactionHash: mockDepositTxHash
-  })
-};
-
-// Create more detailed mock contracts with correct transaction return values
-const mockERC20Contract = {
-  allowance: vi.fn().mockResolvedValue(mockAllowanceValue),
-  approve: vi.fn().mockReturnValue(mockApprovalTx),
-  balanceOf: vi.fn().mockResolvedValue(BigInt(5000000000000000000n)), // 5 tokens
-};
-
-const mockRootChainManagerContract = {
-  depositFor: vi.fn().mockReturnValue(mockDepositTx),
-  depositEtherFor: vi.fn().mockImplementation(() => {
-    return {
-      hash: '0xDepositEthTxHash',
-      wait: vi.fn().mockResolvedValue({
-        status: 1,
-        transactionHash: '0xDepositEthTxHash'
-      })
-    };
-  }),
-};
-
-// Create a mock RPC provider
-const mockRpcProvider = {
-  getPublicClient: vi.fn().mockImplementation((network) => ({
-    readContract: vi.fn().mockImplementation(({ functionName }) => {
-      if (functionName === 'balanceOf') return BigInt(1000000000000000000n);
-      if (functionName === 'allowance') return BigInt(0);
-      if (functionName === 'decimals') return 18;
-      return null;
-    }),
-  })),
-  getWalletClient: vi.fn().mockImplementation((network) => ({
-    writeContract: vi.fn().mockResolvedValue('0xApprovalTxHash'),
-    account: { address: mockSenderAddress },
-  })),
-  sendTransaction: vi.fn().mockImplementation((to, value, data, network) => {
-    if (data && data.includes('depositEth')) return Promise.resolve('0xDepositEthTxHash');
-    if (data && data.includes('depositFor')) return Promise.resolve('0xDepositErc20TxHash');
-    return Promise.resolve('0xGenericTxHash');
-  }),
-  getAddress: vi.fn().mockReturnValue(mockSenderAddress),
-  getEthersProvider: vi.fn().mockReturnValue({})
-};
-
-// Mock PolygonRpcProvider
-vi.mock('../../src/providers/PolygonRpcProvider', () => {
-  return {
-    PolygonRpcProvider: vi.fn().mockImplementation(() => mockRpcProvider),
-    initPolygonRpcProvider: vi.fn().mockResolvedValue(mockRpcProvider),
-  };
-});
-
-// Mock the ethers library with detailed implementations
-vi.mock('ethers', () => {
-  let contractImplementation;
-  
-  return {
-    Contract: vi.fn().mockImplementation((address, abi, signer) => {
-      // Return different mock based on the contract address
-      if (address === CONTRACT_ADDRESSES.ROOT_CHAIN_MANAGER_ADDRESS_L1) {
-        contractImplementation = mockRootChainManagerContract;
-      } else {
-        contractImplementation = mockERC20Contract;
-      }
-      return contractImplementation;
-    }),
-    Wallet: vi.fn().mockImplementation(() => ({
-      address: mockSenderAddress,
-      connect: vi.fn().mockReturnThis(),
-    })),
-    JsonRpcProvider: vi.fn().mockImplementation(() => ({
-      getBalance: vi.fn().mockResolvedValue(BigInt(2000000000000000000)),
-    })),
-  };
-});
-
-// Mock PolygonRpcService
-vi.mock('../../src/services/PolygonRpcService', () => {
-  return {
-    PolygonRpcService: {
-      serviceType: 'polygonRpc',
-    },
-  };
-});
-
-// Mock GasService
-vi.mock('../../src/services/GasService', () => {
-  return {
-    getGasPriceEstimates: vi.fn().mockResolvedValue({
-      fast: { maxPriorityFeePerGas: BigInt(5000000000) },
-      estimatedBaseFee: BigInt(20000000000),
-      fallbackGasPrice: null,
-    }),
-  };
-});
+// Mock PolygonRpcProvider - already defined in vitest.setup.ts
+vi.mock('../../src/providers/PolygonRpcProvider');
 
 describe('PolygonBridgeService', () => {
   let bridgeService: PolygonBridgeService;

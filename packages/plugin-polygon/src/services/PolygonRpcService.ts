@@ -3,7 +3,7 @@ import {
   JsonRpcProvider,
   Contract,
   Wallet
-} from 'ethers'; // Importing only what's needed from ethers v6+
+} from 'ethers'; // Importing directly from ethers v6+
 
 // viem imports for RPC client operations
 import {
@@ -16,71 +16,18 @@ import {
 } from 'viem';
 
 // Import our new provider
-import { PolygonRpcProvider, initPolygonRpcProvider, ERC20_ABI } from '../providers/PolygonRpcProvider';
-import { NetworkType, Transaction, BlockIdentifier, BlockInfo, TransactionDetails, CacheEntry } from '../types';
-import { DEFAULT_RPC_URLS, CONTRACT_ADDRESSES, CACHE_EXPIRY } from '../config';
+import { PolygonRpcProvider, initPolygonRpcProvider } from '../providers/PolygonRpcProvider.js';
+import { NetworkType, Transaction, BlockIdentifier, BlockInfo, TransactionDetails, CacheEntry } from '../types.js';
+import { DEFAULT_RPC_URLS, CONTRACT_ADDRESSES, CACHE_EXPIRY } from '../config.js';
 
-// Minimal ABIs for required contracts
-// These would ideally be loaded from JSON files, but we're providing minimal versions inline for now
-const StakeManagerABI = [
-  {
-    "inputs": [{ "internalType": "uint256", "name": "validatorId", "type": "uint256" }],
-    "name": "getValidatorDetails",
-    "outputs": [
-      { "internalType": "uint256", "name": "status", "type": "uint256" },
-      { "internalType": "uint256", "name": "commissionRate", "type": "uint256" },
-      { "internalType": "uint256", "name": "stake", "type": "uint256" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "uint256", "name": "validatorId", "type": "uint256" }],
-    "name": "getDelegatedAmount",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  }
-] as const;
-
-const ValidatorShareABI = [
-  {
-    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
-    "name": "getDelegatorDetails",
-    "outputs": [
-      { "internalType": "uint256", "name": "delegatedStake", "type": "uint256" },
-      { "internalType": "uint256", "name": "pendingRewards", "type": "uint256" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  }
-] as const;
-
-const RootChainManagerABI = [
-  {
-    "inputs": [
-      { "internalType": "bytes", "name": "inputData", "type": "bytes" }
-    ],
-    "name": "depositFor",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
-] as const;
+// Import ABIs from contract files
+import StakeManagerABI from '../contracts/StakeManagerABI.json' with { type: "json" };
+import ValidatorShareABI from '../contracts/ValidatorShareABI.json' with { type: "json" };
+import RootChainManagerABI from '../contracts/RootChainManagerABI.json' with { type: "json" };
+import ERC20ABI from '../contracts/ERC20ABI.json' with { type: "json" };
 
 // Re-import GasService components
-import { getGasPriceEstimates, GasPriceEstimates } from './GasService';
-
-// Minimal ERC20 ABI fragment for balanceOf
-const ERC20_ABI_BALANCEOF = [
-  {
-    constant: true,
-    inputs: [{ name: '_owner', type: 'address' }],
-    name: 'balanceOf',
-    outputs: [{ name: 'balance', type: 'uint256' }],
-    type: 'function',
-  },
-] as const;
+import { getGasPriceEstimates, GasPriceEstimates } from './GasService.js';
 
 // --- Staking Contract Addresses (Ethereum Mainnet) ---
 const STAKE_MANAGER_ADDRESS_L1 = CONTRACT_ADDRESSES.STAKE_MANAGER_ADDRESS_L1;
@@ -156,11 +103,11 @@ export class PolygonRpcService extends Service {
       // Initialize legacy ethers.js providers for backward compatibility
       const l1RpcUrl = this.runtime.getSetting('ETHEREUM_RPC_URL') || DEFAULT_RPC_URLS.ETHEREUM_RPC_URL;
       const l2RpcUrl = this.runtime.getSetting('POLYGON_RPC_URL') || DEFAULT_RPC_URLS.POLYGON_RPC_URL;
-    const privateKey = this.runtime.getSetting('PRIVATE_KEY');
+      const privateKey = this.runtime.getSetting('PRIVATE_KEY');
     
-    if (!privateKey) {
+      if (!privateKey) {
         throw new Error('Missing required private key');
-    }
+      }
 
       this.l1Provider = new JsonRpcProvider(l1RpcUrl);
       this.l2Provider = new JsonRpcProvider(l2RpcUrl);

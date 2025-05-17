@@ -1,14 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PolygonRpcProvider } from '../../src/providers/PolygonRpcProvider';
-import { elizaLogger } from '../mocks/core-mock';
+import { 
+  elizaLogger, 
+  mockL1PublicClient, 
+  mockL2PublicClient,
+  mockL1WalletClient,
+  mockL2WalletClient
+} from '../../vitest.setup';
 
 // Imported with mocks from vitest.setup.ts
 import { createPublicClient, createWalletClient } from 'viem';
 
 describe('PolygonRpcProvider', () => {
   let provider: PolygonRpcProvider;
-  let mockPublicClient: any;
-  let mockWalletClient: any;
   
   const mockPrivateKey = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
   const mockEthereumRpcUrl = 'https://eth-mainnet.mock.io';
@@ -18,47 +22,6 @@ describe('PolygonRpcProvider', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Setup mock clients
-    mockPublicClient = {
-      getBlockNumber: vi.fn().mockResolvedValue(BigInt(1000000)),
-      getBlock: vi.fn().mockResolvedValue({
-        hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-        number: BigInt(1000000),
-        timestamp: BigInt(1600000000),
-        gasUsed: BigInt(1000000),
-        gasLimit: BigInt(30000000),
-      }),
-      getTransaction: vi.fn().mockResolvedValue({
-        hash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-        from: '0xSenderAddress',
-        to: '0xRecipientAddress',
-        value: BigInt(1000000000000000000), // 1 ETH/MATIC
-        gasPrice: BigInt(20000000000),
-      }),
-      getTransactionReceipt: vi.fn().mockResolvedValue({
-        status: 'success',
-        blockNumber: BigInt(1000000),
-        gasUsed: BigInt(21000),
-      }),
-      getBalance: vi.fn().mockResolvedValue(BigInt(2000000000000000000)), // 2 ETH/MATIC
-      readContract: vi.fn().mockImplementation(({ functionName }) => {
-        if (functionName === 'balanceOf') return BigInt(500000000000000000); // 0.5 tokens
-        if (functionName === 'decimals') return 18;
-        if (functionName === 'symbol') return 'TKN';
-        return null;
-      }),
-    };
-    
-    mockWalletClient = {
-      sendTransaction: vi.fn().mockResolvedValue('0xTransactionHash'),
-      writeContract: vi.fn().mockResolvedValue('0xTransactionHash'),
-      account: { address: '0xUserAddress' },
-    };
-    
-    // Mock implementation for createPublicClient and createWalletClient
-    (createPublicClient as any).mockReturnValue(mockPublicClient);
-    (createWalletClient as any).mockReturnValue(mockWalletClient);
     
     // Spy on elizaLogger methods
     vi.spyOn(elizaLogger, 'log').mockImplementation(() => {});
@@ -74,8 +37,16 @@ describe('PolygonRpcProvider', () => {
       mockPrivateKey
     );
     
-    // Add account property directly to avoid initialization issues
-    provider.account = { address: mockUserAddress };
+    // Set the address property using type assertion to bypass private access
+    (provider as any).account = { 
+      address: mockUserAddress,
+      sign: vi.fn(),
+      experimental_signAuthorization: vi.fn(),
+      signMessage: vi.fn(),
+      signTransaction: vi.fn(),
+      signTypedData: vi.fn(),
+      type: 'local'
+    };
   });
 
   afterEach(() => {
@@ -92,24 +63,24 @@ describe('PolygonRpcProvider', () => {
   describe('Block methods', () => {
     it('should get L1 block number', async () => {
       const blockNumber = await provider.getBlockNumber('L1');
-      expect(blockNumber).toBe(1000000);
+      expect(blockNumber).toBe(16000000);
     });
 
     it('should get L2 block number', async () => {
       const blockNumber = await provider.getBlockNumber('L2');
-      expect(blockNumber).toBe(1000000);
+      expect(blockNumber).toBe(40000000);
     });
 
     it('should get L1 block by number', async () => {
       const block = await provider.getBlock(1000000, 'L1');
       expect(block).toBeDefined();
-      expect(block.number).toBe(BigInt(1000000));
+      expect(block.number).toBe(BigInt(16000000));
     });
 
     it('should get L2 block by number', async () => {
       const block = await provider.getBlock(1000000, 'L2');
       expect(block).toBeDefined();
-      expect(block.number).toBe(BigInt(1000000));
+      expect(block.number).toBe(BigInt(40000000));
     });
   });
 
@@ -142,12 +113,12 @@ describe('PolygonRpcProvider', () => {
   describe('Balance methods', () => {
     it('should get native balance from L1', async () => {
       const balance = await provider.getNativeBalance(mockUserAddress, 'L1');
-      expect(balance).toBe(BigInt(2000000000000000000));
+      expect(balance).toBe(BigInt(5000000000000000000));
     });
 
     it('should get native balance from L2', async () => {
       const balance = await provider.getNativeBalance(mockUserAddress, 'L2');
-      expect(balance).toBe(BigInt(2000000000000000000));
+      expect(balance).toBe(BigInt(100000000000000000000));
     });
 
     it('should get ERC20 token balance from L1', async () => {
@@ -156,7 +127,7 @@ describe('PolygonRpcProvider', () => {
         mockUserAddress,
         'L1'
       );
-      expect(balance).toBe(BigInt(500000000000000000));
+      expect(balance).toBe(BigInt(1000000000000000000));
     });
 
     it('should get ERC20 token balance from L2', async () => {
@@ -165,7 +136,7 @@ describe('PolygonRpcProvider', () => {
         mockUserAddress,
         'L2'
       );
-      expect(balance).toBe(BigInt(500000000000000000));
+      expect(balance).toBe(BigInt(2000000000000000000));
     });
   });
 
@@ -173,14 +144,14 @@ describe('PolygonRpcProvider', () => {
     it('should get ERC20 token metadata from L1', async () => {
       const metadata = await provider.getErc20Metadata(mockTokenAddress, 'L1');
       expect(metadata).toBeDefined();
-      expect(metadata.symbol).toBe('TKN');
+      expect(metadata.symbol).toBe('ETH-TOKEN');
       expect(metadata.decimals).toBe(18);
     });
 
     it('should get ERC20 token metadata from L2', async () => {
       const metadata = await provider.getErc20Metadata(mockTokenAddress, 'L2');
       expect(metadata).toBeDefined();
-      expect(metadata.symbol).toBe('TKN');
+      expect(metadata.symbol).toBe('MATIC-TOKEN');
       expect(metadata.decimals).toBe(18);
     });
   });
@@ -193,7 +164,7 @@ describe('PolygonRpcProvider', () => {
         '0xData',
         'L1'
       );
-      expect(txHash).toBe('0xTransactionHash');
+      expect(txHash).toBe('0xL1SendTxHash');
     });
 
     it('should send a transaction on L2', async () => {
@@ -203,7 +174,7 @@ describe('PolygonRpcProvider', () => {
         '0xData',
         'L2'
       );
-      expect(txHash).toBe('0xTransactionHash');
+      expect(txHash).toBe('0xL2SendTxHash');
     });
   });
 

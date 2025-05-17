@@ -1,3 +1,5 @@
+import { type ContractTransactionResponse, type TransactionResponse, type TransactionReceipt as EthersTransactionReceipt, type Log as EthersLog } from 'ethers';
+
 // Define supported chain types for the Polygon plugin
 export type SupportedChain = string; // Or a more specific union like 'mainnet' | 'mumbai'
 
@@ -56,36 +58,13 @@ export interface TransactionInfo {
   transactionIndex: number | null;
 }
 
-// Transaction receipt information returned by getTransactionReceipt
-export interface TransactionReceipt {
-  blockHash: Hash;
-  blockNumber: number;
-  contractAddress: Address | null;
-  cumulativeGasUsed: bigint;
-  effectiveGasPrice: bigint;
-  from: Address;
-  gasUsed: bigint;
+// Use ethers TransactionReceipt type as a base and extend it
+export interface TransactionReceipt extends Omit<EthersTransactionReceipt, 'logs'> {
   logs: Log[];
-  logsBloom: Hash;
-  status: number; // 0 = failure, 1 = success
-  to: Address | null;
-  transactionHash: Hash;
-  transactionIndex: number;
-  type: number;
 }
 
-// Log entry in transaction receipt
-export interface Log {
-  address: Address;
-  topics: Hash[];
-  data: Hash;
-  blockNumber: number;
-  transactionHash: Hash;
-  transactionIndex: number;
-  blockHash: Hash;
-  logIndex: number;
-  removed: boolean;
-}
+// Use ethers Log type
+export type Log = EthersLog;
 
 // Combined transaction details returned by getTransactionDetails
 export interface TransactionDetails {

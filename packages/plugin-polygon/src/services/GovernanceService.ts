@@ -4,9 +4,9 @@ import { type Address, type Hash } from 'viem';
 import { PolygonRpcService } from './PolygonRpcService';
 
 // Import ABIs
-import VoteTokenABI from '../contracts/VoteTokenABI.json';
-import OZGovernorABI from '../contracts/OZGovernorABI.json';
-import TimelockControllerABI from '../contracts/TimelockControllerABI.json';
+import VoteTokenABI from '../contracts/VoteTokenABI.json' with { type: "json" };
+import OZGovernorABI from '../contracts/OZGovernorABI.json' with { type: "json" };
+import TimelockControllerABI from '../contracts/TimelockControllerABI.json' with { type: "json" };
 
 // Types for governance
 export interface ProposalVotes {
@@ -56,10 +56,10 @@ export class GovernanceService extends Service {
   private tokenAddress: Address | null = null;
   private timelockAddress: Address | null = null;
 
-  // Contract instances (using any to avoid direct ethers dependency)
-  private governorContract: any = null;
-  private tokenContract: any = null;
-  private timelockContract: any = null;
+  // Contract instances
+  private governorContract: Contract | null = null;
+  private tokenContract: Contract | null = null;
+  private timelockContract: Contract | null = null;
   
   // RPC Service for blockchain interactions
   private rpcService: PolygonRpcService | null = null;

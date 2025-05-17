@@ -1,32 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PolygonRpcProvider } from '../../src/providers/PolygonRpcProvider';
-
-// Import the http module directly
-import { http } from 'viem';
+import {
+  mockL1PublicClient,
+  mockL2PublicClient,
+  mockL1WalletClient,
+  mockL2WalletClient
+} from '../../vitest.setup';
 
 // Import the mocked functions from vitest.setup.ts
-import { createPublicClient, createWalletClient } from 'viem';
-
-// Mock Viem and its http transport with proper URL property
-vi.mock('viem', async () => {
-  const actual = await vi.importActual('viem');
-  return {
-    ...actual as any,
-    http: vi.fn().mockImplementation((url) => {
-      // Return a transport object with the URL property for later matching
-      return { url };
-    }),
-    createPublicClient: vi.fn(),
-    createWalletClient: vi.fn(),
-  };
-});
+import { createPublicClient, createWalletClient, http } from 'viem';
 
 describe('Polygon RPC L1/L2 Interactions', () => {
   let provider: PolygonRpcProvider;
-  let mockL1PublicClient: any;
-  let mockL2PublicClient: any;
-  let mockL1WalletClient: any;
-  let mockL2WalletClient: any;
   
   const mockPrivateKey = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
   const mockEthereumRpcUrl = 'https://eth-mainnet.mock.io';
@@ -36,73 +21,6 @@ describe('Polygon RPC L1/L2 Interactions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Create distinct mock clients for L1 and L2
-    mockL1PublicClient = {
-      getBlockNumber: vi.fn().mockResolvedValue(BigInt(16000000)), // Ethereum block
-      getBlock: vi.fn().mockResolvedValue({
-        hash: '0xL1BlockHash',
-        number: BigInt(16000000),
-        timestamp: BigInt(1600000000),
-      }),
-      getTransaction: vi.fn().mockResolvedValue({
-        hash: '0xL1TxHash',
-        from: mockUserAddress,
-        to: '0xL1Recipient',
-        value: BigInt(1000000000000000000), // 1 ETH
-      }),
-      getTransactionReceipt: vi.fn().mockResolvedValue({
-        status: 'success',
-        blockNumber: BigInt(16000000),
-        gasUsed: BigInt(21000),
-      }),
-      getBalance: vi.fn().mockResolvedValue(BigInt(5000000000000000000)), // 5 ETH
-      readContract: vi.fn().mockImplementation(({ functionName }) => {
-        if (functionName === 'balanceOf') return BigInt(1000000000000000000); // 1 token on L1
-        if (functionName === 'decimals') return 18;
-        if (functionName === 'symbol') return 'ETH-TOKEN';
-        return null;
-      }),
-    };
-    
-    mockL2PublicClient = {
-      getBlockNumber: vi.fn().mockResolvedValue(BigInt(40000000)), // Polygon block (typically higher)
-      getBlock: vi.fn().mockResolvedValue({
-        hash: '0xL2BlockHash',
-        number: BigInt(40000000),
-        timestamp: BigInt(1600001000),
-      }),
-      getTransaction: vi.fn().mockResolvedValue({
-        hash: '0xL2TxHash',
-        from: mockUserAddress,
-        to: '0xL2Recipient',
-        value: BigInt(1000000000000000000), // 1 MATIC
-      }),
-      getTransactionReceipt: vi.fn().mockResolvedValue({
-        status: 'success',
-        blockNumber: BigInt(40000000),
-        gasUsed: BigInt(21000),
-      }),
-      getBalance: vi.fn().mockResolvedValue(BigInt(100000000000000000000)), // 100 MATIC
-      readContract: vi.fn().mockImplementation(({ functionName }) => {
-        if (functionName === 'balanceOf') return BigInt(2000000000000000000); // 2 tokens on L2
-        if (functionName === 'decimals') return 18;
-        if (functionName === 'symbol') return 'MATIC-TOKEN';
-        return null;
-      }),
-    };
-    
-    mockL1WalletClient = {
-      sendTransaction: vi.fn().mockResolvedValue('0xL1SendTxHash'),
-      writeContract: vi.fn().mockResolvedValue('0xL1ContractTxHash'),
-      account: { address: mockUserAddress },
-    };
-    
-    mockL2WalletClient = {
-      sendTransaction: vi.fn().mockResolvedValue('0xL2SendTxHash'),
-      writeContract: vi.fn().mockResolvedValue('0xL2ContractTxHash'),
-      account: { address: mockUserAddress },
-    };
     
     // Make sure http is properly mocked to return an object with url property
     (http as any).mockImplementation((url: string) => ({ url }));
@@ -143,8 +61,16 @@ describe('Polygon RPC L1/L2 Interactions', () => {
     Object.defineProperty(provider, 'l1WalletClient', { value: mockL1WalletClient });
     Object.defineProperty(provider, 'l2WalletClient', { value: mockL2WalletClient });
     
-    // @ts-ignore - add account property for testing
-    provider.account = { address: mockUserAddress };
+    // Add account property for testing with type assertion
+    (provider as any).account = { 
+      address: mockUserAddress,
+      sign: vi.fn(),
+      experimental_signAuthorization: vi.fn(),
+      signMessage: vi.fn(),
+      signTransaction: vi.fn(),
+      signTypedData: vi.fn(),
+      type: 'local'
+    };
   });
 
   afterEach(() => {

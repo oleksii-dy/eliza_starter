@@ -2,104 +2,97 @@
  * Utility functions for formatting values in the Polygon plugin
  */
 
+import { formatUnits as viemFormatUnits, parseUnits as viemParseUnits } from 'viem';
+
 /**
- * Formats a bigint value into a decimal string with the specified number of decimals
- * Similar to ethers.js formatUnits but without the dependency
+ * Formats a wei amount to a human-readable string with the specified number of decimals
  * 
- * @param value - The BigInt value to format
- * @param decimals - Number of decimal places (e.g., 18 for ETH/MATIC)
- * @returns Formatted string with appropriate decimal places
+ * @param amount Amount in wei (as bigint or string)
+ * @param decimals Number of decimals to format with (default: 18 for ETH/MATIC)
+ * @param displayDecimals Number of decimal places to display (default: 4)
+ * @returns Formatted string with the specified number of decimals
  */
-export function formatUnits(value: bigint, decimals: number): string {
-  if (decimals < 0) throw new Error('Decimals cannot be negative');
+export function formatUnits(amount: bigint | string, decimals: number = 18, displayDecimals: number = 4): string {
+  const amountBigInt = typeof amount === 'string' ? BigInt(amount) : amount;
+  const formatted = viemFormatUnits(amountBigInt, decimals);
   
-  // Handle zero value case
-  if (value === BigInt(0)) return '0';
-  
-  // Convert to string and pad with leading zeros if needed
-  let valueStr = value.toString();
-  
-  // Add leading zeros if the string is shorter than decimals
-  while (valueStr.length <= decimals) {
-    valueStr = '0' + valueStr;
+  // If display decimals is specified, format to that precision
+  if (displayDecimals >= 0) {
+    const parts = formatted.split('.');
+    if (parts.length === 1) return parts[0];
+    return `${parts[0]}.${parts[1].substring(0, displayDecimals)}`;
   }
   
-  // Insert decimal point
-  const integerPart = valueStr.slice(0, valueStr.length - decimals) || '0';
-  const fractionalPart = valueStr.slice(valueStr.length - decimals);
-  
-  // Remove trailing zeros after decimal point
-  const trimmedFractionalPart = fractionalPart.replace(/0+$/, '');
-  
-  // If fractional part is empty after trimming, just return integer part
-  if (trimmedFractionalPart === '') {
-    return integerPart;
-  }
-  
-  return `${integerPart}.${trimmedFractionalPart}`;
+  return formatted;
 }
 
 /**
- * Parses a string into a bigint with the specified number of decimals
- * Similar to ethers.js parseUnits but without the dependency
+ * Parses a human-readable amount string to wei
  * 
- * @param value - The string value to parse (e.g., "1.5")
- * @param decimals - Number of decimal places (e.g., 18 for ETH/MATIC)
- * @returns BigInt value with proper scaling
+ * @param amount Amount as a string (e.g., "1.5")
+ * @param decimals Number of decimals to parse with (default: 18 for ETH/MATIC)
+ * @returns Amount in wei as a bigint
  */
-export function parseUnits(value: string, decimals: number): bigint {
-  if (decimals < 0) throw new Error('Decimals cannot be negative');
+export function parseUnits(amount: string, decimals: number = 18): bigint {
+  return viemParseUnits(amount, decimals);
+}
+
+/**
+ * Formats a wei amount to a human-readable string with appropriate units
+ * 
+ * @param weiAmount Amount in wei as bigint
+ * @param decimals Number of decimals (default: 18 for ETH/MATIC)
+ * @param symbol Token symbol to append (optional)
+ * @returns Formatted string with appropriate units
+ */
+export function formatWei(weiAmount: bigint, decimals: number = 18, symbol?: string): string {
+  const formatted = formatUnits(weiAmount, decimals);
+  return symbol ? `${formatted} ${symbol}` : formatted;
+}
+
+/**
+ * Formats a gas price from wei to gwei
+ * 
+ * @param weiAmount Gas price in wei
+ * @returns Formatted gas price in gwei
+ */
+export function formatGasPrice(weiAmount: bigint): string {
+  return formatUnits(weiAmount, 9, 2) + ' gwei';
+}
+
+/**
+ * Formats a timestamp to a human-readable date string
+ * 
+ * @param timestamp Unix timestamp in seconds
+ * @returns Formatted date string
+ */
+export function formatTimestamp(timestamp: number): string {
+  return new Date(timestamp * 1000).toLocaleString();
+}
+
+/**
+ * Truncates an address for display purposes
+ * 
+ * @param address Full Ethereum/Polygon address
+ * @param startChars Number of characters to show at the start
+ * @param endChars Number of characters to show at the end
+ * @returns Truncated address
+ */
+export function truncateAddress(address: string, startChars: number = 6, endChars: number = 4): string {
+  if (!address) return '';
+  if (address.length <= startChars + endChars) return address;
   
-  // Handle empty, zero, or invalid values
-  if (!value || value === '.' || value === '') return BigInt(0);
-  
-  // Remove thousand separators and other formatting
-  value = value.replace(/,/g, '');
-  
-  // Split into integer and fractional parts
-  const parts = value.split('.');
-  if (parts.length > 2) {
-    throw new Error(`Invalid decimal value: ${value}`);
-  }
-  
-  let integerPart = parts[0] || '0';
-  let fractionalPart = parts[1] || '';
-  
-  // Validate that all characters are numeric
-  if (!/^-?\d+$/.test(integerPart)) {
-    throw new Error(`Invalid integer part: ${integerPart}`);
-  }
-  
-  if (fractionalPart && !/^\d+$/.test(fractionalPart)) {
-    throw new Error(`Invalid fractional part: ${fractionalPart}`);
-  }
-  
-  // Handle negative values
-  const isNegative = integerPart.startsWith('-');
-  if (isNegative) {
-    integerPart = integerPart.substring(1);
-  }
-  
-  // Trim leading zeros in integer part (except if it's just zero)
-  integerPart = integerPart === '0' ? '0' : integerPart.replace(/^0+/, '');
-  
-  // Truncate or pad the fractional part to match decimals
-  if (fractionalPart.length > decimals) {
-    fractionalPart = fractionalPart.substring(0, decimals);
-  } else {
-    while (fractionalPart.length < decimals) {
-      fractionalPart += '0';
-    }
-  }
-  
-  // Combine parts without decimal point
-  const combined = integerPart + fractionalPart;
-  
-  // Remove leading zeros for BigInt parsing (except if the result is just zero)
-  const normalized = combined.replace(/^0+/, '') || '0';
-  
-  // Apply negative sign if needed
-  return isNegative ? -BigInt(normalized) : BigInt(normalized);
+  return `${address.substring(0, startChars)}...${address.substring(address.length - endChars)}`;
+}
+
+/**
+ * Formats a number with thousands separators
+ * 
+ * @param num Number to format
+ * @returns Formatted number with thousands separators
+ */
+export function formatNumber(num: number): string {
+  return new Intl.NumberFormat().format(num);
 }
 
 /**
@@ -130,14 +123,4 @@ export function normalizeAddress(address: string): `0x${string}` {
   }
   
   return address as `0x${string}`;
-}
-
-/**
- * Format gas price to Gwei units
- * 
- * @param wei - Gas price in wei
- * @returns Formatted gas price in Gwei
- */
-export function formatGasToGwei(wei: bigint): string {
-  return formatUnits(wei, 9);
 } 

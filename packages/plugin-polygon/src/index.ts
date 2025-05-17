@@ -10,33 +10,32 @@ import {
 import { z } from 'zod';
 
 // Import all action files
-import { transferPolygonAction } from './actions/transfer';
-import { delegatePolygonAction } from './actions/delegate';
-import { getCheckpointStatusAction } from './actions/getCheckpointStatus';
-import { proposeGovernanceAction } from './actions/proposeGovernance';
-import { voteGovernanceAction } from './actions/voteGovernance';
-import { getValidatorInfoAction } from './actions/getValidatorInfo';
-import { getDelegatorInfoAction } from './actions/getDelegatorInfo';
-import { withdrawRewardsAction } from './actions/withdrawRewards';
-import { bridgeDepositAction } from './actions/bridgeDeposit';
-import { bridgeERC20Action } from './actions/bridgeERC20Action';
-import { getBlockNumberAction, getBlockDetailsAction } from './actions/getBlockInfo';
-import { getTransactionDetailsAction } from './actions/getTransactionInfo';
-import { getNativeBalanceAction, getErc20BalanceAction } from './actions/getBalanceInfo';
-import { getGovernanceInfoAction, getVotingPowerAction } from './actions/getGovernanceInfo';
+import { transferPolygonAction } from './actions/transfer.js';
+import { delegatePolygonAction } from './actions/delegate.js';
+import { getCheckpointStatusAction } from './actions/getCheckpointStatus.js';
+import { proposeGovernanceAction } from './actions/proposeGovernance.js';
+import { voteGovernanceAction } from './actions/voteGovernance.js';
+import { getValidatorInfoAction } from './actions/getValidatorInfo.js';
+import { getDelegatorInfoAction } from './actions/getDelegatorInfo.js';
+import { withdrawRewardsAction } from './actions/withdrawRewards.js';
+import { bridgeDepositAction } from './actions/bridgeDeposit.js';
+import { getBlockNumberAction, getBlockDetailsAction } from './actions/getBlockInfo.js';
+import { getTransactionDetailsAction } from './actions/getTransactionInfo.js';
+import { getNativeBalanceAction, getERC20BalanceAction } from './actions/getBalanceInfo.js';
+import { getGovernanceInfoAction, getVotingPowerAction } from './actions/getGovernanceInfo.js';
 
 // Import providers and services
-import { WalletProvider } from './providers/PolygonWalletProvider';
-import { PolygonRpcService } from './services/PolygonRpcService';
-import { GovernanceService } from './services/GovernanceService';
-import { getGasPriceEstimates, GasPriceEstimates } from './services/GasService';
-import { PolygonBridgeService } from './services/PolygonBridgeService';
+import { WalletProvider } from './providers/PolygonWalletProvider.js';
+import { PolygonRpcService } from './services/PolygonRpcService.js';
+import { GovernanceService } from './services/GovernanceService.js';
+import { getGasPriceEstimates, GasPriceEstimates } from './services/GasService.js';
+import { PolygonBridgeService } from './services/PolygonBridgeService.js';
 
 // Import our custom formatters
-import { formatUnits } from './utils/formatters';
+import { formatUnits } from './utils/formatters.js';
 
 // Import default configuration
-import { DEFAULT_RPC_URLS } from './config';
+import { DEFAULT_RPC_URLS } from './config.js';
 
 // --- Configuration Schema --- //
 const configSchema = z.object({
@@ -71,7 +70,6 @@ const polygonActions: Action[] = [
   getValidatorInfoAction,
   getDelegatorInfoAction,
   bridgeDepositAction,
-  bridgeERC20Action,
   getCheckpointStatusAction,
   proposeGovernanceAction,
   voteGovernanceAction,
@@ -83,7 +81,7 @@ const polygonActions: Action[] = [
   getBlockDetailsAction,
   getTransactionDetailsAction,
   getNativeBalanceAction,
-  getErc20BalanceAction,
+  getERC20BalanceAction,
   
   // Governance actions
   getGovernanceInfoAction,
@@ -94,7 +92,7 @@ const polygonActions: Action[] = [
     name: 'GET_POLYGON_GAS_ESTIMATES',
     description: 'Gets current gas price estimates for Polygon from PolygonScan.',
     validate: async () => true,
-    handler: async (runtime) => {
+    handler: async (runtime: IAgentRuntime) => {
       const estimates: GasPriceEstimates = await getGasPriceEstimates(runtime);
       let text = 'Polygon Gas Estimates (Wei):\n';
       
