@@ -1,4 +1,4 @@
-import { logger, type IAgentRuntime } from '@elizaos/core';
+import type { IAgentRuntime } from '@elizaos/core';
 
 import { acquireService, askLlmObject } from '../utils';
 
@@ -66,9 +66,9 @@ export async function llmStrategy(runtime: IAgentRuntime) {
 }
 
 // maybe should be a class to reuse the service handles
-async function generateBuySignal(runtime: IAgentRuntime, strategyService: any, hndl: any) {
-  const sentimentsData = (await runtime.getCache<any[]>('sentiments')) || [];
-  const trendingData = (await runtime.getCache<any[]>('tokens_solana')) || [];
+async function generateBuySignal(runtime, strategyService, hndl) {
+  const sentimentsData = (await runtime.getCache<Sentiment[]>('sentiments')) || [];
+  const trendingData = (await runtime.getCache<IToken[]>('tokens_solana')) || [];
 
   let sentiments = '';
 

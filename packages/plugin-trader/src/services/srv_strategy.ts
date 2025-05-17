@@ -1,12 +1,10 @@
-import { IAgentRuntime, Service, logger } from '@elizaos/core';
+import { Service, logger } from '@elizaos/core';
 
 export class TradeStrategyService extends Service {
   private isRunning = false;
 
   static serviceType = 'TRADER_STRATEGY';
   capabilityDescription = 'The agent is able to use trade strategies';
-  chainService: any;
-  infoService: any;
 
   // config (key/string)
 
@@ -45,7 +43,7 @@ export class TradeStrategyService extends Service {
    */
   static async start(runtime: IAgentRuntime) {
     const service = new TradeStrategyService(runtime);
-    await service.start();
+    service.start();
     return service;
   }
   /**
@@ -63,7 +61,6 @@ export class TradeStrategyService extends Service {
   }
 
   async start(): Promise<void> {
-    console.log('***** STARTING TRADE SERVICE');
     if (this.isRunning) {
       logger.warn('Trading strategy service is already running');
       return;

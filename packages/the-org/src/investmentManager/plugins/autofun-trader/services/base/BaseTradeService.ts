@@ -1,9 +1,9 @@
-import { type IAgentRuntime } from '@elizaos/core';
-import { DEFAULT_CONFIG } from '../../config/trading';
-import { TradingConfig } from '../../types/trading';
-import { AnalyticsService } from '../analyticsService';
-import { DataService } from '../dataService';
+import { type IAgentRuntime, logger } from '@elizaos/core';
 import { WalletService } from '../walletService';
+import { DataService } from '../dataService';
+import { AnalyticsService } from '../analyticsService';
+import { TradingConfig } from '../../types/trading';
+import { DEFAULT_CONFIG } from '../../config/trading';
 
 export abstract class BaseTradeService {
   protected tradingConfig: TradingConfig;

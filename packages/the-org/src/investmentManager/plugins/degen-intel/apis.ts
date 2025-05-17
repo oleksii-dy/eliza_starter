@@ -26,8 +26,6 @@ export const routes: Route[] = [
   {
     type: 'GET',
     path: '/degen-intel',
-    public: true,
-    name: 'Degen Intel',
     handler: async (_req: any, res: any) => {
       const route = _req.url;
       res.sendFile(path.resolve(frontendDist, 'index.html'));

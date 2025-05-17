@@ -1,13 +1,10 @@
-import { IAgentRuntime, Service, logger } from '@elizaos/core';
+import { Service, logger } from '@elizaos/core';
 
 export class TradeDataProviderService extends Service {
   private isRunning = false;
 
   static serviceType = 'TRADER_DATAPROVIDER';
   capabilityDescription = 'The agent is able to get information about blockchains';
-  registry: {};
-  events: Map<any, any>;
-  timer: NodeJS.Timeout;
 
   // config (key/string)
 
@@ -117,7 +114,7 @@ export class TradeDataProviderService extends Service {
   static async start(runtime: IAgentRuntime) {
     console.log('TRADER_DATAPROVIDER trying to start');
     const service = new TradeDataProviderService(runtime);
-    await service.start();
+    service.start();
     return service;
   }
   /**

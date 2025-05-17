@@ -1,6 +1,6 @@
 import type { IAgentRuntime } from '@elizaos/core';
 
-import { acquireService } from '../utils';
+import { acquireService, askLlmObject } from '../utils';
 
 export async function copyStrategy(runtime: IAgentRuntime) {
   const service = await acquireService(runtime, 'TRADER_STRATEGY', 'copy trading strategy');

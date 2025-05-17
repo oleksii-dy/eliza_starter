@@ -34,7 +34,7 @@ export class TradeChainService extends Service {
    */
   static async start(runtime: IAgentRuntime) {
     const service = new TradeChainService(runtime);
-    await service.start();
+    service.start();
     return service;
   }
   /**

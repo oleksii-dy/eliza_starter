@@ -43,7 +43,6 @@ export interface BuySignalMessage {
   tokenAddress: string;
   entityId: string;
   expectedOutAmount: string;
-  tradeAmount: string | number;
 }
 
 export interface SellSignalMessage {
