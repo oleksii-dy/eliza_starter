@@ -4,6 +4,9 @@ import {
   handleError,
   installPlugin,
   logHeader,
+  loadEnvironment,
+  promptForEnvVars,
+  saveConfig,
 } from '@/src/utils';
 import { getPluginRepository } from '@/src/utils/registry/index';
 import { logger } from '@elizaos/core';
@@ -228,9 +231,17 @@ plugins
           logger.info(
             `Successfully installed ${pluginNameForPostInstall} from ${githubSpecifier}.`
           );
-          // TODO: Add post-installation steps here, similar to other plugin types
-          // e.g., prompting for env vars, updating config.
-          // For now, just exit cleanly.
+
+          if (!opts.noEnvPrompt) {
+            try {
+              await loadEnvironment();
+              await promptForEnvVars(pluginNameForPostInstall);
+              await saveConfig({ lastUpdated: new Date().toISOString() });
+            } catch (postError) {
+              logger.warn(`Post-install configuration failed: ${postError}`);
+            }
+          }
+
           process.exit(0);
         } else {
           logger.error(`Failed to install plugin from ${githubSpecifier}.`);
