@@ -26,7 +26,8 @@ import {
   type Plugin,
 } from '@elizaos/core';
 import { Command, Option } from 'commander';
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -331,7 +332,7 @@ export async function startAgent(
       while (currentDir !== path.parse(currentDir).root) {
         const envPath = path.join(currentDir, '.env');
 
-        if (fs.existsSync(envPath)) {
+        if (existsSync(envPath)) {
           return envPath;
         }
 
@@ -341,7 +342,7 @@ export async function startAgent(
 
       // Check root directory as well
       const rootEnvPath = path.join(path.parse(currentDir).root, '.env');
-      return fs.existsSync(rootEnvPath) ? rootEnvPath : null;
+      return existsSync(rootEnvPath) ? rootEnvPath : null;
     }
 
     // Node.js environment: load from .env file
@@ -517,9 +518,9 @@ const startAgents = async (options: {
     // Check if we're in a project with a package.json
     const packageJsonPath = path.join(process.cwd(), 'package.json');
 
-    if (fs.existsSync(packageJsonPath)) {
+    if (existsSync(packageJsonPath)) {
       // Read and parse package.json to check if it's a project or plugin
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
 
       // Check if this is a plugin (package.json contains 'eliza' section with type='plugin')
       if (packageJson.eliza?.type && packageJson.eliza.type === 'plugin') {
@@ -547,7 +548,7 @@ const startAgents = async (options: {
       if (mainEntry) {
         const mainPath = path.resolve(process.cwd(), mainEntry);
 
-        if (fs.existsSync(mainPath)) {
+        if (existsSync(mainPath)) {
           try {
             // Try to import the module
             const importedModule = await import(mainPath);
@@ -741,7 +742,7 @@ const startAgents = async (options: {
     let clientPath = path.join(__dirname, '../../client');
 
     // If not found, fall back to the old relative path for development
-    if (!fs.existsSync(clientPath)) {
+    if (!existsSync(clientPath)) {
       clientPath = path.join(__dirname, '../../../..', 'client/dist');
     }
   }

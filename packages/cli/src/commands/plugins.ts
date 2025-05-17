@@ -9,25 +9,25 @@ import { getPluginRepository } from '@/src/utils/registry/index';
 import { logger } from '@elizaos/core';
 import { Command } from 'commander';
 import { execa } from 'execa';
-import fs from 'node:fs';
+import fs, { existsSync, promises as fsPromises } from 'node:fs';
 import path from 'node:path';
 
 // --- Helper Functions ---
 
 /** Reads and parses package.json, returning dependencies. */
-export const readPackageJson = (
+export const readPackageJson = async (
   cwd: string
-): {
+): Promise<{
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
   allDependencies: Record<string, string>;
-} | null => {
+} | null> => {
   const packageJsonPath = path.join(cwd, 'package.json');
-  if (!fs.existsSync(packageJsonPath)) {
+  if (!existsSync(packageJsonPath)) {
     return null;
   }
   try {
-    const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf-8');
+    const packageJsonContent = await fsPromises.readFile(packageJsonPath, 'utf-8');
     const packageJson = JSON.parse(packageJsonContent);
     const dependencies = packageJson.dependencies || {};
     const devDependencies = packageJson.devDependencies || {};
@@ -174,7 +174,7 @@ plugins
   .option('-T, --tag <tagname>', 'Specify a tag to install (e.g., beta)')
   .action(async (pluginArg, opts) => {
     const cwd = process.cwd();
-    const pkgData = readPackageJson(cwd);
+    const pkgData = await readPackageJson(cwd);
 
     if (!pkgData) {
       logger.error(
@@ -322,7 +322,7 @@ plugins
   .action(async () => {
     try {
       const cwd = process.cwd();
-      const pkgData = readPackageJson(cwd);
+      const pkgData = await readPackageJson(cwd);
 
       if (!pkgData) {
         console.error('Could not read or parse package.json.');
@@ -362,7 +362,7 @@ plugins
     try {
       const cwd = process.cwd();
 
-      const pkgData = readPackageJson(cwd);
+      const pkgData = await readPackageJson(cwd);
       if (!pkgData) {
         console.error(
           'Could not read or parse package.json. Cannot determine which package to remove.'

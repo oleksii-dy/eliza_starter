@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import os from 'node:os';
 import {
   type DeployOptions,
@@ -37,7 +37,13 @@ const parseEnv = (envs: string[], envFile: string): Env[] => {
   }
 
   if (envFile) {
-    const envFileContent = fs.readFileSync(envFile, 'utf8');
+    let envFileContent = '';
+    try {
+      envFileContent = await fs.readFile(envFile, 'utf8');
+    } catch (error) {
+      console.error(`Failed to read ${envFile}: ${(error as Error).message}`);
+      envFileContent = '';
+    }
     for (const line of envFileContent.split('\n')) {
       if (line.includes('=')) {
         const [key, value] = line.split('=');

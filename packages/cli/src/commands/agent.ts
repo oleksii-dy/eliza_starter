@@ -2,7 +2,8 @@ import { checkServer, displayAgent, handleError } from '@/src/utils';
 import type { Agent } from '@elizaos/core';
 import { logger } from '@elizaos/core';
 import { Command, OptionValues, Option } from 'commander';
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 // Helper function to determine the agent runtime URL
@@ -201,8 +202,14 @@ agent
 
         // Save file and exit
         const jsonPath = path.resolve(process.cwd(), filename);
-        fs.writeFileSync(jsonPath, JSON.stringify(agentConfig, null, 2));
-        console.log(`Saved agent configuration to ${jsonPath}`);
+        try {
+          await fs.writeFile(jsonPath, JSON.stringify(agentConfig, null, 2));
+          console.log(`Saved agent configuration to ${jsonPath}`);
+        } catch (error) {
+          console.error(
+            `Failed to write agent configuration to ${jsonPath}: ${(error as Error).message}`
+          );
+        }
         return;
       }
 
@@ -301,10 +308,10 @@ Required configuration:
         if (options.path) {
           try {
             const filePath = path.resolve(process.cwd(), options.path);
-            if (!fs.existsSync(filePath)) {
+            if (!existsSync(filePath)) {
               throw new Error(`File not found at path: ${filePath}`);
             }
-            const fileContent = fs.readFileSync(filePath, 'utf8');
+            const fileContent = await fs.readFile(filePath, 'utf8');
             payload.characterJson = JSON.parse(fileContent);
             characterName = await createCharacter(payload);
           } catch (error) {
@@ -515,7 +522,8 @@ agent
         }
       } else if (opts.file) {
         try {
-          config = JSON.parse(fs.readFileSync(opts.file, 'utf8'));
+          const fileContent = await fs.readFile(opts.file, 'utf8');
+          config = JSON.parse(fileContent);
         } catch (error) {
           throw new Error(`Failed to read or parse config file: ${error.message}`);
         }
