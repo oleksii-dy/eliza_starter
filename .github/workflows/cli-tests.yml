@@ -52,7 +52,7 @@ jobs:
           MODEL_DIR="$HOME/.eliza/models"
           mkdir -p "$MODEL_DIR"
           declare -a models=(
-            "Qwen3-0.6B-Q4_0.gguf https://huggingface.co/unsloth/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q4_0.gguf"
+            "Qwen3-1.7B-Q4_0.gguf https://huggingface.co/unsloth/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q4_0.gguf"
             "bge-small-en-v1.5.Q4_K_M.gguf https://huggingface.co/ChristianAzinn/bge-small-en-v1.5-gguf/resolve/main/bge-small-en-v1.5.Q4_K_M.gguf"
           )
           for entry in "${models[@]}"; do
