@@ -5,28 +5,46 @@ import {
   type Provider,
   type ProviderResult,
   logger,
-  Service,
+  type Service,
+  elizaLogger,
 } from '@elizaos/core';
 import { z } from 'zod';
 import { ethers } from 'ethers';
 
-import { transferPolygonAction } from './actions/transfer';
-import { delegatePolygonAction } from './actions/delegate';
-import { getCheckpointStatusAction } from './actions/getCheckpointStatus';
-import { proposeGovernanceAction } from './actions/proposeGovernance';
-import { voteGovernanceAction } from './actions/voteGovernance';
-import { getValidatorInfoAction } from './actions/getValidatorInfo';
-import { getDelegatorInfoAction } from './actions/getDelegatorInfo';
-import { withdrawRewardsAction } from './actions/withdrawRewards';
-import { bridgeDepositAction } from './actions/bridgeDeposit';
-import { IPolygonWalletContext, WalletProvider } from './providers/PolygonWalletProvider';
+// Import all action files
+import { transferPolygonAction } from './actions/transfer.js';
+import { delegateL1Action } from './actions/delegateL1.js';
+import { getCheckpointStatusAction } from './actions/getCheckpointStatus.js';
+import { proposeGovernanceAction } from './actions/proposeGovernance.js';
+import { voteGovernanceAction } from './actions/voteGovernance.js';
+import { getValidatorInfoAction } from './actions/getValidatorInfo.js';
+import { getDelegatorInfoAction } from './actions/getDelegatorInfo.js';
+import { withdrawRewardsAction } from './actions/withdrawRewardsL1.js';
+import { bridgeDepositAction } from './actions/bridgeDeposit.js';
+import { getL2BlockNumberAction } from './actions/getL2BlockNumber.js';
+import { getMaticBalanceAction } from './actions/getMaticBalance.js';
+import { getPolygonGasEstimatesAction } from './actions/getPolygonGasEstimates.js';
+import { undelegateL1Action } from './actions/undelegateL1.js';
+import { restakeRewardsL1Action } from './actions/restakeRewardsL1.js';
+import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed.js';
+import { heimdallVoteAction } from './actions/heimdallVoteAction.js';
+import { heimdallSubmitProposalAction } from './actions/heimdallSubmitProposalAction.js';
+import { heimdallTransferTokensAction } from './actions/heimdallTransferTokensAction.js';
+
+import {
+  WalletProvider,
+  initWalletProvider,
+  polygonWalletProvider,
+} from './providers/PolygonWalletProvider.js';
 import {
   PolygonRpcService,
-  ValidatorInfo,
-  DelegatorInfo,
+  type ValidatorInfo,
+  type DelegatorInfo,
   ValidatorStatus,
-} from './services/PolygonRpcService';
-import { getGasPriceEstimates, GasPriceEstimates } from './services/GasService';
+} from './services/PolygonRpcService.js';
+import { HeimdallService } from './services/HeimdallService.js';
+import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService.js';
+import { parseBigIntString } from './utils.js'; // Import from utils
 
 // --- Configuration Schema --- //
 const configSchema = z.object({
@@ -34,22 +52,14 @@ const configSchema = z.object({
   ETHEREUM_RPC_URL: z.string().url('Invalid Ethereum RPC URL').min(1),
   PRIVATE_KEY: z.string().min(1, 'Private key is required'),
   POLYGONSCAN_KEY: z.string().min(1, 'PolygonScan API Key is required'),
+  HEIMDALL_RPC_URL: z.string().url('Invalid Heimdall RPC URL').min(1).optional(),
+  GOVERNOR_ADDRESS: z.string().optional(),
+  TOKEN_ADDRESS: z.string().optional(),
+  TIMELOCK_ADDRESS: z.string().optional(),
 });
 
 // Infer the type from the schema
 type PolygonPluginConfig = z.infer<typeof configSchema>;
-
-// Helper to parse amount/shares (could be moved to utils)
-function parseBigIntString(value: unknown, unitName: string): bigint {
-  if (typeof value !== 'string' || !/^-?\d+$/.test(value)) {
-    throw new Error(`Invalid ${unitName} amount: Must be a string representing an integer.`);
-  }
-  try {
-    return BigInt(value);
-  } catch (e) {
-    throw new Error(`Invalid ${unitName} amount: Cannot parse '${value}' as BigInt.`);
-  }
-}
 
 // --- Define Actions --- //
 const polygonActions: Action[] = [
@@ -60,306 +70,123 @@ const polygonActions: Action[] = [
   getCheckpointStatusAction,
   proposeGovernanceAction,
   voteGovernanceAction,
-  {
-    name: 'GET_L2_BLOCK_NUMBER',
-    description: 'Gets the current block number on Polygon (L2).',
-    validate: async () => true,
-    handler: async (runtime) => {
-      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!rpcService) throw new Error('PolygonRpcService not available');
-      const blockNumber = await rpcService.getCurrentBlockNumber();
-      return {
-        text: `Current Polygon block number: ${blockNumber}`,
-        actions: ['GET_L2_BLOCK_NUMBER'],
-      };
-    },
-    examples: [],
-  },
-  {
-    name: 'GET_MATIC_BALANCE',
-    description: "Gets the MATIC balance for the agent's address on Polygon (L2).",
-    validate: async () => true,
-    handler: async (runtime, message, state) => {
-      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!rpcService) throw new Error('PolygonRpcService not available');
-
-      // TODO: Determine the correct way to get the agent's address.
-      // It might come from runtime context, another service, or require the provider differently.
-      const agentAddress = runtime.getSetting('AGENT_ADDRESS'); // Example placeholder
-      if (!agentAddress) throw new Error('Could not determine agent address');
-
-      logger.info(`Fetching MATIC balance for address: ${agentAddress}`);
-      const balanceWei = await rpcService.getNativeBalance(agentAddress);
-      const balanceMatic = ethers.formatEther(balanceWei);
-      return {
-        text: `Your MATIC balance (${agentAddress}): ${balanceMatic}`,
-        actions: ['GET_MATIC_BALANCE'],
-        data: { address: agentAddress, balanceWei: balanceWei.toString(), balanceMatic },
-      };
-    },
-    examples: [],
-  },
-  {
-    name: 'GET_POLYGON_GAS_ESTIMATES',
-    description: 'Gets current gas price estimates for Polygon from PolygonScan.',
-    validate: async () => true,
-    handler: async (runtime) => {
-      const estimates: GasPriceEstimates = await getGasPriceEstimates(runtime);
-      let text = 'Polygon Gas Estimates (Wei):\n';
-      text += `  Safe Low Priority: ${estimates.safeLow?.maxPriorityFeePerGas?.toString() ?? 'N/A'}\n`;
-      text += `  Average Priority:  ${estimates.average?.maxPriorityFeePerGas?.toString() ?? 'N/A'}\n`;
-      text += `  Fast Priority:     ${estimates.fast?.maxPriorityFeePerGas?.toString() ?? 'N/A'}\n`;
-      text += `  Estimated Base:  ${estimates.estimatedBaseFee?.toString() ?? 'N/A'}`;
-      if (estimates.fallbackGasPrice) {
-        text += `\n  (Used Fallback Price: ${estimates.fallbackGasPrice.toString()})`;
-      }
-      return { text, actions: ['GET_POLYGON_GAS_ESTIMATES'], data: estimates };
-    },
-    examples: [],
-  },
-  {
-    name: 'GET_L1_VALIDATOR_INFO',
-    description: 'Gets details for a specific validator from Ethereum L1.',
-    validate: async () => true,
-    handler: async (runtime, message, state, options) => {
-      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!rpcService) throw new Error('PolygonRpcService not available');
-      const validatorId = options?.validatorId as number | undefined;
-      if (typeof validatorId !== 'number') throw new Error('Validator ID (number) is required.');
-
-      const info: ValidatorInfo | null = await rpcService.getValidatorInfo(validatorId);
-      if (!info) {
-        return {
-          text: `Validator ${validatorId} not found on L1.`,
-          actions: ['GET_L1_VALIDATOR_INFO'],
-        };
-      }
-      const statusText = ValidatorStatus[info.status] ?? 'Unknown';
-      const text = `L1 Validator ${validatorId}: Status: ${statusText}, Commission: ${info.commissionRate * 100}%, Total Stake: ${ethers.formatEther(info.totalStake)} MATIC`;
-      return { text, actions: ['GET_L1_VALIDATOR_INFO'], data: { validatorId, info } };
-    },
-    examples: [],
-  },
-  {
-    name: 'GET_L1_DELEGATOR_INFO',
-    description: 'Gets staking details for a delegator on a specific validator from Ethereum L1.',
-    validate: async () => true,
-    handler: async (runtime, message, state, options) => {
-      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!rpcService) throw new Error('PolygonRpcService not available');
-      const validatorId = options?.validatorId as number | undefined;
-      let delegatorAddress = options?.delegatorAddress as string | undefined;
-      if (typeof validatorId !== 'number') throw new Error('Validator ID (number) is required.');
-      if (!delegatorAddress) {
-        delegatorAddress = runtime.getSetting('AGENT_ADDRESS');
-        if (!delegatorAddress)
-          throw new Error('Delegator address not specified and agent address not configured.');
-      }
-
-      const info: DelegatorInfo | null = await rpcService.getDelegatorInfo(
-        validatorId,
-        delegatorAddress
-      );
-      if (!info) {
-        return {
-          text: `No delegation found for address ${delegatorAddress} on validator ${validatorId}.`,
-          actions: ['GET_L1_DELEGATOR_INFO'],
-        };
-      }
-      const text = `L1 Delegation (V:${validatorId}, D:${delegatorAddress}): Staked: ${ethers.formatEther(info.delegatedAmount)} MATIC, Rewards: ${ethers.formatEther(info.pendingRewards)} MATIC`;
-      return {
-        text,
-        actions: ['GET_L1_DELEGATOR_INFO'],
-        data: { validatorId, delegatorAddress, info },
-      };
-    },
-    examples: [],
-  },
-  {
-    name: 'DELEGATE_L1',
-    description: 'Delegates MATIC/POL to a validator on Ethereum L1.',
-    validate: async () => true,
-    handler: async (runtime, message, state, options) => {
-      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!rpcService) throw new Error('PolygonRpcService not available');
-
-      const validatorId = options?.validatorId as number | undefined;
-      const amountWeiStr = options?.amountWei as string | undefined;
-      if (typeof validatorId !== 'number') throw new Error('Validator ID (number) is required.');
-      if (typeof amountWeiStr !== 'string') throw new Error('Amount in Wei (string) is required.');
-
-      const amountWei = parseBigIntString(amountWeiStr, 'delegation');
-
-      logger.info(`Action: Delegating ${amountWeiStr} Wei to validator ${validatorId}`);
-      const txHash = await rpcService.delegate(validatorId, amountWei);
-
-      return {
-        text: `Delegation transaction sent to L1: ${txHash}. Check explorer for confirmation.`,
-        actions: ['DELEGATE_L1'],
-        data: { validatorId, amountWei: amountWeiStr, transactionHash: txHash },
-      };
-    },
-    examples: [],
-  },
-  {
-    name: 'UNDELEGATE_L1',
-    description: 'Initiates undelegation (unbonding) of Validator Shares on Ethereum L1.',
-    validate: async () => true,
-    handler: async (runtime, message, state, options) => {
-      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!rpcService) throw new Error('PolygonRpcService not available');
-
-      const validatorId = options?.validatorId as number | undefined;
-      const sharesAmountWeiStr = options?.sharesAmountWei as string | undefined;
-      if (typeof validatorId !== 'number') throw new Error('Validator ID (number) is required.');
-      if (typeof sharesAmountWeiStr !== 'string')
-        throw new Error('Shares amount in Wei (string) is required.');
-
-      const sharesAmountWei = parseBigIntString(sharesAmountWeiStr, 'shares');
-
-      logger.info(
-        `Action: Undelegating ${sharesAmountWeiStr} shares from validator ${validatorId}`
-      );
-      const txHash = await rpcService.undelegate(validatorId, sharesAmountWei);
-
-      return {
-        text: `Undelegation transaction sent to L1: ${txHash}. Unbonding period applies.`,
-        actions: ['UNDELEGATE_L1'],
-        data: { validatorId, sharesAmountWei: sharesAmountWeiStr, transactionHash: txHash },
-      };
-    },
-    examples: [],
-  },
-  {
-    name: 'WITHDRAW_REWARDS_L1',
-    description: 'Withdraws accumulated staking rewards from a validator on Ethereum L1.',
-    validate: async () => true,
-    handler: async (runtime, message, state, options) => {
-      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!rpcService) throw new Error('PolygonRpcService not available');
-
-      const validatorId = options?.validatorId as number | undefined;
-      if (typeof validatorId !== 'number') throw new Error('Validator ID (number) is required.');
-
-      logger.info(`Action: Withdrawing rewards from validator ${validatorId}`);
-      const txHash = await rpcService.withdrawRewards(validatorId);
-
-      return {
-        text: `Reward withdrawal transaction sent to L1: ${txHash}. Check explorer for confirmation.`,
-        actions: ['WITHDRAW_REWARDS_L1'],
-        data: { validatorId, transactionHash: txHash },
-      };
-    },
-    examples: [],
-  },
-  {
-    name: 'RESTAKE_REWARDS_L1',
-    description: 'Withdraws rewards and restakes them to the same validator on Ethereum L1.',
-    validate: async () => true,
-    handler: async (runtime, message, state, options) => {
-      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!rpcService) throw new Error('PolygonRpcService not available');
-
-      const validatorId = options?.validatorId as number | undefined;
-      if (typeof validatorId !== 'number') throw new Error('Validator ID (number) is required.');
-
-      logger.info(`Action: Restaking rewards for validator ${validatorId}`);
-      const delegateTxHash = await rpcService.restakeRewards(validatorId);
-
-      if (!delegateTxHash) {
-        return {
-          text: `No rewards found to restake for validator ${validatorId}.`,
-          actions: ['RESTAKE_REWARDS_L1'],
-          data: { validatorId, status: 'no_rewards' },
-        };
-      }
-
-      return {
-        text: `Restake operation initiated. Delegation transaction sent: ${delegateTxHash}. Check L1 explorer.`,
-        actions: ['RESTAKE_REWARDS_L1'],
-        data: { validatorId, transactionHash: delegateTxHash, status: 'initiated' },
-      };
-    },
-    examples: [],
-  },
-  {
-    name: 'BRIDGE_DEPOSIT_L1',
-    description:
-      'Deposits ERC20 tokens (incl. POL) from Ethereum L1 to Polygon L2 via the PoS bridge.',
-    validate: async () => true,
-    handler: async (runtime, message, state, options) => {
-      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!rpcService) throw new Error('PolygonRpcService not available');
-
-      const tokenAddressL1 = options?.tokenAddressL1 as string | undefined;
-      const amountWeiStr = options?.amountWei as string | undefined;
-      const recipientAddressL2 = options?.recipientAddressL2 as string | undefined;
-
-      if (!tokenAddressL1 || !ethers.isAddress(tokenAddressL1))
-        throw new Error('Valid L1 token address (tokenAddressL1) is required.');
-      if (typeof amountWeiStr !== 'string') throw new Error('Amount in Wei (string) is required.');
-      if (recipientAddressL2 && !ethers.isAddress(recipientAddressL2))
-        throw new Error('Invalid recipient address (recipientAddressL2).');
-
-      const amountWei = parseBigIntString(amountWeiStr, 'deposit');
-
-      logger.info(
-        `Action: Bridging ${amountWeiStr} Wei of ${tokenAddressL1} to L2` +
-          (recipientAddressL2 ? ` for ${recipientAddressL2}` : '')
-      );
-      const txHash = await rpcService.bridgeDeposit(tokenAddressL1, amountWei, recipientAddressL2);
-
-      return {
-        text: `Bridge deposit transaction sent to L1: ${txHash}. Tokens will arrive on L2 after confirmation.`,
-        actions: ['BRIDGE_DEPOSIT_L1'],
-        data: {
-          tokenAddressL1,
-          amountWei: amountWeiStr,
-          recipientAddressL2,
-          transactionHash: txHash,
-        },
-      };
-    },
-    examples: [],
-  },
-  {
-    name: 'IS_L2_BLOCK_CHECKPOINTED',
-    description: 'Checks if a Polygon L2 block has been checkpointed on Ethereum L1.',
-    validate: async () => true,
-    handler: async (runtime, message, state, options) => {
-      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!rpcService) throw new Error('PolygonRpcService not available');
-
-      const l2BlockNumberInput = options?.l2BlockNumber as number | string | undefined;
-      if (l2BlockNumberInput === undefined)
-        throw new Error('L2 block number (l2BlockNumber) is required.');
-
-      let l2BlockNumber: bigint;
-      try {
-        l2BlockNumber = BigInt(l2BlockNumberInput.toString());
-        if (l2BlockNumber < 0n) throw new Error(); // Basic validation
-      } catch {
-        throw new Error('Invalid L2 block number format.');
-      }
-
-      logger.info(`Action: Checking checkpoint status for L2 block ${l2BlockNumber}`);
-      const isCheckpointed = await rpcService.isL2BlockCheckpointed(l2BlockNumber);
-
-      return {
-        text: `L2 block ${l2BlockNumber} checkpointed status on L1: ${isCheckpointed}.`,
-        actions: ['IS_L2_BLOCK_CHECKPOINTED'],
-        data: { l2BlockNumber: l2BlockNumber.toString(), isCheckpointed },
-      };
-    },
-    examples: [],
-  },
+  getL2BlockNumberAction,
+  getMaticBalanceAction,
+  getPolygonGasEstimatesAction,
+  delegateL1Action,
+  undelegateL1Action,
+  withdrawRewardsAction,
+  restakeRewardsL1Action,
+  isL2BlockCheckpointedAction,
+  heimdallVoteAction,
+  heimdallSubmitProposalAction,
+  heimdallTransferTokensAction,
 ];
 
 // --- Define Providers --- //
-const polygonProviders: Provider[] = [WalletProvider];
+
+/**
+ * Provider to fetch and display Polygon-specific info like address, balance, gas.
+ */
+const polygonProviderInfo: Provider = {
+  name: 'Polygon Provider Info',
+  async get(runtime: IAgentRuntime, _message, state): Promise<ProviderResult> {
+    try {
+      // 1. Initialize WalletProvider to get address
+      const polygonWalletProviderInstance = await initWalletProvider(runtime);
+      if (!polygonWalletProviderInstance) {
+        // Renamed to avoid conflict
+        throw new Error(
+          'Failed to initialize PolygonWalletProvider - check PRIVATE_KEY configuration'
+        );
+      }
+      const agentAddress = polygonWalletProviderInstance.getAddress();
+      if (!agentAddress) throw new Error('Could not determine agent address from provider');
+
+      // 2. Get PolygonRpcService instance (should be already started)
+      const polygonRpcService = runtime.getService<PolygonRpcService>(
+        PolygonRpcService.serviceType
+      );
+      if (!polygonRpcService) {
+        throw new Error('PolygonRpcService not available or not started');
+      }
+
+      // 3. Get L2 (Polygon) MATIC balance
+      const maticBalanceWei = await polygonRpcService.getBalance(agentAddress, 'L2');
+      const maticBalanceFormatted = ethers.formatEther(maticBalanceWei);
+
+      // 4. Get Gas price info
+      const gasEstimates = await getGasPriceEstimates(runtime);
+
+      const agentName = state?.agentName || 'The agent';
+
+      // 5. Format the text output
+      let text = `${agentName}'s Polygon Status:\\n`;
+      text += `  Wallet Address: ${agentAddress}\\n`;
+      text += `  MATIC Balance: ${maticBalanceFormatted} MATIC\\n`;
+      text += '  Current Gas Prices (Max Priority Fee Per Gas - Gwei):\\n';
+      const safeLowGwei = gasEstimates.safeLow?.maxPriorityFeePerGas
+        ? ethers.formatUnits(gasEstimates.safeLow.maxPriorityFeePerGas, 'gwei')
+        : 'N/A';
+      const averageGwei = gasEstimates.average?.maxPriorityFeePerGas
+        ? ethers.formatUnits(gasEstimates.average.maxPriorityFeePerGas, 'gwei')
+        : 'N/A';
+      const fastGwei = gasEstimates.fast?.maxPriorityFeePerGas
+        ? ethers.formatUnits(gasEstimates.fast.maxPriorityFeePerGas, 'gwei')
+        : 'N/A';
+      const baseFeeGwei = gasEstimates.estimatedBaseFee
+        ? ethers.formatUnits(gasEstimates.estimatedBaseFee, 'gwei')
+        : 'N/A';
+
+      text += `    - Safe Low: ${safeLowGwei}\\n`;
+      text += `    - Average:  ${averageGwei}\\n`; // Adjusted name to average
+      text += `    - Fast:     ${fastGwei}\\n`;
+      text += `  Estimated Base Fee (Gwei): ${baseFeeGwei}\\n`;
+
+      return {
+        text,
+        data: {
+          address: agentAddress,
+          maticBalance: maticBalanceFormatted,
+          gasEstimates: {
+            safeLowGwei,
+            averageGwei,
+            fastGwei,
+            baseFeeGwei,
+          },
+        },
+        values: {
+          // Provide raw values or formatted strings as needed
+          address: agentAddress,
+          maticBalance: maticBalanceFormatted,
+          gas_safe_low_gwei: safeLowGwei,
+          gas_average_gwei: averageGwei, // Changed key name
+          gas_fast_gwei: fastGwei,
+          gas_base_fee_gwei: baseFeeGwei,
+        },
+      };
+    } catch (error) {
+      logger.error('Error getting Polygon provider info:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // Create a more user-friendly message based on the error
+      const userMessage = errorMessage.includes('private key')
+        ? 'There was an issue with the wallet configuration. Please ensure PRIVATE_KEY is correctly set.'
+        : `Error getting Polygon provider info: ${errorMessage}`;
+
+      return {
+        text: userMessage,
+        data: { error: errorMessage },
+        values: { error: errorMessage },
+      };
+    }
+  },
+};
+
+const polygonProviders: Provider[] = [polygonWalletProvider, polygonProviderInfo];
 
 // --- Define Services --- //
-const polygonServices: (typeof Service)[] = [PolygonRpcService];
+const polygonServices: (typeof Service)[] = [PolygonRpcService, HeimdallService];
 
 // --- Plugin Definition --- //
 export const polygonPlugin: Plugin = {
@@ -372,10 +199,11 @@ export const polygonPlugin: Plugin = {
     ETHEREUM_RPC_URL: process.env.ETHEREUM_RPC_URL,
     PRIVATE_KEY: process.env.PRIVATE_KEY,
     POLYGONSCAN_KEY: process.env.POLYGONSCAN_KEY,
+    HEIMDALL_RPC_URL: process.env.HEIMDALL_RPC_URL,
   },
 
   // Initialization logic
-  async init(config: Record<string, any>, runtime: IAgentRuntime) {
+  async init(config: Record<string, unknown>, runtime: IAgentRuntime) {
     logger.info(`Initializing plugin: ${this.name}`);
     try {
       // Validate configuration

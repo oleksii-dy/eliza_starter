@@ -3,6 +3,7 @@ import { parseUnits, formatUnits, parseEther } from 'ethers'; // Assuming ethers
 import type { IAgentRuntime } from '@elizaos/core';
 import { logger as elizaLogger } from '@elizaos/core'; // Import elizaLogger
 import { PolygonRpcService } from './PolygonRpcService'; // Import PolygonRpcService
+import { GasPriceInfo } from '../types'; // Kept from merge-addpolygon-resolution
 
 /**
  * Structure of the expected successful response from the PolygonScan Gas Oracle API.
@@ -164,7 +165,7 @@ export const getGasPriceEstimates = async (runtime: IAgentRuntime): Promise<GasP
 };
 
 /**
- * Fetches gas price using the eth_gasPrice RPC method as a fallback.
+ * Fetches gas price using the RPC provider's getGasPrice method as a fallback.
  *
  * @param runtime The IAgentRuntime to access services.
  * @returns A promise resolving to a simplified GasPriceEstimates object.
@@ -177,12 +178,10 @@ const fetchFallbackGasPrice = async (runtime: IAgentRuntime): Promise<GasPriceEs
       throw new Error('PolygonRpcService not available'); // Or return all-null estimates
     }
 
-    const l2Provider = rpcService.getL2Provider();
-    const feeData = await l2Provider.getFeeData();
-    const gasPriceWei = feeData.gasPrice;
+    const gasPriceWei = await rpcService.getGasPrice('L2');
 
     if (gasPriceWei === null || gasPriceWei === undefined) {
-      elizaLogger.warn('Fallback eth_gasPrice (via getFeeData) returned null or undefined.'); // Use elizaLogger
+      elizaLogger.warn('Fallback RPC gas price (via getGasPrice L2) returned null or undefined.'); // Use elizaLogger
       return {
         safeLow: null,
         average: null,
@@ -192,21 +191,19 @@ const fetchFallbackGasPrice = async (runtime: IAgentRuntime): Promise<GasPriceEs
       };
     }
 
-    elizaLogger.warn(`Using fallback eth_gasPrice: ${formatUnits(gasPriceWei, 'gwei')} Gwei`); // Use elizaLogger
+    elizaLogger.warn(`Using fallback RPC gas price: ${formatUnits(gasPriceWei, 'gwei')} Gwei`); // Use elizaLogger
 
     // When using fallback, we only have a single gas price.
-    // We might assign it to 'average' priority or provide it separately.
     // We set priority fees and base fee to null as they aren't directly available.
-    // Providing the raw fallback value allows consumers to decide how to use it.
     return {
       safeLow: null,
-      average: null, // Or potentially { maxPriorityFeePerGas: gasPriceWei } if treating as priority
+      average: null,
       fast: null,
       estimatedBaseFee: null,
-      fallbackGasPrice: gasPriceWei, // Provide the fallback value explicitly
+      fallbackGasPrice: gasPriceWei, // Provide the fallback value directly
     };
   } catch (error: unknown) {
-    elizaLogger.error('Error fetching fallback gas price via eth_gasPrice:', error); // Use elizaLogger
+    elizaLogger.error('Error fetching fallback gas price via RPC:', error); // Use elizaLogger
     // Return empty estimates if fallback also fails
     return {
       safeLow: null,
@@ -217,23 +214,3 @@ const fetchFallbackGasPrice = async (runtime: IAgentRuntime): Promise<GasPriceEs
     };
   }
 };
-
-// Example Usage (remove in final implementation)
-/*
-async function testGas() {
-    // Make sure to set POLYGONSCAN_API_KEY in your environment for testing
-    // e.g., export POLYGONSCAN_API_KEY='YourApiKeyToken'
-    console.log('Fetching gas estimates...');
-    const estimates = await getGasPriceEstimates();
-    console.log('Gas Estimates (Wei):');
-    console.log('  Safe Low Priority Fee:', estimates.safeLow?.maxPriorityFeePerGas?.toString());
-    console.log('  Average Priority Fee: ', estimates.average?.maxPriorityFeePerGas?.toString());
-    console.log('  Fast Priority Fee:    ', estimates.fast?.maxPriorityFeePerGas?.toString());
-    console.log('  Estimated Base Fee: ', estimates.estimatedBaseFee?.toString());
-    if (estimates.fallbackGasPrice !== undefined && estimates.fallbackGasPrice !== null) {
-        console.log('  Fallback Gas Price: ', estimates.fallbackGasPrice.toString(), '(used fallback)');
-    }
-}
-
-testGas().catch(console.error);
-*/
