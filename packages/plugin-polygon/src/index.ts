@@ -45,6 +45,7 @@ import {
 import { HeimdallService } from './services/HeimdallService.js';
 import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService.js';
 import { parseBigIntString } from './utils.js'; // Import from utils
+import { ConfigService } from './services/ConfigService';
 
 // --- Configuration Schema --- //
 const configSchema = z.object({
@@ -92,6 +93,12 @@ const polygonProviderInfo: Provider = {
   name: 'Polygon Provider Info',
   async get(runtime: IAgentRuntime, _message, state): Promise<ProviderResult> {
     try {
+      // Get ConfigService instance
+      const configService = runtime.getService<ConfigService>(ConfigService.serviceType);
+      if (!configService) {
+        throw new Error('ConfigService not available');
+      }
+
       // 1. Initialize WalletProvider to get address
       const polygonWalletProviderInstance = await initWalletProvider(runtime);
       if (!polygonWalletProviderInstance) {
@@ -186,46 +193,50 @@ const polygonProviderInfo: Provider = {
 const polygonProviders: Provider[] = [polygonWalletProvider, polygonProviderInfo];
 
 // --- Define Services --- //
-const polygonServices: (typeof Service)[] = [PolygonRpcService, HeimdallService];
+const polygonServices: (typeof Service)[] = [ConfigService, PolygonRpcService, HeimdallService];
 
 // --- Plugin Definition --- //
 export const polygonPlugin: Plugin = {
   name: '@elizaos/plugin-polygon',
   description: 'Plugin for interacting with the Polygon PoS network and staking.',
 
-  // Configuration loaded from environment/character settings
-  config: {
-    POLYGON_RPC_URL: process.env.POLYGON_RPC_URL,
-    ETHEREUM_RPC_URL: process.env.ETHEREUM_RPC_URL,
-    PRIVATE_KEY: process.env.PRIVATE_KEY,
-    POLYGONSCAN_KEY: process.env.POLYGONSCAN_KEY,
-    HEIMDALL_RPC_URL: process.env.HEIMDALL_RPC_URL,
-  },
+  // Configuration will be loaded via ConfigService from .env files
+  config: {},
 
   // Initialization logic
   async init(config: Record<string, unknown>, runtime: IAgentRuntime) {
     logger.info(`Initializing plugin: ${this.name}`);
     try {
-      // Validate configuration
-      const validatedConfig = await configSchema.parseAsync(config);
-      logger.info('Polygon plugin configuration validated successfully.');
-
-      // Store validated config in runtime settings for services/actions/providers to access
-      // This assumes runtime has a way to store validated plugin config or settings are global
-      for (const [key, value] of Object.entries(validatedConfig)) {
-        if (!runtime.getSetting(key)) {
-          logger.warn(
-            `Setting ${key} was validated but not found via runtime.getSetting. Ensure it is loaded globally before plugin init.`
+      // Initialize and register ConfigService first
+      const configService = new ConfigService(runtime);
+      runtime.registerService(ConfigService.serviceType, configService);
+      
+      // Get configuration from ConfigService
+      const polygonConfig = configService.getPolygonConfig();
+      
+      // Validate configuration using the schema
+      try {
+        await configSchema.parseAsync({
+          POLYGON_RPC_URL: polygonConfig.polygonRpcUrl,
+          ETHEREUM_RPC_URL: polygonConfig.ethereumRpcUrl,
+          PRIVATE_KEY: polygonConfig.privateKey,
+          POLYGONSCAN_KEY: polygonConfig.polygonscanKey,
+          HEIMDALL_RPC_URL: polygonConfig.heimdallRpcUrl,
+          GOVERNOR_ADDRESS: polygonConfig.governorAddress,
+          TOKEN_ADDRESS: polygonConfig.tokenAddress,
+          TIMELOCK_ADDRESS: polygonConfig.timelockAddress
+        });
+        logger.info('Polygon plugin configuration validated successfully.');
+      } catch (validationError) {
+        if (validationError instanceof z.ZodError) {
+          logger.error('Invalid Polygon plugin configuration:', validationError.errors);
+          throw new Error(
+            `Invalid Polygon plugin configuration: ${validationError.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ')}`
           );
         }
+        throw validationError;
       }
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        logger.error('Invalid Polygon plugin configuration:', error.errors);
-        throw new Error(
-          `Invalid Polygon plugin configuration: ${error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ')}`
-        );
-      }
       logger.error('Error during Polygon plugin initialization:', error);
       throw error;
     }

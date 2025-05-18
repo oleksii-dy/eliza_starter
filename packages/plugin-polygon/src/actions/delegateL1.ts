@@ -13,6 +13,7 @@ import {
 } from '@elizaos/core';
 import { ethers, parseUnits } from 'ethers';
 import { PolygonRpcService } from '../services/PolygonRpcService';
+import { ConfigService } from '../services/ConfigService';
 import { delegateL1Template } from '../templates';
 import { parseErrorMessage } from '../errors';
 
@@ -64,28 +65,37 @@ export const delegateL1Action: Action = {
   ): Promise<boolean> => {
     logger.debug('Validating DELEGATE_L1 action...');
 
-    const requiredSettings = [
-      'PRIVATE_KEY',
-      'ETHEREUM_RPC_URL', // L1 RPC needed for delegation
-      'POLYGON_PLUGINS_ENABLED', // Ensure main plugin toggle is on
-    ];
-    for (const setting of requiredSettings) {
-      if (!runtime.getSetting(setting)) {
-        logger.error(`Required setting ${setting} not configured for DELEGATE_L1 action.`);
-        return false;
-      }
-    }
     try {
-      const service = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!service) {
-        logger.error('PolygonRpcService not initialized for DELEGATE_L1.');
+      // Get config service
+      const configService = runtime.getService<ConfigService>(ConfigService.serviceType);
+      if (!configService) {
+        logger.error('ConfigService not available for delegateL1Action.');
         return false;
       }
-    } catch (error: unknown) {
-      logger.error('Error accessing PolygonRpcService during DELEGATE_L1 validation:', error);
+
+      // Check required settings
+      const requiredSettings = ['PRIVATE_KEY', 'ETHEREUM_RPC_URL', 'POLYGON_PLUGINS_ENABLED'];
+      
+      for (const setting of requiredSettings) {
+        const value = configService.get(setting);
+        if (!value) {
+          logger.error(`Required setting ${setting} not configured for delegateL1Action.`);
+          return false;
+        }
+      }
+
+      // Check if PolygonRpcService is available
+      const polygonRpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
+      if (!polygonRpcService) {
+        logger.error('PolygonRpcService not initialized for delegateL1Action.');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      logger.error('Error in delegateL1Action.validate:', error);
       return false;
     }
-    return true;
   },
   handler: async (
     runtime: IAgentRuntime,

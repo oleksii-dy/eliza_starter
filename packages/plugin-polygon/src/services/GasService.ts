@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { parseUnits, formatUnits, parseEther } from 'ethers'; // Assuming ethers v6 for bigint handling
 import type { IAgentRuntime } from '@elizaos/core';
-import { logger as elizaLogger } from '@elizaos/core'; // Import elizaLogger
+import { logger } from '@elizaos/core'; // Import logger
 import { PolygonRpcService } from './PolygonRpcService'; // Import PolygonRpcService
+import { ConfigService } from './ConfigService';
 import { GasPriceInfo } from '../types'; // Kept from merge-addpolygon-resolution
 
 /**
@@ -61,14 +62,14 @@ function gweiToWei(gweiString: string | undefined | null): bigint | null {
     gweiString.trim() === '' ||
     Number.isNaN(Number(gweiString))
   ) {
-    elizaLogger.warn(`Invalid input provided to gweiToWei: ${gweiString}. Returning null.`); // Use elizaLogger
+    logger.warn(`Invalid input provided to gweiToWei: ${gweiString}. Returning null.`); // Use logger
     return null;
   }
 
   try {
     return parseUnits(gweiString, 'gwei');
   } catch (error) {
-    elizaLogger.error(`Error converting Gwei string "${gweiString}" to Wei:`, error); // Use elizaLogger
+    logger.error(`Error converting Gwei string "${gweiString}" to Wei:`, error); // Use logger
     // The original code already correctly returns null here and does not throw.
     // The PR comment "remove throw new Error(...)" referred to a line that was already commented out or removed.
     // The key is to return null, which is happening.
@@ -83,39 +84,44 @@ function gweiToWei(gweiString: string | undefined | null): bigint | null {
  * @returns A promise resolving to GasPriceEstimates object with values in Wei.
  */
 export const getGasPriceEstimates = async (runtime: IAgentRuntime): Promise<GasPriceEstimates> => {
-  let apiKey = runtime.getSetting('POLYGONSCAN_KEY');
-  if (!apiKey) {
-    apiKey = runtime.getSetting('POLYGONSCAN_KEY_FALLBACK');
-  }
-
-  if (!apiKey) {
-    elizaLogger.warn(
-      'POLYGONSCAN_KEY or POLYGONSCAN_KEY_FALLBACK not found in configuration. Falling back to eth_gasPrice.'
-    );
-    return fetchFallbackGasPrice(runtime);
-  }
-
-  const params = {
-    module: 'gastracker',
-    action: 'gasoracle',
-    apikey: apiKey,
-  };
-
   try {
+    // Get ConfigService
+    const configService = runtime.getService<ConfigService>(ConfigService.serviceType);
+    if (!configService) {
+      logger.warn('ConfigService not available. Using fallback method for gas price estimation.');
+      return fetchFallbackGasPrice(runtime);
+    }
+
+    // Get PolygonScan API key from config
+    let apiKey = configService.get<string>('POLYGONSCAN_KEY');
+    if (!apiKey) {
+      apiKey = configService.get<string>('POLYGONSCAN_KEY_FALLBACK');
+    }
+
+    // If no API key is available, use fallback
+    if (!apiKey) {
+      logger.info('No PolygonScan API key found. Using fallback method for gas price estimation.');
+      return fetchFallbackGasPrice(runtime);
+    }
+
+    const params = {
+      module: 'gastracker',
+      action: 'gasoracle',
+      apikey: apiKey,
+    };
+
     const response = await axios.get<PolygonScanGasOracleResponse>(POLYGONSCAN_API_URL, { params });
 
     if (response.status !== 200) {
-      throw new Error(`PolygonScan API request failed with status ${response.status}`);
+      logger.warn(`PolygonScan API request failed with status ${response.status}. Using fallback method.`);
+      return fetchFallbackGasPrice(runtime);
     }
 
     const data = response.data;
 
     // PolygonScan sometimes returns status "0" with a message for errors (like invalid key)
     if (data.status !== '1' || !data.result) {
-      elizaLogger.error(
-        `PolygonScan API returned an error: ${data.message} (Status: ${data.status})`
-      ); // Use elizaLogger
-      elizaLogger.warn('Falling back to eth_gasPrice.'); // Use elizaLogger
+      logger.warn(`PolygonScan API returned invalid data: ${JSON.stringify(data)}. Using fallback method.`);
       return fetchFallbackGasPrice(runtime);
     }
 
@@ -134,7 +140,7 @@ export const getGasPriceEstimates = async (runtime: IAgentRuntime): Promise<GasP
         if (typeof BaseFee === 'string' && !Number.isNaN(Number(BaseFee))) {
           baseFeeWei = parseEther(BaseFee);
         } else {
-          elizaLogger.warn(`Invalid BaseFee format received: ${BaseFee}. Skipping.`); // Use elizaLogger
+          logger.warn(`Invalid BaseFee format received: ${BaseFee}. Skipping.`); // Use logger
           // Try suggestBaseFee if BaseFee is invalid
           baseFeeWei = gweiToWei(suggestBaseFee);
         }
@@ -144,7 +150,7 @@ export const getGasPriceEstimates = async (runtime: IAgentRuntime): Promise<GasP
       }
     } catch (error: unknown) {
       // Catch errors from parseEther or gweiToWei inside this block
-      elizaLogger.error('Error parsing base fee from PolygonScan:', error); // Use elizaLogger
+      logger.error('Error parsing base fee from PolygonScan:', error); // Use logger
       baseFeeWei = null;
     }
 
@@ -158,8 +164,8 @@ export const getGasPriceEstimates = async (runtime: IAgentRuntime): Promise<GasP
     };
   } catch (error: unknown) {
     // This catch block now primarily handles axios network errors or API status != 200
-    elizaLogger.error('Error fetching or parsing PolygonScan gas estimates:', error); // Use elizaLogger
-    elizaLogger.warn('Falling back to eth_gasPrice.'); // Use elizaLogger
+    logger.error('Error fetching or parsing PolygonScan gas estimates:', error); // Use logger
+    logger.warn('Falling back to eth_gasPrice.'); // Use logger
     return fetchFallbackGasPrice(runtime);
   }
 };
@@ -172,16 +178,23 @@ export const getGasPriceEstimates = async (runtime: IAgentRuntime): Promise<GasP
  */
 const fetchFallbackGasPrice = async (runtime: IAgentRuntime): Promise<GasPriceEstimates> => {
   try {
-    const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-    if (!rpcService) {
-      elizaLogger.error('PolygonRpcService not available for fallback gas price.'); // Use elizaLogger
+    const polygonRpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
+    if (!polygonRpcService) {
+      logger.error('PolygonRpcService not available for fallback gas price.'); // Use logger
       throw new Error('PolygonRpcService not available'); // Or return all-null estimates
     }
 
-    const gasPriceWei = await rpcService.getGasPrice('L2');
+    const provider = polygonRpcService.getL2Provider();
+    if (!provider) {
+      logger.error('L2 provider not available for fallback gas price.'); // Use logger
+      throw new Error('L2 provider not available'); // Or return all-null estimates
+    }
 
-    if (gasPriceWei === null || gasPriceWei === undefined) {
-      elizaLogger.warn('Fallback RPC gas price (via getGasPrice L2) returned null or undefined.'); // Use elizaLogger
+    const feeData = await provider.getFeeData();
+    const gasPrice = feeData.gasPrice || null;
+
+    if (gasPrice === null || gasPrice === undefined) {
+      logger.warn('Fallback RPC gas price (via getGasPrice L2) returned null or undefined.'); // Use logger
       return {
         safeLow: null,
         average: null,
@@ -191,7 +204,7 @@ const fetchFallbackGasPrice = async (runtime: IAgentRuntime): Promise<GasPriceEs
       };
     }
 
-    elizaLogger.warn(`Using fallback RPC gas price: ${formatUnits(gasPriceWei, 'gwei')} Gwei`); // Use elizaLogger
+    logger.warn(`Using fallback RPC gas price: ${formatUnits(gasPrice, 'gwei')} Gwei`); // Use logger
 
     // When using fallback, we only have a single gas price.
     // We set priority fees and base fee to null as they aren't directly available.
@@ -200,10 +213,10 @@ const fetchFallbackGasPrice = async (runtime: IAgentRuntime): Promise<GasPriceEs
       average: null,
       fast: null,
       estimatedBaseFee: null,
-      fallbackGasPrice: gasPriceWei, // Provide the fallback value directly
+      fallbackGasPrice: gasPrice, // Provide the fallback value directly
     };
   } catch (error: unknown) {
-    elizaLogger.error('Error fetching fallback gas price via RPC:', error); // Use elizaLogger
+    logger.error('Error fetching fallback gas price via RPC:', error); // Use logger
     // Return empty estimates if fallback also fails
     return {
       safeLow: null,
