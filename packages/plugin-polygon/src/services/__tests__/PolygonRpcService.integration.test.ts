@@ -1,8 +1,15 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest'; // Removed beforeEach, afterEach
+import { vi } from 'vitest';
+
+// Unmock modules that are globally mocked in vitest.setup.ts
+// to ensure integration tests use the actual implementations.
+vi.unmock('ethers');
+vi.unmock('@elizaos/core');
+
+import { describe, it, expect, beforeAll } from 'vitest'; // Removed beforeEach, afterEach
 import { PolygonRpcService } from '../PolygonRpcService';
 import type { IAgentRuntime } from '@elizaos/core';
-// No ethers import here, will use actual ethers
-// No logger mock here, will use actual logger from @elizaos/core
+// No ethers import here, will use actual ethers (due to vi.unmock)
+// No logger mock here, will use actual logger from @elizaos/core (due to vi.unmock)
 
 // Constants for integration tests
 const KNOWN_HISTORICAL_CHECKPOINT_MAINNET = 20000000n;

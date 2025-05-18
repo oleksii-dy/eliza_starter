@@ -99,12 +99,20 @@ export class PolygonRpcService extends Service {
       throw new Error('Runtime required');
     }
 
-    const l1RpcUrl = this.runtime.getSetting('ETHEREUM_RPC_URL');
-    const l2RpcUrl = this.runtime.getSetting('POLYGON_RPC_URL');
+    let l1RpcUrl = this.runtime.getSetting('ETHEREUM_RPC_URL');
+    if (!l1RpcUrl) {
+      l1RpcUrl = this.runtime.getSetting('ETHEREUM_RPC_URL_FALLBACK');
+    }
+
+    let l2RpcUrl = this.runtime.getSetting('POLYGON_RPC_URL');
+    if (!l2RpcUrl) {
+      l2RpcUrl = this.runtime.getSetting('POLYGON_RPC_URL_FALLBACK');
+    }
+
     const privateKey = this.runtime.getSetting('PRIVATE_KEY'); // Get private key
 
     if (!l1RpcUrl || !l2RpcUrl) {
-      throw new Error('Missing L1/L2 RPC URLs');
+      throw new Error('Missing L1/L2 RPC URLs (including fallbacks)');
     }
     if (!privateKey) {
       throw new Error('Missing PRIVATE_KEY for signer initialization');

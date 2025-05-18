@@ -1,7 +1,10 @@
 import { defineConfig } from 'vitest/config';
 import path from 'node:path';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default defineConfig({
+  plugins: [tsconfigPaths() as any],
   test: {
     globals: true, // Enable global API (describe, it, expect, etc.)
     environment: 'node',

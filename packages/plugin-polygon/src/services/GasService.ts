@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { parseUnits, formatUnits, parseEther } from 'ethers'; // Assuming ethers v6 for bigint handling
 import type { IAgentRuntime } from '@elizaos/core';
+import { logger as elizaLogger } from '@elizaos/core'; // Import elizaLogger
 import { PolygonRpcService } from './PolygonRpcService'; // Import PolygonRpcService
 
 /**
@@ -54,25 +55,23 @@ const POLYGONSCAN_API_URL = 'https://api.polygonscan.com/api';
  * @returns Value in Wei (as bigint), or null if conversion fails.
  */
 function gweiToWei(gweiString: string | undefined | null): bigint | null {
-  // Allow undefined/null input
-  // Check if input is a valid string and looks like a number (simple check)
   if (
     typeof gweiString !== 'string' ||
     gweiString.trim() === '' ||
     Number.isNaN(Number(gweiString))
   ) {
-    console.warn(`Invalid input provided to gweiToWei: ${gweiString}. Returning null.`);
-    return null; // Return null for invalid inputs
+    elizaLogger.warn(`Invalid input provided to gweiToWei: ${gweiString}. Returning null.`); // Use elizaLogger
+    return null;
   }
 
   try {
-    // Use parseUnits which handles decimals correctly
     return parseUnits(gweiString, 'gwei');
   } catch (error) {
-    console.error(`Error converting Gwei string "${gweiString}" to Wei:`, error);
-    // Explicitly return null on parsing error as well
+    elizaLogger.error(`Error converting Gwei string "${gweiString}" to Wei:`, error); // Use elizaLogger
+    // The original code already correctly returns null here and does not throw.
+    // The PR comment "remove throw new Error(...)" referred to a line that was already commented out or removed.
+    // The key is to return null, which is happening.
     return null;
-    // throw new Error(`Invalid Gwei value format: ${gweiString}`); // Don't throw
   }
 }
 
@@ -83,10 +82,15 @@ function gweiToWei(gweiString: string | undefined | null): bigint | null {
  * @returns A promise resolving to GasPriceEstimates object with values in Wei.
  */
 export const getGasPriceEstimates = async (runtime: IAgentRuntime): Promise<GasPriceEstimates> => {
-  const apiKey = runtime.getSetting('POLYGONSCAN_KEY');
+  let apiKey = runtime.getSetting('POLYGONSCAN_KEY');
+  if (!apiKey) {
+    apiKey = runtime.getSetting('POLYGONSCAN_KEY_FALLBACK');
+  }
 
   if (!apiKey) {
-    console.warn('POLYGONSCAN_KEY not found in configuration. Falling back to eth_gasPrice.');
+    elizaLogger.warn(
+      'POLYGONSCAN_KEY or POLYGONSCAN_KEY_FALLBACK not found in configuration. Falling back to eth_gasPrice.'
+    );
     return fetchFallbackGasPrice(runtime);
   }
 
@@ -107,8 +111,10 @@ export const getGasPriceEstimates = async (runtime: IAgentRuntime): Promise<GasP
 
     // PolygonScan sometimes returns status "0" with a message for errors (like invalid key)
     if (data.status !== '1' || !data.result) {
-      console.error(`PolygonScan API returned an error: ${data.message} (Status: ${data.status})`);
-      console.warn('Falling back to eth_gasPrice.');
+      elizaLogger.error(
+        `PolygonScan API returned an error: ${data.message} (Status: ${data.status})`
+      ); // Use elizaLogger
+      elizaLogger.warn('Falling back to eth_gasPrice.'); // Use elizaLogger
       return fetchFallbackGasPrice(runtime);
     }
 
@@ -127,7 +133,7 @@ export const getGasPriceEstimates = async (runtime: IAgentRuntime): Promise<GasP
         if (typeof BaseFee === 'string' && !Number.isNaN(Number(BaseFee))) {
           baseFeeWei = parseEther(BaseFee);
         } else {
-          console.warn(`Invalid BaseFee format received: ${BaseFee}. Skipping.`);
+          elizaLogger.warn(`Invalid BaseFee format received: ${BaseFee}. Skipping.`); // Use elizaLogger
           // Try suggestBaseFee if BaseFee is invalid
           baseFeeWei = gweiToWei(suggestBaseFee);
         }
@@ -137,7 +143,7 @@ export const getGasPriceEstimates = async (runtime: IAgentRuntime): Promise<GasP
       }
     } catch (error: unknown) {
       // Catch errors from parseEther or gweiToWei inside this block
-      console.error('Error parsing base fee from PolygonScan:', error);
+      elizaLogger.error('Error parsing base fee from PolygonScan:', error); // Use elizaLogger
       baseFeeWei = null;
     }
 
@@ -151,8 +157,8 @@ export const getGasPriceEstimates = async (runtime: IAgentRuntime): Promise<GasP
     };
   } catch (error: unknown) {
     // This catch block now primarily handles axios network errors or API status != 200
-    console.error('Error fetching or parsing PolygonScan gas estimates:', error);
-    console.warn('Falling back to eth_gasPrice.');
+    elizaLogger.error('Error fetching or parsing PolygonScan gas estimates:', error); // Use elizaLogger
+    elizaLogger.warn('Falling back to eth_gasPrice.'); // Use elizaLogger
     return fetchFallbackGasPrice(runtime);
   }
 };
@@ -167,7 +173,7 @@ const fetchFallbackGasPrice = async (runtime: IAgentRuntime): Promise<GasPriceEs
   try {
     const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
     if (!rpcService) {
-      console.error('PolygonRpcService not available for fallback gas price.');
+      elizaLogger.error('PolygonRpcService not available for fallback gas price.'); // Use elizaLogger
       throw new Error('PolygonRpcService not available'); // Or return all-null estimates
     }
 
@@ -176,7 +182,7 @@ const fetchFallbackGasPrice = async (runtime: IAgentRuntime): Promise<GasPriceEs
     const gasPriceWei = feeData.gasPrice;
 
     if (gasPriceWei === null || gasPriceWei === undefined) {
-      console.warn('Fallback eth_gasPrice (via getFeeData) returned null or undefined.');
+      elizaLogger.warn('Fallback eth_gasPrice (via getFeeData) returned null or undefined.'); // Use elizaLogger
       return {
         safeLow: null,
         average: null,
@@ -186,7 +192,7 @@ const fetchFallbackGasPrice = async (runtime: IAgentRuntime): Promise<GasPriceEs
       };
     }
 
-    console.warn(`Using fallback eth_gasPrice: ${formatUnits(gasPriceWei, 'gwei')} Gwei`);
+    elizaLogger.warn(`Using fallback eth_gasPrice: ${formatUnits(gasPriceWei, 'gwei')} Gwei`); // Use elizaLogger
 
     // When using fallback, we only have a single gas price.
     // We might assign it to 'average' priority or provide it separately.
@@ -200,7 +206,7 @@ const fetchFallbackGasPrice = async (runtime: IAgentRuntime): Promise<GasPriceEs
       fallbackGasPrice: gasPriceWei, // Provide the fallback value explicitly
     };
   } catch (error: unknown) {
-    console.error('Error fetching fallback gas price via eth_gasPrice:', error);
+    elizaLogger.error('Error fetching fallback gas price via eth_gasPrice:', error); // Use elizaLogger
     // Return empty estimates if fallback also fails
     return {
       safeLow: null,

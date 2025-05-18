@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDirs": ["src", "."],
     "lib": ["ESNext"],
     "target": "ESNext",
     "module": "Preserve",
@@ -24,8 +24,9 @@
     "baseUrl": ".",
     "paths": {
       "@elizaos/core": ["../core/src"],
-      "@elizaos/core/*": ["../core/src/*"]
+      "@elizaos/core/*": ["../core/src/*"],
+      "~/vitest.setup": ["./vitest.setup.ts"]
     }
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "vitest.setup.ts"]
 }
