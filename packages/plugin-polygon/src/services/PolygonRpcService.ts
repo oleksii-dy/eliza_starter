@@ -20,6 +20,7 @@ import StakeManagerABI from '../contracts/StakeManagerABI.json';
 import ValidatorShareABI from '../contracts/ValidatorShareABI.json';
 import RootChainManagerABI from '../contracts/RootChainManagerABI.json';
 import Erc20ABI from '../contracts/ERC20ABI.json';
+import CheckpointManagerABI from '../contracts/CheckpointManagerABI.json';
 
 // Re-import GasService components
 import { getGasPriceEstimates, type GasPriceEstimates } from './GasService';
@@ -371,19 +372,60 @@ export class PolygonRpcService extends Service {
 
       // Parse the result struct (adjust indices/names based on ABI)
       const status = result.status as ValidatorStatus; // Cast to enum
-      // const commissionRate = Number(result.commissionRate) / 10000; // TODO: commissionRate not in ABI's validators struct
       const totalStake = BigInt(result.amount.toString()); // 'amount' from ABI seems to be total stake
+
+      // Get commission rate from direct StakeManager call
+      let commissionRate = 0;
+      let lastRewardUpdateEpoch = 0n;
+
+      try {
+        // Try to get commission rate directly from the validators struct
+        if (result.commissionRate !== undefined) {
+          commissionRate = Number(result.commissionRate) / 10000; // Convert from basis points (100 = 1%)
+        }
+
+        // Alternatively, try getting from ValidatorShare contract if it exists
+        else if (result.contractAddress && result.contractAddress !== ZeroAddress) {
+          try {
+            const validatorShareContract = new Contract(
+              result.contractAddress,
+              ValidatorShareABI,
+              this.getProvider('L1')
+            );
+
+            // Try to get commission rate from validator share contract if it exposes it
+            if (typeof validatorShareContract.commissionRate === 'function') {
+              const commissionRateResult = await validatorShareContract.commissionRate();
+              commissionRate = Number(commissionRateResult) / 10000;
+            }
+          } catch (e) {
+            // Silently handle this specific error - it's expected if the method doesn't exist
+            logger.debug(
+              `Commission rate not accessible from ValidatorShare contract: ${e.message}`
+            );
+          }
+        }
+
+        // Try to get last commission update epoch (which could indicate last reward update)
+        if (result.lastCommissionUpdate !== undefined) {
+          lastRewardUpdateEpoch = BigInt(result.lastCommissionUpdate.toString());
+        }
+      } catch (commError) {
+        logger.warn(
+          `Failed to fetch commission rate for validator ${validatorId}, defaulting to 0: ${commError}`
+        );
+      }
 
       const info: ValidatorInfo = {
         status: status,
         totalStake: totalStake,
-        commissionRate: 0, // TODO: Set to 0 or fetch differently, not in 'validators' struct
+        commissionRate: commissionRate, // Now includes fetched commission rate or defaults to 0
         signerAddress: result.signer,
         activationEpoch: BigInt(result.activationEpoch.toString()),
         deactivationEpoch: BigInt(result.deactivationEpoch.toString()),
         jailEndEpoch: BigInt(result.jailTime.toString()), // 'jailTime' from ABI
         contractAddress: result.contractAddress, // ValidatorShare contract address
-        lastRewardUpdateEpoch: 0n, // TODO: Set to 0 or fetch differently, not in 'validators' struct
+        lastRewardUpdateEpoch: lastRewardUpdateEpoch, // Set to fetched value or defaults to 0
         // Add other fields as needed
       };
       return info;
@@ -483,30 +525,16 @@ export class PolygonRpcService extends Service {
     const contract = await this._getValidatorShareContract(validatorId);
 
     try {
-      // 1. Prepare Transaction Data
-      // Note: Using populateTransaction to separate data prep from sending
-      const txData = await contract.buyVoucher.populateTransaction(amountWei, 0n); // _minSharesToMint = 0
+      const stakeManager = this.getStakeManagerContract();
+      const txData = await stakeManager.delegate.populateTransaction(validatorId, amountWei);
 
-      // 2. Get Gas Estimates (using GasService via runtime)
-      if (!this.runtime) throw new Error('Runtime context needed for gas estimation');
-      const gasEstimates: GasPriceEstimates = await getGasPriceEstimates(this.runtime);
-      if (!gasEstimates.estimatedBaseFee || !gasEstimates.average?.maxPriorityFeePerGas) {
-        // Fallback or error if estimates aren't complete (adjust as needed)
-        throw new Error('Could not retrieve complete gas estimates from GasService for L1.');
-        // TODO: Consider adding an L1 gas estimation capability if GasService is L2 only
-      }
-      // Use average priority fee for simplicity, adjust strategy if needed
-      const maxPriorityFeePerGas = gasEstimates.average.maxPriorityFeePerGas;
-      const maxFeePerGas = gasEstimates.estimatedBaseFee + maxPriorityFeePerGas;
+      const { maxFeePerGas, maxPriorityFeePerGas } = await this._getL1FeeDetails();
 
-      // 3. Estimate Gas Limit
-      const gasLimit = await signer.estimateGas({
-        ...txData,
-        value: amountWei,
-      });
+      // Estimate gas for the specific transaction
+      const gasLimit = await signer.estimateGas({ ...txData });
       const gasLimitBuffered = (gasLimit * 120n) / 100n; // Add 20% buffer
 
-      // 4. Construct Full Transaction
+      // Construct Full Transaction
       const tx: TransactionRequest = {
         ...txData,
         value: amountWei,
@@ -516,16 +544,16 @@ export class PolygonRpcService extends Service {
         chainId: (await l1Provider.getNetwork()).chainId, // Ensure correct chain ID
       };
 
-      // 5. Sign Transaction
+      // Sign Transaction
       logger.debug('Signing delegation transaction...', tx);
       const signedTx = await signer.signTransaction(tx);
 
-      // 6. Broadcast Transaction
+      // Broadcast Transaction
       logger.info(`Broadcasting L1 delegation transaction for validator ${validatorId}...`);
       const txResponse = await this.sendRawTransaction(signedTx, 'L1');
       logger.info(`Delegation transaction sent: ${txResponse.hash}`);
 
-      // 7. Return Hash (Consider adding wait option later)
+      // Return Hash (Consider adding wait option later)
       return txResponse.hash;
     } catch (error: unknown) {
       logger.error(`Delegation to validator ${validatorId} failed:`, error);
@@ -558,13 +586,7 @@ export class PolygonRpcService extends Service {
       const txData = await contract.sellVoucher.populateTransaction(sharesAmountWei, 0n); // _minClaimAmount = 0
 
       // 2. Get Gas Estimates
-      if (!this.runtime) throw new Error('Runtime context needed for gas estimation');
-      const gasEstimates: GasPriceEstimates = await getGasPriceEstimates(this.runtime);
-      if (!gasEstimates.estimatedBaseFee || !gasEstimates.average?.maxPriorityFeePerGas) {
-        throw new Error('Could not retrieve complete gas estimates for L1.');
-      }
-      const maxPriorityFeePerGas = gasEstimates.average.maxPriorityFeePerGas;
-      const maxFeePerGas = gasEstimates.estimatedBaseFee + maxPriorityFeePerGas;
+      const { maxFeePerGas, maxPriorityFeePerGas } = await this._getL1FeeDetails();
 
       // 3. Estimate Gas Limit
       const gasLimit = await signer.estimateGas({ ...txData }); // No value needed
@@ -614,13 +636,7 @@ export class PolygonRpcService extends Service {
       const txData = await contract.withdrawRewards.populateTransaction();
 
       // 2. Get Gas Estimates
-      if (!this.runtime) throw new Error('Runtime context needed for gas estimation');
-      const gasEstimates: GasPriceEstimates = await getGasPriceEstimates(this.runtime);
-      if (!gasEstimates.estimatedBaseFee || !gasEstimates.average?.maxPriorityFeePerGas) {
-        throw new Error('Could not retrieve complete gas estimates for L1.');
-      }
-      const maxPriorityFeePerGas = gasEstimates.average.maxPriorityFeePerGas;
-      const maxFeePerGas = gasEstimates.estimatedBaseFee + maxPriorityFeePerGas;
+      const { maxFeePerGas, maxPriorityFeePerGas } = await this._getL1FeeDetails();
 
       // 3. Estimate Gas Limit
       const gasLimit = await signer.estimateGas({ ...txData }); // No value needed
@@ -738,48 +754,41 @@ export class PolygonRpcService extends Service {
       await this._approveErc20IfNeeded(tokenAddressL1, amountWei, ROOT_CHAIN_MANAGER_ADDRESS_L1);
       // Approval (if sent) is confirmed within the helper
 
-      // 2. Prepare depositFor transaction data
-      logger.debug('Preparing depositFor transaction...');
-      const depositData = ethers.AbiCoder.defaultAbiCoder().encode(['uint256'], [amountWei]);
-      const txData = await rootChainManager.depositFor.populateTransaction(
+      // 2. Prepare and send the depositFor transaction
+      const txDepositData = await rootChainManager.depositFor.populateTransaction(
         userAddress,
         tokenAddressL1,
-        depositData
+        amountWei
       );
 
-      // 3. Get Gas Estimates for depositFor
-      if (!this.runtime) throw new Error('Runtime context needed for gas estimation');
-      const gasEstimates: GasPriceEstimates = await getGasPriceEstimates(this.runtime);
-      if (!gasEstimates.estimatedBaseFee || !gasEstimates.average?.maxPriorityFeePerGas) {
-        throw new Error('Could not retrieve complete gas estimates for L1 deposit.');
-      }
-      const maxPriorityFeePerGas = gasEstimates.average.maxPriorityFeePerGas;
-      const maxFeePerGas = gasEstimates.estimatedBaseFee + maxPriorityFeePerGas;
+      const { maxFeePerGas, maxPriorityFeePerGas } = await this._getL1FeeDetails();
 
-      // 4. Estimate Gas Limit for depositFor
-      const gasLimit = await signer.estimateGas({ ...txData }); // No value needed for depositFor
-      const gasLimitBuffered = (gasLimit * 150n) / 100n; // Use a larger buffer for bridge tx?
+      const gasLimitDeposit = await signer.estimateGas({
+        ...txDepositData,
+        maxFeePerGas: maxFeePerGas,
+        maxPriorityFeePerGas: maxPriorityFeePerGas,
+        chainId: (await l1Provider.getNetwork()).chainId,
+      });
 
-      // 5. Construct Full Transaction
+      // 3. Construct Full Transaction
       const tx: TransactionRequest = {
-        ...txData,
-        // No value field for depositFor
-        gasLimit: gasLimitBuffered,
+        ...txDepositData,
+        gasLimit: gasLimitDeposit,
         maxFeePerGas: maxFeePerGas,
         maxPriorityFeePerGas: maxPriorityFeePerGas,
         chainId: (await l1Provider.getNetwork()).chainId,
       };
 
-      // 6. Sign Transaction
+      // 4. Sign Transaction
       logger.debug('Signing depositFor transaction...', tx);
       const signedTx = await signer.signTransaction(tx);
 
-      // 7. Broadcast Transaction
+      // 5. Broadcast Transaction
       logger.info(`Broadcasting L1 depositFor transaction for token ${tokenAddressL1}...`);
       const txResponse = await this.sendRawTransaction(signedTx, 'L1');
       logger.info(`Bridge deposit transaction sent: ${txResponse.hash}`);
 
-      // 8. Return Hash of the deposit transaction
+      // 6. Return Hash of the deposit transaction
       return txResponse.hash;
     } catch (error: unknown) {
       logger.error(`Bridge deposit for token ${tokenAddressL1} failed:`, error);
@@ -861,13 +870,7 @@ export class PolygonRpcService extends Service {
     try {
       const txData = await tokenContract.approve.populateTransaction(spender, amount);
 
-      if (!this.runtime) throw new Error('Runtime context needed for gas estimation');
-      const gasEstimates: GasPriceEstimates = await getGasPriceEstimates(this.runtime); // Assuming L1 estimates ok
-      if (!gasEstimates.estimatedBaseFee || !gasEstimates.average?.maxPriorityFeePerGas) {
-        throw new Error('Could not retrieve complete gas estimates for L1 approval.');
-      }
-      const maxPriorityFeePerGas = gasEstimates.average.maxPriorityFeePerGas;
-      const maxFeePerGas = gasEstimates.estimatedBaseFee + maxPriorityFeePerGas;
+      const { maxFeePerGas, maxPriorityFeePerGas } = await this._getL1FeeDetails();
 
       const gasLimit = await signer.estimateGas({ ...txData });
       const gasLimitBuffered = (gasLimit * 150n) / 100n; // Increase buffer for approve? 50%
@@ -892,6 +895,63 @@ export class PolygonRpcService extends Service {
     }
   }
 
+  // Helper for L1 Fee Details
+  private async _getL1FeeDetails(): Promise<{
+    maxFeePerGas: bigint;
+    maxPriorityFeePerGas: bigint;
+  }> {
+    if (!this.l1Provider) throw new Error('L1 provider not initialized for fee data.');
+    // Runtime check is inside getGasPriceEstimates, but good to be explicit if we use it directly often
+    if (!this.runtime) throw new Error('Runtime not available for GasService access.');
+
+    try {
+      const gasServiceEstimates = await getGasPriceEstimates(this.runtime);
+      // Check if GasService provided sufficient EIP-1559 data
+      if (
+        gasServiceEstimates?.estimatedBaseFee &&
+        gasServiceEstimates?.average?.maxPriorityFeePerGas
+      ) {
+        const maxPriorityFeePerGas = gasServiceEstimates.average.maxPriorityFeePerGas;
+        const maxFeePerGas = gasServiceEstimates.estimatedBaseFee + maxPriorityFeePerGas;
+        logger.debug('Using L1 fee details from GasService.');
+        return { maxFeePerGas, maxPriorityFeePerGas };
+      }
+    } catch (gsError) {
+      logger.warn(
+        `GasService call failed or returned insufficient data: ${gsError.message}. Falling back to l1Provider.getFeeData().`
+      );
+    }
+
+    // Fallback to l1Provider.getFeeData()
+    logger.debug('Falling back to l1Provider.getFeeData() for L1 fee details.');
+    const feeData = await this.l1Provider.getFeeData();
+    let maxFeePerGas = feeData.maxFeePerGas;
+    let maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+
+    if (maxFeePerGas === null || maxPriorityFeePerGas === null) {
+      if (feeData.gasPrice !== null) {
+        logger.warn(
+          'L1 fee data: maxFeePerGas or maxPriorityFeePerGas is null, using gasPrice as fallback (legacy transaction type).'
+        );
+        // For legacy tx, or if EIP-1559 not fully supported by provider via getFeeData, use gasPrice.
+        // maxFeePerGas and maxPriorityFeePerGas will effectively be the same as gasPrice.
+        maxFeePerGas = feeData.gasPrice;
+        maxPriorityFeePerGas = feeData.gasPrice;
+      } else {
+        throw new Error(
+          'Unable to obtain L1 fee data: getFeeData() returned all null for EIP-1559 fields and gasPrice.'
+        );
+      }
+    }
+
+    if (maxFeePerGas === null || maxPriorityFeePerGas === null) {
+      // This should ideally not be reached if gasPrice fallback worked.
+      throw new Error('Unable to determine L1 fee details even after fallback attempts.');
+    }
+
+    return { maxFeePerGas, maxPriorityFeePerGas };
+  }
+
   // --- L2 Checkpoint Status Check (L1) ---
 
   /**
@@ -899,19 +959,50 @@ export class PolygonRpcService extends Service {
    * @returns A promise resolving to the last checkpointed L2 block number as a bigint.
    */
   async getLastCheckpointedL2Block(): Promise<bigint> {
-    logger.debug('Getting last checkpointed L2 block number from L1 RootChainManager...');
+    logger.debug(
+      'Getting last checkpointed L2 block number from L1 RootChainManager/CheckpointManager...'
+    );
     try {
       const rootChainManager = this.getRootChainManagerContract();
-      // Call the `lastChildBlock()` view function (Verify exact name from ABI)
-      // TODO: 'lastChildBlock' function not found in provided RootChainManagerABI.json.
-      // const lastBlockBigInt: BigNumberish = await rootChainManager.lastChildBlock();
-      const lastBlockBigInt: BigNumberish = BigInt(0); // Placeholder
-      const lastBlock = BigInt(lastBlockBigInt.toString());
-      logger.info(`Last L2 block checkpointed on L1: ${lastBlock}`);
+      if (!this.l1Provider) {
+        throw new Error('L1 provider not initialized for CheckpointManager interaction.');
+      }
+
+      const checkpointManagerAddr = await rootChainManager.checkpointManagerAddress();
+      if (!checkpointManagerAddr || checkpointManagerAddr === ZeroAddress) {
+        throw new Error(
+          'CheckpointManager address not found or is zero address from RootChainManager.'
+        );
+      }
+
+      const checkpointManager = new Contract(
+        checkpointManagerAddr,
+        CheckpointManagerABI,
+        this.l1Provider
+      );
+
+      const lastHeaderNum = await checkpointManager.currentHeaderBlock();
+      if (lastHeaderNum === undefined || lastHeaderNum === null) {
+        throw new Error('Failed to retrieve currentHeaderBlock from CheckpointManager.');
+      }
+
+      const headerBlockDetails = await checkpointManager.headerBlocks(lastHeaderNum);
+
+      if (!headerBlockDetails || headerBlockDetails.endBlock === undefined) {
+        throw new Error(
+          'Failed to retrieve valid headerBlockDetails or endBlock from CheckpointManager.'
+        );
+      }
+
+      const endBlock = headerBlockDetails.endBlock;
+      const lastBlock = BigInt(endBlock.toString());
+      logger.info(`Last L2 block checkpointed on L1 (via CheckpointManager): ${lastBlock}`);
       return lastBlock;
-    } catch (error) {
-      logger.error('Error fetching last checkpointed L2 block from L1 RootChainManager:', error);
-      throw error; // Re-throw for upstream handling
+    } catch (error: unknown) {
+      logger.error('Error fetching last checkpointed L2 block from L1:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      // Rethrow with a more specific message if needed, or just the original error
+      throw new Error(`Failed to get last checkpointed L2 block: ${errorMessage}`);
     }
   }
 
@@ -921,13 +1012,7 @@ export class PolygonRpcService extends Service {
    * @returns A promise resolving to true if the block is checkpointed, false otherwise.
    */
   async isL2BlockCheckpointed(l2BlockNumber: number | bigint): Promise<boolean> {
-    // TODO: This function depends on getLastCheckpointedL2Block, which has an ABI issue.
-    logger.warn(
-      'isL2BlockCheckpointed is currently non-functional due to missing lastChildBlock in ABI.'
-    );
-    return false;
-    /*
-    const targetBlock = BigInt(l2BlockNumber.toString()); // Ensure bigint for comparison
+    const targetBlock = BigInt(l2BlockNumber.toString());
     logger.debug(`Checking if L2 block ${targetBlock} is checkpointed on L1...`);
     try {
       const lastCheckpointedBlock = await this.getLastCheckpointedL2Block();
@@ -936,15 +1021,16 @@ export class PolygonRpcService extends Service {
         `L2 block ${targetBlock} checkpointed status: ${isCheckpointed} (Last Checkpointed: ${lastCheckpointedBlock})`
       );
       return isCheckpointed;
-    } catch (error) {
-      // Error occurred fetching the last checkpoint, status is uncertain
+    } catch (error: unknown) {
       logger.error(
-        `Could not determine checkpoint status for L2 block ${targetBlock} due to error fetching last checkpoint.`
+        `Could not determine checkpoint status for L2 block ${targetBlock} due to error fetching last checkpoint.`,
+        error
       );
-      throw new Error(`Failed to determine checkpoint status for L2 block ${targetBlock}.`);
-      // Or return false / specific error state depending on desired behavior
-      // return false;
+      // Consistent with user plan: if getLastCheckpointedL2Block fails, this should also fail rather than return false.
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Failed to determine checkpoint status for L2 block ${targetBlock}: ${errorMessage}`
+      );
     }
-    */
   }
 }
