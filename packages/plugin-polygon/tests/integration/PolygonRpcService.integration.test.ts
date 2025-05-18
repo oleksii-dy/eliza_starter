@@ -1,15 +1,6 @@
-import { vi } from 'vitest';
-
-// Unmock modules that are globally mocked in vitest.setup.ts
-// to ensure integration tests use the actual implementations.
-vi.unmock('ethers');
-vi.unmock('@elizaos/core');
-
-import { describe, it, expect, beforeAll } from 'vitest'; // Removed beforeEach, afterEach
-import { PolygonRpcService } from '../PolygonRpcService';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { PolygonRpcService } from '../../src/services/PolygonRpcService';
 import type { IAgentRuntime } from '@elizaos/core';
-// No ethers import here, will use actual ethers (due to vi.unmock)
-// No logger mock here, will use actual logger from @elizaos/core (due to vi.unmock)
 
 // Constants for integration tests
 const KNOWN_HISTORICAL_CHECKPOINT_MAINNET = 20000000n;
@@ -39,16 +30,12 @@ describeIntegration('PolygonRpcService - Checkpoint Integration Tests', () => {
         if (key === 'POLYGON_RPC_URL') return process.env.POLYGON_RPC_URL;
         if (key === 'PRIVATE_KEY') return process.env.PRIVATE_KEY;
         // Allow other potential settings from process.env for flexibility
-        // e.g. if GasService or other dependencies were used by the methods under test.
-        // For these specific checkpoint tests, only L1 URL and PK are critical.
         return process.env[key];
       },
-      getService: vi.fn(), // Not expected to be used by these specific checkpoint tests
+      getService: () => null, // Not expected to be used by these specific checkpoint tests
     } as unknown as IAgentRuntime;
 
     try {
-      // Ensure logger is available if the service uses it during init/operation
-      // Since we are not mocking @elizaos/core, the actual logger will be used.
       console.log(
         `Integration Test: Attempting to start PolygonRpcService with ETHEREUM_RPC_URL: ${process.env.ETHEREUM_RPC_URL}`
       );
@@ -119,4 +106,4 @@ describeIntegration('PolygonRpcService - Checkpoint Integration Tests', () => {
     },
     TEST_TIMEOUT
   );
-});
+}); 

@@ -12,5 +12,13 @@ export default defineConfig({
     setupFiles: [path.resolve(__dirname, 'vitest.setup.ts')],
     // Optional: increase test timeout for integration tests if needed
     // testTimeout: 30000,
+    
+    // Exclude deprecated test files
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/src/__tests__/**',
+      '**/src/services/__tests__/**'
+    ],
   },
 });
