@@ -1,13 +1,28 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
     "sourceMap": true,
     "inlineSources": true,
     "declaration": true,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@elizaos/core": ["../core/dist"],
+      "@elizaos/core/*": ["../core/dist/*"]
+    },
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ESNext",
+    "lib": ["ESNext", "dom"],
+    "isolatedModules": true,
+    "resolveJsonModule": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "references": [{ "path": "../core" }]
 }

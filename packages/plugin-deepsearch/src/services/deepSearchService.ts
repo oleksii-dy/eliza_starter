@@ -12,21 +12,40 @@ export interface DeepSearchAnswer {
 export class DeepSearchService extends Service {
   static serviceType: string = 'deepsearch';
   capabilityDescription = 'Performs iterative web research';
-  private config: DeepSearchConfig;
+  public config: DeepSearchConfig; // Changed to public
 
-  constructor(runtime: IAgentRuntime, config: DeepSearchConfig) {
+  constructor(runtime: IAgentRuntime, config?: DeepSearchConfig) {
     super(runtime);
-    this.config = config;
+    if (config) {
+      this.config = config;
+    } else {
+      // Initialize with a default or expect runtime to set it
+      this.config = {
+        search_provider: 'firecrawl',
+        token_budget: 16000,
+        max_iterations: 3,
+      };
+      logger.warn(`DeepSearchService instantiated without explicit config. Using defaults.`);
+    }
   }
 
-  static async start(runtime: IAgentRuntime) {
-    const cfg = {
+  static async start(runtime: IAgentRuntime, initialConfig?: Partial<DeepSearchConfig>) {
+    // The runtime is responsible for merging default, plugin-specific, and user configs.
+    // This static start method can prepare an initial or default config if absolutely necessary
+    // before the service instance is created by the runtime with the final merged config.
+    // For now, we assume the plugin's defaultConfigSchema is the primary source for defaults.
+    const defaultConfig: DeepSearchConfig = {
       search_provider: 'firecrawl',
       token_budget: 16000,
       max_iterations: 3,
-      ...(runtime.getConfig('deepSearch') as Partial<DeepSearchConfig>),
-    } as DeepSearchConfig;
-    return new DeepSearchService(runtime, cfg);
+      ...(initialConfig || {}),
+    };
+    // The actual service instance will be created by the runtime,
+    // passing the fully resolved config to the constructor.
+    // This static start is more of a factory/setup hook.
+    // We return a new instance here as per the original structure, assuming the runtime
+    // might call this static method to get an instance, providing its own config later or using this.
+    return new DeepSearchService(runtime, defaultConfig);
   }
 
   async stop() {}
@@ -34,7 +53,7 @@ export class DeepSearchService extends Service {
   async ask(
     question: string,
     opts: Record<string, unknown>,
-    callback: HandlerCallback,
+    callback: HandlerCallback
   ): Promise<DeepSearchAnswer> {
     logger.debug(`DeepSearchService.ask called with question: ${question}`);
     const depth = Number(opts.depth ?? this.config.max_iterations ?? 2);
@@ -43,7 +62,7 @@ export class DeepSearchService extends Service {
     const { learnings, visitedUrls } = await deepResearch(
       this.runtime,
       { question, depth, breadth },
-      callback,
+      callback
     );
 
     const prompt = `Answer the question "${question}" using the following notes:\n${learnings.join('\n')}`;

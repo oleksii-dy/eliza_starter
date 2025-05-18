@@ -1,12 +1,14 @@
 {
-  "name": "@acme/plugin-deepsearch",
+  "name": "@elizaos/plugin-deepsearch",
   "version": "0.1.0",
   "description": "DeepSearch plugin for elizaOS",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     "./package.json": "./package.json",
     ".": {

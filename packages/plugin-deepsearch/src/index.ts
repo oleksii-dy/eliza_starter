@@ -7,7 +7,7 @@ import { readerProvider } from './providers/readerProvider';
 import { answerEvaluator } from './evaluators/answerEvaluator';
 
 export const deepSearchPlugin: Plugin = {
-  name: '@acme/plugin-deepsearch',
+  name: '@elizaos/plugin-deepsearch',
   description: 'Iterative search→read→reason loop for high-fidelity answers',
   config: defaultConfigSchema,
   actions: [deepSearchAction],

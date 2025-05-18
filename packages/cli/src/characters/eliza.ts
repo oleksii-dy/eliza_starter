@@ -19,6 +19,7 @@ export const character: Character = {
   name: 'Eliza',
   plugins: [
     '@elizaos/plugin-sql',
+    '@elizaos/plugin-deepsearch',
     ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
     ...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),
     ...(!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY
