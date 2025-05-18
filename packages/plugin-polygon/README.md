@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 # ElizaOS Polygon Plugin
 
 This plugin provides integration with the Polygon blockchain network, allowing ElizaOS to interact with both Ethereum (L1) and Polygon (L2) networks.
-=======
-# @elizaos/plugin-polygon
-
-A comprehensive Polygon network plugin for ElizaOS, enabling interactions with Polygon PoS chain, Ethereum L1 staking contracts, and bridging operations.
 
 ## Features
 
@@ -127,11 +122,9 @@ The following actions will be available once Heimdall integration is complete:
 - `VOTE_GOVERNANCE_POLYGON`
 - `EXECUTE_GOVERNANCE_POLYGON`
 - `QUEUE_GOVERNANCE_POLYGON`
->>>>>>> samarth/addpolygon
 
 ## Features
 
-<<<<<<< HEAD
 - Account and balance management on both Ethereum and Polygon
 - Token interactions (MATIC and ERC20 tokens)
 - Governance interactions (proposals, voting, delegation)
@@ -140,162 +133,63 @@ The following actions will be available once Heimdall integration is complete:
 - Block and transaction information retrieval
 - **L1 to L2 token bridging** - Transfer tokens between Ethereum and Polygon
 - Gas price estimation
-=======
-```bash
-# Start development with hot-reloading
-npm run dev
 
-# Build the plugin
-npm run build
+## Testing
 
-# Test the plugin
-npm run test
+### Standardized Test Mocks
+
+This plugin uses a centralized approach to mocking for tests. All mock definitions are kept in `vitest.setup.ts` to ensure consistency across test files.
+
+Key features of the testing approach:
+
+1. **Centralized Mocks**: All shared mocks are defined in `vitest.setup.ts`
+2. **Standardized Ethers Mocks**: Consistent mocks for ethers.js contracts and providers
+3. **Standardized Viem Mocks**: Consistent mocks for viem clients and utilities
+4. **Standardized Runtime Mock**: A consistent mock for the ElizaOS runtime
+
+When writing tests:
+
+1. Import mocks from `vitest.setup.ts` rather than creating local duplicates
+2. Customize the shared mocks for your specific test scenarios
+3. For service tests, use the shared contract mocks to ensure consistent behavior
+4. For action tests, use the shared service mocks rather than creating local duplicates
+
+Example:
+
+```typescript
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { YourAction } from '../../src/actions/yourAction';
+import { mockRuntime, mockPolygonRpcService } from '../../vitest.setup';
+
+describe('YourAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // Customize the centralized mock for your test
+    mockPolygonRpcService.someMethod = vi.fn().mockResolvedValue('result');
+
+    // Configure runtime to return the service
+    vi.spyOn(mockRuntime, 'getService').mockImplementation((serviceType) => {
+      if (serviceType === 'PolygonRpcService') return mockPolygonRpcService;
+      return null;
+    });
+  });
+
+  it('should perform expected behavior', async () => {
+    // Your test using the centralized mocks
+  });
+});
 ```
-
-## Architecture
-
-The plugin follows the standard ElizaOS plugin architecture with:
-
-1. **Services**:
-
-   - `PolygonRpcService`: Core service for L1/L2 interactions
-   - Future: `HeimdallService` for Cosmos SDK interactions
-
-2. **Providers**:
-
-   - `PolygonWalletProvider`: Wallet provider for Polygon network
-
-3. **Actions**:
-   - Individual actions for staking, bridging, and other operations
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. **RPC Connection Errors**
->>>>>>> samarth/addpolygon
 
    - Ensure your `ETHEREUM_RPC_URL` and `POLYGON_RPC_URL` are valid and accessible
    - Check for rate limiting if using free tier RPC providers
 
-<<<<<<< HEAD
-The plugin requires the following configuration parameters:
-
-| Parameter          | Description                                 | Required | Default                                                               |
-| ------------------ | ------------------------------------------- | -------- | --------------------------------------------------------------------- |
-| `ETHEREUM_RPC_URL` | Ethereum (L1) JSON-RPC endpoint URL         | No       | https://mainnet.infura.io/v3/acc75dee85124d4db03ba3b3a9a9e3ab         |
-| `POLYGON_RPC_URL`  | Polygon (L2) JSON-RPC endpoint URL          | No       | https://polygon-mainnet.infura.io/v3/acc75dee85124d4db03ba3b3a9a9e3ab |
-| `PRIVATE_KEY`      | Private key for transaction signing         | Yes      | None                                                                  |
-| `POLYGONSCAN_KEY`  | PolygonScan API key for gas estimations     | Yes      | None                                                                  |
-| `GOVERNOR_ADDRESS` | Address of the governance contract          | No       | None                                                                  |
-| `TOKEN_ADDRESS`    | Address of the governance token contract    | No       | None                                                                  |
-| `TIMELOCK_ADDRESS` | Address of the timelock controller contract | No       | None                                                                  |
-
-### RPC URL Configuration
-
-The plugin now includes default RPC URLs for both Ethereum and Polygon networks. These defaults will be used if you don't provide your own URLs. However, for production use, it's recommended to provide your own RPC URLs to ensure reliable performance.
-
-You can obtain RPC URLs from providers like:
-
-- [Infura](https://infura.io/)
-- [Alchemy](https://www.alchemy.com/)
-- [QuickNode](https://www.quicknode.com/)
-- [Ankr](https://www.ankr.com/)
-
-## Recent Updates
-
-### TypeScript Fixes (June 2024)
-
-- Fixed TypeScript errors in the `PolygonRpcProvider` implementation
-- Updated contract interaction methods to use `readContract` instead of `getContract` for better type safety
-- Streamlined ethers.js imports to only include necessary types
-- Improved error handling in RPC methods
-- Added proper typing for ERC20 ABIs with `as const`
-
-## Usage
-
-Once configured, the plugin provides various actions for interacting with the Polygon network:
-
-### Basic Information
-
-- `GET_L2_BLOCK_NUMBER` - Get the current block number on Polygon
-- `GET_L2_BLOCK_DETAILS` - Get detailed information about a specific block
-- `GET_TRANSACTION_DETAILS` - Get detailed information about a specific transaction
-- `GET_NATIVE_BALANCE` - Get MATIC balance for an address
-- `GET_ERC20_BALANCE` - Get token balance for an address
-
-### Transactions
-
-- `TRANSFER_POLYGON` - Transfer MATIC or tokens on Polygon
-- `BRIDGE_DEPOSIT` - Deposit assets from Ethereum to Polygon
-
-### Staking and Governance
-
-- `GET_VALIDATOR_INFO` - Get information about a validator
-- `GET_DELEGATOR_INFO` - Get information about a delegator
-- `DELEGATE_POLYGON` - Delegate MATIC to a validator
-- `WITHDRAW_REWARDS` - Withdraw staking rewards
-- `PROPOSE_GOVERNANCE` - Create a governance proposal
-- `VOTE_GOVERNANCE` - Vote on a governance proposal
-- `GET_GOVERNANCE_INFO` - Get information about governance proposals
-- `GET_VOTING_POWER` - Get voting power for an address
-
-## Bridging Ethereum to Polygon
-
-The plugin supports bridging ERC20 tokens from Ethereum (L1) to Polygon (L2) using the official Polygon Bridge protocol.
-
-### Using bridgeDeposit function
-
-The `PolygonBridgeService` provides a `bridgeDeposit()` function that handles the complete bridge process:
-
-```typescript
-// Initialize the bridge service
-const bridgeService = runtime.getService<PolygonBridgeService>(PolygonBridgeService.serviceType);
-
-// Bridge tokens from L1 to L2
-const result = await bridgeService.bridgeDeposit(
-  '0xTokenAddressOnL1', // L1 ERC20 token address
-  1000000000000000000n, // Amount in wei (1 token with 18 decimals)
-  '0xRecipientAddressOnL2' // Optional: defaults to sender
-);
-
-console.log(`Bridge deposit initiated! Transaction: ${result.depositTxHash}`);
-```
-
-The function handles:
-
-1. Approval of token spending by the RootChainManager contract
-2. Deposit of tokens from L1 to L2
-3. Gas estimation and transaction management
-
-This is the recommended approach for programmatic bridging of tokens to Polygon.
-
-### Bridge Deposit Action
-
-The `BRIDGE_DEPOSIT_POLYGON` action provides a user-friendly interface for bridging tokens:
-
-Examples:
-
-- "Bridge 5 USDC from Ethereum to Polygon"
-- "Send 0.5 POL to my Polygon address"
-- "Transfer 10 LINK tokens from Ethereum to Polygon address 0x1234..."
-
-The action will extract the token address, amount, and optional recipient from the user input.
-
-## Development
-
-To build the plugin:
-
-```bash
-npm run build
-```
-
-To run tests:
-
-```
-
-```
-=======
 2. **Transaction Failures**
 
    - Insufficient funds: Ensure your wallet has enough MATIC/ETH for gas
@@ -315,4 +209,3 @@ LOG_LEVEL=debug
 ## License
 
 MIT
->>>>>>> samarth/addpolygon

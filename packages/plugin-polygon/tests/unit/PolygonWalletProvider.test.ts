@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WalletProvider } from '../../src/providers/PolygonWalletProvider';
 import { 
-  elizaLogger,
   mockL1PublicClient,
   mockL1WalletClient,
   mockTestClient

@@ -48,6 +48,7 @@ export const mockRuntime = {
       'PRIVATE_KEY': process.env.PRIVATE_KEY || '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
       'POLYGONSCAN_KEY': process.env.POLYGONSCAN_KEY || 'MOCK_POLYGONSCAN_KEY',
       'POLYGONSCAN_KEY_FALLBACK': process.env.POLYGONSCAN_KEY_FALLBACK,
+      'POLYGON_PLUGINS_ENABLED': 'true',
     };
     return settings[key] || undefined;
   }),
@@ -74,6 +75,13 @@ vi.mock('@elizaos/core', async () => {
   return {
     ...actualCore,
     logger: elizaOsLoggerMock,
+    parseJSONObjectFromText: vi.fn((text) => {
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        throw new Error(`Failed to parse JSON during test: ${text}`);
+      }
+    }),
   };
 });
 
@@ -106,6 +114,7 @@ vi.mock('viem', async () => {
     http: vi.fn().mockImplementation((url) => ({ url, type: 'http' })),
     fallback: vi.fn().mockImplementation((transports) => transports[0]),
     toHex: vi.fn((value) => actualViem.toHex(value)),
+    getAddress: vi.fn((value) => value),
   };
 });
 
@@ -127,6 +136,7 @@ vi.mock('viem/accounts', async () => {
 const ROOT_CHAIN_MANAGER_ADDRESS_L1_MOCK = '0xA0c68C638235ee32657e8f720a23ceC1bFc77C77';
 const STAKE_MANAGER_ADDRESS_L1_MOCK = '0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908';
 const MOCK_CHECKPOINT_MANAGER_ADDR = '0xCheckpointManager123';
+const MOCK_USER_ADDRESS = '0xUserAddress';
 
 export const mockGetLastChildBlock = vi.fn();
 export const mockCheckpointManagerAddressFn = vi.fn();
@@ -156,6 +166,9 @@ export const mockRootChainManagerContractEthers = {
   connect: vi.fn().mockReturnThis(),
 };
 
+// Alias for backward compatibility with existing tests
+export const mockRootChainManagerContract = mockRootChainManagerContractEthers;
+
 export const mockStakeManagerContractEthers = {
     currentEpoch: mockCurrentEpoch,
     validatorThreshold: vi.fn().mockResolvedValue(1n),
@@ -163,6 +176,7 @@ export const mockStakeManagerContractEthers = {
     delegate: vi.fn().mockResolvedValue({ hash: '0xDelegateTxHash', wait: vi.fn().mockResolvedValue({ status: 1}) }),
     getAddress: vi.fn().mockResolvedValue(STAKE_MANAGER_ADDRESS_L1_MOCK),
     connect: vi.fn().mockReturnThis(),
+    validators: vi.fn(),
 };
 
 export const mockCheckpointManagerContractEthers = {
@@ -195,9 +209,48 @@ export const mockTimelockContract = {
   getAddress: vi.fn().mockResolvedValue('0xTimelockAddress'),
 };
 
+// Mock validator share contract for staking tests
+export const mockValidatorShareContract = {
+  getTotalStake: vi.fn().mockResolvedValue(BigInt(1000000000000000000000n)),
+  getLiquidRewards: vi.fn().mockResolvedValue(BigInt(50000000000000000000n)),
+  restake: vi.fn().mockResolvedValue({ hash: '0xRestakeTxHash', wait: vi.fn().mockResolvedValue({ status: 1 }) }),
+  withdraw: vi.fn().mockResolvedValue({ hash: '0xWithdrawTxHash', wait: vi.fn().mockResolvedValue({ status: 1 }) }),
+  withdrawRewards: vi.fn().mockResolvedValue({ hash: '0xWithdrawRewardsTxHash', wait: vi.fn().mockResolvedValue({ status: 1 }) }),
+  getAddress: vi.fn().mockResolvedValue('0xValidatorShareContractAddress'),
+};
+
+// Mock for PolygonRpcProvider and services
+export const mockRpcProvider = {
+  getEthersProvider: vi.fn().mockReturnValue({}),
+  getConfig: vi.fn(),
+  getERC20Contract: vi.fn().mockReturnValue(mockERC20Contract),
+  getL1Signer: vi.fn().mockReturnValue({ address: MOCK_USER_ADDRESS }),
+  getL2Signer: vi.fn().mockReturnValue({ address: MOCK_USER_ADDRESS }),
+};
+
+// Mock services used by actions
+export const mockPolygonRpcService = {
+  serviceType: 'PolygonRpcService',
+  getDelegatorInfo: vi.fn(),
+  getValidatorInfo: vi.fn(),
+  delegate: vi.fn().mockResolvedValue('0xDelegateTxHash'),
+  undelegate: vi.fn().mockResolvedValue('0xUndelegateTxHash'),
+  withdrawRewards: vi.fn().mockResolvedValue('0xWithdrawTxHash'),
+  getCheckpointStatus: vi.fn(),
+};
+
+export const mockCreateGetValidatorInfo = (returnValue) => 
+  vi.fn().mockResolvedValue(returnValue);
+
+export const mockCreateGetDelegatorInfo = (returnValue) => 
+  vi.fn().mockResolvedValue(returnValue);
+
 export const createMockEthersContract = vi.fn().mockImplementation((address, abi, signerOrProvider) => {
   if (abi && (abi as any[]).find((item: any) => item.name === 'approve' && item.type === 'function')) {
     return { ...mockERC20Contract, getAddress: vi.fn().mockResolvedValue(address) };
+  }
+  if (address === '0xValidatorShareContractAddress') {
+    return mockValidatorShareContract;
   }
   return {
     connect: vi.fn().mockReturnThis(),
@@ -250,6 +303,7 @@ vi.mock('ethers', async () => {
           if (address === ROOT_CHAIN_MANAGER_ADDRESS_L1_MOCK) return mockRootChainManagerContractEthers;
           if (address === MOCK_CHECKPOINT_MANAGER_ADDR) return mockCheckpointManagerContractEthers;
           if (address === STAKE_MANAGER_ADDRESS_L1_MOCK) return mockStakeManagerContractEthers;
+          if (address === '0xValidatorShareContractAddress') return mockValidatorShareContract;
           return createMockEthersContract(address, abi, runner);
         }
     ),
@@ -282,17 +336,17 @@ export const createMockEthersProvider = () => mockEthersProviderInstance();
 
 // Viem mock clients
 export const mockL1PublicClient = {
-  getBlockNumber: vi.fn().mockResolvedValue(BigInt(1000000)),
+  getBlockNumber: vi.fn().mockResolvedValue(BigInt(16000000)),
   getBalance: vi.fn().mockResolvedValue(BigInt(1000000000000000000n)),
-  getBlock: vi.fn().mockResolvedValue({ hash: '0xBlockHashViemL1' as `0x${string}`, number: BigInt(1000000), timestamp: BigInt(Math.floor(Date.now() / 1000)) }),
-  getTransaction: vi.fn().mockResolvedValue({ hash: '0xTransactionHashViemL1' as `0x${string}`, from: '0xSenderAddressViem' as `0x${string}`, to: '0xRecipientAddressViem' as `0x${string}`, value: BigInt(1000000000000000000n) }),
-  getTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success' as const, transactionHash: '0xTransactionHashViemL1' as `0x${string}`, blockNumber: BigInt(1000000), gasUsed: BigInt(21000) }),
-  readContract: vi.fn().mockImplementation(({ functionName } : { functionName: string }) => {
+  getBlock: vi.fn().mockResolvedValue({ hash: '0xL1BlockHash' as `0x${string}`, number: BigInt(16000000), timestamp: BigInt(Math.floor(Date.now() / 1000)) }),
+  getTransaction: vi.fn().mockResolvedValue({ hash: '0xL1TxHash' as `0x${string}`, from: '0xSenderAddressViem' as `0x${string}`, to: '0xRecipientAddressViem' as `0x${string}`, value: BigInt(1000000000000000000n) }),
+  getTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success' as const, transactionHash: '0xL1TxHash' as `0x${string}`, blockNumber: BigInt(16000000), gasUsed: BigInt(21000) }),
+  readContract: vi.fn().mockImplementation(({ functionName } : { functionName: string, address: string }) => {
     switch (functionName) {
       case 'balanceOf': return BigInt(1000000000000000000n);
-      case 'symbol': return 'TOKEN';
+      case 'symbol': return 'ETH-TOKEN';
       case 'decimals': return 18;
-      case 'name': return 'Test Token';
+      case 'name': return 'ETH Test Token';
       default: return null;
     }
   }),
@@ -300,16 +354,35 @@ export const mockL1PublicClient = {
   estimateGas: vi.fn().mockResolvedValue(BigInt(21000)),
 };
 
-export const mockL2PublicClient = { ...mockL1PublicClient };
+export const mockL2PublicClient = { 
+  ...mockL1PublicClient,
+  getBlockNumber: vi.fn().mockResolvedValue(BigInt(40000000)),
+  getBlock: vi.fn().mockResolvedValue({ hash: '0xL2BlockHash' as `0x${string}`, number: BigInt(40000000), timestamp: BigInt(Math.floor(Date.now() / 1000)) }),
+  getTransaction: vi.fn().mockResolvedValue({ hash: '0xL2TxHash' as `0x${string}`, from: '0xSenderAddressViem' as `0x${string}`, to: '0xRecipientAddressViem' as `0x${string}`, value: BigInt(1000000000000000000n) }),
+  getTransactionReceipt: vi.fn().mockResolvedValue({ status: 'success' as const, transactionHash: '0xL2TxHash' as `0x${string}`, blockNumber: BigInt(40000000), gasUsed: BigInt(21000) }),
+  readContract: vi.fn().mockImplementation(({ functionName } : { functionName: string, address: string }) => {
+    switch (functionName) {
+      case 'balanceOf': return BigInt(2000000000000000000n);
+      case 'symbol': return 'MATIC-TOKEN';
+      case 'decimals': return 18;
+      case 'name': return 'Polygon Test Token';
+      default: return null;
+    }
+  }),
+};
 
 export const mockL1WalletClient = {
   account: { address: '0xUserAddressViem' as `0x${string}` },
   getAddresses: vi.fn().mockResolvedValue(['0xUserAddressViem' as `0x${string}`]),
-  sendTransaction: vi.fn().mockResolvedValue('0xTransactionHashViem' as `0x${string}`),
-  writeContract: vi.fn().mockResolvedValue('0xContractTxHashViem' as `0x${string}`),
+  sendTransaction: vi.fn().mockResolvedValue('0xL1SendTxHash' as `0x${string}`),
+  writeContract: vi.fn().mockResolvedValue('0xL1ContractTxHash' as `0x${string}`),
 };
 
-export const mockL2WalletClient = { ...mockL1WalletClient };
+export const mockL2WalletClient = { 
+  ...mockL1WalletClient,
+  sendTransaction: vi.fn().mockResolvedValue('0xL2SendTxHash' as `0x${string}`),
+  writeContract: vi.fn().mockResolvedValue('0xL2ContractTxHash' as `0x${string}`),
+};
 
 export const mockTestClient = {
   mine: vi.fn().mockResolvedValue({}),
@@ -326,17 +399,21 @@ const { createPublicClient, createWalletClient, createTestClient: createTestClie
   }));
 
 if (createPublicClient && typeof createPublicClient.mockImplementation === 'function') {
-  createPublicClient.mockImplementation(({ chain }: any) =>
-    chain?.id === 137 ? mockL2PublicClient : mockL1PublicClient
-  );
+  createPublicClient.mockImplementation(({ chain, transport }: any) => {
+    if (chain?.id === 137) return mockL2PublicClient;
+    if (transport?.url?.includes('polygon')) return mockL2PublicClient;
+    return mockL1PublicClient;
+  });
 }
+
 if (createWalletClient && typeof createWalletClient.mockImplementation === 'function') {
-  createWalletClient.mockImplementation(({ chain, account }: any) => {
-    const client = chain?.id === 137 ? mockL2WalletClient : mockL1WalletClient;
+  createWalletClient.mockImplementation(({ chain, account, transport }: any) => {
+    const client = chain?.id === 137 || transport?.url?.includes('polygon') ? mockL2WalletClient : mockL1WalletClient;
     if (account) (client as any).account = account;
     return client;
   });
 }
+
 if (createTestClientViem && typeof createTestClientViem.mockImplementation === 'function') {
     createTestClientViem.mockReturnValue(mockTestClient);
 }
@@ -352,5 +429,14 @@ export const mockGasEstimates = {
   fast: { maxFeePerGas: BigInt(80000000000), maxPriorityFeePerGas: BigInt(2000000000), },
   estimatedBaseFee: BigInt(29000000000),
 };
+
+// Mock for PolygonRpcProvider class
+vi.mock('../../src/providers/PolygonRpcProvider', () => {
+  return {
+    PolygonRpcProvider: vi.fn().mockImplementation(() => {
+      return mockRpcProvider;
+    }),
+  };
+});
 
 console.log('Vitest global setup: All mocks configured.');

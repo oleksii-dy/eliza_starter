@@ -63,7 +63,7 @@ describe('Polygon Plugin Integration', () => {
       );
       
       expect(mockRuntime.registerService).toHaveBeenCalledWith(
-        'polygonGovernance',
+        'heimdall',
         expect.anything()
       );
     });
@@ -87,12 +87,13 @@ describe('Polygon Plugin Integration', () => {
       expect(mockRuntime.registerAction).toHaveBeenCalled();
       
       // Check for specific actions
-      // This verifies our bridge action is registered
       const actionNames = vi.mocked(mockRuntime.registerAction).mock.calls.map(call => call[0]);
       
       expect(actionNames).toContain('BRIDGE_DEPOSIT_POLYGON');
-      expect(actionNames.some(name => name.includes('BALANCE'))).toBe(true);
-      expect(actionNames.some(name => name.includes('TRANSACTION'))).toBe(true);
+      expect(actionNames).toContain('DELEGATE_L1');
+      expect(actionNames).toContain('GET_VALIDATOR_INFO');
+      expect(actionNames).toContain('GET_DELEGATOR_INFO');
+      expect(actionNames).toContain('GET_CHECKPOINT_STATUS');
     });
     
     it('should initialize with default RPC URLs when not provided', async () => {

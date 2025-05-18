@@ -24,12 +24,17 @@ import {
   parseErrorMessage,
 } from '../../errors';
 import { getValidatorInfoTemplate } from '../../templates'; // Import for context
+import { 
+  mockRuntime, 
+  mockCreateGetValidatorInfo, 
+  mockPolygonRpcService 
+} from '../../../vitest.setup';
 
-// --- Mocking @elizaos/core ---
+// Import the existing mocks from vitest.setup.ts
 vi.mock('@elizaos/core', async () => {
-  const originalCore = (await vi.importActual('@elizaos/core')) as typeof import('@elizaos/core');
+  const actualCore = await vi.importActual<typeof import('@elizaos/core')>('@elizaos/core');
   return {
-    ...originalCore,
+    ...actualCore,
     logger: {
       info: vi.fn(),
       error: vi.fn(),
@@ -40,45 +45,29 @@ vi.mock('@elizaos/core', async () => {
   };
 });
 
-// --- Mocking ../services/PolygonRpcService ---
-const mockGetValidatorInfo = vi.fn();
-vi.mock('../../services/PolygonRpcService', async () => {
-  const originalModule = await vi.importActual<typeof import('../../services/PolygonRpcService')>(
-    '../../services/PolygonRpcService'
-  );
-  const MockPolygonRpcService = vi.fn().mockImplementation(() => ({
-    getValidatorInfo: mockGetValidatorInfo,
-  }));
-  // Ensure the mocked constructor has the static 'serviceType' property if it's expected by tests or runtime logic.
-  (MockPolygonRpcService as Mock & { serviceType?: string }).serviceType = 'PolygonRpcService';
+// Use the mockPolygonRpcService from vitest.setup.ts
+vi.mock('../../services/PolygonRpcService', () => {
   return {
-    ...originalModule, // Exports ValidatorStatus and other named exports from the original module
-    PolygonRpcService: MockPolygonRpcService, // Overrides the PolygonRpcService class with the mock
+    PolygonRpcService: vi.fn().mockImplementation(() => mockPolygonRpcService),
+    ValidatorStatus
   };
 });
 
 // --- Mocking ../errors ---
-// Mocking error utilities if their internal logic needs to be controlled or observed.
-// For now, assuming we test their effect via the action's behavior.
-// If specific error formatting is tested, these might need mocks.
 vi.mock('../../errors', async () => {
   const originalErrors = (await vi.importActual('../../errors')) as typeof import('../../errors');
   return {
-    ...originalErrors, // Use actual error classes and formatters by default
-    // parseErrorMessage: vi.fn().mockImplementation(err => err instanceof Error ? err.message : String(err)),
-    // formatErrorMessage: vi.fn().mockImplementation((type, msg, details) => `${type}: ${msg} ${details}`)
+    ...originalErrors,
     parseErrorMessage: originalErrors.parseErrorMessage,
     formatErrorMessage: originalErrors.formatErrorMessage,
   };
 });
 
-// viem is used for formatUnits, no need to mock if we use the actual implementation for testing output.
-
 describe('getValidatorInfoAction', () => {
-  let mockRuntime: IAgentRuntime;
   let mockMessage: Memory;
   let mockState: State | undefined;
   let mockCallback: HandlerCallback;
+  const mockGetValidatorInfo = vi.fn();
 
   const validatorIdMissingError =
     'Validator ID not found or invalid. Please specify a positive integer for the validator ID.';
@@ -86,29 +75,21 @@ describe('getValidatorInfoAction', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
+    // Clear individual mocks
     (coreLogger.info as Mock).mockClear();
     (coreLogger.error as Mock).mockClear();
     (coreLogger.debug as Mock).mockClear();
     (coreLogger.warn as Mock).mockClear();
     (coreComposePromptFromState as Mock).mockClear();
-    mockGetValidatorInfo.mockClear();
 
-    mockRuntime = {
-      getSetting: vi.fn((key: string) => {
-        if (key === 'PRIVATE_KEY') return '0xPrivateKeyMock';
-        if (key === 'ETHEREUM_RPC_URL') return 'mock_l1_rpc_url';
-        if (key === 'POLYGON_RPC_URL') return 'mock_l2_rpc_url';
-        if (key === 'POLYGON_PLUGINS_ENABLED') return 'true';
-        return null;
-      }),
-      getService: vi.fn().mockImplementation((serviceType: string) => {
-        if (serviceType === 'PolygonRpcService') {
-          return new PolygonRpcService(); // Mocked constructor
-        }
-        return null;
-      }),
-      useModel: vi.fn(),
-    } as unknown as IAgentRuntime;
+    // Setup mockRuntime from vitest.setup.ts to return our specific service
+    mockPolygonRpcService.getValidatorInfo = mockGetValidatorInfo;
+    vi.spyOn(mockRuntime, 'getService').mockImplementation((serviceType: string) => {
+      if (serviceType === 'PolygonRpcService') {
+        return mockPolygonRpcService;
+      }
+      return null;
+    });
 
     mockMessage = {
       id: 'validator-test-msg-id' as Memory['id'],
