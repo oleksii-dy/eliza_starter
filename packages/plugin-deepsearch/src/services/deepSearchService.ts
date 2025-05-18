@@ -2,6 +2,7 @@ import type { HandlerCallback, IAgentRuntime } from '@elizaos/core';
 import { Service, logger, ModelType, ServiceType } from '@elizaos/core';
 import type { DeepSearchConfig } from '../config';
 import { deepResearch } from '../research';
+import { DeepSearchEventTypes } from '../types';
 
 export interface DeepSearchAnswer {
   answer: string;
@@ -67,6 +68,15 @@ export class DeepSearchService extends Service {
 
     const prompt = `Answer the question "${question}" using the following notes:\n${learnings.join('\n')}`;
     const answer = await this.runtime.useModel(ModelType.TEXT_SMALL, { prompt });
+
+    await this.runtime.emitEvent(DeepSearchEventTypes.ANSWER_GENERATED, {
+      runtime: this.runtime,
+      source: 'deepsearch',
+      question,
+      answer,
+      citations: visitedUrls,
+      thinking: [],
+    });
 
     return { answer, citations: visitedUrls, thinking: [] };
   }

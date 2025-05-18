@@ -16,4 +16,5 @@ export const deepSearchPlugin: Plugin = {
   evaluators: [answerEvaluator],
 };
 
+export * from './types';
 export default deepSearchPlugin;

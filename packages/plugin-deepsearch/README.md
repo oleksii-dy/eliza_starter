@@ -4,6 +4,12 @@ This plugin implements an iterative search → read → reason loop powered by t
 
 The service generates search queries with a language model, executes them using Firecrawl, summarises the results, and recursively explores follow-up queries. The final answer is produced from all learnings and returned with the visited URLs as citations.
 
+## Events
+
+Progress is reported through the runtime event bus. Handlers can listen for
+`DEEPSEARCH_QUERIES_GENERATED`, `DEEPSEARCH_NOTES_ADDED` and
+`DEEPSEARCH_ANSWER_GENERATED` to receive updates during research.
+
 ## Development
 
 ```

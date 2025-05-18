@@ -1,5 +1,6 @@
 import type { IAgentRuntime, HandlerCallback, Memory, Provider, State } from '@elizaos/core';
 import { ModelType } from '@elizaos/core';
+import { DeepSearchEventTypes } from './types';
 import { v4 as uuidv4 } from 'uuid'; // For generating UUIDs
 
 // The actual name of the search provider as defined in its registration
@@ -97,6 +98,13 @@ export async function deepResearch(
 
   for (let i = 0; i < opts.depth; i++) {
     const queries = await generateQueries(runtime, opts.question, opts.breadth, learnings);
+    await runtime.emitEvent(DeepSearchEventTypes.QUERIES_GENERATED, {
+      runtime,
+      source: 'deepsearch',
+      question: opts.question,
+      iteration: i + 1,
+      queries,
+    });
 
     for (const q of queries) {
       callback?.({ text: `<thinking>Searching for "${q}"</thinking>` });
@@ -124,6 +132,12 @@ export async function deepResearch(
           text: `<thinking>Reading ${contents.length} result(s) for "${q}"</thinking>`,
         });
         const notes = await summarizeContents(runtime, q, contents, opts.breadth);
+        await runtime.emitEvent(DeepSearchEventTypes.NOTES_ADDED, {
+          runtime,
+          source: 'deepsearch',
+          query: q,
+          notes,
+        });
         learnings.push(...notes);
       } else {
         callback?.({ text: `<thinking>No content to read for "${q}"</thinking>` });
