@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.build.json",
+  // "extends": "@elizaos/tsconfig/base.json", //commented out due to build issues
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
