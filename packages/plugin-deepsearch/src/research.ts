@@ -108,8 +108,11 @@ export async function deepResearch(
         minimalState
       );
 
-      const resultsData =
-        (searchResult.data as Array<{ url: string; markdown?: string; [key: string]: any }>) || [];
+      const resultsData = (Array.isArray(searchResult?.data) ? searchResult.data : []) as Array<{
+        url: string;
+        markdown?: string;
+        [key: string]: any;
+      }>;
 
       const urls = resultsData.map((d) => d.url).filter(Boolean);
       visitedUrls.push(...urls);
