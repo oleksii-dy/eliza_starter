@@ -7,6 +7,11 @@ import {
   logger,
   type Service,
   elizaLogger,
+  type Content,
+  type Memory,
+  type HandlerCallback,
+  type State,
+  definePlugin,
 } from '@elizaos/core';
 import { z } from 'zod';
 import { ethers } from 'ethers';
@@ -21,8 +26,6 @@ import { getValidatorInfoAction } from './actions/getValidatorInfo.js';
 import { getDelegatorInfoAction } from './actions/getDelegatorInfo.js';
 import { withdrawRewardsAction } from './actions/withdrawRewardsL1.js';
 import { bridgeDepositAction } from './actions/bridgeDeposit.js';
-import { getL2BlockNumberAction } from './actions/getL2BlockNumber.js';
-import { getMaticBalanceAction } from './actions/getMaticBalance.js';
 import { getPolygonGasEstimatesAction } from './actions/getPolygonGasEstimates.js';
 import { undelegateL1Action } from './actions/undelegateL1.js';
 import { restakeRewardsL1Action } from './actions/restakeRewardsL1.js';
@@ -30,6 +33,9 @@ import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed.js'
 import { heimdallVoteAction } from './actions/heimdallVoteAction.js';
 import { heimdallSubmitProposalAction } from './actions/heimdallSubmitProposalAction.js';
 import { heimdallTransferTokensAction } from './actions/heimdallTransferTokensAction.js';
+import { getGovernanceInfoAction } from './actions/getGovernanceInfo.js';
+import { getNativeBalanceAction, getERC20BalanceAction } from './actions/getBalanceInfo.js';
+import { getBlockInfoAction, getBlockNumberAction, getBlockDetailsAction } from './actions/getBlockInfo.js';
 
 import {
   WalletProvider,
@@ -45,7 +51,7 @@ import {
 import { HeimdallService } from './services/HeimdallService.js';
 import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService.js';
 import { parseBigIntString } from './utils.js'; // Import from utils
-import { ConfigService } from './services/ConfigService';
+import { ConfigService } from './services/ConfigService.js';
 
 // --- Configuration Schema --- //
 const configSchema = z.object({
@@ -71,8 +77,6 @@ const polygonActions: Action[] = [
   getCheckpointStatusAction,
   proposeGovernanceAction,
   voteGovernanceAction,
-  getL2BlockNumberAction,
-  getMaticBalanceAction,
   getPolygonGasEstimatesAction,
   delegateL1Action,
   undelegateL1Action,
@@ -82,6 +86,12 @@ const polygonActions: Action[] = [
   heimdallVoteAction,
   heimdallSubmitProposalAction,
   heimdallTransferTokensAction,
+  getGovernanceInfoAction,
+  getNativeBalanceAction,
+  getERC20BalanceAction,
+  getBlockInfoAction,
+  getBlockNumberAction,
+  getBlockDetailsAction,
 ];
 
 // --- Define Providers --- //
@@ -91,7 +101,7 @@ const polygonActions: Action[] = [
  */
 const polygonProviderInfo: Provider = {
   name: 'Polygon Provider Info',
-  async get(runtime: IAgentRuntime, _message, state): Promise<ProviderResult> {
+  async get(runtime: IAgentRuntime, _message: any, state: any): Promise<ProviderResult> {
     try {
       // Get ConfigService instance
       const configService = runtime.getService<ConfigService>(ConfigService.serviceType);
