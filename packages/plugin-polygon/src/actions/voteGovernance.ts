@@ -9,10 +9,11 @@ import {
   composePromptFromState,
   ModelType,
   type ActionExample,
-  type TemplateType,
+  parseJSONObjectFromText,
 } from '@elizaos/core';
-import { encodeFunctionData, type Address, type Hex, type Chain } from 'viem';
-import { WalletProvider, initWalletProvider } from '../providers/PolygonWalletProvider';
+import { encodeFunctionData, type Address, type Chain, type Hex, type Log } from 'viem';
+import { type WalletProvider, initWalletProvider } from '../providers/PolygonWalletProvider';
+import { voteGovernanceActionTemplate } from '../templates'; // Import the new template
 
 // Minimal ABI for OZ Governor castVote function
 const governorVoteAbi = [
@@ -20,86 +21,135 @@ const governorVoteAbi = [
     inputs: [
       { name: 'proposalId', type: 'uint256' },
       { name: 'support', type: 'uint8' }, // 0 = Against, 1 = For, 2 = Abstain
+      // { name: 'reason', type: 'string' }, // For castVoteWithReason (optional)
     ],
-    name: 'castVote',
+    name: 'castVote', // or castVoteWithReason
     outputs: [], // Typically returns a boolean success or nothing, tx receipt is key
     stateMutability: 'nonpayable',
     type: 'function',
   },
 ] as const;
 
-interface VoteParams {
+// ABI for castVoteWithReason (if you intend to support it)
+const governorVoteWithReasonAbi = [
+  {
+    inputs: [
+      { name: 'proposalId', type: 'uint256' },
+      { name: 'support', type: 'uint8' },
+      { name: 'reason', type: 'string' },
+    ],
+    name: 'castVoteWithReason',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+] as const;
+
+interface VoteGovernanceParams {
   chain: string;
   governorAddress: Address;
-  proposalId: string; // string for LLM, convert to BigInt
+  proposalId: string; // string for LLM, convert to BigInt for tx
   support: number; // 0, 1, or 2
-  reason?: string; // Optional, if using castVoteWithReason
+  reason?: string; // Optional
 }
 
-interface Transaction {
+interface VoteTransaction {
   hash: `0x${string}`;
-  from: Address;
-  to: Address;
+  from: `0x${string}`;
+  to: `0x${string}`;
   value: bigint;
   chainId: number;
   data?: Hex;
-  logs?: any[];
+  logs?: Log[];
+  proposalId: string; // Keep as string from params for consistency
+  support: number;
+  reason?: string;
 }
 
-const voteGovernanceTemplateObj = {
-  name: 'Vote on Governance Proposal',
-  description:
-    'Generates parameters to cast a vote on a governance proposal. // Respond with a valid JSON object containing the extracted parameters.',
-  parameters: {
-    type: 'object',
-    properties: {
-      chain: { type: 'string', description: 'Blockchain name (e.g., polygon).' },
-      governorAddress: { type: 'string', description: 'Address of the Governor.' },
-      proposalId: { type: 'string', description: 'ID of the proposal.' },
-      support: {
-        type: 'integer',
-        enum: [0, 1, 2],
-        description: 'Vote: 0=Against, 1=For, 2=Abstain.',
-      },
-    },
-    required: ['chain', 'governorAddress', 'proposalId', 'support'],
-  },
-} as const;
+// Helper function to extract params from text
+function extractVoteGovernanceParamsFromText(text: string): Partial<VoteGovernanceParams> {
+  const params: Partial<VoteGovernanceParams> = {};
+  logger.debug(`Attempting to extract VoteGovernanceParams from text: "${text}"`);
+
+  const chainMatch = text.match(/\b(?:on\s+|chain\s*[:\-]?\s*)(\w+)/i);
+  if (chainMatch?.[1]) params.chain = chainMatch[1].toLowerCase();
+
+  const governorMatch = text.match(/\b(?:governor\s*(?:address\s*)?[:\-]?\s*)(0x[a-fA-F0-9]{40})/i);
+  if (governorMatch?.[1]) params.governorAddress = governorMatch[1] as Address;
+
+  const proposalIdMatch = text.match(/\b(?:proposal\s*id|prop\s*id)\s*[:\-]?\s*([\w\d\-]+)/i); // Allow hex, numbers, or GUID-like
+  if (proposalIdMatch?.[1]) params.proposalId = proposalIdMatch[1];
+
+  // Support: 0 (Against), 1 (For), 2 (Abstain)
+  // Look for keywords like "for", "yes", "against", "no", "abstain"
+  // Or numbers 0, 1, 2
+  const supportForMatch = text.match(/\b(?:vote|support|option)\s*[:\-]?\s*(for|yes|aye)\b/i);
+  const supportAgainstMatch = text.match(
+    /\b(?:vote|support|option)\s*[:\-]?\s*(against|no|nay)\b/i
+  );
+  const supportAbstainMatch = text.match(/\b(?:vote|support|option)\s*[:\-]?\s*(abstain)\b/i);
+  const supportNumericMatch = text.match(/\b(?:vote|support|option)\s*[:\-]?\s*([012])\b/i);
+
+  if (supportForMatch) params.support = 1;
+  else if (supportAgainstMatch) params.support = 0;
+  else if (supportAbstainMatch) params.support = 2;
+  else if (supportNumericMatch?.[1]) params.support = Number.parseInt(supportNumericMatch[1], 10);
+
+  const reasonMatch = text.match(
+    /\b(?:reason|rationale)\s*[:\-]?\s*(?:['"“](.+?)['"”]|(.+?)(?:\s*\b(?:chain|governor|proposalId|support)\b|$))/i
+  );
+  if (reasonMatch) {
+    params.reason = (reasonMatch[1] || reasonMatch[2])?.trim();
+  }
+
+  logger.debug('Manually extracted VoteGovernanceParams:', params);
+  return params;
+}
 
 class PolygonVoteGovernanceActionRunner {
   constructor(private walletProvider: WalletProvider) {}
 
-  async vote(params: VoteParams): Promise<Transaction> {
+  async vote(params: VoteGovernanceParams): Promise<VoteTransaction> {
     const walletClient = this.walletProvider.getWalletClient(params.chain);
     const publicClient = this.walletProvider.getPublicClient(params.chain);
     const chainConfig = this.walletProvider.getChainConfigs(params.chain);
 
-    const proposalIdBigInt = BigInt(params.proposalId);
-    // Ensure support is uint8 compatible
-    const supportUint8 = params.support as 0 | 1 | 2;
+    if (!walletClient.account) {
+      throw new Error('Wallet client account is not available.');
+    }
+    const senderAddress = walletClient.account.address;
 
-    const txData = encodeFunctionData({
-      abi: governorVoteAbi,
-      functionName: 'castVote',
-      args: [proposalIdBigInt, supportUint8],
-    });
+    const proposalIdBigInt = BigInt(params.proposalId); // Convert proposalId to BigInt
 
-    logger.debug(
-      `Voting on proposal ${params.proposalId} with support ${params.support} on ${params.chain} at governor ${params.governorAddress}`
-    );
+    let txData: Hex;
+    if (params.reason && params.reason.trim() !== '') {
+      txData = encodeFunctionData({
+        abi: governorVoteWithReasonAbi,
+        functionName: 'castVoteWithReason',
+        args: [proposalIdBigInt, params.support, params.reason],
+      });
+    } else {
+      txData = encodeFunctionData({
+        abi: governorVoteAbi,
+        functionName: 'castVote',
+        args: [proposalIdBigInt, params.support],
+      });
+    }
 
     try {
-      // Add missing kzg property
+      logger.debug(
+        `Voting on chain ${params.chain}, governor ${params.governorAddress}, proposal ${params.proposalId}, support ${params.support}, reason: "${params.reason || ''}"`
+      );
       const kzg = {
-        blobToKzgCommitment: (_blob: any) => {
+        blobToKzgCommitment: (_blob: unknown) => {
           throw new Error('KZG not impl.');
         },
-        computeBlobKzgProof: (_blob: any, _commit: any) => {
+        computeBlobKzgProof: (_blob: unknown, _commit: unknown) => {
           throw new Error('KZG not impl.');
         },
       };
       const hash = await walletClient.sendTransaction({
-        account: walletClient.account!,
+        account: senderAddress,
         to: params.governorAddress,
         value: BigInt(0),
         data: txData,
@@ -109,15 +159,19 @@ class PolygonVoteGovernanceActionRunner {
 
       logger.info(`Vote transaction sent. Hash: ${hash}. Waiting for receipt...`);
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      logger.debug('Transaction receipt:', receipt);
 
       return {
         hash,
-        from: walletClient.account!.address,
+        from: senderAddress,
         to: params.governorAddress,
         value: BigInt(0),
         data: txData,
         chainId: chainConfig.id,
-        logs: receipt.logs as any[],
+        logs: receipt.logs as Log[],
+        proposalId: params.proposalId,
+        support: params.support,
+        reason: params.reason,
       };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
@@ -129,20 +183,15 @@ class PolygonVoteGovernanceActionRunner {
 
 export const voteGovernanceAction: Action = {
   name: 'VOTE_GOVERNANCE_POLYGON',
-  similes: ['CAST_POLYGON_VOTE', 'VOTE_ON_POLYGON_PROPOSAL'],
-  description: 'Casts a vote on an existing governance proposal.',
+  similes: ['CAST_VOTE_POLYGON', 'SUPPORT_PROPOSAL_POLYGON', 'VOTE_ON_PROPOSAL_POLYGON'],
+  description: 'Casts a vote on a governance proposal using the Polygon WalletProvider.',
 
-  validate: async (
-    runtime: IAgentRuntime,
-    _message: Memory,
-    _state: State | undefined
-  ): Promise<boolean> => {
+  validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     logger.debug('Validating VOTE_GOVERNANCE_POLYGON action...');
-    const checks = [
-      runtime.getSetting('WALLET_PRIVATE_KEY'),
-      runtime.getSetting('POLYGON_PLUGINS_ENABLED'),
-    ];
-    if (checks.some((check) => !check)) {
+    if (
+      !runtime.getSetting('WALLET_PRIVATE_KEY') ||
+      !runtime.getSetting('POLYGON_PLUGINS_ENABLED')
+    ) {
       logger.error(
         'Required settings (WALLET_PRIVATE_KEY, POLYGON_PLUGINS_ENABLED) are not configured.'
       );
@@ -162,48 +211,104 @@ export const voteGovernanceAction: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     state: State | undefined,
-    _options: any,
+    _options: unknown,
     callback: HandlerCallback | undefined,
     _responses: Memory[] | undefined
   ) => {
     logger.info('Handling VOTE_GOVERNANCE_POLYGON for message:', message.id);
+    const rawMessageText = message.content.text || '';
+    let extractedParams: (Partial<VoteGovernanceParams> & { error?: string }) | null = null;
+
     try {
       const walletProvider = await initWalletProvider(runtime);
       const actionRunner = new PolygonVoteGovernanceActionRunner(walletProvider);
 
       const prompt = composePromptFromState({
         state,
-        template: voteGovernanceTemplateObj as unknown as TemplateType,
+        template: voteGovernanceActionTemplate, // Use the new string template
       });
-      const modelResponse = await runtime.useModel(ModelType.SMALL, { prompt });
-      let paramsJson;
+
+      const modelResponse = await runtime.useModel(ModelType.TEXT_SMALL, {
+        prompt,
+      });
+
       try {
-        const jsonString = (modelResponse || '').replace(/^```json(\r?\n)?|(\r?\n)?```$/g, '');
-        paramsJson = JSON.parse(jsonString);
-      } catch (e) {
-        logger.error('Failed to parse LLM response for vote params:', modelResponse, e);
-        throw new Error('Could not understand vote parameters.');
+        const parsed = parseJSONObjectFromText(modelResponse);
+        if (parsed) {
+          extractedParams = parsed as Partial<VoteGovernanceParams> & {
+            error?: string;
+          };
+        }
+        logger.debug('VOTE_GOVERNANCE_POLYGON: Extracted params via TEXT_SMALL:', extractedParams);
+
+        if (extractedParams?.error) {
+          logger.warn(
+            `VOTE_GOVERNANCE_POLYGON: Model responded with error: ${extractedParams.error}`
+          );
+          throw new Error(extractedParams.error);
+        }
+      } catch (e: unknown) {
+        const errorMsg = e instanceof Error ? e.message : String(e);
+        logger.warn(
+          `VOTE_GOVERNANCE_POLYGON: Failed to parse JSON from model response or model returned error (Proceeding to manual extraction): ${errorMsg}`
+        );
       }
 
       if (
-        !paramsJson.chain ||
-        !paramsJson.governorAddress ||
-        !paramsJson.proposalId ||
-        typeof paramsJson.support === 'undefined'
+        !extractedParams ||
+        extractedParams.error ||
+        !extractedParams.chain ||
+        !extractedParams.governorAddress ||
+        extractedParams.proposalId === undefined ||
+        extractedParams.support === undefined // Support can be 0
       ) {
-        throw new Error('Missing required vote parameters.');
+        logger.info(
+          'VOTE_GOVERNANCE_POLYGON: Model extraction insufficient or failed, attempting manual parameter extraction.'
+        );
+        const manualParams = extractVoteGovernanceParamsFromText(rawMessageText);
+
+        if (extractedParams && !extractedParams.error) {
+          extractedParams = {
+            chain: extractedParams.chain || manualParams.chain,
+            governorAddress: extractedParams.governorAddress || manualParams.governorAddress,
+            proposalId: extractedParams.proposalId || manualParams.proposalId,
+            support:
+              extractedParams.support !== undefined
+                ? extractedParams.support
+                : manualParams.support, // Check for undefined explicitly for support
+            reason: extractedParams.reason || manualParams.reason,
+          };
+        } else {
+          extractedParams = manualParams;
+        }
+        logger.debug(
+          'VOTE_GOVERNANCE_POLYGON: Params after manual extraction attempt:',
+          extractedParams
+        );
       }
 
-      const voteParams: VoteParams = {
-        chain: paramsJson.chain as string,
-        governorAddress: paramsJson.governorAddress as Address,
-        proposalId: paramsJson.proposalId as string,
-        support: paramsJson.support as number,
-      };
+      if (
+        !extractedParams?.chain ||
+        !extractedParams.governorAddress ||
+        extractedParams.proposalId === undefined || // Check for undefined
+        typeof extractedParams.support !== 'number' || // Check for number type and range
+        ![0, 1, 2].includes(extractedParams.support)
+      ) {
+        logger.error(
+          'VOTE_GOVERNANCE_POLYGON: Incomplete or invalid parameters after all extraction attempts.',
+          extractedParams
+        );
+        throw new Error(
+          'Incomplete or invalid vote parameters: chain, governorAddress, proposalId, and support (0, 1, or 2) are required.'
+        );
+      }
 
-      logger.debug('Vote governance parameters:', voteParams);
+      const voteParams = extractedParams as VoteGovernanceParams;
+
+      logger.debug('Vote governance parameters for runner:', voteParams);
       const txResult = await actionRunner.vote(voteParams);
-      const successMsg = `Successfully voted on proposal ${voteParams.proposalId} on ${voteParams.chain} with support ${voteParams.support}. TxHash: ${txResult.hash}`;
+
+      const successMsg = `Successfully voted on proposal ${voteParams.proposalId} on chain ${voteParams.chain} for governor ${voteParams.governorAddress}. Support: ${voteParams.support}. TxHash: ${txResult.hash}.`;
       logger.info(successMsg);
 
       if (callback) {
@@ -232,10 +337,15 @@ export const voteGovernanceAction: Action = {
   examples: [
     [
       {
-        name: 'Vote FOR proposal',
+        name: 'user',
         content: {
-          role: 'user',
-          content: { text: 'Vote FOR proposal 77 on Polygon governor 0xGovAddress.' },
+          text: 'Vote FOR proposal 123 on Polygon governor 0xGov. Chain: polygon.',
+        },
+      },
+      {
+        name: 'user',
+        content: {
+          text: 'Support proposal 0xPropId with option 1 on governor 0xGovAddress for ethereum chain.',
         },
       },
     ],

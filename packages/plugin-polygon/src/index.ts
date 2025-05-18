@@ -5,44 +5,54 @@ import {
   type Provider,
   type ProviderResult,
   logger,
-  Service,
+  type Service,
+  elizaLogger,
 } from '@elizaos/core';
 import { z } from 'zod';
+import { ethers } from 'ethers';
 
 // Import all action files
 import { transferPolygonAction } from './actions/transfer.js';
-import { delegatePolygonAction } from './actions/delegate.js';
+import { delegateL1Action } from './actions/delegateL1.js';
 import { getCheckpointStatusAction } from './actions/getCheckpointStatus.js';
 import { proposeGovernanceAction } from './actions/proposeGovernance.js';
 import { voteGovernanceAction } from './actions/voteGovernance.js';
 import { getValidatorInfoAction } from './actions/getValidatorInfo.js';
 import { getDelegatorInfoAction } from './actions/getDelegatorInfo.js';
-import { withdrawRewardsAction } from './actions/withdrawRewards.js';
+import { withdrawRewardsAction } from './actions/withdrawRewardsL1.js';
 import { bridgeDepositAction } from './actions/bridgeDeposit.js';
-import { getBlockNumberAction, getBlockDetailsAction } from './actions/getBlockInfo.js';
-import { getTransactionDetailsAction } from './actions/getTransactionInfo.js';
-import { getNativeBalanceAction, getERC20BalanceAction } from './actions/getBalanceInfo.js';
-import { getGovernanceInfoAction, getVotingPowerAction } from './actions/getGovernanceInfo.js';
+import { getL2BlockNumberAction } from './actions/getL2BlockNumber.js';
+import { getMaticBalanceAction } from './actions/getMaticBalance.js';
+import { getPolygonGasEstimatesAction } from './actions/getPolygonGasEstimates.js';
+import { undelegateL1Action } from './actions/undelegateL1.js';
+import { restakeRewardsL1Action } from './actions/restakeRewardsL1.js';
+import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed.js';
+import { heimdallVoteAction } from './actions/heimdallVoteAction.js';
+import { heimdallSubmitProposalAction } from './actions/heimdallSubmitProposalAction.js';
+import { heimdallTransferTokensAction } from './actions/heimdallTransferTokensAction.js';
 
-// Import providers and services
-import { WalletProvider } from './providers/PolygonWalletProvider.js';
-import { PolygonRpcService } from './services/PolygonRpcService.js';
-import { GovernanceService } from './services/GovernanceService.js';
-import { getGasPriceEstimates, GasPriceEstimates } from './services/GasService.js';
-import { PolygonBridgeService } from './services/PolygonBridgeService.js';
-
-// Import our custom formatters
-import { formatUnits } from './utils/formatters.js';
-
-// Import default configuration
-import { DEFAULT_RPC_URLS } from './config.js';
+import {
+  WalletProvider,
+  initWalletProvider,
+  polygonWalletProvider,
+} from './providers/PolygonWalletProvider.js';
+import {
+  PolygonRpcService,
+  type ValidatorInfo,
+  type DelegatorInfo,
+  ValidatorStatus,
+} from './services/PolygonRpcService.js';
+import { HeimdallService } from './services/HeimdallService.js';
+import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService.js';
+import { parseBigIntString } from './utils.js'; // Import from utils
 
 // --- Configuration Schema --- //
 const configSchema = z.object({
-  POLYGON_RPC_URL: z.string().url('Invalid Polygon RPC URL').min(1).default(DEFAULT_RPC_URLS.POLYGON_RPC_URL),
-  ETHEREUM_RPC_URL: z.string().url('Invalid Ethereum RPC URL').min(1).default(DEFAULT_RPC_URLS.ETHEREUM_RPC_URL),
+  POLYGON_RPC_URL: z.string().url('Invalid Polygon RPC URL').min(1),
+  ETHEREUM_RPC_URL: z.string().url('Invalid Ethereum RPC URL').min(1),
   PRIVATE_KEY: z.string().min(1, 'Private key is required'),
   POLYGONSCAN_KEY: z.string().min(1, 'PolygonScan API Key is required'),
+  HEIMDALL_RPC_URL: z.string().url('Invalid Heimdall RPC URL').min(1).optional(),
   GOVERNOR_ADDRESS: z.string().optional(),
   TOKEN_ADDRESS: z.string().optional(),
   TIMELOCK_ADDRESS: z.string().optional(),
@@ -51,21 +61,8 @@ const configSchema = z.object({
 // Infer the type from the schema
 type PolygonPluginConfig = z.infer<typeof configSchema>;
 
-// Helper to parse amount/shares (could be moved to utils)
-function parseBigIntString(value: unknown, unitName: string): bigint {
-  if (typeof value !== 'string' || !/^-?\d+$/.test(value)) {
-    throw new Error(`Invalid ${unitName} amount: Must be a string representing an integer.`);
-  }
-  try {
-    return BigInt(value);
-  } catch (e) {
-    throw new Error(`Invalid ${unitName} amount: Cannot parse '${value}' as BigInt.`);
-  }
-}
-
 // --- Define Actions --- //
 const polygonActions: Action[] = [
-  // Core actions
   transferPolygonAction,
   getValidatorInfoAction,
   getDelegatorInfoAction,
@@ -73,130 +70,178 @@ const polygonActions: Action[] = [
   getCheckpointStatusAction,
   proposeGovernanceAction,
   voteGovernanceAction,
+  getL2BlockNumberAction,
+  getMaticBalanceAction,
+  getPolygonGasEstimatesAction,
+  delegateL1Action,
+  undelegateL1Action,
   withdrawRewardsAction,
-  delegatePolygonAction,
-  
-  // New modular actions for blockchain data access
-  getBlockNumberAction,
-  getBlockDetailsAction,
-  getTransactionDetailsAction,
-  getNativeBalanceAction,
-  getERC20BalanceAction,
-  
-  // Governance actions
-  getGovernanceInfoAction,
-  getVotingPowerAction,
-  
-  // Simple action for gas price estimates
-  {
-    name: 'GET_POLYGON_GAS_ESTIMATES',
-    description: 'Gets current gas price estimates for Polygon from PolygonScan.',
-    validate: async () => true,
-    handler: async (runtime: IAgentRuntime) => {
-      const estimates: GasPriceEstimates = await getGasPriceEstimates(runtime);
-      let text = 'Polygon Gas Estimates (Wei):\n';
-      
-      // Format priority fee per gas using our formatter
-      const safeLowPriority = estimates.safeLow?.maxPriorityFeePerGas
-        ? formatUnits(estimates.safeLow.maxPriorityFeePerGas, 9) + ' Gwei'
-        : 'N/A';
-      
-      const averagePriority = estimates.average?.maxPriorityFeePerGas
-        ? formatUnits(estimates.average.maxPriorityFeePerGas, 9) + ' Gwei'
-        : 'N/A';
-      
-      const fastPriority = estimates.fast?.maxPriorityFeePerGas
-        ? formatUnits(estimates.fast.maxPriorityFeePerGas, 9) + ' Gwei'
-        : 'N/A';
-      
-      const baseFee = estimates.estimatedBaseFee
-        ? formatUnits(estimates.estimatedBaseFee, 9) + ' Gwei'
-        : 'N/A';
-      
-      text += `  Safe Low Priority: ${safeLowPriority}\n`;
-      text += `  Average Priority:  ${averagePriority}\n`;
-      text += `  Fast Priority:     ${fastPriority}\n`;
-      text += `  Estimated Base:    ${baseFee}`;
-      
-      if (estimates.fallbackGasPrice) {
-        text += `\n  (Used Fallback Price: ${formatUnits(estimates.fallbackGasPrice, 9)} Gwei)`;
-      }
-      
-      return { text, actions: ['GET_POLYGON_GAS_ESTIMATES'], data: estimates };
-    },
-    examples: [],
-  }
+  restakeRewardsL1Action,
+  isL2BlockCheckpointedAction,
+  heimdallVoteAction,
+  heimdallSubmitProposalAction,
+  heimdallTransferTokensAction,
 ];
 
+// --- Define Providers --- //
+
 /**
- * Polygon Plugin for ElizaOS
- * 
- * A plugin that provides integration with Polygon (MATIC) blockchain,
- * allowing users to interact with both Ethereum (L1) and Polygon (L2) networks.
- * 
- * Features include:
- * - Standard RPC operations on both L1 and L2
- * - Account and balance management
- * - Block and transaction information 
- * - Token interactions (MATIC and ERC20)
- * - Validator interactions (staking, delegation)
- * - Bridge operations between L1 and L2
+ * Provider to fetch and display Polygon-specific info like address, balance, gas.
  */
-class PolygonPlugin implements Plugin {
-  name = 'polygon';
-  description = 'Polygon (MATIC) blockchain integration';
-  capabilities = {
-    polygonRpc: 'Access to Polygon and Ethereum JSON-RPC nodes',
-  };
-  config?: PolygonPluginConfig;
-  
-  /**
-   * Initialize the Polygon plugin
-   */
-  async init(config: Record<string, string>, runtime: IAgentRuntime): Promise<void> {
+const polygonProviderInfo: Provider = {
+  name: 'Polygon Provider Info',
+  async get(runtime: IAgentRuntime, _message, state): Promise<ProviderResult> {
     try {
-      // Add default RPC URLs if not provided
-      const configWithDefaults = {
-        ...config,
-        POLYGON_RPC_URL: config.POLYGON_RPC_URL || DEFAULT_RPC_URLS.POLYGON_RPC_URL,
-        ETHEREUM_RPC_URL: config.ETHEREUM_RPC_URL || DEFAULT_RPC_URLS.ETHEREUM_RPC_URL,
-      };
-      
-      // Parse and validate config
-      const parsedConfig = configSchema.safeParse(configWithDefaults);
-      if (!parsedConfig.success) {
-        const errorMessage = parsedConfig.error.issues
-          .map((issue) => issue.message)
-          .join(', ');
-        throw new Error(`Invalid config: ${errorMessage}`);
+      // 1. Initialize WalletProvider to get address
+      const polygonWalletProviderInstance = await initWalletProvider(runtime);
+      if (!polygonWalletProviderInstance) {
+        // Renamed to avoid conflict
+        throw new Error(
+          'Failed to initialize PolygonWalletProvider - check PRIVATE_KEY configuration'
+        );
       }
-      
-      // Set config if valid
-      this.config = parsedConfig.data;
-      logger.info('Polygon plugin initialized successfully');
-      logger.debug(`Using Ethereum RPC: ${this.config.ETHEREUM_RPC_URL.substring(0, 20)}... and Polygon RPC: ${this.config.POLYGON_RPC_URL.substring(0, 20)}...`);
+      const agentAddress = polygonWalletProviderInstance.getAddress();
+      if (!agentAddress) throw new Error('Could not determine agent address from provider');
+
+      // 2. Get PolygonRpcService instance (should be already started)
+      const polygonRpcService = runtime.getService<PolygonRpcService>(
+        PolygonRpcService.serviceType
+      );
+      if (!polygonRpcService) {
+        throw new Error('PolygonRpcService not available or not started');
+      }
+
+      // 3. Get L2 (Polygon) MATIC balance
+      const maticBalanceWei = await polygonRpcService.getBalance(agentAddress, 'L2');
+      const maticBalanceFormatted = ethers.formatEther(maticBalanceWei);
+
+      // 4. Get Gas price info
+      const gasEstimates = await getGasPriceEstimates(runtime);
+
+      const agentName = state?.agentName || 'The agent';
+
+      // 5. Format the text output
+      let text = `${agentName}'s Polygon Status:\\n`;
+      text += `  Wallet Address: ${agentAddress}\\n`;
+      text += `  MATIC Balance: ${maticBalanceFormatted} MATIC\\n`;
+      text += '  Current Gas Prices (Max Priority Fee Per Gas - Gwei):\\n';
+      const safeLowGwei = gasEstimates.safeLow?.maxPriorityFeePerGas
+        ? ethers.formatUnits(gasEstimates.safeLow.maxPriorityFeePerGas, 'gwei')
+        : 'N/A';
+      const averageGwei = gasEstimates.average?.maxPriorityFeePerGas
+        ? ethers.formatUnits(gasEstimates.average.maxPriorityFeePerGas, 'gwei')
+        : 'N/A';
+      const fastGwei = gasEstimates.fast?.maxPriorityFeePerGas
+        ? ethers.formatUnits(gasEstimates.fast.maxPriorityFeePerGas, 'gwei')
+        : 'N/A';
+      const baseFeeGwei = gasEstimates.estimatedBaseFee
+        ? ethers.formatUnits(gasEstimates.estimatedBaseFee, 'gwei')
+        : 'N/A';
+
+      text += `    - Safe Low: ${safeLowGwei}\\n`;
+      text += `    - Average:  ${averageGwei}\\n`; // Adjusted name to average
+      text += `    - Fast:     ${fastGwei}\\n`;
+      text += `  Estimated Base Fee (Gwei): ${baseFeeGwei}\\n`;
+
+      return {
+        text,
+        data: {
+          address: agentAddress,
+          maticBalance: maticBalanceFormatted,
+          gasEstimates: {
+            safeLowGwei,
+            averageGwei,
+            fastGwei,
+            baseFeeGwei,
+          },
+        },
+        values: {
+          // Provide raw values or formatted strings as needed
+          address: agentAddress,
+          maticBalance: maticBalanceFormatted,
+          gas_safe_low_gwei: safeLowGwei,
+          gas_average_gwei: averageGwei, // Changed key name
+          gas_fast_gwei: fastGwei,
+          gas_base_fee_gwei: baseFeeGwei,
+        },
+      };
     } catch (error) {
-      logger.error('Error initializing Polygon plugin:', error);
+      logger.error('Error getting Polygon provider info:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // Create a more user-friendly message based on the error
+      const userMessage = errorMessage.includes('private key')
+        ? 'There was an issue with the wallet configuration. Please ensure PRIVATE_KEY is correctly set.'
+        : `Error getting Polygon provider info: ${errorMessage}`;
+
+      return {
+        text: userMessage,
+        data: { error: errorMessage },
+        values: { error: errorMessage },
+      };
+    }
+  },
+};
+
+const polygonProviders: Provider[] = [polygonWalletProvider, polygonProviderInfo];
+
+// --- Define Services --- //
+const polygonServices: (typeof Service)[] = [PolygonRpcService, HeimdallService];
+
+// --- Plugin Definition --- //
+export const polygonPlugin: Plugin = {
+  name: '@elizaos/plugin-polygon',
+  description: 'Plugin for interacting with the Polygon PoS network and staking.',
+
+  // Configuration loaded from environment/character settings
+  config: {
+    POLYGON_RPC_URL: process.env.POLYGON_RPC_URL,
+    ETHEREUM_RPC_URL: process.env.ETHEREUM_RPC_URL,
+    PRIVATE_KEY: process.env.PRIVATE_KEY,
+    POLYGONSCAN_KEY: process.env.POLYGONSCAN_KEY,
+    HEIMDALL_RPC_URL: process.env.HEIMDALL_RPC_URL,
+  },
+
+  // Initialization logic
+  async init(config: Record<string, unknown>, runtime: IAgentRuntime) {
+    logger.info(`Initializing plugin: ${this.name}`);
+    try {
+      // Validate configuration
+      const validatedConfig = await configSchema.parseAsync(config);
+      logger.info('Polygon plugin configuration validated successfully.');
+
+      // Store validated config in runtime settings for services/actions/providers to access
+      // This assumes runtime has a way to store validated plugin config or settings are global
+      for (const [key, value] of Object.entries(validatedConfig)) {
+        if (!runtime.getSetting(key)) {
+          logger.warn(
+            `Setting ${key} was validated but not found via runtime.getSetting. Ensure it is loaded globally before plugin init.`
+          );
+        }
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        logger.error('Invalid Polygon plugin configuration:', error.errors);
+        throw new Error(
+          `Invalid Polygon plugin configuration: ${error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ')}`
+        );
+      }
+      logger.error('Error during Polygon plugin initialization:', error);
       throw error;
     }
-  }
-  
-  getProviders(): Provider[] {
-    return [];
-  }
-  
-  getActions(): Action[] {
-    return polygonActions;
-  }
-  
-  getServices(): (typeof Service)[] {
-    const polygonServices: (typeof Service)[] = [
-      PolygonRpcService, 
-      GovernanceService,
-      PolygonBridgeService
-    ];
-    return polygonServices;
-  }
-}
+  },
 
-export default PolygonPlugin;
+  // Register components
+  actions: polygonActions,
+  providers: polygonProviders,
+  services: polygonServices,
+
+  // Optional lifecycle methods, models, tests, routes, events
+  models: {},
+  tests: [],
+  routes: [],
+  events: {},
+};
+
+// Default export for ElizaOS to load
+export default polygonPlugin;

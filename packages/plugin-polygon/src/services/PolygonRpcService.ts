@@ -1,37 +1,36 @@
-import { Service, IAgentRuntime, logger } from '@elizaos/core';
+import { Service, type IAgentRuntime, logger } from '@elizaos/core';
 import {
   JsonRpcProvider,
   Contract,
   Wallet
 } from 'ethers'; // Importing directly from ethers v6+
 
-// viem imports for RPC client operations
-import {
-  type Address,
-  type Hash,
-  type Hex,
-  formatEther,
-  parseEther,
-  type Chain
-} from 'viem';
-
-// Import our new provider
-import { PolygonRpcProvider, initPolygonRpcProvider } from '../providers/PolygonRpcProvider.js';
-import { NetworkType, Transaction, BlockIdentifier, BlockInfo, TransactionDetails, CacheEntry } from '../types.js';
-import { DEFAULT_RPC_URLS, CONTRACT_ADDRESSES, CACHE_EXPIRY } from '../config.js';
-
-// Import ABIs from contract files
-import StakeManagerABI from '../contracts/StakeManagerABI.json' with { type: "json" };
-import ValidatorShareABI from '../contracts/ValidatorShareABI.json' with { type: "json" };
-import RootChainManagerABI from '../contracts/RootChainManagerABI.json' with { type: "json" };
-import ERC20ABI from '../contracts/ERC20ABI.json' with { type: "json" };
+// Import JSON ABIs
+import StakeManagerABI from '../contracts/StakeManagerABI.json';
+import ValidatorShareABI from '../contracts/ValidatorShareABI.json';
+import RootChainManagerABI from '../contracts/RootChainManagerABI.json';
+import Erc20ABI from '../contracts/ERC20ABI.json';
+import CheckpointManagerABI from '../contracts/CheckpointManagerABI.json';
 
 // Re-import GasService components
-import { getGasPriceEstimates, GasPriceEstimates } from './GasService.js';
+import { getGasPriceEstimates, type GasPriceEstimates } from './GasService';
+
+// Minimal ERC20 ABI fragment for balanceOf
+const ERC20_ABI_BALANCEOF = [
+  {
+    constant: true,
+    inputs: [{ name: '_owner', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: 'balance', type: 'uint256' }],
+    type: 'function',
+  },
+];
+
+export type NetworkType = 'L1' | 'L2';
 
 // --- Staking Contract Addresses (Ethereum Mainnet) ---
-const STAKE_MANAGER_ADDRESS_L1 = CONTRACT_ADDRESSES.STAKE_MANAGER_ADDRESS_L1;
-const ROOT_CHAIN_MANAGER_ADDRESS_L1 = CONTRACT_ADDRESSES.ROOT_CHAIN_MANAGER_ADDRESS_L1;
+const STAKE_MANAGER_ADDRESS_L1 = '0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908';
+const ROOT_CHAIN_MANAGER_ADDRESS_L1 = '0xA0c68C638235ee32657e8f720a23ceC1bFc77C77';
 
 // --- Type Definitions for Staking Info ---
 
@@ -77,9 +76,6 @@ export class PolygonRpcService extends Service {
   private stakeManagerContractL1: Contract | null = null;
   private rootChainManagerContractL1: Contract | null = null;
   
-  // New viem-based provider for standardized RPC operations
-  private rpcProvider: PolygonRpcProvider | null = null;
-  
   // Cache settings
   private cacheKey = 'polygon/rpc';
   private cacheExpiryMs = 60000; // 1 minute
@@ -97,16 +93,21 @@ export class PolygonRpcService extends Service {
     }
 
     try {
-      // Initialize viem-based provider
-      this.rpcProvider = await initPolygonRpcProvider(this.runtime);
-      
       // Initialize legacy ethers.js providers for backward compatibility
-      const l1RpcUrl = this.runtime.getSetting('ETHEREUM_RPC_URL') || DEFAULT_RPC_URLS.ETHEREUM_RPC_URL;
-      const l2RpcUrl = this.runtime.getSetting('POLYGON_RPC_URL') || DEFAULT_RPC_URLS.POLYGON_RPC_URL;
+      const l1RpcUrl = this.runtime.getSetting('ETHEREUM_RPC_URL');
+      const l2RpcUrl = this.runtime.getSetting('POLYGON_RPC_URL');
       const privateKey = this.runtime.getSetting('PRIVATE_KEY');
     
       if (!privateKey) {
         throw new Error('Missing required private key');
+      }
+      
+      if (!l1RpcUrl) {
+        throw new Error('Missing required Ethereum RPC URL');
+      }
+      
+      if (!l2RpcUrl) {
+        throw new Error('Missing required Polygon RPC URL');
       }
 
       this.l1Provider = new JsonRpcProvider(l1RpcUrl);
@@ -119,6 +120,8 @@ export class PolygonRpcService extends Service {
         StakeManagerABI,
         this.l1Provider
       );
+      await this.stakeManagerContractL1.validatorThreshold(); // Test connection
+      logger.info('StakeManager L1 contract instance created and connection verified.');
       
       this.rootChainManagerContractL1 = new Contract(
         ROOT_CHAIN_MANAGER_ADDRESS_L1,
@@ -135,13 +138,12 @@ export class PolygonRpcService extends Service {
       this.l1Signer = null;
       this.stakeManagerContractL1 = null;
       this.rootChainManagerContractL1 = null;
-      this.rpcProvider = null;
       throw error;
     }
   }
 
   static async start(runtime: IAgentRuntime): Promise<PolygonRpcService> {
-    logger.info(`Starting PolygonRpcService...`);
+    logger.info('Starting PolygonRpcService...');
     const service = new PolygonRpcService(runtime);
     await service.initializeProviders();
     return service;
@@ -162,7 +164,19 @@ export class PolygonRpcService extends Service {
     this.l1Signer = null;
     this.stakeManagerContractL1 = null;
     this.rootChainManagerContractL1 = null;
-    this.rpcProvider = null;
+  }
+
+  /**
+   * Gets the current gas price for the specified network.
+   * @param network Which network to query (L1 or L2)
+   * @returns The gas price in wei as a bigint
+   */
+  async getGasPrice(network: NetworkType = 'L2'): Promise<bigint> {
+    const provider = network === 'L1' ? this.l1Provider : this.l2Provider;
+    if (!provider) {
+      throw new Error(`Provider for ${network} not available`);
+    }
+    return await provider.getGasPrice();
   }
 
   // --- Standard RPC Methods with Network Selection ---
@@ -171,55 +185,60 @@ export class PolygonRpcService extends Service {
    * Gets the current block number for the specified network
    */
   async getBlockNumber(network: NetworkType = 'L2'): Promise<number> {
-    if (!this.rpcProvider) {
-      throw new Error('RPC Provider not initialized');
+    const provider = network === 'L1' ? this.l1Provider : this.l2Provider;
+    if (!provider) {
+      throw new Error(`Provider for ${network} not available`);
     }
     
-    return this.rpcProvider.getBlockNumber(network);
+    return await provider.getBlockNumber();
   }
 
   /**
    * Gets the balance of native tokens (ETH/MATIC) for an address on the specified network
    */
   async getBalance(address: Address, network: NetworkType = 'L2'): Promise<bigint> {
-    if (!this.rpcProvider) {
-      throw new Error('RPC Provider not initialized');
+    const provider = network === 'L1' ? this.l1Provider : this.l2Provider;
+    if (!provider) {
+      throw new Error(`Provider for ${network} not available`);
     }
     
-    return this.rpcProvider.getNativeBalance(address, network);
+    return await provider.getBalance(address);
   }
 
   /**
    * Gets transaction details by hash from the specified network
    */
   async getTransaction(txHash: Hash, network: NetworkType = 'L2'): Promise<any> {
-    if (!this.rpcProvider) {
-      throw new Error('RPC Provider not initialized');
+    const provider = network === 'L1' ? this.l1Provider : this.l2Provider;
+    if (!provider) {
+      throw new Error(`Provider for ${network} not available`);
     }
     
-    return this.rpcProvider.getTransaction(txHash, network);
+    return await provider.getTransaction(txHash);
   }
 
   /**
    * Gets transaction receipt by hash from the specified network
    */
   async getTransactionReceipt(txHash: Hash, network: NetworkType = 'L2'): Promise<any> {
-    if (!this.rpcProvider) {
-      throw new Error('RPC Provider not initialized');
+    const provider = network === 'L1' ? this.l1Provider : this.l2Provider;
+    if (!provider) {
+      throw new Error(`Provider for ${network} not available`);
     }
     
-    return this.rpcProvider.getTransactionReceipt(txHash, network);
+    return await provider.getTransactionReceipt(txHash);
   }
 
   /**
    * Gets block details by number or hash from the specified network
    */
   async getBlock(blockIdentifier: BlockIdentifier, network: NetworkType = 'L2'): Promise<any> {
-    if (!this.rpcProvider) {
-      throw new Error('RPC Provider not initialized');
+    const provider = network === 'L1' ? this.l1Provider : this.l2Provider;
+    if (!provider) {
+      throw new Error(`Provider for ${network} not available`);
     }
     
-    return this.rpcProvider.getBlock(blockIdentifier, network);
+    return await provider.getBlock(blockIdentifier);
   }
 
   /**
@@ -230,11 +249,12 @@ export class PolygonRpcService extends Service {
     data: Hash, 
     network: NetworkType = 'L2'
   ): Promise<Hash> {
-    if (!this.rpcProvider) {
-      throw new Error('RPC Provider not initialized');
+    const provider = network === 'L1' ? this.l1Provider : this.l2Provider;
+    if (!provider) {
+      throw new Error(`Provider for ${network} not available`);
     }
     
-    const client = this.rpcProvider.getPublicClient(network);
+    const client = provider.getPublicClient();
     const result = await client.call({
       to,
       data,
@@ -250,14 +270,14 @@ export class PolygonRpcService extends Service {
     tx: { to: Address; data?: Hash; value?: bigint },
     network: NetworkType = 'L2'
   ): Promise<bigint> {
-    if (!this.rpcProvider) {
-      throw new Error('RPC Provider not initialized');
+    const provider = network === 'L1' ? this.l1Provider : this.l2Provider;
+    if (!provider) {
+      throw new Error(`Provider for ${network} not available`);
     }
     
-    const client = this.rpcProvider.getPublicClient(network);
-    const account = this.rpcProvider.getAddress();
+    const account = await provider.getAddress();
     
-    const gasEstimate = await client.estimateGas({
+    const gasEstimate = await provider.estimateGas({
       to: tx.to,
       data: tx.data,
       value: tx.value,
@@ -265,20 +285,6 @@ export class PolygonRpcService extends Service {
     });
     
     return gasEstimate;
-  }
-
-  /**
-   * Gets current gas price on the specified network
-   */
-  async getGasPrice(network: NetworkType = 'L2'): Promise<bigint> {
-    if (!this.rpcProvider) {
-      throw new Error('RPC Provider not initialized');
-    }
-    
-    const client = this.rpcProvider.getPublicClient(network);
-    const gasPrice = await client.getGasPrice();
-    
-    return gasPrice;
   }
 
   /**
@@ -290,13 +296,14 @@ export class PolygonRpcService extends Service {
     data: Hash = '0x' as Hash,
     network: NetworkType = 'L2'
   ): Promise<Hash> {
-    if (!this.rpcProvider) {
-      throw new Error('RPC Provider not initialized');
+    const provider = network === 'L1' ? this.l1Provider : this.l2Provider;
+    if (!provider) {
+      throw new Error(`Provider for ${network} not available`);
     }
     
     try {
       // Use the provider's sendTransaction method which is safer and properly handles gas estimation
-      const txHash = await this.rpcProvider.sendTransaction(to, value, data, network);
+      const txHash = await provider.sendTransaction(to, value, data);
       logger.info(`Transaction sent on ${network}: ${txHash}`);
       
       return txHash;
@@ -386,7 +393,7 @@ export class PolygonRpcService extends Service {
       logger.info(`Fetching details for block ${identifier}`);
       
       // Fetch block with full transaction objects
-      const block = await this.rpcProvider!.getBlock(identifier, 'L2');
+      const block = await this.getBlock(identifier, 'L2');
       
       if (!block) {
         throw new Error(`Block not found: ${identifier}`);
@@ -438,8 +445,8 @@ export class PolygonRpcService extends Service {
       
       // Fetch both transaction and receipt in parallel
       const [txResponse, txReceipt] = await Promise.all([
-        this.rpcProvider!.getTransaction(txHash, 'L2'),
-        this.rpcProvider!.getTransactionReceipt(txHash, 'L2')
+        this.getTransaction(txHash, 'L2'),
+        this.getTransactionReceipt(txHash, 'L2')
       ]);
       
       // If neither is found, return null
@@ -460,6 +467,64 @@ export class PolygonRpcService extends Service {
     } catch (error) {
       logger.error(`Error getting transaction details for ${txHash}:`, error);
       throw new Error(`Failed to get transaction details: ${error.message}`);
+    }
+  }
+
+  // --- L1 Staking Write Operations ---
+
+  /**
+   * Delegates MATIC to a validator on L1.
+   * @param validatorId The ID of the validator.
+   * @param amountWei Amount of MATIC/POL to delegate in Wei.
+   * @returns Transaction hash of the delegation transaction.
+   */
+  async delegate(validatorId: number, amountWei: bigint): Promise<string> {
+    logger.info(
+      `Initiating delegation of ${ethers.formatEther(amountWei)} MATIC to validator ${validatorId} on L1...`
+    );
+    if (amountWei <= 0n) {
+      throw new Error('Delegation amount must be greater than zero.');
+    }
+    const signer = this.getL1Signer();
+    const l1Provider = this.getProvider('L1');
+    const contract = await this._getValidatorShareContract(validatorId);
+
+    try {
+      const stakeManager = this.getStakeManagerContract();
+      const txData = await stakeManager.delegate.populateTransaction(validatorId, amountWei);
+
+      const { maxFeePerGas, maxPriorityFeePerGas } = await this._getL1FeeDetails();
+
+      // Estimate gas for the specific transaction
+      const gasLimit = await signer.estimateGas({ ...txData });
+      const gasLimitBuffered = (gasLimit * 120n) / 100n; // Add 20% buffer
+
+      // Construct Full Transaction
+      const tx: TransactionRequest = {
+        ...txData,
+        value: amountWei,
+        gasLimit: gasLimitBuffered,
+        maxFeePerGas: maxFeePerGas,
+        maxPriorityFeePerGas: maxPriorityFeePerGas,
+        chainId: (await l1Provider.getNetwork()).chainId, // Ensure correct chain ID
+      };
+
+      // Sign Transaction
+      logger.debug('Signing delegation transaction...', tx);
+      const signedTx = await signer.signTransaction(tx);
+
+      // Broadcast Transaction
+      logger.info(`Broadcasting L1 delegation transaction for validator ${validatorId}...`);
+      const txResponse = await this.sendRawTransaction(signedTx, 'L1');
+      logger.info(`Delegation transaction sent: ${txResponse.hash}`);
+
+      // Return Hash (Consider adding wait option later)
+      return txResponse.hash;
+    } catch (error: unknown) {
+      logger.error(`Delegation to validator ${validatorId} failed:`, error);
+      // Add more specific error handling (insufficient funds, etc.)
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Delegation failed: ${errorMessage}`);
     }
   }
 
@@ -487,7 +552,7 @@ export class PolygonRpcService extends Service {
       logger.info(`Fetching MATIC balance for ${address}`);
       
       // Get balance using the provider
-      const balance = await this.rpcProvider!.getNativeBalance(address, 'L2');
+      const balance = await this.getBalance(address, 'L2');
       
       // Cache for 30 seconds (balances may change frequently)
       await this.setCacheValue(cacheKey, balance, 30000);
@@ -523,7 +588,7 @@ export class PolygonRpcService extends Service {
       logger.info(`Fetching token balance for ${accountAddress} (token: ${tokenAddress})`);
       
       // Get token balance using the provider
-      const balance = await this.rpcProvider!.getErc20Balance(tokenAddress, accountAddress, 'L2');
+      const balance = await this.getBalance(tokenAddress, 'L2');
       
       // Cache for 30 seconds (balances may change frequently)
       await this.setCacheValue(cacheKey, balance, 30000);
@@ -560,7 +625,7 @@ export class PolygonRpcService extends Service {
       }
       
       return cache.value;
-      } catch (error) {
+    } catch (error) {
       logger.error(`Error retrieving from cache (${key}):`, error);
       return undefined;
     }
@@ -593,6 +658,117 @@ export class PolygonRpcService extends Service {
     }
   }
 
+  // Helper for L1 Fee Details
+  private async _getL1FeeDetails(): Promise<{
+    maxFeePerGas: bigint;
+    maxPriorityFeePerGas: bigint;
+  }> {
+    if (!this.l1Provider) throw new Error('L1 provider not initialized for fee data.');
+    // Runtime check is inside getGasPriceEstimates, but good to be explicit if we use it directly often
+    if (!this.runtime) throw new Error('Runtime not available for GasService access.');
+
+    try {
+      const gasServiceEstimates = await getGasPriceEstimates(this.runtime);
+      // Check if GasService provided sufficient EIP-1559 data
+      if (
+        gasServiceEstimates?.estimatedBaseFee &&
+        gasServiceEstimates?.average?.maxPriorityFeePerGas
+      ) {
+        const maxPriorityFeePerGas = gasServiceEstimates.average.maxPriorityFeePerGas;
+        const maxFeePerGas = gasServiceEstimates.estimatedBaseFee + maxPriorityFeePerGas;
+        logger.debug('Using L1 fee details from GasService.');
+        return { maxFeePerGas, maxPriorityFeePerGas };
+      }
+    } catch (gsError) {
+      logger.warn(
+        `GasService call failed or returned insufficient data: ${gsError.message}. Falling back to l1Provider.getFeeData().`
+      );
+    }
+
+    // Fallback to l1Provider.getFeeData()
+    logger.debug('Falling back to l1Provider.getFeeData() for L1 fee details.');
+    const feeData = await this.l1Provider.getFeeData();
+    let maxFeePerGas = feeData.maxFeePerGas;
+    let maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+
+    if (maxFeePerGas === null || maxPriorityFeePerGas === null) {
+      if (feeData.gasPrice !== null) {
+        logger.warn(
+          'L1 fee data: maxFeePerGas or maxPriorityFeePerGas is null, using gasPrice as fallback (legacy transaction type).'
+        );
+        // For legacy tx, or if EIP-1559 not fully supported by provider via getFeeData, use gasPrice.
+        // maxFeePerGas and maxPriorityFeePerGas will effectively be the same as gasPrice.
+        maxFeePerGas = feeData.gasPrice;
+        maxPriorityFeePerGas = feeData.gasPrice;
+      } else {
+        throw new Error(
+          'Unable to obtain L1 fee data: getFeeData() returned all null for EIP-1559 fields and gasPrice.'
+        );
+      }
+    }
+
+    if (maxFeePerGas === null || maxPriorityFeePerGas === null) {
+      // This should ideally not be reached if gasPrice fallback worked.
+      throw new Error('Unable to determine L1 fee details even after fallback attempts.');
+    }
+
+    return { maxFeePerGas, maxPriorityFeePerGas };
+  }
+
+  // --- L2 Checkpoint Status Check (L1) ---
+
+  /**
+   * Fetches the last L2 block number included in a checkpoint on L1.
+   * @returns A promise resolving to the last checkpointed L2 block number as a bigint.
+   */
+  async getLastCheckpointedL2Block(): Promise<bigint> {
+    logger.debug(
+      'Getting last checkpointed L2 block number from L1 RootChainManager/CheckpointManager...'
+    );
+    try {
+      const rootChainManager = this.getRootChainManagerContract();
+      if (!this.l1Provider) {
+        throw new Error('L1 provider not initialized for CheckpointManager interaction.');
+      }
+
+      const checkpointManagerAddr = await rootChainManager.checkpointManagerAddress();
+      if (!checkpointManagerAddr || checkpointManagerAddr === ZeroAddress) {
+        throw new Error(
+          'CheckpointManager address not found or is zero address from RootChainManager.'
+        );
+      }
+
+      const checkpointManager = new Contract(
+        checkpointManagerAddr,
+        CheckpointManagerABI,
+        this.l1Provider
+      );
+
+      const lastHeaderNum = await checkpointManager.currentHeaderBlock();
+      if (lastHeaderNum === undefined || lastHeaderNum === null) {
+        throw new Error('Failed to retrieve currentHeaderBlock from CheckpointManager.');
+      }
+
+      const headerBlockDetails = await checkpointManager.headerBlocks(lastHeaderNum);
+
+      if (!headerBlockDetails || headerBlockDetails.endBlock === undefined) {
+        throw new Error(
+          'Failed to retrieve valid headerBlockDetails or endBlock from CheckpointManager.'
+        );
+      }
+
+      const endBlock = headerBlockDetails.endBlock;
+      const lastBlock = BigInt(endBlock.toString());
+      logger.info(`Last L2 block checkpointed on L1 (via CheckpointManager): ${lastBlock}`);
+      return lastBlock;
+    } catch (error: unknown) {
+      logger.error('Error fetching last checkpointed L2 block from L1:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      // Rethrow with a more specific message if needed, or just the original error
+      throw new Error(`Failed to get last checkpointed L2 block: ${errorMessage}`);
+    }
+  }
+
   /**
    * Gets the ethers provider for the specified network
    * This is needed for compatibility with contracts that require ethers.js
@@ -608,6 +784,29 @@ export class PolygonRpcService extends Service {
         throw new Error('L2 provider not initialized');
       }
       return this.l2Provider;
+    }
+  }
+
+  async isL2BlockCheckpointed(l2BlockNumber: number | bigint): Promise<boolean> {
+    const targetBlock = BigInt(l2BlockNumber.toString());
+    logger.debug(`Checking if L2 block ${targetBlock} is checkpointed on L1...`);
+    try {
+      const lastCheckpointedBlock = await this.getLastCheckpointedL2Block();
+      const isCheckpointed = targetBlock <= lastCheckpointedBlock;
+      logger.info(
+        `L2 block ${targetBlock} checkpointed status: ${isCheckpointed} (Last Checkpointed: ${lastCheckpointedBlock})`
+      );
+      return isCheckpointed;
+    } catch (error: unknown) {
+      logger.error(
+        `Could not determine checkpoint status for L2 block ${targetBlock} due to error fetching last checkpoint.`,
+        error
+      );
+      // Consistent with user plan: if getLastCheckpointedL2Block fails, this should also fail rather than return false.
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Failed to determine checkpoint status for L2 block ${targetBlock}: ${errorMessage}`
+      );
     }
   }
 }

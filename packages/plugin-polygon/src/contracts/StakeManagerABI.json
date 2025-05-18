@@ -1,44 +1,159 @@
 [
   {
+<<<<<<< HEAD
     "inputs": [
       {
         "internalType": "uint256",
         "name": "validatorId",
+=======
+    "inputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_registry",
+        "type": "address"
+      },
+      {
+        "name": "_rootchain",
+        "type": "address"
+      },
+      {
+        "name": "_token",
+        "type": "address"
+      },
+      {
+        "name": "_NFTContract",
+        "type": "address"
+      },
+      {
+        "name": "_stakingLogger",
+        "type": "address"
+      },
+      {
+        "name": "_validatorShareFactory",
+        "type": "address"
+      },
+      {
+        "name": "_governance",
+        "type": "address"
+      },
+      {
+        "name": "_owner",
+        "type": "address"
+      },
+      {
+        "name": "_extensionCode",
+        "type": "address"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "isOwner",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "getRegistry",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "tokenId",
+>>>>>>> samarth/addpolygon
         "type": "uint256"
       }
     ],
     "name": "ownerOf",
     "outputs": [
       {
+<<<<<<< HEAD
         "internalType": "address",
+=======
+>>>>>>> samarth/addpolygon
         "name": "",
         "type": "address"
       }
     ],
+<<<<<<< HEAD
+=======
+    "payable": false,
+>>>>>>> samarth/addpolygon
     "stateMutability": "view",
     "type": "function"
   },
   {
+<<<<<<< HEAD
     "inputs": [],
     "name": "validatorThreshold",
     "outputs": [
       {
         "internalType": "uint256",
+=======
+    "constant": true,
+    "inputs": [],
+    "name": "epoch",
+    "outputs": [
+      {
+>>>>>>> samarth/addpolygon
         "name": "",
         "type": "uint256"
       }
     ],
+<<<<<<< HEAD
+=======
+    "payable": false,
+>>>>>>> samarth/addpolygon
     "stateMutability": "view",
     "type": "function"
   },
   {
+<<<<<<< HEAD
     "inputs": [
       {
         "internalType": "uint256",
+=======
+    "constant": true,
+    "inputs": [],
+    "name": "withdrawalDelay",
+    "outputs": [
+      {
+>>>>>>> samarth/addpolygon
         "name": "",
         "type": "uint256"
       }
     ],
+<<<<<<< HEAD
     "name": "validators",
     "outputs": [
       {
@@ -82,13 +197,145 @@
         "type": "uint8"
       }
     ],
+=======
+    "payable": false,
+>>>>>>> samarth/addpolygon
     "stateMutability": "view",
     "type": "function"
   },
   {
+<<<<<<< HEAD
     "inputs": [
       {
         "internalType": "uint256",
+=======
+    "constant": true,
+    "inputs": [
+      {
+        "name": "validatorId",
+        "type": "uint256"
+      }
+    ],
+    "name": "validatorStake",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getValidatorId",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "validatorId",
+        "type": "uint256"
+      }
+    ],
+    "name": "delegatedAmount",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "validatorId",
+        "type": "uint256"
+      }
+    ],
+    "name": "delegatorsReward",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "validatorId",
+        "type": "uint256"
+      }
+    ],
+    "name": "validatorReward",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "currentValidatorSetSize",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "currentValidatorSetTotalStake",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+>>>>>>> samarth/addpolygon
         "name": "validatorId",
         "type": "uint256"
       }
@@ -96,15 +343,24 @@
     "name": "getValidatorContract",
     "outputs": [
       {
+<<<<<<< HEAD
         "internalType": "address",
         "name": "ValidatorContract",
         "type": "address"
       }
     ],
+=======
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+>>>>>>> samarth/addpolygon
     "stateMutability": "view",
     "type": "function"
   },
   {
+<<<<<<< HEAD
     "inputs": [],
     "name": "NFTCounter",
     "outputs": [
@@ -134,10 +390,16 @@
     "inputs": [
       {
         "internalType": "uint256",
+=======
+    "constant": true,
+    "inputs": [
+      {
+>>>>>>> samarth/addpolygon
         "name": "validatorId",
         "type": "uint256"
       }
     ],
+<<<<<<< HEAD
     "name": "stakeFor",
     "outputs": [],
     "stateMutability": "payable",
@@ -165,40 +427,216 @@
     "outputs": [
       {
         "internalType": "bool",
+=======
+    "name": "isValidator",
+    "outputs": [
+      {
+>>>>>>> samarth/addpolygon
         "name": "",
         "type": "bool"
       }
     ],
+<<<<<<< HEAD
+=======
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "enabled",
+        "type": "bool"
+      }
+    ],
+    "name": "setDelegationEnabled",
+    "outputs": [],
+    "payable": false,
+>>>>>>> samarth/addpolygon
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
+<<<<<<< HEAD
     "inputs": [
       {
         "internalType": "uint256",
+=======
+    "constant": false,
+    "inputs": [
+      {
+        "name": "validatorId",
+        "type": "uint256"
+      }
+    ],
+    "name": "forceUnstake",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_currentEpoch",
+        "type": "uint256"
+      }
+    ],
+    "name": "setCurrentEpoch",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_token",
+        "type": "address"
+      }
+    ],
+    "name": "setStakingToken",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "newThreshold",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateValidatorThreshold",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_blocks",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateCheckPointBlockInterval",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "newReward",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateCheckpointReward",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "name": "heimdallFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "topUpForFee",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "name": "heimdallFee",
+        "type": "uint256"
+      },
+      {
+        "name": "acceptDelegation",
+        "type": "bool"
+      },
+      {
+        "name": "signerPubkey",
+        "type": "bytes"
+      }
+    ],
+    "name": "stakeFor",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+>>>>>>> samarth/addpolygon
         "name": "validatorId",
         "type": "uint256"
       }
     ],
     "name": "unstake",
     "outputs": [],
+<<<<<<< HEAD
+=======
+    "payable": false,
+>>>>>>> samarth/addpolygon
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
+<<<<<<< HEAD
     "inputs": [
       {
         "internalType": "uint256",
+=======
+    "constant": false,
+    "inputs": [
+      {
+>>>>>>> samarth/addpolygon
         "name": "validatorId",
         "type": "uint256"
       }
     ],
     "name": "unstakeClaim",
     "outputs": [],
+<<<<<<< HEAD
+=======
+    "payable": false,
+>>>>>>> samarth/addpolygon
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
+<<<<<<< HEAD
     "inputs": [
       {
         "internalType": "uint256",
@@ -215,26 +653,44 @@
     "inputs": [
       {
         "internalType": "uint256",
+=======
+    "constant": false,
+    "inputs": [
+      {
+>>>>>>> samarth/addpolygon
         "name": "validatorId",
         "type": "uint256"
       },
       {
+<<<<<<< HEAD
         "internalType": "uint256",
+=======
+>>>>>>> samarth/addpolygon
         "name": "amount",
         "type": "uint256"
       },
       {
+<<<<<<< HEAD
         "internalType": "bool",
+=======
+>>>>>>> samarth/addpolygon
         "name": "stakeRewards",
         "type": "bool"
       }
     ],
+<<<<<<< HEAD
     "name": "withdrawRewards",
     "outputs": [],
+=======
+    "name": "restake",
+    "outputs": [],
+    "payable": false,
+>>>>>>> samarth/addpolygon
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
+<<<<<<< HEAD
     "inputs": [],
     "name": "getValidatorsList",
     "outputs": [
@@ -290,10 +746,52 @@
       {
         "indexed": true,
         "internalType": "uint256",
+=======
+    "constant": false,
+    "inputs": [
+      {
+        "name": "validatorId",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdrawRewards",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "fromValidatorId",
+        "type": "uint256"
+      },
+      {
+        "name": "toValidatorId",
+        "type": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "migrateDelegation",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+>>>>>>> samarth/addpolygon
         "name": "validatorId",
         "type": "uint256"
       },
       {
+<<<<<<< HEAD
         "indexed": false,
         "internalType": "uint256",
         "name": "amount",
@@ -321,17 +819,148 @@
       {
         "indexed": true,
         "internalType": "uint256",
+=======
+        "name": "amount",
+        "type": "int256"
+      }
+    ],
+    "name": "updateValidatorState",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+>>>>>>> samarth/addpolygon
         "name": "validatorId",
         "type": "uint256"
       },
       {
+<<<<<<< HEAD
         "indexed": false,
         "internalType": "uint256",
+=======
+>>>>>>> samarth/addpolygon
         "name": "amount",
         "type": "uint256"
       }
     ],
+<<<<<<< HEAD
     "name": "ClaimedRewards",
     "type": "event"
+=======
+    "name": "decreaseValidatorDelegatedAmount",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "validatorId",
+        "type": "uint256"
+      },
+      {
+        "name": "signerPubkey",
+        "type": "bytes"
+      }
+    ],
+    "name": "updateSigner",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "blockInterval",
+        "type": "uint256"
+      },
+      {
+        "name": "voteHash",
+        "type": "bytes32"
+      },
+      {
+        "name": "stateRoot",
+        "type": "bytes32"
+      },
+      {
+        "name": "proposer",
+        "type": "address"
+      },
+      {
+        "name": "sigs",
+        "type": "uint256[3][]"
+      }
+    ],
+    "name": "checkSignatures",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "validatorId",
+        "type": "uint256"
+      },
+      {
+        "name": "newCommissionRate",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateCommissionRate",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_slashingInfoList",
+        "type": "bytes"
+      }
+    ],
+    "name": "slash",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "validatorId",
+        "type": "uint256"
+      }
+    ],
+    "name": "unjail",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+>>>>>>> samarth/addpolygon
   }
 ]
