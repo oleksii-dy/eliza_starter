@@ -148,20 +148,12 @@
     "inputs": [
       {
         "internalType": "address",
-<<<<<<< HEAD
-        "name": "rootToken",
-=======
         "name": "user",
->>>>>>> samarth/addpolygon
         "type": "address"
       },
       {
         "internalType": "address",
-<<<<<<< HEAD
-        "name": "user",
-=======
         "name": "rootToken",
->>>>>>> samarth/addpolygon
         "type": "address"
       },
       {
@@ -366,7 +358,6 @@
   {
     "stateMutability": "payable",
     "type": "receive"
-<<<<<<< HEAD
   },
   {
     "inputs": [
@@ -386,7 +377,5 @@
     ],
     "stateMutability": "view",
     "type": "function"
-=======
->>>>>>> samarth/addpolygon
   }
 ]
