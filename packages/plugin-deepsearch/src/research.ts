@@ -10,6 +10,8 @@ interface ResearchOptions {
   question: string;
   depth: number;
   breadth: number;
+  roomId?: string;
+  worldId?: string;
 }
 
 export interface ResearchResult {
@@ -28,7 +30,7 @@ function createMinimalQueryMemory(queryText: string): Memory {
     entityId: newUuid,
     roomId: newUuid,
     type: 'INTERNAL_QUERY',
-    metadata: { type: 'custom', source: 'deepsearch-internal-research' }, // Added type property
+    metadata: { type: 'custom', source: 'deepsearch-internal-research', tags: ['deepsearch'] },
     createdAt: timestamp, // Use number timestamp
     updatedAt: timestamp, // Use number timestamp
   } as Memory;
@@ -104,6 +106,8 @@ export async function deepResearch(
       question: opts.question,
       iteration: i + 1,
       queries,
+      roomId: opts.roomId,
+      worldId: opts.worldId,
     });
 
     for (const q of queries) {
@@ -137,6 +141,8 @@ export async function deepResearch(
           source: 'deepsearch',
           query: q,
           notes,
+          roomId: opts.roomId,
+          worldId: opts.worldId,
         });
         learnings.push(...notes);
       } else {

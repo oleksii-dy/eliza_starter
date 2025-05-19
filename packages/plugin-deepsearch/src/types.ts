@@ -17,12 +17,16 @@ export interface DeepSearchQueriesGeneratedPayload extends EventPayload {
   question: string;
   iteration: number;
   queries: string[];
+  roomId?: string;
+  worldId?: string;
 }
 
 /** Payload when notes are added after summarising content */
 export interface DeepSearchNotesAddedPayload extends EventPayload {
   query: string;
   notes: string[];
+  roomId?: string;
+  worldId?: string;
 }
 
 /** Payload when final answer is generated */
@@ -31,6 +35,8 @@ export interface DeepSearchAnswerGeneratedPayload extends EventPayload {
   answer: string;
   citations: string[];
   thinking: unknown[];
+  roomId?: string;
+  worldId?: string;
 }
 
 export interface DeepSearchEventPayloadMap {

@@ -53,7 +53,13 @@ export class DeepSearchService extends Service {
 
   async ask(
     question: string,
-    opts: Record<string, unknown>,
+    opts: {
+      depth?: number;
+      breadth?: number;
+      roomId?: string;
+      worldId?: string;
+      [key: string]: unknown;
+    },
     callback: HandlerCallback
   ): Promise<DeepSearchAnswer> {
     logger.debug(`DeepSearchService.ask called with question: ${question}`);
@@ -62,7 +68,7 @@ export class DeepSearchService extends Service {
 
     const { learnings, visitedUrls } = await deepResearch(
       this.runtime,
-      { question, depth, breadth },
+      { question, depth, breadth, roomId: opts.roomId as string | undefined, worldId: opts.worldId as string | undefined },
       callback
     );
 
@@ -76,6 +82,8 @@ export class DeepSearchService extends Service {
       answer,
       citations: visitedUrls,
       thinking: [],
+      roomId: opts.roomId as string | undefined,
+      worldId: opts.worldId as string | undefined,
     });
 
     return { answer, citations: visitedUrls, thinking: [] };

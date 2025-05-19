@@ -18,7 +18,7 @@ import { AgentStatus } from '@elizaos/core';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@radix-ui/react-collapsible';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { ChevronRight, PanelRight, Paperclip, Send, X } from 'lucide-react';
+import { ChevronRight, PanelRight, Paperclip, Send, X, Info } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import AIWriter from 'react-aiwriter';
 import { AudioRecorder } from './audio-recorder';
@@ -28,6 +28,7 @@ import { Badge } from './ui/badge';
 import ChatTtsButton from './ui/chat/chat-tts-button';
 import { useAutoScroll } from './ui/chat/hooks/useAutoScroll';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import MessageDetailsSheet from './message-details-sheet';
 
 import { CHAT_SOURCE } from '@/constants';
 
@@ -35,6 +36,7 @@ type ExtraContentFields = {
   name: string;
   createdAt: number;
   isLoading?: boolean;
+  details?: unknown;
 };
 
 type ContentWithUser = Content & ExtraContentFields;
@@ -45,10 +47,12 @@ function MessageContent({
   message,
   agentId,
   shouldAnimate,
+  onShowDetails,
 }: {
   message: ContentWithUser;
   agentId: UUID;
   shouldAnimate: boolean;
+  onShowDetails: (m: ContentWithUser) => void;
 }) {
   return (
     <div className="flex flex-col w-full">
@@ -122,6 +126,11 @@ function MessageContent({
               <div className="flex items-center gap-2">
                 <CopyButton text={message.text} />
                 <ChatTtsButton agentId={agentId} text={message.text} />
+                {message.details && (
+                  <Button variant="ghost" size="icon" onClick={() => onShowDetails(message)}>
+                    <Info className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             ) : (
               <div />
@@ -156,6 +165,8 @@ export default function Page({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [input, setInput] = useState('');
   const [inputDisabled, setInputDisabled] = useState<boolean>(false);
+  const [detailsMessage, setDetailsMessage] = useState<ContentWithUser | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -211,6 +222,7 @@ export default function Page({
         roomId: roomId,
         source: CHAT_SOURCE,
         id: data.id, // Add a unique ID for React keys and duplicate detection
+        details: (data as any).details,
       };
 
       console.log(`[Chat] Adding new message to UI from ${newMessage.name}:`, newMessage);
@@ -432,6 +444,11 @@ export default function Page({
     }
   };
 
+  const openMessageDetails = useCallback((message: ContentWithUser) => {
+    setDetailsMessage(message);
+    setDetailsOpen(true);
+  }, []);
+
   return (
     <div
       className={`flex flex-col w-full h-screen items-center ${showDetails ? 'col-span-3' : 'col-span-4'}`}
@@ -537,6 +554,7 @@ export default function Page({
                       message={message}
                       agentId={agentId}
                       shouldAnimate={shouldAnimate}
+                      onShowDetails={openMessageDetails}
                     />
                   </ChatBubble>
                 </div>
@@ -641,6 +659,11 @@ export default function Page({
         </div>
       </div>
       {/* End of width constraining wrapper */}
+      <MessageDetailsSheet
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        message={detailsMessage}
+      />
     </div>
   );
 }

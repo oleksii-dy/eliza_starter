@@ -26,7 +26,11 @@ export const deepSearchAction: Action = {
     }
     const result = await service.ask(
       message.content.text ?? '',
-      options ?? {},
+      {
+        ...(options || {}),
+        roomId: message.roomId,
+        worldId: message.worldId,
+      },
       callback ?? (() => Promise.resolve([]))
     );
     return {
