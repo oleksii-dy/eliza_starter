@@ -220,8 +220,14 @@ export function createBlockendService(integratorId: string) {
                 config
             );
             let tokens = await getTokens(fromChainIds);
-            let fromToken = tokens[fromAssetSymbol].address || "";
-            let toToken = tokens[toAssetSymbol].address || "";
+            let fromToken = tokens[fromAssetSymbol]?.address || "";
+            if (!fromToken) {
+                throw new Error(`Token not found for symbol: ${fromAssetSymbol}`);
+            }
+            let toToken = tokens[toAssetSymbol]?.address || "";
+            if (!toToken) {
+                throw new Error(`Token not found for symbol: ${toAssetSymbol}`);
+            }
             const assetValidationResult = handleAsset(fromChainIds, toChainIds, fromToken, toToken);
             if (assetValidationResult instanceof Error) {
                 throw new Error(`Asset validation failed: ${assetValidationResult.message}`);
