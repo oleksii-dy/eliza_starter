@@ -165,7 +165,7 @@ if (process.env.DEVREL_IMPORT_KNOWLEDGE) {
 const character: Partial<Character> = {
   name: 'Eddy',
   plugins: [
-    '@elizaos/plugin-sql',
+    '@elizaos/plugin-mysql',
     ...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),
     ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
     ...(!process.env.OPENAI_API_KEY ? ['@elizaos/plugin-local-ai'] : []),
