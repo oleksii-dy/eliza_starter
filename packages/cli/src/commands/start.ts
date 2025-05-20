@@ -450,6 +450,8 @@ const startAgents = async (options: {
   // Get PGLite data directory from environment (may have been set during configuration)
   const pgliteDataDir = process.env.PGLITE_DATA_DIR;
 
+  const mysqlUrl = process.env.MYSQL_URL;
+
   // Load existing configuration
   const existingConfig = await loadConfig();
 
@@ -475,6 +477,7 @@ const startAgents = async (options: {
   const server = new AgentServer({
     dataDir: pgliteDataDir,
     postgresUrl,
+    mysqlUrl,
   });
 
   // Set up server properties
@@ -614,9 +617,9 @@ const startAgents = async (options: {
       character.plugins = character.plugins || [];
 
       // make sure character has sql plugin
-      const hasSqlPlugin = character.plugins.some((plugin) => plugin.includes('plugin-sql'));
+      const hasSqlPlugin = character.plugins.some((plugin) => plugin.includes('plugin-mysql'));
       if (!hasSqlPlugin) {
-        character.plugins.push('@elizaos/plugin-sql');
+        character.plugins.push('@elizaos/plugin-mysql');
       }
 
       // make sure character has at least one ai provider
