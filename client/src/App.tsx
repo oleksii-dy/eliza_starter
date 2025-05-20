@@ -7,6 +7,7 @@ import { Toaster } from "./components/ui/toaster";
 import { BrowserRouter, Route, Routes } from "react-router";
 import Chat from "./routes/chat";
 import Overview from "./routes/overview";
+import Memories from "./routes/memories";
 import Home from "./routes/home";
 import useVersion from "./hooks/use-version";
 
@@ -43,6 +44,10 @@ function App() {
                                         <Route
                                             path="settings/:agentId"
                                             element={<Overview />}
+                                        />
+                                        <Route
+                                            path="memories/:agentId"
+                                            element={<Memories />}
                                         />
                                     </Routes>
                                 </div>

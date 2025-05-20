@@ -112,4 +112,6 @@ export const apiClient = {
             body: formData,
         });
     },
+    getMemories: (agentId: string, roomId: string) =>
+        fetcher({ url: `/agents/${agentId}/${roomId}/memories` }),
 };

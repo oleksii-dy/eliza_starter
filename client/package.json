@@ -31,8 +31,9 @@
 		"react-aiwriter": "^1.0.0",
 		"react-dom": "^19.0.0",
 		"react-router": "^7.1.1",
-		"react-router-dom": "^7.1.1",
-		"semver": "^7.6.3",
+                "react-router-dom": "^7.1.1",
+                "react-force-graph": "^1.45.0",
+                "semver": "^7.6.3",
 		"tailwind-merge": "^2.6.0",
 		"tailwindcss-animate": "^1.0.7",
 		"vite-plugin-compression": "^0.5.1"

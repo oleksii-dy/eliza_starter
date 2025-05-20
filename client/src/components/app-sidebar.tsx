@@ -75,21 +75,24 @@ export function AppSidebar() {
                                     {agents?.map(
                                         (agent: { id: UUID; name: string }) => (
                                             <SidebarMenuItem key={agent.id}>
-                                                <NavLink
-                                                    to={`/chat/${agent.id}`}
-                                                >
+                                                <NavLink to={`/chat/${agent.id}`}>
                                                     <SidebarMenuButton
-                                                        isActive={location.pathname.includes(
-                                                            agent.id
-                                                        )}
+                                                        isActive={location.pathname.includes(`chat/${agent.id}`)}
                                                     >
                                                         <User />
-                                                        <span>
-                                                            {agent.name}
-                                                        </span>
+                                                        <span>{agent.name}</span>
                                                     </SidebarMenuButton>
                                                 </NavLink>
                                             </SidebarMenuItem>
+                                            <SidebarMenuSub>
+                                                <SidebarMenuSubItem>
+                                                    <NavLink to={`/memories/${agent.id}`}>
+                                                        <SidebarMenuSubButton size="sm" isActive={location.pathname.includes(`memories/${agent.id}`)}>
+                                                            Graph
+                                                        </SidebarMenuSubButton>
+                                                    </NavLink>
+                                                </SidebarMenuSubItem>
+                                            </SidebarMenuSub>
                                         )
                                     )}
                                 </div>
