@@ -2,6 +2,12 @@ import type { Agent, Character, UUID, Memory } from '@elizaos/core';
 
 export type AgentWithStatus = Omit<Agent, 'status'> & { status: 'active' | 'inactive' };
 
+// Interface for agent panels (public routes)
+export interface AgentPanel {
+  name: string;
+  path: string;
+}
+
 import { WorldManager } from './world-manager';
 import clientLogger from './logger';
 import { connectionStatusActions } from '../context/ConnectionContext';
@@ -379,6 +385,51 @@ export const apiClient = {
     });
   },
 
+  // Get all worlds
+  getWorlds: () => {
+    return fetcher({
+      url: '/agents/worlds',
+      method: 'GET',
+    });
+  },
+
+  // Create a new world
+  createWorld: (agentId: string, params: { name: string; serverId?: string; metadata?: any }) => {
+    return fetcher({
+      url: `/agents/${agentId}/worlds`,
+      method: 'POST',
+      body: params,
+    });
+  },
+
+  // Update a world's properties
+  updateWorld: (agentId: string, worldId: string, params: { name?: string; metadata?: any }) => {
+    return fetcher({
+      url: `/agents/${agentId}/worlds/${worldId}`,
+      method: 'PATCH',
+      body: params,
+    });
+  },
+
+  // Create a room for a specific agent
+  createRoom: (
+    agentId: string,
+    params: {
+      name: string;
+      type?: string;
+      source?: string;
+      worldId?: string;
+      serverId?: string;
+      metadata?: Record<string, any>;
+    }
+  ) => {
+    return fetcher({
+      url: `/agents/${agentId}/rooms`,
+      method: 'POST',
+      body: params,
+    });
+  },
+
   getLogs: ({
     level,
     agentName,
@@ -540,22 +591,6 @@ export const apiClient = {
     });
   },
 
-  getGlobalEnvs: () => {
-    return fetcher({
-      url: `/envs/global`,
-      method: 'GET',
-    });
-  },
-
-  updateGlobalEnvs: (envs: Record<string, string>) => {
-    return fetcher({
-      url: `/envs/global`,
-      method: 'POST',
-      body: {
-        content: envs,
-      },
-    });
-  },
 
   // Agent Panels (public GET routes)
   getAgentPanels: (agentId: string): Promise<{ success: boolean; data: AgentPanel[] }> => {
