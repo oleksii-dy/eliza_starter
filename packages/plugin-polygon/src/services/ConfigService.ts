@@ -1,23 +1,41 @@
-import { logger } from '@elizaos/core';
+import { logger, Service } from '@elizaos/core';
 import dotenv from 'dotenv';
 import path from 'path';
 import type { IAgentRuntime } from '@elizaos/core';
-import { z } from 'zod';
+import type { z } from 'zod';
 
 /**
  * Service for centralizing access to configuration values.
  * This allows for a single point of access for all environment variables
  * and ensures proper .env file loading throughout the codebase.
  */
-export class ConfigService {
+export class ConfigService extends Service {
   static serviceType = 'PolygonConfigService';
-  private runtime: IAgentRuntime;
+
+  // Required abstract property from Service class
+  capabilityDescription = 'Provides configuration management for Polygon plugin';
+
   private configValues: Map<string, any> = new Map();
   private envLoaded = false;
 
   constructor(runtime: IAgentRuntime) {
-    this.runtime = runtime;
+    super(runtime);
     this.loadEnv();
+  }
+
+  /**
+   * Static start method required by Service
+   */
+  static async start(runtime: IAgentRuntime): Promise<ConfigService> {
+    return new ConfigService(runtime);
+  }
+
+  /**
+   * Required stop method from Service abstract class
+   */
+  async stop(): Promise<void> {
+    // Nothing to clean up
+    return Promise.resolve();
   }
 
   /**
@@ -28,11 +46,11 @@ export class ConfigService {
       // Try to load from the root directory first
       const workspaceRoot = path.resolve(__dirname, '../../../..');
       const rootEnvPath = path.resolve(workspaceRoot, '.env');
-      
+
       // Then from the package directory
       const packageRoot = path.resolve(__dirname, '../..');
       const packageEnvPath = path.resolve(packageRoot, '.env');
-      
+
       // Try the root .env first
       let result = dotenv.config({ path: rootEnvPath });
       if (result.error) {
@@ -40,7 +58,9 @@ export class ConfigService {
         // Try the package .env next
         result = dotenv.config({ path: packageEnvPath });
         if (result.error) {
-          logger.warn(`Could not load .env from package: ${packageEnvPath}. Using existing environment variables.`);
+          logger.warn(
+            `Could not load .env from package: ${packageEnvPath}. Using existing environment variables.`
+          );
         } else {
           logger.info(`Loaded .env from package: ${packageEnvPath}`);
           this.envLoaded = true;
@@ -63,27 +83,27 @@ export class ConfigService {
     if (this.configValues.has(key)) {
       return this.configValues.get(key) as T;
     }
-    
+
     // Try to get from runtime settings
     const runtimeValue = this.runtime.getSetting(key);
     if (runtimeValue !== undefined && runtimeValue !== null) {
       this.configValues.set(key, runtimeValue);
       return runtimeValue as T;
     }
-    
+
     // Try to get from environment variables
     const envValue = process.env[key];
     if (envValue !== undefined && envValue !== null) {
       this.configValues.set(key, envValue);
       return envValue as unknown as T;
     }
-    
+
     // Return default value if provided
     if (defaultValue !== undefined) {
       this.configValues.set(key, defaultValue);
       return defaultValue;
     }
-    
+
     // Return null if nothing found
     return null as unknown as T;
   }
@@ -135,4 +155,4 @@ export class ConfigService {
   }
 }
 
-export default ConfigService; 
+export default ConfigService;

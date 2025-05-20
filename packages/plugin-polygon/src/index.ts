@@ -11,7 +11,6 @@ import {
   type Memory,
   type HandlerCallback,
   type State,
-  definePlugin,
 } from '@elizaos/core';
 import { z } from 'zod';
 import { ethers } from 'ethers';
@@ -35,7 +34,11 @@ import { heimdallSubmitProposalAction } from './actions/heimdallSubmitProposalAc
 import { heimdallTransferTokensAction } from './actions/heimdallTransferTokensAction.js';
 import { getGovernanceInfoAction } from './actions/getGovernanceInfo.js';
 import { getNativeBalanceAction, getERC20BalanceAction } from './actions/getBalanceInfo.js';
-import { getBlockInfoAction, getBlockNumberAction, getBlockDetailsAction } from './actions/getBlockInfo.js';
+import {
+  getBlockInfoAction,
+  getBlockNumberAction,
+  getBlockDetailsAction,
+} from './actions/getBlockInfo.js';
 
 import {
   WalletProvider,
@@ -101,7 +104,7 @@ const polygonActions: Action[] = [
  */
 const polygonProviderInfo: Provider = {
   name: 'Polygon Provider Info',
-  async get(runtime: IAgentRuntime, _message: any, state: any): Promise<ProviderResult> {
+  async get(runtime: IAgentRuntime, _message: Memory, state: State): Promise<ProviderResult> {
     try {
       // Get ConfigService instance
       const configService = runtime.getService<ConfigService>(ConfigService.serviceType);
@@ -217,13 +220,13 @@ export const polygonPlugin: Plugin = {
   async init(config: Record<string, unknown>, runtime: IAgentRuntime) {
     logger.info(`Initializing plugin: ${this.name}`);
     try {
-      // Initialize and register ConfigService first
-      const configService = new ConfigService(runtime);
-      runtime.registerService(ConfigService.serviceType, configService);
-      
+      // Initialize and register ConfigService using the Service pattern
+      const configService = await ConfigService.start(runtime);
+      runtime.registerService(ConfigService);
+
       // Get configuration from ConfigService
       const polygonConfig = configService.getPolygonConfig();
-      
+
       // Validate configuration using the schema
       try {
         await configSchema.parseAsync({
@@ -233,8 +236,8 @@ export const polygonPlugin: Plugin = {
           POLYGONSCAN_KEY: polygonConfig.polygonscanKey,
           HEIMDALL_RPC_URL: polygonConfig.heimdallRpcUrl,
           GOVERNOR_ADDRESS: polygonConfig.governorAddress,
-          TOKEN_ADDRESS: polygonConfig.tokenAddress,
-          TIMELOCK_ADDRESS: polygonConfig.timelockAddress
+          // TOKEN_ADDRESS: polygonConfig.tokenAddress,
+          // TIMELOCK_ADDRESS: polygonConfig.timelockAddress
         });
         logger.info('Polygon plugin configuration validated successfully.');
       } catch (validationError) {
