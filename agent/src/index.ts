@@ -819,10 +819,10 @@ export async function createAgent(
             // getSecret(character, "AVALANCHE_PRIVATE_KEY")
             //     ? avalanchePlugin
             //     : null,
-            getSecret(character, "ECHOCHAMBERS_API_URL") &&
-            getSecret(character, "ECHOCHAMBERS_API_KEY")
-                ? echoChambersPlugin
-                : null,
+            // getSecret(character, "ECHOCHAMBERS_API_URL") &&
+            // getSecret(character, "ECHOCHAMBERS_API_KEY")
+            //     ? echoChambersPlugin
+            //     : null,
             // getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
             // getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
             getSecret(character, "GIPHY_API_KEY") ? giphyPlugin : null,
