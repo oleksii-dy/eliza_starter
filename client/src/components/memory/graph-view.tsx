@@ -8,27 +8,42 @@ export interface MemoryItem {
     embedding?: number[];
 }
 
+interface MemoryNodeObject extends NodeObject {
+  memory: MemoryItem;
+}
+
 export default function GraphView({ memories, onSelect }: { memories: MemoryItem[]; onSelect: (m: MemoryItem) => void; }) {
     const graphData = React.useMemo(() => {
-        const embed = memories
-            .filter((m) => m.embedding)
-            .map((m) => m.embedding as number[]);
+        const memoriesWithEmbeddings = memories.filter((m) => m.embedding);
+        const embed = memoriesWithEmbeddings.map((m) => m.embedding as number[]);
         const coords = computePCA(embed, 2);
-        const nodes = memories.map((m, i) => ({
-            id: m.id,
-            memory: m,
-            x: coords[i]?.[0] || 0,
-            y: coords[i]?.[1] || 0,
-        }));
-        return { nodes, links: [] as any[] };
+
+        const pcaCoordsMap = new Map<string, [number, number]>();
+        memoriesWithEmbeddings.forEach((m, i) => {
+            if (coords[i]) {
+                pcaCoordsMap.set(m.id, coords[i] as [number, number]);
+            }
+        });
+
+        const nodes: MemoryNodeObject[] = memories.map((m) => {
+            const nodeCoords = pcaCoordsMap.get(m.id);
+            return {
+                id: m.id,
+                memory: m,
+                x: nodeCoords?.[0] || 0,
+                y: nodeCoords?.[1] || 0,
+            };
+        });
+
+        return { nodes, links: [] };
     }, [memories]);
 
     return (
         <ForceGraph2D
             graphData={graphData}
             nodeAutoColorBy="id"
-            nodeLabel={(node: NodeObject) => (node as any).memory.content.text}
-            onNodeClick={(node) => onSelect((node as any).memory)}
+            nodeLabel={(node: MemoryNodeObject) => node.memory.content.text}
+            onNodeClick={(node: MemoryNodeObject) => onSelect(node.memory)}
         />
     );
 }

@@ -1,6 +1,7 @@
 export function computePCA(data: number[][], components = 2): number[][] {
     if (!data.length) return [];
     const dim = data[0].length;
+    if (dim === 0) return [];
     const mean = new Array(dim).fill(0);
     for (const row of data) {
         for (let i = 0; i < dim; i++) {

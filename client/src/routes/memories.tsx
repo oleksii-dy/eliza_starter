@@ -16,6 +16,22 @@ export default function MemoriesRoute() {
 
     const memories = query.data?.memories || [];
 
+    if (query.isPending) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <p>Loading memories...</p>
+            </div>
+        );
+    }
+
+    if (query.isError) {
+        return (
+            <div className="flex justify-center items-center h-full text-red-500">
+                <p>Failed to load memories. Error: {query.error?.message || 'Unknown error'}</p>
+            </div>
+        );
+    }
+
     if (!agentId) return <div>No agent selected.</div>;
 
     return (
