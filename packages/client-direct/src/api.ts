@@ -308,6 +308,78 @@ export function createApiRouter(
         }
     });
 
+    router.get("/agents/:agentId/:roomId/entities", async (req, res) => {
+        const { agentId, roomId } = validateUUIDParams(req.params, res) ?? {
+            agentId: null,
+            roomId: null,
+        };
+        if (!agentId || !roomId) return;
+
+        let runtime = agents.get(agentId);
+
+        if (!runtime) {
+            runtime = Array.from(agents.values()).find(
+                (a) => a.character.name.toLowerCase() === agentId.toLowerCase(),
+            );
+        }
+
+        if (!runtime) {
+            res.status(404).send("Agent not found");
+            return;
+        }
+
+        try {
+            const entities = await runtime.databaseAdapter.getActorDetails({
+                roomId,
+            });
+            res.json({ entities });
+        } catch (error) {
+            console.error("Error fetching entities:", error);
+            res.status(500).json({ error: "Failed to fetch entities" });
+        }
+    });
+
+    router.get("/agents/:agentId/:roomId/facts", async (req, res) => {
+        const { agentId, roomId } = validateUUIDParams(req.params, res) ?? {
+            agentId: null,
+            roomId: null,
+        };
+        if (!agentId || !roomId) return;
+
+        let runtime = agents.get(agentId);
+
+        if (!runtime) {
+            runtime = Array.from(agents.values()).find(
+                (a) => a.character.name.toLowerCase() === agentId.toLowerCase(),
+            );
+        }
+
+        if (!runtime) {
+            res.status(404).send("Agent not found");
+            return;
+        }
+
+        const factsManager = runtime.getMemoryManager("facts");
+
+        if (!factsManager) {
+            res.json({ facts: [] });
+            return;
+        }
+
+        try {
+            const facts = await factsManager.getMemories({
+                roomId,
+                tableName: "facts",
+                agentId: runtime.agentId,
+                count: 20,
+            });
+            res.json({ facts: facts.map((f) => f.content.text) });
+        } catch (error) {
+            console.error("Error fetching facts:", error);
+            res.status(500).json({ error: "Failed to fetch facts" });
+        }
+    });
+
     // router.get("/tee/agents", async (req, res) => {
     //     try {
     //         const allAgents = [];

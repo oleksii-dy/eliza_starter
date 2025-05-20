@@ -112,4 +112,14 @@ export const apiClient = {
             body: formData,
         });
     },
+    getEntities: (
+        agentId: string,
+        roomId: string,
+    ): Promise<{ entities: any[] }> =>
+        fetcher({ url: `/agents/${agentId}/${roomId}/entities` }),
+    getFacts: (
+        agentId: string,
+        roomId: string,
+    ): Promise<{ facts: string[] }> =>
+        fetcher({ url: `/agents/${agentId}/${roomId}/facts` }),
 };

@@ -97,6 +97,23 @@ export function AppSidebar() {
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
+                <SidebarGroup>
+                    <SidebarGroupLabel>Entities</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <NavLink to={`/entities/${agents?.[0]?.id ?? "user"}`}> 
+                                    <SidebarMenuButton
+                                        isActive={location.pathname.includes("/entities")}
+                                    >
+                                        <User />
+                                        <span>Entities</span>
+                                    </SidebarMenuButton>
+                                </NavLink>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
             </SidebarContent>
             <SidebarFooter>
                 <SidebarMenu>
