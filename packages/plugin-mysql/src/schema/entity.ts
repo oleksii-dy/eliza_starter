@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm';
 import { json, mysqlTable, unique, varchar } from 'drizzle-orm/mysql-core';
 import { agentTable } from './agent';
 import { numberTimestamp } from './types';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import type { Entity, UUID } from '@elizaos/core';
 
 /**
@@ -24,17 +23,19 @@ export const entityTable = mysqlTable(
     // MySQL doesn't support native arrays, use JSON instead
     names: json('names')
       .$type<string[]>()
-      .default(sql`('[]')`),
+      .default(sql`('[]')`)
+      .notNull(),
     metadata: json('metadata')
-      .$type<Record<string, any>>()
-      .default(sql`('{}')`),
+      .$type<Record<string, unknown>>()
+      .default(sql`('{}')`)
+      .notNull(),
   },
   (table) => [unique('id_agent_id_unique').on(table.id, table.agentId)]
 );
 
-// Inferred database model types from the entity table schema
-export type SelectEntity = InferSelectModel<typeof entityTable>;
-export type InsertEntity = InferInsertModel<typeof entityTable>;
+// Using modern type inference with $ prefix
+export type SelectEntity = typeof entityTable.$inferSelect;
+export type InsertEntity = typeof entityTable.$inferInsert;
 
 /**
  * Maps a database entity model to the Core Entity type

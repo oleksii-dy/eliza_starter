@@ -9,7 +9,7 @@ import {
   type UUID,
   logger,
 } from '@elizaos/core';
-import { createDatabaseAdapter } from '@elizaos/plugin-sql';
+import { createDatabaseAdapter } from '@elizaos/plugin-mysql';
 import * as bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -48,6 +48,7 @@ export interface ServerOptions {
   middlewares?: ServerMiddleware[];
   dataDir?: string;
   postgresUrl?: string;
+  mysqlUrl?: string;
 }
 const AGENT_RUNTIME_URL =
   process.env.AGENT_RUNTIME_URL?.replace(/\/$/, '') || 'http://localhost:3000';
@@ -81,16 +82,12 @@ export class AgentServer {
       logger.debug('Initializing AgentServer...');
       this.agents = new Map();
 
-      let dataDir = options?.dataDir ?? process.env.PGLITE_DATA_DIR ?? './elizadb';
-
-      // Expand tilde in database directory path
-      dataDir = expandTildePath(dataDir);
+      let mysqlUrl = options?.mysqlUrl ?? process.env.MYSQL_URL;
 
       // Use the async database adapter
       this.database = createDatabaseAdapter(
         {
-          dataDir,
-          postgresUrl: options?.postgresUrl,
+          mysqlUrl: mysqlUrl,
         },
         '00000000-0000-0000-0000-000000000002'
       );

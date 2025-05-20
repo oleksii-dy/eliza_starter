@@ -3,13 +3,10 @@ import { foreignKey, json, mysqlTable, varchar } from 'drizzle-orm/mysql-core';
 import { entityTable } from './entity';
 import { roomTable } from './room';
 import { numberTimestamp } from './types';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import type { Log, UUID } from '@elizaos/core';
 
 /**
  * Definition of a table representing logs in the database.
- *
- * @type {Table}
  */
 export const logTable = mysqlTable(
   'logs',
@@ -24,7 +21,7 @@ export const logTable = mysqlTable(
     entityId: varchar('entityId', { length: 36 })
       .notNull()
       .references(() => entityTable.id),
-    body: json('body').$type<{ [key: string]: unknown }>().notNull(),
+    body: json('body').$type<Record<string, unknown>>().notNull(),
     type: varchar('type', { length: 50 }).notNull(),
     roomId: varchar('roomId', { length: 36 })
       .notNull()
@@ -44,9 +41,9 @@ export const logTable = mysqlTable(
   ]
 );
 
-// Inferred database model types from the log table schema
-export type SelectLog = InferSelectModel<typeof logTable>;
-export type InsertLog = InferInsertModel<typeof logTable>;
+// Using modern type inference with $ prefix
+export type SelectLog = typeof logTable.$inferSelect;
+export type InsertLog = typeof logTable.$inferInsert;
 
 /**
  * Maps a database log record to the Core Log type

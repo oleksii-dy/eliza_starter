@@ -2,13 +2,10 @@ import { sql } from 'drizzle-orm';
 import { json, mysqlTable, unique, varchar } from 'drizzle-orm/mysql-core';
 import { agentTable } from './agent';
 import { numberTimestamp } from './types';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import type { UUID } from '@elizaos/core';
 
 /**
- * Represents a PostgreSQL table for caching data.
- *
- * @type {pgTable}
+ * Represents a MySQL table for caching data.
  */
 export const cacheTable = mysqlTable(
   'cache',
@@ -31,10 +28,10 @@ export const cacheTable = mysqlTable(
 );
 
 /**
- * Type definitions for the cache table
+ * Type definitions for the cache table using modern $ prefix
  */
-export type SelectCache = InferSelectModel<typeof cacheTable>;
-export type InsertCache = InferInsertModel<typeof cacheTable>;
+export type SelectCache = typeof cacheTable.$inferSelect;
+export type InsertCache = typeof cacheTable.$inferInsert;
 
 /**
  * Interface representing a cache entry in the application

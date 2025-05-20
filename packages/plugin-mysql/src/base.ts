@@ -15,7 +15,7 @@ import {
   logger,
   stringToUuid,
 } from '@elizaos/core';
-import { and, cosineDistance, count, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm';
 import { v4 } from 'uuid';
 import { DIMENSION_MAP, type EmbeddingDimensionColumn } from './schema/embedding';
 import {
@@ -62,7 +62,7 @@ import {
   type Embedding,
   worldTable,
 } from './schema/index';
-import type { DrizzleOperations } from './types';
+import type { DrizzleDatabase } from './types';
 
 // Define the metadata type inline since we can't import it
 /**
@@ -92,8 +92,8 @@ import type { DrizzleOperations } from './types';
  * @template TDatabase - The type of Drizzle operations supported by the adapter.
  */
 export abstract class BaseDrizzleAdapter<
-  TDatabase extends DrizzleOperations,
-> extends DatabaseAdapter<TDatabase> {
+  TDrizzleDatabase extends DrizzleDatabase,
+> extends DatabaseAdapter<TDrizzleDatabase> {
   protected readonly maxRetries: number = 3;
   protected readonly baseDelay: number = 1000;
   protected readonly maxDelay: number = 10000;
@@ -359,7 +359,7 @@ export abstract class BaseDrizzleAdapter<
    * @private
    */
   private async mergeAgentSettings(
-    tx: DrizzleOperations,
+    tx: DrizzleDatabase,
     agentId: UUID,
     updatedSettings: Partial<Agent['settings']> | undefined
   ): Promise<Agent['settings']> {
@@ -525,7 +525,7 @@ export abstract class BaseDrizzleAdapter<
                     .from(memoryTable)
                     .where(inArray(memoryTable.entityId, entityIds));
 
-                  memoryIds = memories.map((m) => m.id);
+                  memoryIds = memories.map((m) => m.id) as UUID[];
                   logger.debug(`[DB] Found ${memoryIds.length} memories belonging to entities`);
                 }
 
@@ -536,7 +536,7 @@ export abstract class BaseDrizzleAdapter<
                   .from(memoryTable)
                   .where(eq(memoryTable.agentId, agentId));
 
-                memoryIds = [...memoryIds, ...agentMemories.map((m) => m.id)];
+                memoryIds = [...memoryIds, ...agentMemories.map((m) => m.id)] as UUID[];
                 logger.debug(`[DB] Found total of ${memoryIds.length} memories to delete`);
 
                 // Step 5: Find memories that belong to the rooms
@@ -547,7 +547,7 @@ export abstract class BaseDrizzleAdapter<
                     .from(memoryTable)
                     .where(inArray(memoryTable.roomId, roomIds));
 
-                  memoryIds = [...memoryIds, ...roomMemories.map((m) => m.id)];
+                  memoryIds = [...memoryIds, ...roomMemories.map((m) => m.id)] as UUID[];
                   logger.debug(`[DB] Updated total to ${memoryIds.length} memories to delete`);
                 }
 
@@ -753,7 +753,9 @@ export abstract class BaseDrizzleAdapter<
 
       // Group components by entity
       const entityData = mapToEntity(result[0].entity);
-      entityData.components = result.filter((row) => row.components).map((row) => row.components);
+      entityData.components = result
+        .filter((row) => row.components)
+        .map((row) => row.components) as Component[];
 
       return entityData;
     }, 'getEntityById');
@@ -1057,7 +1059,7 @@ export abstract class BaseDrizzleAdapter<
         .where(and(...conditions))
         .orderBy(desc(memoryTable.createdAt));
 
-      const rows = count ? await query.limit(params.count) : await query;
+      const rows = count ? await query.limit(params.count ?? 10) : await query;
 
       return rows.map((row) => {
         const memoryRow: SelectMemory = row.memory;
@@ -1218,8 +1220,8 @@ export abstract class BaseDrizzleAdapter<
   }): Promise<{ embedding: number[]; levenshtein_score: number }[]> {
     return this.withDatabase(async () => {
       try {
-        const results = await this.db.execute<{
-          embedding: number[];
+        const rawResults = await this.db.execute<{
+          embedding: number[] | string;
           levenshtein_score: number;
         }>(sql`
                     WITH content_text AS (
@@ -1257,14 +1259,22 @@ export abstract class BaseDrizzleAdapter<
                     LIMIT ${opts.query_match_count}
                 `);
 
-        return results
-          .map((res) => ({
-            embedding: Array.isArray(res.embedding)
-              ? res.embedding
-              : typeof res.embedding === 'string'
-                ? JSON.parse(res.embedding)
+        // MySQL2 returns [rows, fields] for queries
+        const rows =
+          Array.isArray(rawResults) && rawResults.length > 0
+            ? Array.isArray(rawResults[0])
+              ? rawResults[0]
+              : [rawResults[0]]
+            : [];
+
+        return rows
+          .map((row: any) => ({
+            embedding: Array.isArray(row.embedding)
+              ? row.embedding
+              : typeof row.embedding === 'string'
+                ? JSON.parse(row.embedding)
                 : [],
-            levenshtein_score: Number(res.levenshtein_score),
+            levenshtein_score: Number(row.levenshtein_score),
           }))
           .filter((res) => Array.isArray(res.embedding));
       } catch (error) {
@@ -1722,7 +1732,7 @@ export abstract class BaseDrizzleAdapter<
    * @param documentId The UUID of the document memory whose fragments should be deleted
    * @private
    */
-  private async deleteMemoryFragments(tx: DrizzleOperations, documentId: UUID): Promise<void> {
+  private async deleteMemoryFragments(tx: DrizzleDatabase, documentId: UUID): Promise<void> {
     const fragmentsToDelete = await this.getMemoryFragments(tx, documentId);
 
     if (fragmentsToDelete.length > 0) {
@@ -1748,9 +1758,9 @@ export abstract class BaseDrizzleAdapter<
    * @returns An array of memory fragments
    * @private
    */
-  private async getMemoryFragments(tx: DrizzleOperations, documentId: UUID): Promise<Memory[]> {
+  private async getMemoryFragments(tx: DrizzleDatabase, documentId: UUID): Promise<Memory[]> {
     const fragments = await tx
-      .select({ id: memoryTable.id })
+      .select()
       .from(memoryTable)
       .where(
         and(
@@ -1760,7 +1770,7 @@ export abstract class BaseDrizzleAdapter<
         )
       );
 
-    return fragments;
+    return fragments.map((f) => mapToMemory(f));
   }
 
   /**
@@ -2040,7 +2050,7 @@ export abstract class BaseDrizzleAdapter<
       return Promise.all(
         participants.map(async (participant) => {
           const entity = await this.getEntityById(participant.entityId as UUID);
-          return mapToParticipant(participant as SelectParticipant, entity);
+          return mapToParticipant(participant as SelectParticipant, entity || undefined);
         })
       );
     }, 'getParticipantsForEntity');
@@ -2251,30 +2261,29 @@ export abstract class BaseDrizzleAdapter<
   async getRelationships(params: { entityId: UUID; tags?: string[] }): Promise<Relationship[]> {
     return this.withDatabase(async () => {
       try {
-        let query = this.db
-          .select()
-          .from(relationshipTable)
-          .where(
-            and(
-              or(
-                eq(relationshipTable.sourceEntityId, params.entityId),
-                eq(relationshipTable.targetEntityId, params.entityId)
-              ),
-              eq(relationshipTable.agentId, this.agentId)
-            )
-          );
+        // Build all conditions first
+        const conditions = [
+          or(
+            eq(relationshipTable.sourceEntityId, params.entityId),
+            eq(relationshipTable.targetEntityId, params.entityId)
+          ),
+          eq(relationshipTable.agentId, this.agentId),
+        ];
 
-        // Filter by tags if provided
+        // Add tag conditions if provided
         if (params.tags && params.tags.length > 0) {
           // Using JSON_CONTAINS to check if the tags JSON array contains all specified tags
-          const tagConditions = params.tags.map(
-            (tag) => sql`JSON_CONTAINS(${relationshipTable.tags}, ${JSON.stringify(tag)})`
-          );
-          // Combine all tag conditions with AND
-          query = query.where(and(...tagConditions));
+          params.tags.forEach((tag) => {
+            conditions.push(sql`JSON_CONTAINS(${relationshipTable.tags}, ${JSON.stringify(tag)})`);
+          });
         }
 
-        const results = await query;
+        // Apply all conditions at once
+        const results = await this.db
+          .select()
+          .from(relationshipTable)
+          .where(and(...conditions));
+
         return results.map(mapToRelationship);
       } catch (error) {
         logger.error('Error getting relationships:', {
@@ -2492,23 +2501,27 @@ export abstract class BaseDrizzleAdapter<
    */
   async getTasks(params: { roomId?: UUID; tags?: string[] }): Promise<Task[]> {
     return this.withDatabase(async () => {
-      let query = this.db.select().from(taskTable).where(eq(taskTable.agentId, this.agentId));
+      // Collect all conditions
+      const conditions = [eq(taskTable.agentId, this.agentId)];
 
-      // Apply filters if provided
+      // Apply roomId filter if provided
       if (params.roomId) {
-        query = query.where(eq(taskTable.roomId, params.roomId));
+        conditions.push(eq(taskTable.roomId, params.roomId));
       }
 
+      // Apply tags filter if provided
       if (params.tags && params.tags.length > 0) {
         // Filter by tags - find tasks that have ALL of the specified tags
         // Using JSON_CONTAINS for MySQL compatibility
         const tagParams = params.tags.map((tag) => `'${tag.replace(/'/g, "''")}'`).join(', ');
-        query = query.where(
-          sql`JSON_CONTAINS(${taskTable.tags}, JSON_ARRAY(${sql.raw(tagParams)}))`
-        );
+        conditions.push(sql`JSON_CONTAINS(${taskTable.tags}, JSON_ARRAY(${sql.raw(tagParams)}))`);
       }
 
-      const result = await query;
+      // Apply all conditions at once
+      const result = await this.db
+        .select()
+        .from(taskTable)
+        .where(and(...conditions));
 
       // Map database rows to core Task objects
       return result.map(mapToTask);

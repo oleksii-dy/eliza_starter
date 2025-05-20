@@ -1,16 +1,13 @@
 import { sql } from 'drizzle-orm';
 import { json, mysqlTable, varchar } from 'drizzle-orm/mysql-core';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import { World, UUID } from '@elizaos/core';
+import { relations } from 'drizzle-orm';
+import type { World, UUID } from '@elizaos/core';
 import { agentTable } from './agent';
 import { roomTable } from './room';
 import { numberTimestamp } from './types';
-import { relations } from 'drizzle-orm';
 
 /**
  * Represents a table schema for worlds in the database.
- *
- * @type {MysqlTable}
  */
 export const worldTable = mysqlTable('worlds', {
   id: varchar('id', { length: 36 })
@@ -30,9 +27,9 @@ export const worldTable = mysqlTable('worlds', {
     .notNull(),
 });
 
-// Inferred database model types from the world table schema
-export type SelectWorld = InferSelectModel<typeof worldTable>;
-export type InsertWorld = InferInsertModel<typeof worldTable>;
+// Using modern type inference with $ prefix
+export type SelectWorld = typeof worldTable.$inferSelect;
+export type InsertWorld = typeof worldTable.$inferInsert;
 
 // Define relations for the world table
 export const worldRelations = relations(worldTable, ({ many }) => ({
@@ -49,10 +46,8 @@ export function mapToWorld(worldRow: SelectWorld): World {
     name: worldRow.name,
     serverId: worldRow.serverId,
     metadata:
-      typeof worldRow.metadata === 'object' && worldRow.metadata !== null
-        ? (worldRow.metadata as Record<string, unknown>)
-        : {},
-  } as World;
+      typeof worldRow.metadata === 'object' && worldRow.metadata !== null ? worldRow.metadata : {},
+  };
 }
 
 /**

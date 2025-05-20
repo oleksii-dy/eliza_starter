@@ -1,10 +1,9 @@
 import { sql } from 'drizzle-orm';
 import { json, mysqlTable, varchar } from 'drizzle-orm/mysql-core';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { agentTable } from './agent';
 import { numberTimestamp } from './types';
 import { worldTable } from './world';
-import { ChannelType, Room as CoreRoom, UUID } from '@elizaos/core';
+import type { ChannelType, Room as CoreRoom, UUID } from '@elizaos/core';
 
 /**
  * Defines a table schema for 'rooms' in the database.
@@ -21,9 +20,10 @@ export const roomTable = mysqlTable('rooms', {
   source: varchar('source', { length: 255 }).notNull(),
   type: varchar('type', { length: 50 }).notNull(),
   serverId: varchar('serverId', { length: 255 }),
-  worldId: varchar('worldId', { length: 36 }).references(() => worldTable.id, {
-    onDelete: 'cascade',
-  }),
+  worldId: varchar('worldId', { length: 36 }), // no guarantee that world exists, it is optional for now
+  // .references(() => worldTable.id, {
+  //   onDelete: 'cascade',
+  // }),
   name: varchar('name', { length: 255 }),
   metadata: json('metadata')
     .$type<Record<string, unknown>>()
@@ -34,9 +34,9 @@ export const roomTable = mysqlTable('rooms', {
     .notNull(),
 });
 
-// Inferred database model types from the room table schema
-export type SelectRoom = InferSelectModel<typeof roomTable>;
-export type InsertRoom = InferInsertModel<typeof roomTable>;
+// Using modern type inference with $ prefix
+export type SelectRoom = typeof roomTable.$inferSelect;
+export type InsertRoom = typeof roomTable.$inferInsert;
 
 /**
  * Maps a Drizzle room record to the core Room type

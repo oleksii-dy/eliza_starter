@@ -22,7 +22,7 @@ dotenv.config({ path: '../../.env' });
 const character: Character = {
   name: 'Ruby',
   plugins: [
-    '@elizaos/plugin-sql',
+    '@elizaos/plugin-mysql',
     ...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),
     ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
     ...(!process.env.OPENAI_API_KEY ? ['@elizaos/plugin-local-ai'] : []),

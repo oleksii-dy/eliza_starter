@@ -29,7 +29,7 @@ dotenv.config({ path: '../../.env' });
 export const character: Character = {
   name: 'Eli5',
   plugins: [
-    '@elizaos/plugin-sql',
+    '@elizaos/plugin-mysql',
     ...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),
     ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
     ...(!process.env.OPENAI_API_KEY ? ['@elizaos/plugin-local-ai'] : []),

@@ -1,11 +1,10 @@
 import { relations, sql } from 'drizzle-orm';
 import { foreignKey, index, mysqlTable, text, unique, varchar } from 'drizzle-orm/mysql-core';
-import { type UUID, type Participant } from '@elizaos/core';
+import type { UUID, Participant, Entity } from '@elizaos/core';
 import { agentTable } from './agent';
 import { entityTable } from './entity';
 import { roomTable } from './room';
 import { numberTimestamp } from './types';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
 /**
  * Defines the schema for the "participants" table in the database.
@@ -49,17 +48,21 @@ export const participantTable = mysqlTable(
   ]
 );
 
-// Inferred database model types from the participant table schema
-export type SelectParticipant = InferSelectModel<typeof participantTable>;
-export type InsertParticipant = InferInsertModel<typeof participantTable>;
+// Using modern type inference with $ prefix
+export type SelectParticipant = typeof participantTable.$inferSelect;
+export type InsertParticipant = typeof participantTable.$inferInsert;
 
 /**
  * Maps a Drizzle participant record to the core Participant interface
  */
-export function mapToParticipant(participantRow: SelectParticipant, entity?: any): Participant {
+export function mapToParticipant(participantRow: SelectParticipant, entity?: Entity): Participant {
   return {
     id: participantRow.id as UUID,
-    entity: entity || { id: participantRow.entityId as UUID },
+    entity: entity || {
+      id: participantRow.entityId as UUID,
+      names: [],
+      agentId: participantRow.agentId as UUID,
+    },
   };
 }
 

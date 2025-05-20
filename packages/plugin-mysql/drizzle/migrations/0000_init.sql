@@ -3,18 +3,18 @@ CREATE TABLE `agents` (
 	`enabled` boolean NOT NULL DEFAULT true,
 	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`name` varchar(255),
+	`name` varchar(255) NOT NULL,
 	`username` varchar(255),
-	`system` text,
-	`bio` json NOT NULL,
-	`message_examples` json DEFAULT ('[]'),
-	`post_examples` json DEFAULT ('[]'),
-	`topics` json DEFAULT ('[]'),
-	`adjectives` json DEFAULT ('[]'),
-	`knowledge` json DEFAULT ('[]'),
-	`plugins` json DEFAULT ('[]'),
-	`settings` json DEFAULT ('{}'),
-	`style` json DEFAULT ('{}'),
+	`system` text DEFAULT (''),
+	`bio` json NOT NULL DEFAULT ('[]'),
+	`message_examples` json NOT NULL DEFAULT ('[]'),
+	`post_examples` json NOT NULL DEFAULT ('[]'),
+	`topics` json NOT NULL DEFAULT ('[]'),
+	`adjectives` json NOT NULL DEFAULT ('[]'),
+	`knowledge` json NOT NULL DEFAULT ('[]'),
+	`plugins` json NOT NULL DEFAULT ('[]'),
+	`settings` json NOT NULL DEFAULT ('{}'),
+	`style` json NOT NULL DEFAULT ('{}'),
 	CONSTRAINT `agents_id` PRIMARY KEY(`id`),
 	CONSTRAINT `name_unique` UNIQUE(`name`)
 );
@@ -60,8 +60,8 @@ CREATE TABLE `entities` (
 	`id` varchar(36) NOT NULL,
 	`agentId` varchar(36) NOT NULL,
 	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`names` json DEFAULT ('[]'),
-	`metadata` json DEFAULT ('{}'),
+	`names` json NOT NULL DEFAULT ('[]'),
+	`metadata` json NOT NULL DEFAULT ('{}'),
 	CONSTRAINT `entities_id` PRIMARY KEY(`id`),
 	CONSTRAINT `id_agent_id_unique` UNIQUE(`id`,`agentId`)
 );
@@ -82,8 +82,9 @@ CREATE TABLE `memories` (
 	`createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`content` json NOT NULL,
 	`entityId` varchar(36),
-	`agentId` varchar(36),
+	`agentId` varchar(36) NOT NULL,
 	`roomId` varchar(36),
+	`worldId` varchar(36),
 	`unique` boolean NOT NULL DEFAULT true,
 	`metadata` json NOT NULL DEFAULT ('{}'),
 	CONSTRAINT `memories_id` PRIMARY KEY(`id`)
@@ -138,9 +139,10 @@ CREATE TABLE `worlds` (
 CREATE TABLE `tasks` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
 	`name` varchar(255) NOT NULL,
-	`description` varchar(1000) NOT NULL,
-	`room_id` varchar(36),
-	`world_id` varchar(36),
+	`description` varchar(1000),
+	`roomId` varchar(36),
+	`worldId` varchar(36),
+	`entityId` varchar(36),
 	`agent_id` varchar(36) NOT NULL,
 	`tags` json DEFAULT ('[]'),
 	`metadata` json DEFAULT ('{}'),
@@ -162,6 +164,9 @@ ALTER TABLE `logs` ADD CONSTRAINT `logs_entityId_entities_id_fk` FOREIGN KEY (`e
 ALTER TABLE `logs` ADD CONSTRAINT `logs_roomId_rooms_id_fk` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `logs` ADD CONSTRAINT `fk_log_room` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `logs` ADD CONSTRAINT `fk_logs_entityId` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `memories` ADD CONSTRAINT `memories_entityId_entities_id_fk` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `memories` ADD CONSTRAINT `memories_agentId_agents_id_fk` FOREIGN KEY (`agentId`) REFERENCES `agents`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `memories` ADD CONSTRAINT `memories_roomId_rooms_id_fk` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `memories` ADD CONSTRAINT `fk_room` FOREIGN KEY (`roomId`) REFERENCES `rooms`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `memories` ADD CONSTRAINT `fk_memories_entityId` FOREIGN KEY (`entityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `memories` ADD CONSTRAINT `fk_agent` FOREIGN KEY (`agentId`) REFERENCES `agents`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -176,10 +181,10 @@ ALTER TABLE `relationships` ADD CONSTRAINT `relationships_agentId_agents_id_fk` 
 ALTER TABLE `relationships` ADD CONSTRAINT `fk_user_a` FOREIGN KEY (`sourceEntityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `relationships` ADD CONSTRAINT `fk_user_b` FOREIGN KEY (`targetEntityId`) REFERENCES `entities`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `rooms` ADD CONSTRAINT `rooms_agentId_agents_id_fk` FOREIGN KEY (`agentId`) REFERENCES `agents`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `rooms` ADD CONSTRAINT `rooms_worldId_worlds_id_fk` FOREIGN KEY (`worldId`) REFERENCES `worlds`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `worlds` ADD CONSTRAINT `worlds_agentId_agents_id_fk` FOREIGN KEY (`agentId`) REFERENCES `agents`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX `idx_embedding_memory` ON `embeddings` (`memory_id`);--> statement-breakpoint
 CREATE INDEX `idx_memories_type_room` ON `memories` (`type`,`roomId`);--> statement-breakpoint
+CREATE INDEX `idx_memories_world_id` ON `memories` (`worldId`);--> statement-breakpoint
 CREATE INDEX `idx_memories_metadata_type` ON `memories` (`type`);--> statement-breakpoint
 CREATE INDEX `idx_memories_document_id` ON `memories` (`id`);--> statement-breakpoint
 CREATE INDEX `idx_fragments_order` ON `memories` (`id`);--> statement-breakpoint
