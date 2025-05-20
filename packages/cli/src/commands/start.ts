@@ -33,11 +33,6 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const wait = (minTime = 1000, maxTime = 3000) => {
-  const waitTime = Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
-  return new Promise((resolve) => setTimeout(resolve, waitTime));
-};
-
 /**
  * Attempts to load a plugin module, installing it if necessary.
  * Handles various export patterns (default, named export).
@@ -502,7 +497,12 @@ const startAgents = async (options: {
 
   // Inside your startAgents function
   const desiredPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000');
+  logger.debug(`Attempting to start server on port: ${desiredPort}`);
   const serverPort = await findNextAvailablePort(desiredPort);
+
+  if (serverPort !== desiredPort) {
+    logger.warn(`Port ${desiredPort} is in use, using port ${serverPort} instead`);
+  }
 
   process.env.SERVER_PORT = serverPort.toString();
 
@@ -607,7 +607,7 @@ const startAgents = async (options: {
   await server.initialize();
   server.start(serverPort);
 
-  // if characters are provided, start the agents with the characters
+  // If characters are provided, start the agents with the characters
   if (options.characters && options.characters.length > 0) {
     for (const character of options.characters) {
       // Initialize plugins as an empty array if undefined
@@ -752,15 +752,11 @@ export const start = new Command()
   .description('Start the Eliza agent with configurable plugins and services')
   .option(
     '-c, --configure',
-    'Force reconfiguration of services and AI models (ignores existing saved configuration)'
+    'Force reconfiguration of services and AI models (bypasses saved configuration)'
   )
-  .option(
-    '-char, --character <character>',
-    'Path or URL to character file to use instead of default'
-  )
+  .option('-char, --character [paths...]', 'Character file(s) to use - accepts paths or URLs')
   .option('-b, --build', 'Build the project before starting')
-  .option('-chars, --characters [paths...]', 'Multiple character files (comma or space-separated)')
-  .option('-p, --port <port>', 'Port to listen on', (v) => {
+  .option('-p, --port <port>', 'Port to listen on (default: 3000)', (v) => {
     const n = Number.parseInt(v, 10);
     if (Number.isNaN(n) || n <= 0 || n > 65535) {
       throw new Error('Port must be a number between 1 and 65535');
@@ -781,104 +777,82 @@ export const start = new Command()
       let loadedCharacters: Character[] = [];
       let failedCharacters: string[] = [];
 
-      // Collect server options
-      const characterPath = options.character;
+      // Process character(s) from options.character
+      if (options.character) {
+        const characterPaths: string[] = [];
 
-      if (characterPath) {
-        // if character path is a comma separated list, load all characters
-        // can be remote path also
-        if (characterPath.includes(',')) {
-          const paths = characterPath.split(',').map((p) => p.trim().replace(/^['"]|["']$/g, ''));
-
-          for (const path of paths) {
-            if (!path) continue;
-
-            try {
-              logger.info(`Loading character from ${path}`);
-              const characterData = await loadCharacterTryPath(path);
-              loadedCharacters.push(characterData);
-            } catch (error) {
-              failedCharacters.push(path);
-              logger.error(`Failed to load character from ${path}: ${error}`);
-            }
+        // Handle both array and single string inputs
+        if (Array.isArray(options.character)) {
+          for (const item of options.character) {
+            // Split by commas in case user provided comma-separated list
+            // Strip quotes if present (handles both single and double quotes)
+            const parts = item
+              .trim()
+              .split(',')
+              .map((part) => part.trim())
+              .map((part) => part.replace(/^['"](.*)['"]$/, '$1'))
+              .filter(Boolean);
+            characterPaths.push(...parts);
           }
-        } else {
-          // Single character, remove any quotes
-          const cleanPath = characterPath.trim().replace(/^["']|["']$/g, '');
-
-          try {
-            logger.info(`Loading character from ${cleanPath}`);
-            const characterData = await loadCharacterTryPath(cleanPath);
-            loadedCharacters.push(characterData);
-          } catch (error) {
-            failedCharacters.push(cleanPath);
-            logger.error(`Failed to load character from ${cleanPath}: ${error}`);
-          }
-        }
-      } else if (options.characters) {
-        // Process the -chars option (handle both array and string)
-        // Convert to array of clean paths
-        let charPaths: string[] = [];
-
-        if (Array.isArray(options.characters)) {
-          // Handle array from Commander's <paths...> format
-          for (const item of options.characters) {
-            const cleanItem = item.trim().replace(/^['"]|["']$/g, '');
-            if (cleanItem.includes(',')) {
-              // Split comma-separated values within an item
-              const subPaths = cleanItem
-                .split(',')
-                .map((p) => p.trim())
-                .filter(Boolean);
-              charPaths = [...charPaths, ...subPaths];
-            } else {
-              charPaths.push(cleanItem);
-            }
-          }
-        } else if (typeof options.characters === 'string') {
-          // Handle plain string input
-          const items = options.characters
+        } else if (typeof options.character === 'string') {
+          // Split by commas in case user provided comma-separated list
+          // Strip quotes if present (handles both single and double quotes)
+          const parts = options.character
+            .trim()
             .split(',')
-            .map((p) => p.trim())
+            .map((part) => part.trim())
+            .map((part) => part.replace(/^['"](.*)['"]$/, '$1'))
             .filter(Boolean);
-          charPaths = [...charPaths, ...items];
-        } else if (options.characters === true) {
-          // Handle the case where -chars is provided without arguments
-          charPaths = [];
+          characterPaths.push(...parts);
+        } else if (options.character === true) {
+          // Handle the case where flag is provided without arguments
+          logger.warn('--character flag provided without any paths. No characters will be loaded.');
         }
 
-        // Load each character
-        for (const path of charPaths) {
+        // Load each character path
+        for (const path of characterPaths) {
           try {
             logger.info(`Loading character from ${path}`);
-            const characterData = await loadCharacterTryPath(path);
+            // Try with the exact path first
+            let characterData;
+            try {
+              characterData = await loadCharacterTryPath(path);
+            } catch (error) {
+              // If that fails and there's no extension, try adding .json
+              if (!path.includes('.')) {
+                logger.info(`Trying with .json extension: ${path}.json`);
+                characterData = await loadCharacterTryPath(`${path}.json`);
+              } else {
+                throw error;
+              }
+            }
             loadedCharacters.push(characterData);
           } catch (error) {
             failedCharacters.push(path);
             logger.error(`Failed to load character from ${path}: ${error}`);
           }
         }
-      }
 
-      // If we have both successes and failures, log a message
-      if (loadedCharacters.length > 0 && failedCharacters.length > 0) {
-        logger.warn(
-          `${failedCharacters.length} character(s) failed to load, but ${loadedCharacters.length} succeeded. Starting server with valid characters.`
-        );
-      }
-      // If all characters failed, log error and handle gracefully
-      else if (loadedCharacters.length === 0 && (characterPath || options.characters)) {
-        if (failedCharacters.length > 0) {
+        // If we have both successes and failures, log a message
+        if (loadedCharacters.length > 0 && failedCharacters.length > 0) {
+          logger.warn(
+            `${failedCharacters.length} character(s) failed to load, but ${loadedCharacters.length} succeeded. Starting server with valid characters.`
+          );
+        }
+        // If all characters failed, log error and handle gracefully
+        else if (loadedCharacters.length === 0 && characterPaths.length > 0) {
           logger.error(
             `All ${failedCharacters.length} character(s) failed to load. Starting server with default character...`
           );
         }
       }
 
-      // Replace options.characters with our loaded characters
-      options.characters = loadedCharacters;
-
-      await startAgents(options);
+      // Start the agents with loaded characters
+      await startAgents({
+        configure: options.configure,
+        port: options.port,
+        characters: loadedCharacters,
+      });
     } catch (error) {
       handleError(error);
     }
