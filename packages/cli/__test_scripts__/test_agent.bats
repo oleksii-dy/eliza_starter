@@ -10,8 +10,10 @@ setup_file() {
   set -euo pipefail
 
   # ---- Ensure port is free.
-  kill -9 $(lsof -t -i :3000)
-  sleep 1
+  if command -v lsof >/dev/null; then
+    lsof -t -i :3000 2>/dev/null | xargs -r kill -9
+    sleep 1
+  fi
   # -----
 
   # ---------------------------------------------------------------------------

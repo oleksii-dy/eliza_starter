@@ -9,8 +9,10 @@
 setup() {
   set -euo pipefail
   # ---- Ensure port is free.
-  kill -9 $(lsof -t -i :3000)
-  sleep 1
+  if command -v lsof >/dev/null; then
+    lsof -t -i :3000 2>/dev/null | xargs -r kill -9
+    sleep 1
+  fi
   # -----
   export TEST_TMP_DIR="$(mktemp -d /var/tmp/eliza-test-start-XXXXXX)"
   export TEST_SERVER_PORT=3000
