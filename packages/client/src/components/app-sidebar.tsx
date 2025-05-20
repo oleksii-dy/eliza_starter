@@ -1,3 +1,13 @@
+import AgentAvatarStack from '@/components/agent-avatar-stack';
+import ConnectionStatus from '@/components/connection-status';
+import GroupPanel from '@/components/group-panel';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Sidebar,
   SidebarContent,
@@ -10,21 +20,11 @@ import {
   SidebarMenuItem,
   SidebarMenuSkeleton,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import GroupPanel from '@/components/group-panel';
-import ConnectionStatus from '@/components/connection-status';
-import AgentAvatarStack from '@/components/agent-avatar-stack';
 
-import { useAgents, useRooms } from '@/hooks/use-query-hooks';
+import { useAgentsWithDetails, useRooms } from '@/hooks/use-query-hooks';
 import info from '@/lib/info.json';
-import { formatAgentName, cn } from '@/lib/utils';
-import { AgentStatus, type UUID, type Agent, type Room } from '@elizaos/core';
+import { cn, formatAgentName } from '@/lib/utils';
+import { AgentStatus, type Agent, type Room, type UUID } from '@elizaos/core';
 
 import { Book, ChevronDown, Cog, Plus, TerminalIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -128,7 +128,7 @@ const AgentListSection = ({
   className,
 }: {
   title: string;
-  agents: Agent[];
+  agents: Partial<Agent>[];
   isOnline: boolean;
   activePath: string;
   className?: string;
@@ -136,10 +136,10 @@ const AgentListSection = ({
   <SidebarSection title={title} className={className}>
     {agents.map((a) => (
       <AgentRow
-        key={a.id}
-        agent={a}
+        key={a?.id}
+        agent={a as Agent}
         isOnline={isOnline}
-        active={activePath.includes(String(a.id))}
+        active={activePath.includes(String(a?.id))}
       />
     ))}
   </SidebarSection>
@@ -153,7 +153,7 @@ const RoomListSection = ({
 }: {
   rooms: Map<string, { agentId: UUID; name: string }[]>;
   roomsLoading: boolean;
-  agents: Agent[];
+  agents: Partial<Agent>[];
   agentAvatarMap: Record<string, string | null>;
 }) => (
   <SidebarSection title="Groups" className="mt-2">
@@ -240,40 +240,49 @@ const CreateButton = ({ onCreateRoom }: { onCreateRoom: () => void }) => {
   );
 };
 
-/* ---------- main component ---------- */
+/**
+ * Renders the main application sidebar, displaying navigation, agent lists, group rooms, and utility links.
+ *
+ * The sidebar includes sections for online and offline agents, group rooms, a create button for agents and groups, and footer links to documentation, logs, and settings. It handles loading and error states for agent and room data, and conditionally displays a group creation panel.
+ */
 export function AppSidebar() {
-  const { pathname } = useLocation();
+  const location = useLocation();
 
+  const { data: agentsData, error: agentsError } = useAgentsWithDetails();
   const { data: roomsData, isLoading: roomsLoading } = useRooms();
-  const { data: { data: agentsResp } = {}, isError: agentsError } = useAgents();
 
-  const agents = agentsResp?.agents ?? [];
-  const isRoomPage = pathname.startsWith('/room/');
-  const currentRoomId = useMemo(
-    () => (isRoomPage ? pathname.split('/')[2] : null),
-    [isRoomPage, pathname]
-  );
+  const agents = useMemo(() => agentsData?.agents || [], [agentsData]);
 
   const agentAvatarMap = useMemo(
     () =>
-      agents.reduce<Record<string, string | null>>((acc, a) => {
-        if (a.id) acc[a.id] = a.settings?.avatar ?? null;
-        return acc;
-      }, {}),
+      agents.reduce(
+        (acc: Record<string, string | null>, a: Agent): Record<string, string | null> => {
+          if (a.id) {
+            acc[a.id] = a.settings?.avatar ?? null;
+          }
+          return acc;
+        },
+        {}
+      ),
     [agents]
   );
 
   const roomAgentIds = useMemo(
-    () => getRoomAgentIds(roomsData, currentRoomId),
-    [roomsData, currentRoomId]
+    () =>
+      getRoomAgentIds(
+        roomsData,
+        location.pathname.startsWith('/chat/') ? location.pathname.split('/')[2] : null
+      ),
+    [roomsData, location.pathname]
   );
 
   const [onlineAgents, offlineAgents] = useMemo(() => {
     const [on, off] = partition(agents, (a) => a.status === AgentStatus.ACTIVE);
     if (!roomAgentIds.length) return [on, off];
     return [
-      on.filter((a) => roomAgentIds.includes(a.id)),
-      off.filter((a) => roomAgentIds.includes(a.id)),
+      // Ensure a.id exists before checking includes
+      on.filter((a) => a.id && roomAgentIds.includes(a.id)),
+      off.filter((a) => a.id && roomAgentIds.includes(a.id)),
     ];
   }, [agents, roomAgentIds]);
 
@@ -331,7 +340,12 @@ export function AppSidebar() {
         {agentLoadError && <div className="px-4 py-2 text-xs">{agentLoadError}</div>}
 
         {!agentLoadError && (
-          <AgentListSection title="Online" agents={onlineAgents} isOnline activePath={pathname} />
+          <AgentListSection
+            title="Online"
+            agents={onlineAgents}
+            isOnline
+            activePath={location.pathname}
+          />
         )}
 
         {!agentLoadError && offlineAgents.length > 0 && (
@@ -339,7 +353,7 @@ export function AppSidebar() {
             title="Offline"
             agents={offlineAgents}
             isOnline={false}
-            activePath={pathname}
+            activePath={location.pathname}
             className="mt-2"
           />
         )}
@@ -361,7 +375,7 @@ export function AppSidebar() {
           <FooterLink to="https://eliza.how/" Icon={Book} label="Documentation" />
           <FooterLink to="/logs" Icon={TerminalIcon} label="Logs" />
           <FooterLink to="/settings" Icon={Cog} label="Settings" />
-          <ConnectionStatus className="sidebar-connection-status" />
+          <ConnectionStatus />
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

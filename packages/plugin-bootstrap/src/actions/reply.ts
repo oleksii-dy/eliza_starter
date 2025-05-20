@@ -61,27 +61,8 @@ export const replyAction = {
     message: Memory,
     state: State,
     _options: any,
-    callback: HandlerCallback,
-    responses?: Memory[]
+    callback: HandlerCallback
   ) => {
-    // Find all responses with REPLY action and text
-    const existingResponses = responses?.filter(
-      (response) => response.content.actions?.includes('REPLY') && response.content.message
-    );
-
-    // If we found any existing responses, use them and skip LLM
-    if (existingResponses && existingResponses.length > 0) {
-      for (const response of existingResponses) {
-        const responseContent = {
-          thought: response.content.thought || 'Using provided text for reply',
-          text: response.content.message as string,
-          actions: ['REPLY'],
-        };
-        await callback(responseContent);
-      }
-      return;
-    }
-
     // Only generate response using LLM if no suitable response was found
     state = await runtime.composeState(message, [
       ...(message.content.providers ?? []),

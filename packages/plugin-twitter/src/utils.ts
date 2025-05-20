@@ -82,20 +82,16 @@ async function handleNoteTweet(
   tweetId?: string,
   mediaData?: MediaData[]
 ) {
-  try {
-    const noteTweetResult = await client.requestQueue.add(
-      async () => await client.twitterClient.sendNoteTweet(content, tweetId, mediaData)
-    );
+  const noteTweetResult = await client.requestQueue.add(
+    async () => await client.twitterClient.sendNoteTweet(content, tweetId, mediaData)
+  );
 
-    if (noteTweetResult.errors && noteTweetResult.errors.length > 0) {
-      // Note Tweet failed due to authorization. Falling back to standard Tweet.
-      const truncateContent = truncateToCompleteSentence(content, TWEET_CHAR_LIMIT - 1);
-      return await sendStandardTweet(client, truncateContent, tweetId);
-    }
-    return noteTweetResult.data.notetweet_create.tweet_results.result;
-  } catch (error) {
-    throw new Error(`Note Tweet failed: ${error}`);
+  if (noteTweetResult.errors && noteTweetResult.errors.length > 0) {
+    // Note Tweet failed due to authorization. Falling back to standard Tweet.
+    const truncateContent = truncateToCompleteSentence(content, TWEET_CHAR_LIMIT - 1);
+    return await sendStandardTweet(client, truncateContent, tweetId);
   }
+  return noteTweetResult.data.notetweet_create.tweet_results.result;
 }
 
 /**
@@ -107,26 +103,21 @@ async function handleNoteTweet(
  * @param {MediaData[]} [mediaData] - Optional array of media data to attach to the tweet.
  * @returns {Promise<string>} The result of sending the tweet.
  */
-async function sendStandardTweet(
+export async function sendStandardTweet(
   client: ClientBase,
   content: string,
   tweetId?: string,
   mediaData?: MediaData[]
 ) {
-  try {
-    const standardTweetResult = await client.requestQueue.add(
-      async () => await client.twitterClient.sendTweet(content, tweetId, mediaData)
-    );
-    const body = await standardTweetResult.json();
-    if (!body?.data?.create_tweet?.tweet_results?.result) {
-      logger.error('Error sending tweet; Bad response:', body);
-      return;
-    }
-    return body.data.create_tweet.tweet_results.result;
-  } catch (error) {
-    logger.error('Error sending standard Tweet:', error);
-    throw error;
+  const standardTweetResult = await client.requestQueue.add(
+    async () => await client.twitterClient.sendTweet(content, tweetId, mediaData)
+  );
+  const body = await standardTweetResult.json();
+  if (!body?.data?.create_tweet?.tweet_results?.result) {
+    logger.error('Error sending tweet; Bad response:', body);
+    return;
   }
+  return body.data.create_tweet.tweet_results.result;
 }
 
 export async function sendTweet(
@@ -477,49 +468,6 @@ export const parseActionResponseFromText = (text: string): { actions: ActionResp
 };
 
 /**
- * Generates tweet actions based on the given prompt and model type using the provided runtime.
- * @param {{
- *     runtime: IAgentRuntime;
- *     prompt: string;
- *     modelType: ModelTypeName;
- * }} params - Parameters including the runtime, prompt, and model type.
- * @returns {Promise<ActionResponse | null>} The generated actions or null if no valid response.
- */
-export async function generateTweetActions({
-  runtime,
-  prompt,
-  modelType,
-}: {
-  runtime: IAgentRuntime;
-  prompt: string;
-  modelType: ModelTypeName;
-}): Promise<ActionResponse | null> {
-  let retryDelay = 1000;
-  while (true) {
-    try {
-      const response = await runtime.useModel(modelType, {
-        prompt,
-      });
-      logger.debug('Received response from generateText for tweet actions:', response);
-      const { actions } = parseActionResponseFromText(response.trim());
-      if (actions) {
-        logger.debug('Parsed tweet actions:', actions);
-        return actions;
-      }
-      logger.debug('generateTweetActions no valid response');
-    } catch (error) {
-      logger.error('Error in generateTweetActions:', error);
-      if (error instanceof TypeError && error.message.includes('queueTextCompletion')) {
-        logger.error("TypeError: Cannot read properties of null (reading 'queueTextCompletion')");
-      }
-    }
-    logger.log(`Retrying in ${retryDelay}ms...`);
-    await new Promise((resolve) => setTimeout(resolve, retryDelay));
-    retryDelay *= 2;
-  }
-}
-
-/**
  * Generate short filler text via GPT
  */
 /**
@@ -530,14 +478,13 @@ export async function generateTweetActions({
  * @returns {Promise<string>} The generated filler message as a string.
  */
 export async function generateFiller(runtime: IAgentRuntime, fillerType: string): Promise<string> {
-  try {
-    const prompt = composePrompt({
-      state: {
-        values: {
-          fillerType,
-        },
-      } as any as State,
-      template: `
+  const prompt = composePrompt({
+    state: {
+      values: {
+        fillerType,
+      },
+    } as any as State,
+    template: `
 # INSTRUCTIONS:
 You are generating a short filler message for a Twitter Space. The filler type is "{{fillerType}}".
 Keep it brief, friendly, and relevant. No more than two sentences.
@@ -545,15 +492,11 @@ Only return the text, no additional formatting.
 
 ---
 `,
-    });
-    const output = await runtime.useModel(ModelType.TEXT_SMALL, {
-      prompt,
-    });
-    return output.trim();
-  } catch (err) {
-    logger.error('[generateFiller] Error generating filler:', err);
-    return '';
-  }
+  });
+  const output = await runtime.useModel(ModelType.TEXT_SMALL, {
+    prompt,
+  });
+  return output.trim();
 }
 
 /**
@@ -581,10 +524,9 @@ export async function speakFiller(
  * Generate topic suggestions via GPT if no topics are configured
  */
 export async function generateTopicsIfEmpty(runtime: IAgentRuntime): Promise<string[]> {
-  try {
-    const prompt = composePrompt({
-      state: {} as any,
-      template: `
+  const prompt = composePrompt({
+    state: {} as any,
+    template: `
 # INSTRUCTIONS:
 Please generate 5 short topic ideas for a Twitter Space about technology or random interesting subjects.
 Return them as a comma-separated list, no additional formatting or numbering.
@@ -593,19 +535,15 @@ Example:
 "AI Advances, Futuristic Gadgets, Space Exploration, Quantum Computing, Digital Ethics"
 ---
 `,
-    });
-    const response = await runtime.useModel(ModelType.TEXT_SMALL, {
-      prompt,
-    });
-    const topics = response
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
-    return topics.length ? topics : ['Random Tech Chat', 'AI Thoughts'];
-  } catch (err) {
-    logger.error('[generateTopicsIfEmpty] GPT error =>', err);
-    return ['Random Tech Chat', 'AI Thoughts'];
-  }
+  });
+  const response = await runtime.useModel(ModelType.TEXT_SMALL, {
+    prompt,
+  });
+  const topics = response
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
+  return topics.length ? topics : ['Random Tech Chat', 'AI Thoughts'];
 }
 
 export async function isAgentInSpace(client: ClientBase, spaceId: string): Promise<boolean> {

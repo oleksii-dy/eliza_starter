@@ -1,29 +1,6 @@
 import pino, { type LogFn, type DestinationStream } from 'pino';
-
-/**
- * Parses a boolean value from text input.
- *
- * @param {string | undefined | null} value - The text input to be parsed.
- * @returns {boolean} - The boolean value parsed from the text input.
- */
-function parseBooleanFromText(value: string | undefined | null): boolean {
-  if (!value) return false;
-
-  const affirmative = ['YES', 'Y', 'TRUE', 'T', '1', 'ON', 'ENABLE'];
-  const negative = ['NO', 'N', 'FALSE', 'F', '0', 'OFF', 'DISABLE'];
-
-  const normalizedText = value.trim().toUpperCase();
-
-  if (affirmative.includes(normalizedText)) {
-    return true;
-  }
-  if (negative.includes(normalizedText)) {
-    return false;
-  }
-
-  // For environment variables, we'll treat unrecognized values as false
-  return false;
-}
+import { parseBooleanFromText } from './utils';
+import { Sentry } from './sentry/instrument';
 
 /**
  * Interface representing a log entry.
@@ -247,6 +224,17 @@ const options = {
   hooks: {
     logMethod(inputArgs: [string | Record<string, unknown>, ...unknown[]], method: LogFn): void {
       const [arg1, ...rest] = inputArgs;
+      if (process.env.SENTRY_LOGGING !== 'false') {
+        if (arg1 instanceof Error) {
+          Sentry.captureException(arg1);
+        } else {
+          for (const item of rest) {
+            if (item instanceof Error) {
+              Sentry.captureException(item);
+            }
+          }
+        }
+      }
 
       const formatError = (err: Error) => ({
         message: `(${err.name}) ${err.message}`,

@@ -30,8 +30,9 @@ export const character: Character = {
   name: 'Eli5',
   plugins: [
     '@elizaos/plugin-sql',
-    '@elizaos/plugin-anthropic',
-    '@elizaos/plugin-openai',
+    ...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),
+    ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
+    ...(!process.env.OPENAI_API_KEY ? ['@elizaos/plugin-local-ai'] : []),
     '@elizaos/plugin-discord',
     '@elizaos/plugin-twitter',
     '@elizaos/plugin-pdf',
@@ -56,6 +57,14 @@ export const character: Character = {
     'Uses silence effectively and speaks only when necessary.',
     'Asks for help when needed and offers help when asked.',
     'Offers commentary only when appropriate or requested.',
+  ],
+  topics: [
+    'online community management',
+    'engaging online communities',
+    'social media community outreach',
+    'community platform best practices',
+    'developing fair community guidelines',
+    'effective community moderation',
   ],
   messageExamples: [
     [

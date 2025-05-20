@@ -1,37 +1,37 @@
-import { buildProject } from '@/src/utils/build-project';
+import { character as defaultCharacter } from '@/src/characters/eliza';
+import { AgentServer } from '@/src/server/index';
+import { jsonToCharacter, loadCharacterTryPath } from '@/src/server/loader';
+import {
+  buildProject,
+  configureDatabaseSettings,
+  displayBanner,
+  findNextAvailablePort,
+  getCliInstallTag,
+  handleError,
+  installPlugin,
+  loadConfig,
+  loadEnvironment,
+  loadPluginModule,
+  promptForEnvVars,
+  saveConfig,
+} from '@/src/utils';
 import {
   AgentRuntime,
+  encryptedCharacter,
+  logger,
+  RuntimeSettings,
+  stringToUuid,
   type Character,
   type IAgentRuntime,
   type Plugin,
-  logger,
-  stringToUuid,
-  encryptedCharacter,
-  RuntimeSettings,
 } from '@elizaos/core';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import fs from 'node:fs';
-import path, { dirname } from 'node:path';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { character, character as defaultCharacter } from '../characters/eliza';
-import { AgentServer } from '../server/index';
-import { jsonToCharacter, loadCharacterTryPath } from '../server/loader';
-import { loadConfig, saveConfig } from '../utils/config-manager.js';
-import { promptForEnvVars } from '../utils/env-prompt.js';
-import { configureDatabaseSettings, loadEnvironment } from '../utils/get-config';
-import { handleError } from '../utils/handle-error';
-import { installPlugin } from '../utils/install-plugin';
-import { displayBanner, getVersion } from '../utils/displayBanner';
-import { findNextAvailablePort } from '../utils/port-handling';
-import { loadPluginModule } from '../utils/load-plugin';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-export const wait = (minTime = 1000, maxTime = 3000) => {
-  const waitTime = Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
-  return new Promise((resolve) => setTimeout(resolve, waitTime));
-};
 
 /**
  * Attempts to load a plugin module, installing it if necessary.
@@ -241,11 +241,8 @@ export async function startAgent(
 
   const encryptedChar = encryptedCharacter(character);
 
-  // Find package.json relative to the current file (__dirname is defined at top level)
-  const packageJsonPath = path.resolve(__dirname, '../../package.json');
-
-  // Add a simple check in case the path is incorrect
-  let version = getVersion();
+  // Determine the appropriate installation tag based on the CLI version
+  const installTag = getCliInstallTag();
 
   const loadedPluginsMap = new Map<string, Plugin>();
 
@@ -269,18 +266,6 @@ export async function startAgent(
   // Initialize encryptedChar.plugins if it's undefined
   encryptedChar.plugins = encryptedChar.plugins ?? [];
 
-  // Ensure bootstrap plugin string is present in the character's list if not already loaded
-  const bootstrapPluginName = '@elizaos/plugin-bootstrap';
-  const characterHasBootstrapString = encryptedChar.plugins.includes(bootstrapPluginName);
-  const alreadyLoadedBootstrap = loadedPluginsMap.has(bootstrapPluginName);
-
-  if (!characterHasBootstrapString && !alreadyLoadedBootstrap) {
-    logger.debug(
-      `Adding ${bootstrapPluginName} string to character's plugin list as it was missing and not pre-loaded.`
-    );
-    encryptedChar.plugins.push(bootstrapPluginName);
-  }
-
   const characterPlugins: Plugin[] = [];
 
   // Process and load plugins specified by name in the character definition
@@ -295,7 +280,7 @@ export async function startAgent(
 
     if (!loadedPluginsMap.has(pluginName)) {
       logger.debug(`Attempting to load plugin by name from character definition: ${pluginName}`);
-      const loadedPlugin = await loadAndPreparePlugin(pluginName, version);
+      const loadedPlugin = await loadAndPreparePlugin(pluginName, installTag);
       if (loadedPlugin) {
         characterPlugins.push(loadedPlugin);
         // Double-check name consistency and avoid duplicates
@@ -466,7 +451,7 @@ const startAgents = async (options: {
   const pgliteDataDir = process.env.PGLITE_DATA_DIR;
 
   // Load existing configuration
-  const existingConfig = loadConfig();
+  const existingConfig = await loadConfig();
 
   // Check if we should reconfigure based on command-line option or if using default config
   const shouldConfigure = options.configure || existingConfig.isDefault;
@@ -512,7 +497,12 @@ const startAgents = async (options: {
 
   // Inside your startAgents function
   const desiredPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000');
+  logger.debug(`Attempting to start server on port: ${desiredPort}`);
   const serverPort = await findNextAvailablePort(desiredPort);
+
+  if (serverPort !== desiredPort) {
+    logger.warn(`Port ${desiredPort} is in use, using port ${serverPort} instead`);
+  }
 
   process.env.SERVER_PORT = serverPort.toString();
 
@@ -526,12 +516,10 @@ const startAgents = async (options: {
   try {
     // Check if we're in a project with a package.json
     const packageJsonPath = path.join(process.cwd(), 'package.json');
-    logger.debug(`Checking for package.json at: ${packageJsonPath}`);
 
     if (fs.existsSync(packageJsonPath)) {
       // Read and parse package.json to check if it's a project or plugin
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-      logger.debug(`Found package.json with name: ${packageJson.name || 'unnamed'}`);
 
       // Check if this is a plugin (package.json contains 'eliza' section with type='plugin')
       if (packageJson.eliza?.type && packageJson.eliza.type === 'plugin') {
@@ -603,9 +591,6 @@ const startAgents = async (options: {
             ) {
               isProject = true;
               projectModule = importedModule;
-              logger.debug(
-                `Loaded project with ${projectModule.default?.agents?.length || 0} agents`
-              );
             }
           } catch (importError) {
             logger.error(`Error importing module: ${importError}`);
@@ -619,41 +604,11 @@ const startAgents = async (options: {
     logger.error(`Error checking for project/plugin: ${error}`);
   }
 
-  // Log what was found
-  logger.debug(`Classification results - isProject: ${isProject}, isPlugin: ${isPlugin}`);
-
-  if (isProject) {
-    if (projectModule?.default) {
-      const project = projectModule.default;
-      const agents = Array.isArray(project.agents)
-        ? project.agents
-        : project.agent
-          ? [project.agent]
-          : [];
-      logger.debug(`Project contains ${agents.length} agent(s)`);
-
-      // Log agent names
-      if (agents.length > 0) {
-        logger.debug(`Agents: ${agents.map((a) => a.character?.name || 'unnamed').join(', ')}`);
-      }
-    } else {
-      logger.warn("Project module doesn't contain a valid default export");
-    }
-  } else if (isPlugin) {
-    logger.debug(`Found plugin: ${pluginModule?.name || 'unnamed'}`);
-  } else {
-    // Change the log message to be clearer about what we're doing
-    logger.debug(
-      'Running in standalone mode - using default Eliza character from ../characters/eliza'
-    );
-  }
-
   await server.initialize();
-
   server.start(serverPort);
 
-  // if characters are provided, start the agents with the characters
-  if (options.characters) {
+  // If characters are provided, start the agents with the characters
+  if (options.characters && options.characters.length > 0) {
     for (const character of options.characters) {
       // Initialize plugins as an empty array if undefined
       character.plugins = character.plugins || [];
@@ -704,7 +659,7 @@ const startAgents = async (options: {
           : [];
 
       if (agents.length > 0) {
-        logger.debug(`Found ${agents.length} agents in project`);
+        logger.info(`Found ${agents.length} agents in project`);
 
         // Prompt for environment variables for all plugins in the project
         try {
@@ -716,7 +671,7 @@ const startAgents = async (options: {
         const startedAgents = [];
         const results = await Promise.allSettled(
           agents.map(async (agent) => {
-            logger.debug(`Starting agent: ${agent.character.name}`);
+            logger.info(`Starting agent: ${agent.character.name}`);
             const runtime = await startAgent(
               agent.character,
               server,
@@ -733,12 +688,10 @@ const startAgents = async (options: {
           logger.info('No project agents started - falling back to default Eliza character');
           await startAgent(defaultCharacter, server);
         } else {
-          logger.debug(`Successfully started ${startedAgents.length} agents from project`);
+          logger.info(`Successfully started ${startedAgents.length} agents from project`);
         }
       } else {
-        logger.debug(
-          'Project found but no agents defined, falling back to default Eliza character'
-        );
+        logger.info('Project found but no agents defined, falling back to default Eliza character');
         await startAgent(defaultCharacter, server);
       }
     } else if (isPlugin && pluginModule) {
@@ -763,7 +716,7 @@ const startAgents = async (options: {
       // We're using our test plugin plus all the plugins from the default character
       const pluginsToLoad = [pluginModule];
 
-      logger.debug(
+      logger.info(
         `Using default character with plugins: ${defaultElizaCharacter.plugins.join(', ')}`
       );
       logger.info(
@@ -797,68 +750,109 @@ const startAgents = async (options: {
 export const start = new Command()
   .name('start')
   .description('Start the Eliza agent with configurable plugins and services')
-  .option('-c, --configure', 'Reconfigure services and AI models (skips using saved configuration)')
   .option(
-    '-char, --character <character>',
-    'Path or URL to character file to use instead of default'
+    '-c, --configure',
+    'Force reconfiguration of services and AI models (bypasses saved configuration)'
   )
+  .option('-char, --character [paths...]', 'Character file(s) to use - accepts paths or URLs')
   .option('-b, --build', 'Build the project before starting')
-  .option(
-    '-chars, --characters <paths>',
-    'multiple character configuration files separated by commas'
-  )
+  .option('-p, --port <port>', 'Port to listen on (default: 3000)', (v) => {
+    const n = Number.parseInt(v, 10);
+    if (Number.isNaN(n) || n <= 0 || n > 65535) {
+      throw new Error('Port must be a number between 1 and 65535');
+    }
+    return n;
+  })
+  .hook('preAction', async () => {
+    await displayBanner();
+  })
   .action(async (options) => {
-    displayBanner();
-
     try {
       // Build the project first unless skip-build is specified
       if (options.build) {
         await buildProject(process.cwd());
       }
 
-      // Collect server options
-      const characterPath = options.character;
+      // Store characters in a new array to avoid issues with commander
+      let loadedCharacters: Character[] = [];
+      let failedCharacters: string[] = [];
 
-      if (characterPath) {
-        options.characters = [];
-        try {
-          // if character path is a comma separated list, load all characters
-          // can be remote path also
-          if (characterPath.includes(',')) {
-            const characterPaths = characterPath.split(',');
-            for (const characterPath of characterPaths) {
-              logger.info(`Loading character from ${characterPath}`);
-              const characterData = await loadCharacterTryPath(characterPath);
-              options.characters.push(characterData);
-            }
-          } else {
-            // Single character
-            logger.info(`Loading character from ${characterPath}`);
-            const characterData = await loadCharacterTryPath(characterPath);
-            options.characters.push(characterData);
+      // Process character(s) from options.character
+      if (options.character) {
+        const characterPaths: string[] = [];
+
+        // Handle both array and single string inputs
+        if (Array.isArray(options.character)) {
+          for (const item of options.character) {
+            // Split by commas in case user provided comma-separated list
+            // Strip quotes if present (handles both single and double quotes)
+            const parts = item
+              .trim()
+              .split(',')
+              .map((part) => part.trim())
+              .map((part) => part.replace(/^['"](.*)['"]$/, '$1'))
+              .filter(Boolean);
+            characterPaths.push(...parts);
           }
-        } catch (error) {
-          logger.error(`Error loading character: ${error}`);
-          return;
+        } else if (typeof options.character === 'string') {
+          // Split by commas in case user provided comma-separated list
+          // Strip quotes if present (handles both single and double quotes)
+          const parts = options.character
+            .trim()
+            .split(',')
+            .map((part) => part.trim())
+            .map((part) => part.replace(/^['"](.*)['"]$/, '$1'))
+            .filter(Boolean);
+          characterPaths.push(...parts);
+        } else if (options.character === true) {
+          // Handle the case where flag is provided without arguments
+          logger.warn('--character flag provided without any paths. No characters will be loaded.');
         }
-      } else if (options.characters) {
-        // Process the -chars option (comma-separated list)
-        const charactersInput = options.characters;
-        options.characters = [];
-        try {
-          const characterPaths = charactersInput.split(',');
-          for (const characterPath of characterPaths) {
-            logger.info(`Loading character from ${characterPath}`);
-            const characterData = await loadCharacterTryPath(characterPath);
-            options.characters.push(characterData);
+
+        // Load each character path
+        for (const path of characterPaths) {
+          try {
+            logger.info(`Loading character from ${path}`);
+            // Try with the exact path first
+            let characterData;
+            try {
+              characterData = await loadCharacterTryPath(path);
+            } catch (error) {
+              // If that fails and there's no extension, try adding .json
+              if (!path.includes('.')) {
+                logger.info(`Trying with .json extension: ${path}.json`);
+                characterData = await loadCharacterTryPath(`${path}.json`);
+              } else {
+                throw error;
+              }
+            }
+            loadedCharacters.push(characterData);
+          } catch (error) {
+            failedCharacters.push(path);
+            logger.error(`Failed to load character from ${path}: ${error}`);
           }
-        } catch (error) {
-          logger.error(`Error loading characters: ${error}`);
-          return;
+        }
+
+        // If we have both successes and failures, log a message
+        if (loadedCharacters.length > 0 && failedCharacters.length > 0) {
+          logger.warn(
+            `${failedCharacters.length} character(s) failed to load, but ${loadedCharacters.length} succeeded. Starting server with valid characters.`
+          );
+        }
+        // If all characters failed, log error and handle gracefully
+        else if (loadedCharacters.length === 0 && characterPaths.length > 0) {
+          logger.error(
+            `All ${failedCharacters.length} character(s) failed to load. Starting server with default character...`
+          );
         }
       }
 
-      await startAgents(options);
+      // Start the agents with loaded characters
+      await startAgents({
+        configure: options.configure,
+        port: options.port,
+        characters: loadedCharacters,
+      });
     } catch (error) {
       handleError(error);
     }
