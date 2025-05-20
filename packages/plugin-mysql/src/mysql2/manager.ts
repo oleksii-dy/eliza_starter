@@ -194,16 +194,17 @@ export class MySql2ConnectionManager implements IDatabaseClientManager<mysql.Poo
 
       const db = drizzle(connection);
 
-      // --- Find the package root dynamically ---
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = path.dirname(__filename);
-      const packageRoot = findPackageRoot(__dirname);
-      const migrationsPath = path.join(packageRoot, 'drizzle', 'migrations');
-      logger.debug(`Resolved migrations path: ${migrationsPath}`); // Add logging
-      // --- End find package root ---
+      const packageJsonUrl = await import.meta.resolve('@elizaos/plugin-mysql/package.json');
+      const packageJsonPath = fileURLToPath(packageJsonUrl);
+      const packageRoot = path.dirname(packageJsonPath);
+      const migrationsPath = path.resolve(packageRoot, 'drizzle/migrations');
+      logger.debug(
+        `Resolved migrations path (pglite) using import.meta.resolve: ${migrationsPath}`
+      );
 
       await migrate(db, {
-        migrationsFolder: migrationsPath, // Use the dynamically found path
+        migrationsFolder: migrationsPath,
+        migrationsSchema: 'public',
       });
 
       // Close the connection after migration is complete
@@ -213,40 +214,5 @@ export class MySql2ConnectionManager implements IDatabaseClientManager<mysql.Poo
     } catch (error) {
       logger.error('Failed to run database migrations (mysql):', error);
     }
-  }
-}
-
-/**
- * Finds the root directory of the package containing the given directory.
- * Walks up the directory tree looking for package.json.
- * @param startDir The directory to start searching from.
- * @returns The path to the package root directory.
- * @throws Error if package.json is not found.
- */
-function findPackageRoot(startDir: string): string {
-  let currentDir = startDir;
-  while (true) {
-    const packageJsonPath = path.join(currentDir, 'package.json');
-    try {
-      // Check if package.json exists and is a file
-      if (fs.statSync(packageJsonPath).isFile()) {
-        // Make sure the package name is correct (optional but safer)
-        // const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-        // if (pkg.name === '@elizaos/plugin-mysql') { // Or whatever the actual package name is
-        return currentDir;
-        // }
-      }
-    } catch (err) {
-      // Ignore errors (e.g., permission denied, file not found)
-    }
-
-    const parentDir = path.dirname(currentDir);
-    if (parentDir === currentDir) {
-      // Reached the filesystem root without finding the correct package.json
-      throw new Error(
-        `Could not find package root containing package.json starting from ${startDir}`
-      );
-    }
-    currentDir = parentDir;
   }
 }

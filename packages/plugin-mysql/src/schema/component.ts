@@ -6,12 +6,9 @@ import { roomTable } from './room';
 import { numberTimestamp } from './types';
 import { worldTable } from './world';
 import type { Component, UUID } from '@elizaos/core';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
 /**
  * Definition of a table representing components in the database.
- *
- * @type {Table}
  */
 export const componentTable = mysqlTable('components', {
   id: varchar('id', { length: 36 })
@@ -34,16 +31,16 @@ export const componentTable = mysqlTable('components', {
   }),
   type: varchar('type', { length: 50 }).notNull(),
   data: json('data')
-    .$type<Record<string, any>>()
+    .$type<Record<string, unknown>>()
     .default(sql`('{}')`),
   createdAt: numberTimestamp('createdAt')
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
 });
 
-// Inferred database model types from the component table schema
-export type SelectComponent = InferSelectModel<typeof componentTable>;
-export type ComponentModelInsert = InferInsertModel<typeof componentTable>;
+// Using modern type inference with $ prefix
+export type SelectComponent = typeof componentTable.$inferSelect;
+export type InsertComponent = typeof componentTable.$inferInsert;
 
 // Type mapping utility to convert between Drizzle and Core types
 export function mapToComponent(componentRow: SelectComponent): Component {
@@ -58,13 +55,14 @@ export function mapToComponent(componentRow: SelectComponent): Component {
     type: componentRow.type,
     data:
       typeof componentRow.data === 'object' && componentRow.data !== null ? componentRow.data : {},
+    createdAt: Number(componentRow.createdAt),
   };
 }
 
-export function mapToComponentRow(component: Partial<Component>): ComponentModelInsert {
+export function mapToComponentRow(component: Partial<Component>): InsertComponent {
   // Return a properly typed object with only the properties
   // that are defined in the database schema
-  const result: Partial<ComponentModelInsert> = {};
+  const result: Partial<InsertComponent> = {};
 
   // Only copy properties that exist in the component
   if (component.id !== undefined) result.id = component.id;
@@ -75,6 +73,7 @@ export function mapToComponentRow(component: Partial<Component>): ComponentModel
   if (component.sourceEntityId !== undefined) result.sourceEntityId = component.sourceEntityId;
   if (component.type !== undefined) result.type = component.type;
   if (component.data !== undefined) result.data = component.data;
+  if (component.createdAt !== undefined) result.createdAt = component.createdAt;
 
-  return result as ComponentModelInsert;
+  return result as InsertComponent;
 }

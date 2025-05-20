@@ -3,7 +3,6 @@ import { foreignKey, index, json, mysqlTable, unique, varchar } from 'drizzle-or
 import { agentTable } from './agent';
 import { entityTable } from './entity';
 import { numberTimestamp } from './types';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import type { Relationship, UUID } from '@elizaos/core';
 
 /**
@@ -33,7 +32,7 @@ export const relationshipTable = mysqlTable(
       .$type<string[]>()
       .default(sql`('[]')`),
     metadata: json('metadata')
-      .$type<Record<string, any>>()
+      .$type<Record<string, unknown>>()
       .default(sql`('{}')`),
   },
   (table) => [
@@ -52,9 +51,9 @@ export const relationshipTable = mysqlTable(
   ]
 );
 
-// Inferred database model types from the relationship table schema
-export type SelectRelationship = InferSelectModel<typeof relationshipTable>;
-export type InsertRelationship = InferInsertModel<typeof relationshipTable>;
+// Using modern type inference with $ prefix
+export type SelectRelationship = typeof relationshipTable.$inferSelect;
+export type InsertRelationship = typeof relationshipTable.$inferInsert;
 
 /**
  * Maps a Drizzle Relationship from the database to the Core Relationship type

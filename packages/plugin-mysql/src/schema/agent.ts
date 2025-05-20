@@ -22,40 +22,52 @@ export const agentTable = mysqlTable(
       .notNull(),
 
     // Character
-    name: varchar('name', { length: 255 }),
+    name: varchar('name', { length: 255 }).notNull(),
     username: varchar('username', { length: 255 }),
-    system: text('system'),
-    bio: json('bio').$type<string | string[]>().notNull(),
+    system: text('system').default(''),
+    bio: json('bio')
+      .$type<string | string[]>()
+      .default(sql`('[]')`)
+      .notNull(),
     messageExamples: json('message_examples')
       .$type<MessageExample[][]>()
-      .default(sql`('[]')`),
+      .default(sql`('[]')`)
+      .notNull(),
     postExamples: json('post_examples')
       .$type<string[]>()
-      .default(sql`('[]')`),
+      .default(sql`('[]')`)
+      .notNull(),
     topics: json('topics')
       .$type<string[]>()
-      .default(sql`('[]')`),
+      .default(sql`('[]')`)
+      .notNull(),
     adjectives: json('adjectives')
       .$type<string[]>()
-      .default(sql`('[]')`),
+      .default(sql`('[]')`)
+      .notNull(),
     knowledge: json('knowledge')
       .$type<(string | { path: string; shared?: boolean })[]>()
-      .default(sql`('[]')`),
+      .default(sql`('[]')`)
+      .notNull(),
     plugins: json('plugins')
       .$type<string[]>()
-      .default(sql`('[]')`),
+      .default(sql`('[]')`)
+      .notNull(),
     settings: json('settings')
       .$type<{
-        [key: string]: any | string | boolean | number;
+        secrets?: { [key: string]: string | boolean | number };
+        [key: string]: unknown;
       }>()
-      .default(sql`('{}')`),
+      .default(sql`('{}')`)
+      .notNull(),
     style: json('style')
       .$type<{
         all?: string[];
         chat?: string[];
         post?: string[];
       }>()
-      .default(sql`('{}')`),
+      .default(sql`('{}')`)
+      .notNull(),
   },
   (table) => [unique('name_unique').on(table.name)]
 );
