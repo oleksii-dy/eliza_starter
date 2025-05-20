@@ -222,7 +222,10 @@ export function createBlockendService(integratorId: string) {
             let tokens = await getTokens(fromChainIds);
             let fromToken = tokens[fromAssetSymbol].address || "";
             let toToken = tokens[toAssetSymbol].address || "";
-            handleAsset(fromChainIds, toChainIds, fromToken, toToken);
+            const assetValidationResult = handleAsset(fromChainIds, toChainIds, fromToken, toToken);
+            if (assetValidationResult instanceof Error) {
+                throw new Error(`Asset validation failed: ${assetValidationResult.message}`);
+            }
             elizaLogger.log("FromChainIds", fromChainIds);
             elizaLogger.log("ToChainIds", toChainIds);
             elizaLogger.log("FromToken", fromToken);
