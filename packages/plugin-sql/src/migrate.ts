@@ -28,7 +28,7 @@ async function runMigrations() {
       process.exit(1);
     }
   } else {
-    const elizaDbDir = process.env.PGLITE_DATA_DIR ?? path.join(process.cwd(), '.pglite');
+    const elizaDbDir = process.env.PGLITE_DATA_DIR ?? path.join(process.cwd(), '.elizadb');
 
     if (!process.env.PGLITE_DATA_DIR) {
       logger.info(`PGLITE_DATA_DIR not set, defaulting to project path: ${elizaDbDir}`);

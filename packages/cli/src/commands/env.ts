@@ -403,7 +403,7 @@ async function resetEnv(yes = false): Promise<void> {
   const cacheDir = path.join(elizaDir, 'cache');
 
   const localEnvPath = getLocalEnvPath() ?? path.join(process.cwd(), '.env');
-  const localDbDir = path.join(process.cwd(), '.pglite');
+  const localDbDir = path.join(process.cwd(), '.elizadb');
 
   // Check if external Postgres is in use
   let usingExternalPostgres = false;
