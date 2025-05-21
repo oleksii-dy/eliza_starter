@@ -67,7 +67,7 @@ export default function ProfileOverlay({ isOpen, onClose, agentId }: ProfileOver
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-xs"
       onClick={onClose}
       onKeyUp={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -86,7 +86,7 @@ export default function ProfileOverlay({ isOpen, onClose, agentId }: ProfileOver
             </Button>
           </div>
 
-          <div className="p-6 w-full flex items-end bg-gradient-to-b from-primary/20 to-background">
+          <div className="p-6 w-full flex items-end bg-linear-to-b from-primary/20 to-background">
             <div className="flex w-full justify-between items-end">
               <div className="flex flex-col gap-2">
                 <div className="w-24 h-24 flex justify-center items-center relative">

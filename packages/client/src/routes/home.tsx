@@ -124,8 +124,8 @@ export default function Home() {
                               w-full h-full flex items-center justify-center
                               ${
                                 agent.status === AgentStatus.ACTIVE
-                                  ? 'brightness-[100%] hover:brightness-[107%]'
-                                  : 'grayscale }brightness-[75%] opacity-50 hover:brightness-[85%]'
+                                  ? 'brightness-100 hover:brightness-107'
+                                  : 'grayscale }brightness-75 opacity-50 hover:brightness-85'
                               }
                             `}
                           >
@@ -171,13 +171,13 @@ export default function Home() {
                           action: () => {
                             openOverlay(agent);
                           },
-                          variant: 'outline',
+                          variant: 'outline-solid',
                         },
                         {
                           icon: <Cog style={{ height: 16, width: 16 }} />,
                           className: 'w-10 h-10 rounded-full agent-settings-button',
                           action: () => navigate(`/settings/${agent.id}`),
-                          variant: 'outline',
+                          variant: 'outline-solid',
                         },
                       ]}
                     />
@@ -220,7 +220,7 @@ export default function Home() {
                             }
                           }}
                         >
-                          <div className="w-full h-full flex items-center justify-center brightness-[100%] hover:brightness-[107%]">
+                          <div className="w-full h-full flex items-center justify-center brightness-100 hover:brightness-107">
                             {roomName ? formatAgentName(roomName) : 'Unnamed Group'}
                           </div>
                         </div>
@@ -241,7 +241,7 @@ export default function Home() {
                             setSelectedGroupId(roomId as UUID);
                             setIsGroupPanelOpen(true);
                           },
-                          variant: 'outline',
+                          variant: 'outline-solid',
                         },
                       ]}
                     />

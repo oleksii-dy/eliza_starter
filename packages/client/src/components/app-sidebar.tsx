@@ -222,7 +222,7 @@ const CreateButton = ({ onCreateRoom }: { onCreateRoom: () => void }) => {
             Create
           </span>
           <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
-          <div className="absolute inset-0 opacity-0 bg-gradient-to-r via-white/20 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1000" />
+          <div className="absolute inset-0 opacity-0 bg-linear-to-r via-white/20 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1000" />
         </Button>
       </DropdownMenuTrigger>
 

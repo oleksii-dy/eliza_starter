@@ -17,7 +17,7 @@ const AgentDetail: React.FC = () => {
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">{agent.name}</h1>
       <div className="grid gap-4">
-        <div className="border rounded-lg p-4 shadow-sm">
+        <div className="border rounded-lg p-4 shadow-xs">
           <h2 className="text-xl font-semibold">Agent Details</h2>
           <p className="text-sm text-gray-500">ID: {agent.id}</p>
           {/* Add more agent details here */}

@@ -15,7 +15,7 @@ const CharacterList: React.FC = () => {
       <h1 className="text-2xl font-bold mb-4">Characters</h1>
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {characters.map((character) => (
-          <div key={character.id} className="border rounded-lg p-4 shadow-sm">
+          <div key={character.id} className="border rounded-lg p-4 shadow-xs">
             <h2 className="text-xl font-semibold">{character.name}</h2>
             <Link to={`/characters/${character.id}`} className="text-blue-500 hover:underline">
               View Details

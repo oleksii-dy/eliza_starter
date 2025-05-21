@@ -379,7 +379,7 @@ export function AgentMemoryViewer({ agentId, agentName }: { agentId: UUID; agent
             {/* Group messages by date */}
             {Object.entries(messageGroups).map(([date, messages]) => (
               <div key={date} className="mb-4">
-                <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm mb-2 pb-1 pt-2">
+                <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-xs mb-2 pb-1 pt-2">
                   <Badge variant="outline" className="text-xs">
                     {date}
                   </Badge>

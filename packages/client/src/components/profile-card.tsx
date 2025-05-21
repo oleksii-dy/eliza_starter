@@ -10,7 +10,7 @@ interface ButtonConfig {
     | 'link'
     | 'default'
     | 'destructive'
-    | 'outline'
+    | 'outline-solid'
     | 'secondary'
     | 'ghost'
     | null

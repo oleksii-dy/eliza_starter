@@ -521,7 +521,7 @@ export default function Page({
             isAtBottom={isAtBottom}
             scrollToBottom={safeScrollToBottom}
             disableAutoScroll={disableAutoScroll}
-            className="flex-grow scrollbar-hide overflow-y-auto" // Ensure scrolling within this list
+            className="grow scrollbar-hide overflow-y-auto" // Ensure scrolling within this list
           >
             {messages.map((message: ContentWithUser, index: number) => {
               const isUser = message.name === USER_NAME;
@@ -568,7 +568,7 @@ export default function Page({
           </ChatMessageList>
 
           {/* Chat Input */}
-          <div className="px-4 pb-4 mt-auto flex-shrink-0">
+          <div className="px-4 pb-4 mt-auto shrink-0">
             {/* Keep input at bottom */}
             <form
               ref={formRef}

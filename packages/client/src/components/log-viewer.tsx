@@ -185,7 +185,7 @@ export function LogViewer({ agentName, level, hideTitle }: LogViewerProps = {}) 
 
   return (
     <div className="p-4 h-full flex flex-col">
-      <div className="mb-4 flex items-center justify-between flex-shrink-0">
+      <div className="mb-4 flex items-center justify-between shrink-0">
         {!hideTitle && <PageTitle title={'System Logs'} />}
         <div className="flex items-center gap-4">
           <Button variant="destructive" size="sm" onClick={handleClearLogs} disabled={isClearing}>

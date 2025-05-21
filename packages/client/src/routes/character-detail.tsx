@@ -17,7 +17,7 @@ const CharacterDetail: React.FC = () => {
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">{character.name}</h1>
       <div className="grid gap-4">
-        <div className="border rounded-lg p-4 shadow-sm">
+        <div className="border rounded-lg p-4 shadow-xs">
           <h2 className="text-xl font-semibold">Character Details</h2>
           <p className="text-sm text-gray-500">ID: {character.id}</p>
           <p className="mt-2">{character.description}</p>

@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface StopAgentButtonProps {
   agent: Agent;
-  variant?: 'default' | 'destructive' | 'outline';
+  variant?: 'default' | 'destructive' | 'outline-solid';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
   showIcon?: boolean;
