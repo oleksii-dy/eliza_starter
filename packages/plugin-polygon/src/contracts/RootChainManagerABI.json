@@ -358,24 +358,5 @@
   {
     "stateMutability": "payable",
     "type": "receive"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "rootToken",
-        "type": "address"
-      }
-    ],
-    "name": "getMappedChildToken",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
   }
 ]

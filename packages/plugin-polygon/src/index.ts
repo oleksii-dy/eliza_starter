@@ -7,54 +7,43 @@ import {
   logger,
   type Service,
   elizaLogger,
-  type Content,
-  type Memory,
-  type HandlerCallback,
-  type State,
 } from '@elizaos/core';
 import { z } from 'zod';
 import { ethers } from 'ethers';
 
-// Import all action files
-import { transferPolygonAction } from './actions/transfer.js';
-import { delegateL1Action } from './actions/delegateL1.js';
-import { getCheckpointStatusAction } from './actions/getCheckpointStatus.js';
-import { proposeGovernanceAction } from './actions/proposeGovernance.js';
-import { voteGovernanceAction } from './actions/voteGovernance.js';
-import { getValidatorInfoAction } from './actions/getValidatorInfo.js';
-import { getDelegatorInfoAction } from './actions/getDelegatorInfo.js';
-import { withdrawRewardsAction } from './actions/withdrawRewardsL1.js';
-import { bridgeDepositAction } from './actions/bridgeDeposit.js';
-import { getPolygonGasEstimatesAction } from './actions/getPolygonGasEstimates.js';
-import { undelegateL1Action } from './actions/undelegateL1.js';
-import { restakeRewardsL1Action } from './actions/restakeRewardsL1.js';
-import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed.js';
-import { heimdallVoteAction } from './actions/heimdallVoteAction.js';
-import { heimdallSubmitProposalAction } from './actions/heimdallSubmitProposalAction.js';
-import { heimdallTransferTokensAction } from './actions/heimdallTransferTokensAction.js';
-import { getGovernanceInfoAction } from './actions/getGovernanceInfo.js';
-import { getNativeBalanceAction, getERC20BalanceAction } from './actions/getBalanceInfo.js';
-import {
-  getBlockInfoAction,
-  getBlockNumberAction,
-  getBlockDetailsAction,
-} from './actions/getBlockInfo.js';
+import { transferPolygonAction } from './actions/transfer';
+import { delegateL1Action } from './actions/delegateL1';
+import { getCheckpointStatusAction } from './actions/getCheckpointStatus';
+import { proposeGovernanceAction } from './actions/proposeGovernance';
+import { voteGovernanceAction } from './actions/voteGovernance';
+import { getValidatorInfoAction } from './actions/getValidatorInfo';
+import { getDelegatorInfoAction } from './actions/getDelegatorInfo';
+import { withdrawRewardsAction } from './actions/withdrawRewardsL1';
+import { bridgeDepositAction } from './actions/bridgeDeposit';
+import { getL2BlockNumberAction } from './actions/getL2BlockNumber';
+import { getMaticBalanceAction } from './actions/getMaticBalance';
+import { getPolygonGasEstimatesAction } from './actions/getPolygonGasEstimates';
+import { undelegateL1Action } from './actions/undelegateL1';
+import { restakeRewardsL1Action } from './actions/restakeRewardsL1';
+import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed';
+import { heimdallVoteAction } from './actions/heimdallVoteAction';
+import { heimdallSubmitProposalAction } from './actions/heimdallSubmitProposalAction';
+import { heimdallTransferTokensAction } from './actions/heimdallTransferTokensAction';
 
 import {
   WalletProvider,
   initWalletProvider,
   polygonWalletProvider,
-} from './providers/PolygonWalletProvider.js';
+} from './providers/PolygonWalletProvider';
 import {
   PolygonRpcService,
   type ValidatorInfo,
   type DelegatorInfo,
   ValidatorStatus,
-} from './services/PolygonRpcService.js';
-import { HeimdallService } from './services/HeimdallService.js';
-import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService.js';
-import { parseBigIntString } from './utils.js'; // Import from utils
-import { ConfigService } from './services/ConfigService.js';
+} from './services/PolygonRpcService';
+import { HeimdallService } from './services/HeimdallService';
+import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService';
+import { parseBigIntString } from './utils'; // Import from utils
 
 // --- Configuration Schema --- //
 const configSchema = z.object({
@@ -63,9 +52,6 @@ const configSchema = z.object({
   PRIVATE_KEY: z.string().min(1, 'Private key is required'),
   POLYGONSCAN_KEY: z.string().min(1, 'PolygonScan API Key is required'),
   HEIMDALL_RPC_URL: z.string().url('Invalid Heimdall RPC URL').min(1).optional(),
-  GOVERNOR_ADDRESS: z.string().optional(),
-  TOKEN_ADDRESS: z.string().optional(),
-  TIMELOCK_ADDRESS: z.string().optional(),
 });
 
 // Infer the type from the schema
@@ -80,6 +66,8 @@ const polygonActions: Action[] = [
   getCheckpointStatusAction,
   proposeGovernanceAction,
   voteGovernanceAction,
+  getL2BlockNumberAction,
+  getMaticBalanceAction,
   getPolygonGasEstimatesAction,
   delegateL1Action,
   undelegateL1Action,
@@ -89,12 +77,6 @@ const polygonActions: Action[] = [
   heimdallVoteAction,
   heimdallSubmitProposalAction,
   heimdallTransferTokensAction,
-  getGovernanceInfoAction,
-  getNativeBalanceAction,
-  getERC20BalanceAction,
-  getBlockInfoAction,
-  getBlockNumberAction,
-  getBlockDetailsAction,
 ];
 
 // --- Define Providers --- //
@@ -104,14 +86,8 @@ const polygonActions: Action[] = [
  */
 const polygonProviderInfo: Provider = {
   name: 'Polygon Provider Info',
-  async get(runtime: IAgentRuntime, _message: Memory, state: State): Promise<ProviderResult> {
+  async get(runtime: IAgentRuntime, _message, state): Promise<ProviderResult> {
     try {
-      // Get ConfigService instance
-      const configService = runtime.getService<ConfigService>(ConfigService.serviceType);
-      if (!configService) {
-        throw new Error('ConfigService not available');
-      }
-
       // 1. Initialize WalletProvider to get address
       const polygonWalletProviderInstance = await initWalletProvider(runtime);
       if (!polygonWalletProviderInstance) {
@@ -206,50 +182,46 @@ const polygonProviderInfo: Provider = {
 const polygonProviders: Provider[] = [polygonWalletProvider, polygonProviderInfo];
 
 // --- Define Services --- //
-const polygonServices: (typeof Service)[] = [ConfigService, PolygonRpcService, HeimdallService];
+const polygonServices: (typeof Service)[] = [PolygonRpcService, HeimdallService];
 
 // --- Plugin Definition --- //
 export const polygonPlugin: Plugin = {
   name: '@elizaos/plugin-polygon',
   description: 'Plugin for interacting with the Polygon PoS network and staking.',
 
-  // Configuration will be loaded via ConfigService from .env files
-  config: {},
+  // Configuration loaded from environment/character settings
+  config: {
+    POLYGON_RPC_URL: process.env.POLYGON_RPC_URL,
+    ETHEREUM_RPC_URL: process.env.ETHEREUM_RPC_URL,
+    PRIVATE_KEY: process.env.PRIVATE_KEY,
+    POLYGONSCAN_KEY: process.env.POLYGONSCAN_KEY,
+    HEIMDALL_RPC_URL: process.env.HEIMDALL_RPC_URL,
+  },
 
   // Initialization logic
   async init(config: Record<string, unknown>, runtime: IAgentRuntime) {
     logger.info(`Initializing plugin: ${this.name}`);
     try {
-      // Initialize and register ConfigService using the Service pattern
-      const configService = await ConfigService.start(runtime);
-      runtime.registerService(ConfigService);
+      // Validate configuration
+      const validatedConfig = await configSchema.parseAsync(config);
+      logger.info('Polygon plugin configuration validated successfully.');
 
-      // Get configuration from ConfigService
-      const polygonConfig = configService.getPolygonConfig();
-
-      // Validate configuration using the schema
-      try {
-        await configSchema.parseAsync({
-          POLYGON_RPC_URL: polygonConfig.polygonRpcUrl,
-          ETHEREUM_RPC_URL: polygonConfig.ethereumRpcUrl,
-          PRIVATE_KEY: polygonConfig.privateKey,
-          POLYGONSCAN_KEY: polygonConfig.polygonscanKey,
-          HEIMDALL_RPC_URL: polygonConfig.heimdallRpcUrl,
-          GOVERNOR_ADDRESS: polygonConfig.governorAddress,
-          // TOKEN_ADDRESS: polygonConfig.tokenAddress,
-          // TIMELOCK_ADDRESS: polygonConfig.timelockAddress
-        });
-        logger.info('Polygon plugin configuration validated successfully.');
-      } catch (validationError) {
-        if (validationError instanceof z.ZodError) {
-          logger.error('Invalid Polygon plugin configuration:', validationError.errors);
-          throw new Error(
-            `Invalid Polygon plugin configuration: ${validationError.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ')}`
+      // Store validated config in runtime settings for services/actions/providers to access
+      // This assumes runtime has a way to store validated plugin config or settings are global
+      for (const [key, value] of Object.entries(validatedConfig)) {
+        if (!runtime.getSetting(key)) {
+          logger.warn(
+            `Setting ${key} was validated but not found via runtime.getSetting. Ensure it is loaded globally before plugin init.`
           );
         }
-        throw validationError;
       }
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        logger.error('Invalid Polygon plugin configuration:', error.errors);
+        throw new Error(
+          `Invalid Polygon plugin configuration: ${error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ')}`
+        );
+      }
       logger.error('Error during Polygon plugin initialization:', error);
       throw error;
     }

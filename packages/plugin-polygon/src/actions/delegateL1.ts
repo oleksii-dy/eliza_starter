@@ -13,7 +13,6 @@ import {
 } from '@elizaos/core';
 import { ethers, parseUnits } from 'ethers';
 import { PolygonRpcService } from '../services/PolygonRpcService';
-import { ConfigService } from '../services/ConfigService';
 import { delegateL1Template } from '../templates';
 import { parseErrorMessage } from '../errors';
 
@@ -38,9 +37,9 @@ function extractParamsFromText(text: string): Partial<DelegateL1Params> {
     }
   }
 
-  // Extract amount (e.g., "10", "5.5", "100 MATIC", "0.25 ether")
-  // This regex looks for a number (int or float) optionally followed by "MATIC", "ETH", or "ether"
-  const amountMatch = text.match(/(\\d*\\.?\\d+)\\s*(?:MATIC|ETH|ether)?/i);
+  // Extract amount (e.g., "10 MATIC", "5.5 MATIC", "0.25 ether")
+  // This regex requires a number followed by a unit keyword
+  const amountMatch = text.match(/(\d+(?:\.\d+)?)\s*(MATIC|ETH|ether)\b/i);
   if (amountMatch?.[1]) {
     try {
       // Convert to Wei. Assumes 18 decimal places for MATIC/ETH.
@@ -65,37 +64,28 @@ export const delegateL1Action: Action = {
   ): Promise<boolean> => {
     logger.debug('Validating DELEGATE_L1 action...');
 
+    const requiredSettings = [
+      'PRIVATE_KEY',
+      'ETHEREUM_RPC_URL', // L1 RPC needed for delegation
+      'POLYGON_PLUGINS_ENABLED', // Ensure main plugin toggle is on
+    ];
+    for (const setting of requiredSettings) {
+      if (!runtime.getSetting(setting)) {
+        logger.error(`Required setting ${setting} not configured for DELEGATE_L1 action.`);
+        return false;
+      }
+    }
     try {
-      // Get config service
-      const configService = runtime.getService<ConfigService>(ConfigService.serviceType);
-      if (!configService) {
-        logger.error('ConfigService not available for delegateL1Action.');
+      const service = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
+      if (!service) {
+        logger.error('PolygonRpcService not initialized for DELEGATE_L1.');
         return false;
       }
-
-      // Check required settings
-      const requiredSettings = ['PRIVATE_KEY', 'ETHEREUM_RPC_URL', 'POLYGON_PLUGINS_ENABLED'];
-      
-      for (const setting of requiredSettings) {
-        const value = configService.get(setting);
-        if (!value) {
-          logger.error(`Required setting ${setting} not configured for delegateL1Action.`);
-          return false;
-        }
-      }
-
-      // Check if PolygonRpcService is available
-      const polygonRpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
-      if (!polygonRpcService) {
-        logger.error('PolygonRpcService not initialized for delegateL1Action.');
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      logger.error('Error in delegateL1Action.validate:', error);
+    } catch (error: unknown) {
+      logger.error('Error accessing PolygonRpcService during DELEGATE_L1 validation:', error);
       return false;
     }
+    return true;
   },
   handler: async (
     runtime: IAgentRuntime,
@@ -190,14 +180,57 @@ export const delegateL1Action: Action = {
       const parsedError = parseErrorMessage(error);
       logger.error('Error in DELEGATE_L1 handler:', parsedError);
 
+      // Check if it's an "insufficient funds" error and provide more specific guidance
+      let errorText = parsedError.message;
+
+      if (errorText.includes('insufficient funds')) {
+        try {
+          // Try to extract amounts from error message if possible
+          const matches = errorText.match(/address (0x[a-fA-F0-9]+) have ([\d.]+) want ([\d.]+)/i);
+          if (matches && matches.length >= 4) {
+            const have = ethers.parseEther(matches[2]);
+            const want = ethers.parseEther(matches[3]);
+            const missing = want - have;
+
+            errorText = `Insufficient ETH for delegation. You have ${ethers.formatEther(have)} ETH but need ${ethers.formatEther(want)} ETH (missing ${ethers.formatEther(missing)} ETH). Please fund your wallet with more ETH to cover the transaction cost.`;
+
+            // Add diagnostic information when the requested amount seems unusually high
+            if (want > ethers.parseEther('0.05')) {
+              errorText +=
+                '\n\nNOTE: The required ETH amount appears unusually high. This typically indicates one of two issues:\n' +
+                '1. Your MATIC amount is being sent as transaction value instead of using token approval\n' +
+                "2. Gas price is being calculated incorrectly (possibly using 18 decimals instead of 'gwei')\n" +
+                'The normal gas cost for delegation is ~0.005-0.015 ETH.';
+            }
+          } else {
+            // Generic improved message for insufficient funds
+            errorText =
+              'Insufficient ETH to cover transaction fees. Please fund your wallet with more ETH (typically 0.005-0.015 ETH is enough) and try again.';
+          }
+        } catch (parseErr) {
+          logger.warn('Error parsing amounts from insufficient funds error:', parseErr);
+          // Fall back to generic message if parsing fails
+          errorText =
+            'Insufficient ETH to cover transaction fees. Please fund your wallet with ~0.01 ETH and try again.';
+        }
+      }
+
       const errorContent: Content = {
-        text: `Error delegating MATIC (L1): ${parsedError.message}`,
+        text: `Error delegating MATIC (L1): ${errorText}`,
         actions: ['DELEGATE_L1'],
         source: message.content.source,
         data: {
           success: false,
           error: parsedError.message,
           details: parsedError.details,
+          // Add diagnostic information about the transaction parameters
+          diagnostics: {
+            validatorId: params?.validatorId,
+            amountMaticRequested: params?.amountWei
+              ? ethers.formatEther(params.amountWei)
+              : 'unknown',
+            amountWei: params?.amountWei || 'unknown',
+          },
         },
       };
 

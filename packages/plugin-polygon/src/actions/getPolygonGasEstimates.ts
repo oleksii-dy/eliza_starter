@@ -15,7 +15,39 @@ export const getPolygonGasEstimatesAction: Action = {
     if (estimates.fallbackGasPrice) {
       text += `\n  (Used Fallback Price: ${estimates.fallbackGasPrice.toString()})`;
     }
-    return { text, actions: ['GET_POLYGON_GAS_ESTIMATES'], data: estimates };
+
+    // Create a serializable version of the estimates with BigInt values converted to strings
+    const serializableEstimates = {
+      safeLow: estimates.safeLow
+        ? {
+            maxPriorityFeePerGas: estimates.safeLow.maxPriorityFeePerGas
+              ? estimates.safeLow.maxPriorityFeePerGas.toString()
+              : null,
+          }
+        : null,
+      average: estimates.average
+        ? {
+            maxPriorityFeePerGas: estimates.average.maxPriorityFeePerGas
+              ? estimates.average.maxPriorityFeePerGas.toString()
+              : null,
+          }
+        : null,
+      fast: estimates.fast
+        ? {
+            maxPriorityFeePerGas: estimates.fast.maxPriorityFeePerGas
+              ? estimates.fast.maxPriorityFeePerGas.toString()
+              : null,
+          }
+        : null,
+      estimatedBaseFee: estimates.estimatedBaseFee ? estimates.estimatedBaseFee.toString() : null,
+      fallbackGasPrice: estimates.fallbackGasPrice ? estimates.fallbackGasPrice.toString() : null,
+    };
+
+    return {
+      text,
+      actions: ['GET_POLYGON_GAS_ESTIMATES'],
+      data: serializableEstimates,
+    };
   },
   examples: [],
 };
