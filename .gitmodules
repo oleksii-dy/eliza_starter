@@ -1,3 +1,7 @@
 [submodule "plugin-specification"]
 	path = plugin-specification
 	url = https://github.com/elizaos/plugin-specification
+[submodule "packages/plugin-jupiter"]
+	path = packages/plugin-jupiter
+	url = https://github.com/elizaos-plugins/plugin-jupiter
+	branch = 1.x
