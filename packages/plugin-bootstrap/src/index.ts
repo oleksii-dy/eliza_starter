@@ -161,6 +161,8 @@ const messageReceivedHandler = async ({
       throw new Error('Agent responses map not found');
     }
 
+    console.log('agentResponses is', agentResponses);
+
     // Set this as the latest response ID for this agent+room
     agentResponses.set(message.roomId, responseId);
 
@@ -179,6 +181,8 @@ const messageReceivedHandler = async ({
       status: 'started',
       source: 'messageHandler',
     });
+
+    console.log('runId is', runId);
 
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(async () => {
@@ -199,7 +203,10 @@ const messageReceivedHandler = async ({
       }, timeoutDuration);
     });
 
+    console.log('message is', message);
+
     const processingPromise = (async () => {
+      console.log('processingPromise');
       try {
         if (message.entityId === runtime.agentId) {
           logger.debug(`[Bootstrap] Skipping message from self (${runtime.agentId})`);
@@ -475,6 +482,7 @@ const messageReceivedHandler = async ({
           source: 'messageHandler',
         });
       } catch (error: any) {
+        console.error('error is', error);
         // Emit run ended event with error
         await runtime.emitEvent(EventType.RUN_ENDED, {
           runtime,
@@ -491,6 +499,9 @@ const messageReceivedHandler = async ({
         });
       }
     })();
+
+    console.log('processingPromise is', processingPromise);
+    console.log('timeoutPromise is', timeoutPromise);
 
     await Promise.race([processingPromise, timeoutPromise]);
   } finally {
@@ -604,6 +615,9 @@ const postGeneratedHandler = async ({
     const response = await runtime.useModel(ModelType.TEXT_SMALL, {
       prompt,
     });
+
+    console.log('prompt is', prompt);
+    console.log('response is', response);
 
     // Parse XML
     const parsedXml = parseKeyValueXml(response);
@@ -794,8 +808,6 @@ const syncSingleUser = async (
   type: ChannelType,
   source: string
 ) => {
-  //logger.info(`Syncing user: ${entity.metadata[source].username || entity.id}`);
-
   try {
     const entity = await runtime.getEntityById(entityId);
     logger.info(`[Bootstrap] Syncing user: ${entity?.metadata?.[source]?.username || entityId}`);

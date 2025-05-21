@@ -4,7 +4,6 @@ import {
   logger,
   Service,
   ServiceType,
-  type UUID,
   type IAgentRuntime,
   type Memory,
   type ServiceTypeName,
@@ -184,12 +183,6 @@ export class TaskService extends Service {
       // validate the tasks and sort them
       const tasks = await this.validateTasks(allTasks);
 
-      /*
-      if (tasks.length > 0) {
-        logger.debug(`Found ${tasks.length} queued tasks`);
-      }
-      */
-
       const now = Date.now();
 
       for (const task of tasks) {
@@ -263,7 +256,7 @@ export class TaskService extends Service {
         return;
       }
 
-      // lock task, so it's not fired again
+      // Handle repeating vs non-repeating tasks
       if (task.tags?.includes('repeat')) {
         // For repeating tasks, update the updatedAt timestamp
         await this.runtime.updateTask(task.id, {
@@ -281,6 +274,7 @@ export class TaskService extends Service {
       await worker.execute(this.runtime, task.metadata || {}, task);
       //logger.debug('task.tags are', task.tags);
 
+      // Handle repeating vs non-repeating tasks
       if (!task.tags?.includes('repeat')) {
         // For non-repeating tasks, delete the task after execution
         await this.runtime.deleteTask(task.id);

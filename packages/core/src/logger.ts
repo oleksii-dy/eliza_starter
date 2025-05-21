@@ -1,4 +1,5 @@
-import pino, { type LogFn, type DestinationStream } from 'pino';
+import pino, { type DestinationStream, type LogFn } from 'pino';
+import { Sentry } from './sentry/instrument';
 import { parseBooleanFromText } from './utils';
 
 /**
@@ -176,11 +177,6 @@ const createPrettyConfig = () => ({
         level = inputData;
       }
 
-      // ANSI
-      const RED = '\x1b[31m';
-      const YELLOW = '\x1b[33m';
-      const RESET = '\x1b[0m';
-
       const levelNames: Record<number, string> = {
         10: 'TRACE',
         20: 'DEBUG',
@@ -188,8 +184,8 @@ const createPrettyConfig = () => ({
         28: 'PROGRESS',
         29: 'LOG',
         30: 'INFO',
-        40: `${YELLOW}WARN${RESET}`,
-        50: `${RED}ERROR${RESET}`,
+        40: 'WARN',
+        50: 'ERROR',
         60: 'FATAL',
       };
 
@@ -228,6 +224,17 @@ const options = {
   hooks: {
     logMethod(inputArgs: [string | Record<string, unknown>, ...unknown[]], method: LogFn): void {
       const [arg1, ...rest] = inputArgs;
+      if (process.env.SENTRY_LOGGING !== 'false') {
+        if (arg1 instanceof Error) {
+          Sentry.captureException(arg1);
+        } else {
+          for (const item of rest) {
+            if (item instanceof Error) {
+              Sentry.captureException(item);
+            }
+          }
+        }
+      }
 
       const formatError = (err: Error) => ({
         message: `(${err.name}) ${err.message}`,

@@ -46,7 +46,6 @@ export const characterProvider: Provider = {
     // postCreationTemplate in core prompts.ts
     // Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
     // Write a post that is {{Spartan is dirty}} about {{Spartan is currently}}
-    //const topic = topicString ? `${character.name} is currently interested in ${topicString}` : '';
     const topic = topicString || '';
 
     // Format topics list
@@ -74,7 +73,6 @@ export const characterProvider: Provider = {
         ? character.adjectives[Math.floor(Math.random() * character.adjectives.length)]
         : '';
 
-    //const adjective = adjectiveString ? `${character.name} is ${adjectiveString}` : '';
     const adjective = adjectiveString || '';
 
     // Format post examples
