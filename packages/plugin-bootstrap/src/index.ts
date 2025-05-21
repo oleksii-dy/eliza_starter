@@ -32,6 +32,7 @@ import { v4 } from 'uuid';
 import * as actions from './actions';
 import * as evaluators from './evaluators';
 import * as providers from './providers';
+import { isQuestionOrKnowledgeQuery } from './providers/knowledge';
 
 import { ScenarioService } from './services/scenario';
 import { TaskService } from './services/task';
@@ -360,8 +361,38 @@ const messageReceivedHandler = async ({
             latestResponseIds.delete(runtime.agentId);
           }
 
+          // Check if knowledge might be needed using LLM
+          if (message.content.text) {
+            const needsKnowledge = await isQuestionOrKnowledgeQuery(runtime, message.content.text);
+            logger.info('[Bootstrap] Knowledge query check result:', { needsKnowledge });
+            logger.debug('[Bootstrap] Knowledge query check details:', {
+              text: message.content.text,
+              needsKnowledge: needsKnowledge,
+            });
+          }
+
           if (responseContent?.providers?.length && responseContent?.providers?.length > 0) {
-            state = await runtime.composeState(message, responseContent?.providers || []);
+            // Create a copy of the requested providers
+            const enhancedProviders = [...responseContent.providers];
+
+            logger.info('[Bootstrap] Original providers requested:', responseContent.providers);
+
+            // Check if knowledge might be needed using LLM
+            if (message.content.text && !enhancedProviders.includes('KNOWLEDGE')) {
+              const needsKnowledge = await isQuestionOrKnowledgeQuery(
+                runtime,
+                message.content.text
+              );
+              if (needsKnowledge) {
+                enhancedProviders.push('KNOWLEDGE');
+                logger.info('[Bootstrap] Added KNOWLEDGE provider based on analysis');
+              }
+            }
+
+            logger.info('[Bootstrap] Final enhanced providers:', enhancedProviders);
+
+            // Use the enhanced providers list
+            state = await runtime.composeState(message, enhancedProviders || []);
           }
 
           if (
