@@ -11,8 +11,7 @@ import {
   State,
 } from '@elizaos/core';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { loadWallet } from '../utils/loadWallet';
-import { sendTransaction } from '../utils/sendTransaction';
+
 import {
   Clmm,
   ClmmPoolInfo,

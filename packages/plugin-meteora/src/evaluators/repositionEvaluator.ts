@@ -6,7 +6,7 @@ import {
   State,
   HandlerCallback,
 } from '@elizaos/core';
-import { extractAndValidateConfiguration } from '../../actions/meteora/managePositions';
+//import { extractAndValidateConfiguration } from '../actions/managePositions';
 
 export const meteoraManagePositionActionRetriggerEvaluator: Evaluator = {
   name: 'DEGEN_LP_METEORA_REPOSITION_EVALUATOR',
@@ -38,14 +38,14 @@ export const meteoraManagePositionActionRetriggerEvaluator: Evaluator = {
     const intervalMs = config.intervalSeconds * 1000;
     await new Promise((resolve) => setTimeout(resolve, intervalMs));
 
-    await runtime.databaseAdapter.createMemory(
+    await runtime.createMemory(
       {
         content: {
           text: message.content.text,
         },
         agentId: runtime.agentId,
         roomId: runtime.agentId,
-        userId: runtime.agentId,
+        entityId: runtime.agentId,
         metadata: {
           type: 'meteora_reposition_message',
         },

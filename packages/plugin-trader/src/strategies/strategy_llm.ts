@@ -4,6 +4,8 @@ import { acquireService, askLlmObject } from '../utils';
 
 // agentic personal application? separate strategy
 
+// fixme: an option to mix in autofun unbonded token
+// can't be per wallet since we're deciding across multiple wallets
 // fixme: include price history data
 
 const buyTemplate = `
@@ -29,7 +31,7 @@ Only return the following JSON and nothing else (even if no sentiment or trendin
   recommend_buy_address: "the address of the token to purchase, for example: Gu3LDkn7Vx3bmCzLafYNKcDxv2mH7YN44NJZFXnypump",
   reason: "the reason why you think this is a good buy, and why you chose the specific amount",
   opportunity_score: "number, for example 50",
-  buy_amount: "number, for example: 1",
+  buy_amount: "number between 1 and 100, for example: 23",
   exit_conditions: "what conditions in which you'd change your position on this token",
   exit_sentiment_drop_threshold: "what drop in sentiment in which you'd change your position on this token",
   exit_24hvolume_threshold: "what drop in 24h volume in which you'd change your position on this token",
@@ -133,19 +135,138 @@ async function generateBuySignal(runtime, strategyService, hndl) {
   // validateTokenForTrading (look at liquidity/volume/suspicious atts)
 
   // now it's a signal
-  // assess response, figure what wallet are buying based on balance
-  // and scale amount for each wallet based on available balance
-  // execute buys on each of wallet
 
+  // phase 1 in parallel (fetch wallets/balance)
+  // assess response, figure what wallet are buying based on balance
+  // list of wallets WITH this strategy ODI
+  // individualize
+  // get balance of each ODI
+  // and scale amount for each wallet based on available balance
+  function scaleAmount(walletKeypair, balance, signal) {
+    // NEO write this
+  }
+
+  // phase 2 in parallel buy everything (eventually prioritize premium over non) NEO
+  // create promise and that create tasks
+  // execute buys on each of wallet
   // calculateOptimalBuyAmount
   // wallet.swap (wallet slippage cfg: 2.5%)
   // wallet.quote
   // calculateDynamicSlippage (require quote)
   // wallet.buy
+  // we just need the outAmount
+  // calc fee/slippage => position
 
-  // open position
+  async function calculateOptimalBuyAmount(
+    jupiterService: JupiterService,
+    inputMint: string,
+    outputMint: string,
+    availableAmount: number
+  ): Promise<{ amount: number; slippage: number }> {
+    try {
+      // Get price impact for the trade
+      const priceImpact = await jupiterService.getPriceImpact({
+        inputMint,
+        outputMint,
+        amount: availableAmount,
+      });
+
+      // Find optimal slippage based on market conditions
+      const slippage = await jupiterService.findBestSlippage({
+        inputMint,
+        outputMint,
+        amount: availableAmount,
+      });
+
+      // If price impact is too high, reduce the amount
+      let optimalAmount = availableAmount;
+      if (priceImpact > 5) {
+        // 5% price impact threshold
+        optimalAmount = availableAmount * 0.5; // Reduce amount by half
+      }
+
+      return { amount: optimalAmount, slippage };
+    } catch (error) {
+      logger.error('Error calculating optimal buy amount:', error);
+      throw error;
+    }
+  }
+
+  async function executeBuy(
+    runtime: IAgentRuntime,
+    wallets: Array<{ keypair: any; balance: number }>,
+    signal: any
+  ) {
+    const jupiterService = await acquireService(runtime, 'JUPITER_SERVICE', 'execute trades');
+
+    const buyPromises = wallets.map(async (wallet) => {
+      try {
+        // Get initial quote to determine input mint and other parameters
+        const initialQuote = await jupiterService.getQuote({
+          outputMint: signal.recommend_buy_address,
+          amount: wallet.balance, // Using full balance for initial quote
+        });
+
+        // Calculate optimal buy amount using the input mint from quote
+        const { amount, slippage } = await calculateOptimalBuyAmount(
+          jupiterService,
+          initialQuote.inputMint,
+          signal.recommend_buy_address,
+          wallet.balance
+        );
+
+        // Get final quote with optimized amount
+        const quoteResponse = await jupiterService.getQuote({
+          inputMint: initialQuote.inputMint,
+          outputMint: signal.recommend_buy_address,
+          amount,
+          slippageBps: slippage,
+        });
+
+        // Execute the swap
+        const swapResponse = await jupiterService.executeSwap({
+          quoteResponse,
+          userPublicKey: wallet.keypair.publicKey.toString(),
+          slippageBps: slippage,
+        });
+
+        // Calculate final amounts including fees
+        const fees = await jupiterService.estimateGasFees({
+          inputMint: initialQuote.inputMint,
+          outputMint: signal.recommend_buy_address,
+          amount,
+        });
+
+        return {
+          success: true,
+          outAmount: Number(quoteResponse.outAmount),
+          fees,
+          swapResponse,
+        };
+      } catch (error) {
+        logger.error('Error in buy execution:', error);
+        return { success: false };
+      }
+    });
+
+    return Promise.all(buyPromises);
+  }
+
+  // open position ODI
   // set up exit conditions
   //await strategyService.open_position(hndl, pos)
+}
+
+// sell functions
+
+async function onPriceDelta() {
+  // per token
+  // get all positions with this chain/token
+  // filter positions, which position change about this price change
+  // may trigger some exit/close position action (might not)
+  // exit position: wallet.swap, strategyService.close_position(hndl, pos)
+  // sell
+  // swap/quote/sell
 }
 
 async function onSentimentDelta() {
@@ -153,12 +274,18 @@ async function onSentimentDelta() {
   // is this wallet/position sentiment delta trigger
 }
 
-// what other exit conditions? liquidity, sentiment
-
-async function onPriceDelta() {
+async function onVol24hDelta() {
   // per token
   // get all positions with this chain/token
-  // filter positions, which position change about this price change
+  // filter positions, which position change about this vol change
+  // may trigger some exit/close position action (might not)
+  // exit position: wallet.swap, strategyService.close_position(hndl, pos)
+}
+
+async function onLiquidDelta() {
+  // per token
+  // get all positions with this chain/token
+  // filter positions, which position change about this liq change
   // may trigger some exit/close position action (might not)
   // exit position: wallet.swap, strategyService.close_position(hndl, pos)
 }

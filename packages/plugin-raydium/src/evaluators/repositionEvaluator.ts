@@ -50,7 +50,7 @@ export const managePositionActionRetriggerEvaluator: Evaluator = {
         },
         agentId: runtime.agentId,
         roomId: runtime.agentId,
-        userId: runtime.agentId,
+        entityId: runtime.agentId,
         metadata: {
           type: 'raydium_reposition_message',
         },

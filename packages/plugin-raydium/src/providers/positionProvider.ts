@@ -1,14 +1,13 @@
 import {
   elizaLogger,
   AgentRuntime,
-  AgentState as State,
+  AgentStatus as State,
   IAgentRuntime,
   Memory,
   Provider,
 } from '@elizaos/core';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Clmm, ClmmPoolInfo, Position, PositionInfo } from '@raydium-io/raydium-sdk';
-import { loadWallet } from '../utils/loadWallet';
 
 export interface FetchedPositionStatistics {
   poolAddress: PublicKey;

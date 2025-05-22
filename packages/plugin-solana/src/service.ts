@@ -1,10 +1,10 @@
-import { type IAgentRuntime, Service, logger } from '@elizaos/core';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { type IAgentRuntime, Service, logger, TEEMode } from '@elizaos/core';
+import { Connection, PublicKey, ComputeBudgetProgram, DeriveKeyProvider } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { SOLANA_SERVICE_NAME, SOLANA_WALLET_DATA_CACHE_KEY } from './constants';
 import { getWalletKey, KeypairResult } from './keypairUtils';
 import type { Item, Prices, WalletPortfolio } from './types';
-import { Keypair } from '@solana/web3.js';
+import { Keypair, VersionedTransaction, TransactionMessage } from '@solana/web3.js';
 import bs58 from 'bs58';
 
 const PROVIDER_CONFIG = {
@@ -506,4 +506,145 @@ export class SolanaService extends Service {
       throw error;
     }
   }
+}
+
+/**
+ * Gets either a keypair or public key based on TEE mode and runtime settings
+ * @param runtime The agent runtime
+ * @param requirePrivateKey Whether to return a full keypair (true) or just public key (false)
+ * @returns KeypairResult containing either keypair or public key
+ */
+export async function loadWallet(
+  runtime: IAgentRuntime,
+  requirePrivateKey: boolean = true
+): Promise<WalletResult> {
+  const teeMode = runtime.getSetting('TEE_MODE') || TEEMode.OFF;
+
+  if (teeMode !== TEEMode.OFF) {
+    const walletSecretSalt = runtime.getSetting('WALLET_SECRET_SALT');
+    if (!walletSecretSalt) {
+      throw new Error('WALLET_SECRET_SALT required when TEE_MODE is enabled');
+    }
+
+    const deriveKeyProvider = new DeriveKeyProvider(teeMode);
+    const deriveKeyResult = await deriveKeyProvider.deriveEd25519Keypair(
+      '/',
+      walletSecretSalt,
+      runtime.agentId
+    );
+
+    return requirePrivateKey
+      ? { signer: deriveKeyResult.keypair }
+      : { address: deriveKeyResult.keypair.publicKey };
+  }
+
+  // TEE mode is OFF
+  if (requirePrivateKey) {
+    const privateKeyString =
+      runtime.getSetting('SOLANA_PRIVATE_KEY') ?? runtime.getSetting('WALLET_PRIVATE_KEY');
+
+    if (!privateKeyString) {
+      throw new Error('Private key not found in settings');
+    }
+
+    try {
+      // First try base58
+      const secretKey = bs58.decode(privateKeyString);
+      return { signer: Keypair.fromSecretKey(secretKey) };
+    } catch (e) {
+      console.log('Error decoding base58 private key:', e);
+      try {
+        // Then try base64
+        console.log('Try decoding base64 instead');
+        const secretKey = Uint8Array.from(Buffer.from(privateKeyString, 'base64'));
+        return { signer: Keypair.fromSecretKey(secretKey) };
+      } catch (e2) {
+        console.error('Error decoding private key: ', e2);
+        throw new Error('Invalid private key format');
+      }
+    }
+  } else {
+    const publicKeyString =
+      runtime.getSetting('SOLANA_PUBLIC_KEY') ?? runtime.getSetting('WALLET_PUBLIC_KEY');
+
+    if (!publicKeyString) {
+      throw new Error('Public key not found in settings');
+    }
+
+    return { address: new PublicKey(publicKeyString) };
+  }
+}
+export async function sendTransaction(
+  connection: Connection,
+  instructions: Array<any>,
+  wallet: Keypair
+): Promise<string> {
+  const latestBlockhash = await connection.getLatestBlockhash();
+
+  // Create a new TransactionMessage with the instructions
+  const messageV0 = new TransactionMessage({
+    payerKey: wallet.publicKey,
+    recentBlockhash: latestBlockhash.blockhash,
+    instructions,
+  }).compileToV0Message();
+
+  // Estimate compute units
+  const simulatedTx = new VersionedTransaction(messageV0);
+  simulatedTx.sign([wallet]);
+  const simulation = await connection.simulateTransaction(simulatedTx);
+  const computeUnits = simulation.value.unitsConsumed || 200_000;
+  const safeComputeUnits = Math.ceil(Math.max(computeUnits * 1.3, computeUnits + 100_000));
+
+  // Get prioritization fee
+  const recentPrioritizationFees = await connection.getRecentPrioritizationFees();
+  const prioritizationFee = recentPrioritizationFees
+    .map((fee) => fee.prioritizationFee)
+    .sort((a, b) => a - b)[Math.ceil(0.95 * recentPrioritizationFees.length) - 1];
+
+  // Add compute budget instructions
+  const computeBudgetInstructions = [
+    ComputeBudgetProgram.setComputeUnitLimit({ units: safeComputeUnits }),
+    ComputeBudgetProgram.setComputeUnitPrice({ microLamports: prioritizationFee }),
+  ];
+
+  // Create final transaction
+  const finalMessage = new TransactionMessage({
+    payerKey: wallet.publicKey,
+    recentBlockhash: latestBlockhash.blockhash,
+    instructions: [...computeBudgetInstructions, ...instructions],
+  }).compileToV0Message();
+
+  const transaction = new VersionedTransaction(finalMessage);
+  transaction.sign([wallet]);
+
+  // Send and confirm transaction
+  const timeoutMs = 90000;
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeoutMs) {
+    const transactionStartTime = Date.now();
+
+    const signature = await connection.sendTransaction(transaction, {
+      maxRetries: 0,
+      skipPreflight: true,
+    });
+
+    const statuses = await connection.getSignatureStatuses([signature]);
+    if (statuses.value[0]) {
+      if (!statuses.value[0].err) {
+        logger.log(`Transaction confirmed: ${signature}`);
+        return signature;
+      } else {
+        throw new Error(`Transaction failed: ${statuses.value[0].err.toString()}`);
+      }
+    }
+
+    const elapsedTime = Date.now() - transactionStartTime;
+    const remainingTime = Math.max(0, 1000 - elapsedTime);
+    if (remainingTime > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remainingTime));
+    }
+  }
+
+  throw new Error('Transaction timeout');
 }

@@ -12,8 +12,7 @@ import {
 } from '@elizaos/core';
 import { PublicKey } from '@solana/web3.js';
 import { DLMM, StrategyType } from '@meteora-ag/dlmm';
-import { sendTransaction } from '../../utils/sendTransaction';
-import { loadWallet } from '../../utils/loadWallet';
+import { loadWallet } from '../utils/loadWallet';
 
 interface FetchedPosition {
   poolAddress: string;

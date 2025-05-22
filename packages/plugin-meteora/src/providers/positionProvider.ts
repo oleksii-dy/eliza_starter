@@ -1,7 +1,6 @@
-import { elizaLogger, IAgentRuntime, Memory, Provider, settings, State } from '@elizaos/core';
+import { elizaLogger, IAgentRuntime, Memory, Provider, State } from '@elizaos/core';
 import { DLMM } from '@meteora-ag/dlmm';
 import { PublicKey } from '@solana/web3.js';
-import { loadWallet } from '../../utils/loadWallet';
 
 export interface MeteoraPositionStatistics {
   poolAddress: string;
