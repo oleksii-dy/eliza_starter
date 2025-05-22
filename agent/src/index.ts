@@ -5,7 +5,7 @@ import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
 import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
 import { AutoClientInterface } from "@elizaos/client-auto";
 import { DiscordClientInterface } from "@elizaos/client-discord";
-import { FarcasterAgentClient } from "@elizaos/client-farcaster";
+// import { FarcasterAgentClient } from "@elizaos/client-farcaster";
 import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
@@ -105,6 +105,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
 // import {dominosPlugin} from "@elizaos/plugin-dominos";
+
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory

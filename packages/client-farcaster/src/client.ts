@@ -103,7 +103,7 @@ export class FarcasterClient {
 
         this.cache.set(`farcaster/cast/${castHash}`, cast);
 
-        return cast;
+        return cast as Cast;
     }
 
     async getCastsByFid(request: FidRequest): Promise<Cast[]> {
@@ -158,7 +158,7 @@ export class FarcasterClient {
                     : {}),
                 timestamp: new Date(notification.cast!.timestamp),
             };
-            mentions.push(cast);
+            mentions.push(cast as Cast);
             this.cache.set(`farcaster/cast/${cast.hash}`, cast);
         });
 
