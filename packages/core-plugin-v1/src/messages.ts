@@ -3,7 +3,7 @@ import {
   formatActors as coreFormatActors,
   formatMessages as coreFormatMessages,
   formatTimestamp as coreFormatTimestamp,
-} from '@elizaos/core';
+} from '@nexos/core';
 
 import type {
     IAgentRuntime,

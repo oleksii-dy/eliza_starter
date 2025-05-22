@@ -1,4 +1,4 @@
-import { MemoryManager as coreMemoryManager } from '@elizaos/core';
+import { MemoryManager as coreMemoryManager } from '@nexos/core';
 import type {
     IAgentRuntime,
     IMemoryManager,

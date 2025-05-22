@@ -54,14 +54,14 @@ for (const arg of args) {
 
 // Configuration
 const PACKAGES_DIR = path.join(targetPath, 'packages');
-const OLD_IMPORT = '@elizaos/core';
-const NEW_IMPORT = '@elizaos/core-plugin-v1';
+const OLD_IMPORT = '@nexos/core';
+const NEW_IMPORT = '@nexos/core-plugin-v1';
 
 // Find all plugin directories
 function getPluginDirectories() {
   if (!fs.existsSync(PACKAGES_DIR)) {
     console.error(`Error: Packages directory not found at ${PACKAGES_DIR}.`);
-    console.error(`Make sure you're running the script on a valid Eliza repository.`);
+    console.error(`Make sure you're running the script on a valid Nex repository.`);
     process.exit(1);
   }
 
@@ -76,7 +76,7 @@ function getPluginDirectories() {
   return dirs;
 }
 
-// Replace @elizaos/core with @elizaos/core-plugin-v1 in a file
+// Replace @nexos/core with @nexos/core-plugin-v1 in a file
 // nothing calls this
 function replaceInFile(filePath) {
   try {
@@ -173,7 +173,7 @@ function main() {
   const pluginDirs = getPluginDirectories();
   const results = [];
 
-  console.log(`\nScanning plugins for @elizaos/core references...`);
+  console.log(`\nScanning plugins for @nexos/core references...`);
 
   for (const pluginDir of pluginDirs) {
     results.push(buildPluginFromDir(pluginDir));
@@ -195,7 +195,7 @@ function main() {
   // Display summary
   console.log('\nAnalysis Summary:');
   console.log(`Total plugins: ${results.length}`);
-  console.log(`Plugins with @elizaos/core references: ${pluginsWithRefs.length}`);
+  console.log(`Plugins with @nexos/core references: ${pluginsWithRefs.length}`);
   console.log('\nPlugins by category:');
   console.log(`- Source and dist references: ${categories.srcAndDist.length}`);
   console.log(`- Source references only: ${categories.srcOnly.length}`);
@@ -260,7 +260,7 @@ function main() {
       migrationStats.configsUpdated += results.tsupConfig ? 1 : 0;
       migrationStats.nodeModulesFound += results.nodeModules ? 1 : 0;
 
-      // Step 2: For plugins with node_modules/@elizaos/core, reinstall dependencies
+      // Step 2: For plugins with node_modules/@nexos/core, reinstall dependencies
       if (results.nodeModules) {
         const reinstalled = reinstallDependencies(plugin);
         if (reinstalled) {
@@ -282,7 +282,7 @@ function main() {
     console.log(`Files updated: ${migrationStats.filesUpdated}`);
     console.log(`Package.json files updated: ${migrationStats.packagesUpdated}`);
     console.log(`Build configs updated: ${migrationStats.configsUpdated}`);
-    console.log(`Plugins with node_modules/@elizaos/core: ${migrationStats.nodeModulesFound}`);
+    console.log(`Plugins with node_modules/@nexos/core: ${migrationStats.nodeModulesFound}`);
     console.log(`Plugins with dependencies reinstalled: ${migrationStats.dependenciesReinstalled}`);
     console.log(`Plugins rebuilt: ${migrationStats.pluginsRebuilt}`);
 
@@ -307,7 +307,7 @@ Usage:
   node migrate-to-core-plugin-v1.js [options] [path|url]
 
 Arguments:
-  path                    Local directory containing Eliza plugins (default: current directory)
+  path                    Local directory containing Nex plugins (default: current directory)
   url                     GitHub repository URL to clone and migrate
 
 Options:
@@ -316,9 +316,9 @@ Options:
 
 Examples:
   node migrate-to-core-plugin-v1.js                           # Migrate plugins in current directory
-  node migrate-to-core-plugin-v1.js /path/to/eliza            # Migrate plugins in specified directory
+  node migrate-to-core-plugin-v1.js /path/to/nex            # Migrate plugins in specified directory
   node migrate-to-core-plugin-v1.js --analyze-only            # Analyze only without migrating
-  node migrate-to-core-plugin-v1.js https://github.com/user/eliza.git  # Clone and migrate GitHub repo
+  node migrate-to-core-plugin-v1.js https://github.com/user/nex.git  # Clone and migrate GitHub repo
 `);
 }
 

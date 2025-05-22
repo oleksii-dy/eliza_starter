@@ -78,7 +78,7 @@ export const PROMPT_TEMPLATES = {
         Format information for conversation templates
         Maintain consistent data access
 
-    Actions are core building blocks in Eliza that define how agents respond to and interact with messages. They allow agents to interact with external systems, modify their behavior, and perform tasks beyond simple message responses.
+    Actions are core building blocks in Nex that define how agents respond to and interact with messages. They allow agents to interact with external systems, modify their behavior, and perform tasks beyond simple message responses.
         Overview
         Each Action consists of:
         name: Unique identifier for the action
@@ -226,7 +226,7 @@ Format in markdown without adding any additional headers.`,
 ### Debugging Tips
 - [First debugging tip]
 - [Second debugging tip]
-- Ask your questions at https://eliza.gg/ 🚀 or in our discord
+- Ask your questions at https://nex.gg/ 🚀 or in our discord
 
 Format in markdown without adding any additional headers.`,
 };

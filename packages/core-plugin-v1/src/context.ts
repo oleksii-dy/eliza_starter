@@ -2,7 +2,7 @@ import {
   composeContext as coreComposeContext,
   addHeader as coreAddHeader,
   composeRandomUser as coreComposeRandomUser,
-} from '@elizaos/core';
+} from '@nexos/core';
 import type { State, TemplateType } from "./types.ts";
 
 /**

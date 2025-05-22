@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { factEvaluator, formatFacts } from '../../src/evaluators/fact';
-import { composeContext, generateObjectArray, MemoryManager, ModelClass, type Memory } from '@elizaos/core';
+import { composeContext, generateObjectArray, MemoryManager, ModelClass, type Memory } from '@nexos/core';
 
-vi.mock('@elizaos/core', () => ({
+vi.mock('@nexos/core', () => ({
     composeContext: vi.fn(),
     generateObjectArray: vi.fn(),
     MemoryManager: vi.fn().mockImplementation((config: any) => ({

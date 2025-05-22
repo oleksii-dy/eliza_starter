@@ -5,7 +5,7 @@ import {
   hasEnvVariable as coreHasEnvVariable,
   settings as coreSettings,
   getEnvVariable as coreGetEnvVariable,
-} from '@elizaos/core';
+} from '@nexos/core';
 import type { IAgentRuntime, State, Memory } from "./types.ts";
 
 interface Settings {

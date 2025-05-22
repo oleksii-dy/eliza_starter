@@ -200,7 +200,7 @@ Format:
 
 if __name__ == "__main__":
     # Configure paths
-    PR_REPORTS_PATH = Path("/Users/ilessio/dev-agents/ELIZA_FIX/eliza_aiflow/scripts/bug_hunt/reports")
+    PR_REPORTS_PATH = Path("/Users/ilessio/dev-agents/Nex_FIX/nex_aiflow/scripts/bug_hunt/reports")
 
     choice = input("\nEnter your choice (1-2): ")
 

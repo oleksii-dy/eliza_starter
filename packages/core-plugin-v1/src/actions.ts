@@ -2,7 +2,7 @@ import {
   composeActionExamples as coreComposeActionExamples,
   formatActionNames as coreFormatActionNames,
   formatActions as coreFormatActions,
-} from '@elizaos/core';
+} from '@nexos/core';
 
 import type { Action, ActionExample } from "./types.ts";
 

@@ -1,6 +1,6 @@
 # Codebase Documentation
 
-- https://github.com/elizaOS/eliza/issues/1110
+- https://github.com/nexOS/nex/issues/1110
 
 ## Set up
 
@@ -45,7 +45,7 @@ The `src/Configuration.ts` handles configuration loading from environment variab
 
 #### Default Values
 
-- **Repository**: elizaOS/eliza
+- **Repository**: nexOS/nex
 - **Branch**: develop
 - **Commit Message**: "Generated JSDoc comments"
 - **PR Title**: "JSDoc Generation"

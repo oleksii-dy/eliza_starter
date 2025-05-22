@@ -4,7 +4,7 @@ import {
   getEmbeddingType as coreGetEmbeddingType,
   getEmbeddingZeroVector as coreGetEmbeddingZeroVector,
   embed as coreEmbed,
-} from '@elizaos/core';
+} from '@nexos/core';
 
 import { type IAgentRuntime, ModelProviderName } from "./types.ts";
 

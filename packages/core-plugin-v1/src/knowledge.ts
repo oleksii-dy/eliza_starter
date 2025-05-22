@@ -1,7 +1,7 @@
 import {
   knowledge as coreKnowledge,
   AgentRuntime as coreAgentRuntime,
-} from '@elizaos/core';
+} from '@nexos/core';
 import type { AgentRuntime } from "./runtime.ts";
 import type { IAgentRuntime, KnowledgeItem, UUID, Memory } from "./types.ts";
 

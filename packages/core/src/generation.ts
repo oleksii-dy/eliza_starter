@@ -19,7 +19,7 @@ import { encodingForModel, type TiktokenModel } from "js-tiktoken";
 // import { AutoTokenizer } from "@huggingface/transformers";
 import Together from "together-ai";
 import type { ZodSchema } from "zod";
-import { elizaLogger } from "./index.ts";
+import { nexLogger } from "./index.ts";
 import {
     models,
     getModelSettings,
@@ -128,7 +128,7 @@ export async function trimTokens(
         );
     }
 
-    elizaLogger.warn(`Unsupported tokenizer type: ${tokenizerType}`);
+    nexLogger.warn(`Unsupported tokenizer type: ${tokenizerType}`);
     return truncateTiktoken("gpt-4o", context, maxTokens);
 }
 
@@ -152,7 +152,7 @@ export async function trimTokens(
 //         // Decode back to text - js-tiktoken decode() returns a string directly
 //         return tokenizer.decode(truncatedTokens);
 //     } catch (error) {
-//         elizaLogger.error("Error in trimTokens:", error);
+//         nexLogger.error("Error in trimTokens:", error);
 //         // Return truncated string if tokenization fails
 //         return context.slice(-maxTokens * 4); // Rough estimate of 4 chars per token
 //     }
@@ -180,7 +180,7 @@ async function truncateTiktoken(
         // Decode back to text - js-tiktoken decode() returns a string directly
         return encoding.decode(truncatedTokens);
     } catch (error) {
-        elizaLogger.error("Error in trimTokens:", error);
+        nexLogger.error("Error in trimTokens:", error);
         // Return truncated string if tokenization fails
         return context.slice(-maxTokens * 4); // Rough estimate of 4 chars per token
     }
@@ -232,17 +232,17 @@ async function getOnChainEternalAISystemPrompt(
                 args: [new BigNumber(agentId)],
             });
             if (result) {
-                elizaLogger.info("on-chain system-prompt response", result[0]);
+                nexLogger.info("on-chain system-prompt response", result[0]);
                 const value = result[0].toString().replace("0x", "");
                 const content = Buffer.from(value, "hex").toString("utf-8");
-                elizaLogger.info("on-chain system-prompt", content);
+                nexLogger.info("on-chain system-prompt", content);
                 return await fetchEternalAISystemPrompt(runtime, content);
             } else {
                 return undefined;
             }
         } catch (error) {
-            elizaLogger.error(error);
-            elizaLogger.error("err", error);
+            nexLogger.error(error);
+            nexLogger.error("err", error);
         }
     }
     return undefined;
@@ -263,11 +263,11 @@ async function fetchEternalAISystemPrompt(
             IPFS,
             "https://gateway.lighthouse.storage/ipfs/"
         );
-        elizaLogger.info("fetch lightHouse", lightHouse);
+        nexLogger.info("fetch lightHouse", lightHouse);
         const responseLH = await fetch(lightHouse, {
             method: "GET",
         });
-        elizaLogger.info("fetch lightHouse resp", responseLH);
+        nexLogger.info("fetch lightHouse resp", responseLH);
         if (responseLH.ok) {
             const data = await responseLH.text();
             return data;
@@ -276,11 +276,11 @@ async function fetchEternalAISystemPrompt(
                 IPFS,
                 "https://cdn.eternalai.org/upload/"
             );
-            elizaLogger.info("fetch gcs", gcs);
+            nexLogger.info("fetch gcs", gcs);
             const responseGCS = await fetch(gcs, {
                 method: "GET",
             });
-            elizaLogger.info("fetch lightHouse gcs", responseGCS);
+            nexLogger.info("fetch lightHouse gcs", responseGCS);
             if (responseGCS.ok) {
                 const data = await responseGCS.text();
                 return data;
@@ -308,7 +308,7 @@ function getCloudflareGatewayBaseURL(
     const cloudflareAccountId = runtime.getSetting("CLOUDFLARE_AI_ACCOUNT_ID");
     const cloudflareGatewayId = runtime.getSetting("CLOUDFLARE_AI_GATEWAY_ID");
 
-    elizaLogger.debug("Cloudflare Gateway Configuration:", {
+    nexLogger.debug("Cloudflare Gateway Configuration:", {
         isEnabled: isCloudflareEnabled,
         hasAccountId: !!cloudflareAccountId,
         hasGatewayId: !!cloudflareGatewayId,
@@ -316,26 +316,26 @@ function getCloudflareGatewayBaseURL(
     });
 
     if (!isCloudflareEnabled) {
-        elizaLogger.debug("Cloudflare Gateway is not enabled");
+        nexLogger.debug("Cloudflare Gateway is not enabled");
         return undefined;
     }
 
     if (!cloudflareAccountId) {
-        elizaLogger.warn(
+        nexLogger.warn(
             "Cloudflare Gateway is enabled but CLOUDFLARE_AI_ACCOUNT_ID is not set"
         );
         return undefined;
     }
 
     if (!cloudflareGatewayId) {
-        elizaLogger.warn(
+        nexLogger.warn(
             "Cloudflare Gateway is enabled but CLOUDFLARE_AI_GATEWAY_ID is not set"
         );
         return undefined;
     }
 
     const baseURL = `https://gateway.ai.cloudflare.com/v1/${cloudflareAccountId}/${cloudflareGatewayId}/${provider.toLowerCase()}`;
-    elizaLogger.info("Using Cloudflare Gateway:", {
+    nexLogger.info("Using Cloudflare Gateway:", {
         provider,
         baseURL,
         accountId: cloudflareAccountId,
@@ -387,17 +387,17 @@ export async function generateText({
         return "";
     }
 
-    elizaLogger.log("Generating text...");
+    nexLogger.log("Generating text...");
 
-    elizaLogger.info("Generating text with options:", {
+    nexLogger.info("Generating text with options:", {
         modelProvider: runtime.modelProvider,
         model: modelClass,
         // verifiableInference,
     });
-    elizaLogger.log("Using provider:", runtime.modelProvider);
+    nexLogger.log("Using provider:", runtime.modelProvider);
     // If verifiable inference is requested and adapter is provided, use it
     // if (verifiableInference && runtime.verifiableInferenceAdapter) {
-    //     elizaLogger.log(
+    //     nexLogger.log(
     //         "Using verifiable inference adapter:",
     //         runtime.verifiableInferenceAdapter
     //     );
@@ -408,7 +408,7 @@ export async function generateText({
     //                 modelClass,
     //                 verifiableInferenceOptions
     //             );
-    //         elizaLogger.log("Verifiable inference result:", result);
+    //         nexLogger.log("Verifiable inference result:", result);
     //         // Verify the proof
     //         const isValid =
     //             await runtime.verifiableInferenceAdapter.verifyProof(result);
@@ -418,13 +418,13 @@ export async function generateText({
 
     //         return result.text;
     //     } catch (error) {
-    //         elizaLogger.error("Error in verifiable inference:", error);
+    //         nexLogger.error("Error in verifiable inference:", error);
     //         throw error;
     //     }
     // }
 
     const provider = runtime.modelProvider;
-    elizaLogger.debug("Provider settings:", {
+    nexLogger.debug("Provider settings:", {
         provider,
         hasRuntime: !!runtime,
         runtimeSettings: {
@@ -509,7 +509,7 @@ export async function generateText({
             break;
     }
 
-    elizaLogger.info("Selected model:", model);
+    nexLogger.info("Selected model:", model);
 
     const modelConfiguration = runtime.character?.settings?.modelConfig;
     const temperature =
@@ -530,7 +530,7 @@ export async function generateText({
     const apiKey = runtime.token;
 
     try {
-        elizaLogger.debug(
+        nexLogger.debug(
             `Trimming context to max length of ${max_context_length} tokens.`
         );
 
@@ -539,7 +539,7 @@ export async function generateText({
         let response: string;
 
         const _stop = stop || modelSettings.stop;
-        elizaLogger.debug(
+        nexLogger.debug(
             `Using provider: ${provider}, model: ${model}, temperature: ${temperature}, max response length: ${max_response_length}`
         );
 
@@ -557,13 +557,13 @@ export async function generateText({
             case ModelProviderName.LMSTUDIO:
             case ModelProviderName.NEARAI:
             case ModelProviderName.KLUSTERAI: {
-                elizaLogger.debug(
+                nexLogger.debug(
                     "Initializing OpenAI model with Cloudflare check"
                 );
                 const baseURL =
                     getCloudflareGatewayBaseURL(runtime, "openai") || endpoint;
 
-                //elizaLogger.debug("OpenAI baseURL result:", { baseURL });
+                //nexLogger.debug("OpenAI baseURL result:", { baseURL });
                 const openai = createOpenAI({
                     apiKey,
                     baseURL,
@@ -593,7 +593,7 @@ export async function generateText({
             }
 
             case ModelProviderName.ETERNALAI: {
-                elizaLogger.debug("Initializing EternalAI model.");
+                nexLogger.debug("Initializing EternalAI model.");
                 const openai = createOpenAI({
                     apiKey,
                     baseURL: endpoint,
@@ -608,18 +608,18 @@ export async function generateText({
                     const on_chain_system_prompt =
                         await getOnChainEternalAISystemPrompt(runtime);
                     if (!on_chain_system_prompt) {
-                        elizaLogger.error(
+                        nexLogger.error(
                             new Error("invalid on_chain_system_prompt")
                         );
                     } else {
                         system_prompt = on_chain_system_prompt;
-                        elizaLogger.info(
+                        nexLogger.info(
                             "new on-chain system prompt",
                             system_prompt
                         );
                     }
                 } catch (e) {
-                    elizaLogger.error(e);
+                    nexLogger.error(e);
                 }
 
                 // Prepare the request with chain_id
@@ -639,7 +639,7 @@ export async function generateText({
                 });
 
                 response = openaiResponse;
-                elizaLogger.debug("Received response from EternalAI model.");
+                nexLogger.debug("Received response from EternalAI model.");
                 break;
             }
 
@@ -667,7 +667,7 @@ export async function generateText({
                 });
 
                 response = googleResponse;
-                elizaLogger.debug("Received response from Google model.");
+                nexLogger.debug("Received response from Google model.");
                 break;
             }
 
@@ -688,18 +688,18 @@ export async function generateText({
                 });
 
                 response = mistralResponse;
-                elizaLogger.debug("Received response from Mistral model.");
+                nexLogger.debug("Received response from Mistral model.");
                 break;
             }
 
             case ModelProviderName.ANTHROPIC: {
-                elizaLogger.debug(
+                nexLogger.debug(
                     "Initializing Anthropic model with Cloudflare check"
                 );
                 const baseURL =
                     getCloudflareGatewayBaseURL(runtime, "anthropic") ||
                     "https://api.anthropic.com/v1";
-                elizaLogger.debug("Anthropic baseURL result:", { baseURL });
+                nexLogger.debug("Anthropic baseURL result:", { baseURL });
 
                 const anthropic = createAnthropic({
                     apiKey,
@@ -724,12 +724,12 @@ export async function generateText({
                 });
 
                 response = anthropicResponse;
-                elizaLogger.debug("Received response from Anthropic model.");
+                nexLogger.debug("Received response from Anthropic model.");
                 break;
             }
 
             case ModelProviderName.CLAUDE_VERTEX: {
-                elizaLogger.debug("Initializing Claude Vertex model.");
+                nexLogger.debug("Initializing Claude Vertex model.");
 
                 const anthropic = createAnthropic({
                     apiKey,
@@ -754,14 +754,14 @@ export async function generateText({
                 });
 
                 response = anthropicResponse;
-                elizaLogger.debug(
+                nexLogger.debug(
                     "Received response from Claude Vertex model."
                 );
                 break;
             }
 
             case ModelProviderName.GROK: {
-                elizaLogger.debug("Initializing Grok model.");
+                nexLogger.debug("Initializing Grok model.");
                 const grok = createOpenAI({
                     apiKey,
                     baseURL: endpoint,
@@ -788,12 +788,12 @@ export async function generateText({
                 });
 
                 response = grokResponse;
-                elizaLogger.debug("Received response from Grok model.");
+                nexLogger.debug("Received response from Grok model.");
                 break;
             }
 
             case ModelProviderName.MEM0: {
-                elizaLogger.debug(
+                nexLogger.debug(
                     "Initializing Mem0 model with Cloudflare check"
                 );
                 const baseURL = endpoint || getCloudflareGatewayBaseURL(runtime, "openai");
@@ -804,7 +804,7 @@ export async function generateText({
                     fetch: runtime.fetch,
                     mem0ApiKey: runtime.getSetting("MEM0_API_KEY"),
                     mem0Config: {
-                        user_id: runtime.getSetting("MEM0_USER_ID") || "eliza-os-user"
+                        user_id: runtime.getSetting("MEM0_USER_ID") || "nex-os-user"
                     }
                 });
 
@@ -826,16 +826,16 @@ export async function generateText({
                 });
 
                 response = mem0Response;
-                elizaLogger.debug("Received response from Mem0 Provider.");
+                nexLogger.debug("Received response from Mem0 Provider.");
                 break;
             }
 
             case ModelProviderName.GROQ: {
-                elizaLogger.debug(
+                nexLogger.debug(
                     "Initializing Groq model with Cloudflare check"
                 );
                 const baseURL = getCloudflareGatewayBaseURL(runtime, "groq");
-                elizaLogger.debug("Groq baseURL result:", { baseURL });
+                nexLogger.debug("Groq baseURL result:", { baseURL });
                 const groq = createGroq({
                     apiKey,
                     fetch: runtime.fetch,
@@ -860,12 +860,12 @@ export async function generateText({
                 });
 
                 response = groqResponse;
-                elizaLogger.debug("Received response from Groq model.");
+                nexLogger.debug("Received response from Groq model.");
                 break;
             }
 
             case ModelProviderName.LLAMALOCAL: {
-                elizaLogger.debug(
+                nexLogger.debug(
                     "Using local Llama model for text completion."
                 );
                 const textGenerationService =
@@ -885,12 +885,12 @@ export async function generateText({
                     presence_penalty,
                     max_response_length
                 );
-                elizaLogger.debug("Received response from local Llama model.");
+                nexLogger.debug("Received response from local Llama model.");
                 break;
             }
 
             case ModelProviderName.REDPILL: {
-                elizaLogger.debug("Initializing RedPill model.");
+                nexLogger.debug("Initializing RedPill model.");
                 const serverUrl = getEndpoint(provider);
                 const openai = createOpenAI({
                     apiKey,
@@ -916,12 +916,12 @@ export async function generateText({
                 });
 
                 response = redpillResponse;
-                elizaLogger.debug("Received response from redpill model.");
+                nexLogger.debug("Received response from redpill model.");
                 break;
             }
 
             case ModelProviderName.OPENROUTER: {
-                elizaLogger.debug("Initializing OpenRouter model.");
+                nexLogger.debug("Initializing OpenRouter model.");
                 const serverUrl = getEndpoint(provider);
                 const openrouter = createOpenAI({
                     apiKey,
@@ -947,13 +947,13 @@ export async function generateText({
                 });
 
                 response = openrouterResponse;
-                elizaLogger.debug("Received response from OpenRouter model.");
+                nexLogger.debug("Received response from OpenRouter model.");
                 break;
             }
 
             case ModelProviderName.OLLAMA:
                 {
-                    elizaLogger.debug("Initializing Ollama model.");
+                    nexLogger.debug("Initializing Ollama model.");
 
                     const ollamaProvider = createOllama({
                         baseURL: getEndpoint(provider) + "/api",
@@ -961,7 +961,7 @@ export async function generateText({
                     });
                     const ollama = ollamaProvider(model);
 
-                    elizaLogger.debug("****** MODEL\n", model);
+                    nexLogger.debug("****** MODEL\n", model);
 
                     const { text: ollamaResponse } = await aiGenerateText({
                         model: ollama,
@@ -981,11 +981,11 @@ export async function generateText({
                         ""
                     );
                 }
-                elizaLogger.debug("Received response from Ollama model.");
+                nexLogger.debug("Received response from Ollama model.");
                 break;
 
             case ModelProviderName.HEURIST: {
-                elizaLogger.debug("Initializing Heurist model.");
+                nexLogger.debug("Initializing Heurist model.");
                 const heurist = createOpenAI({
                     apiKey: apiKey,
                     baseURL: endpoint,
@@ -1011,11 +1011,11 @@ export async function generateText({
                 });
 
                 response = heuristResponse;
-                elizaLogger.debug("Received response from Heurist model.");
+                nexLogger.debug("Received response from Heurist model.");
                 break;
             }
             case ModelProviderName.GAIANET: {
-                elizaLogger.debug("Initializing GAIANET model.");
+                nexLogger.debug("Initializing GAIANET model.");
 
                 var baseURL = getEndpoint(provider);
                 if (!baseURL) {
@@ -1038,7 +1038,7 @@ export async function generateText({
                     }
                 }
 
-                elizaLogger.debug("Using GAIANET model with baseURL:", baseURL);
+                nexLogger.debug("Using GAIANET model with baseURL:", baseURL);
 
                 const openai = createOpenAI({
                     apiKey,
@@ -1064,12 +1064,12 @@ export async function generateText({
                 });
 
                 response = openaiResponse;
-                elizaLogger.debug("Received response from GAIANET model.");
+                nexLogger.debug("Received response from GAIANET model.");
                 break;
             }
 
             case ModelProviderName.ATOMA: {
-                elizaLogger.debug("Initializing Atoma model.");
+                nexLogger.debug("Initializing Atoma model.");
                 const atoma = createOpenAI({
                     apiKey,
                     baseURL: endpoint,
@@ -1094,12 +1094,12 @@ export async function generateText({
                 });
 
                 response = atomaResponse;
-                elizaLogger.debug("Received response from Atoma model.");
+                nexLogger.debug("Received response from Atoma model.");
                 break;
             }
 
             case ModelProviderName.GALADRIEL: {
-                elizaLogger.debug("Initializing Galadriel model.");
+                nexLogger.debug("Initializing Galadriel model.");
                 const headers = {};
                 const fineTuneApiKey = runtime.getSetting(
                     "GALADRIEL_FINE_TUNE_API_KEY"
@@ -1132,12 +1132,12 @@ export async function generateText({
                 });
 
                 response = galadrielResponse;
-                elizaLogger.debug("Received response from Galadriel model.");
+                nexLogger.debug("Received response from Galadriel model.");
                 break;
             }
 
             case ModelProviderName.INFERA: {
-                elizaLogger.debug("Initializing Infera model.");
+                nexLogger.debug("Initializing Infera model.");
 
                 const apiKey = settings.INFERA_API_KEY || runtime.token;
 
@@ -1163,12 +1163,12 @@ export async function generateText({
                     presencePenalty: presence_penalty,
                 });
                 response = inferaResponse;
-                elizaLogger.debug("Received response from Infera model.");
+                nexLogger.debug("Received response from Infera model.");
                 break;
             }
 
             case ModelProviderName.VENICE: {
-                elizaLogger.debug("Initializing Venice model.");
+                nexLogger.debug("Initializing Venice model.");
                 
                 const bypass = parseBooleanFromText(
                     runtime.getSetting("BYPASS_VENICE_SYSTEM_PROMPT")
@@ -1211,12 +1211,12 @@ export async function generateText({
                 //rferrari: remove all text from <think> to </think>\n\n
                 response = veniceResponse
                     .replace(/<think>[\s\S]*?<\/think>\s*\n*/g, '');
-                elizaLogger.debug("Received response from Venice model.");
+                nexLogger.debug("Received response from Venice model.");
                 break;
             }
 
             case ModelProviderName.NVIDIA: {
-                elizaLogger.debug("Initializing NVIDIA model.");
+                nexLogger.debug("Initializing NVIDIA model.");
                 const nvidia = createOpenAI({
                     apiKey: apiKey,
                     baseURL: endpoint,
@@ -1237,12 +1237,12 @@ export async function generateText({
                 });
 
                 response = nvidiaResponse;
-                elizaLogger.debug("Received response from NVIDIA model.");
+                nexLogger.debug("Received response from NVIDIA model.");
                 break;
             }
 
             case ModelProviderName.DEEPSEEK: {
-                elizaLogger.debug("Initializing Deepseek model.");
+                nexLogger.debug("Initializing Deepseek model.");
                 const serverUrl = models[provider].endpoint;
                 const deepseek = createOpenAI({
                     apiKey,
@@ -1268,12 +1268,12 @@ export async function generateText({
                 });
 
                 response = deepseekResponse;
-                elizaLogger.debug("Received response from Deepseek model.");
+                nexLogger.debug("Received response from Deepseek model.");
                 break;
             }
 
             case ModelProviderName.LIVEPEER: {
-                elizaLogger.debug("Initializing Livepeer model.");
+                nexLogger.debug("Initializing Livepeer model.");
 
                 if (!endpoint) {
                     throw new Error("Livepeer Gateway URL is not defined");
@@ -1303,7 +1303,7 @@ export async function generateText({
                     headers: {
                         accept: "text/event-stream",
                         "Content-Type": "application/json",
-                        Authorization: "Bearer eliza-app-llm",
+                        Authorization: "Bearer nex-app-llm",
                     },
                     body: JSON.stringify(requestBody),
                 });
@@ -1325,7 +1325,7 @@ export async function generateText({
                     /<\|start_header_id\|>assistant<\|end_header_id\|>\n\n/,
                     ""
                 );
-                elizaLogger.debug(
+                nexLogger.debug(
                     "Successfully received response from Livepeer model"
                 );
                 break;
@@ -1333,7 +1333,7 @@ export async function generateText({
 
             case ModelProviderName.SECRETAI:
                 {
-                    elizaLogger.debug("Initializing SecretAI model.");
+                    nexLogger.debug("Initializing SecretAI model.");
 
                     const secretAiProvider = createOllama({
                         baseURL: getEndpoint(provider) + "/api",
@@ -1360,7 +1360,7 @@ export async function generateText({
                 break;
 
             case ModelProviderName.BEDROCK: {
-                elizaLogger.debug("Initializing Bedrock model.");
+                nexLogger.debug("Initializing Bedrock model.");
 
                 const { text: bedrockResponse } = await aiGenerateText({
                     model: bedrock(model),
@@ -1374,20 +1374,20 @@ export async function generateText({
                 });
 
                 response = bedrockResponse;
-                elizaLogger.debug("Received response from Bedrock model.");
+                nexLogger.debug("Received response from Bedrock model.");
                 break;
             }
 
             default: {
                 const errorMessage = `Unsupported provider: ${provider}`;
-                elizaLogger.error(errorMessage);
+                nexLogger.error(errorMessage);
                 throw new Error(errorMessage);
             }
         }
 
         return response;
     } catch (error) {
-        elizaLogger.error("Error in generateText:", error);
+        nexLogger.error("Error in generateText:", error);
         throw error;
     }
 }
@@ -1418,7 +1418,7 @@ export async function generateShouldRespond({
     let retryDelay = 1000;
     while (true) {
         try {
-            elizaLogger.debug(
+            nexLogger.debug(
                 "Attempting to generate text with context:",
                 context
             );
@@ -1428,27 +1428,27 @@ export async function generateShouldRespond({
                 modelClass,
             });
 
-            elizaLogger.debug("Received response from generateText:", response);
+            nexLogger.debug("Received response from generateText:", response);
             const parsedResponse = parseShouldRespondFromText(response.trim());
             if (parsedResponse) {
-                elizaLogger.debug("Parsed response:", parsedResponse);
+                nexLogger.debug("Parsed response:", parsedResponse);
                 return parsedResponse;
             } else {
-                elizaLogger.debug("generateShouldRespond no response");
+                nexLogger.debug("generateShouldRespond no response");
             }
         } catch (error) {
-            elizaLogger.error("Error in generateShouldRespond:", error);
+            nexLogger.error("Error in generateShouldRespond:", error);
             if (
                 error instanceof TypeError &&
                 error.message.includes("queueTextCompletion")
             ) {
-                elizaLogger.error(
+                nexLogger.error(
                     "TypeError: Cannot read properties of null (reading 'queueTextCompletion')"
                 );
             }
         }
 
-        elizaLogger.log(`Retrying in ${retryDelay}ms...`);
+        nexLogger.log(`Retrying in ${retryDelay}ms...`);
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
         retryDelay *= 2;
     }
@@ -1466,31 +1466,31 @@ export async function splitChunks(
     chunkSize = 1500, // in tokens
     bleed = 100 // in tokens
 ): Promise<string[]> {
-    elizaLogger.debug(`[splitChunks] Starting text split`);
+    nexLogger.debug(`[splitChunks] Starting text split`);
 
     // Validate parameters
     if (chunkSize <= 0) {
-        elizaLogger.warn(
+        nexLogger.warn(
             `Invalid chunkSize (${chunkSize}), using default 1500`
         );
         chunkSize = 1500;
     }
 
     if (bleed >= chunkSize) {
-        elizaLogger.warn(
+        nexLogger.warn(
             `Bleed (${bleed}) >= chunkSize (${chunkSize}), adjusting bleed to 1/4 of chunkSize`
         );
         bleed = Math.floor(chunkSize / 4);
     }
 
     if (bleed < 0) {
-        elizaLogger.warn(`Invalid bleed (${bleed}), using default 100`);
+        nexLogger.warn(`Invalid bleed (${bleed}), using default 100`);
         bleed = 100;
     }
 
     const chunks = splitText(content, chunkSize, bleed);
 
-    elizaLogger.debug(`[splitChunks] Split complete:`, {
+    nexLogger.debug(`[splitChunks] Split complete:`, {
         numberOfChunks: chunks.length,
         averageChunkSize:
             chunks.reduce((acc, chunk) => acc + chunk.length, 0) /
@@ -1654,7 +1654,7 @@ export async function generateTrueOrFalse({
                 return parsedResponse;
             }
         } catch (error) {
-            elizaLogger.error("Error in generateTrueOrFalse:", error);
+            nexLogger.error("Error in generateTrueOrFalse:", error);
         }
 
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
@@ -1687,7 +1687,7 @@ export async function generateTextArray({
     modelClass: ModelClass;
 }): Promise<string[]> {
     if (!context) {
-        elizaLogger.error("generateTextArray context is empty");
+        nexLogger.error("generateTextArray context is empty");
         return [];
     }
     let retryDelay = 1000;
@@ -1705,7 +1705,7 @@ export async function generateTextArray({
                 return parsedResponse;
             }
         } catch (error) {
-            elizaLogger.error("Error in generateTextArray:", error);
+            nexLogger.error("Error in generateTextArray:", error);
         }
 
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
@@ -1723,7 +1723,7 @@ export async function generateObjectDeprecated({
     modelClass: ModelClass;
 }): Promise<any> {
     if (!context) {
-        elizaLogger.error("generateObjectDeprecated context is empty");
+        nexLogger.error("generateObjectDeprecated context is empty");
         return null;
     }
     let retryDelay = 1000;
@@ -1741,7 +1741,7 @@ export async function generateObjectDeprecated({
                 return parsedResponse;
             }
         } catch (error) {
-            elizaLogger.error("Error in generateObject:", error);
+            nexLogger.error("Error in generateObject:", error);
         }
 
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
@@ -1759,7 +1759,7 @@ export async function generateObjectArray({
     modelClass: ModelClass;
 }): Promise<any[]> {
     if (!context) {
-        elizaLogger.error("generateObjectArray context is empty");
+        nexLogger.error("generateObjectArray context is empty");
         return [];
     }
     let retryDelay = 1000;
@@ -1777,7 +1777,7 @@ export async function generateObjectArray({
                 return parsedResponse;
             }
         } catch (error) {
-            elizaLogger.error("Error in generateTextArray:", error);
+            nexLogger.error("Error in generateTextArray:", error);
         }
 
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
@@ -1810,11 +1810,11 @@ export async function generateMessageResponse({
     const max_context_length = modelSettings.maxInputTokens;
 
     context = await trimTokens(context, max_context_length, runtime);
-    elizaLogger.debug("Context:", context);
+    nexLogger.debug("Context:", context);
     let retryLength = 1000; // exponential backoff
     while (true) {
         try {
-            elizaLogger.log("Generating message response..");
+            nexLogger.log("Generating message response..");
 
             const response = await generateText({
                 runtime,
@@ -1825,17 +1825,17 @@ export async function generateMessageResponse({
             // try parsing the response as JSON, if null then try again
             const parsedContent = parseJSONObjectFromText(response) as Content;
             if (!parsedContent) {
-                elizaLogger.debug("parsedContent is null, retrying");
+                nexLogger.debug("parsedContent is null, retrying");
                 continue;
             }
 
             return parsedContent;
         } catch (error) {
-            elizaLogger.error("ERROR:", error);
+            nexLogger.error("ERROR:", error);
             // wait for 2 seconds
             retryLength *= 2;
             await new Promise((resolve) => setTimeout(resolve, retryLength));
-            elizaLogger.debug("Retrying...");
+            nexLogger.debug("Retrying...");
         }
     }
 }
@@ -1865,13 +1865,13 @@ export const generateImage = async (
 }> => {
     const modelSettings = getImageModelSettings(runtime.imageModelProvider);
     if (!modelSettings) {
-        elizaLogger.warn(
+        nexLogger.warn(
             "No model settings found for the image model provider."
         );
         return { success: false, error: "No model settings available" };
     }
     const model = modelSettings.name;
-    elizaLogger.info("Generating image with options:", {
+    nexLogger.info("Generating image with options:", {
         imageModelProvider: model,
     });
 
@@ -1909,7 +1909,7 @@ export const generateImage = async (
                               );
                               return JSON.stringify(config?.auth);
                           } catch (e) {
-                              elizaLogger.warn(
+                              nexLogger.warn(
                                   `Error loading NEAR AI config. The environment variable NEARAI_API_KEY will be used. ${e}`
                               );
                           }
@@ -1995,7 +1995,7 @@ export const generateImage = async (
             const base64s = await Promise.all(
                 togetherResponse.data.map(async (image) => {
                     if (!image.url) {
-                        elizaLogger.error("Missing URL in image data:", image);
+                        nexLogger.error("Missing URL in image data:", image);
                         throw new Error("Missing URL in Together AI response");
                     }
 
@@ -2021,7 +2021,7 @@ export const generateImage = async (
                 throw new Error("No images generated by Together AI");
             }
 
-            elizaLogger.debug(`Generated ${base64s.length} images`);
+            nexLogger.debug(`Generated ${base64s.length} images`);
             return { success: true, data: base64s };
         } else if (runtime.imageModelProvider === ModelProviderName.FAL) {
             fal.config({
@@ -2061,7 +2061,7 @@ export const generateImage = async (
                 logs: true,
                 onQueueUpdate: (update) => {
                     if (update.status === "IN_PROGRESS") {
-                        elizaLogger.info(update.logs.map((log) => log.message));
+                        nexLogger.info(update.logs.map((log) => log.message));
                     }
                 },
             });
@@ -2172,7 +2172,7 @@ export const generateImage = async (
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            Authorization: "Bearer eliza-app-img",
+                            Authorization: "Bearer nex-app-img",
                         },
                         body: JSON.stringify({
                             model_id:
@@ -2472,7 +2472,7 @@ export async function handleProvider(
             return await handleBedrock(options);
         default: {
             const errorMessage = `Unsupported provider: ${provider}`;
-            elizaLogger.error(errorMessage);
+            nexLogger.error(errorMessage);
             throw new Error(errorMessage);
         }
     }
@@ -2527,13 +2527,13 @@ async function handleAnthropic({
     modelOptions,
     runtime,
 }: ProviderOptions): Promise<GenerationResult> {
-    elizaLogger.debug("Handling Anthropic request with Cloudflare check");
+    nexLogger.debug("Handling Anthropic request with Cloudflare check");
     if (mode === "json") {
-        elizaLogger.warn("Anthropic mode is set to json, changing to auto");
+        nexLogger.warn("Anthropic mode is set to json, changing to auto");
         mode = "auto";
     }
     const baseURL = getCloudflareGatewayBaseURL(runtime, "anthropic");
-    elizaLogger.debug("Anthropic handleAnthropic baseURL:", { baseURL });
+    nexLogger.debug("Anthropic handleAnthropic baseURL:", { baseURL });
 
     const anthropic = createAnthropic({
         apiKey,
@@ -2597,9 +2597,9 @@ async function handleGroq({
     modelOptions,
     runtime,
 }: ProviderOptions): Promise<GenerationResult> {
-    elizaLogger.debug("Handling Groq request with Cloudflare check");
+    nexLogger.debug("Handling Groq request with Cloudflare check");
     const baseURL = getCloudflareGatewayBaseURL(runtime, "groq");
-    elizaLogger.debug("Groq handleGroq baseURL:", { baseURL });
+    nexLogger.debug("Groq handleGroq baseURL:", { baseURL });
 
     const groq = createGroq({
         apiKey,
@@ -2950,29 +2950,29 @@ export async function generateTweetActions({
                 context,
                 modelClass,
             });
-            elizaLogger.debug(
+            nexLogger.debug(
                 "Received response from generateText for tweet actions:",
                 response
             );
             const { actions } = parseActionResponseFromText(response.trim());
             if (actions) {
-                elizaLogger.debug("Parsed tweet actions:", actions);
+                nexLogger.debug("Parsed tweet actions:", actions);
                 return actions;
             } else {
-                elizaLogger.debug("generateTweetActions no valid response");
+                nexLogger.debug("generateTweetActions no valid response");
             }
         } catch (error) {
-            elizaLogger.error("Error in generateTweetActions:", error);
+            nexLogger.error("Error in generateTweetActions:", error);
             if (
                 error instanceof TypeError &&
                 error.message.includes("queueTextCompletion")
             ) {
-                elizaLogger.error(
+                nexLogger.error(
                     "TypeError: Cannot read properties of null (reading 'queueTextCompletion')"
                 );
             }
         }
-        elizaLogger.log(`Retrying in ${retryDelay}ms...`);
+        nexLogger.log(`Retrying in ${retryDelay}ms...`);
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
         retryDelay *= 2;
     }

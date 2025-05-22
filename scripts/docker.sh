@@ -9,14 +9,14 @@ fi
 # Execute the corresponding command based on the argument
 case "$1" in
     build)
-        docker build --platform linux/amd64 -t eliza .
+        docker build --platform linux/amd64 -t nex .
         ;;
     run)
         # Ensure the container is not already running
-        if [ "$(docker ps -q -f name=eliza)" ]; then
-            echo "Container 'eliza' is already running. Stopping it first."
-            docker stop eliza
-            docker rm eliza
+        if [ "$(docker ps -q -f name=nex)" ]; then
+            echo "Container 'nex' is already running. Stopping it first."
+            docker stop nex
+            docker rm nex
         fi
 
         # Define base directories to mount
@@ -66,20 +66,20 @@ case "$1" in
         CMD="$CMD -v \"$(pwd)/packages/core/types:/app/packages/core/types\""
 
         # Add container name and image
-        CMD="$CMD --name eliza eliza"
+        CMD="$CMD --name nex nex"
 
         # Execute the command
         eval $CMD
         ;;
     start)
-        docker start eliza
+        docker start nex
         ;;
     bash)
         # Check if the container is running before executing bash
-        if [ "$(docker ps -q -f name=eliza)" ]; then
-            docker exec -it eliza bash
+        if [ "$(docker ps -q -f name=nex)" ]; then
+            docker exec -it nex bash
         else
-            echo "Container 'eliza' is not running. Please start it first."
+            echo "Container 'nex' is not running. Please start it first."
             exit 1
         fi
         ;;

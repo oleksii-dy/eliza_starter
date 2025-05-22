@@ -8,7 +8,7 @@ import {
     composeContext,
     booleanFooter,
     type State,
-} from "@elizaos/core-plugin-v1";
+} from "@nexos/core-plugin-v1";
 
 export const shouldFollowTemplate =
     `Based on the conversation so far:

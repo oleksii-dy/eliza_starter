@@ -7,7 +7,7 @@ export const DEFAULT_AGENT_ID = stringToUuid(DEFAULT_CHARACTER ?? uuidv4());
 
 function projectRoot() {
     return path.join(import.meta.dirname, "..");
-    // return "/Users/piotr/Documents/GitHub/Sifchain/eliza"
+    // return "/Users/piotr/Documents/GitHub/Sifchain/nex"
 }
 
 function log(message) {

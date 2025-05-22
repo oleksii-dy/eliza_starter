@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ModelProviderName } from "./types";
-import elizaLogger from "./logger";
+import nexLogger from "./logger";
 
 // TODO: TO COMPLETE
 export const envSchema = z.object({
@@ -175,7 +175,7 @@ export function validateCharacterConfig(json: unknown): CharacterConfig {
             );
 
             Object.entries(groupedErrors).forEach(([field, messages]) => {
-                elizaLogger.error(
+                nexLogger.error(
                     `Validation errors in ${field}: ${messages.join(" - ")}`
                 );
             });

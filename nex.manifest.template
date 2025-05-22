@@ -32,7 +32,7 @@ sgx.debug = false
 sgx.remote_attestation = "dcap"
 sgx.max_threads = 64
 
-# Some dependencies of Eliza utilize WebAssembly (WASM).
+# Some dependencies of Nex utilize WebAssembly (WASM).
 # Initializing WASM requires a substantial amount of memory.
 # If there is insufficient memory, you may encounter the following error:
 # RangeError: WebAssembly.instantiate(): Out of memory: Cannot allocate Wasm memory for a new instance.
@@ -66,8 +66,8 @@ sgx.trusted_files = [
   # These files are symbolic links to node_modules,
   # and Gramine does not support adding symbolic link directories to sgx.trusted_files.
   # Therefore, we must add each directory individually to sgx.trusted_files.
-  # "file:agent/node_modules/@elizaos/adapter-sqlite/",
-  # "file:agent/node_modules/@elizaos/.../",
+  # "file:agent/node_modules/@nexos/adapter-sqlite/",
+  # "file:agent/node_modules/@nexos/.../",
 ]
 
 # Insecure configuration. Use gramine encrypted fs to store data in production.

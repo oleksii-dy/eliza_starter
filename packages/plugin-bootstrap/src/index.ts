@@ -1,4 +1,4 @@
-import type { Plugin } from "@elizaos/core-plugin-v1";
+import type { Plugin } from "@nexos/core-plugin-v1";
 import { continueAction } from "./actions/continue.ts";
 import { followRoomAction } from "./actions/followRoom.ts";
 import { ignoreAction } from "./actions/ignore.ts";

@@ -3,7 +3,7 @@ import {
   FsCacheAdapter as coreFsCacheAdapter,
   DbCacheAdapter as coreDbCacheAdapter,
   CacheManager as coreCacheManager,
-} from '@elizaos/core';
+} from '@nexos/core';
 
 import type {
     CacheOptions,

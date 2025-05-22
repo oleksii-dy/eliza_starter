@@ -7,7 +7,7 @@ import {
     composeContext,
     generateObjectArray,
     MemoryManager,
-} from "@elizaos/core-plugin-v1";
+} from "@nexos/core-plugin-v1";
 
 export const formatFacts = (facts: Memory[]) => {
     const messageStrings = facts

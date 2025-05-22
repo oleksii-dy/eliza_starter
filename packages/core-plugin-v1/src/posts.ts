@@ -1,6 +1,6 @@
 import {
   formatPosts as coreFormatPosts,
-} from '@elizaos/core';
+} from '@nexos/core';
 import type { Actor, Memory } from "./types.ts";
 
 export const formatPosts = ({

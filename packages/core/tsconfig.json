@@ -20,7 +20,7 @@
         "noEmitOnError": false,
         "moduleDetection": "force",
         "allowArbitraryExtensions": true,
-        "customConditions": ["@elizaos/source"]
+        "customConditions": ["@nexos/source"]
     },
     "include": ["src/**/*"],
     "exclude": ["node_modules", "dist", "src/**/*.d.ts", "types/**/*.test.ts"]

@@ -1,6 +1,6 @@
 import {
   AgentRuntime as coreAgentRuntime,
-} from '@elizaos/core';
+} from '@nexos/core';
 
 import {
     type Character,

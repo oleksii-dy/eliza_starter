@@ -1,4 +1,4 @@
-import { elizaLogger as coreLogger } from '@elizaos/core';
+import { nexLogger as coreLogger } from '@nexos/core';
 import type { LogFn } from 'pino';
 
 // Use actual LogFn parameter types to avoid overload mismatch
@@ -56,5 +56,5 @@ const logger: Record<
 };
 
 export { logger };
-export const elizaLogger = logger;
+export const nexLogger = logger;
 export default logger;

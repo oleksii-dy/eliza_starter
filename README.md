@@ -1,12 +1,12 @@
-# Eliza 🤖
+# Nex 🤖
 
 <div align="center">
-  <img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
+  <img src="./docs/static/img/nex_banner.jpg" alt="Nex Banner" width="100%" />
 </div>
 
 <div align="center">
 
-📑 [Technical Report](https://arxiv.org/pdf/2501.06781) |  📖 [Documentation](https://elizaos.github.io/eliza/) | 🎯 [Examples](https://github.com/thejoven/awesome-eliza)
+📑 [Technical Report](https://arxiv.org/pdf/2501.06781) |  📖 [Documentation](https://nexos.github.io/nex/) | 🎯 [Examples](https://github.com/thejoven/awesome-nex)
 
 </div>
 
@@ -17,7 +17,7 @@
 ## 🚩 Overview
 
 <div align="center">
-  <img src="./docs/static/img/eliza_diagram.png" alt="Eliza Diagram" width="100%" />
+  <img src="./docs/static/img/nex_diagram.png" alt="Nex Diagram" width="100%" />
 </div>
 
 ## ✨ Features
@@ -54,21 +54,21 @@
 
 ### Use the Starter (Recommended for Agent Creation)
 
-Full steps and documentation can be found in the [Eliza Starter Repository](https://github.com/elizaOS/eliza-starter).
+Full steps and documentation can be found in the [Nex Starter Repository](https://github.com/nexOS/nex-starter).
 ```bash
-git clone https://github.com/elizaos/eliza-starter.git
-cd eliza-starter
+git clone https://github.com/nexos/nex-starter.git
+cd nex-starter
 cp .env.example .env
 pnpm i && pnpm build && pnpm start
 ```
 
-### Manually Start Eliza (Only recommended for plugin or platform development)
+### Manually Start Nex (Only recommended for plugin or platform development)
 
 #### Checkout the latest release
 
 ```bash
 # Clone the repository
-git clone https://github.com/elizaos/eliza.git
+git clone https://github.com/nexos/nex.git
 
 # This project iterates fast, so we recommend checking out the latest release
 git checkout $(git describe --tags --abbrev=0)
@@ -92,7 +92,7 @@ cp .env.example .env
 
 Note: .env is optional. If you're planning to run multiple distinct agents, you can pass secrets through the character JSON
 
-#### Start Eliza
+#### Start Nex
 
 ```bash
 pnpm i
@@ -113,13 +113,13 @@ Open another terminal, move to the same directory, run the command below, then f
 pnpm start:client
 ```
 
-Then read the [Documentation](https://elizaos.github.io/eliza/) to learn how to customize your Eliza.
+Then read the [Documentation](https://nexos.github.io/nex/) to learn how to customize your Nex.
 
 ---
 
-### Automatically Start Eliza
+### Automatically Start Nex
 
-The start script provides an automated way to set up and run Eliza:
+The start script provides an automated way to set up and run Nex:
 
 ```bash
 sh scripts/start.sh
@@ -145,9 +145,9 @@ For detailed instructions on using the start script, including character managem
 
 ### Add more plugins
 
-1. run `npx elizaos plugins list` to get a list of available plugins or visit https://elizaos.github.io/registry/
+1. run `npx nexos plugins list` to get a list of available plugins or visit https://nexos.github.io/registry/
 
-2. run `npx elizaos plugins add @elizaos-plugins/plugin-NAME` to install the plugin into your instance
+2. run `npx nexos plugins add @nexos-plugins/plugin-NAME` to install the plugin into your instance
 
 #### Additional Requirements
 
@@ -160,7 +160,7 @@ pnpm install --include=optional sharp
 ---
 
 ## Using Your Custom Plugins
-Plugins that are not in the official registry for ElizaOS can be used as well. Here's how:
+Plugins that are not in the official registry for NexOS can be used as well. Here's how:
 
 ### Installation
 
@@ -186,7 +186,7 @@ packages/
 ```json
 {
   "dependencies": {
-    "@elizaos/plugin-example": "workspace:*"
+    "@nexos/plugin-example": "workspace:*"
   }
 }
 ```
@@ -195,41 +195,41 @@ packages/
 
 ```json
   "plugins": [
-    "@elizaos/plugin-example",
+    "@nexos/plugin-example",
   ],
 ```
 
 ---
 
-### Start Eliza with Gitpod
+### Start Nex with Gitpod
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/elizaos/eliza/tree/main)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/nexos/nex/tree/main)
 
 ---
 
-### Deploy Eliza in one click
+### Deploy Nex in one click
 
-Use [Fleek](https://fleek.xyz/eliza/) to deploy Eliza in one click. This opens Eliza to non-developers and provides the following options to build your agent:
+Use [Fleek](https://fleek.xyz/nex/) to deploy Nex in one click. This opens Nex to non-developers and provides the following options to build your agent:
 1. Start with a template
 2. Build characterfile from scratch
 3. Upload pre-made characterfile
 
-Click [here](https://fleek.xyz/eliza/) to get started!
+Click [here](https://fleek.xyz/nex/) to get started!
 
 ---
 
 ### Community & contact
 
-- [GitHub Issues](https://github.com/elizaos/eliza/issues). Best for: bugs you encounter using Eliza, and feature proposals.
-- [elizaOS Discord](https://discord.gg/elizaos). Best for: hanging out with the elizaOS technical community
+- [GitHub Issues](https://github.com/nexos/nex/issues). Best for: bugs you encounter using Nex, and feature proposals.
+- [nexOS Discord](https://discord.gg/nexos). Best for: hanging out with the nexOS technical community
 - [DAO Discord](https://discord.gg/ai16z). Best for: hanging out with the larger non-technical community
 
 ## Citation
 
-We now have a [paper](https://arxiv.org/pdf/2501.06781) you can cite for the Eliza OS:
+We now have a [paper](https://arxiv.org/pdf/2501.06781) you can cite for the Nex OS:
 ```bibtex
-@article{walters2025eliza,
-  title={Eliza: A Web3 friendly AI Agent Operating System},
+@article{walters2025nex,
+  title={Nex: A Web3 friendly AI Agent Operating System},
   author={Walters, Shaw and Gao, Sam and Nerd, Shakker and Da, Feng and Williams, Warren and Meng, Ting-Chien and Han, Hunter and He, Frank and Zhang, Allen and Wu, Ming and others},
   journal={arXiv preprint arXiv:2501.06781},
   year={2025}
@@ -238,14 +238,14 @@ We now have a [paper](https://arxiv.org/pdf/2501.06781) you can cite for the Eli
 
 ## Contributors
 
-<a href="https://github.com/elizaos/eliza/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=elizaos/eliza" alt="Eliza project contributors" />
+<a href="https://github.com/nexos/nex/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=nexos/nex" alt="Nex project contributors" />
 </a>
 
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=elizaos/eliza&type=Date)](https://star-history.com/#elizaos/eliza&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=nexos/nex&type=Date)](https://star-history.com/#nexos/nex&Date)
 
 ## 🛠️ System Requirements
 
@@ -268,9 +268,9 @@ We now have a [paper](https://arxiv.org/pdf/2501.06781) you can cite for the Eli
 
 ## 📁 Project Structure
 ```
-eliza/
+nex/
 ├── packages/
-│   ├── core/           # Core Eliza functionality
+│   ├── core/           # Core Nex functionality
 │   ├── clients/        # Client implementations
 │   └── actions/        # Custom actions
 ├── docs/              # Documentation

@@ -8,7 +8,7 @@ import {
     booleanFooter,
     generateTrueOrFalse,
     composeContext,
-} from "@elizaos/core-plugin-v1";
+} from "@nexos/core-plugin-v1";
 
 export const shouldMuteTemplate =
     `Based on the conversation so far:

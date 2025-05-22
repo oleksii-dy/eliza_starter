@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "elizaos-bug-hunter"
+name = "nexos-bug-hunter"
 version = "0.1.0"
-description = "Bug hunting and code quality analysis tools for ElizaOS plugins"
+description = "Bug hunting and code quality analysis tools for NexOS plugins"
 authors = ["AIFlow_ML <mlstudio@aiflow.ml>"]
 package-mode = false  # Disable package mode
 

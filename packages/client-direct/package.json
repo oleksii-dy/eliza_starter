@@ -1,5 +1,5 @@
 {
-    "name": "@elizaos/client-direct",
+    "name": "@nexos/client-direct",
     "version": "0.25.9",
     "main": "dist/index.js",
     "module": "dist/index.js",
@@ -9,7 +9,7 @@
         "./package.json": "./package.json",
         ".": {
             "import": {
-                "@elizaos/source": "./src/index.ts",
+                "@nexos/source": "./src/index.ts",
                 "types": "./dist/index.d.ts",
                 "default": "./dist/index.js"
             }
@@ -19,7 +19,7 @@
         "dist"
     ],
     "dependencies": {
-        "@elizaos/core": "workspace:*",
+        "@nexos/core": "workspace:*",
         "@types/body-parser": "1.19.5",
         "@types/cors": "2.8.17",
         "body-parser": "1.20.3",

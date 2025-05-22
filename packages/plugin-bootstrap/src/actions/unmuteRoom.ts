@@ -8,7 +8,7 @@ import {
     composeContext,
     generateTrueOrFalse,
     booleanFooter,
-} from "@elizaos/core-plugin-v1";
+} from "@nexos/core-plugin-v1";
 
 export const shouldUnmuteTemplate =
     `Based on the conversation so far:

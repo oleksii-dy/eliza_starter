@@ -8,7 +8,7 @@ import {
     generateTrueOrFalse,
     composeContext,
     type State,
-} from "@elizaos/core-plugin-v1";
+} from "@nexos/core-plugin-v1";
 
 const shouldUnfollowTemplate =
     `Based on the conversation so far:

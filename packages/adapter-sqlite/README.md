@@ -1,6 +1,6 @@
-# SQLite Adapter for ElizaOS
+# SQLite Adapter for NexOS
 
-A lightweight SQLite adapter for ElizaOS that provides persistent storage with vector embedding support, relationship management, and caching capabilities. Designed for embedded applications and local development.
+A lightweight SQLite adapter for NexOS that provides persistent storage with vector embedding support, relationship management, and caching capabilities. Designed for embedded applications and local development.
 
 ## Features
 
@@ -16,7 +16,7 @@ A lightweight SQLite adapter for ElizaOS that provides persistent storage with v
 ## Installation
 
 ```bash
-pnpm add @elizaos/adapter-sqlite
+pnpm add @nexos/adapter-sqlite
 ```
 
 ## Database Schema
@@ -65,7 +65,7 @@ pnpm add @elizaos/adapter-sqlite
 ### Basic Setup
 
 ```typescript
-import { SqliteDatabaseAdapter } from '@elizaos/adapter-sqlite';
+import { SqliteDatabaseAdapter } from '@nexos/adapter-sqlite';
 
 const adapter = new SqliteDatabaseAdapter('path/to/database.db');
 await adapter.init();
@@ -174,4 +174,4 @@ pnpm test:watch
 - Node.js 23.3.0+
 - SQLite 3.35.0+ (for JSON support)
 - Sufficient disk space for vector storage
-- ElizaOS core package
+- NexOS core package

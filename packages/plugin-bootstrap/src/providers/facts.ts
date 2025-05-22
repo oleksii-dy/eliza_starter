@@ -6,7 +6,7 @@ import {
     type Memory,
     type Provider,
     type State
-} from "@elizaos/core-plugin-v1";
+} from "@nexos/core-plugin-v1";
 import { formatFacts } from "../evaluators/fact.ts";
 
 const factsProvider: Provider = {

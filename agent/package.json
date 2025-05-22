@@ -1,5 +1,5 @@
 {
-    "name": "@elizaos/agent",
+    "name": "@nexos/agent",
     "version": "0.25.9",
     "main": "src/index.ts",
     "type": "module",
@@ -18,9 +18,9 @@
         "exec": "node --enable-source-maps --loader ts-node/esm src/index.ts"
     },
     "dependencies": {
-        "@elizaos/client-direct": "workspace:*",
-        "@elizaos/core": "workspace:*",
-        "@elizaos/plugin-bootstrap": "workspace:*",
+        "@nexos/client-direct": "workspace:*",
+        "@nexos/core": "workspace:*",
+        "@nexos/plugin-bootstrap": "workspace:*",
         "@types/node": "^22.13.5",
         "json5": "2.2.3",
         "ts-node": "^10.9.2",

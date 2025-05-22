@@ -14,7 +14,7 @@ import {
   generateObject as coreGenerateObject,
   handleProvider as coreHandleProvider,
   generateTweetActions as coreGenerateTweetActions,
-} from '@elizaos/core';
+} from '@nexos/core';
 
 import {
     type Content,

@@ -5,7 +5,7 @@ import {
   CharacterSchema as coreCharacterSchema,
   type CharacterConfig as coreCharacterConfig,
   validateCharacterConfig as coreValidateCharacterConfig,
-} from '@elizaos/core';
+} from '@nexos/core';
 
 import { ModelProviderName } from "./types";
 
