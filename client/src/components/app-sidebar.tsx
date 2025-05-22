@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { apiClient } from "@/lib/api";
 import { NavLink, useLocation } from "react-router";
-import type { UUID } from "@elizaos/core";
+import type { UUID } from "@nexos/core";
 import { Book, Cog, User } from "lucide-react";
 import ConnectionStatus from "./connection-status";
 
@@ -37,8 +37,8 @@ export function AppSidebar() {
                         <SidebarMenuButton size="lg" asChild>
                             <NavLink to="/">
                                 <img
-                                    alt="elizaos-icon"
-                                    src="/elizaos-icon.png"
+                                    alt="nexos-icon"
+                                    src="/nexos-icon.png"
                                     width="100%"
                                     height="100%"
                                     className="size-7"
@@ -46,7 +46,7 @@ export function AppSidebar() {
 
                                 <div className="flex flex-col gap-0.5 leading-none">
                                     <span className="font-semibold">
-                                        ElizaOS
+                                        NexOS
                                     </span>
                                     <span className="">v{info?.version}</span>
                                 </div>
@@ -102,7 +102,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <NavLink
-                            to="https://elizaos.github.io/eliza/docs/intro/"
+                            to="https://nexos.github.io/nex/docs/intro/"
                             target="_blank"
                         >
                             <SidebarMenuButton>

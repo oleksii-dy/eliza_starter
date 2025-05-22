@@ -2,7 +2,7 @@ import {
   uuidSchema as coreUuidSchema,
   validateUuid as coreValidateUuid,
   stringToUuid as coreStringToUuid
-} from '@elizaos/core';
+} from '@nexos/core';
 import type { UUID } from "./types.ts";
 
 export const uuidSchema = coreUuidSchema;

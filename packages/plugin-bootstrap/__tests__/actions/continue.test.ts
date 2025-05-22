@@ -1,12 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { continueAction } from '../../src/actions/continue';
-import { composeContext, generateMessageResponse, generateTrueOrFalse, ModelClass } from '@elizaos/core';
+import { composeContext, generateMessageResponse, generateTrueOrFalse, ModelClass } from '@nexos/core';
 
-vi.mock('@elizaos/core', () => ({
+vi.mock('@nexos/core', () => ({
     composeContext: vi.fn(),
     generateMessageResponse: vi.fn(),
     generateTrueOrFalse: vi.fn(),
-    elizaLogger: {
+    nexLogger: {
         info: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),

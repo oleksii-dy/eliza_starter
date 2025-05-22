@@ -33,7 +33,7 @@ export default function useVersion() {
 
     const compareVersion = async () => {
         try {
-            const latestVersion = await getLatestRelease("elizaos/eliza");
+            const latestVersion = await getLatestRelease("nexos/nex");
             const thisVersion = info?.version;
             if (latestVersion && thisVersion) {
                 if (
@@ -48,7 +48,7 @@ export default function useVersion() {
                         description: "Visit GitHub for more information.",
                         action: (
                             <NavLink
-                                to="https://github.com/elizaos/eliza/releases"
+                                to="https://github.com/nexos/nex/releases"
                                 target="_blank"
                             >
                                 <ToastAction altText="Update">

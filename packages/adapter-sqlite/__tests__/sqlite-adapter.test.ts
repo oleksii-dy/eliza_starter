@@ -1,15 +1,15 @@
-import type { UUID } from '@elizaos/core';
+import type { UUID } from '@nexos/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SqliteDatabaseAdapter } from '../src';
 import { load } from '../src/sqlite_vec';
 import type { Database } from 'better-sqlite3';
 
-// Mock the elizaLogger
-vi.mock('@elizaos/core', async () => {
-    const actual = await vi.importActual('@elizaos/core');
+// Mock the nexLogger
+vi.mock('@nexos/core', async () => {
+    const actual = await vi.importActual('@nexos/core');
     return {
         ...actual as any,
-        elizaLogger: {
+        nexLogger: {
             error: vi.fn()
         }
     };

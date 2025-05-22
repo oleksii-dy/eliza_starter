@@ -1,5 +1,5 @@
 {
-    "name": "@elizaos/core",
+    "name": "@nexos/core",
     "version": "0.25.9",
     "description": "",
     "type": "module",
@@ -10,7 +10,7 @@
         "./package.json": "./package.json",
         ".": {
             "import": {
-                "@elizaos/source": "./src/index.ts",
+                "@nexos/source": "./src/index.ts",
                 "types": "./dist/index.d.ts",
                 "default": "./dist/index.js"
             }

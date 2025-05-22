@@ -12,7 +12,7 @@ import {
   cleanJsonResponse as coreCleanJsonResponse,
   parseActionResponseFromText as coreParseActionResponseFromText,
   truncateToCompleteSentence as coreTruncateToCompleteSentence,
-} from '@elizaos/core';
+} from '@nexos/core';
 import type { ActionResponse } from "./types.ts";
 
 export const messageCompletionFooter = coreMessageCompletionFooter;

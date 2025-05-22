@@ -4,7 +4,7 @@ import {
   formatEvaluators as coreFormatEvaluators,
   formatEvaluatorExamples as coreFormatEvaluatorExamples,
   formatEvaluatorExampleDescriptions as coreFormatEvaluatorExampleDescriptions,
-} from '@elizaos/core';
+} from '@nexos/core';
 
 import type { ActionExample, Evaluator } from "./types.ts";
 

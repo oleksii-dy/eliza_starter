@@ -4,7 +4,7 @@ import {
   getImageModelSettings as coreGetImageModelSettings,
   getEmbeddingModelSettings as coreGetEmbeddingModelSettings,
   getEndpoint as coreGetEndpoint,
-} from '@elizaos/core';
+} from '@nexos/core';
 import {
     type EmbeddingModelSettings,
     type ImageModelSettings,

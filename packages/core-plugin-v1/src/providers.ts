@@ -1,6 +1,6 @@
 import {
   getProviders as coreGetProviders,
-} from '@elizaos/core';
+} from '@nexos/core';
 import type { IAgentRuntime, State, Memory } from "./types.ts";
 
 /**

@@ -40,13 +40,13 @@ cat << "EOF"
 *                                                                     *
 *     Add your plugin to the "dependencies" section like so:         *
 *                                                                     *
-*        "@elizaos/your-plugin-name": "workspace:*"                    *
+*        "@nexos/your-plugin-name": "workspace:*"                    *
 *                                                                     *
 *  5. Edit the 'index.ts' file in 'agent/src':                       *
 *                                                                     *
 *     a. Import your plugin:                                         *
 *                                                                     *
-*        import yourPlugin from '@elizaos/your-plugin-name';           *
+*        import yourPlugin from '@nexos/your-plugin-name';           *
 *                                                                     *
 *     b. Add your plugin to the `plugins` array:                     *
 *                                                                     *
@@ -115,7 +115,7 @@ if [ -d "./agent" ]; then
   # the initial sleep helps newer machines (ryzen 7xxx+) cycle faster
   # older machine won't need it but they will be delayed 1 sec
   # favoring newer machine for development
-  COMMANDS+=("echo 'boot elizaOS' && sleep 1 && echo 'starting nodemon' && nodemon --verbose ${WATCH_PATHS[@]} -e js,json,map --delay 2 --exec 'pnpm --dir agent dev -- $*'")
+  COMMANDS+=("echo 'boot nexOS' && sleep 1 && echo 'starting nodemon' && nodemon --verbose ${WATCH_PATHS[@]} -e js,json,map --delay 2 --exec 'pnpm --dir agent dev -- $*'")
 else
   echo "Warning: 'agent' directory not found."
 fi

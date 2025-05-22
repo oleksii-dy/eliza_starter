@@ -1,5 +1,5 @@
 {
-    "name": "@elizaos-plugins/adapter-sqlite",
+    "name": "@nexos-plugins/adapter-sqlite",
     "version": "0.25.9",
     "type": "module",
     "main": "dist/index.js",
@@ -9,7 +9,7 @@
         "./package.json": "./package.json",
         ".": {
             "import": {
-                "@elizaos/source": "./src/index.ts",
+                "@nexos/source": "./src/index.ts",
                 "types": "./dist/index.d.ts",
                 "default": "./dist/index.js"
             }
@@ -19,7 +19,7 @@
         "dist"
     ],
     "dependencies": {
-        "@elizaos/core": "workspace:*",
+        "@nexos/core": "workspace:*",
         "@types/better-sqlite3": "7.6.12",
         "better-sqlite3": "11.8.1",
         "sqlite-vec": "0.1.6",

@@ -1,7 +1,7 @@
 import fs, { glob } from "node:fs/promises";
 import path from "node:path";
 
-const characterName = "eliza";
+const characterName = "nex";
 const newCacheDir = path.resolve(`./data/${characterName}/cache`);
 
 const twitterUserName = "";

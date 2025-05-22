@@ -216,7 +216,7 @@ show_welcome() {
  EE     LL     II   ZZ     AA  AA
  EEEEEE LLLLL IIII ZZZZZZZ AA  AA
 
-Eliza is an open-source AI agent.
+Nex is an open-source AI agent.
      Created by ai16z 2024.
      
 EOF
@@ -454,7 +454,7 @@ select_character() {
                         selected_paths=""
                         first=true
                         # Save selected_names to a temp file to preserve it across the pipe
-                        echo "$selected_names" > /tmp/eliza_selected_names
+                        echo "$selected_names" > /tmp/nex_selected_names
                         while read -r name; do
                             for file in $character_paths; do
                                 base_name=$(basename "$file" .character.json)
@@ -468,8 +468,8 @@ select_character() {
                                     break
                                 fi
                             done
-                        done < /tmp/eliza_selected_names
-                        rm -f /tmp/eliza_selected_names
+                        done < /tmp/nex_selected_names
+                        rm -f /tmp/nex_selected_names
 
                         if [ -n "$selected_paths" ]; then
                             selected_character_path="$selected_paths"
@@ -487,7 +487,7 @@ select_character() {
     done
 }
 
-start_eliza() {
+start_nex() {
     # Ask about editing environment configuration first
     log_info "Would you like to configure API secrets in .env?"
     if gum confirm "Edit .env file?"; then
@@ -505,7 +505,7 @@ start_eliza() {
         return 1
     fi
     
-    log_info "Starting Eliza..."
+    log_info "Starting Nex..."
     
     # Start server with selected character(s)
     pnpm start --characters="$selected_character_path" &
@@ -514,7 +514,7 @@ start_eliza() {
     
     # Check if server started successfully
     if ! kill -0 $SERVER_PID 2>/dev/null; then
-        log_error "Failed to start Eliza server"
+        log_error "Failed to start Nex server"
         return 1
     fi
     
@@ -525,13 +525,13 @@ start_eliza() {
     
     # Check if client started successfully
     if ! kill -0 $CLIENT_PID 2>/dev/null; then
-        log_error "Failed to start Eliza client"
+        log_error "Failed to start Nex client"
         kill $SERVER_PID 2>/dev/null
         return 1
     fi
 
     # Open in browser
-    log_info "Opening Eliza in your browser..."
+    log_info "Opening Nex in your browser..."
     if command -v xdg-open >/dev/null 2>&1; then
         xdg-open "http://localhost:5173"
     elif command -v open >/dev/null 2>&1; then
@@ -540,8 +540,8 @@ start_eliza() {
         log_info "Please open http://localhost:5173 in your browser"
     fi
 
-    log_success "Eliza is now running"
-    log_info "Press Ctrl+C to stop Eliza"
+    log_success "Nex is now running"
+    log_info "Press Ctrl+C to stop Nex"
     
     # Wait for both processes
     wait $SERVER_PID $CLIENT_PID
@@ -592,7 +592,7 @@ build_and_start() {
     fi
     log_success "Project built successfully"
 
-    start_eliza
+    start_nex
 }
 
 check_existing_installation() {
@@ -618,7 +618,7 @@ check_existing_installation() {
 
                 case "$action" in
                     "Start")
-                        start_eliza
+                        start_nex
                         exit 0
                         ;;
                     "Update")
@@ -638,15 +638,15 @@ check_existing_installation() {
                             log_success "Already up to date"
                             
                             # Ask to start
-                            if gum confirm "Would you like to start Eliza now?"; then
-                                start_eliza
+                            if gum confirm "Would you like to start Nex now?"; then
+                                start_nex
                                 exit 0
                             fi
                             exit 0  # Exit instead of return if user chooses not to start
                         fi
                         
                         # If we get here, there are updates
-                        log_info "Updates available. Updating Eliza..."
+                        log_info "Updates available. Updating Nex..."
                         
                         # Pull latest changes
                         if ! git pull; then
@@ -669,8 +669,8 @@ check_existing_installation() {
                         log_success "Update completed"
                         
                         # Ask to start
-                        if gum confirm "Would you like to start Eliza now?"; then
-                            start_eliza
+                        if gum confirm "Would you like to start Nex now?"; then
+                            start_nex
                             exit 0
                         fi
                         exit 0  # Exit instead of return if user chooses not to start
@@ -774,7 +774,7 @@ main() {
     # Add the installation check here
     check_existing_installation
 
-    if ! gum confirm "Ready to install Eliza?"; then
+    if ! gum confirm "Ready to install Nex?"; then
         log_info "Installation cancelled"
         exit 0
     fi
@@ -790,7 +790,7 @@ main() {
     build_and_start
 
     # This will only be reached after Ctrl+C or error
-    log_info "Eliza has been stopped"
+    log_info "Nex has been stopped"
 }
 
 # Call main function

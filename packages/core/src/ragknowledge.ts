@@ -1,6 +1,6 @@
 import { embed } from "./embedding.ts";
 import { splitChunks } from "./generation.ts";
-import elizaLogger from "./logger.ts";
+import nexLogger from "./logger.ts";
 import {
     type IAgentRuntime,
     type IRAGKnowledgeManager,
@@ -120,7 +120,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
 
     private preprocess(content: string): string {
         if (!content || typeof content !== "string") {
-            elizaLogger.warn("Invalid input for preprocessing");
+            nexLogger.warn("Invalid input for preprocessing");
             return "";
         }
 
@@ -165,7 +165,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
         // Check proximity
         for (let i = 0; i < allPositions.length - 1; i++) {
             if (Math.abs(allPositions[i] - allPositions[i + 1]) <= 5) {
-                elizaLogger.debug("[Proximity Match]", {
+                nexLogger.debug("[Proximity Match]", {
                     terms,
                     positions: allPositions,
                     matchFound: `${allPositions[i]} - ${allPositions[i + 1]}`
@@ -288,7 +288,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
 
     async createKnowledge(item: RAGKnowledgeItem): Promise<void> {
         if (!item.content.text) {
-            elizaLogger.warn("Empty content in knowledge item");
+            nexLogger.warn("Empty content in knowledge item");
             return;
         }
 
@@ -342,7 +342,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                 });
             }
         } catch (error) {
-            elizaLogger.error(`Error processing knowledge ${item.id}:`, error);
+            nexLogger.error(`Error processing knowledge ${item.id}:`, error);
             throw error;
         }
     }
@@ -393,7 +393,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
      * @returns Array of RAGKnowledgeItem entries
      */
     async listAllKnowledge(agentId: UUID): Promise<RAGKnowledgeItem[]> {
-        elizaLogger.debug(
+        nexLogger.debug(
             `[Knowledge List] Fetching all entries for agent: ${agentId}`
         );
 
@@ -403,12 +403,12 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                 agentId: agentId,
             });
 
-            elizaLogger.debug(
+            nexLogger.debug(
                 `[Knowledge List] Found ${results.length} entries`
             );
             return results;
         } catch (error) {
-            elizaLogger.error(
+            nexLogger.error(
                 "[Knowledge List] Error fetching knowledge entries:",
                 error
             );
@@ -418,12 +418,12 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
 
     async cleanupDeletedKnowledgeFiles() {
         try {
-            elizaLogger.debug(
+            nexLogger.debug(
                 "[Cleanup] Starting knowledge cleanup process, agent: ",
                 this.runtime.agentId
             );
 
-            elizaLogger.debug(
+            nexLogger.debug(
                 `[Cleanup] Knowledge root path: ${this.knowledgeRoot}`
             );
 
@@ -436,7 +436,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                     !item.id.includes("chunk") && item.content.metadata?.source // Must have a source path
             );
 
-            elizaLogger.debug(
+            nexLogger.debug(
                 `[Cleanup] Found ${parentDocuments.length} parent documents to check`
             );
 
@@ -444,17 +444,17 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                 const relativePath = item.content.metadata?.source;
                 const filePath = join(this.knowledgeRoot, relativePath);
 
-                elizaLogger.debug(
+                nexLogger.debug(
                     `[Cleanup] Checking joined file path: ${filePath}`
                 );
 
                 if (!existsSync(filePath)) {
-                    elizaLogger.warn(
+                    nexLogger.warn(
                         `[Cleanup] File not found, starting removal process: ${filePath}`
                     );
 
                     const idToRemove = item.id;
-                    elizaLogger.debug(
+                    nexLogger.debug(
                         `[Cleanup] Using ID for removal: ${idToRemove}`
                     );
 
@@ -471,11 +471,11 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                         //     keyPattern: baseCacheKeyWithWildcard,
                         // });
 
-                        elizaLogger.success(
+                        nexLogger.success(
                             `[Cleanup] Successfully removed knowledge for file: ${filePath}`
                         );
                     } catch (deleteError) {
-                        elizaLogger.error(
+                        nexLogger.error(
                             `[Cleanup] Error during deletion process for ${filePath}:`,
                             deleteError instanceof Error
                                 ? {
@@ -489,9 +489,9 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                 }
             }
 
-            elizaLogger.debug("[Cleanup] Finished knowledge cleanup process");
+            nexLogger.debug("[Cleanup] Finished knowledge cleanup process");
         } catch (error) {
-            elizaLogger.error(
+            nexLogger.error(
                 "[Cleanup] Error cleaning up deleted knowledge files:",
                 error
             );
@@ -513,7 +513,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
     }): Promise<void> {
         const timeMarker = (label: string) => {
             const time = (Date.now() - startTime) / 1000;
-            elizaLogger.info(`[Timing] ${label}: ${time.toFixed(2)}s`);
+            nexLogger.info(`[Timing] ${label}: ${time.toFixed(2)}s`);
         };
 
         const startTime = Date.now();
@@ -521,7 +521,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
 
         try {
             const fileSizeKB = new TextEncoder().encode(content).length / 1024;
-            elizaLogger.info(
+            nexLogger.info(
                 `[File Progress] Starting ${file.path} (${fileSizeKB.toFixed(2)} KB)`
             );
 
@@ -564,7 +564,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
             // Step 4: Generate chunks
             const chunks = await splitChunks(processedContent, 512, 20);
             const totalChunks = chunks.length;
-            elizaLogger.info(`Generated ${totalChunks} chunks`);
+            nexLogger.info(`Generated ${totalChunks} chunks`);
             timeMarker("Chunk generation");
 
             // Step 5: Process chunks with larger batches
@@ -613,13 +613,13 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
 
                 processedChunks += batch.length;
                 const batchTime = (Date.now() - batchStart) / 1000;
-                elizaLogger.info(
+                nexLogger.info(
                     `[Batch Progress] ${file.path}: Processed ${processedChunks}/${totalChunks} chunks (${batchTime.toFixed(2)}s for batch)`
                 );
             }
 
             const totalTime = (Date.now() - startTime) / 1000;
-            elizaLogger.info(
+            nexLogger.info(
                 `[Complete] Processed ${file.path} in ${totalTime.toFixed(2)}s`
             );
         } catch (error) {
@@ -627,12 +627,12 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                 file.isShared &&
                 error?.code === "SQLITE_CONSTRAINT_PRIMARYKEY"
             ) {
-                elizaLogger.info(
+                nexLogger.info(
                     `Shared knowledge ${file.path} already exists in database, skipping creation`
                 );
                 return;
             }
-            elizaLogger.error(`Error processing file ${file.path}:`, error);
+            nexLogger.error(`Error processing file ${file.path}:`, error);
             throw error;
         }
     }

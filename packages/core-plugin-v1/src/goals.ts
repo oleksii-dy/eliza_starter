@@ -3,7 +3,7 @@ import {
   formatGoalsAsString as coreFormatGoalsAsString,
   updateGoal as coreUpdateGoal,
   createGoal as coreCreateGoal,
-} from '@elizaos/core';
+} from '@nexos/core';
 
 import type {
     IAgentRuntime,

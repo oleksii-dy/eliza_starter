@@ -13,13 +13,13 @@ const { buildPluginFromDir, migratePlugin } = require('./lib.migrate')
 
 const pluginPkgPath = (pluginRepo) => {
   const parts = pluginRepo.split('/')
-  const elizaOSroot = pathUtil.resolve(__dirname, '../..')
-  const pkgPath = elizaOSroot + '/packages/' + parts[1]
+  const nexOSroot = pathUtil.resolve(__dirname, '../..')
+  const pkgPath = nexOSroot + '/packages/' + parts[1]
   return pkgPath
 }
 
-const packagedPlugins = ['cli', '@elizaos/client-direct', '@elizaos/core',
-  '@elizaos/core-plugin-v1', 'dynamic-imports', '@elizaos/plugin-bootstrap']
+const packagedPlugins = ['cli', '@nexos/client-direct', '@nexos/core',
+  '@nexos/core-plugin-v1', 'dynamic-imports', '@nexos/plugin-bootstrap']
 
 const getInstalledPackages = (baseDir) => {
   const dirs = fs.readdirSync(baseDir, { withFileTypes: true })
@@ -41,20 +41,20 @@ const getInstalledPackages = (baseDir) => {
 }
 
 program
-  .name('elizaos')
-  .description('elizaOS CLI - Manage your plugins')
+  .name('nexos')
+  .description('nexOS CLI - Manage your plugins')
   .version(version);
 
 const pluginsCmd = new Command()
   .name('plugins')
-  .description('manage elizaOS plugins')
+  .description('manage nexOS plugins')
 
 let metadata = {}
 
 async function getPlugins() {
-  const resp = await fetch('https://raw.githubusercontent.com/elizaos-plugins/registry/refs/heads/main/index.json')
+  const resp = await fetch('https://raw.githubusercontent.com/nexos-plugins/registry/refs/heads/main/index.json')
   const mostlyJson = await resp.text();
-  //const resp = await axios.get('https://raw.githubusercontent.com/elizaos-plugins/registry/refs/heads/main/index.json')
+  //const resp = await axios.get('https://raw.githubusercontent.com/nexos-plugins/registry/refs/heads/main/index.json')
   //const object = resp.data
   const jsonLike = []
   for(const l of mostlyJson.split('\n')) {
@@ -99,8 +99,8 @@ pluginsCmd
         .filter(name => !opts.type || name.includes(opts.type))
         .sort()
 
-      const elizaOSroot = pathUtil.resolve(__dirname, '../..')
-      const installled = getInstalledPackages(elizaOSroot + '/packages')
+      const nexOSroot = pathUtil.resolve(__dirname, '../..')
+      const installled = getInstalledPackages(nexOSroot + '/packages')
       const installedPlugins = installled.filter(p => !packagedPlugins.includes(p))
       //console.log('installled', installled)
 
@@ -140,11 +140,11 @@ pluginsCmd
     const nameParts = plugin.split('/', 2)
     const namePart = nameParts[1]
     const pluginName = plugin
-    const elizaOSroot = pathUtil.resolve(__dirname, '../..')
+    const nexOSroot = pathUtil.resolve(__dirname, '../..')
 
     let repo = ''
     if (namePart === 'plugin-trustdb') {
-      repo = 'elizaos-plugins/plugin-trustdb'
+      repo = 'nexos-plugins/plugin-trustdb'
     } else {
       const repoData = plugins[pluginName]?.split(':')
       if (!repoData) {
@@ -158,7 +158,7 @@ pluginsCmd
       }
       repo = repoData[1]
     }
-    const pkgPath = elizaOSroot + '/packages/' + namePart
+    const pkgPath = nexOSroot + '/packages/' + namePart
 
     // add to packages
     if (!fs.existsSync(pkgPath + '/package.json')) {
@@ -207,12 +207,12 @@ pluginsCmd
     const updateDependencies = (deps) => {
       if (!deps) return false
       let changed = false
-      const okPackages = ['@elizaos/client-direct', '@elizaos/core', '@elizaos/core-plugin-v1', '@elizaos/plugin-bootstrap']
+      const okPackages = ['@nexos/client-direct', '@nexos/core', '@nexos/core-plugin-v1', '@nexos/plugin-bootstrap']
       for (const dep in deps) {
         if (okPackages.indexOf(dep) !== -1) continue // skip these, they're fine
         // do we want/need to perserve local packages like core?
-        if (dep.startsWith("@elizaos/")) {
-          const newDep = dep.replace("@elizaos/", "@elizaos-plugins/")
+        if (dep.startsWith("@nexos/")) {
+          const newDep = dep.replace("@nexos/", "@nexos-plugins/")
           deps[newDep] = deps[dep]
           delete deps[dep]
           changed = true
@@ -221,7 +221,7 @@ pluginsCmd
       return changed
     }
 
-    // normalize @elizaos => @elizaos-plugins
+    // normalize @nexos => @nexos-plugins
     if (updateDependencies(packageJson.dependencies)) {
       console.log('updating plugin\'s package.json to not use @elizos/ for dependencies')
       fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n")
@@ -230,13 +230,13 @@ pluginsCmd
     */
     const swapCoreDependencies = (deps) => {
       console.log('Ensuring plugin\'s core dependencies')
-      delete deps['@elizaos/core']
-      deps['@elizaos/core-plugin-v1'] = 'workspace:*'
+      delete deps['@nexos/core']
+      deps['@nexos/core-plugin-v1'] = 'workspace:*'
       fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n")
     }
     swapCoreDependencies(packageJson.dependencies)
 
-    const installled = getInstalledPackages(elizaOSroot + '/packages')
+    const installled = getInstalledPackages(nexOSroot + '/packages')
     const installedPlugins = installled.filter(p => !packagedPlugins.includes(p))
 
     //console.log('packageJson', packageJson.dependencies)
@@ -248,7 +248,7 @@ pluginsCmd
           // install from registry
           console.log('attempting installation of dependency', d)
           try {
-            const pluginAddDepOutput = execSync('npx elizaos plugins add ' + d, { cwd: elizaOSroot, stdio: 'pipe' }).toString().trim();
+            const pluginAddDepOutput = execSync('npx nexos plugins add ' + d, { cwd: nexOSroot, stdio: 'pipe' }).toString().trim();
             //console.log('pluginAddDepOutput', pluginAddDepOutput)
           } catch (e) {
             console.error('pluginAddDepOutput error', e)
@@ -260,19 +260,19 @@ pluginsCmd
     }
 
     // add core to plugin
-    // # pnpm add @elizaos/core@workspace:* --filter ./packages/client-twitter
+    // # pnpm add @nexos/core@workspace:* --filter ./packages/client-twitter
 
     // ok this can be an issue if it's referencing a plugin it couldn't be
-    console.log('Making sure plugin has access to @elizaos/core-plugin-v1')
+    console.log('Making sure plugin has access to @nexos/core-plugin-v1')
     try {
-      const pluginAddCoreOutput = execSync('pnpm add @elizaos/core-plugin-v1@workspace:* --filter ./packages/' + plugin, { cwd: elizaOSroot, stdio: 'pipe' }).toString().trim();
+      const pluginAddCoreOutput = execSync('pnpm add @nexos/core-plugin-v1@workspace:* --filter ./packages/' + plugin, { cwd: nexOSroot, stdio: 'pipe' }).toString().trim();
     } catch(e) {
       console.error('pluginAddCoreOutput error', e)
     }
 
     // is this needed? if we want it to be assumed and hard coded but might not work with npm
-    if (packageJson.name !== '@elizaos-plugins/' + namePart) {
-      packageJson.name = '@elizaos-plugins/' + namePart
+    if (packageJson.name !== '@nexos-plugins/' + namePart) {
+      packageJson.name = '@nexos-plugins/' + namePart
       console.log('Updating plugins package.json name to', packageJson.name)
       fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
     }
@@ -282,9 +282,9 @@ pluginsCmd
     migratePlugin(pluginObj)
 
     // ensure we have all needed NPMs
-    console.log('installing NPMs', elizaOSroot)
+    console.log('installing NPMs', nexOSroot)
     try {
-      const projectInstallOutput = execSync('pnpm i --no-frozen-lockfile', { cwd: elizaOSroot, stdio: 'pipe' }).toString().trim();
+      const projectInstallOutput = execSync('pnpm i --no-frozen-lockfile', { cwd: nexOSroot, stdio: 'pipe' }).toString().trim();
       //console.log('projectInstallOutput', projectInstallOutput)
     } catch (e) {
       console.error('projectInstallOutput error', e)
@@ -301,13 +301,13 @@ pluginsCmd
     }
 
     // add to agent
-    const agentPackageJsonPath = elizaOSroot + '/agent/package.json'
+    const agentPackageJsonPath = nexOSroot + '/agent/package.json'
     const agentPackageJson = JSON.parse(fs.readFileSync(agentPackageJsonPath, 'utf-8'));
     //console.log('agentPackageJson', agentPackageJson.dependencies[pluginName])
     if (!agentPackageJson.dependencies[pluginName]) {
       console.log('Adding plugin', plugin, 'to agent/package.json')
       try {
-        const pluginAddAgentOutput = execSync('pnpm add ' + pluginName + '@workspace:* --filter ./agent', { cwd: elizaOSroot, stdio: 'pipe' }).toString().trim();
+        const pluginAddAgentOutput = execSync('pnpm add ' + pluginName + '@workspace:* --filter ./agent', { cwd: nexOSroot, stdio: 'pipe' }).toString().trim();
         //console.log('pluginAddAgentOutput', pluginAddAgentOutput)
       } catch (e) {
         console.error('error', e)
@@ -332,13 +332,13 @@ pluginsCmd
     const nameParts = plugin.split('/', 2)
     const namePart = nameParts[1]
     const pluginName = plugin
-    const elizaOSroot = pathUtil.resolve(__dirname, '../..')
-    const pkgPath = elizaOSroot + '/packages/' + namePart
+    const nexOSroot = pathUtil.resolve(__dirname, '../..')
+    const pkgPath = nexOSroot + '/packages/' + namePart
     const plugins = await getPlugins()
 
     let repo = ''
     if (namePart === 'plugin-trustdb') {
-      repo = 'elizaos-plugins/plugin-trustdb'
+      repo = 'nexos-plugins/plugin-trustdb'
     } else {
       const repoData = plugins[pluginName]?.split(':')
       if (!repoData) {
@@ -352,7 +352,7 @@ pluginsCmd
     // remove from agent: pnpm remove some-plugin --filter ./agent
     try {
       console.log('Removing', pluginName, 'from agent')
-      const pluginRemoveAgentOutput = execSync('pnpm remove ' + pluginName + ' --filter ./agent', { cwd: elizaOSroot, stdio: 'pipe' }).toString().trim();
+      const pluginRemoveAgentOutput = execSync('pnpm remove ' + pluginName + ' --filter ./agent', { cwd: nexOSroot, stdio: 'pipe' }).toString().trim();
     } catch (e) {
       console.error('removal from agent, error', e)
     }

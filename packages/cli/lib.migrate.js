@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const OLD_IMPORT = '@elizaos/core';
-const NEW_IMPORT = '@elizaos/core-plugin-v1';
+const OLD_IMPORT = '@nexos/core';
+const NEW_IMPORT = '@nexos/core-plugin-v1';
 
 function escapeRegex(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -40,7 +40,7 @@ function findImportOccurrences(dir, searchTerm) {
 }
 
 function buildPluginFromDir(pluginDir) {
-  const corePath = path.join(pluginDir, 'node_modules', '@elizaos', 'core');
+  const corePath = path.join(pluginDir, 'node_modules', '@nexos', 'core');
 
   let references
   try {
@@ -90,8 +90,8 @@ function migratePlugin(plugin) {
       try {
         const content = fs.readFileSync(file, 'utf-8');
 
-        // Use a regex that will only match the exact string @elizaos/core
-        // This prevents double replacements (@elizaos/core-plugin-v1-plugin-v1)
+        // Use a regex that will only match the exact string @nexos/core
+        // This prevents double replacements (@nexos/core-plugin-v1-plugin-v1)
         // Using word boundary \b to ensure we don't replace partial matches
         // if (content.includes(OLD_IMPORT) && !content.includes(NEW_IMPORT)) {
         const escapedOldImport = escapeRegex(OLD_IMPORT);
@@ -163,7 +163,7 @@ function migratePlugin(plugin) {
   // 4. Print a message about node_modules if needed
   if (plugin.hasNodeModulesCore) {
     results.nodeModules = true;
-    console.log(`  Found @elizaos/core in node_modules - will need to reinstall dependencies`);
+    console.log(`  Found @nexos/core in node_modules - will need to reinstall dependencies`);
   }
 
   // Summary for this plugin

@@ -1,10 +1,10 @@
 import {
     SqliteDatabaseAdapter,
     loadVecExtensions,
-} from "@elizaos/adapter-sqlite";
-import { SqlJsDatabaseAdapter } from "@elizaos/adapter-sqljs";
-import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
-import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
+} from "@nexos/adapter-sqlite";
+import { SqlJsDatabaseAdapter } from "@nexos/adapter-sqljs";
+import { SupabaseDatabaseAdapter } from "@nexos/adapter-supabase";
+import { PGLiteDatabaseAdapter } from "@nexos/adapter-pglite";
 import type { DatabaseAdapter } from "../database.ts";
 import { getEndpoint } from "../models.ts";
 import { AgentRuntime } from "../runtime.ts";

@@ -47,11 +47,11 @@ from utils.reporting import BiomeReportGenerator
 
 # Initialize rich console
 console = Console()
-app = typer.Typer(help="ElizaOS Plugin Bug Hunter CLI")
+app = typer.Typer(help="NexOS Plugin Bug Hunter CLI")
 checkpoint_manager = CheckpointManager()
 
 class PluginAnalyzerApp(App):
-    """A Textual app for analyzing ElizaOS plugins."""
+    """A Textual app for analyzing NexOS plugins."""
 
     BINDINGS = [
         Binding("q", "quit", "Quit", show=True),
@@ -64,7 +64,7 @@ class PluginAnalyzerApp(App):
         """Create child widgets for the app."""
         yield Header()
         yield Container(
-            Static("Welcome to ElizaOS Plugin Bug Hunter", classes="title"),
+            Static("Welcome to NexOS Plugin Bug Hunter", classes="title"),
             Button("Start New Analysis", variant="primary", id="start"),
             Button("Resume Previous Session", variant="default", id="resume"),
             Button("View Analysis Reports", variant="default", id="reports"),

@@ -10,7 +10,7 @@ import {
     getGoals,
     generateText,
     composeContext,
-} from "@elizaos/core-plugin-v1";
+} from "@nexos/core-plugin-v1";
 
 const goalsTemplate = `TASK: Update Goal
 Analyze the conversation and update the status of the goals based on the new information provided.

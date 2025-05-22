@@ -16,7 +16,7 @@ import {
 } from "./evaluators.ts";
 import { generateText } from "./generation.ts";
 import { formatGoalsAsString, getGoals } from "./goals.ts";
-import { elizaLogger } from "./index.ts";
+import { nexLogger } from "./index.ts";
 import knowledge from "./knowledge.ts";
 import { MemoryManager } from "./memory.ts";
 import { formatActors, formatMessages, getActorDetails } from "./messages.ts";
@@ -186,7 +186,7 @@ export class AgentRuntime implements IAgentRuntime {
         }
 
         if (this.memoryManagers.has(manager.tableName)) {
-            elizaLogger.warn(
+            nexLogger.warn(
                 `Memory manager ${manager.tableName} is already registered. Skipping registration.`,
             );
             return;
@@ -202,7 +202,7 @@ export class AgentRuntime implements IAgentRuntime {
     getService<T extends Service>(service: ServiceType): T | null {
         const serviceInstance = this.services.get(service);
         if (!serviceInstance) {
-            elizaLogger.error(`Service ${service} not found`);
+            nexLogger.error(`Service ${service} not found`);
             return null;
         }
         return serviceInstance as T;
@@ -210,10 +210,10 @@ export class AgentRuntime implements IAgentRuntime {
 
     async registerService(service: Service): Promise<void> {
         const serviceType = service.serviceType;
-        elizaLogger.log(`${this.character.name}(${this.agentId}) - Registering service:`, serviceType);
+        nexLogger.log(`${this.character.name}(${this.agentId}) - Registering service:`, serviceType);
 
         if (this.services.has(serviceType)) {
-            elizaLogger.warn(
+            nexLogger.warn(
                 `${this.character.name}(${this.agentId}) - Service ${serviceType} is already registered. Skipping registration.`
             );
             return;
@@ -221,7 +221,7 @@ export class AgentRuntime implements IAgentRuntime {
 
         // Add the service to the services map
         this.services.set(serviceType, service);
-        elizaLogger.success(`${this.character.name}(${this.agentId}) - Service ${serviceType} registered successfully`);
+        nexLogger.success(`${this.character.name}(${this.agentId}) - Service ${serviceType} registered successfully`);
     }
 
     /**
@@ -274,13 +274,13 @@ export class AgentRuntime implements IAgentRuntime {
             throw new Error("Character input is required");
         }
 
-        elizaLogger.info(`${this.character.name}(${this.agentId}) - Initializing AgentRuntime with options:`, {
+        nexLogger.info(`${this.character.name}(${this.agentId}) - Initializing AgentRuntime with options:`, {
             character: opts.character?.name,
             modelProvider: opts.modelProvider,
             characterModelProvider: opts.character?.modelProvider,
         });
 
-        elizaLogger.debug(
+        nexLogger.debug(
             `[AgentRuntime] Process working directory: ${process.cwd()}`,
         );
 
@@ -292,7 +292,7 @@ export class AgentRuntime implements IAgentRuntime {
             "knowledge",
         );
 
-        elizaLogger.debug(
+        nexLogger.debug(
             `[AgentRuntime] Process knowledgeRoot: ${this.knowledgeRoot}`,
         );
 
@@ -301,7 +301,7 @@ export class AgentRuntime implements IAgentRuntime {
 
         this.databaseAdapter = opts.databaseAdapter;
 
-        elizaLogger.success(`Agent ID: ${this.agentId}`);
+        nexLogger.success(`Agent ID: ${this.agentId}`);
 
         this.fetch = (opts.fetch as typeof fetch) ?? this.fetch;
 
@@ -348,7 +348,7 @@ export class AgentRuntime implements IAgentRuntime {
 
         this.serverUrl = opts.serverUrl ?? this.serverUrl;
 
-        elizaLogger.info(`${this.character.name}(${this.agentId}) - Setting Model Provider:`, {
+        nexLogger.info(`${this.character.name}(${this.agentId}) - Setting Model Provider:`, {
             characterModelProvider: this.character.modelProvider,
             optsModelProvider: opts.modelProvider,
             currentModelProvider: this.modelProvider,
@@ -369,25 +369,25 @@ export class AgentRuntime implements IAgentRuntime {
         this.imageVisionModelProvider =
             this.character.imageVisionModelProvider ?? this.modelProvider;
 
-        elizaLogger.info(
+        nexLogger.info(
           `${this.character.name}(${this.agentId}) - Selected model provider:`,
           this.modelProvider
         );
 
-        elizaLogger.info(
+        nexLogger.info(
           `${this.character.name}(${this.agentId}) - Selected image model provider:`,
           this.imageModelProvider
         );
 
-        elizaLogger.info(
+        nexLogger.info(
             `${this.character.name}(${this.agentId}) - Selected image vision model provider:`,
             this.imageVisionModelProvider
         );
 
         // Validate model provider
         if (!Object.values(ModelProviderName).includes(this.modelProvider)) {
-            elizaLogger.error("Invalid model provider:", this.modelProvider);
-            elizaLogger.error(
+            nexLogger.error("Invalid model provider:", this.modelProvider);
+            nexLogger.error(
                 "Available providers:",
                 Object.values(ModelProviderName),
             );
@@ -395,7 +395,7 @@ export class AgentRuntime implements IAgentRuntime {
         }
 
         if (!this.serverUrl) {
-            elizaLogger.warn("No serverUrl provided, defaulting to localhost");
+            nexLogger.warn("No serverUrl provided, defaulting to localhost");
         }
 
         this.token = opts.token;
@@ -463,11 +463,11 @@ export class AgentRuntime implements IAgentRuntime {
             try {
                 await service.initialize(this);
                 this.services.set(serviceType, service);
-                elizaLogger.success(
+                nexLogger.success(
                     `${this.character.name}(${this.agentId}) - Service ${serviceType} initialized successfully`
                 );
             } catch (error) {
-                elizaLogger.error(
+                nexLogger.error(
                     `${this.character.name}(${this.agentId}) - Failed to initialize service ${serviceType}:`,
                     error
                 );
@@ -490,10 +490,10 @@ export class AgentRuntime implements IAgentRuntime {
             this.character.knowledge &&
             this.character.knowledge.length > 0
         ) {
-            elizaLogger.info(
+            nexLogger.info(
                 `[RAG Check] RAG Knowledge enabled: ${this.character.settings.ragKnowledge ? true : false}`,
             );
-            elizaLogger.debug(
+            nexLogger.debug(
                 `[RAG Check] Knowledge items:`,
                 this.character.knowledge,
             );
@@ -505,18 +505,18 @@ export class AgentRuntime implements IAgentRuntime {
                         (acc, item) => {
                             if (typeof item === "object") {
                                 if (isDirectoryItem(item)) {
-                                    elizaLogger.debug(
+                                    nexLogger.debug(
                                         `[RAG Filter] Found directory item: ${JSON.stringify(item)}`,
                                     );
                                     acc[0].push(item);
                                 } else if ("path" in item) {
-                                    elizaLogger.debug(
+                                    nexLogger.debug(
                                         `[RAG Filter] Found path item: ${JSON.stringify(item)}`,
                                     );
                                     acc[1].push(item);
                                 }
                             } else if (typeof item === "string") {
-                                elizaLogger.debug(
+                                nexLogger.debug(
                                     `[RAG Filter] Found string item: ${item.slice(0, 100)}...`,
                                 );
                                 acc[2].push(item);
@@ -530,17 +530,17 @@ export class AgentRuntime implements IAgentRuntime {
                         ],
                     );
 
-                elizaLogger.info(
+                nexLogger.info(
                     `[RAG Summary] Found ${directoryKnowledge.length} directories, ${pathKnowledge.length} paths, and ${stringKnowledge.length} strings`,
                 );
 
                 // Process each type of knowledge
                 if (directoryKnowledge.length > 0) {
-                    elizaLogger.info(
+                    nexLogger.info(
                         `[RAG Process] Processing directory knowledge sources:`,
                     );
                     for (const dir of directoryKnowledge) {
-                        elizaLogger.info(
+                        nexLogger.info(
                             `  - Directory: ${dir.directory} (shared: ${!!dir.shared})`,
                         );
                         await this.processCharacterRAGDirectory(dir);
@@ -548,14 +548,14 @@ export class AgentRuntime implements IAgentRuntime {
                 }
 
                 if (pathKnowledge.length > 0) {
-                    elizaLogger.info(
+                    nexLogger.info(
                         `[RAG Process] Processing individual file knowledge sources`,
                     );
                     await this.processCharacterRAGKnowledge(pathKnowledge);
                 }
 
                 if (stringKnowledge.length > 0) {
-                    elizaLogger.info(
+                    nexLogger.info(
                         `[RAG Process] Processing direct string knowledge`,
                     );
                     await this.processCharacterRAGKnowledge(stringKnowledge);
@@ -569,16 +569,16 @@ export class AgentRuntime implements IAgentRuntime {
             }
 
             // After all new knowledge is processed, clean up any deleted files
-            elizaLogger.info(
+            nexLogger.info(
                 `[RAG Cleanup] Starting cleanup of deleted knowledge files`,
             );
             await this.ragKnowledgeManager.cleanupDeletedKnowledgeFiles();
-            elizaLogger.info(`[RAG Cleanup] Cleanup complete`);
+            nexLogger.info(`[RAG Cleanup] Cleanup complete`);
         }
     }
 
     async stop() {
-        elizaLogger.debug("runtime::stop - character", this.character.name);
+        nexLogger.debug("runtime::stop - character", this.character.name);
         // stop services, they don't have a stop function
         // just initialize
 
@@ -588,7 +588,7 @@ export class AgentRuntime implements IAgentRuntime {
 
         // client have a start
         for (const c of this.clients) {
-            elizaLogger.log(
+            nexLogger.log(
                 "runtime::stop - requesting",
                 c,
                 "client stop for",
@@ -617,7 +617,7 @@ export class AgentRuntime implements IAgentRuntime {
           }
         }
         if (!toAdd.length) return;
-        elizaLogger.info('discovered ' + toAdd.length + ' new knowledge items')
+        nexLogger.info('discovered ' + toAdd.length + ' new knowledge items')
         const chunkSize = 512;
         const ps = [];
         for (const a of toAdd) {
@@ -626,7 +626,7 @@ export class AgentRuntime implements IAgentRuntime {
 
             if (item.length > chunkSize) {
               // these are just slower
-              elizaLogger.info(
+              nexLogger.info(
                   this.character.name,
                   " knowledge item over 512 characters, splitting - ",
                   item.slice(0, 100),
@@ -642,7 +642,7 @@ export class AgentRuntime implements IAgentRuntime {
         }
         // wait for it all to be added
         await Promise.all(ps);
-        elizaLogger.success(this.character.name, 'knowledge is synchronized');
+        nexLogger.success(this.character.name, 'knowledge is synchronized');
     }
 
     /**
@@ -690,7 +690,7 @@ export class AgentRuntime implements IAgentRuntime {
                     try {
                         const filePath = join(this.knowledgeRoot, contentItem);
                         // Get existing knowledge first with more detailed logging
-                        elizaLogger.debug("[RAG Query]", {
+                        nexLogger.debug("[RAG Query]", {
                             knowledgeId,
                             agentId: this.agentId,
                             relativePath: contentItem,
@@ -706,7 +706,7 @@ export class AgentRuntime implements IAgentRuntime {
                                 agentId: this.agentId, // Keep agentId as it's used in OR query
                             });
 
-                        elizaLogger.debug("[RAG Query Result]", {
+                        nexLogger.debug("[RAG Query Result]", {
                             relativePath: contentItem,
                             fullPath: filePath,
                             knowledgeId,
@@ -743,7 +743,7 @@ export class AgentRuntime implements IAgentRuntime {
                             const existingContent =
                                 existingKnowledge[0].content.text;
 
-                            elizaLogger.debug("[RAG Compare]", {
+                            nexLogger.debug("[RAG Compare]", {
                                 path: contentItem,
                                 knowledgeId,
                                 isShared,
@@ -758,14 +758,14 @@ export class AgentRuntime implements IAgentRuntime {
                             });
 
                             if (existingContent === content) {
-                                elizaLogger.info(
+                                nexLogger.info(
                                     `${isShared ? "Shared knowledge" : "Knowledge"} ${contentItem} unchanged, skipping`,
                                 );
                                 continue;
                             }
 
                             // Content changed, remove old knowledge before adding new
-                            elizaLogger.info(
+                            nexLogger.info(
                                 `${isShared ? "Shared knowledge" : "Knowledge"} ${contentItem} changed, updating...`,
                             );
                             await this.ragKnowledgeManager.removeKnowledge(
@@ -776,7 +776,7 @@ export class AgentRuntime implements IAgentRuntime {
                             );
                         }
 
-                        elizaLogger.info(
+                        nexLogger.info(
                             `Processing ${fileExtension.toUpperCase()} file content for`,
                             this.character.name,
                             "-",
@@ -791,7 +791,7 @@ export class AgentRuntime implements IAgentRuntime {
                         });
                     } catch (error: any) {
                         hasError = true;
-                        elizaLogger.error(
+                        nexLogger.error(
                             `Failed to read knowledge file ${contentItem}. Error details:`,
                             error?.message || error || "Unknown error",
                         );
@@ -799,7 +799,7 @@ export class AgentRuntime implements IAgentRuntime {
                     }
                 } else {
                     // Handle direct knowledge string
-                    elizaLogger.info(
+                    nexLogger.info(
                         "Processing direct knowledge for",
                         this.character.name,
                         "-",
@@ -813,7 +813,7 @@ export class AgentRuntime implements IAgentRuntime {
                         });
 
                     if (existingKnowledge.length > 0) {
-                        elizaLogger.info(
+                        nexLogger.info(
                             `Direct knowledge ${knowledgeId} already exists, skipping`,
                         );
                         continue;
@@ -832,7 +832,7 @@ export class AgentRuntime implements IAgentRuntime {
                 }
             } catch (error: any) {
                 hasError = true;
-                elizaLogger.error(
+                nexLogger.error(
                     `Error processing knowledge item ${item}:`,
                     error?.message || error || "Unknown error",
                 );
@@ -841,7 +841,7 @@ export class AgentRuntime implements IAgentRuntime {
         }
 
         if (hasError) {
-            elizaLogger.warn(
+            nexLogger.warn(
                 "Some knowledge items failed to process, but continuing with available knowledge",
             );
         }
@@ -856,7 +856,7 @@ export class AgentRuntime implements IAgentRuntime {
         shared?: boolean;
     }) {
         if (!dirConfig.directory) {
-            elizaLogger.error("[RAG Directory] No directory specified");
+            nexLogger.error("[RAG Directory] No directory specified");
             return;
         }
 
@@ -868,13 +868,13 @@ export class AgentRuntime implements IAgentRuntime {
             // Check if directory exists
             const dirExists = existsSync(dirPath);
             if (!dirExists) {
-                elizaLogger.error(
+                nexLogger.error(
                     `[RAG Directory] Directory does not exist: ${sanitizedDir}`,
                 );
                 return;
             }
 
-            elizaLogger.debug(`[RAG Directory] Searching in: ${dirPath}`);
+            nexLogger.debug(`[RAG Directory] Searching in: ${dirPath}`);
             // Use glob to find all matching files in directory
             const files = await glob("**/*.{md,txt,pdf}", {
                 cwd: dirPath,
@@ -883,13 +883,13 @@ export class AgentRuntime implements IAgentRuntime {
             });
 
             if (files.length === 0) {
-                elizaLogger.warn(
+                nexLogger.warn(
                     `No matching files found in directory: ${dirConfig.directory}`,
                 );
                 return;
             }
 
-            elizaLogger.info(
+            nexLogger.info(
                 `[RAG Directory] Found ${files.length} files in ${dirConfig.directory}`,
             );
 
@@ -903,7 +903,7 @@ export class AgentRuntime implements IAgentRuntime {
                         try {
                             const relativePath = join(sanitizedDir, file);
 
-                            elizaLogger.debug(
+                            nexLogger.debug(
                                 `[RAG Directory] Processing file ${i + 1}/${files.length}:`,
                                 {
                                     file,
@@ -919,7 +919,7 @@ export class AgentRuntime implements IAgentRuntime {
                                 },
                             ]);
                         } catch (error) {
-                            elizaLogger.error(
+                            nexLogger.error(
                                 `[RAG Directory] Failed to process file: ${file}`,
                                 error instanceof Error
                                     ? {
@@ -933,16 +933,16 @@ export class AgentRuntime implements IAgentRuntime {
                     }),
                 );
 
-                elizaLogger.debug(
+                nexLogger.debug(
                     `[RAG Directory] Completed batch ${Math.min(i + BATCH_SIZE, files.length)}/${files.length} files`,
                 );
             }
 
-            elizaLogger.success(
+            nexLogger.success(
                 `[RAG Directory] Successfully processed directory: ${sanitizedDir}`,
             );
         } catch (error) {
-            elizaLogger.error(
+            nexLogger.error(
                 `[RAG Directory] Failed to process directory: ${sanitizedDir}`,
                 error instanceof Error
                     ? {
@@ -987,7 +987,7 @@ export class AgentRuntime implements IAgentRuntime {
      * @param action The action to register.
      */
     registerAction(action: Action) {
-        elizaLogger.success(`${this.character.name}(${this.agentId}) - Registering action: ${action.name}`);
+        nexLogger.success(`${this.character.name}(${this.agentId}) - Registering action: ${action.name}`);
         this.actions.push(action);
     }
 
@@ -1028,7 +1028,7 @@ export class AgentRuntime implements IAgentRuntime {
     ): Promise<void> {
         for (const response of responses) {
             if (!response.content?.action) {
-                elizaLogger.warn("No action found in the response content.");
+                nexLogger.warn("No action found in the response content.");
                 continue;
             }
 
@@ -1036,7 +1036,7 @@ export class AgentRuntime implements IAgentRuntime {
                 .toLowerCase()
                 .replace("_", "");
 
-            elizaLogger.success(`Normalized action: ${normalizedAction}`);
+            nexLogger.success(`Normalized action: ${normalizedAction}`);
 
             let action = this.actions.find(
                 (a: { name: string }) =>
@@ -1050,7 +1050,7 @@ export class AgentRuntime implements IAgentRuntime {
             );
 
             if (!action) {
-                elizaLogger.info("Attempting to find action in similes.");
+                nexLogger.info("Attempting to find action in similes.");
                 for (const _action of this.actions) {
                     const simileAction = _action.similes.find(
                         (simile) =>
@@ -1064,7 +1064,7 @@ export class AgentRuntime implements IAgentRuntime {
                     );
                     if (simileAction) {
                         action = _action;
-                        elizaLogger.success(
+                        nexLogger.success(
                             `Action found in similes: ${action.name}`,
                         );
                         break;
@@ -1073,7 +1073,7 @@ export class AgentRuntime implements IAgentRuntime {
             }
 
             if (!action) {
-                elizaLogger.error(
+                nexLogger.error(
                     "No action found for",
                     response.content.action,
                 );
@@ -1081,17 +1081,17 @@ export class AgentRuntime implements IAgentRuntime {
             }
 
             if (!action.handler) {
-                elizaLogger.error(`Action ${action.name} has no handler.`);
+                nexLogger.error(`Action ${action.name} has no handler.`);
                 continue;
             }
 
             try {
-                elizaLogger.info(
+                nexLogger.info(
                     `Executing handler for action: ${action.name}`,
                 );
                 await action.handler(this, message, state, {}, callback);
             } catch (error) {
-                elizaLogger.error(error);
+                nexLogger.error(error);
             }
         }
     }
@@ -1112,7 +1112,7 @@ export class AgentRuntime implements IAgentRuntime {
     ) {
         const evaluatorPromises = this.evaluators.map(
             async (evaluator: Evaluator) => {
-                elizaLogger.log("Evaluating", evaluator.name);
+                nexLogger.log("Evaluating", evaluator.name);
                 if (!evaluator.handler) {
                     return null;
                 }
@@ -1212,7 +1212,7 @@ export class AgentRuntime implements IAgentRuntime {
                     plugins: this.character?.plugins?.map((plugin) => plugin.name),
                 }) : { summary: "" },
             });
-            elizaLogger.success(`User ${userName} created successfully.`);
+            nexLogger.success(`User ${userName} created successfully.`);
         }
     }
 
@@ -1222,11 +1222,11 @@ export class AgentRuntime implements IAgentRuntime {
         if (!participants.includes(userId)) {
             await this.databaseAdapter.addParticipant(userId, roomId);
             if (userId === this.agentId) {
-                elizaLogger.log(
+                nexLogger.log(
                     `Agent ${this.character.name} linked to room ${roomId} successfully.`,
                 );
             } else {
-                elizaLogger.log(
+                nexLogger.log(
                     `User ${userId} linked to room ${roomId} successfully.`,
                 );
             }
@@ -1273,7 +1273,7 @@ export class AgentRuntime implements IAgentRuntime {
         const room = await this.databaseAdapter.getRoom(roomId);
         if (!room) {
             await this.databaseAdapter.createRoom(roomId);
-            elizaLogger.log(`Room ${roomId} created successfully.`);
+            nexLogger.log(`Room ${roomId} created successfully.`);
         }
     }
 

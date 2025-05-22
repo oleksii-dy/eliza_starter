@@ -1,6 +1,6 @@
-# @elizaos/plugin-bootstrap
+# @nexos/plugin-bootstrap
 
-A plugin providing core functionality and basic actions for ElizaOS agents.
+A plugin providing core functionality and basic actions for NexOS agents.
 
 ## Description
 
@@ -9,7 +9,7 @@ The Bootstrap plugin enables fundamental agent behaviors including conversation 
 ## Installation
 
 ```bash
-pnpm install @elizaos/plugin-bootstrap
+pnpm install @nexos/plugin-bootstrap
 ```
 
 ## Features
@@ -91,7 +91,7 @@ pnpm run lint
 
 ## Dependencies
 
-- @elizaos/core: workspace:\*
+- @nexos/core: workspace:\*
 
 ## Future Enhancements
 
@@ -170,9 +170,9 @@ Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) fil
 
 Special thanks to:
 
-- The Eliza Core development team
-- The Eliza community for their contributions and feedback
+- The Nex Core development team
+- The Nex community for their contributions and feedback
 
 ## License
 
-This plugin is part of the Eliza project. See the main project repository for license information.
+This plugin is part of the Nex project. See the main project repository for license information.

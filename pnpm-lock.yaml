@@ -66,7 +66,7 @@ importers:
       '@deepgram/sdk':
         specifier: ^3.11.1
         version: 3.11.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@elizaos-plugins/adapter-sqlite':
+      '@nexos-plugins/adapter-sqlite':
         specifier: workspace:*
         version: link:packages/adapter-sqlite
       '@injectivelabs/sdk-ts':
@@ -163,13 +163,13 @@ importers:
 
   agent:
     dependencies:
-      '@elizaos/client-direct':
+      '@nexos/client-direct':
         specifier: workspace:*
         version: link:../packages/client-direct
-      '@elizaos/core':
+      '@nexos/core':
         specifier: workspace:*
         version: link:../packages/core
-      '@elizaos/plugin-bootstrap':
+      '@nexos/plugin-bootstrap':
         specifier: workspace:*
         version: link:../packages/plugin-bootstrap
       '@types/node':
@@ -203,7 +203,7 @@ importers:
 
   client:
     dependencies:
-      '@elizaos/core':
+      '@nexos/core':
         specifier: workspace:*
         version: link:../packages/core
       '@radix-ui/react-avatar':
@@ -430,7 +430,7 @@ importers:
 
   packages/adapter-sqlite:
     dependencies:
-      '@elizaos/core':
+      '@nexos/core':
         specifier: workspace:*
         version: link:../core
       '@types/better-sqlite3':
@@ -476,7 +476,7 @@ importers:
 
   packages/client-direct:
     dependencies:
-      '@elizaos/core':
+      '@nexos/core':
         specifier: workspace:*
         version: link:../core
       '@types/body-parser':
@@ -628,7 +628,7 @@ importers:
 
   packages/core-plugin-v1:
     dependencies:
-      '@elizaos/core':
+      '@nexos/core':
         specifier: workspace:*
         version: link:../core
       ai:
@@ -652,7 +652,7 @@ importers:
 
   packages/plugin-bootstrap:
     dependencies:
-      '@elizaos/core-plugin-v1':
+      '@nexos/core-plugin-v1':
         specifier: workspace:*
         version: link:../core-plugin-v1
       whatwg-url:

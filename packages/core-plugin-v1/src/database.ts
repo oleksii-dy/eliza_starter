@@ -1,5 +1,5 @@
 import {
   type DatabaseAdapter as coreDatabaseAdapter,
-} from '@elizaos/core';
+} from '@nexos/core';
 
 export type DatabaseAdapter = coreDatabaseAdapter;

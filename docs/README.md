@@ -1,8 +1,8 @@
-# Eliza - Multi-agent simulation framework
+# Nex - Multi-agent simulation framework
 
-# https://github.com/elizaOS/eliza
+# https://github.com/Nexis-AI/nex
 
-# Visit https://eliza.builders for support
+# Visit https://nex.builders for support
 
 ## 🌍 README Translations
 
@@ -10,7 +10,7 @@
 
 # dev branch
 
-<img src="static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
+<img src="static/img/nex_banner.jpg" alt="Eliza Banner" width="100%" />
 
 _As seen powering [@DegenSpartanAI](https://x.com/degenspartanai) and [@MarcAIndreessen](https://x.com/pmairca)_
 
@@ -53,7 +53,7 @@ pnpm start
 
 ### Adding custom actions
 
-To avoid git clashes in the core directory, we recommend adding custom actions to a `custom_actions` directory and then adding them to the `elizaConfig.yaml` file. See the `elizaConfig.example.yaml` file for an example.
+To avoid git clashes in the core directory, we recommend adding custom actions to a `custom_actions` directory and then adding them to the `nexConfig.yaml` file. See the `nexConfig.example.yaml` file for an example.
 
 ## Running with different models
 
