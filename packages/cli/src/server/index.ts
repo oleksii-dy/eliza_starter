@@ -81,7 +81,7 @@ export class AgentServer {
       logger.debug('Initializing AgentServer...');
       this.agents = new Map();
 
-      let dataDir = options?.dataDir ?? process.env.PGLITE_DATA_DIR ?? './elizadb';
+      let dataDir = options?.dataDir ?? process.env.PGLITE_DATA_DIR ?? './.pglite';
 
       // Expand tilde in database directory path
       dataDir = expandTildePath(dataDir);
@@ -233,7 +233,9 @@ export class AgentServer {
       this.app.use(
         '/api',
         (req, res, next) => {
-          logger.debug(`API request: ${req.method} ${req.path}`);
+          if (req.path !== '/ping') {
+            logger.debug(`API request: ${req.method} ${req.path}`);
+          }
           next();
         },
         apiRouter,
@@ -254,7 +256,8 @@ export class AgentServer {
 
       // Add a catch-all route for API 404s
       this.app.use('/api/*', (req, res) => {
-        logger.warn(`API 404: ${req.method} ${req.path}`);
+        // worms are going to hitting it all the time, use a reverse proxy if you need this type of logging
+        //logger.warn(`API 404: ${req.method} ${req.path}`);
         res.status(404).json({
           success: false,
           error: {

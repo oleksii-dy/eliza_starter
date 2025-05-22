@@ -7,6 +7,7 @@ import {
   promptAndStorePostgresUrl,
   runBunCommand,
   setupPgLite,
+  findNearestEnvFile,
 } from '@/src/utils';
 import { Command } from 'commander';
 import { existsSync, readFileSync } from 'node:fs';
@@ -116,22 +117,22 @@ node_modules
 }
 
 /**
- * Initialize a new project or plugin.
+ * Initialize a new project, plugin, or agent.
  *
  * @param {Object} opts - Options for initialization.
  * @param {string} opts.dir - Installation directory.
  * @param {boolean} opts.yes - Skip confirmation.
- * @param {string} opts.type - Type of template to use (project or plugin).
+ * @param {string} opts.type - Type to create (project, plugin, or agent).
  *
  * @returns {Promise<void>} Promise that resolves once the initialization process is complete.
  */
 export const create = new Command()
   .name('create')
-  .description('Initialize a new project or plugin')
+  .description('Initialize a new project, plugin, or agent')
   .option('-d, --dir <dir>', 'installation directory', '.')
   .option('-y, --yes', 'skip confirmation', false)
-  .option('-t, --type <type>', 'type of template to use (project or plugin)', 'project')
-  .argument('[name]', 'name for the project or plugin')
+  .option('-t, --type <type>', 'type to create (project, plugin, or agent)', 'project')
+  .argument('[name]', 'name for the project, plugin, or agent')
   .action(async (name, opts) => {
     // Set non-interactive mode if environment variable is set or if -y/--yes flag is present in process.argv
     if (
@@ -205,31 +206,13 @@ export const create = new Command()
         type: projectType,
       });
 
-      // Try to find .env file by recursively checking parent directories
-      const envPath = path.join(process.cwd(), '.env');
+      // Try to find the nearest .env file for database configuration
+      const envPath = findNearestEnvFile();
+      let postgresUrl: string | null = null;
 
-      let currentPath = envPath;
-      let depth = 0;
-      const maxDepth = 10;
-
-      let postgresUrl = null;
-
-      while (depth < maxDepth && currentPath.includes(path.sep)) {
-        if (existsSync(currentPath)) {
-          const env = readFileSync(currentPath, 'utf8');
-          const envVars = env.split('\n').filter((line) => line.trim() !== '');
-          const postgresUrlLine = envVars.find((line) => line.startsWith('POSTGRES_URL='));
-          if (postgresUrlLine) {
-            postgresUrl = postgresUrlLine.split('=')[1].trim();
-            break;
-          }
-        }
-
-        // Move up one directory
-        const currentDir = path.dirname(currentPath);
-        const parentDir = path.dirname(currentDir);
-        currentPath = path.join(parentDir, '.env');
-        depth++;
+      if (envPath) {
+        require('dotenv').config({ path: envPath });
+        postgresUrl = process.env.POSTGRES_URL || null;
       }
 
       // Prompt for project/plugin name if not provided
@@ -354,7 +337,7 @@ export const create = new Command()
         console.log('Plugin initialized successfully!');
         const cdPath = options.dir === '.' ? projectName : path.relative(process.cwd(), targetDir);
         console.info(
-          `\nYour plugin is ready! Here's your development workflow:\n\n[1] Development\n   cd ${cdPath}\n   ${colors.cyan('elizaos dev')}                   # Start development with hot-reloading\n\n[2] Testing\n   ${colors.cyan('elizaos test')}                  # Run automated tests\n   ${colors.cyan('elizaos start')}                 # Test in a live agent environment\n\n[3] Publishing\n   ${colors.cyan('elizaos plugin publish --test')} # Check registry requirements\n   ${colors.cyan('elizaos plugin publish')}        # Submit to registry\n\n[?] Learn more: https://eliza.how/docs/cli/plugins`
+          `\nYour plugin is ready! Here's your development workflow:\n\n[1] Development\n   cd ${cdPath}\n   ${colors.cyan('elizaos dev')}                   # Start development with hot-reloading\n\n[2] Testing\n   ${colors.cyan('elizaos test')}                  # Run automated tests\n   ${colors.cyan('elizaos start')}                 # Test in a live agent environment\n\n[3] Publishing\n   ${colors.cyan('elizaos plugins publish --test')} # Check registry requirements\n   ${colors.cyan('elizaos plugins publish')}        # Submit to registry\n\n[?] Learn more: https://eliza.how/docs/cli/plugins`
         );
         process.stdout.write(`\u001B]1337;CurrentDir=${targetDir}\u0007`);
         return;
@@ -427,14 +410,20 @@ export const create = new Command()
 
         await createIgnoreFiles(targetDir);
 
-        const { elizaDbDir, envFilePath } = await getElizaDirectories();
+        // Define project-specific .env file path, this will be created if it doesn't exist by downstream functions.
+        const projectEnvFilePath = path.join(targetDir, '.env');
+
+        await getElizaDirectories();
+
         if (database === 'pglite') {
-          await setupPgLite(process.env.PGLITE_DATA_DIR || elizaDbDir, envFilePath);
+          const projectPgliteDbDir = process.env.PGLITE_DATA_DIR ?? path.join(targetDir, '.pglite');
+          await setupPgLite(projectPgliteDbDir, projectEnvFilePath);
           console.debug(
-            `Using PGLite database directory: ${process.env.PGLITE_DATA_DIR || elizaDbDir}`
+            `PGLite database will be stored in project directory: ${projectPgliteDbDir}`
           );
         } else if (database === 'postgres' && !postgresUrl) {
-          postgresUrl = await promptAndStorePostgresUrl(envFilePath);
+          // Store Postgres URL in the project's .env file.
+          postgresUrl = await promptAndStorePostgresUrl(projectEnvFilePath);
         }
 
         const srcDir = path.join(targetDir, 'src');

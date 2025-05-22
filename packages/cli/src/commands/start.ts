@@ -5,6 +5,7 @@ import {
   buildProject,
   configureDatabaseSettings,
   displayBanner,
+  findNearestEnvFile,
   findNextAvailablePort,
   getCliInstallTag,
   handleError,
@@ -25,7 +26,7 @@ import {
   type IAgentRuntime,
   type Plugin,
 } from '@elizaos/core';
-import { Command, Option } from 'commander';
+import { Command } from 'commander';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -84,16 +85,16 @@ async function loadAndPreparePlugin(pluginName: string, version: string): Promis
     .replace(/^@elizaos-plugins\//, '') // Remove alternative prefix
     .replace(/-./g, (match) => match[1].toUpperCase())}Plugin`; // Convert kebab-case to camelCase and add 'Plugin' suffix
 
-  logger.debug(`Looking for plugin export: ${expectedFunctionName} or default`);
-  logger.debug(`Available exports: ${Object.keys(pluginModule).join(', ')}`);
-  logger.debug(`Has default export: ${!!pluginModule.default}`);
+  //logger.debug(`Looking for plugin export: ${expectedFunctionName} or default`);
+  //logger.debug(`Available exports: ${Object.keys(pluginModule).join(', ')}`);
+  //logger.debug(`Has default export: ${!!pluginModule.default}`);
 
   // --- Improved Export Resolution Logic ---
 
   // 1. Prioritize the expected named export if it exists
   const expectedExport = pluginModule[expectedFunctionName];
   if (isValidPluginShape(expectedExport)) {
-    logger.debug(`Found valid plugin export using expected name: ${expectedFunctionName}`);
+    logger.success(`Found valid plugin export using expected name: ${expectedFunctionName}`);
     return expectedExport as Plugin;
   }
 
@@ -102,15 +103,15 @@ async function loadAndPreparePlugin(pluginName: string, version: string): Promis
   if (isValidPluginShape(defaultExport)) {
     // Ensure it's not the same invalid object we might have checked above
     if (expectedExport !== defaultExport) {
-      logger.debug('Found valid plugin export using default export');
+      logger.success('Found valid plugin export using default export');
       return defaultExport as Plugin;
     }
   }
 
   // 3. If neither primary method worked, search all exports aggressively
-  logger.debug(
-    `Primary exports (named: ${expectedFunctionName}, default) not found or invalid, searching all exports...`
-  );
+  //logger.debug(
+  //`Primary exports (named: ${expectedFunctionName}, default) not found or invalid, searching all exports...`
+  //);
   for (const key of Object.keys(pluginModule)) {
     // Skip keys we already checked (or might be checking)
     if (key === expectedFunctionName || key === 'default') {
@@ -119,7 +120,7 @@ async function loadAndPreparePlugin(pluginName: string, version: string): Promis
 
     const potentialPlugin = pluginModule[key];
     if (isValidPluginShape(potentialPlugin)) {
-      logger.debug(
+      logger.success(
         `Found alternative valid plugin export under key: ${key}, Name: ${potentialPlugin.name}`
       );
       return potentialPlugin as Plugin;
@@ -279,7 +280,7 @@ export async function startAgent(
     }
 
     if (!loadedPluginsMap.has(pluginName)) {
-      logger.debug(`Attempting to load plugin by name from character definition: ${pluginName}`);
+      //logger.debug(`Attempting to load plugin by name from character definition: ${pluginName}`);
       const loadedPlugin = await loadAndPreparePlugin(pluginName, installTag);
       if (loadedPlugin) {
         characterPlugins.push(loadedPlugin);
@@ -317,26 +318,6 @@ export async function startAgent(
     } catch (err) {
       // Silently fail if require is not available (e.g., in browser environments)
       logger.debug('dotenv module not available');
-    }
-
-    function findNearestEnvFile(startDir = process.cwd()) {
-      let currentDir = startDir;
-
-      // Continue searching until we reach the root directory
-      while (currentDir !== path.parse(currentDir).root) {
-        const envPath = path.join(currentDir, '.env');
-
-        if (fs.existsSync(envPath)) {
-          return envPath;
-        }
-
-        // Move up to parent directory
-        currentDir = path.dirname(currentDir);
-      }
-
-      // Check root directory as well
-      const rootEnvPath = path.join(path.parse(currentDir).root, '.env');
-      return fs.existsSync(rootEnvPath) ? rootEnvPath : null;
     }
 
     // Node.js environment: load from .env file
@@ -441,14 +422,14 @@ const startAgents = async (options: {
   port?: number;
   characters?: Character[];
 }) => {
-  // Load environment variables from project .env or .eliza/.env
+  // Load environment variables from project .env
   await loadEnvironment();
 
   // Configure database settings - pass reconfigure option to potentially force reconfiguration
   const postgresUrl = await configureDatabaseSettings(options.configure);
 
   // Get PGLite data directory from environment (may have been set during configuration)
-  const pgliteDataDir = process.env.PGLITE_DATA_DIR;
+  const pgliteDataDir = process.env.PGLITE_DATA_DIR ?? path.join(process.cwd(), '.pglite');
 
   // Load existing configuration
   const existingConfig = await loadConfig();
@@ -497,7 +478,12 @@ const startAgents = async (options: {
 
   // Inside your startAgents function
   const desiredPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000');
+  logger.debug(`Attempting to start server on port: ${desiredPort}`);
   const serverPort = await findNextAvailablePort(desiredPort);
+
+  if (serverPort !== desiredPort) {
+    logger.warn(`Port ${desiredPort} is in use, using port ${serverPort} instead`);
+  }
 
   process.env.SERVER_PORT = serverPort.toString();
 
@@ -609,7 +595,9 @@ const startAgents = async (options: {
       character.plugins = character.plugins || [];
 
       // make sure character has sql plugin
-      const hasSqlPlugin = character.plugins.some((plugin) => plugin.includes('plugin-sql'));
+      const hasSqlPlugin = character.plugins.some(
+        (plugin) => plugin.includes('plugin-sql') || plugin.includes('plugin-mysql')
+      );
       if (!hasSqlPlugin) {
         character.plugins.push('@elizaos/plugin-sql');
       }
@@ -747,11 +735,11 @@ export const start = new Command()
   .description('Start the Eliza agent with configurable plugins and services')
   .option(
     '-c, --configure',
-    'Force reconfiguration of services and AI models (ignores existing saved configuration)'
+    'Force reconfiguration of services and AI models (bypasses saved configuration)'
   )
   .option('-char, --character [paths...]', 'Character file(s) to use - accepts paths or URLs')
   .option('-b, --build', 'Build the project before starting')
-  .option('-p, --port <port>', 'Port to listen on', (v) => {
+  .option('-p, --port <port>', 'Port to listen on (default: 3000)', (v) => {
     const n = Number.parseInt(v, 10);
     if (Number.isNaN(n) || n <= 0 || n > 65535) {
       throw new Error('Port must be a number between 1 and 65535');
@@ -774,63 +762,68 @@ export const start = new Command()
 
       // Process character(s) from options.character
       if (options.character) {
-        let characterPaths: string[] = [];
+        const characterPaths: string[] = [];
 
-        // Normalize to array of paths, handling both single and multiple inputs
+        // Handle both array and single string inputs
         if (Array.isArray(options.character)) {
-          // Process each item in the array
           for (const item of options.character) {
-            const cleanItem = item.trim().replace(/^['"]|["']$/g, '');
-            if (cleanItem.includes(',')) {
-              // Split comma-separated values
-              const subPaths = cleanItem
-                .split(',')
-                .map((p) => p.trim())
-                .filter(Boolean);
-              characterPaths = [...characterPaths, ...subPaths];
-            } else {
-              characterPaths.push(cleanItem);
-            }
+            // Split by commas in case user provided comma-separated list
+            // Strip quotes if present (handles both single and double quotes)
+            const parts = item
+              .trim()
+              .split(',')
+              .map((part) => part.trim())
+              .map((part) => part.replace(/^['"](.*)['"]$/, '$1'))
+              .filter(Boolean);
+            characterPaths.push(...parts);
           }
         } else if (typeof options.character === 'string') {
-          // Handle single string, which might be comma-separated
-          const cleanPath = options.character.trim().replace(/^["']|["']$/g, '');
-          if (cleanPath.includes(',')) {
-            const paths = cleanPath
-              .split(',')
-              .map((p) => p.trim())
-              .filter(Boolean);
-            characterPaths = [...characterPaths, ...paths];
-          } else {
-            characterPaths.push(cleanPath);
-          }
+          // Split by commas in case user provided comma-separated list
+          // Strip quotes if present (handles both single and double quotes)
+          const parts = options.character
+            .trim()
+            .split(',')
+            .map((part) => part.trim())
+            .map((part) => part.replace(/^['"](.*)['"]$/, '$1'))
+            .filter(Boolean);
+          characterPaths.push(...parts);
         } else if (options.character === true) {
           // Handle the case where flag is provided without arguments
-          characterPaths = [];
+          logger.warn('--character flag provided without any paths. No characters will be loaded.');
         }
 
         // Load each character path
         for (const path of characterPaths) {
           try {
             logger.info(`Loading character from ${path}`);
-            const characterData = await loadCharacterTryPath(path);
+            // Try with the exact path first
+            let characterData;
+            try {
+              characterData = await loadCharacterTryPath(path);
+            } catch (error) {
+              // If that fails and there's no extension, try adding .json
+              if (!path.includes('.')) {
+                logger.info(`Trying with .json extension: ${path}.json`);
+                characterData = await loadCharacterTryPath(`${path}.json`);
+              } else {
+                throw error;
+              }
+            }
             loadedCharacters.push(characterData);
           } catch (error) {
             failedCharacters.push(path);
             logger.error(`Failed to load character from ${path}: ${error}`);
           }
         }
-      }
 
-      // If we have both successes and failures, log a message
-      if (loadedCharacters.length > 0 && failedCharacters.length > 0) {
-        logger.warn(
-          `${failedCharacters.length} character(s) failed to load, but ${loadedCharacters.length} succeeded. Starting server with valid characters.`
-        );
-      }
-      // If all characters failed, log error and handle gracefully
-      else if (loadedCharacters.length === 0 && options.character) {
-        if (failedCharacters.length > 0) {
+        // If we have both successes and failures, log a message
+        if (loadedCharacters.length > 0 && failedCharacters.length > 0) {
+          logger.warn(
+            `${failedCharacters.length} character(s) failed to load, but ${loadedCharacters.length} succeeded. Starting server with valid characters.`
+          );
+        }
+        // If all characters failed, log error and handle gracefully
+        else if (loadedCharacters.length === 0 && characterPaths.length > 0) {
           logger.error(
             `All ${failedCharacters.length} character(s) failed to load. Starting server with default character...`
           );
