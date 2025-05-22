@@ -5,7 +5,7 @@ import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
 import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
 import { AutoClientInterface } from "@elizaos/client-auto";
 import { DiscordClientInterface } from "@elizaos/client-discord";
-import { FarcasterAgentClient } from "@elizaos/client-farcaster";
+// import { FarcasterAgentClient } from "@elizaos/client-farcaster";
 import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
@@ -103,6 +103,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
 // import {dominosPlugin} from "@elizaos/plugin-dominos";
+
+import { milliCharacter } from "./milli.character";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -819,10 +821,10 @@ export async function createAgent(
             // getSecret(character, "AVALANCHE_PRIVATE_KEY")
             //     ? avalanchePlugin
             //     : null,
-            getSecret(character, "ECHOCHAMBERS_API_URL") &&
-            getSecret(character, "ECHOCHAMBERS_API_KEY")
-                ? echoChambersPlugin
-                : null,
+            // getSecret(character, "ECHOCHAMBERS_API_URL") &&
+            // getSecret(character, "ECHOCHAMBERS_API_KEY")
+            //     ? echoChambersPlugin
+            //     : null,
             // getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
             // getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
             getSecret(character, "GIPHY_API_KEY") ? giphyPlugin : null,
@@ -1020,11 +1022,11 @@ const startAgents = async () => {
     let serverPort = parseInt(settings.SERVER_PORT || "3000");
     const args = parseArguments();
     let charactersArg = args.characters || args.character;
-    let characters = [defaultCharacter];
+    let characters = [milliCharacter, defaultCharacter];
 
-    if (charactersArg) {
-        characters = await loadCharacters(charactersArg);
-    }
+    // if (charactersArg) {
+    //     characters = await loadCharacters(charactersArg);
+    // }
 
     try {
         for (const character of characters) {
