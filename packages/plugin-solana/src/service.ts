@@ -506,6 +506,111 @@ export class SolanaService extends Service {
       throw error;
     }
   }
+
+  /**
+   * Calculates the optimal buy amount and slippage based on market conditions
+   * @param {JupiterService} jupiterService - Jupiter service instance
+   * @param {string} inputMint - Input token mint address
+   * @param {string} outputMint - Output token mint address
+   * @param {number} availableAmount - Available amount to trade
+   * @returns {Promise<{ amount: number; slippage: number }>} Optimal amount and slippage
+   */
+  public async calculateOptimalBuyAmount(
+    jupiterService: any,
+    inputMint: string,
+    outputMint: string,
+    availableAmount: number
+  ): Promise<{ amount: number; slippage: number }> {
+    try {
+      // Get price impact for the trade
+      const priceImpact = await jupiterService.getPriceImpact({
+        inputMint,
+        outputMint,
+        amount: availableAmount,
+      });
+
+      // Find optimal slippage based on market conditions
+      const slippage = await jupiterService.findBestSlippage({
+        inputMint,
+        outputMint,
+        amount: availableAmount,
+      });
+
+      // If price impact is too high, reduce the amount
+      let optimalAmount = availableAmount;
+      if (priceImpact > 5) {
+        // 5% price impact threshold
+        optimalAmount = availableAmount * 0.5; // Reduce amount by half
+      }
+
+      return { amount: optimalAmount, slippage };
+    } catch (error) {
+      logger.error('Error calculating optimal buy amount:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Executes buy orders for multiple wallets
+   * @param {Array<{ keypair: any; balance: number }>} wallets - Array of wallet information
+   * @param {any} signal - Trading signal information
+   * @returns {Promise<Array<{ success: boolean; outAmount?: number; fees?: any; swapResponse?: any }>>}
+   */
+  public async executeBuy(wallets: Array<{ keypair: any; balance: number }>, signal: any) {
+    const jupiterService = await acquireService(this.runtime, 'JUPITER_SERVICE', 'execute trades');
+
+    const buyPromises = wallets.map(async (wallet) => {
+      try {
+        // Get initial quote to determine input mint and other parameters
+        const initialQuote = await jupiterService.getQuote({
+          outputMint: signal.recommend_buy_address,
+          amount: wallet.balance, // Using full balance for initial quote
+        });
+
+        // Calculate optimal buy amount using the input mint from quote
+        const { amount, slippage } = await this.calculateOptimalBuyAmount(
+          jupiterService,
+          initialQuote.inputMint,
+          signal.recommend_buy_address,
+          wallet.balance
+        );
+
+        // Get final quote with optimized amount
+        const quoteResponse = await jupiterService.getQuote({
+          inputMint: initialQuote.inputMint,
+          outputMint: signal.recommend_buy_address,
+          amount,
+          slippageBps: slippage,
+        });
+
+        // Execute the swap
+        const swapResponse = await jupiterService.executeSwap({
+          quoteResponse,
+          userPublicKey: wallet.keypair.publicKey.toString(),
+          slippageBps: slippage,
+        });
+
+        // Calculate final amounts including fees
+        const fees = await jupiterService.estimateGasFees({
+          inputMint: initialQuote.inputMint,
+          outputMint: signal.recommend_buy_address,
+          amount,
+        });
+
+        return {
+          success: true,
+          outAmount: Number(quoteResponse.outAmount),
+          fees,
+          swapResponse,
+        };
+      } catch (error) {
+        logger.error('Error in buy execution:', error);
+        return { success: false };
+      }
+    });
+
+    return Promise.all(buyPromises);
+  }
 }
 
 /**
