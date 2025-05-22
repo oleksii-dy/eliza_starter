@@ -31,7 +31,7 @@ Only return the following JSON and nothing else (even if no sentiment or trendin
   recommend_buy_address: "the address of the token to purchase, for example: Gu3LDkn7Vx3bmCzLafYNKcDxv2mH7YN44NJZFXnypump",
   reason: "the reason why you think this is a good buy, and why you chose the specific amount",
   opportunity_score: "number, for example 50",
-  buy_amount: "number, for example: 1",
+  buy_amount: "number between 1 and 100, for example: 23",
   exit_conditions: "what conditions in which you'd change your position on this token",
   exit_sentiment_drop_threshold: "what drop in sentiment in which you'd change your position on this token",
   exit_24hvolume_threshold: "what drop in 24h volume in which you'd change your position on this token",
@@ -135,34 +135,62 @@ async function generateBuySignal(runtime, strategyService, hndl) {
   // validateTokenForTrading (look at liquidity/volume/suspicious atts)
 
   // now it's a signal
-  // assess response, figure what wallet are buying based on balance
-  // and scale amount for each wallet based on available balance
-  // execute buys on each of wallet
 
+  // phase 1 in parallel (fetch wallets/balance)
+  // assess response, figure what wallet are buying based on balance
+  // list of wallets WITH this strategy ODI
+  // individualize
+  // get balance of each ODI
+  // and scale amount for each wallet based on available balance
+  function scaleAmount(walletKeypair, balance, signal) {
+    // NEO write this
+  }
+
+  // phase 2 in parallel buy everything (eventually prioritize premium over non) NEO
+  // create promise and that create tasks
+  // execute buys on each of wallet
   // calculateOptimalBuyAmount
   // wallet.swap (wallet slippage cfg: 2.5%)
   // wallet.quote
   // calculateDynamicSlippage (require quote)
   // wallet.buy
+  // we just need the outAmount
+  // calc fee/slippage => position
 
-  // open position
+  // open position ODI
   // set up exit conditions
   //await strategyService.open_position(hndl, pos)
 }
 
-// 24h volume delta
+// sell functions
+
+async function onPriceDelta() {
+  // per token
+  // get all positions with this chain/token
+  // filter positions, which position change about this price change
+  // may trigger some exit/close position action (might not)
+  // exit position: wallet.swap, strategyService.close_position(hndl, pos)
+  // sell
+  // swap/quote/sell
+}
 
 async function onSentimentDelta() {
   // get all positions with this chain/token
   // is this wallet/position sentiment delta trigger
 }
 
-// what other exit conditions? liquidity, sentiment
-
-async function onPriceDelta() {
+async function onVol24hDelta() {
   // per token
   // get all positions with this chain/token
-  // filter positions, which position change about this price change
+  // filter positions, which position change about this vol change
+  // may trigger some exit/close position action (might not)
+  // exit position: wallet.swap, strategyService.close_position(hndl, pos)
+}
+
+async function onLiquidDelta() {
+  // per token
+  // get all positions with this chain/token
+  // filter positions, which position change about this liq change
   // may trigger some exit/close position action (might not)
   // exit position: wallet.swap, strategyService.close_position(hndl, pos)
 }
