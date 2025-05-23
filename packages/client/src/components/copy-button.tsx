@@ -19,7 +19,7 @@ const CopyButton = ({ text }: { text: string }) => {
         <Button
           onClick={handleCopy}
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           className="flex items-center space-x-2 text-muted-foreground"
         >
           {copied ? <Check className="size-3" /> : <Copy className="size-3" />}

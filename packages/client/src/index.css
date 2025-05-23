@@ -80,7 +80,7 @@
   h4,
   h5,
   h6 {
-    @apply font-display font-bold tracking-tight;
+    @apply font-display font-bold tracking-tight text-foreground;
   }
 
   h1 {
@@ -99,6 +99,36 @@
     @apply text-xl lg:text-2xl;
     font-weight: 600;
     letter-spacing: -0.01em;
+  }
+
+  h4 {
+    @apply text-lg font-semibold;
+    letter-spacing: -0.005em;
+  }
+
+  h5 {
+    @apply text-base font-medium;
+  }
+
+  h6 {
+    @apply text-sm font-medium text-muted-foreground;
+  }
+
+  /* Typography utility classes inspired by OriginUI patterns */
+  .text-primary {
+    @apply text-foreground;
+  }
+
+  .text-secondary {
+    @apply text-muted-foreground;
+  }
+
+  .text-muted {
+    @apply text-muted-foreground/70;
+  }
+
+  .text-subtle {
+    @apply text-muted-foreground/50;
   }
 
   /* Code and monospace elements */

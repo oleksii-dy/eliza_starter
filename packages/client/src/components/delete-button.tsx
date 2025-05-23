@@ -10,7 +10,7 @@ const DeleteButton = ({ onClick }: DeleteButtonProps) => {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button onClick={onClick} variant="ghost" size="icon" className="text-muted-foreground">
+        <Button onClick={onClick} variant="ghost" size="icon-sm" className="text-muted-foreground">
           <Trash2 className="size-3" />
         </Button>
       </TooltipTrigger>

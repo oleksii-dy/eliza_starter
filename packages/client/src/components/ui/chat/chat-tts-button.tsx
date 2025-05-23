@@ -83,7 +83,7 @@ export default function ChatTtsButton({ agentId, text }: { agentId: string; text
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            size="icon"
+            size="icon-sm"
             variant="ghost"
             type="button"
             onClick={() => execute()}
