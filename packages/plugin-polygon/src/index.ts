@@ -11,6 +11,12 @@ import {
 import { z } from 'zod';
 import { ethers } from 'ethers';
 
+// Add global handler for unhandled promise rejections to prevent Node crashes
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Promise Rejection:', reason);
+  // Don't crash, just log the error and continue
+});
+
 import { transferPolygonAction } from './actions/transfer';
 import { delegateL1Action } from './actions/delegateL1';
 import { getCheckpointStatusAction } from './actions/getCheckpointStatus';

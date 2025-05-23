@@ -33,10 +33,12 @@ import * as path from 'node:path';
 
 import type { SupportedChain } from '../types';
 
+const ETH_MAINNET_KEY = 'ethereum';
+
 export class WalletProvider {
   private cache: NodeCache;
   private cacheKey = 'polygon/wallet';
-  private currentChain: SupportedChain = 'mainnet';
+  private currentChain: SupportedChain = ETH_MAINNET_KEY as SupportedChain;
   private CACHE_EXPIRY_SEC = 5;
   chains: Record<string, Chain> = {};
   account: PrivateKeyAccount;
@@ -61,6 +63,8 @@ export class WalletProvider {
   getAddress(): Address {
     return this.account.address;
   }
+
+  hasChain = (name: string) => Boolean(this.chains[name]);
 
   getCurrentChain(): Chain {
     return this.chains[this.currentChain];
@@ -101,7 +105,8 @@ export class WalletProvider {
   }
 
   getChainConfigs(chainName: SupportedChain): Chain {
-    const chain = viemChains[chainName];
+    const key = chainName === ETH_MAINNET_KEY ? 'mainnet' : chainName;
+    const chain = viemChains[key];
 
     if (!chain?.id) {
       throw new Error('Invalid chain name');
@@ -142,12 +147,23 @@ export class WalletProvider {
     this.setChains(chain);
   }
 
+  getActiveWalletClient(): WalletClient {
+    return this.getWalletClient(this.currentChain);
+  }
+
   switchChain(chainName: SupportedChain, customRpcUrl?: string) {
     if (!this.chains[chainName]) {
       const chain = WalletProvider.genChainFromName(chainName, customRpcUrl);
       this.addChain({ [chainName]: chain });
     }
     this.setCurrentChain(chainName);
+  }
+  async switchChainById(chainId: number): Promise<WalletClient> {
+    const entry = Object.entries(this.chains).find(([, c]) => c.id === chainId);
+    if (!entry) throw new Error(`Unsupported chainId ${chainId}`);
+    const [name] = entry as [SupportedChain, Chain];
+    this.setCurrentChain(name);
+    return this.getActiveWalletClient();
   }
 
   private setAccount = (accountOrPrivateKey: PrivateKeyAccount | `0x${string}`) => {
@@ -173,6 +189,12 @@ export class WalletProvider {
 
   private createHttpTransport = (chainName: SupportedChain) => {
     const chain = this.chains[chainName];
+
+    if (!chain) {
+      throw new Error(
+        `Unsupported chain "${chainName}". Available: ${Object.keys(this.chains).join(', ')}`
+      );
+    }
 
     if (chain.rpcUrls.custom) {
       return http(chain.rpcUrls.custom.http[0]);
@@ -230,15 +252,20 @@ const genChainsFromRuntime = (runtime: IAgentRuntime): Record<string, Chain> => 
   const ethRpcUrl = runtime.getSetting('ETHEREUM_RPC_URL');
   if (ethRpcUrl) {
     // Attempt to determine if it's mainnet or testnet (e.g., Sepolia)
-    // Simple check for now
     const isEthMainnet = !/(sepolia|goerli|ropsten|kovan)/i.test(ethRpcUrl);
-    const ethChainName = isEthMainnet ? 'mainnet' : 'sepolia'; // Defaulting testnet to Sepolia
+    const viemKeyForEth = isEthMainnet ? 'mainnet' : 'sepolia';
+    const storageKeyForEth = isEthMainnet ? ETH_MAINNET_KEY : 'sepolia'; // ETH_MAINNET_KEY is "ethereum"
     try {
-      const chain = WalletProvider.genChainFromName(ethChainName, ethRpcUrl);
-      chains[ethChainName] = chain;
-      elizaLogger.info(`Configured Ethereum L1 chain: ${ethChainName}`);
+      const chain = WalletProvider.genChainFromName(viemKeyForEth, ethRpcUrl);
+      chains[storageKeyForEth] = chain;
+      elizaLogger.info(
+        `Configured Ethereum L1 chain: ${storageKeyForEth} (using viem key: ${viemKeyForEth})`
+      );
     } catch (error) {
-      elizaLogger.error(`Error configuring Ethereum L1 chain (${ethChainName}):`, error);
+      elizaLogger.error(
+        `Error configuring Ethereum L1 chain (${storageKeyForEth} with viem key ${viemKeyForEth}):`,
+        error
+      );
     }
   } else {
     elizaLogger.warn('ETHEREUM_RPC_URL setting not found.');
@@ -277,7 +304,11 @@ export const initWalletProvider = async (
         runtime.agentId
       );
       elizaLogger.info('Initialized WalletProvider using TEE derived key.');
-      return new WalletProvider(deriveKeyResult.keypair, runtime, chains);
+      return new WalletProvider(
+        deriveKeyResult.keypair as unknown as PrivateKeyAccount,
+        runtime,
+        chains
+      );
     } catch (error) {
       elizaLogger.error('Failed to initialize WalletProvider with TEE:', error);
       throw error; // Rethrow TEE initialization error
