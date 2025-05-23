@@ -4,6 +4,11 @@ export interface TweetContent {
     text: string;
 }
 
+export interface TwitterFeedDataResponse {
+    topic: string;
+  }
+
+
 export const TweetSchema = z.object({
     text: z.string().describe("The text of the tweet"),
 });
@@ -11,3 +16,4 @@ export const TweetSchema = z.object({
 export const isTweetContent = (obj: any): obj is TweetContent => {
     return TweetSchema.safeParse(obj).success;
 };
+
