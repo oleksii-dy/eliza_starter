@@ -1,215 +1,445 @@
-import { type Action, logger, type IAgentRuntime } from '@elizaos/core';
-import { z } from 'zod';
-import { formatUnits, normalizeAddress } from '../utils/formatters.js';
+import {
+  type Action,
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  type HandlerCallback,
+  type Content,
+  logger,
+} from '@elizaos/core';
+import { ethers } from 'ethers';
 import { PolygonRpcService } from '../services/PolygonRpcService.js';
-import { type Address } from '../types.js';
+import { initWalletProvider } from '../providers/PolygonWalletProvider.js';
 
-const balanceOptionsSchema = z.object({
-  address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, {
-    message: 'Address must be a valid Ethereum address (0x followed by 40 hex characters)'
-  }),
-  tokenAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, {
-    message: 'Token address must be a valid Ethereum address (0x followed by 40 hex characters)'
-  }).optional()
-});
+// Common token addresses on Polygon
+const USDC_ADDRESS = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'; // USDC on Polygon
+const WETH_ADDRESS = '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619'; // WETH on Polygon
 
-/**
- * Action to get native MATIC balance for an address on Polygon (L2)
- */
-export const getNativeBalanceAction: Action = {
-  name: 'GET_NATIVE_BALANCE',
-  description: 'Gets the native MATIC balance for an address on Polygon (L2).',
-  
-  // Define examples
-  examples: [
-    "What's my MATIC balance on Polygon?",
-    "Show me the balance for address 0x1234567890abcdef1234567890abcdef12345678",
-    "How much MATIC does 0x1234567890abcdef1234567890abcdef12345678 have?"
-  ],
-  
-  validate: async (options: any, runtime: IAgentRuntime) => {
+export const getUSDCBalanceAction: Action = {
+  name: 'GET_USDC_BALANCE',
+  similes: ['CHECK_USDC_BALANCE', 'SHOW_USDC_BALANCE', 'GET_USDC_AMOUNT'],
+  description: 'Gets the USDC balance for the agent wallet on Polygon.',
+  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+    const content = message.content?.text?.toLowerCase() || '';
+
+    logger.info(`[getUSDCBalanceAction] VALIDATION CALLED - message: "${content}"`);
+
     try {
-      // Check if POLYGON_RPC_URL is set in environment
-      const polygonRpcUrl = runtime.getSetting('POLYGON_RPC_URL');
-      if (!polygonRpcUrl) {
-        return 'POLYGON_RPC_URL setting is required to get balance information';
+      // Check for USDC balance related keywords
+      const usdcKeywords = [
+        'usdc balance',
+        'usdc amount',
+        'my usdc',
+        'get usdc',
+        'show usdc',
+        'check usdc',
+        'usdc wallet',
+        'balance usdc',
+        'how much usdc',
+      ];
+
+      const matches = usdcKeywords.some((keyword) => content.includes(keyword));
+      logger.info(`[getUSDCBalanceAction] Validation result: ${matches}`);
+
+      // Also check if we have required services
+      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
+      if (!rpcService) {
+        logger.warn(`[getUSDCBalanceAction] PolygonRpcService not available - validation false`);
+        return false;
       }
-      
-      // If no address provided, check if we have a default address
-      if (!options?.address) {
-        const defaultAddress = runtime.getSetting('DEFAULT_ADDRESS');
-        if (!defaultAddress) {
-          return 'Address is required to get balance';
-        }
-      }
-      
-      // If address is provided, validate format
-      if (options?.address) {
-        try {
-          balanceOptionsSchema.parse({ address: options.address });
-        } catch (error) {
-          if (error instanceof z.ZodError) {
-            return error.errors[0].message;
-          }
-          return 'Invalid address format';
-        }
-      }
-      
-      return true;
+
+      return matches;
     } catch (error) {
-      logger.error('Validation error:', error);
-      return 'Invalid balance options';
+      logger.error(`[getUSDCBalanceAction] Validation error:`, error);
+      return false;
     }
   },
-  
-  execute: async (options: any, runtime: IAgentRuntime) => {
+  handler: async (
+    runtime: IAgentRuntime,
+    message: Memory,
+    state?: State,
+    options?: { [key: string]: unknown },
+    callback?: HandlerCallback
+  ): Promise<Content> => {
+    logger.info('[getUSDCBalanceAction] Handler called!');
+
+    const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
+    if (!rpcService) {
+      throw new Error('PolygonRpcService not available');
+    }
+
     try {
-      // Get address from options or default
-      let address = options?.address as Address;
-      if (!address) {
-        address = runtime.getSetting('DEFAULT_ADDRESS') as Address;
-        logger.info(`Using default address: ${address}`);
-      } else {
-        logger.info(`Getting native balance for address: ${address}`);
+      // Get agent wallet address using the wallet provider
+      const polygonWalletProvider = await initWalletProvider(runtime);
+      if (!polygonWalletProvider) {
+        throw new Error(
+          'Failed to initialize PolygonWalletProvider - check that PRIVATE_KEY is configured correctly'
+        );
       }
-      
-      // Get the RPC service
-      const rpcService = runtime.getService(PolygonRpcService.serviceType) as PolygonRpcService;
-      if (!rpcService) {
-        throw new Error('PolygonRpcService not available');
+      const agentAddress = polygonWalletProvider.getAddress();
+      if (!agentAddress) {
+        throw new Error('Could not determine agent address from provider');
       }
-      
-      // Get native balance
-      logger.info(`Fetching MATIC balance for ${address}`);
-      const balance = await rpcService.getNativeBalance(address);
-      
-      // Format the balance
-      const formattedBalance = formatUnits(balance, 18);
-      
-      logger.info(`MATIC balance: ${formattedBalance} MATIC`);
-      
-      return {
-        actions: ['GET_NATIVE_BALANCE'],
+
+      logger.info(`Getting USDC balance for address: ${agentAddress}`);
+
+      // Get USDC balance
+      const balance = await rpcService.getErc20Balance(USDC_ADDRESS, agentAddress);
+
+      // USDC has 6 decimals on Polygon
+      const formattedBalance = ethers.formatUnits(balance, 6);
+
+      const responseContent: Content = {
+        text: `Your USDC balance (${agentAddress}): ${formattedBalance} USDC`,
+        actions: ['GET_USDC_BALANCE'],
         data: {
-          address,
+          address: agentAddress,
+          tokenAddress: USDC_ADDRESS,
           balance: balance.toString(),
           formattedBalance,
-          symbol: 'MATIC'
-        }
+          symbol: 'USDC',
+          decimals: 6,
+        },
       };
+
+      if (callback) {
+        await callback(responseContent);
+      }
+
+      return responseContent;
     } catch (error) {
-      logger.error('Error getting native balance:', error);
-      return {
-        actions: ['GET_NATIVE_BALANCE'],
-        data: { error: error instanceof Error ? error.message : String(error) }
+      logger.error('Error getting USDC balance:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      const errorContent: Content = {
+        text: `Error retrieving USDC balance: ${errorMessage}`,
+        actions: ['GET_USDC_BALANCE'],
+        data: { error: errorMessage },
       };
+
+      if (callback) {
+        await callback(errorContent);
+      }
+
+      return errorContent;
     }
   },
+  examples: [
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'get my usdc balance',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: 'Your USDC balance (0x1234...): 1,250.50 USDC',
+          actions: ['GET_USDC_BALANCE'],
+        },
+      },
+    ],
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'how much usdc do i have',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: 'Your USDC balance (0x1234...): 1,250.50 USDC',
+          actions: ['GET_USDC_BALANCE'],
+        },
+      },
+    ],
+  ],
 };
 
-/**
- * Action to get ERC20 token balance for an address on Polygon (L2)
- */
+export const getWETHBalanceAction: Action = {
+  name: 'GET_WETH_BALANCE',
+  similes: ['CHECK_WETH_BALANCE', 'SHOW_WETH_BALANCE', 'GET_WETH_AMOUNT'],
+  description: 'Gets the WETH balance for the agent wallet on Polygon.',
+  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+    const content = message.content?.text?.toLowerCase() || '';
+
+    logger.info(`[getWETHBalanceAction] VALIDATION CALLED - message: "${content}"`);
+
+    try {
+      // Check for WETH balance related keywords
+      const wethKeywords = [
+        'weth balance',
+        'weth amount',
+        'my weth',
+        'get weth',
+        'show weth',
+        'check weth',
+        'weth wallet',
+        'balance weth',
+        'how much weth',
+        'wrapped eth',
+        'wrapped ethereum',
+      ];
+
+      const matches = wethKeywords.some((keyword) => content.includes(keyword));
+      logger.info(`[getWETHBalanceAction] Validation result: ${matches}`);
+
+      // Also check if we have required services
+      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
+      if (!rpcService) {
+        logger.warn(`[getWETHBalanceAction] PolygonRpcService not available - validation false`);
+        return false;
+      }
+
+      return matches;
+    } catch (error) {
+      logger.error(`[getWETHBalanceAction] Validation error:`, error);
+      return false;
+    }
+  },
+  handler: async (
+    runtime: IAgentRuntime,
+    message: Memory,
+    state?: State,
+    options?: { [key: string]: unknown },
+    callback?: HandlerCallback
+  ): Promise<Content> => {
+    logger.info('[getWETHBalanceAction] Handler called!');
+
+    const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
+    if (!rpcService) {
+      throw new Error('PolygonRpcService not available');
+    }
+
+    try {
+      // Get agent wallet address using the wallet provider
+      const polygonWalletProvider = await initWalletProvider(runtime);
+      if (!polygonWalletProvider) {
+        throw new Error(
+          'Failed to initialize PolygonWalletProvider - check that PRIVATE_KEY is configured correctly'
+        );
+      }
+      const agentAddress = polygonWalletProvider.getAddress();
+      if (!agentAddress) {
+        throw new Error('Could not determine agent address from provider');
+      }
+
+      logger.info(`Getting WETH balance for address: ${agentAddress}`);
+
+      // Get WETH balance
+      const balance = await rpcService.getErc20Balance(WETH_ADDRESS, agentAddress);
+
+      // WETH has 18 decimals like regular ETH
+      const formattedBalance = ethers.formatEther(balance);
+
+      const responseContent: Content = {
+        text: `Your WETH balance (${agentAddress}): ${formattedBalance} WETH`,
+        actions: ['GET_WETH_BALANCE'],
+        data: {
+          address: agentAddress,
+          tokenAddress: WETH_ADDRESS,
+          balance: balance.toString(),
+          formattedBalance,
+          symbol: 'WETH',
+          decimals: 18,
+        },
+      };
+
+      if (callback) {
+        await callback(responseContent);
+      }
+
+      return responseContent;
+    } catch (error) {
+      logger.error('Error getting WETH balance:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      const errorContent: Content = {
+        text: `Error retrieving WETH balance: ${errorMessage}`,
+        actions: ['GET_WETH_BALANCE'],
+        data: { error: errorMessage },
+      };
+
+      if (callback) {
+        await callback(errorContent);
+      }
+
+      return errorContent;
+    }
+  },
+  examples: [
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'get my weth balance',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: 'Your WETH balance (0x1234...): 0.5 WETH',
+          actions: ['GET_WETH_BALANCE'],
+        },
+      },
+    ],
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'check me weth balance',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: 'Your WETH balance (0x1234...): 0.5 WETH',
+          actions: ['GET_WETH_BALANCE'],
+        },
+      },
+    ],
+  ],
+};
+
 export const getERC20BalanceAction: Action = {
   name: 'GET_ERC20_BALANCE',
-  description: 'Gets the ERC20 token balance for an address on Polygon (L2).',
-  
-  // Define examples
-  examples: [
-    "What's my USDC balance on Polygon?",
-    "Show me the token balance for address 0x1234567890abcdef1234567890abcdef12345678 and token 0xabcdef1234567890abcdef1234567890abcdef12",
-    "How many tokens does 0x1234567890abcdef1234567890abcdef12345678 have for contract 0xabcdef1234567890abcdef1234567890abcdef12?"
-  ],
-  
-  validate: async (options: any, runtime: IAgentRuntime) => {
+  similes: ['CHECK_TOKEN_BALANCE', 'SHOW_TOKEN_BALANCE', 'GET_TOKEN_AMOUNT'],
+  description: 'Gets the ERC-20 token balance for a specific token contract address.',
+  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+    const content = message.content?.text?.toLowerCase() || '';
+
+    logger.info(`[getERC20BalanceAction] VALIDATION CALLED - message: "${content}"`);
+
     try {
-      // Check if POLYGON_RPC_URL is set in environment
-      const polygonRpcUrl = runtime.getSetting('POLYGON_RPC_URL');
-      if (!polygonRpcUrl) {
-        return 'POLYGON_RPC_URL setting is required to get token balance';
+      // Check for ERC-20 token balance related keywords
+      const tokenKeywords = [
+        'token balance',
+        'erc20 balance',
+        'token amount',
+        'balance of token',
+        'get token balance',
+        'show token balance',
+        'check token balance',
+      ];
+
+      const matches = tokenKeywords.some((keyword) => content.includes(keyword));
+      logger.info(`[getERC20BalanceAction] Validation result: ${matches}`);
+
+      // Also check if we have required services
+      const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
+      if (!rpcService) {
+        logger.warn(`[getERC20BalanceAction] PolygonRpcService not available - validation false`);
+        return false;
       }
-      
-      // Check if token address is provided
-      if (!options?.tokenAddress) {
-        return 'Token address is required to get ERC20 balance';
-      }
-      
-      // If no address provided, check if we have a default address
-      if (!options?.address) {
-        const defaultAddress = runtime.getSetting('DEFAULT_ADDRESS');
-        if (!defaultAddress) {
-          return 'Address is required to get token balance';
-        }
-      }
-      
-      // Validate options format
-      try {
-        balanceOptionsSchema.parse({
-          address: options.address || runtime.getSetting('DEFAULT_ADDRESS'),
-          tokenAddress: options.tokenAddress
-        });
-      } catch (error) {
-        if (error instanceof z.ZodError) {
-          return error.errors[0].message;
-        }
-        return 'Invalid address or token address format';
-      }
-      
-      return true;
+
+      return matches;
     } catch (error) {
-      logger.error('Validation error:', error);
-      return 'Invalid token balance options';
+      logger.error(`[getERC20BalanceAction] Validation error:`, error);
+      return false;
     }
   },
-  
-  execute: async (options: any, runtime: IAgentRuntime) => {
+  handler: async (
+    runtime: IAgentRuntime,
+    message: Memory,
+    state?: State,
+    options?: { [key: string]: unknown },
+    callback?: HandlerCallback
+  ): Promise<Content> => {
+    logger.info('[getERC20BalanceAction] Handler called!');
+
+    const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
+    if (!rpcService) {
+      throw new Error('PolygonRpcService not available');
+    }
+
     try {
-      // Get addresses from options or default
-      let address = options?.address as Address;
-      if (!address) {
-        address = runtime.getSetting('DEFAULT_ADDRESS') as Address;
-        logger.info(`Using default address: ${address}`);
+      // Get agent wallet address using the wallet provider
+      const polygonWalletProvider = await initWalletProvider(runtime);
+      if (!polygonWalletProvider) {
+        throw new Error(
+          'Failed to initialize PolygonWalletProvider - check that PRIVATE_KEY is configured correctly'
+        );
       }
-      
-      const tokenAddress = options.tokenAddress as Address;
-      
-      logger.info(`Getting token balance for address: ${address}, token: ${tokenAddress}`);
-      
-      // Get the RPC service
-      const rpcService = runtime.getService(PolygonRpcService.serviceType) as PolygonRpcService;
-      if (!rpcService) {
-        throw new Error('PolygonRpcService not available');
+      const agentAddress = polygonWalletProvider.getAddress();
+      if (!agentAddress) {
+        throw new Error('Could not determine agent address from provider');
       }
-      
-      // Get token metadata and balance in parallel
-      logger.info(`Fetching token metadata and balance...`);
-      const [metadata, balance] = await Promise.all([
-        rpcService.getErc20Metadata(tokenAddress, 'L2'),
-        rpcService.getErc20Balance(tokenAddress, address, 'L2')
-      ]);
-      
-      // Format the balance
-      const formattedBalance = formatUnits(balance, metadata.decimals);
-      
-      logger.info(`Token balance: ${formattedBalance} ${metadata.symbol}`);
-      
-      return {
+
+      // Get token address from options (this would need to be provided)
+      const tokenAddress = options?.tokenAddress as string;
+      if (!tokenAddress) {
+        throw new Error('Token address is required for ERC-20 balance check');
+      }
+
+      logger.info(`Getting ERC-20 balance for token: ${tokenAddress}, address: ${agentAddress}`);
+
+      // Get token balance
+      const balance = await rpcService.getErc20Balance(tokenAddress, agentAddress);
+
+      // Format with 18 decimals as default (could be refined later)
+      const formattedBalance = ethers.formatUnits(balance, 18);
+
+      const responseContent: Content = {
+        text: `Your token balance (${agentAddress}): ${formattedBalance} tokens`,
         actions: ['GET_ERC20_BALANCE'],
         data: {
-          address,
+          address: agentAddress,
           tokenAddress,
-          symbol: metadata.symbol,
-          decimals: metadata.decimals,
           balance: balance.toString(),
-          formattedBalance
-        }
+          formattedBalance,
+          symbol: 'TOKEN',
+          decimals: 18,
+        },
       };
+
+      if (callback) {
+        await callback(responseContent);
+      }
+
+      return responseContent;
     } catch (error) {
-      logger.error('Error getting token balance:', error);
-      return {
+      logger.error('Error getting ERC-20 balance:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      const errorContent: Content = {
+        text: `Error retrieving token balance: ${errorMessage}`,
         actions: ['GET_ERC20_BALANCE'],
-        data: { error: error instanceof Error ? error.message : String(error) }
+        data: { error: errorMessage },
       };
+
+      if (callback) {
+        await callback(errorContent);
+      }
+
+      return errorContent;
     }
   },
-}; 
+  examples: [
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'get token balance',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: 'Your TOKEN balance (0x1234...): 1,250.50 TOKEN',
+          actions: ['GET_ERC20_BALANCE'],
+        },
+      },
+    ],
+  ],
+};
+
+// Legacy actions - keeping for backward compatibility but not exported
+const getNativeBalanceAction: Action = {
+  name: 'GET_NATIVE_BALANCE_LEGACY',
+  description: 'Legacy action - use getMaticBalanceAction instead',
+  validate: async () => false, // Disabled
+  handler: async () => ({ text: 'This action is deprecated', actions: [] }),
+  examples: [],
+};
