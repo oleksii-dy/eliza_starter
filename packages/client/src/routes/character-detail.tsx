@@ -15,14 +15,14 @@ const CharacterDetail: React.FC = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">{character.name}</h1>
+      <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight mb-6">{character.name}</h1>
       <div className="grid gap-4">
         <div className="border rounded-lg p-4 shadow-sm">
-          <h2 className="text-xl font-semibold">Character Details</h2>
-          <p className="text-sm text-gray-500">ID: {character.id}</p>
+          <h2 className="text-2xl lg:text-3xl font-bold tracking-tight">Character Details</h2>
+          <p className="text-muted-foreground">ID: {character.id}</p>
           <p className="mt-2">{character.description}</p>
 
-          <h3 className="text-lg font-semibold mt-4">Traits</h3>
+          <h3 className="text-xl lg:text-2xl font-semibold tracking-tight mt-4">Traits</h3>
           <ul className="list-disc pl-5">
             {character.traits.map((trait, index) => (
               <li key={index}>{trait}</li>

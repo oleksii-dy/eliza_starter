@@ -33,7 +33,7 @@ const CharacterForm: React.FC = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">
+      <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight mb-6">
         {isEditing ? `Edit Character: ${formData.name}` : 'Create New Character'}
       </h1>
 

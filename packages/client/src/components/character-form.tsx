@@ -364,7 +364,7 @@ export default function CharacterForm({
                 {field.title}
                 {field.name in FIELD_REQUIREMENTS &&
                   (FIELD_REQUIREMENTS as Record<string, FIELD_REQUIREMENT_TYPE>)[field.name] ===
-                    FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-red-500">*</p>}
+                    FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-destructive">*</p>}
               </Label>
             </TooltipTrigger>
             {field.tooltip && (
@@ -376,7 +376,7 @@ export default function CharacterForm({
         </TooltipProvider>
       </div>
 
-      {field.description && <p className="text-sm text-muted-foreground">{field.description}</p>}
+      {field.description && <p className="text-muted-foreground">{field.description}</p>}
 
       {field.fieldType === 'textarea' ? (
         <Textarea
@@ -439,7 +439,7 @@ export default function CharacterForm({
                 {field.title}
                 {field.path in FIELD_REQUIREMENTS &&
                   (FIELD_REQUIREMENTS as Record<string, FIELD_REQUIREMENT_TYPE>)[field.path] ===
-                    FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-red-500">*</p>}
+                    FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-destructive">*</p>}
               </Label>
             </TooltipTrigger>
             {field.tooltip && (
@@ -450,7 +450,7 @@ export default function CharacterForm({
           </Tooltip>
         </TooltipProvider>
       </div>
-      {field.description && <p className="text-sm text-muted-foreground">{field.description}</p>}
+      {field.description && <p className="text-muted-foreground">{field.description}</p>}
       <ArrayInput
         data={field.getData(characterValue)}
         onChange={(newData) => updateArray(field.path, newData)}
@@ -541,8 +541,10 @@ export default function CharacterForm({
     <div className="container w-full mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">{title || 'Agent Settings'}</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight">
+            {title || 'Agent Settings'}
+          </h1>
+          <p className="text-muted-foreground mt-2">
             {description || 'Configure your agent settings'}
           </p>
         </div>
@@ -550,7 +552,10 @@ export default function CharacterForm({
 
       {/* Template Selector */}
       <div className="mb-6">
-        <Label htmlFor="template-selector" className="text-base font-medium">
+        <Label
+          htmlFor="template-selector"
+          className="text-xl lg:text-2xl font-semibold tracking-tight"
+        >
           Start with Template:
         </Label>
         <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
