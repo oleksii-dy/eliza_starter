@@ -58,6 +58,18 @@ export default {
       },
       container: {
         center: true,
+        padding: '2rem',
+        screens: {
+          '2xl': '1400px',
+        },
+      },
+      spacing: {
+        '18': '4.5rem',
+        '88': '22rem',
+      },
+      maxWidth: {
+        '8xl': '88rem',
+        '9xl': '96rem',
       },
       colors: {
         background: 'hsl(var(--background))',
