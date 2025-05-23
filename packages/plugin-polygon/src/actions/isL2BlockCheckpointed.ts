@@ -10,11 +10,11 @@ import {
   ModelType,
   parseJSONObjectFromText,
 } from '@elizaos/core';
-import { PolygonRpcService } from '../services/PolygonRpcService';
-import { isL2BlockCheckpointedTemplate } from '../templates';
+import { PolygonRpcService } from '../services/PolygonRpcService.js';
+import { isL2BlockCheckpointedTemplate } from '../templates/index.js';
 
 // Add type declaration for missing method
-declare module '../services/PolygonRpcService' {
+declare module '../services/PolygonRpcService.js' {
   interface PolygonRpcService {
     isL2BlockCheckpointed(l2BlockNumber: number | bigint): Promise<boolean>;
   }
@@ -85,7 +85,7 @@ export const isL2BlockCheckpointedAction: Action = {
 
       // Extract parameters using LLM with proper template
       const prompt = composePromptFromState({
-        state,
+        state: state ? state : { values: {}, data: {}, text: '' },
         template: isL2BlockCheckpointedTemplate,
       });
 

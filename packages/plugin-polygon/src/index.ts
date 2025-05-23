@@ -35,6 +35,10 @@ import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed';
 import { heimdallVoteAction } from './actions/heimdallVoteAction';
 import { heimdallSubmitProposalAction } from './actions/heimdallSubmitProposalAction';
 import { heimdallTransferTokensAction } from './actions/heimdallTransferTokensAction';
+// import { getNativeBalanceAction, getERC20BalanceAction } from './actions/getBalanceInfo.js';
+import { getUSDCBalanceAction, getWETHBalanceAction } from './actions/getBalanceInfo.js';
+import { getBlockNumberAction, getBlockDetailsAction } from './actions/getBlockInfo.js';
+import { getPolygonBlockDetailsAction } from './actions/getPolygonBlockDetails.js';
 
 import {
   WalletProvider,
@@ -83,7 +87,23 @@ const polygonActions: Action[] = [
   heimdallVoteAction,
   heimdallSubmitProposalAction,
   heimdallTransferTokensAction,
+  getBlockNumberAction,
+  // getBlockDetailsAction,  // Temporarily disabled - uses old interface, conflicts with getPolygonBlockDetailsAction
+  getPolygonBlockDetailsAction,
+  getUSDCBalanceAction,
+  getWETHBalanceAction,
 ];
+
+// Debug logging for action registration
+logger.info(`[PolygonPlugin] Registering ${polygonActions.length} actions:`);
+polygonActions.forEach((action) => {
+  logger.info(
+    `[PolygonPlugin] - Action: ${action.name} (similes: ${action.similes?.join(', ') || 'none'})`
+  );
+});
+logger.info(
+  `[PolygonPlugin] Actions with new interface: GET_MATIC_BALANCE, GET_L2_BLOCK_NUMBER, GET_POLYGON_BLOCK_DETAILS, GET_USDC_BALANCE, GET_WETH_BALANCE`
+);
 
 // --- Define Providers --- //
 
