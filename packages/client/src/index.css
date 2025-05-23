@@ -81,22 +81,33 @@
   h5,
   h6 {
     @apply font-display font-bold tracking-tight;
-    letter-spacing: -0.025em;
   }
 
   h1 {
     @apply text-3xl lg:text-4xl;
     font-weight: 800;
+    letter-spacing: -0.02em;
   }
 
   h2 {
     @apply text-2xl lg:text-3xl;
     font-weight: 700;
+    letter-spacing: -0.015em;
   }
 
   h3 {
     @apply text-xl lg:text-2xl;
     font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Code and monospace elements */
+  code,
+  pre {
+    font-family:
+      'Geist Mono', Monaco, 'Cascadia Code', 'Segoe UI Mono', 'Roboto Mono', 'Oxygen Mono',
+      'Ubuntu Monospace', 'Source Code Pro', 'Fira Code', 'Droid Sans Mono', 'Courier New',
+      monospace;
   }
 
   /* Container and layout patterns inspired by Arcjet */
