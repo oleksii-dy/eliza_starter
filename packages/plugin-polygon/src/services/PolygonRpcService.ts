@@ -16,14 +16,14 @@ import {
 } from 'ethers'; // Assuming ethers v6+
 
 // Import JSON ABIs
-import StakeManagerABI from '../contracts/StakeManagerABI.json';
-import ValidatorShareABI from '../contracts/ValidatorShareABI.json';
-import RootChainManagerABI from '../contracts/RootChainManagerABI.json';
-import Erc20ABI from '../contracts/ERC20ABI.json';
-import CheckpointManagerABI from '../contracts/CheckpointManagerABI.json';
+import StakeManagerABI from '../contracts/StakeManagerABI.json' assert { type: 'json' };
+import ValidatorShareABI from '../contracts/ValidatorShareABI.json' assert { type: 'json' };
+import RootChainManagerABI from '../contracts/RootChainManagerABI.json' assert { type: 'json' };
+import Erc20ABI from '../contracts/ERC20ABI.json' assert { type: 'json' };
+import CheckpointManagerABI from '../contracts/CheckpointManagerABI.json' assert { type: 'json' };
 
 // Re-import GasService components
-import { getGasPriceEstimates, type GasPriceEstimates } from './GasService';
+import { getGasPriceEstimates, type GasPriceEstimates } from './GasService.js';
 
 export type NetworkType = 'L1' | 'L2';
 
@@ -64,11 +64,17 @@ export class PolygonRpcService extends Service {
   capabilityDescription =
     'Provides access to Ethereum (L1) and Polygon (L2) JSON-RPC nodes and L1 staking operations.';
 
+  private runtime: IAgentRuntime;
   private l1Provider: EthersProvider | null = null;
   private l2Provider: EthersProvider | null = null;
   private l1Signer: Signer | null = null; // Added L1 Signer
   private stakeManagerContractL1: Contract | null = null; // Added for L1 StakeManager
   private rootChainManagerContractL1: Contract | null = null; // Added RootChainManager instance
+
+  constructor(runtime: IAgentRuntime) {
+    super();
+    this.runtime = runtime;
+  }
 
   private async initializeProviders(): Promise<void> {
     if (this.l1Provider && this.l2Provider && this.rootChainManagerContractL1) {
@@ -119,7 +125,7 @@ export class PolygonRpcService extends Service {
       logger.debug('RootChainManager contract details:', {
         address: ROOT_CHAIN_MANAGER_ADDRESS_L1,
         methods: this.rootChainManagerContractL1.interface.fragments
-          .map((f) => (typeof f === 'object' && 'name' in f && f.name ? f.name : 'unnamed'))
+          .map((f: { name?: string }) => (typeof f === 'object' && f.name ? f.name : 'unnamed'))
           .join(', '),
       });
     } catch (error) {
@@ -215,9 +221,11 @@ export class PolygonRpcService extends Service {
           `ValidatorShare contract at ${validatorShareAddress} may not have expected interface - buyVoucher(uint256,uint256) not found.`
         );
       }
-    } catch (error) {
+    } catch (error: unknown) {
       // Log but don't throw - individual method calls will validate specific functions
-      logger.warn(`Could not verify ValidatorShare contract interface: ${error.message}`);
+      logger.warn(
+        `Could not verify ValidatorShare contract interface: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     return validatorShareContract;
@@ -377,8 +385,10 @@ export class PolygonRpcService extends Service {
       try {
         // Check if we can get the stake - this will throw if validator doesn't exist
         await stakeManager.validatorStake(validatorId);
-      } catch (e) {
-        logger.warn(`Validator ID ${validatorId} not found or inactive.`);
+      } catch (e: unknown) {
+        logger.warn(
+          `Validator ID ${validatorId} not found or inactive. ${e instanceof Error ? e.message : String(e)}`
+        );
         return null;
       }
 
@@ -399,8 +409,10 @@ export class PolygonRpcService extends Service {
       try {
         const delegated = await stakeManager.delegatedAmount(validatorId);
         totalStake = totalStake + BigInt(delegated.toString());
-      } catch (e) {
-        logger.warn(`Could not get delegated amount for validator ${validatorId}: ${e.message}`);
+      } catch (e: unknown) {
+        logger.warn(
+          `Could not get delegated amount for validator ${validatorId}: ${e instanceof Error ? e.message : String(e)}`
+        );
       }
 
       // Determine status - since we don't have direct status info, assume Active
@@ -428,9 +440,9 @@ export class PolygonRpcService extends Service {
             try {
               const commissionRateResult = await validatorShareContract.commissionRate();
               commissionRate = Number(commissionRateResult) / 10000; // Convert from basis points (100 = 1%)
-            } catch (e) {
+            } catch (e: unknown) {
               logger.debug(
-                `Commission rate not available for validator ${validatorId}: ${e.message}`
+                `Commission rate not available for validator ${validatorId}: ${e instanceof Error ? e.message : String(e)}`
               );
             }
           }
@@ -439,14 +451,16 @@ export class PolygonRpcService extends Service {
           if (typeof validatorShareContract.owner === 'function') {
             try {
               signerAddress = await validatorShareContract.owner();
-            } catch (e) {
+            } catch (e: unknown) {
               logger.debug(
-                `Owner address not available for validator ${validatorId}: ${e.message}`
+                `Owner address not available for validator ${validatorId}: ${e instanceof Error ? e.message : String(e)}`
               );
             }
           }
-        } catch (e) {
-          logger.warn(`Error interacting with ValidatorShare contract: ${e.message}`);
+        } catch (e: unknown) {
+          logger.warn(
+            `Error interacting with ValidatorShare contract: ${e instanceof Error ? e.message : String(e)}`
+          );
         }
       }
 
@@ -529,7 +543,11 @@ export class PolygonRpcService extends Service {
       );
       // Handle specific errors (e.g., contract revert if delegator never staked)
       // Often reverts happen if delegator has no stake - might return null instead of throwing
-      if (error.message.includes('delegator never staked') || error.code === 'CALL_EXCEPTION') {
+      if (
+        error instanceof Error &&
+        (error.message.includes('delegator never staked') ||
+          ('code' in error && (error as any).code === 'CALL_EXCEPTION'))
+      ) {
         // Example error check
         logger.warn(
           `Delegator ${delegatorAddress} likely has no stake with validator ${validatorId}.`
@@ -1062,9 +1080,9 @@ export class PolygonRpcService extends Service {
         logger.debug('Using L1 fee details from GasService.');
         return { maxFeePerGas, maxPriorityFeePerGas };
       }
-    } catch (gsError) {
+    } catch (gsError: unknown) {
       logger.warn(
-        `GasService call failed or returned insufficient data: ${gsError.message}. Falling back to l1Provider.getFeeData().`
+        `GasService call failed or returned insufficient data: ${gsError instanceof Error ? gsError.message : String(gsError)}. Falling back to l1Provider.getFeeData().`
       );
     }
 
@@ -1142,7 +1160,7 @@ export class PolygonRpcService extends Service {
         logger.debug('RootChainManager contract details:', {
           address: ROOT_CHAIN_MANAGER_ADDRESS_L1,
           methods: rootChainManager.interface.fragments
-            .map((f) => (typeof f === 'object' && 'name' in f && f.name ? f.name : 'unnamed'))
+            .map((f: { name?: string }) => (typeof f === 'object' && f.name ? f.name : 'unnamed'))
             .join(', '),
         });
         throw new Error(`Failed to get CheckpointManager address from RootChainManager: ${errMsg}`);
@@ -1192,7 +1210,7 @@ export class PolygonRpcService extends Service {
         logger.debug('CheckpointManager contract details:', {
           address: checkpointManagerAddr,
           methods: checkpointManager.interface.fragments
-            .map((f) => (typeof f === 'object' && 'name' in f && f.name ? f.name : 'unnamed'))
+            .map((f: { name?: string }) => (typeof f === 'object' && f.name ? f.name : 'unnamed'))
             .join(', '),
         });
         throw new Error(`Failed to retrieve currentHeaderBlock from CheckpointManager: ${errMsg}`);
@@ -1242,9 +1260,9 @@ export class PolygonRpcService extends Service {
         endBlock = headerBlockDetails[2];
       }
 
-      if (endBlock === undefined) {
+      if (endBlock === undefined || endBlock === null) {
         logger.error(
-          'endBlock not found in headerBlockDetails, full details:',
+          'endBlock not found or is null in headerBlockDetails, full details:',
           JSON.stringify(headerBlockDetails, (_, v) => (typeof v === 'bigint' ? v.toString() : v))
         );
         throw new Error('Failed to retrieve endBlock from headerBlockDetails.');

@@ -508,7 +508,8 @@ If no valid block number is found, or if the user's intent is unclear, you MUST 
 `;
 
 export const isL2BlockCheckpointedTemplate = `You are an AI assistant. Your task is to extract the block number from the user's message to check if it has been checkpointed.
-The block number must be a positive integer.
+The block number must be a positive integer. Extract the block number from the user's most recent message if multiple messages are provided.
+Do not return anything other than the block number requested to be checked in the following json format.
 
 Review the recent messages:
 <recent_messages>
