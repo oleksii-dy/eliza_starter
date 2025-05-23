@@ -579,14 +579,14 @@ export default function Page({ serverId }: { serverId: UUID }) {
                   return (
                     <div
                       key={`${message.id as string}-${message.createdAt}`}
-                      className={`flex flex-col gap-1 p-1 ${isUser ? 'justify-end' : ''}`}
+                      className={isUser ? 'flex justify-end' : 'flex'}
                     >
                       <ChatBubble
                         variant={isUser ? 'sent' : 'received'}
-                        className={`flex flex-row items-end gap-2 ${isUser ? 'flex-row-reverse' : ''}`}
+                        className={isUser ? 'flex-row-reverse' : ''}
                       >
                         {!isUser && (
-                          <Avatar className="size-8 border rounded-full select-none mb-2">
+                          <Avatar>
                             <AvatarImage
                               src={
                                 isUser
@@ -659,7 +659,7 @@ export default function Page({ serverId }: { serverId: UUID }) {
                       ? 'Input disabled while agent is processing...'
                       : 'Type your message here...'
                   }
-                  className="min-h-12 resize-none rounded-md bg-card border-0 p-3 shadow-none focus-visible:ring-0"
+                  className="min-h-12"
                   disabled={inputDisabled}
                 />
                 <div className="flex items-center p-3 pt-0">
@@ -691,7 +691,7 @@ export default function Page({ serverId }: { serverId: UUID }) {
                       <p>Attach file</p>
                     </TooltipContent>
                   </Tooltip>
-                  <Button type="submit" size="sm" className="ml-auto gap-1.5 h-[30px]">
+                  <Button type="submit" size="sm" className="ml-auto">
                     <Send className="size-3.5" />
                   </Button>
                 </div>

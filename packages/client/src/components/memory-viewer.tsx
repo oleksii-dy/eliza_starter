@@ -225,11 +225,11 @@ export function AgentMemoryViewer({ agentId, agentName }: { agentId: UUID; agent
     return (
       <div
         key={memory.id || index}
-        className="border rounded-md p-3 mb-3 bg-card hover:bg-accent/10 transition-colors relative group"
+        className="border rounded-md p-3 mb-3 bg-card hover:bg-accent/10 transition-colors group"
       >
         {/* Action buttons */}
         {memory.id && (
-          <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button
               variant="ghost"
               size="icon"
@@ -239,7 +239,6 @@ export function AgentMemoryViewer({ agentId, agentName }: { agentId: UUID; agent
                 setEditingMemory(memory);
               }}
               title="Edit memory"
-              className="h-7 w-7 hover:bg-muted"
             >
               <Pencil className="h-4 w-4" />
             </Button>
