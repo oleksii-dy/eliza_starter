@@ -48,6 +48,8 @@ import createGoatPlugin from "@elizaos/plugin-goat";
 // import { availPlugin } from "@elizaos/plugin-avail";
 // import { avalanchePlugin } from "@elizaos/plugin-avalanche";
 import { binancePlugin } from "@elizaos/plugin-binance";
+import { seiAgentkitPlugin } from "@elizaos/plugin-sei-agent-kit";
+
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -104,7 +106,6 @@ import { fileURLToPath } from "url";
 import yargs from "yargs";
 // import {dominosPlugin} from "@elizaos/plugin-dominos";
 
-import { milliCharacter } from "./milli.character";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -790,6 +791,11 @@ export async function createAgent(
             getSecret(character, "COINGECKO_PRO_API_KEY")
                 ? coingeckoPlugin
                 : null,
+            getSecret(character, "SEI_PRIVATE_KEY") &&
+            getSecret(character, "SEI_RPC_URL") &&
+            getSecret(character, "OPENAI_API_KEY")
+                ? seiAgentkitPlugin
+                : null,
             getSecret(character, "EVM_PROVIDER_URL") ? goatPlugin : null,
             // getSecret(character, "ABSTRACT_PRIVATE_KEY")
             //     ? abstractPlugin
@@ -1022,11 +1028,11 @@ const startAgents = async () => {
     let serverPort = parseInt(settings.SERVER_PORT || "3000");
     const args = parseArguments();
     let charactersArg = args.characters || args.character;
-    let characters = [milliCharacter, defaultCharacter];
+    let characters = [defaultCharacter];
 
-    // if (charactersArg) {
-    //     characters = await loadCharacters(charactersArg);
-    // }
+    if (charactersArg) {
+        characters = await loadCharacters(charactersArg);
+    }
 
     try {
         for (const character of characters) {
