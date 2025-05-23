@@ -43,54 +43,21 @@ export class WalletProvider {
   chains: Record<string, Chain> = {};
   account: PrivateKeyAccount;
   runtime: IAgentRuntime;
-  private l1ChainName: string | undefined; // Store the configured L1 chain name
 
   constructor(
     accountOrPrivateKey: PrivateKeyAccount | `0x${string}`,
     runtime: IAgentRuntime,
-    chainsConfig?: { l1ChainName: string; polygonChainName: string; chains: Record<string, Chain> }
+    chains?: Record<string, Chain>
   ) {
     this.setAccount(accountOrPrivateKey);
+    this.setChains(chains);
     this.runtime = runtime;
 
-    if (chainsConfig) {
-      this.l1ChainName = chainsConfig.l1ChainName;
-      this.setChains(chainsConfig.chains);
-      if (Object.keys(chainsConfig.chains).length > 0) {
-        // Prioritize setting current chain to Polygon if available, else L1, else first in list
-        if (chainsConfig.polygonChainName && chainsConfig.chains[chainsConfig.polygonChainName]) {
-          this.setCurrentChain(chainsConfig.polygonChainName as SupportedChain);
-        } else if (chainsConfig.l1ChainName && chainsConfig.chains[chainsConfig.l1ChainName]) {
-          this.setCurrentChain(chainsConfig.l1ChainName as SupportedChain);
-        } else {
-          this.setCurrentChain(Object.keys(chainsConfig.chains)[0] as SupportedChain);
-        }
-      }
+    if (chains && Object.keys(chains).length > 0) {
+      this.setCurrentChain(Object.keys(chains)[0] as SupportedChain);
     }
 
     this.cache = new NodeCache({ stdTTL: this.CACHE_EXPIRY_SEC });
-  }
-
-  // Helper to resolve aliases like "ethereum" to the configured L1 chain name
-  private resolveChainName(chainName: SupportedChain): string {
-    const lowerChainName = chainName.toLowerCase();
-    if (lowerChainName === 'ethereum' && this.l1ChainName && this.chains[this.l1ChainName]) {
-      return this.l1ChainName;
-    }
-    // Add more aliases if needed, e.g., for Polygon
-    if (lowerChainName === 'matic' && this.chains['polygon']) {
-      // Assuming polygon is always 'polygon'
-      return 'polygon';
-    }
-    if (!this.chains[chainName]) {
-      elizaLogger.warn(
-        `Chain name "${chainName}" not directly found in configured chains. Attempting to find a viem standard chain.`
-      );
-      // Attempt to fall back to a standard viem chain name if not in configured this.chains
-      // This is a failsafe and might indicate a configuration issue if hit often.
-      // throw new Error(`Chain "${chainName}" not found in configured chains and fallback to standard viem chains without explicit RPC is disabled.`);
-    }
-    return chainName;
   }
 
   getAddress(): Address {
@@ -106,22 +73,20 @@ export class WalletProvider {
   getPublicClient(
     chainName: SupportedChain
   ): PublicClient<HttpTransport, Chain, Account | undefined> {
-    const resolvedChainName = this.resolveChainName(chainName);
-    const transport = this.createHttpTransport(resolvedChainName as SupportedChain);
+    const transport = this.createHttpTransport(chainName);
 
     const publicClient = createPublicClient({
-      chain: this.chains[resolvedChainName],
+      chain: this.chains[chainName],
       transport,
     });
     return publicClient;
   }
 
   getWalletClient(chainName: SupportedChain): WalletClient {
-    const resolvedChainName = this.resolveChainName(chainName);
-    const transport = this.createHttpTransport(resolvedChainName as SupportedChain);
+    const transport = this.createHttpTransport(chainName);
 
     const walletClient = createWalletClient({
-      chain: this.chains[resolvedChainName],
+      chain: this.chains[chainName],
       transport,
       account: this.account,
     });
@@ -140,16 +105,11 @@ export class WalletProvider {
   }
 
   getChainConfigs(chainName: SupportedChain): Chain {
-    const resolvedChainName = this.resolveChainName(chainName);
-    // Prefer configured chain if available
-    if (this.chains[resolvedChainName]) {
-      return this.chains[resolvedChainName];
-    }
-    // Fallback to viemChains if not in this.chains (e.g. for LiFi SDK needs)
-    const chain = viemChains[resolvedChainName as keyof typeof viemChains];
+    const key = chainName === ETH_MAINNET_KEY ? 'mainnet' : chainName;
+    const chain = viemChains[key];
 
     if (!chain?.id) {
-      throw new Error(`Invalid chain name: ${resolvedChainName}`);
+      throw new Error('Invalid chain name');
     }
 
     return chain;
@@ -192,14 +152,12 @@ export class WalletProvider {
   }
 
   switchChain(chainName: SupportedChain, customRpcUrl?: string) {
-    const resolvedChainName = this.resolveChainName(chainName);
-    if (!this.chains[resolvedChainName]) {
-      const chain = WalletProvider.genChainFromName(resolvedChainName, customRpcUrl);
-      this.addChain({ [resolvedChainName]: chain }); // Use resolved name for adding
+    if (!this.chains[chainName]) {
+      const chain = WalletProvider.genChainFromName(chainName, customRpcUrl);
+      this.addChain({ [chainName]: chain });
     }
-    this.setCurrentChain(resolvedChainName as SupportedChain);
+    this.setCurrentChain(chainName);
   }
-
   async switchChainById(chainId: number): Promise<WalletClient> {
     const entry = Object.entries(this.chains).find(([, c]) => c.id === chainId);
     if (!entry) throw new Error(`Unsupported chainId ${chainId}`);
@@ -230,16 +188,15 @@ export class WalletProvider {
   };
 
   private createHttpTransport = (chainName: SupportedChain) => {
-    const resolvedChainName = this.resolveChainName(chainName);
-    const chain = this.chains[resolvedChainName];
+    const chain = this.chains[chainName];
 
     if (!chain) {
       throw new Error(
-        `Chain configuration not found for resolved name: ${resolvedChainName} (original: ${chainName})`
+        `Unsupported chain "${chainName}". Available: ${Object.keys(this.chains).join(', ')}`
       );
     }
 
-    if (chain.rpcUrls.custom?.http && chain.rpcUrls.custom.http.length > 0) {
+    if (chain.rpcUrls.custom) {
       return http(chain.rpcUrls.custom.http[0]);
     }
     return http(chain.rpcUrls.default.http[0]);
@@ -270,32 +227,22 @@ export class WalletProvider {
 
 // --- Adjusted Chain Configuration Logic --- //
 
-const genChainsFromRuntime = (
-  runtime: IAgentRuntime
-): { l1ChainName?: string; polygonChainName?: string; chains: Record<string, Chain> } => {
+const genChainsFromRuntime = (runtime: IAgentRuntime): Record<string, Chain> => {
   const chains: Record<string, Chain> = {};
-  let l1ChainName: string | undefined;
-  let polygonChainName: string | undefined;
 
   // 1. Get L2 Polygon RPC URL
-  const polyRpcUrl = runtime.getSetting('POLYGON_RPC_URL');
-  const configuredPolygonName =
-    runtime.getSetting('POLYGON_CHAIN_NAME')?.toLowerCase() || 'polygon';
-
-  if (polyRpcUrl) {
+  const polygonRpcUrl = runtime.getSetting('POLYGON_RPC_URL');
+  if (polygonRpcUrl) {
+    // Attempt to determine if it's mainnet or testnet (Mumbai)
+    // Simple check for now, could be more robust
+    const isMainnet = !/mumbai/i.test(polygonRpcUrl);
+    const polygonChainName = isMainnet ? 'polygon' : 'polygonMumbai';
     try {
-      // Use configured name or default to 'polygon' / 'polygonMumbai' based on URL
-      const actualPolygonChainKey = viemChains[configuredPolygonName as keyof typeof viemChains]
-        ? configuredPolygonName
-        : !/mumbai/i.test(polyRpcUrl)
-          ? 'polygon'
-          : 'polygonMumbai';
-      const chain = WalletProvider.genChainFromName(actualPolygonChainKey, polyRpcUrl);
-      chains[actualPolygonChainKey] = chain;
-      polygonChainName = actualPolygonChainKey;
-      elizaLogger.info(`Configured Polygon chain: ${actualPolygonChainKey}`);
+      const chain = WalletProvider.genChainFromName(polygonChainName, polygonRpcUrl);
+      chains[polygonChainName] = chain;
+      elizaLogger.info(`Configured Polygon chain: ${polygonChainName}`);
     } catch (error) {
-      elizaLogger.error(`Error configuring Polygon chain (${configuredPolygonName}):`, error);
+      elizaLogger.error(`Error configuring Polygon chain (${polygonChainName}):`, error);
     }
   } else {
     elizaLogger.warn('POLYGON_RPC_URL setting not found.');
@@ -303,22 +250,22 @@ const genChainsFromRuntime = (
 
   // 2. Get L1 Ethereum RPC URL
   const ethRpcUrl = runtime.getSetting('ETHEREUM_RPC_URL');
-  const configuredEthName = runtime.getSetting('ETHEREUM_CHAIN_NAME')?.toLowerCase() || 'mainnet';
-
   if (ethRpcUrl) {
+    // Attempt to determine if it's mainnet or testnet (e.g., Sepolia)
+    const isEthMainnet = !/(sepolia|goerli|ropsten|kovan)/i.test(ethRpcUrl);
+    const viemKeyForEth = isEthMainnet ? 'mainnet' : 'sepolia';
+    const storageKeyForEth = isEthMainnet ? ETH_MAINNET_KEY : 'sepolia'; // ETH_MAINNET_KEY is "ethereum"
     try {
-      // Use configured name or default to 'mainnet' / 'sepolia' based on URL
-      const actualEthChainKey = viemChains[configuredEthName as keyof typeof viemChains]
-        ? configuredEthName
-        : !/(sepolia|goerli|ropsten|kovan)/i.test(ethRpcUrl)
-          ? 'mainnet'
-          : 'sepolia';
-      const chain = WalletProvider.genChainFromName(actualEthChainKey, ethRpcUrl);
-      chains[actualEthChainKey] = chain;
-      l1ChainName = actualEthChainKey;
-      elizaLogger.info(`Configured Ethereum L1 chain: ${actualEthChainKey}`);
+      const chain = WalletProvider.genChainFromName(viemKeyForEth, ethRpcUrl);
+      chains[storageKeyForEth] = chain;
+      elizaLogger.info(
+        `Configured Ethereum L1 chain: ${storageKeyForEth} (using viem key: ${viemKeyForEth})`
+      );
     } catch (error) {
-      elizaLogger.error(`Error configuring Ethereum L1 chain (${configuredEthName}):`, error);
+      elizaLogger.error(
+        `Error configuring Ethereum L1 chain (${storageKeyForEth} with viem key ${viemKeyForEth}):`,
+        error
+      );
     }
   } else {
     elizaLogger.warn('ETHEREUM_RPC_URL setting not found.');
@@ -327,69 +274,70 @@ const genChainsFromRuntime = (
   if (Object.keys(chains).length === 0) {
     elizaLogger.error('No chains could be configured. WalletProvider may not function correctly.');
   }
-  return { l1ChainName, polygonChainName, chains };
+
+  return chains;
 };
 
 export const initWalletProvider = async (
   runtime: IAgentRuntime
 ): Promise<WalletProvider | null> => {
-  elizaLogger.info('Initializing WalletProvider...');
-  try {
-    const pkSetting = runtime.getSetting('WALLET_PRIVATE_KEY');
-    const encryptedPk = runtime.getSetting('WALLET_ENCRYPTED_PRIVATE_KEY');
-    let privateKey: `0x${string}` | null = null;
+  // TEE Mode handling (optional, keep if needed, ensure settings are correct)
+  const teeMode = runtime.getSetting('TEE_MODE') || 'OFF'; // Use correct setting if TEE is used
 
-    if (encryptedPk) {
-      elizaLogger.info('Found encrypted private key. Attempting to derive...');
-      try {
-        const phalaProvider = new PhalaDeriveKeyProvider(runtime);
-        privateKey = (await phalaProvider.deriveKey(encryptedPk)) as `0x${string}`;
-        if (privateKey && privateKey.startsWith('0x') && privateKey.length === 66) {
-          elizaLogger.info('Successfully derived private key from encrypted key.');
-        } else {
-          elizaLogger.error(
-            'Derived key is not a valid private key format. Falling back or failing.'
-          );
-          privateKey = null; // Ensure it's null if derivation was not successful
-        }
-      } catch (deriveError) {
-        elizaLogger.error('Error deriving private key with PhalaDeriveKeyProvider:', deriveError);
-        // Fall through to try WALLET_PRIVATE_KEY if derivation fails
-      }
+  const chains = genChainsFromRuntime(runtime);
+  if (Object.keys(chains).length === 0) {
+    elizaLogger.error('Cannot initialize WalletProvider: No chains configured.');
+    return null; // Return null or throw error if no chains are essential
+  }
+
+  if (teeMode !== 'OFF') {
+    const walletSecretSalt = runtime.getSetting('WALLET_SECRET_SALT'); // Use correct TEE setting key if needed
+    if (!walletSecretSalt) {
+      throw new Error('WALLET_SECRET_SALT required when TEE_MODE is enabled');
     }
 
-    // Fallback to direct private key if encrypted key is not present or derivation failed
-    if (!privateKey && pkSetting) {
-      elizaLogger.info(
-        'Using direct WALLET_PRIVATE_KEY (encryption/derivation not used or failed).'
+    try {
+      const deriveKeyProvider = new PhalaDeriveKeyProvider(teeMode);
+      const deriveKeyResult = await deriveKeyProvider.deriveEcdsaKeypair(
+        walletSecretSalt,
+        'polygon', // Use a unique context for polygon
+        runtime.agentId
       );
-      if (pkSetting.startsWith('0x') && pkSetting.length === 66) {
-        privateKey = pkSetting as `0x${string}`;
-      } else {
-        elizaLogger.error(
-          'WALLET_PRIVATE_KEY is not a valid hex private key. It must be 66 characters long and start with 0x.'
-        );
-        // Do not proceed if the direct PK is invalid and no encrypted one worked
-        if (!encryptedPk) return null; // Or if encryptedPk was present but failed derivation
-      }
-    }
-
-    if (!privateKey) {
-      elizaLogger.error(
-        'Private key not available (neither WALLET_PRIVATE_KEY nor derivable WALLET_ENCRYPTED_PRIVATE_KEY found or valid). WalletProvider cannot be initialized.'
+      elizaLogger.info('Initialized WalletProvider using TEE derived key.');
+      return new WalletProvider(
+        deriveKeyResult.keypair as unknown as PrivateKeyAccount,
+        runtime,
+        chains
       );
-      return null;
+    } catch (error) {
+      elizaLogger.error('Failed to initialize WalletProvider with TEE:', error);
+      throw error; // Rethrow TEE initialization error
     }
-
+  } else {
+    // Use PRIVATE_KEY defined in this plugin's config
+    const rawPrivateKey = runtime.getSetting('PRIVATE_KEY');
     elizaLogger.info('PRIVATE_KEY setting retrieved (not showing actual key for security)');
-    const chainsConfig = genChainsFromRuntime(runtime);
-    const provider = new WalletProvider(privateKey, runtime, chainsConfig);
-    elizaLogger.info('Initialized WalletProvider using PRIVATE_KEY setting.');
-    return provider;
-  } catch (e) {
-    const errMsg = e instanceof Error ? e.message : String(e);
-    elizaLogger.error('Failed to initialize WalletProvider:', errMsg, e);
-    return null;
+
+    if (!rawPrivateKey) {
+      elizaLogger.error(
+        'PRIVATE_KEY setting is missing or not loaded. Cannot initialize WalletProvider.'
+      );
+      throw new Error('PRIVATE_KEY setting is missing for WalletProvider initialization');
+    }
+
+    try {
+      // Format the private key correctly with 0x prefix if missing
+      const privateKey = rawPrivateKey.startsWith('0x')
+        ? (rawPrivateKey as `0x${string}`)
+        : (`0x${rawPrivateKey}` as `0x${string}`);
+
+      const provider = new WalletProvider(privateKey, runtime, chains);
+      elizaLogger.info('Initialized WalletProvider using PRIVATE_KEY setting.');
+      return provider;
+    } catch (error) {
+      elizaLogger.error('Failed to initialize WalletProvider with private key:', error);
+      throw error; // Rethrow wallet initialization error
+    }
   }
 };
 
