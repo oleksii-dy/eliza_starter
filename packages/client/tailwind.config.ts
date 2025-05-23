@@ -17,6 +17,24 @@ export default {
           'Segoe UI Symbol',
           'Noto Color Emoji',
         ],
+        display: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        xs: ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.025em' }],
+        sm: ['0.875rem', { lineHeight: '1.25rem', letterSpacing: '0.025em' }],
+        base: ['1rem', { lineHeight: '1.5rem', letterSpacing: '0.025em' }],
+        lg: ['1.125rem', { lineHeight: '1.75rem', letterSpacing: '0.025em' }],
+        xl: ['1.25rem', { lineHeight: '1.75rem', letterSpacing: '0.025em' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem', letterSpacing: '0.025em' }],
+        '3xl': ['1.875rem', { lineHeight: '2.25rem', letterSpacing: '0.025em' }],
+      },
+      fontWeight: {
+        normal: '400',
+        medium: '500',
+        semibold: '600',
+        bold: '700',
+        extrabold: '800',
+        black: '900',
       },
       keyframes: {
         'bounce-sm': {
@@ -31,6 +49,12 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+      },
+      boxShadow: {
+        sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+        xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
       },
       container: {
         center: true,
