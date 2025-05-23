@@ -166,6 +166,14 @@ export const bridgeDepositAction: Action = {
     logger.info('Handling BRIDGE_DEPOSIT_POLYGON for:', message.id);
     try {
       const walletProvider = await initWalletProvider(runtime);
+      if (!walletProvider) {
+        logger.error(
+          'Failed to initialize WalletProvider. Check private key and chain configurations.'
+        );
+        throw new Error(
+          'Failed to initialize WalletProvider. Ensure private key and chain configurations are correct.'
+        );
+      }
       const actionRunner = new PolygonBridgeActionRunner(walletProvider);
       const prompt = composePromptFromState({
         state,
@@ -186,11 +194,11 @@ export const bridgeDepositAction: Action = {
         }
 
         // At this point, paramsJson must be BridgeParams
-        const bridgeOptions: BridgeParams = paramsJson;
       } catch (e) {
         logger.error('Failed to parse LLM response for bridge params:', modelResponse, e);
         throw new Error('Could not understand bridge parameters.');
       }
+      const bridgeOptions: BridgeParams = paramsJson;
       if (
         !bridgeOptions.fromChain ||
         !bridgeOptions.toChain ||
