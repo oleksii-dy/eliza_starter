@@ -649,6 +649,10 @@ export class PolygonRpcService extends Service {
         chainId: (await l1Provider.getNetwork()).chainId, // Ensure correct chain ID
       };
 
+      // Get current nonce before signing
+      const nonce = await signer.getNonce();
+      tx.nonce = nonce;
+
       // Add debugging info
       logger.debug('Transaction details:', {
         to: tx.to,
@@ -1027,6 +1031,10 @@ export class PolygonRpcService extends Service {
         maxPriorityFeePerGas: maxPriorityFeePerGas,
         chainId: (await l1Provider.getNetwork()).chainId,
       };
+
+      // Get current nonce before signing
+      const nonce = await signer.getNonce();
+      tx.nonce = nonce;
 
       logger.debug('Signing approve transaction...', tx);
       const signedTx = await signer.signTransaction(tx);
