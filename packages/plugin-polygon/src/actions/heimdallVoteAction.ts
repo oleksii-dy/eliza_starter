@@ -111,7 +111,6 @@ export const heimdallVoteAction: Action = {
         if (parsed) {
           extractedParams = parsed as Partial<HeimdallVoteParams>;
 
-          // ---- BEGIN MODIFICATION: Convert string/number option to VoteOption enum ----
           if (extractedParams && extractedParams.option !== undefined) {
             const opt = String(extractedParams.option).toUpperCase().trim();
             if (opt === 'YES' || opt === '1') {
@@ -130,7 +129,7 @@ export const heimdallVoteAction: Action = {
             } else if (opt === 'UNSPECIFIED' || opt === '0') {
               extractedParams.option = VoteOption.VOTE_OPTION_UNSPECIFIED;
             } else {
-              const numOpt = parseInt(opt, 10);
+              const numOpt = Number.parseInt(opt, 10);
               if (!isNaN(numOpt) && VoteOption[numOpt] !== undefined) {
                 extractedParams.option = numOpt as unknown as VoteOption;
               } else {

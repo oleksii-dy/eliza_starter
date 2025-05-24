@@ -10,7 +10,26 @@ export const getBlockNumberAction: Action = {
   description: 'Gets the current block number on Polygon (L2).',
 
   // Define examples for how to use this action
-  examples: [],
+  examples: [
+    [
+      {
+        name: 'User',
+        content: { text: 'What is the current block number on Polygon?' },
+      },
+    ],
+    [
+      {
+        name: 'User',
+        content: { text: 'Get latest Polygon block height' },
+      },
+    ],
+    [
+      {
+        name: 'User',
+        content: { text: 'Fetch current block number for L2' },
+      },
+    ],
+  ],
 
   // Validation function
   validate: async (runtime: IAgentRuntime, message: Memory) => {
@@ -70,9 +89,26 @@ export const getBlockDetailsAction: Action = {
 
   // Define examples for how to use this action
   examples: [
-    'Show me details for block 12345678 on Polygon',
-    'Get information about Polygon block 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-    'What transactions are in Polygon block 12345678?',
+    [
+      {
+        name: 'User',
+        content: { text: 'Show me details for block 12345678 on Polygon' },
+      },
+    ],
+    [
+      {
+        name: 'User',
+        content: {
+          text: 'Get information about Polygon block 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        },
+      },
+    ],
+    [
+      {
+        name: 'User',
+        content: { text: 'What transactions are in Polygon block 12345678?' },
+      },
+    ],
   ],
 
   // Validation function
@@ -233,9 +269,26 @@ export const getBlockInfoAction: Action = {
 
   // Define examples
   examples: [
-    "What's in block 42000000 on Polygon?",
-    'Show me the details of block 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-    'Get information about Polygon block 42000000',
+    [
+      {
+        name: 'User',
+        content: { text: "What's in block 42000000 on Polygon?" },
+      },
+    ],
+    [
+      {
+        name: 'User',
+        content: {
+          text: 'Show me the details of block 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        },
+      },
+    ],
+    [
+      {
+        name: 'User',
+        content: { text: 'Get information about Polygon block 42000000' },
+      },
+    ],
   ],
 
   validate: async (options: any, runtime: IAgentRuntime) => {

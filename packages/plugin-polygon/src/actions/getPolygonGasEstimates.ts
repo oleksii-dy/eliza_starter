@@ -1,5 +1,5 @@
 import type { Action, IAgentRuntime } from '@elizaos/core';
-import { getGasPriceEstimates, type GasPriceEstimates } from '../services/GasService';
+import { getGasPriceEstimates, type GasPriceEstimates } from '../services/GasService.js';
 
 export const getPolygonGasEstimatesAction: Action = {
   name: 'GET_POLYGON_GAS_ESTIMATES',
@@ -49,5 +49,24 @@ export const getPolygonGasEstimatesAction: Action = {
       data: serializableEstimates,
     };
   },
-  examples: [],
+  examples: [
+    [
+      {
+        name: 'User',
+        content: { text: 'What are the current gas prices on Polygon?' },
+      },
+    ],
+    [
+      {
+        name: 'User',
+        content: { text: 'Get Polygon gas estimates' },
+      },
+    ],
+    [
+      {
+        name: 'User',
+        content: { text: 'Fetch gas fees for Polygon network' },
+      },
+    ],
+  ],
 };
