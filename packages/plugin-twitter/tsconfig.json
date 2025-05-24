@@ -15,5 +15,6 @@
       "@elizaos/core/*": ["../core/src/*"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "../plugin-milli/src/actions/summarizeTweets.ts", "../plugin-milli/src/services/tweetRetrievalProvider.ts"],
+  "composite": true
 }

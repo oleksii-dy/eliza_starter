@@ -97,6 +97,7 @@ import { OpacityAdapter } from "@elizaos/plugin-opacity";
 // import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
 // import { stargazePlugin } from "@elizaos/plugin-stargaze";
 import { akashPlugin } from "@elizaos/plugin-akash";
+import { TweetMonitoringService } from "@elizaos/plugin-milli";
 // import { quaiPlugin } from "@elizaos/plugin-quai";
 import Database from "better-sqlite3";
 import fs from "fs";
@@ -980,6 +981,18 @@ async function startAgent(
 
         // start services/plugins/process knowledge
         await runtime.initialize();
+        
+        // Initialize tweet monitoring service for Milli character
+        if (character.name === "Milli" || character.name?.toLowerCase() === "milli") {
+            try {
+                const monitoringService = TweetMonitoringService.getInstance();
+                await monitoringService.initialize(runtime);
+                await monitoringService.start();
+                elizaLogger.info("Tweet monitoring service started for Milli agent");
+            } catch (error) {
+                elizaLogger.error("Failed to start tweet monitoring service:", error);
+            }
+        }
 
         // start assigned clients
         runtime.clients = await initializeClients(character, runtime);
@@ -1051,7 +1064,7 @@ const startAgents = async () => {
     }
 
     // upload some agent functionality into directClient
-    directClient.startAgent = async (character) => {
+    directClient.startAgent = async (character: Character) => {
         // Handle plugins
         character.plugins = await handlePluginImporting(character.plugins);
 
