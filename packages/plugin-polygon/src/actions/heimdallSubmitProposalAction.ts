@@ -14,9 +14,9 @@ import {
   HeimdallService,
   type TextProposal as ServiceTextProposal, // Alias to avoid name clash if needed
   type ParameterChangeProposal as ServiceParameterChangeProposal,
-} from '../services/HeimdallService';
+} from '../services/HeimdallService.js';
 import { z } from 'zod';
-import { heimdallSubmitProposalActionTemplate } from '../templates'; // Will be created
+import { heimdallSubmitProposalActionTemplate } from '../templates/index.js'; // Will be created
 
 // --- Action Parameter Schemas ---
 const paramChangeSchema = z.object({
@@ -153,13 +153,72 @@ export const heimdallSubmitProposalAction: Action = {
 
       try {
         const prompt = composePromptFromState({
-          state,
+          state: state ?? { values: {}, data: {}, text: '' }, // Provide a default State object if state is undefined
           template: heimdallSubmitProposalActionTemplate,
         });
         const modelResponse = await runtime.useModel(ModelType.TEXT_SMALL, {
           prompt,
         });
-        const parsed = parseJSONObjectFromText(modelResponse);
+        logger.debug(
+          'HEIMDALL_SUBMIT_PROPOSAL: Raw modelResponse from runtime.useModel:',
+          modelResponse
+        ); // New Log
+
+        // Pre-process modelResponse to strip markdown fences
+        let jsonString = modelResponse;
+        const regex = /```(?:json)?\s*([\s\S]*?)\s*```/;
+        logger.debug('HEIMDALL_SUBMIT_PROPOSAL: Regex to be used for stripping:', regex.toString()); // New Log
+        const match = modelResponse.match(regex);
+        logger.debug('HEIMDALL_SUBMIT_PROPOSAL: Result of modelResponse.match(regex):', match); // New Log
+
+        if (match && match[1]) {
+          logger.debug('HEIMDALL_SUBMIT_PROPOSAL: Regex match found. match[1] is:', match[1]); // New Log
+          jsonString = match[1];
+          // Remove single-line comments from jsonString
+          jsonString = jsonString.replace(/\/\/.*$/gm, '');
+          logger.debug(
+            'HEIMDALL_SUBMIT_PROPOSAL: jsonString after stripping attempt and comment removal:',
+            jsonString
+          ); // Modified Log
+        } else {
+          logger.warn(
+            'HEIMDALL_SUBMIT_PROPOSAL: Regex did not match or match[1] was empty. jsonString remains unstripped.'
+          ); // New Log
+        }
+
+        logger.debug(
+          "Model's json response (this is jsonString passed to parseJSONObjectFromText):",
+          jsonString
+        ); // Modified existing log for clarity
+
+        // ---- BEGIN NEW DEBUG BLOCK ----
+        let directParseResult: any = null;
+        let directParseError: any = null;
+        try {
+          directParseResult = JSON.parse(jsonString);
+          logger.debug(
+            'HEIMDALL_SUBMIT_PROPOSAL: Direct JSON.parse(jsonString) SUCCEEDED. Result:',
+            directParseResult
+          );
+        } catch (e) {
+          directParseError = e instanceof Error ? e.message : String(e);
+          logger.error(
+            'HEIMDALL_SUBMIT_PROPOSAL: Direct JSON.parse(jsonString) FAILED. Error:',
+            directParseError
+          );
+          logger.error(
+            'HEIMDALL_SUBMIT_PROPOSAL: jsonString that failed direct parse was:',
+            jsonString
+          );
+        }
+        // ---- END NEW DEBUG BLOCK ----
+
+        const parsed = directParseResult ?? parseJSONObjectFromText(jsonString);
+        logger.debug(
+          'HEIMDALL_SUBMIT_PROPOSAL: Result from parseJSONObjectFromText(jsonString) or directParseResult:',
+          parsed
+        ); // Modified Log
+
         if (parsed) {
           extractedParams = parsed as Partial<HeimdallSubmitProposalParams>;
         }
@@ -176,7 +235,7 @@ export const heimdallSubmitProposalAction: Action = {
 
       if (
         !extractedParams ||
-        extractedParams.error ||
+        (extractedParams.error && extractedParams.error.trim() !== '') ||
         !extractedParams.content ||
         !extractedParams.initialDepositAmount
       ) {

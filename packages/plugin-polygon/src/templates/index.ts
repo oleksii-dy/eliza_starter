@@ -186,7 +186,7 @@ If the user's intent is unclear or unrelated to Polygon gas estimates, you MUST 
 \`\`\`
 `;
 
-export const bridgeDepositPolygonTemplate = `You are an AI assistant. Your task is to extract parameters for a bridge deposit from L1 to Polygon.
+export const bridgeDepositPolygonTemplate = `You are an AI assistant. Your task is to extract parameters for a bridge deposit between blockchain networks.
 
 Review the recent messages:
 <recent_messages>
@@ -194,28 +194,52 @@ Review the recent messages:
 </recent_messages>
 
 Based on the conversation, extract the following parameters:
-- tokenAddressL1: The L1 token address (string starting with 0x)
-- amountWei: The amount to bridge in Wei (string, positive integer)
-- recipientAddressL2 (optional): The recipient address on L2 (string starting with 0x)
+- fromChain: The source blockchain network (e.g., "ethereum", "polygon", "arbitrum")
+- toChain: The destination blockchain network (e.g., "ethereum", "polygon", "arbitrum")
+- fromToken: The token address on the source chain (string starting with 0x)
+- toToken: The token address on the destination chain (string starting with 0x)
+- amount: The amount to bridge (string, representing the human-readable amount)
+- toAddress (optional): The recipient address on the destination chain (string starting with 0x)
+
+Important notes: 
+- Always use "ethereum" (not "mainnet") when referring to the Ethereum network
+- Always use "polygon" when referring to the Polygon network
+- Always use "arbitrum" when referring to the Arbitrum network
 
 Respond with a JSON markdown block containing only the extracted values.
-The JSON should have this structure:
+The JSON should have this structure and MUST NOT include any comments:
 \`\`\`json
 {
-    "tokenAddressL1": string,
-    "amountWei": string,
-    "recipientAddressL2"?: string
+    "fromChain": string,
+    "toChain": string,
+    "fromToken": string,
+    "toToken": string,
+    "amount": string,
+    "toAddress"?: string
 }
 \`\`\`
-If 'recipientAddressL2' is not mentioned by the user, omit it from the JSON.
+If 'toAddress' is not mentioned by the user, omit it from the JSON.
 
-If the required parameters (tokenAddressL1 and amountWei) are not found or invalid, you MUST respond with the following JSON structure:
+IMPORTANT: Your JSON response must be valid JSON without any comments or explanatory text. Do not include // comments or /* */ style comments in the JSON.
+
+If the required parameters are not found or invalid, you MUST respond with the following JSON structure:
 \`\`\`json
 {
-    "error": "Missing or invalid parameters. Please provide a valid token address (starting with 0x) and amount in Wei (as a string)."
+    "error": "Missing or invalid parameters. Please provide source chain, destination chain, token addresses and amount."
 }
 \`\`\`
-`;
+
+Example valid tokens:
+- Ethereum MATIC: 0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0
+- Ethereum USDC: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+- Ethereum WETH: 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+- Polygon MATIC: 0x0000000000000000000000000000000000001010
+- Polygon USDC: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
+- Polygon WETH: 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619
+- Arbitrum USDC: 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8
+- Arbitrum WETH: 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1
+
+Always use the appropriate token address for the specified chains.`;
 
 export const proposeGovernanceActionTemplate = `You are an AI assistant. Your task is to extract parameters for submitting a new governance proposal.
 
@@ -453,6 +477,59 @@ If any required parameters (recipientAddress, amount) are missing or unclear, yo
 \`\`\`json
 {
     "error": "Could not determine all required Heimdall transfer parameters (recipientAddress, amount). Please clarify your request."
+}
+\`\`\`
+`;
+
+export const getCheckpointStatusTemplate = `You are an AI assistant. Your task is to extract the block number from the user's message to check its checkpoint status.
+The block number must be a positive integer.
+
+Review the recent messages:
+<recent_messages>
+{{recentMessages}}
+</recent_messages>
+
+Based on the conversation, identify the Polygon L2 block number to check.
+
+Respond with a JSON markdown block containing only the extracted block number.
+The JSON should have this structure:
+\`\`\`json
+{
+    "blockNumber": number
+}
+\`\`\`
+
+If no valid block number is found, or if the user's intent is unclear, you MUST respond with the following JSON structure:
+\`\`\`json
+{
+    "error": "Block number not found or invalid. Please specify a positive integer for the block number."
+}
+\`\`\`
+`;
+
+export const isL2BlockCheckpointedTemplate = `You are an AI assistant. Your task is to extract the block number from the user's message to check if it has been checkpointed.
+The block number must be a positive integer. Extract the block number from the user's most recent message if multiple messages are provided.
+Do not return anything other than the block number requested to be checked in the following json format.
+
+Review the recent messages:
+<recent_messages>
+{{recentMessages}}
+</recent_messages>
+
+Based on the conversation, identify the Polygon L2 block number to check if it has been checkpointed.
+
+Respond with a JSON markdown block containing only the extracted block number.
+The JSON should have this structure:
+\`\`\`json
+{
+    "l2BlockNumber": number
+}
+\`\`\`
+
+If no valid block number is found, or if the user's intent is unclear, you MUST respond with the following JSON structure:
+\`\`\`json
+{
+    "error": "Block number not found or invalid. Please specify a positive integer for the block number."
 }
 \`\`\`
 `;

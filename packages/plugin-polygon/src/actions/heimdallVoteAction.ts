@@ -10,9 +10,9 @@ import {
   parseJSONObjectFromText,
   type ActionExample,
 } from '@elizaos/core';
-import { HeimdallService, VoteOption } from '../services/HeimdallService';
+import { HeimdallService, VoteOption } from '../services/HeimdallService.js';
 import { z } from 'zod';
-import { heimdallVoteActionTemplate } from '../templates'; // Assuming a template will be created
+import { heimdallVoteActionTemplate } from '../templates/index.js'; // Assuming a template will be created
 
 // --- Action Parameter Schema ---
 const heimdallVoteParamsSchema = z.object({
@@ -110,6 +110,36 @@ export const heimdallVoteAction: Action = {
         const parsed = parseJSONObjectFromText(modelResponse);
         if (parsed) {
           extractedParams = parsed as Partial<HeimdallVoteParams>;
+
+          if (extractedParams && extractedParams.option !== undefined) {
+            const opt = String(extractedParams.option).toUpperCase().trim();
+            if (opt === 'YES' || opt === '1') {
+              extractedParams.option = VoteOption.VOTE_OPTION_YES;
+            } else if (opt === 'NO' || opt === '3') {
+              extractedParams.option = VoteOption.VOTE_OPTION_NO;
+            } else if (opt === 'ABSTAIN' || opt === '2') {
+              extractedParams.option = VoteOption.VOTE_OPTION_ABSTAIN;
+            } else if (
+              opt === 'NO_WITH_VETO' ||
+              opt === 'NOWITHVETO' ||
+              opt === 'NO WITH VETO' ||
+              opt === '4'
+            ) {
+              extractedParams.option = VoteOption.VOTE_OPTION_NO_WITH_VETO;
+            } else if (opt === 'UNSPECIFIED' || opt === '0') {
+              extractedParams.option = VoteOption.VOTE_OPTION_UNSPECIFIED;
+            } else {
+              const numOpt = Number.parseInt(opt, 10);
+              if (!isNaN(numOpt) && VoteOption[numOpt] !== undefined) {
+                extractedParams.option = numOpt as unknown as VoteOption;
+              } else {
+                logger.warn(
+                  `Unrecognized vote option from LLM: ${extractedParams.option}. Validation will likely fail.`
+                );
+              }
+            }
+          }
+          // ---- END MODIFICATION ----
         }
         logger.debug(
           'HEIMDALL_VOTE_ON_PROPOSAL: Extracted params via TEXT_SMALL:',

@@ -8,9 +8,10 @@ import {
   logger,
   composePromptFromState,
   ModelType,
-  type TemplateType,
+  parseJSONObjectFromText,
 } from '@elizaos/core';
 import { PolygonRpcService } from '../services/PolygonRpcService';
+import { getCheckpointStatusTemplate } from '../templates';
 
 // Define the structure for checkpoint status information
 interface CheckpointStatus {
@@ -21,25 +22,9 @@ interface CheckpointStatus {
 
 // Define input schema for the LLM-extracted parameters
 interface CheckpointParams {
-  blockNumber: number;
+  blockNumber?: number;
+  error?: string;
 }
-
-// Define template for LLM parameter extraction
-const checkpointTemplate = {
-  name: 'Check Polygon Checkpoint Status',
-  description:
-    'Extracts parameters for checking if a Polygon L2 block has been checkpointed on Ethereum L1.',
-  parameters: {
-    type: 'object',
-    properties: {
-      blockNumber: {
-        type: 'number',
-        description: 'The L2 Polygon block number to check checkpoint status for.',
-      },
-    },
-    required: ['blockNumber'],
-  },
-};
 
 export const getCheckpointStatusAction: Action = {
   name: 'GET_CHECKPOINT_STATUS',
@@ -102,19 +87,27 @@ export const getCheckpointStatusAction: Action = {
         throw new Error('PolygonRpcService not available');
       }
 
-      // Extract parameters using LLM
+      // Extract parameters using LLM with proper template
       const prompt = composePromptFromState({
         state,
-        template: checkpointTemplate as unknown as TemplateType,
+        template: getCheckpointStatusTemplate,
       });
 
-      const modelResponse = await runtime.useModel(ModelType.LARGE, { prompt });
+      // Try using the model to extract block number
+      const modelResponse = await runtime.useModel(ModelType.TEXT_SMALL, {
+        prompt,
+      });
       let params: CheckpointParams;
 
       try {
-        const responseText = modelResponse || '';
-        const jsonString = responseText.replace(/^```json\n?|\n?```$/g, '');
-        params = JSON.parse(jsonString);
+        params = parseJSONObjectFromText(modelResponse) as CheckpointParams;
+        logger.debug('GET_CHECKPOINT_STATUS: Extracted params:', params);
+
+        if (params.error) {
+          // Check if the model response contains an error
+          logger.warn(`GET_CHECKPOINT_STATUS: Model responded with error: ${params.error}`);
+          throw new Error(params.error);
+        }
       } catch (error: unknown) {
         logger.error(
           'Failed to parse LLM response for checkpoint parameters:',

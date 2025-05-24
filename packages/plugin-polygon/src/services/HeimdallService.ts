@@ -1,5 +1,5 @@
 import type { OfflineSigner } from '@cosmjs/proto-signing';
-import { DirectSecp256k1HdWallet, coins } from '@cosmjs/proto-signing';
+import { DirectSecp256k1HdWallet, coins, DirectSecp256k1Wallet } from '@cosmjs/proto-signing';
 import type { SigningStargateClient, StargateClientOptions } from '@cosmjs/stargate';
 import { SigningStargateClient as ConcreteSigningStargateClient } from '@cosmjs/stargate';
 import { Service, type IAgentRuntime, logger } from '@elizaos/core';
@@ -125,9 +125,18 @@ export class HeimdallService extends Service {
       throw new Error('Heimdall private key is not configured for HeimdallService.');
     }
     try {
-      const signer = await DirectSecp256k1HdWallet.fromMnemonic(this.privateKey, {
-        prefix: 'heimdall',
-      });
+      // Convert hex private key to Uint8Array
+      // Ensure the private key starts with 0x for consistency, then strip it for Buffer conversion
+      const hexKey = this.privateKey.startsWith('0x')
+        ? this.privateKey.substring(2)
+        : this.privateKey;
+      if (!/^[0-9a-fA-F]{64}$/.test(hexKey)) {
+        logger.error('Invalid private key format. Expected 64 hex characters.');
+        throw new Error('Invalid private key format.');
+      }
+      const privateKeyBytes = Uint8Array.from(Buffer.from(hexKey, 'hex'));
+
+      const signer = await DirectSecp256k1Wallet.fromKey(privateKeyBytes, 'heimdall');
       return signer;
     } catch (error) {
       logger.error(
