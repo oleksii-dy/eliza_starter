@@ -36,7 +36,7 @@ const heimdallTransferTokensParamsSchema = z.object({
   amount: z
     .string()
     .min(1)
-    .regex(/^\\d+$/, 'Amount must be a string containing only digits (Wei).')
+    .regex(/^\d+$/, 'Amount must be a string containing only digits (Wei).')
     .describe('The amount of tokens to transfer in Wei (e.g., "1000000000000000000").'),
   denom: z
     .string()
@@ -54,14 +54,14 @@ function extractHeimdallTransferTokensParamsFromText(
   logger.debug(`Attempting to extract HeimdallTransferTokensParams from text: \"${text}\".`);
 
   const recipientMatch = text.match(
-    /\\b(?:to|recipient|receiver)\\s*[:\\-]?\\s*(heimdall(?:valoper)?[a-zA-Z0-9]+)/i
+    /\b(?:to|recipient|receiver)\s*[:\-]?\s*(heimdall(?:valoper)?[a-zA-Z0-9]+)/i
   );
   if (recipientMatch?.[1]) params.recipientAddress = recipientMatch[1];
 
-  const amountMatch = text.match(/\\b(amount|sum)\\s*[:\\-]?\\s*(\\d+)/i);
+  const amountMatch = text.match(/\b(amount|sum)\s*[:\-]?\s*(\d+)/i);
   if (amountMatch?.[2]) params.amount = amountMatch[2];
 
-  const denomMatch = text.match(/\\b(denom|denomination|currency)\\s*[:\\-]?\\s*(\\w+)/i);
+  const denomMatch = text.match(/\b(denom|denomination|currency)\s*[:\-]?\s*(\w+)/i);
   if (denomMatch?.[2]) params.denom = denomMatch[2].toLowerCase();
 
   logger.debug('Manually extracted HeimdallTransferTokensParams:', params);
@@ -71,8 +71,17 @@ function extractHeimdallTransferTokensParamsFromText(
 // --- Action Definition ---
 export const heimdallTransferTokensAction: Action = {
   name: 'HEIMDALL_TRANSFER_TOKENS',
-  similes: ['TRANSFER_HEIMDALL_MATIC', 'SEND_HEIMDALL_TOKENS', 'HEIMDALL_TOKEN_TRANSFER'],
-  description: 'Transfers native tokens (e.g., MATIC) on the Heimdall network.',
+  similes: [
+    'TRANSFER_HEIMDALL_MATIC', 
+    'SEND_HEIMDALL_TOKENS', 
+    'HEIMDALL_TOKEN_TRANSFER',
+    'TRANSFER_TO_HEIMDALL',
+    'SEND_TO_HEIMDALL',
+    'HEIMDALL_TRANSFER',
+    'TRANSFER_MATIC_HEIMDALL',
+    'SEND_MATIC_HEIMDALL'
+  ],
+  description: 'Transfers native tokens (e.g., MATIC) on the Heimdall network when the recipient address starts with "heimdall".',
 
   validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     logger.debug('Validating HEIMDALL_TRANSFER_TOKENS action...');

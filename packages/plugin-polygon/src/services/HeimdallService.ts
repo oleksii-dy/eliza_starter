@@ -8,48 +8,6 @@ import { Service, type IAgentRuntime, logger } from '@elizaos/core';
 const HEIMDALL_RPC_URL_KEY = 'HEIMDALL_RPC_URL';
 const PRIVATE_KEY_KEY = 'PRIVATE_KEY';
 
-/**
- * Enum representing voting options for governance proposals.
- * These values match the Cosmos SDK VoteOption enum values.
- */
-export enum VoteOption {
-  VOTE_OPTION_UNSPECIFIED = 0,
-  VOTE_OPTION_YES = 1,
-  VOTE_OPTION_ABSTAIN = 2,
-  VOTE_OPTION_NO = 3,
-  VOTE_OPTION_NO_WITH_VETO = 4,
-}
-
-// Type for standard Cosmos SDK MsgVote
-interface MsgVote {
-  typeUrl: string;
-  value: {
-    proposalId: string | number;
-    voter: string;
-    option: VoteOption;
-  };
-}
-
-// Interface for Content types in proposals
-export interface TextProposal {
-  title: string;
-  description: string;
-}
-
-export interface ParamChange {
-  subspace: string;
-  key: string;
-  value: string;
-}
-
-export interface ParameterChangeProposal {
-  title: string;
-  description: string;
-  changes: ParamChange[];
-}
-
-export type ProposalContent = TextProposal | ParameterChangeProposal;
-
 // Interface for cosmos sdk transaction return type
 interface BroadcastTxSuccess {
   code: number;
@@ -62,12 +20,12 @@ interface BroadcastTxSuccess {
 
 /**
  * Service for interacting with the Polygon Heimdall layer,
- * primarily for governance actions.
+ * primarily for token transfer operations.
  */
 export class HeimdallService extends Service {
   static override serviceType = 'heimdall';
   override capabilityDescription =
-    'Provides access to Polygon Heimdall layer for governance operations.';
+    'Provides access to Polygon Heimdall layer for token transfer operations.';
 
   private heimdallRpcUrl: string | null = null;
   private privateKey: string | null = null;
@@ -187,160 +145,6 @@ export class HeimdallService extends Service {
     }
   }
 
-  /**
-   * Vote on a Heimdall governance proposal.
-   *
-   * @param proposalId The ID of the proposal to vote on
-   * @param option The vote option (YES, NO, etc.)
-   * @returns The transaction hash if successful
-   */
-  public async voteOnProposal(proposalId: string | number, option: VoteOption): Promise<string> {
-    logger.info(`Attempting to vote on proposal ${proposalId} with option ${VoteOption[option]}`);
-
-    try {
-      // Step 1: Get the signing client and first account/signer
-      const client = await this.getSigningClient();
-      const signer = await this.getSigner();
-      const accounts = await signer.getAccounts();
-      if (accounts.length === 0) {
-        throw new Error('No accounts found in wallet');
-      }
-      const voter = accounts[0].address;
-      logger.debug(`Voter address: ${voter}`);
-
-      // Step 2: Construct the MsgVote with the proper typeUrl
-      const msgVote: MsgVote = {
-        typeUrl: '/cosmos.gov.v1beta1.MsgVote',
-        value: {
-          proposalId: proposalId.toString(), // Ensure proposalId is a string
-          voter: voter,
-          option: option,
-        },
-      };
-
-      // Step 3: Prepare fee
-      const fee = {
-        amount: coins(HeimdallService.DEFAULT_FEE_AMOUNT, HeimdallService.DEFAULT_DENOM),
-        gas: HeimdallService.DEFAULT_GAS_LIMIT,
-      };
-
-      // Step 4: Broadcast the transaction
-      logger.debug('Broadcasting vote transaction...');
-      const result = await client.signAndBroadcast(voter, [msgVote], fee);
-
-      // Step 5: Check for success and return tx hash
-      this.assertIsBroadcastTxSuccess(result);
-      logger.info(
-        `Successfully voted on proposal ${proposalId}, tx hash: ${result.transactionHash}`
-      );
-      return result.transactionHash;
-    } catch (error) {
-      // Convert error to a more user-friendly format
-      let errorMessage: string;
-      if (error instanceof Error) {
-        errorMessage = error.message;
-        // Add more specific error handling based on error messages
-        if (errorMessage.includes('insufficient fee')) {
-          errorMessage =
-            'Insufficient fee for Heimdall transaction. Try increasing the fee amount.';
-        } else if (
-          errorMessage.includes('proposal not found') ||
-          errorMessage.includes('not found')
-        ) {
-          errorMessage = `Proposal ${proposalId} not found or no longer in voting period.`;
-        } else if (errorMessage.includes('already voted')) {
-          errorMessage = `This account has already voted on proposal ${proposalId}.`;
-        }
-      } else {
-        errorMessage = String(error);
-      }
-
-      logger.error(`Failed to vote on proposal ${proposalId}:`, errorMessage);
-      throw new Error(`Vote failed: ${errorMessage}`);
-    }
-  }
-
-  public async submitProposal(
-    content: ProposalContent,
-    initialDepositAmount: string,
-    initialDepositDenom = 'matic'
-  ): Promise<string> {
-    const contentType = 'changes' in content ? 'ParameterChangeProposal' : 'TextProposal';
-    logger.info(`Attempting to submit ${contentType}`);
-
-    try {
-      // Step 1: Get the signing client and first account/signer
-      const client = await this.getSigningClient();
-      const signer = await this.getSigner();
-      const accounts = await signer.getAccounts();
-      if (accounts.length === 0) {
-        throw new Error('No accounts found in wallet');
-      }
-      const proposer = accounts[0].address;
-      logger.debug(`Proposal from address: ${proposer}`);
-
-      // Step 2: Construct the proposal content based on its type
-      let typeUrl: string;
-      if ('changes' in content) {
-        // It's a ParameterChangeProposal
-        typeUrl = '/cosmos.params.v1beta1.ParameterChangeProposal';
-        logger.debug(`Parameter change proposal: ${content.title}`);
-        // The content is passed directly as the 'content' field in MsgSubmitProposal
-      } else {
-        // It's a TextProposal
-        typeUrl = '/cosmos.gov.v1beta1.TextProposal';
-        logger.debug(`Text proposal: ${content.title}`);
-        // The content is passed directly as the 'content' field in MsgSubmitProposal
-      }
-
-      // Step 3: Construct the MsgSubmitProposal
-      const msgSubmitProposal = {
-        typeUrl: '/cosmos.gov.v1beta1.MsgSubmitProposal',
-        value: {
-          content: {
-            typeUrl,
-            value: content, // When using cosmjs, this will get properly converted/encoded
-          },
-          initialDeposit: coins(initialDepositAmount, initialDepositDenom),
-          proposer,
-        },
-      };
-
-      // Step 4: Prepare fee
-      const fee = {
-        amount: coins(HeimdallService.DEFAULT_FEE_AMOUNT, HeimdallService.DEFAULT_DENOM),
-        gas: HeimdallService.DEFAULT_GAS_LIMIT,
-      };
-
-      // Step 5: Broadcast the transaction
-      logger.debug('Broadcasting submit proposal transaction...');
-      const result = await client.signAndBroadcast(proposer, [msgSubmitProposal], fee);
-
-      // Step 6: Check for success and return tx hash
-      this.assertIsBroadcastTxSuccess(result);
-      logger.info(`Successfully submitted proposal, tx hash: ${result.transactionHash}`);
-      return result.transactionHash;
-    } catch (error) {
-      // Convert error to a more user-friendly format
-      let errorMessage: string;
-      if (error instanceof Error) {
-        errorMessage = error.message;
-        // Add more specific error handling
-        if (errorMessage.includes('insufficient fee')) {
-          errorMessage =
-            'Insufficient fee for Heimdall transaction. Try increasing the fee amount.';
-        } else if (errorMessage.includes('minimum deposit')) {
-          errorMessage = 'The initial deposit is below the minimum required for proposals.';
-        }
-      } else {
-        errorMessage = String(error);
-      }
-
-      logger.error('Failed to submit proposal:', errorMessage);
-      throw new Error(`Proposal submission failed: ${errorMessage}`);
-    }
-  }
-
   public async transferHeimdallTokens(
     recipientAddress: string,
     amount: string,
@@ -413,33 +217,3 @@ export class HeimdallService extends Service {
     }
   }
 }
-
-// Example of how this service might be registered in your plugin's main file (e.g., src/index.ts)
-/*
-import { ElizaOSAgent } from "@elizaos/core";
-import { HeimdallService } from "./services/HeimdallService";
-
-export default class MyPolygonPlugin extends ElizaOSAgent {
-	async onReady() {
-		await super.onReady();
-
-		// Register the HeimdallService
-		if (this.runtime) {
-			this.runtime.registerService(HeimdallService.serviceType, async (runtime) => {
-				return HeimdallService.start(runtime);
-			});
-			logger.info("MyPolygonPlugin: HeimdallService registered.");
-		} else {
-			logger.error("MyPolygonPlugin: Runtime not available to register HeimdallService.");
-		}
-
-		// You can now access the service via runtime.getService<HeimdallService>(HeimdallService.serviceType)
-		// Example:
-		// const heimdallService = this.runtime?.getService<HeimdallService>(HeimdallService.serviceType);
-		// if (heimdallService) {
-		//   const client = await heimdallService.getSigningClient();
-		//   logger.info("Got Heimdall client from service:", client?.registry?.toString());
-		// }
-	}
-}
-*/
