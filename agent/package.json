@@ -41,6 +41,7 @@
         "@elizaos/plugin-evm": "workspace:*",
         "@elizaos/plugin-goat": "workspace:*",
         "@elizaos/plugin-image-generation": "workspace:*",
+        "@elizaos/plugin-milli": "workspace:*",
         "@elizaos/plugin-node": "workspace:*",
         "@elizaos/plugin-giphy": "workspace:*",
         "@elizaos/plugin-sgx": "workspace:*",
