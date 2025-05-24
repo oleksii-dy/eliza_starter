@@ -1,5 +1,5 @@
 import { Action, IAgentRuntime, Memory, HandlerCallback, State, elizaLogger } from "@elizaos/core";
-import { TwitterService } from "@elizaos/plugin-twitter";
+import { Scraper } from "agent-twitter-client";
 
 export const analyzeSentimentAction: Action = {
     name: "ANALYZE_SENTIMENT",
@@ -72,20 +72,21 @@ async function performSentimentAnalysis(runtime: IAgentRuntime, _depth: string, 
     try {
         elizaLogger.info("Performing real sentiment analysis on Twitter data");
         
-        // Get Twitter service for real data
-        const twitterService = TwitterService.getInstance();
-        if (!twitterService) {
-            elizaLogger.warn("Twitter service not available for sentiment analysis");
-            return generateFallbackSentimentData();
+        // Initialize Twitter scraper
+        const scraper = new Scraper();
+        
+        // Try to login if credentials are available
+        const twitterUsername = runtime.getSetting("TWITTER_USERNAME");
+        const twitterPassword = runtime.getSetting("TWITTER_PASSWORD");
+        
+        if (twitterUsername && twitterPassword) {
+            try {
+                await scraper.login(twitterUsername, twitterPassword);
+                elizaLogger.debug("Logged into Twitter for sentiment analysis");
+            } catch (error) {
+                elizaLogger.warn("Failed to login to Twitter, using public access:", error);
+            }
         }
-
-        const twitterClientManager = twitterService.getClient(runtime.agentId, runtime.agentId);
-        if (!twitterClientManager) {
-            elizaLogger.warn("Twitter client not configured for sentiment analysis");
-            return generateFallbackSentimentData();
-        }
-
-        const client = twitterClientManager.client;
         
         // Get monitored accounts
         const monitoredAccounts = runtime.getSetting("TWEET_ACCOUNTS_TO_MONITOR")?.split(",") || 
@@ -97,7 +98,7 @@ async function performSentimentAnalysis(runtime: IAgentRuntime, _depth: string, 
         
         for (const account of monitoredAccounts.slice(0, 3)) { // Limit for performance
             try {
-                const tweets = await fetchTweetsForSentiment(client, account, 15);
+                const tweets = await fetchTweetsForSentiment(scraper, account, 15);
                 allTweets.push(...tweets);
                 
                 // Categorize tweets by topic
@@ -140,25 +141,23 @@ async function performSentimentAnalysis(runtime: IAgentRuntime, _depth: string, 
     }
 }
 
-async function fetchTweetsForSentiment(client: any, username: string, maxTweets: number): Promise<any[]> {
+async function fetchTweetsForSentiment(scraper: Scraper, username: string, maxTweets: number): Promise<any[]> {
     try {
-        const profile = await client.twitterClient.getProfile(username);
-        if (!profile?.userId) return [];
+        const tweets = [];
+        for await (const tweet of scraper.getTweets(username, maxTweets)) {
+            tweets.push({
+                text: tweet.text,
+                likes: tweet.likes || 0,
+                retweets: tweet.retweets || 0,
+                replies: tweet.replies || 0,
+                timestamp: tweet.timestamp,
+                username: tweet.username
+            });
+            
+            if (tweets.length >= maxTweets) break;
+        }
         
-        const userTweets = await client.twitterClient.getUserTweets(profile.userId, maxTweets);
-        if (!userTweets?.tweets) return [];
-        
-        return userTweets.tweets.map((tweet: any) => {
-            const parsed = client.parseTweet(tweet);
-            return {
-                text: parsed.text,
-                likes: parsed.likes || 0,
-                retweets: parsed.retweets || 0,
-                replies: parsed.replies || 0,
-                timestamp: parsed.timestamp,
-                username: parsed.username
-            };
-        });
+        return tweets;
     } catch (error) {
         elizaLogger.warn(`Error fetching sentiment tweets for @${username}:`, error);
         return [];

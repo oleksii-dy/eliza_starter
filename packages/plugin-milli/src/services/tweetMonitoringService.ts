@@ -1,10 +1,11 @@
 import { IAgentRuntime, elizaLogger } from "@elizaos/core";
-import { TwitterService } from "@elizaos/plugin-twitter";
+import { Scraper } from "agent-twitter-client";
 
 export class TweetMonitoringService {
     private static instance: TweetMonitoringService;
     private intervalId?: NodeJS.Timeout;
     private runtime: IAgentRuntime;
+    private scraper?: Scraper;
 
     static getInstance(): TweetMonitoringService {
         if (!TweetMonitoringService.instance) {
@@ -16,6 +17,24 @@ export class TweetMonitoringService {
     async initialize(runtime: IAgentRuntime): Promise<void> {
         this.runtime = runtime;
         elizaLogger.info("Initializing Tweet Monitoring Service for Milli");
+        
+        // Initialize Twitter scraper
+        this.scraper = new Scraper();
+        
+        // Try to login if credentials are available
+        const twitterUsername = runtime.getSetting("TWITTER_USERNAME");
+        const twitterPassword = runtime.getSetting("TWITTER_PASSWORD");
+        
+        if (twitterUsername && twitterPassword) {
+            try {
+                await this.scraper.login(twitterUsername, twitterPassword);
+                elizaLogger.info("Tweet monitoring service logged into Twitter");
+            } catch (error) {
+                elizaLogger.warn("Failed to login to Twitter for monitoring, using public access:", error);
+            }
+        } else {
+            elizaLogger.info("No Twitter credentials configured for monitoring, using public access");
+        }
     }
 
     async start(): Promise<void> {
@@ -44,21 +63,23 @@ export class TweetMonitoringService {
             
             elizaLogger.debug(`Monitoring ${accounts.length} accounts: ${accounts.join(", ")}`);
             
-            // Fetch tweets for each monitored account
-            const twitterService = TwitterService.getInstance();
-            const client = twitterService.client;
+            // Fetch tweets for each monitored account using our scraper
+            if (!this.scraper) {
+                elizaLogger.warn("Twitter scraper not initialized");
+                return;
+            }
             
             for (const account of accounts) {
                 try {
                     elizaLogger.debug(`Fetching tweets for account: ${account}`);
                     
-                    if (!client) {
-                        elizaLogger.warn("Twitter client not available for monitoring");
-                        continue;
+                    // Fetch recent tweets (last 10)
+                    const tweets = [];
+                    for await (const tweet of this.scraper.getTweets(account, 10)) {
+                        tweets.push(tweet);
+                        if (tweets.length >= 10) break;
                     }
                     
-                    // Fetch recent tweets (last 10)
-                    const tweets = await client.getUserTweets(account, 10);
                     elizaLogger.debug(`Found ${tweets.length} tweets for ${account}`);
                     
                     // Process tweets for sentiment or other analysis

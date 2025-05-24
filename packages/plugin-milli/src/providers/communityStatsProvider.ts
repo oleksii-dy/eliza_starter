@@ -1,5 +1,5 @@
 import { Provider, IAgentRuntime, Memory, State, elizaLogger } from "@elizaos/core";
-import { TwitterService } from "@elizaos/plugin-twitter";
+import { Scraper } from "agent-twitter-client";
 
 export const communityStatsProvider: Provider = {
     get: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
@@ -36,20 +36,21 @@ async function generateCommunityStats(runtime: IAgentRuntime): Promise<string> {
     try {
         elizaLogger.info("Generating fresh community statistics");
         
-        // Get Twitter service for real data
-        const twitterService = TwitterService.getInstance();
-        if (!twitterService) {
-            elizaLogger.warn("Twitter service not available, using fallback stats");
-            return generateFallbackStats();
+        // Initialize Twitter scraper
+        const scraper = new Scraper();
+        
+        // Try to login if credentials are available
+        const twitterUsername = runtime.getSetting("TWITTER_USERNAME");
+        const twitterPassword = runtime.getSetting("TWITTER_PASSWORD");
+        
+        if (twitterUsername && twitterPassword) {
+            try {
+                await scraper.login(twitterUsername, twitterPassword);
+                elizaLogger.debug("Logged into Twitter for stats generation");
+            } catch (error) {
+                elizaLogger.warn("Failed to login to Twitter, using public access:", error);
+            }
         }
-
-        const twitterClientManager = twitterService.getClient(runtime.agentId, runtime.agentId);
-        if (!twitterClientManager) {
-            elizaLogger.warn("Twitter client not configured, using fallback stats");
-            return generateFallbackStats();
-        }
-
-        const client = twitterClientManager.client;
         
         // Get monitored accounts
         const monitoredAccounts = runtime.getSetting("TWEET_ACCOUNTS_TO_MONITOR")?.split(",") || 
@@ -65,7 +66,7 @@ async function generateCommunityStats(runtime: IAgentRuntime): Promise<string> {
         
         for (const account of monitoredAccounts.slice(0, 5)) { // Limit for performance
             try {
-                const tweets = await fetchAccountStats(client, account, 10);
+                const tweets = await fetchAccountStats(scraper, account, 10);
                 if (tweets.length > 0) {
                     totalTweets += tweets.length;
                     
@@ -121,24 +122,22 @@ async function generateCommunityStats(runtime: IAgentRuntime): Promise<string> {
     }
 }
 
-async function fetchAccountStats(client: any, username: string, maxTweets: number): Promise<any[]> {
+async function fetchAccountStats(scraper: Scraper, username: string, maxTweets: number): Promise<any[]> {
     try {
-        const profile = await client.twitterClient.getProfile(username);
-        if (!profile?.userId) return [];
+        const tweets = [];
+        for await (const tweet of scraper.getTweets(username, maxTweets)) {
+            tweets.push({
+                text: tweet.text,
+                likes: tweet.likes || 0,
+                retweets: tweet.retweets || 0,
+                replies: tweet.replies || 0,
+                timestamp: tweet.timestamp
+            });
+            
+            if (tweets.length >= maxTweets) break;
+        }
         
-        const userTweets = await client.twitterClient.getUserTweets(profile.userId, maxTweets);
-        if (!userTweets?.tweets) return [];
-        
-        return userTweets.tweets.map((tweet: any) => {
-            const parsed = client.parseTweet(tweet);
-            return {
-                text: parsed.text,
-                likes: parsed.likes || 0,
-                retweets: parsed.retweets || 0,
-                replies: parsed.replies || 0,
-                timestamp: parsed.timestamp
-            };
-        });
+        return tweets;
     } catch (error) {
         elizaLogger.warn(`Error fetching stats for @${username}:`, error);
         return [];

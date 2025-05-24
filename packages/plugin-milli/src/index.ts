@@ -5,7 +5,7 @@ export * from "./providers/communityStatsProvider";
 export * from "./services/tweetMonitoringService";
 export * from "./types";
 
-import { Plugin } from "@elizaos/core";
+import type { Plugin } from "@elizaos/core";
 import { summarizeTweetsAction } from "./actions/summarizeTweets";
 import { analyzeSentimentAction } from "./actions/analyzeSentiment";
 import { tweetRetrievalProvider } from "./providers/tweetRetrievalProvider";

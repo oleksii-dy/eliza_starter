@@ -1,6 +1,6 @@
 {
     "name": "Milli",
-    "clients": ["twitter"],
+    "clients": [],
     "modelProvider": "openai",
     "settings": {
         "secrets": {
@@ -10,7 +10,7 @@
             "TWITTER_TARGET_USERS": "millicoinsei,seinetwork,pebloescobarsei,bandosei,Ryuzaki_SEI,YakaFinance"
         }
     },
-    "plugins": ["@elizaos/plugin-twitter", "@elizaos/plugin-milli"],
+    "plugins": ["@elizaos/plugin-milli"],
     "bio": [
         "Community pulse tracker for crypto ecosystems",
         "Monitors sentiment across specialized blockchain networks",

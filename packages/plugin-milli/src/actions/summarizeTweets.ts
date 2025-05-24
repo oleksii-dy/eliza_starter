@@ -1,5 +1,5 @@
 import { Action, IAgentRuntime, Memory, HandlerCallback, State, elizaLogger } from "@elizaos/core";
-import { TwitterService } from "@elizaos/plugin-twitter";
+import { Scraper } from "agent-twitter-client";
 
 export const summarizeTweetsAction: Action = {
     name: "SUMMARIZE_TWEETS",
@@ -30,23 +30,23 @@ export const summarizeTweetsAction: Action = {
             
             const maxTweets = parseInt(runtime.getSetting("MAX_TWEETS_PER_ACCOUNT") || "10");
             
-            // Get Twitter service and client
-            const twitterService = TwitterService.getInstance();
-            if (!twitterService) {
-                elizaLogger.error("Twitter service not available");
-                callback({ text: "Sorry, I cannot access Twitter right now to fetch community updates." }, []);
-                return;
+            // Initialize Twitter client using agent-twitter-client
+            const scraper = new Scraper();
+            
+            // Check if we have Twitter credentials
+            const twitterUsername = runtime.getSetting("TWITTER_USERNAME");
+            const twitterPassword = runtime.getSetting("TWITTER_PASSWORD");
+            
+            if (!twitterUsername || !twitterPassword) {
+                elizaLogger.warn("Twitter credentials not configured, using public access only");
+            } else {
+                try {
+                    await scraper.login(twitterUsername, twitterPassword);
+                    elizaLogger.info("Successfully logged into Twitter");
+                } catch (error) {
+                    elizaLogger.warn("Failed to login to Twitter, using public access:", error);
+                }
             }
-
-            // Get client instance for this agent
-            const twitterClientManager = twitterService.getClient(runtime.agentId, runtime.agentId);
-            if (!twitterClientManager) {
-                elizaLogger.error("Twitter client not found for agent");
-                callback({ text: "Twitter client not properly configured. Please check your Twitter credentials." }, []);
-                return;
-            }
-
-            const client = twitterClientManager.client;
 
             let summaryText = "📊 **Community Pulse Update**\n\n";
             let totalTweets = 0;
@@ -58,7 +58,7 @@ export const summarizeTweetsAction: Action = {
                     elizaLogger.info(`Fetching tweets from @${account.trim()}`);
                     
                     // Fetch real tweets from the account
-                    const accountTweets = await fetchAccountTweets(client, account.trim(), maxTweets);
+                    const accountTweets = await fetchAccountTweets(scraper, account.trim(), maxTweets);
                     
                     if (accountTweets.length > 0) {
                         totalTweets += accountTweets.length;
@@ -123,44 +123,38 @@ export const summarizeTweetsAction: Action = {
 };
 
 // Helper functions
-async function fetchAccountTweets(client: any, username: string, maxTweets: number): Promise<any[]> {
+async function fetchAccountTweets(scraper: Scraper, username: string, maxTweets: number): Promise<any[]> {
     try {
         elizaLogger.info(`Fetching ${maxTweets} tweets from @${username}`);
         
-        // Get user profile first to get user ID
-        const profile = await client.twitterClient.getProfile(username);
+        // Get user profile to get user ID
+        const profile = await scraper.getProfile(username);
         if (!profile || !profile.userId) {
             elizaLogger.warn(`Could not find profile for @${username}`);
             return [];
         }
         
-        // Fetch tweets using getUserTweets method
-        const userTweets = await client.twitterClient.getUserTweets(profile.userId, maxTweets);
-        
-        if (!userTweets || !userTweets.tweets) {
-            elizaLogger.warn(`No tweets returned for @${username}`);
-            return [];
+        // Fetch tweets from the user
+        const tweets = [];
+        for await (const tweet of scraper.getTweets(username, maxTweets)) {
+            tweets.push({
+                id: tweet.id,
+                text: tweet.text,
+                username: tweet.username,
+                timestamp: new Date(tweet.timestamp),
+                likes: tweet.likes || 0,
+                retweets: tweet.retweets || 0,
+                replies: tweet.replies || 0,
+                hashtags: tweet.hashtags || [],
+                mentions: tweet.mentions || [],
+                urls: tweet.urls || []
+            });
+            
+            if (tweets.length >= maxTweets) break;
         }
         
-        // Parse and process tweets
-        const processedTweets = userTweets.tweets.map(tweet => {
-            const parsedTweet = client.parseTweet(tweet);
-            return {
-                id: parsedTweet.id,
-                text: parsedTweet.text,
-                username: parsedTweet.username,
-                timestamp: new Date(parsedTweet.timestamp),
-                likes: parsedTweet.likes || 0,
-                retweets: parsedTweet.retweets || 0,
-                replies: parsedTweet.replies || 0,
-                hashtags: parsedTweet.hashtags || [],
-                mentions: parsedTweet.mentions || [],
-                urls: parsedTweet.urls || []
-            };
-        });
-        
-        elizaLogger.info(`Successfully fetched ${processedTweets.length} tweets from @${username}`);
-        return processedTweets;
+        elizaLogger.info(`Successfully fetched ${tweets.length} tweets from @${username}`);
+        return tweets;
         
     } catch (error) {
         elizaLogger.error(`Error fetching tweets from @${username}:`, error);
