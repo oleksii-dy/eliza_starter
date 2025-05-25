@@ -76,8 +76,26 @@ ENV LOG_LEVEL=$LOG_LEVEL
 # Expose port
 EXPOSE 3000
 
-# Change to project-starter directory
+# Change to project-starter directory where elizaos should run
 WORKDIR /app/packages/project-starter
 
-# Start command using the locally built and linked CLI
-CMD ["sh", "-c", "LOG_LEVEL=${LOG_LEVEL:-debug} elizaos start"]
+# Create .env file with all the environment variables for elizaos to load
+RUN echo "NODE_ENV=${NODE_ENV}" > .env && \
+    echo "PORT=${PORT}" >> .env && \
+    echo "OPENAI_API_KEY=${OPENAI_API_KEY}" >> .env && \
+    echo "OPENROUTER_API_KEY=${OPENROUTER_API_KEY}" >> .env && \
+    echo "EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER}" >> .env && \
+    echo "TEXT_EMBEDDING_MODEL=${TEXT_EMBEDDING_MODEL}" >> .env && \
+    echo "EMBEDDING_DIMENSION=${EMBEDDING_DIMENSION}" >> .env && \
+    echo "TEXT_PROVIDER=${TEXT_PROVIDER}" >> .env && \
+    echo "TEXT_MODEL=${TEXT_MODEL}" >> .env && \
+    echo "CTX_KNOWLEDGE_ENABLED=${CTX_KNOWLEDGE_ENABLED}" >> .env && \
+    echo "LOAD_DOCS_ON_STARTUP=${LOAD_DOCS_ON_STARTUP}" >> .env && \
+    echo "POSTGRES_URL=${POSTGRES_URL}" >> .env && \
+    echo "DISCORD_APPLICATION_ID=${DISCORD_APPLICATION_ID}" >> .env && \
+    echo "DISCORD_API_TOKEN=${DISCORD_API_TOKEN}" >> .env && \
+    echo "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}" >> .env && \
+    echo "LOG_LEVEL=${LOG_LEVEL}" >> .env
+
+# Start elizaos from the project-starter directory with .env file available
+CMD ["elizaos", "start"]
