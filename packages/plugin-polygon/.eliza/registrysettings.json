@@ -3,7 +3,7 @@
   "publishConfig": {
     "registry": "elizaos/registry",
     "username": "monilpat",
-    "useNpm": false,
+    "useNpm": true,
     "platform": "universal"
   }
 }

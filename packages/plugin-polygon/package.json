@@ -124,5 +124,6 @@
       }
     }
   },
-  "packageType": "plugin"
+  "packageType": "plugin",
+  "npmPackage": "@elizaos/plugin-polygon"
 }
