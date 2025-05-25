@@ -81,30 +81,30 @@ If no valid validator ID or amount is found, or if the user\'s intent is unclear
 \`\`\`
 `;
 
-export const undelegateL1Template = `You are an AI assistant. Your task is to extract the validator ID and the amount of shares to undelegate from the user\'s message.
+export const undelegateL1Template = `You are an AI assistant. Your task is to extract the validator ID and the amount of MATIC to undelegate from the user's message.
 The validator ID must be a positive integer.
-The shares amount must be a positive number, representing the amount of validator shares in the smallest unit (Wei) as a string.
+The amount should be treated as MATIC tokens (e.g., "0.1", "0.5 MATIC", "2.5 matic") and will be converted to validator shares automatically.
 
 Review the recent messages:
 <recent_messages>
 {{recentMessages}}
 </recent_messages>
 
-Based on the conversation, identify the validator ID and the amount of shares to undelegate.
+Based on the conversation, identify the validator ID and the MATIC amount to undelegate.
 
 Respond with a JSON markdown block containing only the extracted values.
 The JSON should have this structure:
 \`\`\`json
 {
     "validatorId": number,
-    "sharesAmountWei": string
+    "maticAmount": string
 }
 \`\`\`
 
-If no valid validator ID or shares amount is found, or if the user\'s intent is unclear, you MUST respond with the following JSON structure:
+If no valid validator ID or amount is found, or if the user's intent is unclear, you MUST respond with the following JSON structure:
 \`\`\`json
 {
-    "error": "Validator ID or shares amount not found or invalid. Please specify a positive integer for the validator ID and a positive amount of shares in Wei (as a string)."
+    "error": "Validator ID or MATIC amount not found or invalid. Please specify a positive integer for the validator ID and a positive MATIC amount (e.g., '0.5' or '0.5 MATIC')."
 }
 \`\`\`
 `;

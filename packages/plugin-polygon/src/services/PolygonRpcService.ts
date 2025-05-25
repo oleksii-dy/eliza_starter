@@ -699,9 +699,12 @@ export class PolygonRpcService extends Service {
    * @param sharesAmountWei Amount of Validator Shares to undelegate (in Wei).
    * @returns Transaction hash of the undelegation transaction.
    */
-  async undelegate(validatorId: number, sharesAmountWei: bigint): Promise<string> {
+  async undelegate(
+    validatorId: number,
+    sharesAmountWei: bigint // This is the precisely calculated shares amount
+  ): Promise<string> {
     logger.info(
-      `Initiating undelegation of ${sharesAmountWei} shares from validator ${validatorId} on L1...`
+      `Initiating undelegation of approximately ${sharesAmountWei} shares from validator ${validatorId} on L1...`
     );
     if (sharesAmountWei <= 0n) {
       throw new Error('Undelegation shares amount must be greater than zero.');
@@ -716,11 +719,20 @@ export class PolygonRpcService extends Service {
         throw new Error('ValidatorShare contract does not expose sellVoucher(uint256,uint256)');
       }
 
-      // 1. Prepare Transaction Data (Verify function name: sellVoucher or similar)
-      // Using sellVoucher(uint256 _amount, uint256 _minClaimAmount)
-      const txData = await contract.sellVoucher.populateTransaction(sharesAmountWei, 0n); // _minClaimAmount = 0
+      // Add a slippage buffer to the sharesAmountWei to get maxSharesToBurn
+      // Buffer: 0.1% of shares (or minimum +1 share for very small amounts)
+      const buffer = sharesAmountWei / 1000n; // 0.1%
+      const maxSharesToBurn = sharesAmountWei + buffer + 1n;
 
-      // 2. Estimate Gas Limit BEFORE fee details
+      logger.debug(
+        `Calculated shares: ${sharesAmountWei}, Max shares to burn (with buffer): ${maxSharesToBurn}`
+      );
+
+      const txData = await contract['sellVoucher(uint256,uint256)'].populateTransaction(
+        sharesAmountWei,
+        maxSharesToBurn
+      ); // Use sharesAmountWei for amount, maxSharesToBurn for limit
+
       const gasLimit = await signer.estimateGas({ ...txData });
       const gasLimitBuffered = (gasLimit * 120n) / 100n;
 
@@ -737,6 +749,10 @@ export class PolygonRpcService extends Service {
         chainId: (await l1Provider.getNetwork()).chainId,
       };
 
+      // Get current nonce before signing
+      const nonce = await signer.getNonce();
+      tx.nonce = nonce;
+
       // 5. Sign Transaction
       logger.debug('Signing undelegation transaction...', tx);
       const signedTx = await signer.signTransaction(tx);
@@ -752,6 +768,56 @@ export class PolygonRpcService extends Service {
       logger.error(`Undelegation from validator ${validatorId} failed:`, error);
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(`Undelegation failed: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Converts MATIC amount to validator shares using the exchange rate.
+   * @param validatorId The ID of the validator.
+   * @param maticAmountWei The amount of MATIC in Wei to convert.
+   * @returns The equivalent amount in validator shares.
+   */
+  async convertMaticToShares(validatorId: number, maticAmountWei: bigint): Promise<bigint> {
+    logger.debug(
+      `Converting ${maticAmountWei} Wei MATIC to shares for validator ${validatorId}...`
+    );
+
+    if (maticAmountWei <= 0n) {
+      throw new Error('MATIC amount must be greater than zero.');
+    }
+
+    try {
+      const validatorShareContract = await this._getValidatorShareContract(validatorId);
+
+      // Validate that the required function exists
+      if (!validatorShareContract.interface.getFunction('exchangeRate()')) {
+        throw new Error('ValidatorShare contract does not expose exchangeRate()');
+      }
+
+      // Get the current exchange rate from the ValidatorShare contract
+      const exchangeRate = await validatorShareContract.exchangeRate();
+
+      if (exchangeRate <= 0n) {
+        throw new Error('Invalid exchange rate received from ValidatorShare contract');
+      }
+
+      // Determine the correct precision based on validator ID
+      // Validator IDs < 8 use a precision of 100, others use 10^29 (common for non-foundation)
+      const validatorIdBigInt = BigInt(validatorId);
+      const precision = validatorIdBigInt < 8n ? 100n : 10n ** 29n;
+
+      // Calculate shares: shares = (maticAmountWei * precision) / exchangeRateFromContract
+      const sharesAmount = (maticAmountWei * precision) / exchangeRate;
+
+      logger.debug(
+        `Validator ID: ${validatorId}, Precision: ${precision}, Exchange rate: ${exchangeRate}, Calculated ${maticAmountWei} Wei MATIC to ${sharesAmount} shares`
+      );
+
+      return sharesAmount;
+    } catch (error: unknown) {
+      logger.error(`Failed to convert MATIC to shares for validator ${validatorId}:`, error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`MATIC to shares conversion failed: ${errorMessage}`);
     }
   }
 
