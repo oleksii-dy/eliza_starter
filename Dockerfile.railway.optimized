@@ -15,7 +15,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install bun and turbo
-RUN npm install -g bun@1.2.5 turbo@2.3.3
+RUN npm install -g bun@1.2.13 turbo@2.3.3 fluent-ffmpeg
 
 # Create python symlink
 RUN ln -s /usr/bin/python3 /usr/bin/python
@@ -46,7 +46,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install bun and turbo (runtime)
-RUN npm install -g bun@1.2.5 turbo@2.3.3
+RUN npm install -g bun@1.2.13 turbo@2.3.3 fluent-ffmpeg
 
 # Create python symlink
 RUN ln -s /usr/bin/python3 /usr/bin/python
