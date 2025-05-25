@@ -35,6 +35,10 @@ RUN bun install --no-cache
 # Build the project
 RUN bun run build
 
+# Build and link the CLI locally
+WORKDIR /app/packages/cli
+RUN npm link
+
 # Declare build arguments for environment variables
 ARG OPENAI_API_KEY
 ARG OPENROUTER_API_KEY
@@ -72,11 +76,8 @@ ENV LOG_LEVEL=$LOG_LEVEL
 # Expose port
 EXPOSE 3000
 
-# Change to project-starter directory and run elizaos
+# Change to project-starter directory
 WORKDIR /app/packages/project-starter
 
-# Install elizaos CLI globally to ensure it's available
-RUN npm install -g @elizaos/cli
-
-# Start command
+# Start command using the locally built and linked CLI
 CMD ["sh", "-c", "LOG_LEVEL=${LOG_LEVEL:-debug} elizaos start"]
