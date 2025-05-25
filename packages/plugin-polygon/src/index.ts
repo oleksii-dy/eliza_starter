@@ -20,8 +20,6 @@ process.on('unhandledRejection', (reason, promise) => {
 import { transferPolygonAction } from './actions/transfer';
 import { delegateL1Action } from './actions/delegateL1';
 import { getCheckpointStatusAction } from './actions/getCheckpointStatus';
-import { proposeGovernanceAction } from './actions/proposeGovernance';
-import { voteGovernanceAction } from './actions/voteGovernance';
 import { getValidatorInfoAction } from './actions/getValidatorInfo';
 import { getDelegatorInfoAction } from './actions/getDelegatorInfo';
 import { withdrawRewardsAction } from './actions/withdrawRewardsL1';
@@ -32,9 +30,10 @@ import { getPolygonGasEstimatesAction } from './actions/getPolygonGasEstimates';
 import { undelegateL1Action } from './actions/undelegateL1';
 import { restakeRewardsL1Action } from './actions/restakeRewardsL1';
 import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed';
-import { heimdallVoteAction } from './actions/heimdallVoteAction';
-import { heimdallSubmitProposalAction } from './actions/heimdallSubmitProposalAction';
-import { heimdallTransferTokensAction } from './actions/heimdallTransferTokensAction';
+// Heimdall read-only query actions
+import { heimdallValidatorInfoAction } from './actions/heimdallValidatorInfoAction.js';
+import { heimdallValidatorSetAction } from './actions/heimdallValidatorSetAction.js';
+import { heimdallCheckpointStatusAction } from './actions/heimdallCheckpointStatusAction.js';
 // import { getNativeBalanceAction, getERC20BalanceAction } from './actions/getBalanceInfo.js';
 import { getUSDCBalanceAction, getWETHBalanceAction } from './actions/getBalanceInfo.js';
 import { getBlockNumberAction, getBlockDetailsAction } from './actions/getBlockInfo.js';
@@ -74,8 +73,6 @@ const polygonActions: Action[] = [
   getDelegatorInfoAction,
   bridgeDepositAction,
   getCheckpointStatusAction,
-  proposeGovernanceAction,
-  voteGovernanceAction,
   getL2BlockNumberAction,
   getMaticBalanceAction,
   getPolygonGasEstimatesAction,
@@ -84,14 +81,14 @@ const polygonActions: Action[] = [
   withdrawRewardsAction,
   restakeRewardsL1Action,
   isL2BlockCheckpointedAction,
-  heimdallVoteAction,
-  heimdallSubmitProposalAction,
-  heimdallTransferTokensAction,
   getBlockNumberAction,
   // getBlockDetailsAction,  // Temporarily disabled - uses old interface, conflicts with getPolygonBlockDetailsAction
   getPolygonBlockDetailsAction,
   getUSDCBalanceAction,
   getWETHBalanceAction,
+  heimdallValidatorInfoAction,
+  heimdallValidatorSetAction,
+  heimdallCheckpointStatusAction,
 ];
 
 // Debug logging for action registration

@@ -43,11 +43,13 @@ POLYGON_PLUGINS_ENABLED=true
 
 ### Advanced Configuration
 
-For the planned Heimdall integration (governance operations):
+For monitoring Polygon validator operations (read-only):
 
 ```
-HEIMDALL_RPC_URL=https://heimdall-api.polygon.technology
+HEIMDALL_RPC_URL=https://polygon-heimdall-rpc.publicnode.com:443
 ```
+
+**Note**: After extensive analysis, we determined that Heimdall's modified Cosmos SDK does not support general token transfers or governance operations for external users. See `HEIMDALL_ANALYSIS.md` for detailed findings. Heimdall is a specialized validator consensus layer, not a general-purpose blockchain.
 
 ## Available Actions
 
@@ -114,24 +116,25 @@ Swaps tokens on Polygon using LiFi integration.
 Swap 100 USDC for DAI on Polygon with 0.3% slippage
 ```
 
-### Governance Actions (Future)
+### HEIMDALL_TRANSFER_TOKENS
 
-The following actions will be available once Heimdall integration is complete:
+Transfers native tokens on the Heimdall network.
 
-- `PROPOSE_GOVERNANCE_POLYGON`
-- `VOTE_GOVERNANCE_POLYGON`
-- `EXECUTE_GOVERNANCE_POLYGON`
-- `QUEUE_GOVERNANCE_POLYGON`
+**Example query:**
+
+```
+Transfer 1000000000000000000 matic to heimdall1abc...
+```
 
 ## Features
 
 - Account and balance management on both Ethereum and Polygon
 - Token interactions (MATIC and ERC20 tokens)
-- Governance interactions (proposals, voting, delegation)
 - Staking operations (validators, delegation, rewards)
 - Bridge operations between L1 and L2
 - Block and transaction information retrieval
 - **L1 to L2 token bridging** - Transfer tokens between Ethereum and Polygon
+- **Heimdall token transfers** - Transfer tokens on the Heimdall network
 - Gas price estimation
 
 ## Testing
