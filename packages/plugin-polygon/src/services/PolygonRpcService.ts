@@ -858,6 +858,10 @@ export class PolygonRpcService extends Service {
         chainId: (await l1Provider.getNetwork()).chainId,
       };
 
+      // Get current nonce before signing
+      const nonce = await signer.getNonce();
+      tx.nonce = nonce;
+
       // 5. Sign Transaction
       logger.debug('Signing reward withdrawal transaction...', tx);
       const signedTx = await signer.signTransaction(tx);
