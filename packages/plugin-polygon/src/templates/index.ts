@@ -81,30 +81,30 @@ If no valid validator ID or amount is found, or if the user\'s intent is unclear
 \`\`\`
 `;
 
-export const undelegateL1Template = `You are an AI assistant. Your task is to extract the validator ID and the amount of shares to undelegate from the user\'s message.
+export const undelegateL1Template = `You are an AI assistant. Your task is to extract the validator ID and the amount of MATIC to undelegate from the user's message.
 The validator ID must be a positive integer.
-The shares amount must be a positive number, representing the amount of validator shares in the smallest unit (Wei) as a string.
+The amount should be treated as MATIC tokens (e.g., "0.1", "0.5 MATIC", "2.5 matic") and will be converted to validator shares automatically.
 
 Review the recent messages:
 <recent_messages>
 {{recentMessages}}
 </recent_messages>
 
-Based on the conversation, identify the validator ID and the amount of shares to undelegate.
+Based on the conversation, identify the validator ID and the MATIC amount to undelegate.
 
 Respond with a JSON markdown block containing only the extracted values.
 The JSON should have this structure:
 \`\`\`json
 {
     "validatorId": number,
-    "sharesAmountWei": string
+    "maticAmount": string
 }
 \`\`\`
 
-If no valid validator ID or shares amount is found, or if the user\'s intent is unclear, you MUST respond with the following JSON structure:
+If no valid validator ID or amount is found, or if the user's intent is unclear, you MUST respond with the following JSON structure:
 \`\`\`json
 {
-    "error": "Validator ID or shares amount not found or invalid. Please specify a positive integer for the validator ID and a positive amount of shares in Wei (as a string)."
+    "error": "Validator ID or MATIC amount not found or invalid. Please specify a positive integer for the validator ID and a positive MATIC amount (e.g., '0.5' or '0.5 MATIC')."
 }
 \`\`\`
 `;
@@ -383,104 +383,6 @@ If any required parameters are missing or unclear, you MUST respond with the fol
 \`\`\`
 `;
 
-export const heimdallVoteActionTemplate = `You are an AI assistant. Your task is to extract parameters for voting on a Heimdall governance proposal.
-
-Review the recent messages:
-<recent_messages>
-{{recentMessages}}
-</recent_messages>
-
-Based on the conversation, identify:
-- proposalId: The ID of the Heimdall proposal (string or number).
-- option: The vote option (numeric value like 0, 1, 2, 3, 4, or string like YES, NO, ABSTAIN).
-
-Respond with a JSON markdown block containing only the extracted values.
-The JSON should have this structure:
-\`\`\`json
-{
-    "proposalId": "string | number",
-    "option": "number | string"
-}
-\`\`\`
-
-If any required parameters (proposalId, option) are missing or unclear, you MUST respond with the following JSON structure:
-\`\`\`json
-{
-    "error": "Could not determine all required Heimdall voting parameters (proposalId, option). Please clarify your request."
-}
-\`\`\`
-`;
-
-export const heimdallSubmitProposalActionTemplate = `You are an AI assistant. Your task is to extract parameters for submitting a new governance proposal (Text or ParameterChange) to Heimdall.
-
-Review the recent messages:
-<recent_messages>
-{{recentMessages}}
-</recent_messages>
-
-Based on the conversation, identify:
-- content: An object representing the proposal content. It must have a "type" field ("TextProposal" or "ParameterChangeProposal").
-  - For TextProposal: "title" (string), "description" (string).
-  - For ParameterChangeProposal: "title" (string), "description" (string), "changes" (array of {subspace: string, key: string, value: string}).
-- initialDepositAmount: The amount of the initial deposit for the proposal (string, e.g., "10000000").
-- initialDepositDenom (optional): The denomination of the initial deposit (default: "matic").
-
-Respond with a JSON markdown block containing only the extracted values.
-The JSON should have this structure:
-\`\`\`json
-{
-    "content": {
-        "type": "TextProposal" | "ParameterChangeProposal",
-        "title": "string",
-        "description": "string",
-        "changes": [{ "subspace": "string", "key": "string", "value": "string" }] // Only for ParameterChangeProposal
-    },
-    "initialDepositAmount": "string",
-    "initialDepositDenom": "string" // e.g., "matic"
-}
-\`\`\`
-
-Example for TextProposal content:
-{
-    "type": "TextProposal",
-    "title": "Network Upgrade Info",
-    "description": "Details about upcoming v2 upgrade."
-}
-
-Example for ParameterChangeProposal content:
-{
-    "type": "ParameterChangeProposal",
-    "title": "Update Staking Param",
-    "description": "Increase max validators",
-    "changes": [
-        { "subspace": "staking", "key": "MaxValidators", "value": "120" }
-    ]
-}
-
-If any required parameters are missing or unclear, you MUST respond with the following JSON structure:
-\`\`\`json
-{
-    "error": "Could not determine all required Heimdall proposal parameters (content type, title, description, initialDepositAmount, and changes if ParameterChangeProposal). Please clarify your request."
-}
-\`\`\`
-`;
-
-export const heimdallTransferTokensActionTemplate = `You are an AI assistant. Your task is to extract parameters for transferring native tokens on the Heimdall network.\n\nReview the recent messages:\n<recent_messages>\n{{recentMessages}}\n</recent_messages>\n\nBased on the conversation, identify:\n- recipientAddress: The Heimdall address of the recipient (must start with \"heimdall\" or \"heimdallvaloper\").\n- amount: The amount of tokens to transfer in Wei (string of digits, e.g., \"1000000000000000000\").\n- denom (optional): The denomination of the tokens (default: \"matic\").\n\nRespond with a JSON markdown block containing only the extracted values.\nThe JSON should have this structure:\n\`\`\`json
-{
-    "recipientAddress": "string",
-    "amount": "string",
-    "denom": "string" // e.g., "matic" or "uatom"
-}
-\`\`\`
-
-If any required parameters (recipientAddress, amount) are missing or unclear, you MUST respond with the following JSON structure:
-\`\`\`json
-{
-    "error": "Could not determine all required Heimdall transfer parameters (recipientAddress, amount). Please clarify your request."
-}
-\`\`\`
-`;
-
 export const getCheckpointStatusTemplate = `You are an AI assistant. Your task is to extract the block number from the user's message to check its checkpoint status.
 The block number must be a positive integer.
 
@@ -533,3 +435,6 @@ If no valid block number is found, or if the user's intent is unclear, you MUST 
 }
 \`\`\`
 `;
+
+// Note: Heimdall transfer tokens template removed as Heimdall does not support general token transfers
+// See HEIMDALL_ANALYSIS.md for detailed findings about Heimdall's limitations
