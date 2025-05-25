@@ -5,7 +5,7 @@
     "dockerfilePath": "./Dockerfile.railway"
   },
   "deploy": {
-    "startCommand": "cd packages/project-starter && LOG_LEVEL=${LOG_LEVEL:-debug} elizaos start",
+    "startCommand": "elizaos start",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
