@@ -14,6 +14,7 @@ import {
   logger,
 } from '@elizaos/core';
 import { z } from 'zod';
+import { getCurrentBlockNumberAction } from './actions/getCurrentBlockNumber';
 
 /**
  * Define the configuration schema for the plugin with the following properties:
@@ -21,18 +22,27 @@ import { z } from 'zod';
  * @param {string} EXAMPLE_PLUGIN_VARIABLE - The name of the plugin (min length of 1, optional)
  * @returns {object} - The configured schema object
  */
-const configSchema = z.object({
-  EXAMPLE_PLUGIN_VARIABLE: z
-    .string()
-    .min(1, 'Example plugin variable is not provided')
-    .optional()
-    .transform((val) => {
-      if (!val) {
-        console.warn('Warning: Example plugin variable is not provided');
-      }
-      return val;
-    }),
-});
+const configSchema = z
+  .object({
+    EXAMPLE_PLUGIN_VARIABLE: z
+      .string()
+      .min(1, 'Example plugin variable is not provided')
+      .optional()
+      .transform((val) => {
+        if (!val) {
+          console.warn('Warning: Example plugin variable is not provided');
+        }
+        return val;
+      }),
+    // Add Polygon zkEVM specific configuration to the schema
+    ALCHEMY_API_KEY: z.string().min(1, 'ALCHEMY_API_KEY is required').optional(), // Making optional here as RPC is a fallback
+    ZKEVM_RPC_URL: z.string().url('Invalid ZKEVM_RPC_URL').optional(), // Making optional here as Alchemy is primary
+    PRIVATE_KEY: z.string().min(1, 'PRIVATE_KEY is required').optional(), // Keeping optional for now as it's not used in block number action
+  })
+  .refine((data) => data.ALCHEMY_API_KEY || data.ZKEVM_RPC_URL, {
+    // Ensure at least one of the endpoints is provided
+    message: 'Either ALCHEMY_API_KEY or ZKEVM_RPC_URL must be provided',
+  });
 
 /**
  * Example HelloWorld action
@@ -158,26 +168,25 @@ export class StarterService extends Service {
 }
 
 const plugin: Plugin = {
-  name: 'starter',
-  description: 'A starter plugin for Eliza',
-  // Set lowest priority so real models take precedence
-  priority: -1000,
+  name: 'polygon-zkevm',
+  description: 'A plugin for interacting with Polygon zkEVM',
   config: {
-    EXAMPLE_PLUGIN_VARIABLE: process.env.EXAMPLE_PLUGIN_VARIABLE,
+    // Configuration will be loaded and validated in the init function
   },
   async init(config: Record<string, string>) {
-    logger.info('*** Initializing starter plugin ***');
+    logger.info('*** Initializing Polygon zkEVM plugin ***');
     try {
       const validatedConfig = await configSchema.parseAsync(config);
 
-      // Set all environment variables at once
-      for (const [key, value] of Object.entries(validatedConfig)) {
-        if (value) process.env[key] = value;
-      }
+      // Set environment variables for access in actions/services
+      if (validatedConfig.ALCHEMY_API_KEY)
+        process.env.ALCHEMY_API_KEY = validatedConfig.ALCHEMY_API_KEY;
+      if (validatedConfig.ZKEVM_RPC_URL) process.env.ZKEVM_RPC_URL = validatedConfig.ZKEVM_RPC_URL;
+      if (validatedConfig.PRIVATE_KEY) process.env.PRIVATE_KEY = validatedConfig.PRIVATE_KEY; // Be cautious with private keys
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new Error(
-          `Invalid plugin configuration: ${error.errors.map((e) => e.message).join(', ')}`
+          `Invalid Polygon zkEVM plugin configuration: ${error.errors.map((e) => e.message).join(', ')}`
         );
       }
       throw error;
@@ -205,17 +214,7 @@ const plugin: Plugin = {
     },
   },
   routes: [
-    {
-      name: 'helloworld',
-      path: '/helloworld',
-      type: 'GET',
-      handler: async (_req: any, res: any) => {
-        // send a response
-        res.json({
-          message: 'Hello World!',
-        });
-      },
-    },
+    // Removed the misplaced helloWorld route definition
   ],
   events: {
     MESSAGE_RECEIVED: [
@@ -248,7 +247,7 @@ const plugin: Plugin = {
     ],
   },
   services: [StarterService],
-  actions: [helloWorldAction],
+  actions: [helloWorldAction, getCurrentBlockNumberAction],
   providers: [helloWorldProvider],
 };
 
