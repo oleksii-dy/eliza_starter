@@ -1,6 +1,7 @@
 import { Action, IAgentRuntime, Memory, HandlerCallback, State, elizaLogger } from "@elizaos/core";
 import { Scraper } from "agent-twitter-client";
 import { OpenAI } from 'openai';
+import { summarizeExamples } from "../examples";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY // or your actual key for testing
@@ -70,32 +71,7 @@ export const summarizeTweetsAction: Action = {
             }, []);
         }
     },
-    examples: [
-        [
-            {
-                user: "{{user1}}",
-                content: { text: "What's the latest sentiment in the community?" },
-            },
-            {
-                user: "{{agentName}}",
-                content: { 
-                    text: "📊 **Community Pulse Update**\n\n**@seinetwork** (8 recent tweets)\n- Sentiment: Positive\n- Key topics: mainnet, development, partnerships\n\n**Overall Community Sentiment**: Positive\n**Total Tweets Analyzed**: 24\n**Trending Topics**: mainnet, DeFi, partnerships, development, ecosystem"
-                },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: { text: "Can you give me a community update?" },
-            },
-            {
-                user: "{{agentName}}",
-                content: { 
-                    text: "📊 **Community Pulse Update**\n\nBased on recent activity from monitored accounts, the community sentiment is positive with strong discussion around development milestones and ecosystem growth."
-                },
-            },
-        ],
-    ],
+    examples: summarizeExamples
 };
 
 
