@@ -31,6 +31,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          submodules: recursive  # Ensures submodules are cloned and initialized
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
