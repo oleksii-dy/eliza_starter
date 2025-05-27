@@ -2,9 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { teeStarterPlugin } from '../src/plugin';
 
 describe('Plugin Routes', () => {
-  it('should not have custom routes (relies on other plugins for HTTP endpoints)', () => {
-    // Our simplified plugin doesn't define custom routes
-    expect(teeStarterPlugin.routes).toBeUndefined();
+  it('should have custom routes', () => {
+    // Plugin has routes
+    expect(teeStarterPlugin.routes).toBeDefined();
+    expect(teeStarterPlugin.routes?.length).toBeGreaterThan(0);
   });
 
   it('should have correct plugin configuration', () => {

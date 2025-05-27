@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { teeStarterPlugin } from '../src/plugin';
 
 describe('Plugin Events', () => {
-  it('should not have custom events (relies on plugin-tee for TEE events)', () => {
-    // Our simplified plugin doesn't define custom events
-    expect(teeStarterPlugin.events).toBeUndefined();
+  it('should have custom events', () => {
+    // Plugin has events
+    expect(teeStarterPlugin.events).toBeDefined();
   });
 
   it('should have correct plugin configuration', () => {

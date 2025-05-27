@@ -3,7 +3,7 @@ import { teeStarterPlugin } from '../src/plugin';
 
 describe('Plugin Models', () => {
   it('should not have custom models (using plugin-tee and other plugins for model handling)', () => {
-    // Our simplified plugin doesn't define custom models
+    // Our plugin doesn't define custom models
     // Model handling is done by other plugins (openai, etc.)
     expect(teeStarterPlugin.models).toBeUndefined();
   });

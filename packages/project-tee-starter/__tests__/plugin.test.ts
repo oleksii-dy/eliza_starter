@@ -22,15 +22,17 @@ describe('TEE Starter Plugin', () => {
     expect(teeStarterPlugin.actions).toEqual([]);
   });
 
-  it('should have no custom providers', () => {
-    expect(teeStarterPlugin.providers).toEqual([]);
+  it('should have custom providers', () => {
+    expect(teeStarterPlugin.providers).toBeDefined();
+    expect(teeStarterPlugin.providers?.length).toBeGreaterThan(0);
   });
 
   it('should have no custom evaluators', () => {
     expect(teeStarterPlugin.evaluators).toEqual([]);
   });
 
-  it('should have no custom services', () => {
-    expect(teeStarterPlugin.services).toEqual([]);
+  it('should have custom services', () => {
+    expect(teeStarterPlugin.services).toBeDefined();
+    expect(teeStarterPlugin.services?.length).toBeGreaterThan(0);
   });
 });

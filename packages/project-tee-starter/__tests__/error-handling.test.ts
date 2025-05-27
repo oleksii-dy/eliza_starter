@@ -7,7 +7,8 @@ describe('Error Handling', () => {
       // Our plugin has no dependencies, so it should always be valid
       expect(teeStarterPlugin).toBeDefined();
       expect(teeStarterPlugin.actions).toEqual([]);
-      expect(teeStarterPlugin.providers).toEqual([]);
+      expect(teeStarterPlugin.providers).toBeDefined();
+      expect(teeStarterPlugin.providers?.length).toBeGreaterThan(0);
     });
 
     it('should handle runtime errors gracefully', async () => {

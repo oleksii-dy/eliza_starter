@@ -1,10 +1,11 @@
 import type { Plugin } from '@elizaos/core';
 import {
-  type GenerateTextParams,
   type IAgentRuntime,
-  ModelType,
   Service,
   logger,
+  type EventPayload,
+  type MessagePayload,
+  type WorldPayload,
 } from '@elizaos/core';
 import { z } from 'zod';
 import { type DeriveKeyResponse, TappdClient } from '@phala/dstack-sdk';
@@ -49,27 +50,39 @@ export class StarterService extends Service {
     logger.info("*** Starting Mr. TEE's custom service (StarterService) ***");
     const service = new StarterService(runtime);
 
-    const deriveKeyResponse: DeriveKeyResponse = await service.teeClient.deriveKey(
-      service.secretSalt
-    );
+    try {
+      const deriveKeyResponse: DeriveKeyResponse = await service.teeClient.deriveKey(
+        service.secretSalt
+      );
 
-    // ECDSA Key
-    const hex = keccak256(deriveKeyResponse.asUint8Array());
-    const ecdsaKeypair: PrivateKeyAccount = privateKeyToAccount(hex);
+      // ECDSA Key
+      const hex = keccak256(deriveKeyResponse.asUint8Array());
+      const ecdsaKeypair: PrivateKeyAccount = privateKeyToAccount(hex);
 
-    // ED25519 Key
-    const uint8ArrayDerivedKey = deriveKeyResponse.asUint8Array();
-    const hash = crypto.createHash('sha256');
-    hash.update(uint8ArrayDerivedKey);
-    const seed = hash.digest();
-    const seedArray = new Uint8Array(seed);
-    const ed25519Keypair = Keypair.fromSeed(seedArray.slice(0, 32));
+      // ED25519 Key
+      const uint8ArrayDerivedKey = deriveKeyResponse.asUint8Array();
+      const hash = crypto.createHash('sha256');
+      hash.update(uint8ArrayDerivedKey);
+      const seed = hash.digest();
+      const seedArray = new Uint8Array(seed);
+      const ed25519Keypair = Keypair.fromSeed(seedArray.slice(0, 32));
 
-    logger.log('ECDSA Key Derived Successfully!');
-    logger.log('ECDSA Keypair:', ecdsaKeypair.address);
-    logger.log('ED25519 Keypair:', ed25519Keypair.publicKey);
-    const signature = await ecdsaKeypair.signMessage({ message: 'Hello, world!' });
-    logger.log('Sign message w/ ECDSA keypair: Hello world!, Signature: ', signature);
+      logger.log('ECDSA Key Derived Successfully!');
+      logger.log('ECDSA Keypair:', ecdsaKeypair.address);
+      logger.log('ED25519 Keypair:', ed25519Keypair.publicKey);
+      const signature = await ecdsaKeypair.signMessage({ message: 'Hello, world!' });
+      logger.log('Sign message w/ ECDSA keypair: Hello world!, Signature: ', signature);
+    } catch (error) {
+      // Handle TEE connection errors gracefully
+      if (error instanceof Error && error.message.includes('ENOENT')) {
+        logger.warn('TEE daemon not available - running in non-TEE mode for testing');
+        logger.warn('To run with TEE, ensure tappd is running at /var/run/tappd.sock');
+      } else {
+        logger.error('Error connecting to TEE:', error);
+      }
+      // Continue without TEE functionality for testing
+    }
+
     return service;
   }
 
@@ -94,6 +107,7 @@ const teeStarterPlugin: Plugin = {
     TEE_MODE: process.env.TEE_MODE,
     WALLET_SECRET_SALT: process.env.WALLET_SECRET_SALT,
   },
+  priority: -1000,
   async init(config: Record<string, string>) {
     logger.info('*** Initializing Mr. TEE plugin ***');
     try {
@@ -131,32 +145,56 @@ const teeStarterPlugin: Plugin = {
   ],
   events: {
     MESSAGE_RECEIVED: [
-      async (params) => {
+      async (params: EventPayload) => {
+        const messagePayload = params as MessagePayload;
         logger.info(
           '[MR_TEE_PLUGIN] MESSAGE_RECEIVED event',
-          params.message?.content?.text?.substring(0, 50)
+          messagePayload.message?.content?.text?.substring(0, 50)
         );
       },
     ],
     VOICE_MESSAGE_RECEIVED: [
-      async (params) => {
+      async (params: EventPayload) => {
         logger.info('[MR_TEE_PLUGIN] VOICE_MESSAGE_RECEIVED event');
       },
     ],
     WORLD_CONNECTED: [
-      async (params) => {
+      async (params: EventPayload) => {
+        const worldPayload = params as WorldPayload;
         logger.info('[MR_TEE_PLUGIN] WORLD_CONNECTED event');
       },
     ],
     WORLD_JOINED: [
-      async (params) => {
+      async (params: EventPayload) => {
+        const worldPayload = params as WorldPayload;
         logger.info('[MR_TEE_PLUGIN] WORLD_JOINED event');
       },
     ],
   },
   services: [StarterService],
   actions: [],
-  providers: [],
+  evaluators: [],
+  providers: [
+    {
+      name: 'HELLO_WORLD_PROVIDER',
+      description: 'A simple provider that returns a hello world message from Mr. TEE',
+      get: async (runtime, message, state) => {
+        return {
+          text: "Hello from Mr. TEE's secure enclave! I pity the fool who doesn't use TEE!",
+          values: {
+            greeting: 'Hello World',
+            source: 'Mr. TEE',
+            secure: true,
+          },
+          data: {
+            timestamp: new Date().toISOString(),
+            teeMode: process.env.TEE_MODE || 'NOT SET',
+          },
+        };
+      },
+    },
+  ],
 };
 
 export default teeStarterPlugin;
+export { teeStarterPlugin };

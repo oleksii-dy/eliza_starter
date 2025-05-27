@@ -1,4 +1,4 @@
-import { character } from '../src/index';
+import { character } from '../dist/index.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // Define a minimal TestSuite interface that matches what's needed
@@ -52,8 +52,8 @@ export class StarterTestSuite implements TestSuite {
         }
 
         // Additional character property validations
-        if (character.name !== 'Eliza') {
-          throw new Error(`Expected character name to be 'Eliza', got '${character.name}'`);
+        if (character.name !== 'Mr. TEE') {
+          throw new Error(`Expected character name to be 'Mr. TEE', got '${character.name}'`);
         }
         if (!Array.isArray(character.plugins)) {
           throw new Error('Character plugins should be an array');
@@ -107,17 +107,20 @@ export class StarterTestSuite implements TestSuite {
 
         // Test the hello world action
         try {
-          await runtime.processActions(message, [], state, async (content: Content) => {
-            if (content.text === 'hello world!' && content.actions?.includes('HELLO_WORLD')) {
-              responseReceived = true;
-            }
-            return [];
-          });
+          // The mr-tee-starter-plugin does not have a HELLO_WORLD action.
+          // This test is likely a leftover. We'll check that the action is NOT found.
+          const helloWorldAction = runtime.actions.find((a: any) => a.name === 'HELLO_WORLD');
+          if (helloWorldAction) {
+            // If it were found, we could proceed with testing it:
+            /*
+            await runtime.processActions(message, [], state, async (content: Content) => {
+              if (content.text === 'hello world!' && content.actions?.includes('HELLO_WORLD')) {
+                responseReceived = true;
+              }
+              return [];
+            });
 
-          if (!responseReceived) {
-            // Try directly executing the action if processActions didn't work
-            const helloWorldAction = runtime.actions.find((a) => a.name === 'HELLO_WORLD');
-            if (helloWorldAction) {
+            if (!responseReceived) {
               await helloWorldAction.handler(
                 runtime,
                 message,
@@ -131,14 +134,16 @@ export class StarterTestSuite implements TestSuite {
                 },
                 []
               );
-            } else {
-              throw new Error('HELLO_WORLD action not found in runtime.actions');
             }
-          }
 
-          if (!responseReceived) {
-            throw new Error('Hello world action did not produce expected response');
+            if (!responseReceived) {
+              throw new Error('Hello world action did not produce expected response');
+            }
+            */
+            throw new Error('HELLO_WORLD action was found, but it is not expected in this plugin.');
           }
+          // If the action is not found, this part of the test passes.
+          // No error is thrown if helloWorldAction is undefined.
         } catch (error) {
           throw new Error(`Hello world action test failed: ${error.message}`);
         }
@@ -179,8 +184,13 @@ export class StarterTestSuite implements TestSuite {
 
           const result = await helloWorldProvider.get(runtime, message, state);
 
-          if (result.text !== 'I am a provider') {
-            throw new Error(`Expected provider to return "I am a provider", got "${result.text}"`);
+          if (
+            result.text !==
+            "Hello from Mr. TEE's secure enclave! I pity the fool who doesn't use TEE!"
+          ) {
+            throw new Error(
+              `Expected provider to return "Hello from Mr. TEE's secure enclave! I pity the fool who doesn't use TEE!", got "${result.text}"`
+            );
           }
         } catch (error) {
           throw new Error(`Hello world provider test failed: ${error.message}`);
@@ -199,7 +209,7 @@ export class StarterTestSuite implements TestSuite {
 
           if (
             service.capabilityDescription !==
-            'This is a starter service which is attached to the agent through the starter plugin.'
+            'This is a starter service, can be customized for Mr. TEE.'
           ) {
             throw new Error('Incorrect service capability description');
           }

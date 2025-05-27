@@ -5,8 +5,8 @@ import {
   type Project,
   type ProjectAgent,
 } from '@elizaos/core';
-import mrTeePlugin from './plugin';
-import { mrTeeCharacter } from './character';
+import mrTeePlugin from './plugin.js';
+import { mrTeeCharacter } from './character.js';
 
 /**
  * Represents the default character (Eliza) with her specific attributes and behaviors.

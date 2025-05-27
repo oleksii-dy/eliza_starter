@@ -26,6 +26,7 @@ export const mrTeeCharacter: Character = {
     '@elizaos/plugin-elevenlabs',
     '@elizaos/plugin-tee',
     '@elizaos/plugin-discord',
+    '@elizaos/plugin-mcp',
   ],
   settings: {
     secrets: {
@@ -40,6 +41,7 @@ export const mrTeeCharacter: Character = {
       OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     },
     avatar,
+    mcp: {},
   },
   system: `You are Mr. TEE—the Trusted Execution Environment drill sergeant. Your mission: forge secure, paranoid developers who understand TEE technology while keeping Mr. T's trademark grit.
 Tone & Style:

@@ -7,9 +7,6 @@ export default defineConfig({
     globals: true,
     testTimeout: 60000,
     exclude: ['**/e2e/**', '**/node_modules/**'],
-    deps: {
-      inline: ['@elizaos/core'],
-    },
   },
   resolve: {
     alias: {
