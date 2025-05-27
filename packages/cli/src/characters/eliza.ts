@@ -1,7 +1,9 @@
 import type { Character } from '@elizaos/core';
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config({ path: '../../.env' });
+// Load .env from the project root
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 /**
  * Character object representing Eliza - a friendly, helpful community manager and member of the team.
@@ -19,8 +21,9 @@ export const character: Character = {
   name: 'Eliza',
   plugins: [
     '@elizaos/plugin-sql',
-    ...(process.env.POLYGON_RPC_URL && process.env.ETHEREUM_RPC_URL && process.env.PRIVATE_KEY
-      ? ['@elizaos/plugin-polygon']
+    // Removed @elizaos/plugin-polygon to avoid conflicts with zkEVM plugin
+    ...(process.env.ALCHEMY_API_KEY || process.env.ZKEVM_RPC_URL
+      ? ['@elizaos/plugin-polygon-zkevm']
       : []),
     ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
     ...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),

@@ -15,6 +15,20 @@ import {
 } from '@elizaos/core';
 import { z } from 'zod';
 import { getCurrentBlockNumberAction } from './actions/getCurrentBlockNumber';
+import { getBalanceAction } from './actions/getBalance';
+import { getTransactionByHashAction } from './actions/getTransactionByHash';
+import { getTransactionReceiptAction } from './actions/getTransactionReceipt';
+import { getGasPriceAction } from './actions/getGasPrice';
+import { getTransactionCountAction } from './actions/getTransactionCount';
+import { getCodeAction } from './actions/getCode';
+import { getStorageAtAction } from './actions/getStorageAt';
+import { getLogsAction } from './actions/getLogs';
+import { estimateGasAction } from './actions/estimateGas';
+import { getTransactionDetailsAction } from './actions/getTransactionDetails';
+import { getAccountBalanceAction } from './actions/getAccountBalance';
+import { getGasPriceEstimatesAction } from './actions/getGasPriceEstimates';
+import { checkBlockStatusAction } from './actions/checkBlockStatus';
+import { getBatchInfoAction } from './actions/getBatchInfo';
 
 /**
  * Define the configuration schema for the plugin with the following properties:
@@ -173,16 +187,18 @@ const plugin: Plugin = {
   config: {
     // Configuration will be loaded and validated in the init function
   },
-  async init(config: Record<string, string>) {
+  async init(config: Record<string, string>, runtime: IAgentRuntime) {
     logger.info('*** Initializing Polygon zkEVM plugin ***');
     try {
-      const validatedConfig = await configSchema.parseAsync(config);
+      // Get configuration from runtime settings or environment variables
+      const configToValidate = {
+        ALCHEMY_API_KEY: runtime.getSetting('ALCHEMY_API_KEY') || process.env.ALCHEMY_API_KEY,
+        ZKEVM_RPC_URL: runtime.getSetting('ZKEVM_RPC_URL') || process.env.ZKEVM_RPC_URL,
+        PRIVATE_KEY: runtime.getSetting('PRIVATE_KEY') || process.env.PRIVATE_KEY,
+      };
 
-      // Set environment variables for access in actions/services
-      if (validatedConfig.ALCHEMY_API_KEY)
-        process.env.ALCHEMY_API_KEY = validatedConfig.ALCHEMY_API_KEY;
-      if (validatedConfig.ZKEVM_RPC_URL) process.env.ZKEVM_RPC_URL = validatedConfig.ZKEVM_RPC_URL;
-      if (validatedConfig.PRIVATE_KEY) process.env.PRIVATE_KEY = validatedConfig.PRIVATE_KEY; // Be cautious with private keys
+      const validatedConfig = await configSchema.parseAsync(configToValidate);
+      logger.info('Polygon zkEVM plugin configuration validated successfully.');
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new Error(
@@ -192,27 +208,8 @@ const plugin: Plugin = {
       throw error;
     }
   },
-  models: {
-    [ModelType.TEXT_SMALL]: async (
-      _runtime,
-      { prompt, stopSequences = [] }: GenerateTextParams
-    ) => {
-      return 'Never gonna give you up, never gonna let you down, never gonna run around and desert you...';
-    },
-    [ModelType.TEXT_LARGE]: async (
-      _runtime,
-      {
-        prompt,
-        stopSequences = [],
-        maxTokens = 8192,
-        temperature = 0.7,
-        frequencyPenalty = 0.7,
-        presencePenalty = 0.7,
-      }: GenerateTextParams
-    ) => {
-      return 'Never gonna make you cry, never gonna say goodbye, never gonna tell a lie and hurt you...';
-    },
-  },
+  // Remove mock models to allow real AI models to work
+  models: {},
   routes: [
     // Removed the misplaced helloWorld route definition
   ],
@@ -247,7 +244,24 @@ const plugin: Plugin = {
     ],
   },
   services: [StarterService],
-  actions: [helloWorldAction, getCurrentBlockNumberAction],
+  actions: [
+    helloWorldAction,
+    getCurrentBlockNumberAction,
+    getBalanceAction,
+    getTransactionByHashAction,
+    getTransactionReceiptAction,
+    getGasPriceAction,
+    getTransactionCountAction,
+    getCodeAction,
+    getStorageAtAction,
+    getLogsAction,
+    estimateGasAction,
+    getTransactionDetailsAction,
+    getAccountBalanceAction,
+    getGasPriceEstimatesAction,
+    checkBlockStatusAction,
+    getBatchInfoAction,
+  ],
   providers: [helloWorldProvider],
 };
 

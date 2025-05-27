@@ -7,6 +7,9 @@ import {
 } from '@elizaos/core';
 import starterPlugin from './plugin.ts';
 
+// Export the plugin directly for use in other configurations
+export { default as polygonZkevmPlugin } from './plugin.ts';
+
 /**
  * Represents the default character (Eliza) with her specific attributes and behaviors.
  * Eliza responds to a wide range of messages, is helpful and conversational.
