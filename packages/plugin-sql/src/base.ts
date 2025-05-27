@@ -1123,6 +1123,7 @@ export abstract class BaseDrizzleAdapter<
           entityId: memoryTable.entityId,
           agentId: memoryTable.agentId,
           roomId: memoryTable.roomId,
+          worldId: memoryTable.worldId,
           unique: memoryTable.unique,
           metadata: memoryTable.metadata,
         })
@@ -1139,6 +1140,7 @@ export abstract class BaseDrizzleAdapter<
         entityId: row.entityId as UUID,
         agentId: row.agentId as UUID,
         roomId: row.roomId as UUID,
+        worldId: row.worldId ?? undefined,
         unique: row.unique,
         metadata: row.metadata,
       })) as Memory[];
@@ -1175,6 +1177,7 @@ export abstract class BaseDrizzleAdapter<
         entityId: row.memory.entityId as UUID,
         agentId: row.memory.agentId as UUID,
         roomId: row.memory.roomId as UUID,
+        worldId: row.memory.worldId ?? undefined,
         unique: row.memory.unique,
         metadata: row.memory.metadata as MemoryMetadata,
         embedding: row.embedding ?? undefined,
@@ -1219,6 +1222,7 @@ export abstract class BaseDrizzleAdapter<
         entityId: row.memory.entityId as UUID,
         agentId: row.memory.agentId as UUID,
         roomId: row.memory.roomId as UUID,
+        worldId: row.memory.worldId ?? undefined,
         unique: row.memory.unique,
         metadata: row.memory.metadata as MemoryMetadata,
         embedding: row.embedding ?? undefined,
@@ -2742,6 +2746,41 @@ export abstract class BaseDrizzleAdapter<
         .select({ id: roomTable.id })
         .from(roomTable)
         .where(and(eq(roomTable.worldId, params.worldId), eq(roomTable.agentId, this.agentId)));
+
+      if (rooms.length === 0) {
+        return [];
+      }
+
+      const roomIds = rooms.map((room) => room.id as UUID);
+
+      const memories = await this.getMemoriesByRoomIds({
+        roomIds,
+        tableName: params.tableName || 'messages',
+        limit: params.count,
+      });
+
+      return memories;
+    });
+  }
+
+  async getMemoriesByServerId(params: {
+    worldId: UUID;
+    serverId: UUID;
+    count?: number;
+    tableName?: string;
+  }): Promise<Memory[]> {
+    return this.withDatabase(async () => {
+      // Get all rooms for the given worldId AND serverId
+      const rooms = await this.db
+        .select({ id: roomTable.id })
+        .from(roomTable)
+        .where(
+          and(
+            eq(roomTable.worldId, params.worldId),
+            eq(roomTable.serverId, params.serverId),
+            eq(roomTable.agentId, this.agentId)
+          )
+        );
 
       if (rooms.length === 0) {
         return [];

@@ -559,5 +559,12 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
     tableName?: string;
   }): Promise<Memory[]>;
 
+  abstract getMemoriesByServerId(params: {
+    worldId: UUID;
+    serverId: UUID;
+    count?: number;
+    tableName?: string;
+  }): Promise<Memory[]>;
+
   abstract deleteRoomsByWorldId(worldId: UUID): Promise<void>;
 }

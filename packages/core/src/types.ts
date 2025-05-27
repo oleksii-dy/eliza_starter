@@ -574,13 +574,16 @@ export type RoomMetadata = Record<string, unknown>;
 export type Room = {
   id: UUID;
   name?: string;
-  agentId?: UUID;
   source: string;
   type: ChannelType;
   channelId?: string;
   serverId?: string;
   worldId?: UUID;
   metadata?: RoomMetadata;
+  participants?: {
+    agentId: UUID;
+    character: Character;
+  }[];
 };
 
 /**
@@ -1073,6 +1076,13 @@ export interface IDatabaseAdapter {
 
   getMemoriesByWorldId(params: {
     worldId: UUID;
+    count?: number;
+    tableName?: string;
+  }): Promise<Memory[]>;
+
+  getMemoriesByServerId(params: {
+    worldId: UUID;
+    serverId: UUID;
     count?: number;
     tableName?: string;
   }): Promise<Memory[]>;

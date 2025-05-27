@@ -41,8 +41,24 @@ const partition = <T,>(src: T[], pred: (v: T) => boolean): [T[], T[]] => {
 const getRoomAgentIds = (
   roomsData: ReturnType<typeof useRooms>['data'],
   roomId: string | null
-): UUID[] =>
-  roomId ? ((roomsData?.get(roomId) ?? []).map((r) => r.agentId).filter(Boolean) as UUID[]) : [];
+): UUID[] => {
+  if (!roomId || !roomsData) return [];
+
+  const rooms = roomsData.get(roomId) ?? [];
+  const agentIds: UUID[] = [];
+
+  rooms.forEach((room) => {
+    if ((room as any).participants) {
+      (room as any).participants.forEach((participant: any) => {
+        if (participant.agentId) {
+          agentIds.push(participant.agentId);
+        }
+      });
+    }
+  });
+
+  return agentIds;
+};
 
 /* ---------- tiny components ---------- */
 const SectionHeader = ({
@@ -163,17 +179,19 @@ const RoomListSection = ({
             <SidebarMenuSkeleton />
           </SidebarMenuItem>
         ))
-      : Array.from(rooms.entries()).map(([roomId, roomArr]) => {
-          const roomName = roomArr[0]?.name ?? 'Unnamed';
-          const ids = roomArr.map((r) => r.agentId).filter(Boolean) as UUID[];
-          const names = ids.map((id) => agents.find((a) => a.id === id)?.name ?? 'Unknown');
+      : Array.from(rooms.entries()).map(([roomId, roomParticipants]) => {
+          const roomName = roomParticipants[0]?.name ?? 'Unnamed';
+          const ids = roomParticipants.map((p) => p.agentId).filter(Boolean) as UUID[];
+          const uniqueIds = [...new Set(ids)]; // Remove duplicates
+          const names = uniqueIds.map((id) => agents.find((a) => a.id === id)?.name ?? 'Unknown');
+
           return (
             <SidebarMenuItem key={roomId} className="h-16">
               <NavLink to={`/room/${roomId}`}>
                 <SidebarMenuButton className="px-4 py-2 my-2 h-full rounded-md">
                   <div className="flex items-center gap-5">
                     <AgentAvatarStack
-                      agentIds={ids}
+                      agentIds={uniqueIds}
                       agentNames={names}
                       agentAvatars={agentAvatarMap}
                       size="md"
@@ -182,7 +200,7 @@ const RoomListSection = ({
                     <div className="flex flex-col gap-1">
                       <span className="text-base truncate max-w-24 leading-none">{roomName}</span>
                       <span className="text-xs text-muted-foreground leading-none">
-                        {ids.length} {ids.length === 1 ? 'Member' : 'Members'}
+                        {uniqueIds.length} {uniqueIds.length === 1 ? 'Member' : 'Members'}
                       </span>
                     </div>
                   </div>
@@ -297,9 +315,20 @@ export function AppSidebar() {
 
     const filteredMap = new Map<string, { agentId: UUID; name: string }[]>();
     roomsData.forEach((roomArray, key) => {
-      const validRooms = roomArray
-        .filter((room): room is Room & { agentId: UUID } => room.agentId !== undefined)
-        .map((room) => ({ agentId: room.agentId, name: room.name ?? 'Unnamed Room' }));
+      const validRooms: { agentId: UUID; name: string }[] = [];
+
+      roomArray.forEach((room) => {
+        if ((room as any).participants) {
+          (room as any).participants.forEach((participant: any) => {
+            if (participant.agentId) {
+              validRooms.push({
+                agentId: participant.agentId,
+                name: room.name ?? 'Unnamed Room',
+              });
+            }
+          });
+        }
+      });
 
       if (validRooms.length > 0) {
         filteredMap.set(key, validRooms);

@@ -1182,7 +1182,6 @@ export class AgentRuntime implements IAgentRuntime {
       await this.createRoom({
         id,
         name,
-        agentId: this.agentId,
         source,
         type,
         channelId,
@@ -2143,5 +2142,14 @@ export class AgentRuntime implements IAgentRuntime {
     tableName?: string;
   }): Promise<Memory[]> {
     return await this.adapter.getMemoriesByWorldId(params);
+  }
+
+  async getMemoriesByServerId(params: {
+    worldId: UUID;
+    serverId: UUID;
+    count?: number;
+    tableName?: string;
+  }): Promise<Memory[]> {
+    return await this.adapter.getMemoriesByServerId(params);
   }
 }

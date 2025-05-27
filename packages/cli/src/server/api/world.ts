@@ -27,17 +27,22 @@ export function worldRouter(server?: AgentServer): express.Router {
               return null;
             }
 
-            const character = await db.getAgent(roomData.agentId);
+            const participantIds = await db.getParticipantsForRoom(roomData.id);
+            const participants = await Promise.all(
+              participantIds.map(async (entityId) => ({
+                agentId: entityId,
+                character: await db.getAgent(entityId),
+              }))
+            );
 
             return {
               id: roomData.id,
               name: roomData.name,
               source: roomData.source,
               worldId: roomData.worldId,
-              character,
-              agentId: roomData.agentId,
-              metadata: roomData.metadata,
               serverId: roomData.serverId,
+              metadata: roomData.metadata,
+              participants,
             };
           } catch (error) {
             logger.error(`[ROOMS GET] Error getting details for room ${roomData.id}:`, error);
@@ -82,6 +87,40 @@ export function worldRouter(server?: AgentServer): express.Router {
           code: 'FETCH_ERROR',
           message: 'Failed to retrieve memories',
           details: error.message,
+        },
+      });
+    }
+  });
+
+  /**
+   * Retrieves all memories from a specific server within a world.
+   */
+  router.get('/:worldId/memories/:serverId', async (req, res) => {
+    const worldId = validateUuid(req.params.worldId);
+    const serverId = validateUuid(req.params.serverId);
+    try {
+      const memories = await db.getMemoriesByServerId({
+        worldId,
+        serverId,
+        count: 50,
+        tableName: 'messages',
+      });
+
+      res.json({
+        success: true,
+        data: memories,
+      });
+    } catch (error) {
+      logger.error(
+        `[MEMORIES GET] Error retrieving memories for server ${serverId} in world ${worldId}:`,
+        error
+      );
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'FETCH_ERROR',
+          message: 'Failed to retrieve memories',
+          details: error instanceof Error ? error.message : String(error),
         },
       });
     }
