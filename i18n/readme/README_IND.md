@@ -30,7 +30,7 @@
 
 ## Tutorial Video
 
-[AI Agent Dev School](https://www.youtube.com/watch?v=ArptLpQiKfI&list=PLx5pnFXdPTRzWla0RaOxALTSTnVq53fKL)
+[Sekolah Pengembang Agen AI](https://www.youtube.com/watch?v=ArptLpQiKfI&list=PLx5pnFXdPTRzWla0RaOxALTSTnVq53fKL)
 
 ## 🎯 Penggunaan
 
