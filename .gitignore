@@ -147,6 +147,7 @@ playwright-report/
 *.7z
 
 # Temporary files
+.swp
 *.tmp
 *.temp
 temp/
