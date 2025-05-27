@@ -48,8 +48,8 @@ const getRoomAgentIds = (
   const agentIds: UUID[] = [];
 
   rooms.forEach((room) => {
-    if ((room as any).participants) {
-      (room as any).participants.forEach((participant: any) => {
+    if (room.participants) {
+      room.participants.forEach((participant) => {
         if (participant.agentId) {
           agentIds.push(participant.agentId);
         }
@@ -318,8 +318,8 @@ export function AppSidebar() {
       const validRooms: { agentId: UUID; name: string }[] = [];
 
       roomArray.forEach((room) => {
-        if ((room as any).participants) {
-          (room as any).participants.forEach((participant: any) => {
+        if (room.participants) {
+          room.participants.forEach((participant) => {
             if (participant.agentId) {
               validRooms.push({
                 agentId: participant.agentId,
