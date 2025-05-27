@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { PGlite, type PGliteOptions } from '@electric-sql/pglite';
 import { fuzzystrmatch } from '@electric-sql/pglite/contrib/fuzzystrmatch';
 import { vector } from '@electric-sql/pglite/vector';
-import { logger } from '@elizaos/core';
+import { logger } from '@elizaos/core-plugin-v2';
 import { drizzle } from 'drizzle-orm/pglite';
 import { migrate } from 'drizzle-orm/pglite/migrator';
 import type { IDatabaseClientManager } from '../types';

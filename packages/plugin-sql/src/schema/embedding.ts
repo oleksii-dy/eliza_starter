@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { check, foreignKey, index, pgTable, uuid, vector } from 'drizzle-orm/pg-core';
-import { VECTOR_DIMS } from '@elizaos/core';
+import { VECTOR_DIMS } from '@elizaos/core-plugin-v2';
 import { memoryTable } from './memory';
 import { numberTimestamp } from './types';
 

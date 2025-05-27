@@ -1,4 +1,4 @@
-import type { MessageExample } from '@elizaos/core';
+import type { MessageExample } from '@elizaos/core-plugin-v2';
 import { sql } from 'drizzle-orm';
 import { boolean, jsonb, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { numberTimestamp } from './types';

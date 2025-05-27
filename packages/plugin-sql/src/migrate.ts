@@ -1,4 +1,4 @@
-import { logger } from '@elizaos/core';
+import { logger } from '@elizaos/core-plugin-v2';
 import { config } from 'dotenv';
 import { PostgresConnectionManager } from './pg/manager';
 import { PGliteClientManager } from './pglite/manager';

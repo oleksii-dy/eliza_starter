@@ -16,7 +16,7 @@ export default defineConfig({
     'http',
     'agentkeepalive',
     'uuid',
-    '@elizaos/core',
+    '@elizaos/core-plugin-v2',
     '@electric-sql/pglite',
     'zod',
   ],

@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { logger } from '@elizaos/core';
+import { logger } from '@elizaos/core-plugin-v2';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pkg, { type Pool as PgPool } from 'pg';

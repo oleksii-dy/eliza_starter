@@ -17,7 +17,7 @@ import {
   TaskMetadata,
   ChannelType,
   RoomMetadata,
-} from '@elizaos/core';
+} from '@elizaos/core-plugin-v2';
 import { and, cosineDistance, count, desc, eq, gte, inArray, lte, or, sql, not } from 'drizzle-orm';
 import { v4 } from 'uuid';
 import { DIMENSION_MAP, type EmbeddingDimensionColumn } from './schema/embedding';
