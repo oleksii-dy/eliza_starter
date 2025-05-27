@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive  # Ensures submodules are cloned and initialized
       - uses: oven-sh/setup-bun@v2
       - uses: actions/setup-node@v4
         with:
