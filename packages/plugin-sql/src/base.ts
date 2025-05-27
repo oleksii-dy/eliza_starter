@@ -2774,13 +2774,7 @@ export abstract class BaseDrizzleAdapter<
       const rooms = await this.db
         .select({ id: roomTable.id })
         .from(roomTable)
-        .where(
-          and(
-            eq(roomTable.worldId, params.worldId),
-            eq(roomTable.serverId, params.serverId),
-            eq(roomTable.agentId, this.agentId)
-          )
-        );
+        .where(and(eq(roomTable.worldId, params.worldId), eq(roomTable.serverId, params.serverId)));
 
       if (rooms.length === 0) {
         return [];
@@ -2788,6 +2782,7 @@ export abstract class BaseDrizzleAdapter<
 
       const roomIds = rooms.map((room) => room.id as UUID);
 
+      // Filter memories by agentId in the getMemoriesByRoomIds call
       const memories = await this.getMemoriesByRoomIds({
         roomIds,
         tableName: params.tableName || 'messages',
