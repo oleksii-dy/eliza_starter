@@ -63,7 +63,7 @@ async function checkIfUpdateNeeded(): Promise<{
 }> {
   try {
     // Get current version
-    const { getVersion } = await import('./display-banner');
+    const { getVersion } = await import('./version');
     const currentVersion = getVersion();
 
     // Get latest version from npm
