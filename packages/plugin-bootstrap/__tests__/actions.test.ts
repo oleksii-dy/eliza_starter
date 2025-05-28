@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach, MockedFunction } from 'vitest';
 import { replyAction } from '../src/actions/reply';
 import { followRoomAction } from '../src/actions/followRoom';
 import { ignoreAction } from '../src/actions/ignore';
@@ -23,6 +23,7 @@ import {
   ChannelType,
   HandlerCallback,
   EventType,
+  getUserServerRole as originalGetUserServerRole,
 } from '@elizaos/core';
 import {
   createMockRuntime,
@@ -32,18 +33,37 @@ import {
   setupActionTest,
 } from './test-utils';
 
+// Control the mock for getUserServerRole from @elizaos/core
+const mockGetUserServerRole = vi.fn();
+
+vi.mock('@elizaos/core', async (importOriginal) => {
+  const originalCore = await importOriginal<typeof import('@elizaos/core')>();
+  return {
+    ...originalCore,
+    getUserServerRole: (...args: any[]) => mockGetUserServerRole(...args),
+  };
+});
+
+// We'll mock getUserServerRole in individual tests since vi.mock doesn't work in this environment
+// Create a wrapper that we can control
+// let mockGetUserServerRole = vi.fn(); // Moved up and modified for vi.mock
+// const getUserServerRole = (...args: any[]) => mockGetUserServerRole(...args); // No longer needed due to vi.mock
+
 // Spy on commonly used methods for logging
 beforeEach(() => {
   vi.spyOn(logger, 'error').mockImplementation(() => {});
   vi.spyOn(logger, 'warn').mockImplementation(() => {});
   vi.spyOn(logger, 'debug').mockImplementation(() => {});
+  // Reset the mock for each test
+  mockGetUserServerRole.mockClear();
+  mockGetUserServerRole.mockResolvedValue('ADMIN');
 });
 
 describe('Reply Action', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
   let mockState: Partial<State>;
-  let callbackFn: ReturnType<typeof vi.fn>;
+  let callbackFn: MockedFunction<HandlerCallback>;
 
   afterEach(() => {
     vi.resetAllMocks();
@@ -83,7 +103,10 @@ describe('Reply Action', () => {
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    callbackFn = setup.callbackFn;
+    callbackFn = setup.callbackFn as MockedFunction<HandlerCallback>;
+    callbackFn.mockImplementation(async (response: Content, files?: any) =>
+      Promise.resolve(undefined)
+    );
 
     await replyAction.handler(
       mockRuntime as IAgentRuntime,
@@ -111,7 +134,10 @@ describe('Reply Action', () => {
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    callbackFn = setup.callbackFn;
+    callbackFn = setup.callbackFn as MockedFunction<HandlerCallback>;
+    callbackFn.mockImplementation(async (response: Content, files?: any) =>
+      Promise.resolve(undefined)
+    );
 
     // Implement a fallback handler within the test
     const mockReplyAction = {
@@ -158,14 +184,17 @@ describe('Follow Room Action', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
   let mockState: Partial<State>;
-  let callbackFn: ReturnType<typeof vi.fn>;
+  let callbackFn: MockedFunction<HandlerCallback>;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    callbackFn = setup.callbackFn;
+    callbackFn = setup.callbackFn as MockedFunction<HandlerCallback>;
+    callbackFn.mockImplementation(async (response: Content, files?: any) =>
+      Promise.resolve(undefined)
+    );
   });
 
   afterEach(() => {
@@ -278,14 +307,17 @@ describe('Ignore Action', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
   let mockState: Partial<State>;
-  let callbackFn: ReturnType<typeof vi.fn>;
+  let callbackFn: MockedFunction<HandlerCallback>;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    callbackFn = setup.callbackFn;
+    callbackFn = setup.callbackFn as MockedFunction<HandlerCallback>;
+    callbackFn.mockImplementation(async (response: Content, files?: any) =>
+      Promise.resolve(undefined)
+    );
   });
 
   afterEach(() => {
@@ -338,14 +370,17 @@ describe('Mute Room Action', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
   let mockState: Partial<State>;
-  let callbackFn: ReturnType<typeof vi.fn>;
+  let callbackFn: MockedFunction<HandlerCallback>;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    callbackFn = setup.callbackFn;
+    callbackFn = setup.callbackFn as MockedFunction<HandlerCallback>;
+    callbackFn.mockImplementation(async (response: Content, files?: any) =>
+      Promise.resolve(undefined)
+    );
   });
 
   afterEach(() => {
@@ -444,14 +479,17 @@ describe('Unmute Room Action', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
   let mockState: Partial<State>;
-  let callbackFn: ReturnType<typeof vi.fn>;
+  let callbackFn: MockedFunction<HandlerCallback>;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    callbackFn = setup.callbackFn;
+    callbackFn = setup.callbackFn as MockedFunction<HandlerCallback>;
+    callbackFn.mockImplementation(async (response: Content, files?: any) =>
+      Promise.resolve(undefined)
+    );
 
     // Set default state to MUTED for unmute tests
     mockState.data!.currentParticipantState = 'MUTED';
@@ -565,14 +603,17 @@ describe('Unfollow Room Action', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
   let mockState: Partial<State>;
-  let callbackFn: ReturnType<typeof vi.fn>;
+  let callbackFn: MockedFunction<HandlerCallback>;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    callbackFn = setup.callbackFn;
+    callbackFn = setup.callbackFn as MockedFunction<HandlerCallback>;
+    callbackFn.mockImplementation(async (response: Content, files?: any) =>
+      Promise.resolve(undefined)
+    );
 
     // Set default state to FOLLOWED for unfollow tests
     mockState.data!.currentParticipantState = 'FOLLOWED';
@@ -686,14 +727,17 @@ describe('None Action', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
   let mockState: Partial<State>;
-  let callbackFn: ReturnType<typeof vi.fn>;
+  let callbackFn: MockedFunction<HandlerCallback>;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    callbackFn = setup.callbackFn;
+    callbackFn = setup.callbackFn as MockedFunction<HandlerCallback>;
+    callbackFn.mockImplementation(async (response: Content, files?: any) =>
+      Promise.resolve(undefined)
+    );
   });
 
   afterEach(() => {
@@ -730,14 +774,16 @@ describe('Reply Action (Extended)', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
   let mockState: Partial<State>;
-  let callbackFn: ReturnType<typeof vi.fn>;
+  let callbackFn: MockedFunction<HandlerCallback>;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    callbackFn = vi.fn();
+    callbackFn = vi.fn(
+      async (response: Content, files?: any): Promise<void> => Promise.resolve(undefined)
+    ) as MockedFunction<HandlerCallback>;
   });
 
   afterEach(() => {
@@ -833,14 +879,16 @@ describe('Choice Action (Extended)', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
   let mockState: Partial<State>;
-  let callbackFn: ReturnType<typeof vi.fn>;
+  let callbackFn: MockedFunction<HandlerCallback>;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    callbackFn = vi.fn();
+    callbackFn = vi.fn(
+      async (response: Content, files?: any): Promise<void> => Promise.resolve(undefined)
+    ) as MockedFunction<HandlerCallback>;
 
     // Mock realistic response that parses the task from message content
     mockRuntime.useModel = vi.fn().mockImplementation((modelType, params) => {
@@ -878,12 +926,8 @@ describe('Choice Action (Extended)', () => {
       },
     ]);
 
-    // Need to mock both user role and getParticipantUserState
-    mockRuntime.getUserServerRole = vi.fn().mockResolvedValue('ADMIN');
-    mockRuntime.getParticipantUserState = vi.fn().mockResolvedValue('ACTIVE');
-
-    // Add validation spy to see how it's being called
-    const validateSpy = vi.spyOn(choiceAction, 'validate');
+    // Mock getUserServerRole as a standalone function
+    mockGetUserServerRole.mockResolvedValue('ADMIN');
 
     const isValid = await choiceAction.validate(
       mockRuntime as IAgentRuntime,
@@ -891,12 +935,8 @@ describe('Choice Action (Extended)', () => {
       mockState as State
     );
 
-    // Check how validate was called
-    console.log('Validation spy calls:', validateSpy.mock.calls);
-    console.log('Validation result:', isValid);
-
-    // If the validation always returns false in the actual implementation, adjust expectation
-    expect(isValid).toBe(false); // Changed from true to match actual behavior
+    // The validation should return true when user is ADMIN and there are tasks with options
+    expect(isValid).toBe(true);
     expect(mockRuntime.getTasks).toHaveBeenCalledWith({
       roomId: mockMessage.roomId,
       tags: ['AWAITING_CHOICE'],
@@ -914,16 +954,24 @@ describe('Choice Action (Extended)', () => {
       },
     ]);
 
-    // Set user role to USER, which shouldn't have permission
-    mockRuntime.getUserServerRole = vi.fn().mockResolvedValue('USER');
+    // Mock getUserServerRole to return USER role
+    mockGetUserServerRole.mockResolvedValue('USER');
 
-    const isValid = await choiceAction.validate(
-      mockRuntime as IAgentRuntime,
-      mockMessage as Memory,
-      mockState as State
-    );
+    try {
+      const isValid = await choiceAction.validate(
+        mockRuntime as IAgentRuntime,
+        mockMessage as Memory,
+        mockState as State
+      );
 
-    expect(isValid).toBe(false);
+      console.log('isValid', isValid);
+
+      expect(isValid).toBe(false);
+    } catch (error) {
+      console.error('Validation error:', error);
+      // If validation throws, fail the test with a clear message
+      throw new Error(`Validation should not throw an error: ${error}`);
+    }
   });
 
   it('should handle multiple tasks awaiting choice', async () => {
@@ -1102,14 +1150,16 @@ describe('Send Message Action (Extended)', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
   let mockState: Partial<State>;
-  let callbackFn: ReturnType<typeof vi.fn>;
+  let callbackFn: MockedFunction<HandlerCallback>;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    callbackFn = vi.fn();
+    callbackFn = vi.fn(
+      async (response: Content, files?: any): Promise<void> => Promise.resolve(undefined)
+    ) as MockedFunction<HandlerCallback>;
   });
 
   afterEach(() => {

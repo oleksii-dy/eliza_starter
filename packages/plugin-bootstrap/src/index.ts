@@ -1258,6 +1258,24 @@ export const bootstrapPlugin: Plugin = {
     providers.worldProvider,
   ],
   services: [TaskService, ScenarioService],
+  tests: [
+    {
+      name: 'Bootstrap Plugin Tests',
+      tests: [
+        {
+          name: 'should have correct plugin metadata',
+          fn: async (runtime) => {
+            if (bootstrapPlugin.name !== 'bootstrap') {
+              throw new Error('Plugin name should be "bootstrap"');
+            }
+            if (!bootstrapPlugin.description) {
+              throw new Error('Plugin should have a description');
+            }
+          },
+        },
+      ],
+    },
+  ],
 };
 
 export default bootstrapPlugin;
