@@ -3,8 +3,6 @@
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execa } from 'execa';
-import { yellow } from 'yoctocolors';
 
 // Function to get the package version
 // --- Utility: Get local CLI version from package.json ---
@@ -51,40 +49,6 @@ export function isUtf8Locale() {
     }
   }
   return false;
-}
-// --- Utility: Check for latest CLI version and notify user ---
-async function checkForCliUpdate(currentVersion: string) {
-  try {
-    // Get the time data for all published versions to find the most recent
-    const { stdout } = await execa('npm', ['view', '@elizaos/cli', 'time', '--json']);
-    const timeData = JSON.parse(stdout);
-
-    // Remove metadata entries like 'created' and 'modified'
-    delete timeData.created;
-    delete timeData.modified;
-
-    // Find the most recently published version
-    let latestVersion = '';
-    let latestDate = new Date(0); // Start with epoch time
-
-    for (const [version, dateString] of Object.entries(timeData)) {
-      const publishDate = new Date(dateString as string);
-      if (publishDate > latestDate) {
-        latestDate = publishDate;
-        latestVersion = version;
-      }
-    }
-
-    // If already at the latest version or couldn't determine latest, exit
-    if (!latestVersion || latestVersion === currentVersion) return;
-
-    console.log(
-      `\x1b[33m\nA new version of elizaOS CLI is available: ${latestVersion} (current: ${currentVersion})\x1b[0m`
-    );
-    console.log(`\x1b[32mUpdate with: elizaos update\x1b[0m\n`);
-  } catch {
-    /* silent: update check failure must not block banner */
-  }
 }
 
 // --- Main: Display banner and version, then check for updates ---
@@ -171,6 +135,7 @@ ${b}⠀⠀⠀⠀⢸⣿⡦⠀⠀⠉⠛⠿⠃⠀⠀⠀ ${w} ⠀⠀⠀⠀⠀⠀⠀�
 
   // Notify user if a new CLI version is available
   try {
+    const { checkForCliUpdate } = await import('./auto-update');
     await checkForCliUpdate(version);
   } catch (error) {
     // Silently continue if update check fails
