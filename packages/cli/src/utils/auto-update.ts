@@ -12,15 +12,14 @@ async function getLatestCliVersion(): Promise<string | null> {
     const { stdout } = await execa('npm', ['view', '@elizaos/cli', 'time', '--json']);
     const timeData = JSON.parse(stdout);
 
-    // Remove metadata entries like 'created' and 'modified'
-    delete timeData.created;
-    delete timeData.modified;
-
-    // Find the most recently published version
+    // Find the most recently published version (excluding metadata entries)
     let latestVersion = '';
     let latestDate = new Date(0); // Start with epoch time
 
     for (const [version, dateString] of Object.entries(timeData)) {
+      // Skip metadata entries
+      if (version === 'created' || version === 'modified') continue;
+
       const publishDate = new Date(dateString as string);
       if (publishDate > latestDate) {
         latestDate = publishDate;
