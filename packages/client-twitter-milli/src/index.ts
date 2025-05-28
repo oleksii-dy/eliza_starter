@@ -25,7 +25,7 @@ class TwitterManager {
     }
 }
 
-export const TwitterClientInterface: Client = {
+export const TwitterMilliClientInterface: Client = {
     async start(runtime: IAgentRuntime) {
         const twitterConfig: TwitterConfig =
             await validateTwitterConfig(runtime);
@@ -48,4 +48,4 @@ export const TwitterClientInterface: Client = {
     },
 };
 
-export default TwitterClientInterface;
+export default TwitterMilliClientInterface;

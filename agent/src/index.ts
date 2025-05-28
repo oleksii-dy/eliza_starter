@@ -10,6 +10,7 @@ import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
+import { TwitterMilliClientInterface } from "@elizaos/client-twitter-milli";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { DirectClient } from "@elizaos/client-direct";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
@@ -97,7 +98,6 @@ import { OpacityAdapter } from "@elizaos/plugin-opacity";
 // import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
 // import { stargazePlugin } from "@elizaos/plugin-stargaze";
 import { akashPlugin } from "@elizaos/plugin-akash";
-import { TweetMonitoringService } from "@elizaos/plugin-milli";
 // import { quaiPlugin } from "@elizaos/plugin-quai";
 import Database from "better-sqlite3";
 import fs from "fs";
@@ -560,14 +560,21 @@ export async function initializeClients(
         }
     }
 
-    if (clientTypes.includes(Clients.FARCASTER)) {
-        // why is this one different :(
-        const farcasterClient = new FarcasterAgentClient(runtime);
-        if (farcasterClient) {
-            farcasterClient.start();
-            clients.farcaster = farcasterClient;
+    if (clientTypes.includes(Clients.TWITTERMILLI)) {
+        const twitterMiiliClient = await TwitterMilliClientInterface.start(runtime);
+        if (twitterMiiliClient) {
+            clients.twitterMilli = twitterMiiliClient;
         }
     }
+
+    // if (clientTypes.includes(Clients.FARCASTER)) {
+    //     // why is this one different :(
+    //     const farcasterClient = new FarcasterAgentClient(runtime);
+    //     if (farcasterClient) {
+    //         farcasterClient.start();
+    //         clients.farcaster = farcasterClient;
+    //     }
+    // }
     if (clientTypes.includes("lens")) {
         const lensClient = new LensAgentClient(runtime);
         lensClient.start();
@@ -981,7 +988,7 @@ async function startAgent(
 
         // start services/plugins/process knowledge
         await runtime.initialize();
-        
+
         // start assigned clients
         runtime.clients = await initializeClients(character, runtime);
 
