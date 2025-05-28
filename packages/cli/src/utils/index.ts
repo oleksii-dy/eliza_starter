@@ -1,5 +1,6 @@
 // Core utilities
 export * from './audioBuffer';
+export * from './auto-update';
 export * from './build-project';
 export * from './cli-prompts';
 export * from './config-manager';
