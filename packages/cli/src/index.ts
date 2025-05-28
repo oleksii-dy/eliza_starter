@@ -86,18 +86,14 @@ async function main() {
     .addCommand(publish)
     .addCommand(stopCommand);
 
-  // Add auto-update hook to all commands except 'update' to avoid recursion
-  program.commands.forEach((command) => {
-    if (command.name() !== 'update') {
-      command.hook('preAction', async (thisCommand, actionCommand) => {
-        const opts = program.opts();
-        // Only perform auto-update if --noupdate flag is not set
-        if (!opts.noupdate) {
-          await performAutoUpdate();
-        }
-      });
-    }
-  });
+  // Check for --noupdate flag and update command before performing auto-update
+  const hasNoUpdateFlag = process.argv.includes('--noupdate');
+  const isUpdateCommand = process.argv.includes('update');
+
+  // Perform auto-update once before parsing commands (unless disabled or running update command)
+  if (!hasNoUpdateFlag && !isUpdateCommand && process.argv.length > 2) {
+    await performAutoUpdate();
+  }
 
   // if no args are passed, display the banner
   if (process.argv.length === 2) {
