@@ -1,41 +1,44 @@
 import {
   type Action,
+  type Content,
+  type HandlerCallback,
   type IAgentRuntime,
   type Memory,
   type State,
-  type HandlerCallback,
-  type Content,
   logger,
+  ModelType,
+  composePromptFromState,
 } from '@elizaos/core';
-import { z } from 'zod';
 import { JsonRpcProvider } from 'ethers';
+import { getBatchInfoTemplate } from '../templates';
+import { callLLMWithTimeout } from '../utils/llmHelpers';
+
+interface BatchInfo {
+  batchNumber: number;
+  blockRange?: {
+    start: number;
+    end: number;
+  };
+  status?: string;
+  timestamp?: number;
+  transactionCount?: number;
+  method: 'alchemy' | 'rpc';
+}
 
 export const getBatchInfoAction: Action = {
-  name: 'GET_BATCH_INFORMATION',
-  similes: [
-    'GET_BATCH_INFO',
-    'FETCH_BATCH_DATA',
-    'SHOW_BATCH_DETAILS',
-    'GET_ZKEVM_BATCH',
-    'BATCH_METADATA',
-    'BATCH_TRANSACTIONS',
-  ],
-  description:
-    'Fetches metadata for a given batch ID, including transaction list and proofs from Polygon zkEVM.',
+  name: 'GET_BATCH_INFO_ZKEVM',
+  similes: ['GET_BATCH', 'BATCH_INFO', 'BATCH_DETAILS', 'ZKEVM_BATCH'],
+  description: 'Get batch information for Polygon zkEVM',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
-    const alchemyApiKey = process.env.ALCHEMY_API_KEY;
-    const zkevmRpcUrl = process.env.ZKEVM_RPC_URL;
+    const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+    const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
 
     if (!alchemyApiKey && !zkevmRpcUrl) {
       return false;
     }
 
-    // Check if message contains a batch ID (number)
-    const batchIdRegex = /(?:batch\s*(?:id|number)?[:\s]*)?(\d+)/i;
-    const match = message.content.text.match(batchIdRegex);
-
-    return !!match;
+    return true;
   },
 
   handler: async (
@@ -47,172 +50,129 @@ export const getBatchInfoAction: Action = {
   ): Promise<Content> => {
     logger.info('[getBatchInfoAction] Handler called!');
 
-    const alchemyApiKey = process.env.ALCHEMY_API_KEY;
-    const zkevmRpcUrl = process.env.ZKEVM_RPC_URL;
+    const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+    const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
 
     if (!alchemyApiKey && !zkevmRpcUrl) {
-      throw new Error('ALCHEMY_API_KEY or ZKEVM_RPC_URL is required in configuration.');
-    }
-
-    // Extract batch ID from message
-    const batchIdRegex = /(?:batch\s*(?:id|number)?[:\s]*)?(\d+)/i;
-    const match = message.content.text.match(batchIdRegex);
-
-    if (!match) {
+      const errorMessage = 'ALCHEMY_API_KEY or ZKEVM_RPC_URL is required in configuration.';
+      logger.error(`[getBatchInfoAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
-        text: "❌ Please provide a valid batch ID. Example: 'get batch info 12345' or 'show batch 67890'",
-        actions: ['GET_BATCH_INFORMATION'],
-        data: { error: 'Invalid batch ID format' },
+        text: errorMessage,
+        actions: ['GET_BATCH_INFO_ZKEVM'],
+        data: { error: errorMessage },
       };
 
       if (callback) {
         await callback(errorContent);
       }
-      return errorContent;
+      throw new Error(errorMessage);
     }
 
-    const batchId = parseInt(match[1], 10);
-    let batchInfo: any = null;
-    let methodUsed: 'alchemy' | 'rpc' | null = null;
+    let batchInput: any | null = null;
+
+    // Extract batch number using LLM with OBJECT_LARGE model
+    try {
+      batchInput = await callLLMWithTimeout<{ batchNumber: number; error?: string }>(
+        runtime,
+        state,
+        getBatchInfoTemplate,
+        'getBatchInfoAction'
+      );
+
+      if (batchInput?.error) {
+        logger.error('[getBatchInfoAction] LLM returned an error:', batchInput?.error);
+        throw new Error(batchInput?.error);
+      }
+
+      if (!batchInput?.batchNumber || typeof batchInput.batchNumber !== 'number') {
+        throw new Error('Invalid batch number received from LLM.');
+      }
+    } catch (error) {
+      logger.debug(
+        '[getBatchInfoAction] OBJECT_LARGE model failed',
+        error instanceof Error ? error : undefined
+      );
+      throw new Error(
+        `[getBatchInfoAction] Failed to extract batch number from input: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+
+    const batchNumber = batchInput.batchNumber;
+
+    // Setup provider - prefer Alchemy, fallback to RPC
+    let provider: JsonRpcProvider;
+    let methodUsed: 'alchemy' | 'rpc' = 'rpc';
+    const zkevmAlchemyUrl =
+      runtime.getSetting('ZKEVM_ALCHEMY_URL') || 'https://polygonzkevm-mainnet.g.alchemy.com/v2';
+
+    if (alchemyApiKey) {
+      provider = new JsonRpcProvider(`${zkevmAlchemyUrl}/${alchemyApiKey}`);
+      methodUsed = 'alchemy';
+    } else {
+      provider = new JsonRpcProvider(zkevmRpcUrl);
+    }
+
+    let batchInfo: BatchInfo | null = null;
     let errorMessages: string[] = [];
 
-    // 1. Attempt to use Alchemy API (zk.getBatch method)
-    if (alchemyApiKey) {
+    // Try to get batch information
+    try {
+      logger.info(`[getBatchInfoAction] Fetching batch info for batch ${batchNumber}`);
+
+      // Try zkEVM-specific RPC methods
+      let batchData: any;
+
       try {
-        logger.info(`[getBatchInfoAction] Attempting to use Alchemy API for batch ${batchId}`);
-        const alchemyUrl = `https://polygonzkevm-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
-
-        // Try Alchemy's zkevm_getBatchByNumber method first
-        const alchemyOptions = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'zkevm_getBatchByNumber',
-            params: [`0x${batchId.toString(16)}`, false], // hex format + includeTransactions boolean
-            id: 1,
-          }),
-        };
-
-        const alchemyResponse = await fetch(alchemyUrl, alchemyOptions);
-        if (!alchemyResponse.ok) {
-          throw new Error(
-            `Alchemy API returned status ${alchemyResponse.status}: ${alchemyResponse.statusText}`
-          );
-        }
-
-        const alchemyData = (await alchemyResponse.json()) as {
-          error?: { message: string };
-          result?: any;
-        };
-
-        if (alchemyData?.error) {
-          throw new Error(`Alchemy API returned error: ${alchemyData?.error?.message}`);
-        }
-
-        if (alchemyData?.result) {
-          batchInfo = alchemyData.result;
-          methodUsed = 'alchemy';
-          logger.info(`[getBatchInfoAction] Batch info from Alchemy: ${JSON.stringify(batchInfo)}`);
-        } else {
-          throw new Error('Alchemy API did not return batch information.');
-        }
-      } catch (error) {
-        logger.error('Error using Alchemy API:', error);
-        errorMessages.push(
-          `Alchemy API failed: ${error instanceof Error ? error.message : String(error)}`
-        );
-        // Continue to fallback
-      }
-    }
-
-    // 2. Fallback to JSON-RPC if Alchemy failed or not configured
-    if (batchInfo === null && zkevmRpcUrl) {
-      logger.info(`[getBatchInfoAction] Falling back to JSON-RPC for batch ${batchId}`);
-      try {
-        const provider = new JsonRpcProvider(zkevmRpcUrl);
-
         // Try zkevm_getBatchByNumber method
-        const rpcResult = await provider.send('zkevm_getBatchByNumber', [
-          `0x${batchId.toString(16)}`,
-          false,
-        ]);
-
-        if (rpcResult) {
-          batchInfo = rpcResult;
-          methodUsed = 'rpc';
-          logger.info(`[getBatchInfoAction] Batch info from RPC: ${JSON.stringify(batchInfo)}`);
-        } else {
-          throw new Error('RPC did not return batch information.');
-        }
-      } catch (error) {
-        logger.error('Error using JSON-RPC fallback:', error);
-        errorMessages.push(
-          `JSON-RPC fallback failed: ${error instanceof Error ? error.message : String(error)}`
+        batchData = await provider.send('zkevm_getBatchByNumber', [batchNumber]);
+        logger.info('[getBatchInfoAction] Got batch data from zkevm_getBatchByNumber');
+      } catch (batchError) {
+        logger.warn(
+          '[getBatchInfoAction] zkevm_getBatchByNumber not available, trying alternative methods'
         );
+
+        try {
+          // Try alternative method
+          batchData = await provider.send('zkevm_getBatch', [batchNumber]);
+          logger.info('[getBatchInfoAction] Got batch data from zkevm_getBatch');
+        } catch (altError) {
+          logger.warn('[getBatchInfoAction] Alternative batch methods not available');
+          throw new Error('Batch information not available via RPC methods');
+        }
       }
+
+      if (batchData) {
+        batchInfo = {
+          batchNumber,
+          blockRange: batchData.blockRange || undefined,
+          status: batchData.status || 'unknown',
+          timestamp: batchData.timestamp || Date.now(),
+          transactionCount: batchData.transactionCount || 0,
+          method: methodUsed,
+        };
+      }
+    } catch (error) {
+      const errorMsg = `Failed to get batch info: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error(errorMsg);
+      errorMessages.push(errorMsg);
     }
 
-    // Handle result and errors
-    if (batchInfo !== null) {
-      // Format the batch information for user-friendly display
-      const transactionCount = batchInfo.transactions ? batchInfo.transactions.length : 0;
-      const hasProof = batchInfo.proof || batchInfo.verifyBatchTxHash;
+    if (batchInfo) {
+      const responseText = `📦 **Batch Information (Polygon zkEVM)**
 
-      let responseText = `📦 **Batch ${batchId} Information** (via ${methodUsed})\n\n`;
+**Batch Number:** ${batchInfo.batchNumber}
+**Status:** ${batchInfo.status}
+**Block Range:** ${batchInfo.blockRange ? `${batchInfo.blockRange.start} - ${batchInfo.blockRange.end}` : 'N/A'}
+**Transaction Count:** ${batchInfo.transactionCount || 'N/A'}
+**Method:** ${batchInfo.method}
 
-      if (batchInfo.number) {
-        responseText += `🔢 **Batch Number:** ${parseInt(batchInfo.number, 16)}\n`;
-      }
-
-      if (batchInfo.timestamp) {
-        const timestamp = parseInt(batchInfo.timestamp, 16) * 1000;
-        responseText += `⏰ **Timestamp:** ${new Date(timestamp).toISOString()}\n`;
-      }
-
-      if (batchInfo.coinbase) {
-        responseText += `👤 **Coinbase:** \`${batchInfo.coinbase}\`\n`;
-      }
-
-      if (batchInfo.stateRoot) {
-        responseText += `🌳 **State Root:** \`${batchInfo.stateRoot}\`\n`;
-      }
-
-      if (batchInfo.globalExitRoot) {
-        responseText += `🚪 **Global Exit Root:** \`${batchInfo.globalExitRoot}\`\n`;
-      }
-
-      responseText += `📊 **Transaction Count:** ${transactionCount}\n`;
-
-      if (hasProof) {
-        responseText += `✅ **Proof Available:** Yes\n`;
-        if (batchInfo.verifyBatchTxHash) {
-          responseText += `🔐 **Verify Batch Tx:** \`${batchInfo.verifyBatchTxHash}\`\n`;
-        }
-      } else {
-        responseText += `⏳ **Proof Available:** Pending\n`;
-      }
-
-      // Show first few transactions if available
-      if (batchInfo.transactions && batchInfo.transactions.length > 0) {
-        responseText += `\n📋 **Transactions:**\n`;
-        const displayCount = Math.min(5, batchInfo.transactions.length);
-        for (let i = 0; i < displayCount; i++) {
-          responseText += `  ${i + 1}. \`${batchInfo.transactions[i]}\`\n`;
-        }
-        if (batchInfo.transactions.length > 5) {
-          responseText += `  ... and ${batchInfo.transactions.length - 5} more\n`;
-        }
-      }
+${errorMessages.length > 0 ? `\n**Warnings:**\n${errorMessages.map((msg) => `- ${msg}`).join('\n')}` : ''}`;
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_BATCH_INFORMATION'],
+        actions: ['GET_BATCH_INFO_ZKEVM'],
         data: {
-          batchId,
           batchInfo,
-          transactionCount,
-          hasProof,
           network: 'polygon-zkevm',
           timestamp: Date.now(),
           method: methodUsed,
@@ -225,20 +185,13 @@ export const getBatchInfoAction: Action = {
 
       return responseContent;
     } else {
-      // Both methods failed
-      const errorMessage = `❌ Failed to retrieve batch ${batchId} information from Polygon zkEVM using both Alchemy and RPC methods.\n\n**Errors encountered:**\n${errorMessages.map((err) => `• ${err}`).join('\n')}\n\n💡 **Possible reasons:**\n• Batch ID ${batchId} does not exist\n• Batch is too recent and not yet finalized\n• Network connectivity issues\n• API rate limits exceeded`;
-
+      const errorMessage = `Failed to retrieve batch information for batch ${batchNumber}. ${errorMessages.join('; ')}`;
       logger.error(errorMessage);
 
       const errorContent: Content = {
-        text: errorMessage,
-        actions: ['GET_BATCH_INFORMATION'],
-        data: {
-          error: errorMessage,
-          errors: errorMessages,
-          batchId,
-          network: 'polygon-zkevm',
-        },
+        text: `❌ ${errorMessage}`,
+        actions: ['GET_BATCH_INFO_ZKEVM'],
+        data: { error: errorMessage, errors: errorMessages, batchNumber },
       };
 
       if (callback) {
@@ -252,46 +205,31 @@ export const getBatchInfoAction: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'get batch info 12345',
+          text: 'Get batch info for batch 123',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: '📦 **Batch 12345 Information** (via alchemy)\n\n🔢 **Batch Number:** 12345\n⏰ **Timestamp:** 2024-01-15T10:30:45.000Z\n👤 **Coinbase:** `0x1234...5678`\n🌳 **State Root:** `0xabcd...ef01`\n🚪 **Global Exit Root:** `0x9876...5432`\n📊 **Transaction Count:** 25\n✅ **Proof Available:** Yes\n🔐 **Verify Batch Tx:** `0xdef0...1234`\n\n📋 **Transactions:**\n  1. `0x1111...2222`\n  2. `0x3333...4444`\n  3. `0x5555...6666`\n  4. `0x7777...8888`\n  5. `0x9999...aaaa`\n  ... and 20 more',
-          actions: ['GET_BATCH_INFORMATION'],
-        },
-      },
-    ],
-    [
-      {
-        name: 'user',
-        content: {
-          text: 'show me batch 67890 details',
-        },
-      },
-      {
-        name: 'assistant',
-        content: {
-          text: '📦 **Batch 67890 Information** (via rpc)\n\n🔢 **Batch Number:** 67890\n⏰ **Timestamp:** 2024-01-15T14:22:10.000Z\n👤 **Coinbase:** `0xabcd...ef01`\n🌳 **State Root:** `0x1234...5678`\n🚪 **Global Exit Root:** `0x9876...5432`\n📊 **Transaction Count:** 42\n⏳ **Proof Available:** Pending',
-          actions: ['GET_BATCH_INFORMATION'],
+          text: "I'll get the batch information for batch 123 on Polygon zkEVM.",
+          actions: ['GET_BATCH_INFO_ZKEVM'],
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'fetch batch metadata for 999999',
+          text: 'Show details for zkEVM batch 456',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: '❌ Failed to retrieve batch 999999 information from Polygon zkEVM using both Alchemy and RPC methods.\n\n**Errors encountered:**\n• Alchemy API failed: Batch not found\n• JSON-RPC fallback failed: Invalid batch number\n\n💡 **Possible reasons:**\n• Batch ID 999999 does not exist\n• Batch is too recent and not yet finalized\n• Network connectivity issues\n• API rate limits exceeded',
-          actions: ['GET_BATCH_INFORMATION'],
+          text: 'Let me fetch the details for that batch.',
+          actions: ['GET_BATCH_INFO_ZKEVM'],
         },
       },
     ],

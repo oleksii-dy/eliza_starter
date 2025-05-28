@@ -12,6 +12,7 @@ import {
 import { z } from 'zod';
 import { JsonRpcProvider } from 'ethers';
 import { blockDetailsByNumberTemplate } from '../templates';
+import { callLLMWithTimeout } from '../utils/llmHelpers';
 
 export const getBlockDetailsByNumberAction: Action = {
   name: 'GET_BLOCK_DETAILS_BY_NUMBER',
@@ -69,14 +70,12 @@ export const getBlockDetailsByNumberAction: Action = {
     try {
       // The plugin-evm approach is to directly use ModelType.OBJECT_LARGE
       // and handle any potential errors in the catch block
-      blockNumberInput = (await runtime.useModel(ModelType.OBJECT_LARGE, {
-        prompt: composePromptFromState({
-          state,
-          template: blockDetailsByNumberTemplate,
-        }),
-      })) as { blockNumber: number; error?: string };
-
-      logger.debug('[getBlockDetailsByNumberAction] Parsed LLM parameters:', blockNumberInput);
+      blockNumberInput = await callLLMWithTimeout<{ blockNumber: number }>(
+        runtime,
+        state,
+        blockDetailsByNumberTemplate,
+        'getBlockDetailsByNumberAction'
+      );
 
       // Check if the model returned an error field
       if (blockNumberInput?.error) {

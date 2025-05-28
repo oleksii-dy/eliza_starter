@@ -6,7 +6,10 @@ import {
   type Memory,
   type State,
   logger,
+  ModelType,
+  composePromptFromState,
 } from '@elizaos/core';
+import { getTransactionReceiptTemplate } from '../templates';
 import { JsonRpcProvider } from 'ethers';
 
 /**
@@ -18,32 +21,24 @@ export const getTransactionReceiptAction: Action = {
   similes: ['GET_TX_RECEIPT', 'TRANSACTION_RECEIPT', 'TX_RECEIPT', 'RECEIPT'],
   description: 'Get transaction receipt by hash on Polygon zkEVM',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<boolean> => {
-    // Check if we have the required configuration
-    const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
-    const zkevmRpcUrl = process.env.ZKEVM_RPC_URL || runtime.getSetting('ZKEVM_RPC_URL');
+  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+    const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+    const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
 
     if (!alchemyApiKey && !zkevmRpcUrl) {
-      logger.error('No Alchemy API key or zkEVM RPC URL configured');
       return false;
     }
 
-    // Check if message contains a transaction hash or receipt request
-    const text = message.content.text.toLowerCase();
-    const hasReceiptRequest =
-      /0x[a-fA-F0-9]{64}/.test(text) || text.includes('receipt') || text.includes('status');
-
-    return hasReceiptRequest;
+    return true;
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State,
-    options: any,
-    callback: HandlerCallback,
-    responses: Memory[]
-  ) => {
+    state?: State,
+    options?: { [key: string]: unknown },
+    callback?: HandlerCallback
+  ): Promise<Content> => {
     try {
       logger.info('Handling GET_TRANSACTION_RECEIPT_ZKEVM action');
 
@@ -65,15 +60,15 @@ export const getTransactionReceiptAction: Action = {
 
       // Setup provider - prefer Alchemy, fallback to RPC
       let provider: JsonRpcProvider;
-      const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
+      const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
 
       if (alchemyApiKey) {
         provider = new JsonRpcProvider(
-          `https://polygonzkevm-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
+          `${runtime.getSetting('ZKEVM_ALCHEMY_URL') || 'https://polygonzkevm-mainnet.g.alchemy.com/v2'}/${alchemyApiKey}`
         );
       } else {
         const zkevmRpcUrl =
-          process.env.ZKEVM_RPC_URL ||
+          runtime.getSetting('ZKEVM_RPC_URL') ||
           runtime.getSetting('ZKEVM_RPC_URL') ||
           'https://zkevm-rpc.com';
         provider = new JsonRpcProvider(zkevmRpcUrl);
@@ -93,11 +88,9 @@ export const getTransactionReceiptAction: Action = {
       }
 
       // Format receipt details
-      const gasUsedPercent = receipt.gasLimit
-        ? ((Number(receipt.gasUsed) / Number(receipt.gasLimit)) * 100).toFixed(2)
-        : 'N/A';
-      const effectiveGasPriceGwei = receipt.effectiveGasPrice
-        ? (Number(receipt.effectiveGasPrice) / 1e9).toFixed(2)
+      const gasUsedPercent = 'N/A'; // Gas limit not available in receipt
+      const effectiveGasPriceGwei = receipt.gasPrice
+        ? (Number(receipt.gasPrice) / 1e9).toFixed(2)
         : 'N/A';
       const status = receipt.status === 1 ? '✅ Success' : '❌ Failed';
 
@@ -146,13 +139,13 @@ export const getTransactionReceiptAction: Action = {
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
           text: 'Get receipt for transaction 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{user2}}',
         content: {
           text: `Transaction Receipt for 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef:
 📋 Hash: 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef

@@ -6,8 +6,40 @@ import {
   type Memory,
   type State,
   logger,
+  ModelType,
+  composePromptFromState,
 } from '@elizaos/core';
-import { JsonRpcProvider } from 'ethers';
+import { JsonRpcProvider, isAddress, getAddress } from 'ethers';
+import { estimateGasTemplate } from '../templates';
+import { callLLMWithTimeout } from '../utils/llmHelpers';
+
+/**
+ * Validate and normalize an Ethereum address
+ */
+function validateAndNormalizeAddress(address: string): string {
+  if (!address) {
+    throw new Error('Address is required');
+  }
+
+  // Remove any whitespace
+  const cleanAddress = address.trim();
+
+  // Check if it's a valid address format
+  if (!isAddress(cleanAddress)) {
+    throw new Error(
+      `Invalid address format: ${cleanAddress}. Please provide a valid Ethereum address starting with 0x.`
+    );
+  }
+
+  // Return the checksummed address
+  try {
+    return getAddress(cleanAddress);
+  } catch (error) {
+    throw new Error(
+      `Invalid address checksum: ${cleanAddress}. Please use the correct capitalization or provide the address in all lowercase.`
+    );
+  }
+}
 
 /**
  * Estimate gas action for Polygon zkEVM
@@ -15,159 +47,245 @@ import { JsonRpcProvider } from 'ethers';
  */
 export const estimateGasAction: Action = {
   name: 'ESTIMATE_GAS_ZKEVM',
-  similes: ['GAS_ESTIMATE', 'ESTIMATE_GAS', 'GAS_COST', 'TRANSACTION_COST'],
-  description: 'Estimate gas required for a transaction on Polygon zkEVM',
+  similes: ['ESTIMATE_GAS', 'GAS_ESTIMATE', 'GAS_COST', 'TRANSACTION_COST'],
+  description: 'Estimate gas cost for a transaction on Polygon zkEVM',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<boolean> => {
-    // Check if we have the required configuration
-    const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
-    const zkevmRpcUrl = process.env.ZKEVM_RPC_URL || runtime.getSetting('ZKEVM_RPC_URL');
+  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+    const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+    const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
 
     if (!alchemyApiKey && !zkevmRpcUrl) {
-      logger.error('No Alchemy API key or zkEVM RPC URL configured');
       return false;
     }
 
-    // Check if message contains gas estimation request
-    const text = message.content.text.toLowerCase();
-    const hasGasRequest = text.includes('estimate') && text.includes('gas');
+    // Check if the message is about gas estimation
+    const messageText = message.content.text?.toLowerCase() || '';
+    const gasEstimationKeywords = [
+      'estimate gas',
+      'gas estimate',
+      'gas cost',
+      'transaction cost',
+      'how much gas',
+      'gas fee',
+      'estimate fee',
+      'cost to send',
+      'transaction fee',
+    ];
 
-    return hasGasRequest;
+    const hasGasKeywords = gasEstimationKeywords.some((keyword) => messageText.includes(keyword));
+
+    // Also check for transaction-like patterns (address + value/action)
+    const hasAddress = /0x[a-fA-F0-9]{40}/.test(messageText);
+    const hasValue = /\d+(?:\.\d+)?\s*eth/i.test(messageText) || messageText.includes('send');
+
+    logger.debug('[estimateGasAction] Validation check:', {
+      hasGasKeywords,
+      hasAddress,
+      hasValue,
+      messageText: messageText.substring(0, 100),
+    });
+
+    return hasGasKeywords || (hasAddress && hasValue);
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State,
-    options: any,
-    callback: HandlerCallback,
-    responses: Memory[]
-  ) => {
+    state?: State,
+    options?: { [key: string]: unknown },
+    callback?: HandlerCallback
+  ): Promise<Content> => {
     try {
-      logger.info('Handling ESTIMATE_GAS_ZKEVM action');
+      logger.info('[estimateGasAction] Handler called!');
 
-      const text = message.content.text;
+      const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+      const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
+
+      if (!alchemyApiKey && !zkevmRpcUrl) {
+        const errorMessage = 'ALCHEMY_API_KEY or ZKEVM_RPC_URL is required in configuration.';
+        logger.error(`[estimateGasAction] Configuration error: ${errorMessage}`);
+        const errorContent: Content = {
+          text: errorMessage,
+          actions: ['ESTIMATE_GAS_ZKEVM'],
+          data: { error: errorMessage },
+        };
+
+        if (callback) {
+          await callback(errorContent);
+        }
+        throw new Error(errorMessage);
+      }
+
+      let gasInput: any | null = null;
+
+      // Extract gas estimation parameters using LLM with OBJECT_LARGE model
+      try {
+        gasInput = await callLLMWithTimeout<{
+          to?: string;
+          from?: string;
+          value?: string;
+          data?: string;
+          error?: string;
+        }>(runtime, state, estimateGasTemplate, 'estimateGasAction');
+
+        if (gasInput?.error) {
+          logger.error('[estimateGasAction] LLM returned an error:', gasInput?.error);
+          throw new Error(gasInput?.error);
+        }
+
+        // Validate that we got at least a 'to' address
+        if (!gasInput?.to) {
+          logger.warn(
+            '[estimateGasAction] LLM did not extract a "to" address, trying fallback extraction...'
+          );
+
+          // Fallback: try to extract address and value from the message text
+          const messageText = message.content.text || '';
+          const addressMatch = messageText.match(/0x[a-fA-F0-9]{40}/);
+          const valueMatch = messageText.match(/(\d+(?:\.\d+)?)\s*ETH/i);
+
+          if (addressMatch) {
+            gasInput = {
+              to: addressMatch[0],
+              value: valueMatch ? valueMatch[1] : undefined,
+            };
+            logger.info('[estimateGasAction] Fallback extraction successful:', gasInput);
+          } else {
+            throw new Error(
+              'Could not extract transaction parameters. Please specify at least a recipient address.'
+            );
+          }
+        }
+      } catch (error) {
+        logger.error(
+          '[estimateGasAction] OBJECT_LARGE model failed',
+          error instanceof Error ? error : undefined
+        );
+        throw new Error(
+          `[estimateGasAction] Failed to extract gas estimation parameters from input: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
 
       // Setup provider - prefer Alchemy, fallback to RPC
       let provider: JsonRpcProvider;
-      const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
+      const zkevmAlchemyUrl =
+        runtime.getSetting('ZKEVM_ALCHEMY_URL') || 'https://polygonzkevm-mainnet.g.alchemy.com/v2';
 
       if (alchemyApiKey) {
-        provider = new JsonRpcProvider(
-          `https://polygonzkevm-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
-        );
+        provider = new JsonRpcProvider(`${zkevmAlchemyUrl}/${alchemyApiKey}`);
+        logger.info('[estimateGasAction] Using Alchemy provider');
       } else {
-        const zkevmRpcUrl =
-          process.env.ZKEVM_RPC_URL ||
-          runtime.getSetting('ZKEVM_RPC_URL') ||
-          'https://zkevm-rpc.com';
         provider = new JsonRpcProvider(zkevmRpcUrl);
+        logger.info('[estimateGasAction] Using RPC provider:', zkevmRpcUrl);
       }
 
-      // Build transaction object from message
+      // Build transaction object from extracted parameters with validation
+      logger.info('[estimateGasAction] Building transaction object...');
       const transaction: any = {};
 
-      // Extract addresses
-      const addresses = text.match(/0x[a-fA-F0-9]{40}/g);
-      if (addresses && addresses.length >= 1) {
-        transaction.to = addresses[0];
-        if (addresses.length >= 2) {
-          transaction.from = addresses[1];
+      if (gasInput.to) {
+        try {
+          transaction.to = validateAndNormalizeAddress(gasInput.to);
+        } catch (error) {
+          throw new Error(
+            `Invalid 'to' address: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
       }
 
-      // Extract value if specified
-      const valueMatch = text.match(/(\d+(?:\.\d+)?)\s*(eth|ether)/i);
-      if (valueMatch) {
-        const ethValue = parseFloat(valueMatch[1]);
+      if (gasInput.from) {
+        try {
+          transaction.from = validateAndNormalizeAddress(gasInput.from);
+        } catch (error) {
+          throw new Error(
+            `Invalid 'from' address: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
+      }
+
+      if (gasInput.value) {
+        const ethValue = parseFloat(gasInput.value);
+        if (isNaN(ethValue) || ethValue < 0) {
+          throw new Error(
+            `Invalid value: ${gasInput.value}. Please provide a valid positive number.`
+          );
+        }
         transaction.value = '0x' + BigInt(Math.floor(ethValue * 1e18)).toString(16);
       }
 
-      // Extract data if specified (for contract calls)
-      const dataMatch = text.match(/data[:\s]+(0x[a-fA-F0-9]+)/i);
-      if (dataMatch) {
-        transaction.data = dataMatch[1];
-      }
-
-      // If no specific transaction details, provide estimates for common operations
-      if (!transaction.to && !transaction.data) {
-        const gasPrice = await provider.send('eth_gasPrice', []);
-        const gasPriceInGwei = Number(BigInt(gasPrice)) / 1e9;
-
-        const estimates = [
-          { operation: 'Simple Transfer', gas: 21000 },
-          { operation: 'ERC20 Transfer', gas: 65000 },
-          { operation: 'Uniswap Swap', gas: 150000 },
-          { operation: 'Contract Deployment', gas: 500000 },
-          { operation: 'Complex DeFi Operation', gas: 300000 },
-        ];
-
-        let responseText = `⛽ Gas Estimates for Common Operations:
-💸 Current Gas Price: ${gasPriceInGwei.toFixed(4)} Gwei
-
-📊 Operation Estimates:`;
-
-        for (const estimate of estimates) {
-          const costInEth = (gasPriceInGwei * estimate.gas) / 1e9;
-          responseText += `\n🔸 ${estimate.operation}: ${estimate.gas.toLocaleString()} gas (~${costInEth.toFixed(6)} ETH)`;
+      if (gasInput.data) {
+        // Basic validation for hex data
+        if (gasInput.data && !gasInput.data.startsWith('0x')) {
+          transaction.data = '0x' + gasInput.data;
+        } else {
+          transaction.data = gasInput.data;
         }
-
-        const responseContent: Content = {
-          text: responseText,
-          actions: ['ESTIMATE_GAS_ZKEVM'],
-          source: message.content.source,
-        };
-
-        await callback(responseContent);
-        return responseContent;
       }
 
-      // Estimate gas for the specific transaction
+      // Estimate gas
+      logger.info('[estimateGasAction] Starting gas estimation with transaction:', transaction);
       const gasEstimate = await provider.estimateGas(transaction);
+      logger.info('[estimateGasAction] Gas estimation completed:', gasEstimate.toString());
+
+      logger.info('[estimateGasAction] Getting gas price...');
       const gasPrice = await provider.send('eth_gasPrice', []);
-      const gasPriceInGwei = Number(BigInt(gasPrice)) / 1e9;
-      const costInEth = (gasPriceInGwei * Number(gasEstimate)) / 1e9;
+      logger.info('[estimateGasAction] Gas price retrieved:', gasPrice);
 
-      let responseText = `⛽ Gas Estimation Results:
-📊 Estimated Gas: ${gasEstimate.toString()} units
-💸 Current Gas Price: ${gasPriceInGwei.toFixed(4)} Gwei
-💰 Estimated Cost: ${costInEth.toFixed(6)} ETH
+      // Calculate costs
+      const gasCostWei = gasEstimate * BigInt(gasPrice);
+      const gasCostEth = Number(gasCostWei) / 1e18;
+      const gasPriceGwei = Number(BigInt(gasPrice)) / 1e9;
 
-🔧 Transaction Details:`;
+      const responseText = `⛽ **Gas Estimation for Polygon zkEVM**
 
-      if (transaction.to) {
-        responseText += `\n📍 To: ${transaction.to}`;
-      }
-      if (transaction.from) {
-        responseText += `\n📤 From: ${transaction.from}`;
-      }
-      if (transaction.value) {
-        const valueInEth = Number(BigInt(transaction.value)) / 1e18;
-        responseText += `\n💰 Value: ${valueInEth} ETH`;
-      }
-      if (transaction.data) {
-        const dataLength = (transaction.data.length - 2) / 2;
-        responseText += `\n📦 Data: ${dataLength} bytes`;
-      }
+**Transaction Details:**
+- To: ${transaction.to || 'N/A'}
+- From: ${transaction.from || 'N/A'}
+- Value: ${gasInput.value ? `${gasInput.value} ETH` : '0 ETH'}
+- Data: ${transaction.data ? `${transaction.data.slice(0, 20)}...` : 'None'}
+
+**Gas Estimation:**
+- Estimated Gas: ${gasEstimate.toString()} units
+- Gas Price: ${gasPriceGwei.toFixed(2)} Gwei
+- Total Cost: ${gasCostEth.toFixed(6)} ETH (~$${(gasCostEth * 2000).toFixed(2)} USD)
+
+**Network:** Polygon zkEVM`;
 
       const responseContent: Content = {
         text: responseText,
         actions: ['ESTIMATE_GAS_ZKEVM'],
-        source: message.content.source,
+        data: {
+          gasEstimate: gasEstimate.toString(),
+          gasPrice: gasPrice.toString(),
+          gasCostWei: gasCostWei.toString(),
+          gasCostEth,
+          gasPriceGwei,
+          transaction,
+        },
       };
 
-      await callback(responseContent);
+      if (callback) {
+        await callback(responseContent);
+      }
+
       return responseContent;
     } catch (error) {
-      logger.error('Error in ESTIMATE_GAS_ZKEVM action:', error);
+      const errorMessage = `Failed to estimate gas: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error(errorMessage);
 
       const errorContent: Content = {
-        text: `Error estimating gas: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        text: `❌ ${errorMessage}`,
         actions: ['ESTIMATE_GAS_ZKEVM'],
-        source: message.content.source,
+        data: {
+          error: errorMessage,
+          success: false,
+        },
       };
 
-      await callback(errorContent);
+      if (callback) {
+        await callback(errorContent);
+      }
+
       return errorContent;
     }
   },
@@ -175,45 +293,30 @@ export const estimateGasAction: Action = {
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
-          text: 'Estimate gas for sending 1 ETH to 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+          text: 'Estimate gas for sending 0.1 ETH to 0x742d35Cc6634C0532925A3B8D4C9dB96C4B4d8B6',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{user2}}',
         content: {
-          text: `⛽ Gas Estimation Results:
-📊 Estimated Gas: 21000 units
-💸 Current Gas Price: 1.2345 Gwei
-💰 Estimated Cost: 0.000026 ETH
-
-🔧 Transaction Details:
-📍 To: 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6
-💰 Value: 1 ETH`,
+          text: "I'll estimate the gas cost for that transaction on Polygon zkEVM.",
           actions: ['ESTIMATE_GAS_ZKEVM'],
         },
       },
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
-          text: 'What are the gas estimates for common operations?',
+          text: 'What would it cost to call a contract at 0x1234567890123456789012345678901234567890?',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{user2}}',
         content: {
-          text: `⛽ Gas Estimates for Common Operations:
-💸 Current Gas Price: 1.2345 Gwei
-
-📊 Operation Estimates:
-🔸 Simple Transfer: 21,000 gas (~0.000026 ETH)
-🔸 ERC20 Transfer: 65,000 gas (~0.000080 ETH)
-🔸 Uniswap Swap: 150,000 gas (~0.000185 ETH)
-🔸 Contract Deployment: 500,000 gas (~0.000617 ETH)
-🔸 Complex DeFi Operation: 300,000 gas (~0.000370 ETH)`,
+          text: 'Let me estimate the gas cost for that contract call.',
           actions: ['ESTIMATE_GAS_ZKEVM'],
         },
       },

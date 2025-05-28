@@ -6,7 +6,10 @@ import {
   type Memory,
   type State,
   logger,
+  ModelType,
+  composePromptFromState,
 } from '@elizaos/core';
+import { getGasPriceEstimatesTemplate } from '../templates';
 import { JsonRpcProvider, formatUnits, parseUnits } from 'ethers';
 
 interface GasPriceEstimates {
@@ -40,57 +43,41 @@ export const getGasPriceEstimatesAction: Action = {
   ],
   description: 'Get gas price estimates with low/medium/high tiers for Polygon zkEVM transactions',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<boolean> => {
-    // Check if we have the required configuration
-    const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
-    const zkevmRpcUrl = process.env.ZKEVM_RPC_URL || runtime.getSetting('ZKEVM_RPC_URL');
+  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+    const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+    const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
 
     if (!alchemyApiKey && !zkevmRpcUrl) {
-      logger.error('No Alchemy API key or zkEVM RPC URL configured');
       return false;
     }
 
-    // Check if message contains gas price related keywords
-    const text = message.content.text.toLowerCase();
-    const hasGasKeywords =
-      text.includes('gas') ||
-      text.includes('fee') ||
-      text.includes('price') ||
-      text.includes('estimate') ||
-      text.includes('cost') ||
-      text.includes('tier') ||
-      text.includes('low') ||
-      text.includes('medium') ||
-      text.includes('high');
-
-    return hasGasKeywords;
+    return true;
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State,
-    options: any,
-    callback: HandlerCallback,
-    responses: Memory[]
-  ) => {
+    state?: State,
+    options?: { [key: string]: unknown },
+    callback?: HandlerCallback
+  ): Promise<Content> => {
     try {
       logger.info('⛽ Handling GET_GAS_PRICE_ESTIMATES action');
 
       // Setup provider - prefer Alchemy, fallback to RPC
       let provider: JsonRpcProvider;
       let methodUsed: 'alchemy' | 'rpc' = 'rpc';
-      const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
+      const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
 
       if (alchemyApiKey) {
         provider = new JsonRpcProvider(
-          `https://polygonzkevm-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
+          `${runtime.getSetting('ZKEVM_ALCHEMY_URL') || 'https://polygonzkevm-mainnet.g.alchemy.com/v2'}/${alchemyApiKey}`
         );
         methodUsed = 'alchemy';
         logger.info('🔗 Using Alchemy API for gas price estimates');
       } else {
         const zkevmRpcUrl =
-          process.env.ZKEVM_RPC_URL ||
+          runtime.getSetting('ZKEVM_RPC_URL') ||
           runtime.getSetting('ZKEVM_RPC_URL') ||
           'https://zkevm-rpc.com';
         provider = new JsonRpcProvider(zkevmRpcUrl);
@@ -105,8 +92,8 @@ export const getGasPriceEstimatesAction: Action = {
         logger.info('📊 Fetching current gas price...');
 
         // Try to get gas price using provider method first
-        const gasPriceResult = await provider.getGasPrice();
-        baseGasPrice = gasPriceResult;
+        const gasPriceResult = await provider.send('eth_gasPrice', []);
+        baseGasPrice = BigInt(gasPriceResult);
 
         logger.info(`✅ Base gas price retrieved: ${baseGasPrice.toString()} wei`);
       } catch (error) {
@@ -119,13 +106,13 @@ export const getGasPriceEstimatesAction: Action = {
           logger.info('🔄 Attempting fallback to direct RPC...');
           try {
             const fallbackRpcUrl =
-              process.env.ZKEVM_RPC_URL ||
+              runtime.getSetting('ZKEVM_RPC_URL') ||
               runtime.getSetting('ZKEVM_RPC_URL') ||
               'https://zkevm-rpc.com';
             const fallbackProvider = new JsonRpcProvider(fallbackRpcUrl);
 
-            const fallbackGasPrice = await fallbackProvider.getGasPrice();
-            baseGasPrice = fallbackGasPrice;
+            const fallbackGasPrice = await fallbackProvider.send('eth_gasPrice', []);
+            baseGasPrice = BigInt(fallbackGasPrice);
             methodUsed = 'rpc';
             logger.info('✅ Fallback successful');
           } catch (fallbackError) {
@@ -254,13 +241,13 @@ export const getGasPriceEstimatesAction: Action = {
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
           text: 'Get gas price estimates for zkEVM',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{user2}}',
         content: {
           text: '⛽ **Gas Price Estimates for Polygon zkEVM**\n\n**Current Base Price:**\n📊 0.25 gwei (250000000 wei)\n\n**Recommended Tiers:**\n🐌 **Low Priority:** 0.35 gwei (+40.0%)\n   └─ 350000000 wei\n⚡ **Medium Priority:** 0.5 gwei (+100.0%)\n   └─ 750000000 wei\n🚀 **High Priority:** 0.75 gwei (+200.0%)\n   └─ 750000000 wei\n\n**Usage Recommendations:**\n🐌 Low: Non-urgent transactions, can wait 1-2 minutes\n⚡ Medium: Standard transactions, ~30-60 seconds\n🚀 High: Urgent transactions, fastest confirmation\n\n🔗 Retrieved via Alchemy API\n\n💡 *zkEVM gas prices are typically lower than Ethereum mainnet*',
           actions: ['GET_GAS_PRICE_ESTIMATES'],
@@ -269,13 +256,13 @@ export const getGasPriceEstimatesAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
           text: 'What are the current gas fees?',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{user2}}',
         content: {
           text: '⛽ **Gas Price Estimates for Polygon zkEVM**\n\n**Current Base Price:**\n📊 1.2 gwei (1200000000 wei)\n\n**Recommended Tiers:**\n🐌 **Low Priority:** 1.7 gwei (+41.7%)\n   └─ 1700000000 wei\n⚡ **Medium Priority:** 2.2 gwei (+83.3%)\n   └─ 2200000000 wei\n🚀 **High Priority:** 3.2 gwei (+166.7%)\n   └─ 3200000000 wei\n\n**Usage Recommendations:**\n🐌 Low: Non-urgent transactions, can wait 1-2 minutes\n⚡ Medium: Standard transactions, ~30-60 seconds\n🚀 High: Urgent transactions, fastest confirmation\n\n🔗 Retrieved via Direct RPC\n\n💡 *zkEVM gas prices are typically lower than Ethereum mainnet*',
           actions: ['GET_GAS_PRICE_ESTIMATES'],
@@ -284,13 +271,13 @@ export const getGasPriceEstimatesAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
           text: 'Show me low medium high gas price tiers',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{user2}}',
         content: {
           text: '⛽ **Gas Price Estimates for Polygon zkEVM**\n\n**Current Base Price:**\n📊 0.8 gwei (800000000 wei)\n\n**Recommended Tiers:**\n🐌 **Low Priority:** 1.3 gwei (+62.5%)\n   └─ 1300000000 wei\n⚡ **Medium Priority:** 1.8 gwei (+125.0%)\n   └─ 1800000000 wei\n🚀 **High Priority:** 2.8 gwei (+250.0%)\n   └─ 2800000000 wei\n\n**Usage Recommendations:**\n🐌 Low: Non-urgent transactions, can wait 1-2 minutes\n⚡ Medium: Standard transactions, ~30-60 seconds\n🚀 High: Urgent transactions, fastest confirmation\n\n🔗 Retrieved via Alchemy API\n\n💡 *zkEVM gas prices are typically lower than Ethereum mainnet*',
           actions: ['GET_GAS_PRICE_ESTIMATES'],

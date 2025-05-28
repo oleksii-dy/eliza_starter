@@ -6,7 +6,10 @@ import {
   type Memory,
   type State,
   logger,
+  ModelType,
+  composePromptFromState,
 } from '@elizaos/core';
+import { getTransactionDetailsTemplate } from '../templates';
 import { JsonRpcProvider } from 'ethers';
 
 /**
@@ -27,36 +30,24 @@ export const getTransactionDetailsAction: Action = {
   description:
     'Get comprehensive transaction details including receipt data for a Polygon zkEVM transaction hash',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<boolean> => {
-    // Check if we have the required configuration
-    const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
-    const zkevmRpcUrl = process.env.ZKEVM_RPC_URL || runtime.getSetting('ZKEVM_RPC_URL');
+  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+    const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+    const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
 
     if (!alchemyApiKey && !zkevmRpcUrl) {
-      logger.error('No Alchemy API key or zkEVM RPC URL configured');
       return false;
     }
 
-    // Check if message contains a transaction hash
-    const text = message.content.text.toLowerCase();
-    const hasTransactionHash =
-      /0x[a-fA-F0-9]{64}/.test(text) ||
-      text.includes('transaction') ||
-      text.includes('tx') ||
-      text.includes('hash') ||
-      text.includes('details');
-
-    return hasTransactionHash;
+    return true;
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State,
-    options: any,
-    callback: HandlerCallback,
-    responses: Memory[]
-  ) => {
+    state?: State,
+    options?: { [key: string]: unknown },
+    callback?: HandlerCallback
+  ): Promise<Content> => {
     try {
       logger.info('🔍 Handling GET_TRANSACTION_DETAILS action');
 
@@ -80,17 +71,17 @@ export const getTransactionDetailsAction: Action = {
       // Setup provider - prefer Alchemy, fallback to RPC
       let provider: JsonRpcProvider;
       let methodUsed: 'alchemy' | 'rpc' = 'rpc';
-      const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
+      const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
 
       if (alchemyApiKey) {
         provider = new JsonRpcProvider(
-          `https://polygonzkevm-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
+          `${runtime.getSetting('ZKEVM_ALCHEMY_URL') || 'https://polygonzkevm-mainnet.g.alchemy.com/v2'}/${alchemyApiKey}`
         );
         methodUsed = 'alchemy';
         logger.info('🔗 Using Alchemy API for transaction details');
       } else {
         const zkevmRpcUrl =
-          process.env.ZKEVM_RPC_URL ||
+          runtime.getSetting('ZKEVM_RPC_URL') ||
           runtime.getSetting('ZKEVM_RPC_URL') ||
           'https://zkevm-rpc.com';
         provider = new JsonRpcProvider(zkevmRpcUrl);
@@ -138,7 +129,7 @@ export const getTransactionDetailsAction: Action = {
         logger.info('🔄 Attempting fallback to direct RPC...');
         try {
           const fallbackRpcUrl =
-            process.env.ZKEVM_RPC_URL ||
+            runtime.getSetting('ZKEVM_RPC_URL') ||
             runtime.getSetting('ZKEVM_RPC_URL') ||
             'https://zkevm-rpc.com';
           const fallbackProvider = new JsonRpcProvider(fallbackRpcUrl);
@@ -286,13 +277,13 @@ export const getTransactionDetailsAction: Action = {
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
           text: 'Get transaction details for 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{user2}}',
         content: {
           text: '📋 **Transaction Details for 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef**\n\n**Transaction Info:**\n• From: 0xabc123...\n• To: 0xdef456...\n• Value: 1.500000 ETH\n• Block: 12345678\n• Nonce: 42\n• Gas Limit: 21000\n\n**Receipt Info:**\n• Status: ✅ Success\n• Gas Used: 21000\n• Logs Count: 0\n\n⛽ Gas Efficiency: 100.00% (21000/21000)\n\n🔗 Retrieved via Alchemy API',
           actions: ['GET_TRANSACTION_DETAILS'],
@@ -301,13 +292,13 @@ export const getTransactionDetailsAction: Action = {
     ],
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
           text: 'Show me details for transaction 0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{user2}}',
         content: {
           text: '📋 **Transaction Details for 0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890**\n\n**Transaction Info:**\n• From: 0x123abc...\n• To: Contract Creation\n• Value: 0.000000 ETH\n• Block: 12345679\n• Nonce: 1\n• Gas Limit: 500000\n\n**Receipt Info:**\n• Status: ✅ Success\n• Gas Used: 450000\n• Logs Count: 3\n• Contract Created: 0x789def...\n\n⛽ Gas Efficiency: 90.00% (450000/500000)\n\n🔗 Retrieved via Direct RPC',
           actions: ['GET_TRANSACTION_DETAILS'],

@@ -6,8 +6,12 @@ import {
   type Memory,
   type State,
   logger,
+  ModelType,
+  composePromptFromState,
 } from '@elizaos/core';
 import { JsonRpcProvider } from 'ethers';
+import { getTransactionByHashTemplate } from '../templates';
+import { callLLMWithTimeout } from '../utils/llmHelpers';
 
 /**
  * Get transaction by hash action for Polygon zkEVM
@@ -15,67 +19,87 @@ import { JsonRpcProvider } from 'ethers';
  */
 export const getTransactionByHashAction: Action = {
   name: 'GET_TRANSACTION_BY_HASH_ZKEVM',
-  similes: ['GET_TX', 'TRANSACTION_DETAILS', 'TX_INFO', 'TRANSACTION_BY_HASH'],
+  similes: ['GET_TX_BY_HASH', 'GET_TRANSACTION', 'TRANSACTION_DETAILS', 'TX_DETAILS'],
   description: 'Get transaction details by hash on Polygon zkEVM',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<boolean> => {
-    // Check if we have the required configuration
-    const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
-    const zkevmRpcUrl = process.env.ZKEVM_RPC_URL || runtime.getSetting('ZKEVM_RPC_URL');
+  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+    const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+    const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
 
     if (!alchemyApiKey && !zkevmRpcUrl) {
-      logger.error('No Alchemy API key or zkEVM RPC URL configured');
       return false;
     }
 
-    // Check if message contains a transaction hash
-    const text = message.content.text.toLowerCase();
-    const hasTxHash =
-      /0x[a-fA-F0-9]{64}/.test(text) || text.includes('transaction') || text.includes('tx');
-
-    return hasTxHash;
+    return true;
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State,
-    options: any,
-    callback: HandlerCallback,
-    responses: Memory[]
-  ) => {
+    state?: State,
+    options?: { [key: string]: unknown },
+    callback?: HandlerCallback
+  ): Promise<Content> => {
     try {
-      logger.info('Handling GET_TRANSACTION_BY_HASH_ZKEVM action');
+      logger.info('[getTransactionByHashAction] Handler called!');
 
-      // Extract transaction hash from message
-      const text = message.content.text;
-      const txHashMatch = text.match(/0x[a-fA-F0-9]{64}/);
+      const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+      const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
 
-      if (!txHashMatch) {
+      if (!alchemyApiKey && !zkevmRpcUrl) {
+        const errorMessage = 'ALCHEMY_API_KEY or ZKEVM_RPC_URL is required in configuration.';
+        logger.error(`[getTransactionByHashAction] Configuration error: ${errorMessage}`);
         const errorContent: Content = {
-          text: 'Please provide a valid transaction hash (0x... 64 characters) to get transaction details.',
+          text: errorMessage,
           actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
-          source: message.content.source,
+          data: { error: errorMessage },
         };
-        await callback(errorContent);
-        return errorContent;
+
+        if (callback) {
+          await callback(errorContent);
+        }
+        throw new Error(errorMessage);
       }
 
-      const txHash = txHashMatch[0];
+      let hashInput: any | null = null;
+
+      // Extract transaction hash using LLM with OBJECT_LARGE model
+      try {
+        hashInput = await callLLMWithTimeout<{ transactionHash: string; error?: string }>(
+          runtime,
+          state,
+          getTransactionByHashTemplate,
+          'getTransactionByHashAction'
+        );
+
+        if (hashInput?.error) {
+          logger.error('[getTransactionByHashAction] LLM returned an error:', hashInput?.error);
+          throw new Error(hashInput?.error);
+        }
+
+        if (!hashInput?.transactionHash || typeof hashInput.transactionHash !== 'string') {
+          throw new Error('Invalid transaction hash received from LLM.');
+        }
+      } catch (error) {
+        logger.error(
+          '[getTransactionByHashAction] OBJECT_LARGE model failed',
+          error instanceof Error ? error : undefined
+        );
+        throw new Error(
+          `[getTransactionByHashAction] Failed to extract transaction hash from input: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+
+      const txHash = hashInput.transactionHash;
 
       // Setup provider - prefer Alchemy, fallback to RPC
       let provider: JsonRpcProvider;
-      const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
+      const zkevmAlchemyUrl =
+        runtime.getSetting('ZKEVM_ALCHEMY_URL') || 'https://polygonzkevm-mainnet.g.alchemy.com/v2';
 
       if (alchemyApiKey) {
-        provider = new JsonRpcProvider(
-          `https://polygonzkevm-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
-        );
+        provider = new JsonRpcProvider(`${zkevmAlchemyUrl}/${alchemyApiKey}`);
       } else {
-        const zkevmRpcUrl =
-          process.env.ZKEVM_RPC_URL ||
-          runtime.getSetting('ZKEVM_RPC_URL') ||
-          'https://zkevm-rpc.com';
         provider = new JsonRpcProvider(zkevmRpcUrl);
       }
 
@@ -84,11 +108,12 @@ export const getTransactionByHashAction: Action = {
 
       if (!transaction) {
         const errorContent: Content = {
-          text: `Transaction not found: ${txHash}`,
+          text: `❌ Transaction not found: ${txHash}`,
           actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
-          source: message.content.source,
         };
-        await callback(errorContent);
+        if (callback) {
+          await callback(errorContent);
+        }
         return errorContent;
       }
 
@@ -96,33 +121,72 @@ export const getTransactionByHashAction: Action = {
       const valueInEth = Number(transaction.value) / 1e18;
       const gasPriceInGwei = transaction.gasPrice ? Number(transaction.gasPrice) / 1e9 : 'N/A';
 
+      const responseText = `🔍 **Transaction Details (Polygon zkEVM)**
+
+**Basic Information:**
+- Hash: \`${transaction.hash}\`
+- Block Number: ${transaction.blockNumber || 'Pending'}
+- Block Hash: \`${transaction.blockHash || 'Pending'}\`
+- Transaction Index: ${transaction.index !== null ? transaction.index : 'Pending'}
+
+**Transaction Data:**
+- From: \`${transaction.from}\`
+- To: \`${transaction.to || 'Contract Creation'}\`
+- Value: ${valueInEth} ETH
+- Gas Limit: ${transaction.gasLimit?.toString() || 'N/A'}
+- Gas Price: ${gasPriceInGwei} Gwei
+- Nonce: ${transaction.nonce}
+
+**Status:**
+- Confirmations: ${transaction.confirmations || 0}
+- Type: ${transaction.type || 'Legacy'}
+
+${transaction.data && transaction.data !== '0x' ? `**Data:** \`${transaction.data.slice(0, 100)}${transaction.data.length > 100 ? '...' : ''}\`` : ''}`;
+
       const responseContent: Content = {
-        text: `Transaction Details for ${txHash}:
-📋 Hash: ${transaction.hash}
-🔗 Block: ${transaction.blockNumber || 'Pending'}
-📍 From: ${transaction.from}
-📍 To: ${transaction.to || 'Contract Creation'}
-💰 Value: ${valueInEth.toFixed(6)} ETH
-⛽ Gas Limit: ${transaction.gasLimit?.toString() || 'N/A'}
-💸 Gas Price: ${gasPriceInGwei} Gwei
-🔢 Nonce: ${transaction.nonce}
-📊 Status: ${transaction.blockNumber ? 'Confirmed' : 'Pending'}`,
+        text: responseText,
         actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
-        source: message.content.source,
+        data: {
+          transaction: {
+            hash: transaction.hash,
+            blockNumber: transaction.blockNumber,
+            blockHash: transaction.blockHash,
+            from: transaction.from,
+            to: transaction.to,
+            value: transaction.value?.toString(),
+            gasLimit: transaction.gasLimit?.toString(),
+            gasPrice: transaction.gasPrice?.toString(),
+            nonce: transaction.nonce,
+            confirmations: transaction.confirmations,
+            type: transaction.type,
+            data: transaction.data,
+          },
+          network: 'polygon-zkevm',
+        },
       };
 
-      await callback(responseContent);
+      if (callback) {
+        await callback(responseContent);
+      }
+
       return responseContent;
     } catch (error) {
-      logger.error('Error in GET_TRANSACTION_BY_HASH_ZKEVM action:', error);
+      const errorMessage = `Failed to get transaction details: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error(errorMessage);
 
       const errorContent: Content = {
-        text: `Error getting transaction details: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        text: `❌ ${errorMessage}`,
         actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
-        source: message.content.source,
+        data: {
+          error: errorMessage,
+          success: false,
+        },
       };
 
-      await callback(errorContent);
+      if (callback) {
+        await callback(errorContent);
+      }
+
       return errorContent;
     }
   },
@@ -130,24 +194,30 @@ export const getTransactionByHashAction: Action = {
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
-          text: 'Get transaction details for 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+          text: 'Get details for transaction 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{user2}}',
         content: {
-          text: `Transaction Details for 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef:
-📋 Hash: 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-🔗 Block: 12345
-📍 From: 0xabc123...
-📍 To: 0xdef456...
-💰 Value: 1.000000 ETH
-⛽ Gas Limit: 21000
-💸 Gas Price: 20 Gwei
-🔢 Nonce: 42
-📊 Status: Confirmed`,
+          text: "I'll get the transaction details for that hash on Polygon zkEVM.",
+          actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'Show me transaction 0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Let me fetch the details for that transaction.',
           actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
         },
       },

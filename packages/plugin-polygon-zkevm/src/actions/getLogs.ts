@@ -6,7 +6,10 @@ import {
   type Memory,
   type State,
   logger,
+  ModelType,
+  composePromptFromState,
 } from '@elizaos/core';
+import { getLogsTemplate } from '../templates';
 import { JsonRpcProvider } from 'ethers';
 
 /**
@@ -18,32 +21,24 @@ export const getLogsAction: Action = {
   similes: ['GET_EVENTS', 'EVENT_LOGS', 'LOGS', 'CONTRACT_EVENTS'],
   description: 'Get event logs from contracts on Polygon zkEVM',
 
-  validate: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<boolean> => {
-    // Check if we have the required configuration
-    const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
-    const zkevmRpcUrl = process.env.ZKEVM_RPC_URL || runtime.getSetting('ZKEVM_RPC_URL');
+  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
+    const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+    const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
 
     if (!alchemyApiKey && !zkevmRpcUrl) {
-      logger.error('No Alchemy API key or zkEVM RPC URL configured');
       return false;
     }
 
-    // Check if message contains logs/events request
-    const text = message.content.text.toLowerCase();
-    const hasLogsRequest =
-      text.includes('logs') || text.includes('events') || text.includes('emit');
-
-    return hasLogsRequest;
+    return true;
   },
 
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State,
-    options: any,
-    callback: HandlerCallback,
-    responses: Memory[]
-  ) => {
+    state?: State,
+    options?: { [key: string]: unknown },
+    callback?: HandlerCallback
+  ): Promise<Content> => {
     try {
       logger.info('Handling GET_LOGS_ZKEVM action');
 
@@ -51,15 +46,15 @@ export const getLogsAction: Action = {
 
       // Setup provider - prefer Alchemy, fallback to RPC
       let provider: JsonRpcProvider;
-      const alchemyApiKey = process.env.ALCHEMY_API_KEY || runtime.getSetting('ALCHEMY_API_KEY');
+      const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
 
       if (alchemyApiKey) {
         provider = new JsonRpcProvider(
-          `https://polygonzkevm-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
+          `${runtime.getSetting('ZKEVM_ALCHEMY_URL') || 'https://polygonzkevm-mainnet.g.alchemy.com/v2'}/${alchemyApiKey}`
         );
       } else {
         const zkevmRpcUrl =
-          process.env.ZKEVM_RPC_URL ||
+          runtime.getSetting('ZKEVM_RPC_URL') ||
           runtime.getSetting('ZKEVM_RPC_URL') ||
           'https://zkevm-rpc.com';
         provider = new JsonRpcProvider(zkevmRpcUrl);
@@ -177,13 +172,13 @@ export const getLogsAction: Action = {
   examples: [
     [
       {
-        name: '{{name1}}',
+        name: '{{user1}}',
         content: {
           text: 'Get logs for contract 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
         },
       },
       {
-        name: '{{name2}}',
+        name: '{{user2}}',
         content: {
           text: `📋 Event Logs Query Results:
 🔍 Filter: {

@@ -6,14 +6,17 @@ import {
   type HandlerCallback,
   type Content,
   logger,
+  composePromptFromState,
+  ModelType,
+  parseJSONObjectFromText,
 } from '@elizaos/core';
-import { z } from 'zod';
 import { JsonRpcProvider } from 'ethers';
+import { getCurrentBlockNumberTemplate } from '../templates';
 
-// Define a schema for the action-specific configuration if needed, or rely on plugin config
-// const GetCurrentBlockNumberConfigSchema = z.object({
-//   // Define schema for config variables used by this action if different from plugin config
-// });
+interface CurrentBlockParams {
+  requestCurrentBlock?: boolean;
+  error?: string;
+}
 
 export const getCurrentBlockNumberAction: Action = {
   name: 'GET_POLYGON_ZKEVM_BLOCK_NUMBER',
@@ -23,52 +26,42 @@ export const getCurrentBlockNumberAction: Action = {
     'SHOW_LATEST_ZKEVM_BLOCK',
     'POLYGON_ZKEVM_BLOCK_NUMBER',
     'GET_ZKEVM_BLOCK_NUMBER',
-    'GET_L2_BLOCK_NUMBER', // Add this to override regular Polygon plugin
+    'GET_L2_BLOCK_NUMBER',
   ],
   description: 'Gets the current block number on Polygon zkEVM (Layer 2 zero-knowledge rollup).',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
-    const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY') || process.env.ALCHEMY_API_KEY;
-    const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL') || process.env.ZKEVM_RPC_URL;
+    const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+    const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
 
+    // If no API configuration is available, don't try to handle
     if (!alchemyApiKey && !zkevmRpcUrl) {
-      logger.info('[getCurrentBlockNumberAction] No API keys available');
+      logger.debug('[getCurrentBlockNumberAction] No API keys available');
       return false;
     }
 
-    // Check if the message specifically mentions zkEVM
     const content = message.content?.text?.toLowerCase() || '';
 
-    // High priority zkEVM keywords - must be present
-    const zkevmKeywords = ['zkevm', 'zk evm', 'polygon zkevm', 'zkEVM', 'zk-evm'];
+    // Simple keyword matching - much more permissive
+    const blockKeywords = ['block', 'polygon', 'zkevm', 'zkEVM', 'current', 'latest', 'number'];
 
-    const hasZkevmKeyword = zkevmKeywords.some((keyword) =>
+    // Check if message contains relevant keywords
+    const hasBlockKeyword = blockKeywords.some((keyword) =>
       content.includes(keyword.toLowerCase())
     );
 
-    // Block-related keywords
-    const blockKeywords = [
-      'block number',
-      'current block',
-      'latest block',
-      'block height',
-      'block',
-      'what block',
-    ];
+    // Also check for specific patterns
+    const hasBlockPattern =
+      /block.*number|current.*block|latest.*block|polygon.*block|zkevm.*block/i.test(content);
 
-    const hasBlockKeyword = blockKeywords.some((keyword) => content.includes(keyword));
+    // Much simpler validation - if it mentions blocks or zkEVM, try to handle it
+    const shouldHandle = hasBlockKeyword || hasBlockPattern;
 
-    // Special case: if message contains "polygon zkevm" specifically, prioritize this action
-    const hasPolygonZkevm = content.includes('polygon zkevm');
+    if (shouldHandle) {
+      logger.debug('[getCurrentBlockNumberAction] Validation passed for message:', content);
+    }
 
-    // Must have zkEVM keyword AND block keyword, OR specifically mention "polygon zkevm"
-    const result = (hasZkevmKeyword && hasBlockKeyword) || hasPolygonZkevm;
-
-    logger.info(
-      `[getCurrentBlockNumberAction] Validation: content="${content}", zkEVM=${hasZkevmKeyword}, block=${hasBlockKeyword}, polygonZkevm=${hasPolygonZkevm}, result=${result}`
-    );
-
-    return result;
+    return shouldHandle;
   },
 
   handler: async (
@@ -80,9 +73,8 @@ export const getCurrentBlockNumberAction: Action = {
   ): Promise<Content> => {
     logger.info('[getCurrentBlockNumberAction] Handler called!');
 
-    // Placeholder: Need to figure out how config is passed or accessed
-    const alchemyApiKey = process.env.ALCHEMY_API_KEY; // Assuming direct env access for now
-    const zkevmRpcUrl = process.env.ZKEVM_RPC_URL; // Assuming direct env access for now
+    const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
+    const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL');
 
     if (!alchemyApiKey && !zkevmRpcUrl) {
       throw new Error('ALCHEMY_API_KEY or ZKEVM_RPC_URL is required in configuration.');
@@ -96,13 +88,16 @@ export const getCurrentBlockNumberAction: Action = {
     if (alchemyApiKey) {
       try {
         logger.info('[getCurrentBlockNumberAction] Attempting to use Alchemy API');
-        const alchemyUrl = `https://polygonzkevm-mainnet.g.alchemy.com/v2/${alchemyApiKey}`;
+        const zkevmAlchemyUrl =
+          runtime.getSetting('ZKEVM_ALCHEMY_URL') ||
+          'https://polygonzkevm-mainnet.g.alchemy.com/v2';
+        const alchemyUrl = `${zkevmAlchemyUrl}/${alchemyApiKey}`;
         const options = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             jsonrpc: '2.0',
-            method: 'eth_blockNumber', // Alchemy also supports standard RPC methods
+            method: 'eth_blockNumber',
             params: [],
             id: 1,
           }),
@@ -119,7 +114,7 @@ export const getCurrentBlockNumberAction: Action = {
         }
 
         if (data?.result) {
-          blockNumber = parseInt(data?.result, 16); // Block number is typically in hex
+          blockNumber = parseInt(data?.result, 16);
           methodUsed = 'alchemy';
           logger.info(`[getCurrentBlockNumberAction] Block number from Alchemy: ${blockNumber}`);
         } else {
@@ -131,7 +126,6 @@ export const getCurrentBlockNumberAction: Action = {
         errorMessages.push(
           `Alchemy API failed: ${error instanceof Error ? error.message : String(error)}`
         );
-        // Continue to fallback
       }
     }
 
@@ -142,7 +136,7 @@ export const getCurrentBlockNumberAction: Action = {
         const provider = new JsonRpcProvider(zkevmRpcUrl);
         const latestBlock = await provider.getBlockNumber();
 
-        blockNumber = latestBlock; // getBlockNumber returns a number
+        blockNumber = latestBlock;
         methodUsed = 'rpc';
         logger.info(`[getCurrentBlockNumberAction] Block number from RPC: ${blockNumber}`);
       } catch (error) {
@@ -156,7 +150,7 @@ export const getCurrentBlockNumberAction: Action = {
     // Handle result and errors
     if (blockNumber !== null) {
       const responseContent: Content = {
-        text: `The current Polygon zkEVM block number is ${blockNumber.toLocaleString()} (via ${methodUsed}).`,
+        text: `📊 The current Polygon zkEVM block number is **${blockNumber.toLocaleString()}** (retrieved via ${methodUsed}).`,
         actions: ['GET_POLYGON_ZKEVM_BLOCK_NUMBER'],
         data: {
           blockNumber,
@@ -172,8 +166,7 @@ export const getCurrentBlockNumberAction: Action = {
 
       return responseContent;
     } else {
-      // Both methods failed
-      const errorMessage = `Failed to retrieve Polygon zkEVM block number using both Alchemy and RPC. Errors: ${errorMessages.join('; ')}`;
+      const errorMessage = `❌ Failed to retrieve Polygon zkEVM block number using both Alchemy and RPC. Errors: ${errorMessages.join('; ')}`;
       logger.error(errorMessage);
 
       const errorContent: Content = {
@@ -193,60 +186,30 @@ export const getCurrentBlockNumberAction: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
           text: 'What is the current block number on Polygon zkEVM?',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: 'The current Polygon zkEVM block number is 22,604,506 (via alchemy).',
+          text: "I'll get the current block number for Polygon zkEVM.",
           actions: ['GET_POLYGON_ZKEVM_BLOCK_NUMBER'],
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Get the latest Polygon zkEVM block number',
+          text: 'Show me the latest zkEVM block',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: 'The current Polygon zkEVM block number is 22,604,506 (via alchemy).',
-          actions: ['GET_POLYGON_ZKEVM_BLOCK_NUMBER'],
-        },
-      },
-    ],
-    [
-      {
-        name: 'user',
-        content: {
-          text: 'Show me the current zkEVM block height',
-        },
-      },
-      {
-        name: 'assistant',
-        content: {
-          text: 'The current Polygon zkEVM block number is 22,604,506 (via alchemy).',
-          actions: ['GET_POLYGON_ZKEVM_BLOCK_NUMBER'],
-        },
-      },
-    ],
-    [
-      {
-        name: 'user',
-        content: {
-          text: 'What block is Polygon zkEVM on right now?',
-        },
-      },
-      {
-        name: 'assistant',
-        content: {
-          text: 'The current Polygon zkEVM block number is 22,604,506 (via alchemy).',
+          text: 'Let me fetch the latest block number for you.',
           actions: ['GET_POLYGON_ZKEVM_BLOCK_NUMBER'],
         },
       },
