@@ -50,21 +50,47 @@ export const bridgeMessagesAction: Action = {
     'Sends arbitrary calldata messages between Ethereum and Polygon zkEVM using the bridge contract.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
-    const privateKey = runtime.getSetting('PRIVATE_KEY') || process.env.PRIVATE_KEY;
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY') || process.env.ALCHEMY_API_KEY;
     const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL') || process.env.ZKEVM_RPC_URL;
-
-    if (!privateKey) {
-      logger.error('[bridgeMessagesAction] PRIVATE_KEY is required for bridging messages');
-      return false;
-    }
 
     if (!alchemyApiKey && !zkevmRpcUrl) {
       logger.error('[bridgeMessagesAction] Either ALCHEMY_API_KEY or ZKEVM_RPC_URL is required');
       return false;
     }
 
-    return true;
+    // Check if the message content indicates a message bridging request
+    const content = message.content?.text?.toLowerCase() || '';
+    logger.info(`[bridgeMessagesAction] Validating message: "${content}"`);
+
+    // Keywords that indicate message bridging operations
+    const messageKeywords = [
+      'send message',
+      'bridge message',
+      'cross chain message',
+      'bridge calldata',
+      'send calldata',
+      'cross chain call',
+      'message bridge',
+      'bridge data',
+      'send data',
+      'cross chain data',
+      'calldata',
+      'message passing',
+      'bridge contract call',
+      'send contract call',
+    ];
+
+    // Must contain message bridging keywords
+    const matches = messageKeywords.some((keyword) => content.includes(keyword));
+    logger.info(`[bridgeMessagesAction] Keyword match result: ${matches}, content: "${content}"`);
+
+    if (matches) {
+      logger.info('[bridgeMessagesAction] Validation passed!');
+    } else {
+      logger.info('[bridgeMessagesAction] Validation failed - no matching keywords found');
+    }
+
+    return matches;
   },
 
   handler: async (

@@ -53,21 +53,39 @@ export const bridgeAssetsAction: Action = {
   description: 'Bridges assets (ETH or ERC-20 tokens) between Ethereum and Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
-    const privateKey = runtime.getSetting('PRIVATE_KEY') || process.env.PRIVATE_KEY;
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY') || process.env.ALCHEMY_API_KEY;
     const zkevmRpcUrl = runtime.getSetting('ZKEVM_RPC_URL') || process.env.ZKEVM_RPC_URL;
-
-    if (!privateKey) {
-      logger.error('[bridgeAssetsAction] PRIVATE_KEY is required for bridging assets');
-      return false;
-    }
 
     if (!alchemyApiKey && !zkevmRpcUrl) {
       logger.error('[bridgeAssetsAction] Either ALCHEMY_API_KEY or ZKEVM_RPC_URL is required');
       return false;
     }
 
-    return true;
+    // Check if the message content indicates a bridge request
+    const content = message.content?.text?.toLowerCase() || '';
+
+    // Keywords that indicate bridge operations
+    const bridgeKeywords = [
+      'bridge',
+      'deposit',
+      'withdraw',
+      'transfer to',
+      'move to',
+      'send to ethereum',
+      'send to zkevm',
+      'send to polygon',
+      'bridge assets',
+      'bridge tokens',
+      'bridge eth',
+      'deposit eth',
+      'withdraw eth',
+      'cross chain',
+      'transfer between',
+      'move between',
+    ];
+
+    // Must contain bridge-related keywords
+    return bridgeKeywords.some((keyword) => content.includes(keyword));
   },
 
   handler: async (

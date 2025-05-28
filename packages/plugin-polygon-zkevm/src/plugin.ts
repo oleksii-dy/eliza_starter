@@ -31,6 +31,8 @@ import { checkBlockStatusAction } from './actions/checkBlockStatus';
 import { getBatchInfoAction } from './actions/getBatchInfo';
 import { deploySmartContractAction } from './actions/deploySmartContract';
 import { interactSmartContractAction } from './actions/interactSmartContract';
+import { bridgeAssetsAction } from './actions/bridgeAssets';
+import { bridgeMessagesAction } from './actions/bridgeMessages';
 
 /**
  * Define the configuration schema for the plugin with the following properties:
@@ -265,6 +267,8 @@ const plugin: Plugin = {
     getBatchInfoAction,
     deploySmartContractAction,
     interactSmartContractAction,
+    bridgeAssetsAction,
+    bridgeMessagesAction,
   ],
   providers: [helloWorldProvider],
 };
