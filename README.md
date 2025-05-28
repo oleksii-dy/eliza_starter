@@ -22,7 +22,7 @@
 
 ## ✨ Features
 
-- 🛠️ Full-featured Discord, X (Twitter) and Telegram connectors
+- 🛠️ Full-featured Discord, X (Twitter), and Telegram connectors
 - 🔗 Support for every model (Llama, Grok, OpenAI, Anthropic, Gemini, etc.)
 - 👥 Multi-agent and room support
 - 📚 Easily ingest and interact with your documents
@@ -64,7 +64,7 @@ pnpm i && pnpm build && pnpm start
 
 ### Manually Start Eliza (Only recommended for plugin or platform development)
 
-#### Checkout the latest release
+#### Check out the latest release
 
 ```bash
 # Clone the repository
@@ -133,13 +133,13 @@ For detailed instructions on using the start script, including character managem
 
 ### Modify Character
 
-1. Open `packages/core/src/defaultCharacter.ts` to modify the default character. Uncomment and edit.
+1. Open `agent/src/defaultCharacter.ts` to modify the default character. Uncomment and edit.
 
 2. To load custom characters:
     - Use `pnpm start --characters="path/to/your/character.json"`
     - Multiple character files can be loaded simultaneously
 3. Connect with X (Twitter)
-    - change `"clients": []` to `"clients": ["twitter"]` in the character file to connect with X
+    - Change `"clients": []` to `"clients": ["twitter"]` in the character file to connect with X
 
 ---
 
