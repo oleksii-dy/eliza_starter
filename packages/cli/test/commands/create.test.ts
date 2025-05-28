@@ -535,6 +535,10 @@ describe('create command', () => {
       await mkdir(customDirAbsolute, { recursive: true });
       const expectedFinalProjectPath = resolvePath(customDirAbsolute, projectName);
 
+      // Create the project directory and add a file to make it non-empty
+      await mkdir(expectedFinalProjectPath, { recursive: true });
+      await writeFile(join(expectedFinalProjectPath, 'existing-file.txt'), 'some content');
+
       mockPrompts.mockResolvedValue({ database: 'pglite' });
 
       // SUT currently has a bug: it prematurely checks/errors on a non-target path.
