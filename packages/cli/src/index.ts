@@ -14,6 +14,7 @@ import { teeCommand as tee } from '@/src/commands/tee';
 import { test } from '@/src/commands/test';
 import { update } from '@/src/commands/update';
 import { displayBanner } from '@/src/utils';
+import { performAutoUpdate } from '@/src/utils/auto-update';
 import { logger } from '@elizaos/core';
 import { Command, Option } from 'commander';
 import fs from 'node:fs';
@@ -46,11 +47,8 @@ async function main() {
 
   const program = new Command()
     .name('elizaos')
-    .version(version, '-v, --version', 'output the version number');
-
-  // Add global options but hide them from global help
-  // They will still be passed to all commands for backward compatibility
-  // Note: Removed --remote-url global option as it conflicts with subcommand options
+    .version(version, '-v, --version', 'output the version number')
+    .option('--noupdate', 'Disable automatic CLI updates', false);
 
   // Create a stop command for testing purposes
   const stopCommand = new Command('stop')
@@ -73,6 +71,7 @@ async function main() {
       }
     });
 
+  // Add all commands to the program
   program
     .addCommand(create)
     .addCommand(setupMonorepo)
@@ -86,6 +85,19 @@ async function main() {
     .addCommand(dev)
     .addCommand(publish)
     .addCommand(stopCommand);
+
+  // Add auto-update hook to all commands except 'update' to avoid recursion
+  program.commands.forEach((command) => {
+    if (command.name() !== 'update') {
+      command.hook('preAction', async (thisCommand, actionCommand) => {
+        const opts = program.opts();
+        // Only perform auto-update if --noupdate flag is not set
+        if (!opts.noupdate) {
+          await performAutoUpdate();
+        }
+      });
+    }
+  });
 
   // if no args are passed, display the banner
   if (process.argv.length === 2) {
