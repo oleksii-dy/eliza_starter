@@ -333,6 +333,13 @@ SMALL_OPENROUTER_MODEL= # Small model
 MEDIUM_OPENROUTER_MODEL= # Medium model
 LARGE_OPENROUTER_MODEL= # Large model
 
+# AI/ML API Configuration
+AIMLAPI_API_KEY=       # AI/ML API Key
+AIMLAPI_MODEL=         # Default: gpt-4o-mini
+SMALL_AIMLAPI_MODEL=   # Default: gpt-4o-mini
+MEDIUM_AIMLAPI_MODEL=  # Default: gpt-4o-mini
+LARGE_AIMLAPI_MODEL=   # Default: gpt-4o-mini
+
 # REDPILL
 REDPILL_API_KEY= # API key
 REDPILL_MODEL= # Model name

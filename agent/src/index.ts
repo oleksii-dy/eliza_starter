@@ -492,6 +492,11 @@ export function getTokenForProvider(
                 character.settings?.secrets?.OPENROUTER_API_KEY ||
                 settings.OPENROUTER_API_KEY
             );
+        case ModelProviderName.AIMLAPI:
+            return (
+                character.settings?.secrets?.AIMLAPI_API_KEY ||
+                settings.AIMLAPI_API_KEY
+            );
         case ModelProviderName.GROK:
             return (
                 character.settings?.secrets?.GROK_API_KEY ||
