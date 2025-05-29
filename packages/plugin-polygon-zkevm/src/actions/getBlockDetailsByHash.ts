@@ -12,6 +12,7 @@ import {
 import { z } from 'zod';
 import { JsonRpcProvider } from 'ethers';
 import { blockDetailsByHashTemplate } from '../templates';
+import { callLLMWithTimeout } from '../utils/llmHelpers';
 
 export const getBlockDetailsByHashAction: Action = {
   name: 'GET_BLOCK_DETAILS_BY_HASH',
@@ -63,14 +64,12 @@ export const getBlockDetailsByHashAction: Action = {
 
     // First try using OBJECT_LARGE model type for structured output
     try {
-      blockHashInput = (await runtime.useModel(ModelType.OBJECT_LARGE, {
-        prompt: composePromptFromState({
-          state,
-          template: blockDetailsByHashTemplate,
-        }),
-      })) as { blockHash: string; error?: string };
-
-      logger.debug('[getBlockDetailsByHashAction] Parsed LLM parameters:', blockHashInput);
+      blockHashInput = await callLLMWithTimeout<{ blockHash: string }>(
+        runtime,
+        state,
+        blockDetailsByHashTemplate,
+        'getBlockDetailsByHashAction'
+      );
 
       // Check if the model returned an error field
       if (blockHashInput?.error) {
