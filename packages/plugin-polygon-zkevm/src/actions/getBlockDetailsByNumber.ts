@@ -94,11 +94,24 @@ export const getBlockDetailsByNumberAction: Action = {
       throw new Error('[getBlockDetailsByNumberAction] OBJECT_LARGE model failed');
     }
 
+    // Extract the actual block number from the LLM response
+    const blockNumber = blockNumberInput?.blockNumber;
+    if (!blockNumber || typeof blockNumber !== 'number') {
+      throw new Error('Invalid block number extracted from input');
+    }
+
+    // Convert block number to hex format for API calls
+    const blockNumberHex = '0x' + blockNumber.toString(16);
+
+    logger.info(
+      `[getBlockDetailsByNumberAction] Processing block number: ${blockNumber} (hex: ${blockNumberHex})`
+    );
+
     // 1. Attempt to use Alchemy API (using standard eth_getBlockByNumber method as per example)
     if (alchemyApiKey) {
       try {
         logger.info(
-          `[getBlockDetailsByNumberAction] Attempting to use Alchemy API for block ${blockNumberInput}`
+          `[getBlockDetailsByNumberAction] Attempting to use Alchemy API for block ${blockNumber}`
         );
         // Assuming the RPC URL pattern and API key usage is consistent
         const alchemyUrl = `${zkevmRpcUrl}/${alchemyApiKey}`; // Adjust if Alchemy URL structure is different
@@ -108,7 +121,7 @@ export const getBlockDetailsByNumberAction: Action = {
           body: JSON.stringify({
             jsonrpc: '2.0',
             method: 'eth_getBlockByNumber',
-            params: [blockNumberInput, true], // true for full transaction details
+            params: [blockNumberHex, true], // Use hex format for API
             id: 1,
           }),
         };
@@ -127,16 +140,16 @@ export const getBlockDetailsByNumberAction: Action = {
           blockDetails = data?.result;
           methodUsed = 'alchemy';
           logger.info(
-            `[getBlockDetailsByNumberAction] Block details from Alchemy for block ${blockNumberInput}`
+            `[getBlockDetailsByNumberAction] Block details from Alchemy for block ${blockNumber}`
           );
         } else {
           // Alchemy returned no error but also no result for a valid number might mean block not found via Alchemy
           logger.warn(
-            `[getBlockDetailsByNumberAction] Alchemy API returned no result for block ${blockNumberInput}.`
+            `[getBlockDetailsByNumberAction] Alchemy API returned no result for block ${blockNumber}.`
           );
         }
       } catch (error) {
-        logger.error(`Error using Alchemy API for block ${blockNumberInput}:`, error);
+        logger.error(`Error using Alchemy API for block ${blockNumber}:`, error);
         errorMessages.push(
           `Alchemy API failed: ${error instanceof Error ? error.message : String(error)}`
         );
@@ -147,27 +160,27 @@ export const getBlockDetailsByNumberAction: Action = {
     // 2. Fallback to JSON-RPC if Alchemy failed or not configured
     if (blockDetails === null && zkevmRpcUrl) {
       logger.info(
-        `[getBlockDetailsByNumberAction] Falling back to JSON-RPC for block ${blockNumberInput}`
+        `[getBlockDetailsByNumberAction] Falling back to JSON-RPC for block ${blockNumber}`
       );
       try {
         const provider = new JsonRpcProvider(zkevmRpcUrl);
         // Ethers.js getBlock by number accepts hex or decimal strings, and a boolean for full details
-        const block = await provider.getBlock(blockNumberInput, true); // true for full transaction details
+        const block = await provider.getBlock(blockNumber, true); // Use the number directly
 
         if (block) {
           // Ethers.js getBlock returns a Block object, convert to plain object if needed for data structure
           blockDetails = block.toJSON(); // Or just use block object directly if compatible
           methodUsed = 'rpc';
           logger.info(
-            `[getBlockDetailsByNumberAction] Block details from RPC for block ${blockNumberInput}`
+            `[getBlockDetailsByNumberAction] Block details from RPC for block ${blockNumber}`
           );
         } else {
           logger.warn(
-            `[getBlockDetailsByNumberAction] RPC returned no block for number ${blockNumberInput}.`
+            `[getBlockDetailsByNumberAction] RPC returned no block for number ${blockNumber}.`
           );
         }
       } catch (error) {
-        logger.error(`Error using JSON-RPC fallback for block ${blockNumberInput}:`, error);
+        logger.error(`Error using JSON-RPC fallback for block ${blockNumber}:`, error);
         errorMessages.push(
           `JSON-RPC fallback failed: ${error instanceof Error ? error.message : String(error)}`
         );
@@ -184,7 +197,7 @@ export const getBlockDetailsByNumberAction: Action = {
       };
 
       const responseContent: Content = {
-        text: `Here are the details for Polygon zkEVM block ${blockNumberInput} (via ${methodUsed}):
+        text: `Here are the details for Polygon zkEVM block ${blockNumber} (via ${methodUsed}):
 \`\`\`json
 ${JSON.stringify(blockDetails, null, 2)}
 \`\`\`
@@ -206,13 +219,13 @@ ZK-specific fields: ${JSON.stringify(zkevmFields, null, 2)}`,
       return responseContent;
     } else {
       // Both methods failed or block not found
-      const errorMessage = `Failed to retrieve details for Polygon zkEVM block ${blockNumberInput} using both Alchemy and RPC. Errors: ${errorMessages.join('; ')}. It's possible the block number is invalid or the block does not exist yet.`;
+      const errorMessage = `Failed to retrieve details for Polygon zkEVM block ${blockNumber} using both Alchemy and RPC. Errors: ${errorMessages.join('; ')}. It's possible the block number is invalid or the block does not exist yet.`;
       logger.error(errorMessage);
 
       const errorContent: Content = {
         text: errorMessage,
         actions: ['GET_BLOCK_DETAILS_BY_NUMBER'],
-        data: { error: errorMessage, errors: errorMessages, blockNumberInput },
+        data: { error: errorMessage, errors: errorMessages, blockNumber },
       };
 
       if (callback) {
