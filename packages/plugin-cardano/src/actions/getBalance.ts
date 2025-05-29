@@ -96,7 +96,7 @@ export const getBalanceAction: Action = {
 
         try {
             const getBalanceResponse = await action.getBalance(getBalanceOptions);
-            let textNetwork = content.chain === DEFAULT_SUPPORT_CHAINS.CARDANO
+            const textNetwork = content.chain === DEFAULT_SUPPORT_CHAINS.CARDANO
                 ? 'Cardano Mainnet'
                 : 'Cardano Preprod';
             let text = `No balance found for ${getBalanceOptions.address} on ${textNetwork}`;
@@ -112,7 +112,7 @@ export const getBalanceAction: Action = {
         } catch (error) {
             elizaLogger.error("Error during get balance:", error);
             // Provide more user-friendly error messages based on error type
-            let userMessage = `Get balance failed: ${error.message}`;
+            const userMessage = `Get balance failed: ${error.message}`;
             callback?.({
                 text: userMessage,
                 content: {

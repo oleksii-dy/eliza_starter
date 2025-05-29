@@ -127,7 +127,7 @@ export const transferAction: Action = {
         } catch (error) {
             elizaLogger.error("Error during transfer:", error.message);
             // Enhanced error diagnosis
-            let errorMessage = error.message;
+            const errorMessage = error.message;
             callback?.({
                 text: `Transfer failed: ${errorMessage}`,
                 content: { error: errorMessage },
