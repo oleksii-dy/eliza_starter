@@ -54,7 +54,7 @@ export const transferAction: Action = {
     description: "Transfer tokens between addresses on the same chain",
     suppressInitialMessage: true,
     template: transferTemplate,
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         return true;
     },
     handler: async (
@@ -102,8 +102,7 @@ export const transferAction: Action = {
 
         console.log({ content });
 
-        let token: string;
-        token = content.token || 'ADA'
+        const token = content.token || 'ADA'
         const walletProvider: LucidEvolution = await initWalletProvider(runtime, content.chain);
         const action = new TransferAction(walletProvider);
         const paramOptions: TransferParams = {

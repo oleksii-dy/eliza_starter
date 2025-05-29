@@ -47,7 +47,7 @@ export const getBalanceAction: Action = {
     description: "Get balance of a token or all tokens for the given address",
     suppressInitialMessage: true,
     template: getBalanceTemplate,
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         return true;
     },
     handler: async (
