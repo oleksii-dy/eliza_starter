@@ -1,0 +1,50 @@
+{
+    "name": "@elizaos/plugin-cardano",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "dependencies": {
+        "@elizaos/core-plugin-v1": "workspace:*",
+        "@lucid-evolution/lucid": "^0.4.27",
+        "chalk": "^5.4.1",
+        "cli-table3": "^0.6.5",
+        "ora": "^8.2.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.5",
+        "tsup": "8.3.5"
+    },
+    "scripts": {
+        "build": "tsup --format esm --dts",
+        "dev": "tsup --format esm --dts --watch",
+        "test": "vitest run"
+    },
+    "peerDependencies": {
+        "whatwg-url": "7.1.0"
+    },
+    "agentConfig": {
+        "pluginType": "elizaos:client:1.0.0",
+        "pluginParameters": {
+            "CARDANO_SEED_PHRASE": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Your seed phrase for the Cardano Chain ecosystem. Grants full access to associated funds.",
+                "optional": true
+            },
+            "CARDANO_BLOCKFROST_ID_PREPROD": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Your blockfrost key for the Cardano Preprod ecosystem.",
+                "optional": true
+            },
+            "CARDANO_BLOCKFROST_ID_MAINNET": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Your blockfrost key for the Cardano Mainnet ecosystem.",
+                "optional": true
+            }
+        }
+    }
+}
