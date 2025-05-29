@@ -313,23 +313,23 @@ describe('create command', () => {
       );
     });
 
-    it.skip('should handle existing non-empty directory', async () => {
-      const actionFn = getActionFn();
-      const projectName = 'testproject';
-      const projectPath = resolvePath(tempDir, projectName);
-      await mkdir(projectPath, { recursive: true });
-      await writeFile(join(projectPath, 'dummy.txt'), 'content');
+    // it.skip('should handle existing non-empty directory', async () => {
+    //   const actionFn = getActionFn();
+    //   const projectName = 'testproject';
+    //   const projectPath = resolvePath(tempDir, projectName);
+    //   await mkdir(projectPath, { recursive: true });
+    //   await writeFile(join(projectPath, 'dummy.txt'), 'content');
 
-      const expectedErrorMsg = `Directory "${projectName}" is not empty`;
-      // This error is generated and thrown by mockHandleError based on SUT calling it.
-      await expect(
-        actionFn(projectName, { dir: '.', yes: true, type: 'project' })
-      ).rejects.toThrowError(expectedErrorMsg);
-      expect(mockHandleError).toHaveBeenCalledWith(expect.any(Error)); // Check it was an Error object
-      // Further check the message of the error passed to mockHandleError
-      const errorArg = mockHandleError.mock.calls[0][0] as Error;
-      expect(errorArg.message).toContain(expectedErrorMsg);
-    });
+    //   const expectedErrorMsg = `Directory "${projectName}" is not empty`;
+    //   // This error is generated and thrown by mockHandleError based on SUT calling it.
+    //   await expect(
+    //     actionFn(projectName, { dir: '.', yes: true, type: 'project' })
+    //   ).rejects.toThrowError(expectedErrorMsg);
+    //   expect(mockHandleError).toHaveBeenCalledWith(expect.any(Error)); // Check it was an Error object
+    //   // Further check the message of the error passed to mockHandleError
+    //   const errorArg = mockHandleError.mock.calls[0][0] as Error;
+    //   expect(errorArg.message).toContain(expectedErrorMsg);
+    // });
 
     it('should proceed if target directory exists but is empty', async () => {
       const actionFn = getActionFn();
