@@ -215,6 +215,7 @@ export type Models = {
     [ModelProviderName.CLAUDE_VERTEX]: Model;
     [ModelProviderName.REDPILL]: Model;
     [ModelProviderName.OPENROUTER]: Model;
+    [ModelProviderName.AIMLAPI]: Model;
     [ModelProviderName.OLLAMA]: Model;
     [ModelProviderName.HEURIST]: Model;
     [ModelProviderName.GALADRIEL]: Model;
@@ -257,6 +258,7 @@ export enum ModelProviderName {
     CLAUDE_VERTEX = "claude_vertex",
     REDPILL = "redpill",
     OPENROUTER = "openrouter",
+    AIMLAPI = "aimlapi",
     OLLAMA = "ollama",
     HEURIST = "heurist",
     GALADRIEL = "galadriel",

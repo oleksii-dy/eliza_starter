@@ -507,6 +507,26 @@ export async function generateText({
                 }
             }
             break;
+        case ModelProviderName.AIMLAPI:
+            {
+                switch (modelClass) {
+                    case ModelClass.LARGE:
+                        {
+                            model =
+                                runtime.getSetting("LARGE_AIMLAPI_MODEL") ||
+                                model;
+                        }
+                        break;
+                    case ModelClass.SMALL:
+                        {
+                            model =
+                                runtime.getSetting("SMALL_AIMLAPI_MODEL") ||
+                                model;
+                        }
+                        break;
+                }
+            }
+            break;
     }
 
     elizaLogger.info("Selected model:", model);
@@ -948,6 +968,38 @@ export async function generateText({
 
                 response = openrouterResponse;
                 elizaLogger.debug("Received response from OpenRouter model.");
+                break;
+            }
+
+            case ModelProviderName.AIMLAPI: {
+                elizaLogger.debug("Initializing AI/ML API model.");
+
+                const serverUrl = getEndpoint(provider);
+                const aimlapi = createOpenAI({
+                    apiKey,
+                    baseURL: serverUrl,
+                    fetch: runtime.fetch,
+                });
+
+                const { text: aimlapiResponse } = await aiGenerateText({
+                    model: aimlapi.languageModel(model),
+                    prompt: context,
+                    temperature: temperature,
+                    system:
+                        runtime.character.system ??
+                        settings.SYSTEM_PROMPT ??
+                        undefined,
+                    tools: tools,
+                    onStepFinish: onStepFinish,
+                    maxSteps: maxSteps,
+                    maxTokens: max_response_length,
+                    frequencyPenalty: frequency_penalty,
+                    presencePenalty: presence_penalty,
+                    experimental_telemetry: experimental_telemetry,
+                });
+
+                response = aimlapiResponse;
+                elizaLogger.debug("Received response from AI/ML API model.");
                 break;
             }
 
@@ -2458,6 +2510,8 @@ export async function handleProvider(
             return await handleRedPill(options);
         case ModelProviderName.OPENROUTER:
             return await handleOpenRouter(options);
+        case ModelProviderName.AIMLAPI:
+            return await handleAIMLAPI(options);
         case ModelProviderName.OLLAMA:
             return await handleOllama(options);
         case ModelProviderName.DEEPSEEK:
@@ -2726,6 +2780,37 @@ async function handleOpenRouter({
     });
     return aiGenerateObject({
         model: openRouter.languageModel(model),
+        schema,
+        schemaName,
+        schemaDescription,
+        mode,
+        ...modelOptions,
+    });
+}
+
+/**
+ * Handles object generation for AI/ML API models.
+ *
+ * @param {ProviderOptions} options - Options specific to AI/ML API.
+ * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
+ */
+async function handleAIMLAPI({
+    model,
+    apiKey,
+    schema,
+    schemaName,
+    schemaDescription,
+    mode = "json",
+    modelOptions,
+    runtime,
+}: ProviderOptions): Promise<GenerationResult> {
+    const aimlapi = createOpenAI({
+        apiKey,
+        baseURL: models.aimlapi.endpoint,
+        fetch: runtime.fetch
+    });
+    return aiGenerateObject({
+        model: aimlapi.languageModel(model),
         schema,
         schemaName,
         schemaDescription,

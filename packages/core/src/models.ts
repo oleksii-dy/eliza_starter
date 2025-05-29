@@ -541,6 +541,52 @@ export const models: Models = {
             },
         },
     },
+    [ModelProviderName.AIMLAPI]: {
+        endpoint: "https://api.aimlapi.com/v1",
+        // Available models: https://aimlapi.com/models
+        // To test other models, change the models below
+        model: {
+            [ModelClass.SMALL]: {
+                name:
+                    settings.SMALL_AIMLAPI_MODEL ||
+                    settings.AIMLAPI_MODEL ||
+                    "gpt-4o-mini",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                frequency_penalty: 0.4,
+                presence_penalty: 0.4,
+                temperature: 0.7,
+            },
+            [ModelClass.MEDIUM]: {
+                name:
+                    settings.MEDIUM_AIMLAPI_MODEL ||
+                    settings.AIMLAPI_MODEL ||
+                    "gpt-4o-mini",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                frequency_penalty: 0.4,
+                presence_penalty: 0.4,
+                temperature: 0.7,
+            },
+            [ModelClass.LARGE]: {
+                name:
+                    settings.LARGE_AIMLAPI_MODEL ||
+                    settings.AIMLAPI_MODEL ||
+                    "gpt-4o-mini",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                frequency_penalty: 0.4,
+                presence_penalty: 0.4,
+                temperature: 0.7,
+            },
+            [ModelClass.EMBEDDING]: {
+                name: "text-embedding-3-small",
+            },
+        },
+    },
     [ModelProviderName.OLLAMA]: {
         endpoint: settings.OLLAMA_SERVER_URL || "http://localhost:11434",
         model: {

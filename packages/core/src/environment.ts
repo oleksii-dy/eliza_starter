@@ -14,6 +14,7 @@ export const envSchema = z.object({
         .string()
         .startsWith("gsk_", "GROQ API key must start with 'gsk_'"),
     OPENROUTER_API_KEY: z.string().min(1, "OpenRouter API key is required"),
+    AIMLAPI_API_KEY: z.string().min(1, "AI/ML API key is required"),
     GOOGLE_GENERATIVE_AI_API_KEY: z
         .string()
         .min(1, "Gemini API key is required"),
