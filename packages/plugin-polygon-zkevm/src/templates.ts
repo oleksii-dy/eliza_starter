@@ -110,6 +110,44 @@ If no valid transaction parameters are found, you MUST respond with the followin
 \`\`\`
 `;
 
+export const estimateTransactionFeeTemplate = `You are an AI assistant. Your task is to extract transaction parameters for fee estimation.
+
+Review the recent messages:
+<recent_messages>
+{{recentMessages}}
+</recent_messages>
+
+Based on the conversation, identify:
+- to: The recipient address (0x...)
+- from: The sender address (0x...) - optional
+- value: The ETH value to send (e.g., "1.5", "0.1") - optional
+- data: The transaction data (0x...) - optional
+- priorityFee: Custom priority fee in Gwei (e.g., "2", "1.5") - optional
+- gasPrice: Custom gas price in Gwei (e.g., "20", "15.5") - optional
+- rawTransaction: Raw transaction hex string (0x...) - optional
+
+Respond with a JSON markdown block containing only the extracted values.
+The JSON should have this structure:
+\`\`\`json
+{
+    "to"?: string,
+    "from"?: string,
+    "value"?: string,
+    "data"?: string,
+    "priorityFee"?: string,
+    "gasPrice"?: string,
+    "rawTransaction"?: string
+}
+\`\`\`
+
+If no valid transaction parameters are found, you MUST respond with the following JSON structure:
+\`\`\`json
+{
+    "error": "Transaction parameters not found. Please specify at least a recipient address or raw transaction for fee estimation."
+}
+\`\`\`
+`;
+
 export const getAccountBalanceTemplate = `You are an AI assistant. Your task is to extract account address from the user's message for balance checking.
 
 Review the recent messages:

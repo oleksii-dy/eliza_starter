@@ -126,6 +126,16 @@ A plugin for interacting with Polygon zkEVM blockchain through Eliza.
 - Get batch information
 - **Deploy smart contracts**
 - **Bridge assets between Ethereum and Polygon zkEVM** (NEW)
+- Block information and status queries
+- Transaction details and receipts
+- Account balance checking
+- Gas price estimation and analysis
+- Smart contract deployment
+- Smart contract interaction
+- Asset bridging between Ethereum and Polygon zkEVM
+- Message bridging between networks
+- Transaction fee estimation
+- Batch information queries
 
 ## Configuration
 
@@ -270,4 +280,38 @@ For specific test files:
 
 ```bash
 npm test -- deploySmartContract.test.ts
+```
+
+### Gas and Fee Estimation
+
+#### `ESTIMATE_TRANSACTION_FEE`
+
+Estimates gas limit and total fee for transaction payloads on Polygon zkEVM.
+
+**Features:**
+
+- Supports both ETH transfers and contract calls
+- Uses Alchemy API with fallback to JSON-RPC
+- Allows priority fee override
+- Returns structured data: `{ gasLimit: string, fee: string }`
+- Accurate fee calculation within network tolerance
+
+**Usage:**
+
+- "Estimate fee for sending 0.1 ETH to 0x742d35Cc6634C0532925A3B8D4C9dB96C4B4d8B6"
+- "Calculate transaction fee with priority fee of 25 gwei"
+- "How much will it cost to call contract at 0x..."
+
+**Response format:**
+
+```json
+{
+  "gasLimit": "21000",
+  "fee": "420000000000000",
+  "gasPrice": "20000000000",
+  "gasPriceGwei": "20",
+  "totalFeeEth": "0.00042",
+  "transaction": {...},
+  "network": "polygon-zkevm"
+}
 ```

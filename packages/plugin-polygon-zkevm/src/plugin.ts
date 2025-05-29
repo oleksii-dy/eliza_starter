@@ -33,6 +33,7 @@ import { deploySmartContractAction } from './actions/deploySmartContract';
 import { interactSmartContractAction } from './actions/interactSmartContract';
 import { bridgeAssetsAction } from './actions/bridgeAssets';
 import { bridgeMessagesAction } from './actions/bridgeMessages';
+import { estimateTransactionFeeAction } from './actions/estimateTransactionFee';
 
 /**
  * Define the configuration schema for the plugin with the following properties:
@@ -260,6 +261,7 @@ const plugin: Plugin = {
     getStorageAtAction,
     getLogsAction,
     estimateGasAction,
+    estimateTransactionFeeAction,
     getTransactionDetailsAction,
     getAccountBalanceAction,
     getGasPriceEstimatesAction,
