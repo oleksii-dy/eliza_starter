@@ -10,7 +10,15 @@ import {
   composePromptFromState,
 } from '@elizaos/core';
 import { z } from 'zod';
-import { JsonRpcProvider, Wallet, Contract, parseEther, formatEther, parseUnits } from 'ethers';
+import {
+  JsonRpcProvider,
+  Wallet,
+  Contract,
+  parseEther,
+  formatEther,
+  parseUnits,
+  getBytes,
+} from 'ethers';
 import { bridgeMessagesTemplate } from '../templates';
 import { callLLMWithTimeout } from '../utils/llmHelpers';
 
@@ -64,30 +72,44 @@ export const bridgeMessagesAction: Action = {
 
     // Keywords that indicate message bridging operations
     const messageKeywords = [
-      'send message',
-      'bridge message',
-      'cross chain message',
       'bridge calldata',
       'send calldata',
-      'cross chain call',
-      'message bridge',
+      'bridge message',
+      'cross chain message',
       'bridge data',
       'send data',
-      'cross chain data',
+      'cross chain call',
+      'message bridge',
       'calldata',
+      'bridge to ethereum',
+      'bridge to polygon',
+      'bridge to zkevm',
+      'send to ethereum',
+      'send to polygon',
+      'send to zkevm',
       'message passing',
       'bridge contract call',
       'send contract call',
     ];
 
-    // Must contain message bridging keywords
-    const matches = messageKeywords.some((keyword) => content.includes(keyword));
-    logger.info(`[bridgeMessagesAction] Keyword match result: ${matches}, content: "${content}"`);
+    // Check for hex calldata pattern (0x followed by hex characters)
+    const calldataPattern = /0x[a-fA-F0-9]{8,}/;
+    const hasCalldata = calldataPattern.test(content);
+
+    // Must contain message bridging keywords OR have calldata pattern
+    const hasKeywords = messageKeywords.some((keyword) => content.includes(keyword));
+    const matches = hasKeywords || hasCalldata;
+
+    logger.info(
+      `[bridgeMessagesAction] Keyword match: ${hasKeywords}, Calldata pattern: ${hasCalldata}, Final result: ${matches}`
+    );
 
     if (matches) {
       logger.info('[bridgeMessagesAction] Validation passed!');
     } else {
-      logger.info('[bridgeMessagesAction] Validation failed - no matching keywords found');
+      logger.info(
+        '[bridgeMessagesAction] Validation failed - no matching keywords or calldata found'
+      );
     }
 
     return matches;
@@ -259,6 +281,65 @@ export const bridgeMessagesAction: Action = {
       // Handle ETH value if specified
       const ethValue = messageParams.value ? parseEther(messageParams.value) : 0;
 
+      // Validate and prepare permitData
+      let permitDataBytes: string;
+      try {
+        // Ensure the calldata is valid hex
+        if (!messageParams.messageData.startsWith('0x')) {
+          throw new Error('Message data must start with 0x');
+        }
+
+        // Get hex data without 0x prefix
+        let hexData = messageParams.messageData.slice(2);
+
+        // Validate hex format and minimum length
+        const hexPattern = /^[0-9a-fA-F]+$/;
+        if (!hexPattern.test(hexData)) {
+          throw new Error('Message data contains invalid hex characters');
+        }
+
+        // Check if hex data has odd length and auto-fix by padding with 0
+        if (hexData.length % 2 !== 0) {
+          logger.warn(
+            `[bridgeMessagesAction] Calldata has odd length (${hexData.length}), padding with trailing zero`
+          );
+          hexData = hexData + '0'; // Pad with trailing zero
+        }
+
+        // Minimum 4 bytes for valid calldata (function selector)
+        if (hexData.length < 8) {
+          throw new Error(
+            'Message data must be at least 4 bytes (8 hex characters) for a valid function call'
+          );
+        }
+
+        // Reconstruct the padded calldata
+        permitDataBytes = '0x' + hexData;
+
+        logger.info(
+          `[bridgeMessagesAction] Valid calldata: ${permitDataBytes} (${hexData.length / 2} bytes)`
+        );
+
+        // Additional validation for common function calls
+        if (hexData.length >= 8) {
+          const functionSelector = hexData.slice(0, 8);
+          if (functionSelector === 'a9059cbb') {
+            logger.info(`[bridgeMessagesAction] Detected ERC-20 transfer function call`);
+          } else if (functionSelector === '095ea7b3') {
+            logger.info(`[bridgeMessagesAction] Detected ERC-20 approve function call`);
+          } else {
+            logger.info(`[bridgeMessagesAction] Function selector: 0x${functionSelector}`);
+          }
+        }
+      } catch (error) {
+        throw new Error(
+          `Invalid calldata format: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+
+      // Update txParams with validated permitData
+      txParams.permitData = permitDataBytes;
+
       // Estimate gas
       let gasLimit: bigint;
       try {
@@ -300,6 +381,17 @@ export const bridgeMessagesAction: Action = {
       }
 
       logger.info('[bridgeMessagesAction] Sending message transaction...');
+
+      // Debug log all parameters before calling contract
+      logger.info(`[bridgeMessagesAction] Contract call parameters:`, {
+        destinationNetwork: txParams.destinationNetwork,
+        destinationAddress: txParams.destinationAddress,
+        amount: txParams.amount,
+        token: txParams.token,
+        forceUpdateGlobalExitRoot: txParams.forceUpdateGlobalExitRoot,
+        permitData: txParams.permitData,
+        txOptions: txOptions,
+      });
 
       // Send the bridge message transaction
       const tx = await bridgeContract.bridgeAsset(
@@ -398,4 +490,67 @@ ${depositCount !== null ? `- Deposit Count: ${depositCount}` : ''}
       throw new Error(errorMessage);
     }
   },
+
+  examples: [
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'bridge calldata 0xa9059cbb000000000000000000000000742d35cc6000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a7640000 to ethereum',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: '✅ Message bridged successfully!\n\n**Transaction Details:**\n- Transaction Hash: `0x1234567890abcdef...`\n- From: zkEVM\n- To: ethereum\n- Block Number: 12345\n- Gas Used: 200000\n- Message ID: `zkEVM-0-12345`\n\n**Message Data:** `0xa9059cbb000000000000000000000000742d35cc6000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a7640000`\n\n**Note:** The message will be available for claiming on the destination chain once the transaction is finalized (typically 30-60 minutes for zkEVM).',
+          actions: ['BRIDGE_MESSAGES'],
+        },
+      },
+    ],
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'send calldata 0x095ea7b3000000000000000000000000742d35cc60000000000000000000000000000000000000000000000000000000000000000000000000000001bc16d674ec80000 to polygon zkevm',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: '✅ Message bridged successfully!\n\n**Transaction Details:**\n- Transaction Hash: `0xabcdef1234567890...`\n- From: Ethereum\n- To: zkevm\n- Block Number: 18500000\n- Gas Used: 150000\n- Message ID: `Ethereum-1-67890`\n\n**Message Data:** `0x095ea7b3000000000000000000000000742d35cc60000000000000000000000000000000000000000000000000000000000000000000000000000001bc16d674ec80000`\n\n**Note:** The message will be available for claiming on the destination chain once the transaction is finalized (typically 30-60 minutes for zkEVM).',
+          actions: ['BRIDGE_MESSAGES'],
+        },
+      },
+    ],
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'bridge message 0x1234abcd to ethereum',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: '✅ Message bridged successfully!\n\n**Transaction Details:**\n- Transaction Hash: `0xfedcba0987654321...`\n- From: zkEVM\n- To: ethereum\n- Block Number: 8500000\n- Gas Used: 180000\n- Message ID: `zkEVM-0-55555`\n\n**Message Data:** `0x1234abcd`\n\n**Note:** The message will be available for claiming on the destination chain once the transaction is finalized (typically 30-60 minutes for zkEVM).',
+          actions: ['BRIDGE_MESSAGES'],
+        },
+      },
+    ],
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'send cross chain message with data 0xabcdef1234567890 from ethereum to polygon zkevm',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: '✅ Message bridged successfully!\n\n**Transaction Details:**\n- Transaction Hash: `0x9876543210fedcba...`\n- From: Ethereum\n- To: zkevm\n- Block Number: 18600000\n- Gas Used: 165000\n- Message ID: `Ethereum-1-77777`\n\n**Message Data:** `0xabcdef1234567890`\n\n**Note:** The message will be available for claiming on the destination chain once the transaction is finalized (typically 30-60 minutes for zkEVM).',
+          actions: ['BRIDGE_MESSAGES'],
+        },
+      },
+    ],
+  ],
 };
