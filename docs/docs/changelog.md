@@ -235,7 +235,7 @@
 * feat: replace AgentRuntime to his interface to extend client by @kesar in https://github.com/elizaOS/eliza/pull/2388
 * chore: remove langchain dependency for text splitting by @Deeptanshu-sankhwar in https://github.com/elizaOS/eliza/pull/3642
 * fix: generate structured objects and images with NEAR AI by @think-in-universe in https://github.com/elizaOS/eliza/pull/3644
-* chore: stablize develop by @odilitime in https://github.com/elizaOS/eliza/pull/3645
+* chore: stabilize develop by @odilitime in https://github.com/elizaOS/eliza/pull/3645
 * chore: develop => main (0.25.8 release) by @odilitime in https://github.com/elizaOS/eliza/pull/3522
 
 #### New Contributors
@@ -1154,7 +1154,7 @@ Complete changelog:
 * feat: anyone plugin to privatise network requests  by @Saundr21 in https://github.com/elizaOS/eliza/pull/1960
 * fix: SQLITE ERROR, zero-lenght vectors not supported by @JoeyKhd in https://github.com/elizaOS/eliza/pull/1984
 * fix: many fixes to the Telegram templates by @Laurentiu-Andronache in https://github.com/elizaOS/eliza/pull/1982
-* test: changing test structure for core package. Fixing failling outdated tests by @ai16z-demirix in https://github.com/elizaOS/eliza/pull/1989
+* test: changing test structure for core package. Fixing failing outdated tests by @ai16z-demirix in https://github.com/elizaOS/eliza/pull/1989
 * chore: Enable all EVM chains by default by @Minco-Yuga in https://github.com/elizaOS/eliza/pull/1981
 * chore: add debug logging for context by @Laurentiu-Andronache in https://github.com/elizaOS/eliza/pull/1980
 * fix: Fix db init race condition affecting builds by @0x-jj in https://github.com/elizaOS/eliza/pull/1968
@@ -1442,7 +1442,7 @@ Complete changelog:
 * feat: allow passing secrets through environment by @odilitime in https://github.com/elizaOS/eliza/pull/1454
 * feat: Add ModelConfiguration to Character to enable adjusting temperature, response length & penalties  by @peersky in https://github.com/elizaOS/eliza/pull/1455
 * feat: replace `unruggable-core` with `unruggable-sdk` by @remiroyc in https://github.com/elizaOS/eliza/pull/450
-* chore: update defailt character topic test case by @shakkernerd in https://github.com/elizaOS/eliza/pull/1466
+* chore: update default character topic test case by @shakkernerd in https://github.com/elizaOS/eliza/pull/1466
 * docs: Fixed Incorrect Model Name in API Integration by @mdqst in https://github.com/elizaOS/eliza/pull/1465
 * feat: Adding plugin for Cronos ZKEVM by @samarth30 in https://github.com/elizaOS/eliza/pull/1464
 * fix: client-twitter: fix ENABLE_ACTION_PROCESSING logic by @zkvm in https://github.com/elizaOS/eliza/pull/1463
@@ -1537,7 +1537,7 @@ Complete changelog:
 * Added Hungarian README by @mdominikd in https://github.com/elizaOS/eliza/pull/1645
 * fix: activate web-search plugin in agents/ by @cmadaanaya in https://github.com/elizaOS/eliza/pull/1577
 * fix: 1634  fix image description service by @nusk0 in https://github.com/elizaOS/eliza/pull/1667
-* fix: Seperated imageModelProvider and imageVisionModelProvider for ImageDescriptioServices by @denizekiz in https://github.com/elizaOS/eliza/pull/1664
+* fix: Separated imageModelProvider and imageVisionModelProvider for ImageDescriptioServices by @denizekiz in https://github.com/elizaOS/eliza/pull/1664
 * fix: Update Supabase schema.sql by @0xRider in https://github.com/elizaOS/eliza/pull/1660
 * feat: add docs for story plugin by @chandiniv1 in https://github.com/elizaOS/eliza/pull/1672
 * fix: add web search to agent by @odilitime in https://github.com/elizaOS/eliza/pull/1676
@@ -1684,7 +1684,7 @@ Complete changelog:
 * Update generation.ts to fix TOGETHER/LLAMACLOUD image generation by @ProphetX10 in https://github.com/ai16z/eliza/pull/786
 * fix: dev command by @shakkernerd in https://github.com/ai16z/eliza/pull/793
 * chore: update README_KOR.md to match latest README.md by @mike0295 in https://github.com/ai16z/eliza/pull/789
-* fix: enviroment -> environment by @tomguluson92 in https://github.com/ai16z/eliza/pull/787
+* fix: environment -> environment by @tomguluson92 in https://github.com/ai16z/eliza/pull/787
 * fix: Docker default non-interactive mode for Cloud instances by @rarepepi in https://github.com/ai16z/eliza/pull/796
 * fix: swap type error, create user trust on first message in telegram by @MarcoMandar in https://github.com/ai16z/eliza/pull/800
 * fix: update npm publication workflow by @cygaar in https://github.com/ai16z/eliza/pull/805
@@ -2035,7 +2035,7 @@ Complete changelog:
 * docs: Fix my name in stream notes by @odilitime in https://github.com/ai16z/eliza/pull/442
 * feat: create-eliza-app by @coffeeorgreentea in https://github.com/ai16z/eliza/pull/462
 * fix: Add missing fuzzystrmatch extension for levenshtein() method to postgresql schema.sql definition by @martincik in https://github.com/ai16z/eliza/pull/460
-* fix: Fixing failling tests token.test.ts and videoGeneration.test.ts by @ai16z-demirix in https://github.com/ai16z/eliza/pull/465
+* fix: Fixing failing tests token.test.ts and videoGeneration.test.ts by @ai16z-demirix in https://github.com/ai16z/eliza/pull/465
 * feat: init github client by @tarrencev in https://github.com/ai16z/eliza/pull/456
 * docs: Add Discord username question by @odilitime in https://github.com/ai16z/eliza/pull/468
 * docs: Update Contributors to bring inline with PR468 by @odilitime in https://github.com/ai16z/eliza/pull/470
@@ -2299,7 +2299,7 @@ Complete changelog:
 * docs: Fix my name in stream notes by @odilitime in https://github.com/ai16z/eliza/pull/442
 * feat: create-eliza-app by @coffeeorgreentea in https://github.com/ai16z/eliza/pull/462
 * fix: Add missing fuzzystrmatch extension for levenshtein() method to postgresql schema.sql definition by @martincik in https://github.com/ai16z/eliza/pull/460
-* fix: Fixing failling tests token.test.ts and videoGeneration.test.ts by @ai16z-demirix in https://github.com/ai16z/eliza/pull/465
+* fix: Fixing failing tests token.test.ts and videoGeneration.test.ts by @ai16z-demirix in https://github.com/ai16z/eliza/pull/465
 * feat: init github client by @tarrencev in https://github.com/ai16z/eliza/pull/456
 * docs: Add Discord username question by @odilitime in https://github.com/ai16z/eliza/pull/468
 * docs: Update Contributors to bring inline with PR468 by @odilitime in https://github.com/ai16z/eliza/pull/470
@@ -2396,7 +2396,7 @@ Complete changelog:
 * Implement grok beta by @MeDott29 in https://github.com/ai16z/eliza/pull/216
 * add the template overrides by @lalalune in https://github.com/ai16z/eliza/pull/207
 * lazy load llama by @lalalune in https://github.com/ai16z/eliza/pull/220
-* Abstracts Eliza into a Package to enble publishing onto NPM along with plugin system by @ponderingdemocritus in https://github.com/ai16z/eliza/pull/214
+* Abstracts Eliza into a Package to enable publishing onto NPM along with plugin system by @ponderingdemocritus in https://github.com/ai16z/eliza/pull/214
 * Add OLLAMA as Model Provider  by @o-on-x in https://github.com/ai16z/eliza/pull/221
 * models.gguf stored in models file, & tsconfig changes for ref @eliza/core & other things by @o-on-x in https://github.com/ai16z/eliza/pull/224
 * plugin-image-generation tsconfig.json fix & ollama error handling by @o-on-x in https://github.com/ai16z/eliza/pull/228
@@ -2467,9 +2467,9 @@ Complete changelog:
 * default set to new standard  post time 90-180 type: post time by @o-on-x in https://github.com/ai16z/eliza/pull/369
 * feat: readme by @ponderingdemocritus in https://github.com/ai16z/eliza/pull/370
 * twitter-profile-remake by @alextitonis in https://github.com/ai16z/eliza/pull/263
-* fix: bug in getRecentMessageInteractions not awating for promisses before formating by @bmgalego in https://github.com/ai16z/eliza/pull/366
+* fix: bug in getRecentMessageInteractions not awating for promises before formatting by @bmgalego in https://github.com/ai16z/eliza/pull/366
 * feat: starknet token transfer by @enitrat in https://github.com/ai16z/eliza/pull/373
-* feat: Adding unit tests for start - Covering goals, defaultCharacters, relationships, evaulators, posts, database, messages by @ai16z-demirix in https://github.com/ai16z/eliza/pull/367
+* feat: Adding unit tests for start - Covering goals, defaultCharacters, relationships, evaluators, posts, database, messages by @ai16z-demirix in https://github.com/ai16z/eliza/pull/367
 * feat: Enhance Heurist Image Generation Settings and Image Handling by @tsubasakong in https://github.com/ai16z/eliza/pull/375
 * feat: install clients from plugin by @ponderingdemocritus in https://github.com/ai16z/eliza/pull/371
 * fix: openrouter 70b don't support 128000, changed to 405b in model.ts by @denizekiz in https://github.com/ai16z/eliza/pull/356

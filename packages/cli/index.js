@@ -100,13 +100,13 @@ pluginsCmd
         .sort()
 
       const elizaOSroot = pathUtil.resolve(__dirname, '../..')
-      const installled = getInstalledPackages(elizaOSroot + '/packages')
-      const installedPlugins = installled.filter(p => !packagedPlugins.includes(p))
-      //console.log('installled', installled)
+      const installed = getInstalledPackages(elizaOSroot + '/packages')
+      const installedPlugins = installed.filter(p => !packagedPlugins.includes(p))
+      //console.log('installed', installed)
 
       console.info("\nAvailable plugins:")
       for (const plugin of pluginNames) {
-        console.info(` ${installled.includes(plugin) ? '✅' : '  '}  ${plugin} `)
+        console.info(` ${installed.includes(plugin) ? '✅' : '  '}  ${plugin} `)
       }
       for(const plugin of installedPlugins) {
         if (!pluginNames.includes(plugin)) {
@@ -236,8 +236,8 @@ pluginsCmd
     }
     swapCoreDependencies(packageJson.dependencies)
 
-    const installled = getInstalledPackages(elizaOSroot + '/packages')
-    const installedPlugins = installled.filter(p => !packagedPlugins.includes(p))
+    const installed = getInstalledPackages(elizaOSroot + '/packages')
+    const installedPlugins = installed.filter(p => !packagedPlugins.includes(p))
 
     //console.log('packageJson', packageJson.dependencies)
     for(const d in packageJson.dependencies) {

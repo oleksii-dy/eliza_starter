@@ -163,7 +163,7 @@ import { InjectiveActions } from '@elizaos/plugin-injective';
 ```
 
 ## Contributing
-Feel free to contribute to more similes, examples and refined templates - for a more robust action contorl.
+Feel free to contribute to more similes, examples and refined templates - for a more robust action control.
 
 1. Fork the repository
 2. Create your feature branch
