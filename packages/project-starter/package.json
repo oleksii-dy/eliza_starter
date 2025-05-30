@@ -30,6 +30,7 @@
   "dependencies": {
     "@elizaos/cli": "workspace:*",
     "@elizaos/core": "workspace:*",
+    "@elizaos/plugin-knowledge": "^1.0.0-beta.78",
     "@elizaos/plugin-openai": "^1.0.0-beta.71",
     "@elizaos/plugin-openrouter": "^1.0.0-beta.51",
     "@elizaos/plugin-sql": "workspace:*",
