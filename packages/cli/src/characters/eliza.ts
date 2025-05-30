@@ -25,6 +25,7 @@ export const character: Character = {
     ...(process.env.ALCHEMY_API_KEY || process.env.ZKEVM_RPC_URL
       ? ['@elizaos/plugin-polygon-zkevm']
       : []),
+    ...(process.env.CLOB_API_URL ? ['@elizaos/plugin-polymarket'] : []),
     ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
     ...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),
     ...(!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY

@@ -5,7 +5,54 @@ import {
   type Project,
   type ProjectAgent,
 } from '@elizaos/core';
-import starterPlugin from './plugin.ts';
+import polymarketPlugin from './plugin.ts';
+
+// Export the plugin directly for use in other configurations
+export { default as polymarketPlugin } from './plugin.ts';
+
+// Export individual actions for direct use
+export { retrieveAllMarketsAction } from './actions/retrieveAllMarkets';
+export { getSimplifiedMarketsAction } from './actions/getSimplifiedMarkets';
+export { getSamplingMarkets } from './actions/getSamplingMarkets';
+export { getClobMarkets } from './actions/getClobMarkets';
+export { getPriceHistory } from './actions/getPriceHistory';
+export { getMarketDetailsAction } from './actions/getMarketDetails';
+export { getOrderBookSummaryAction } from './actions/getOrderBookSummary';
+export { getOrderBookDepthAction } from './actions/getOrderBookDepth';
+export { getBestPriceAction } from './actions/getBestPrice';
+export { getMidpointPriceAction } from './actions/getMidpointPrice';
+export { getSpreadAction } from './actions/getSpread';
+export { placeOrderAction } from './actions/placeOrder';
+
+// Export utilities and services for advanced use cases
+export { initializeClobClient } from './utils/clobClient';
+export { callLLMWithTimeout } from './utils/llmHelpers';
+export { PolymarketService } from './plugin';
+
+// Export TypeScript interfaces and types
+export type {
+  Market,
+  Token,
+  Rewards,
+  MarketsResponse,
+  OrderBook,
+  BookEntry,
+  TokenPrice,
+  MarketFilters,
+  OrderParams,
+  Trade,
+  Position,
+  Balance,
+  ClobError,
+  SimplifiedMarket,
+  SimplifiedMarketsResponse,
+  OrderArgs,
+  SignedOrder,
+  OrderResponse,
+  OrderSide,
+  OrderType,
+  MarketOrderRequest,
+} from './types';
 
 /**
  * Represents the default character (Eliza) with her specific attributes and behaviors.
@@ -136,7 +183,7 @@ const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
 export const projectAgent: ProjectAgent = {
   character,
   init: async (runtime: IAgentRuntime) => await initCharacter({ runtime }),
-  plugins: [starterPlugin],
+  plugins: [polymarketPlugin],
 };
 const project: Project = {
   agents: [projectAgent],
