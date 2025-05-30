@@ -3,7 +3,9 @@
 setup() {
   set -euo pipefail
   export TEST_TMP_DIR="$(mktemp -d /var/tmp/eliza-test-update-XXXXXX)"
-  export ELIZAOS_CMD="${ELIZAOS_CMD:-bun run $(cd "$BATS_TEST_DIRNAME/../dist" && pwd)/index.js}"
+  # Source common utilities
+  source "$BATS_TEST_DIRNAME/common.sh"
+  setup_elizaos_cmd
   cd "$TEST_TMP_DIR"
 }
 
@@ -75,4 +77,74 @@ make_proj() {            # $1 = directory name
 @test "update succeeds outside a project (global check)" {
   run $ELIZAOS_CMD update
   [ "$status" -eq 0 ]
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Non-project directory handling
+# ──────────────────────────────────────────────────────────────────────────────
+@test "update --packages shows helpful message in empty directory" {
+  run $ELIZAOS_CMD update --packages
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"empty directory"* ]]
+  [[ "$output" == *"elizaos create"* ]]
+}
+
+@test "update --packages shows helpful message in non-elizaos project" {
+  # Create a non-ElizaOS package.json
+  cat > package.json << EOF
+{
+  "name": "some-other-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.18.0"
+  }
+}
+EOF
+  
+  run $ELIZAOS_CMD update --packages
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"non-ElizaOS project"* ]]
+  [[ "$output" == *"some-other-project"* ]]
+  [[ "$output" == *"elizaos create"* ]]
+}
+
+@test "update --packages works in elizaos project with dependencies" {
+  make_proj update-elizaos-project
+  
+  # Add some ElizaOS dependencies to make it a valid project
+  cat > package.json << EOF
+{
+  "name": "test-elizaos-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "@elizaos/core": "^1.0.0"
+  }
+}
+EOF
+  
+  run $ELIZAOS_CMD update --packages --check
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"ElizaOS"* ]]
+}
+
+@test "update --packages shows message for project without elizaos dependencies" {
+  make_proj update-no-deps-project
+  
+  # Create package.json without ElizaOS dependencies
+  cat > package.json << EOF
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "eliza": {
+    "type": "project"
+  },
+  "dependencies": {
+    "express": "^4.18.0"
+  }
+}
+EOF
+  
+  run $ELIZAOS_CMD update --packages
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"No ElizaOS packages found"* ]]
 }

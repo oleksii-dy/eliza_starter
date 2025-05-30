@@ -6,22 +6,15 @@
 # own temp workspace.
 # -----------------------------------------------------------------------------
 
-setup_file() {
-  local cache_file="$BATS_TEST_DIRNAME/../.eliza/cached-registry.json"
-  if [[ -f "$cache_file" ]]; then
-    echo "Cache file $cache_file already exists. Skipping parse-registry.ts." >&3
-    return 0
-  fi
-  echo "Running parse-registry.ts to generate cache..." >&3
-  bun run "$BATS_TEST_DIRNAME/../src/utils/parse-registry.ts"
-}
 
 setup() {
   set -euo pipefail
   export TEST_TMP_DIR="$(mktemp -d /var/tmp/eliza-test-plugins-XXXXXX)"
   cd "$TEST_TMP_DIR"
 
-  export ELIZAOS_CMD="${ELIZAOS_CMD:-bun run $(cd "$BATS_TEST_DIRNAME/../dist" && pwd)/index.js}"
+  # Source common utilities
+source "$BATS_TEST_DIRNAME/common.sh"
+setup_elizaos_cmd
 }
 
 teardown() {

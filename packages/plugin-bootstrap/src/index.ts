@@ -31,16 +31,16 @@ import {
 } from '@elizaos/core';
 import { v4 } from 'uuid';
 
-import * as actions from './actions';
-import * as evaluators from './evaluators';
-import * as providers from './providers';
+import * as actions from './actions/index.ts';
+import * as evaluators from './evaluators/index.ts';
+import * as providers from './providers/index.ts';
 
-import { ScenarioService } from './services/scenario';
-import { TaskService } from './services/task';
+import { ScenarioService } from './services/scenario.ts';
+import { TaskService } from './services/task.ts';
 
-export * from './actions';
-export * from './evaluators';
-export * from './providers';
+export * from './actions/index.ts';
+export * from './evaluators/index.ts';
+export * from './providers/index.ts';
 
 /**
  * Represents media data containing a buffer of data and the media type.
@@ -159,40 +159,45 @@ export async function processAttachments(
       const processedAttachment: Media = { ...attachment };
 
       // Only process images that don't already have descriptions
-      if (attachment.contentType?.includes(ContentType.IMAGE) && !attachment.description) {
+      if (attachment.contentType === ContentType.IMAGE && !attachment.description) {
         logger.debug(`[Bootstrap] Generating description for image: ${attachment.url}`);
 
-        const response = await runtime.useModel(ModelType.IMAGE_DESCRIPTION, {
-          prompt: imageDescriptionTemplate,
-          imageUrl: attachment.url,
-        });
+        try {
+          const response = await runtime.useModel(ModelType.IMAGE_DESCRIPTION, {
+            prompt: imageDescriptionTemplate,
+            imageUrl: attachment.url,
+          });
 
-        logger.debug(`[Bootstrap] Image description response:`, response);
+          if (typeof response === 'string') {
+            // Parse XML response
+            const parsedXml = parseKeyValueXml(response);
 
-        if (typeof response === 'string') {
-          // Parse XML response
-          const parsedXml = parseKeyValueXml(response);
+            if (parsedXml?.description && parsedXml?.text) {
+              processedAttachment.description = parsedXml.description;
+              processedAttachment.title = parsedXml.title || 'Image';
+              processedAttachment.text = parsedXml.text;
 
-          if (parsedXml?.description && parsedXml?.text) {
-            processedAttachment.description = parsedXml.description;
-            processedAttachment.title = parsedXml.title || 'Image';
-            processedAttachment.text = parsedXml.text;
+              logger.debug(
+                `[Bootstrap] Generated description: ${processedAttachment.description?.substring(0, 100)}...`
+              );
+            } else {
+              logger.warn(`[Bootstrap] Failed to parse XML response for image description`);
+            }
+          } else if (response && typeof response === 'object' && 'description' in response) {
+            // Handle object responses for backwards compatibility
+            processedAttachment.description = response.description;
+            processedAttachment.title = response.title || 'Image';
+            processedAttachment.text = response.description;
 
             logger.debug(
               `[Bootstrap] Generated description: ${processedAttachment.description?.substring(0, 100)}...`
             );
           } else {
-            logger.warn(`[Bootstrap] Failed to parse XML response for image description`);
+            logger.warn(`[Bootstrap] Unexpected response format for image description`);
           }
-        } else if (response && typeof response === 'object' && 'description' in response) {
-          // Handle object responses for backwards compatibility
-          processedAttachment.description = response.description;
-          processedAttachment.title = response.title || 'Image';
-          processedAttachment.text = response.description;
-
-          logger.debug(
-            `[Bootstrap] Generated description: ${processedAttachment.description?.substring(0, 100)}...`
-          );
+        } catch (error) {
+          logger.error(`[Bootstrap] Error generating image description:`, error);
+          // Continue processing without description
         }
       }
 
@@ -235,8 +240,6 @@ const messageReceivedHandler = async ({
       throw new Error('Agent responses map not found');
     }
 
-    console.log('agentResponses is', agentResponses);
-
     // Set this as the latest response ID for this agent+room
     agentResponses.set(message.roomId, responseId);
 
@@ -255,8 +258,6 @@ const messageReceivedHandler = async ({
       status: 'started',
       source: 'messageHandler',
     });
-
-    console.log('runId is', runId);
 
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(async () => {
@@ -277,10 +278,7 @@ const messageReceivedHandler = async ({
       }, timeoutDuration);
     });
 
-    console.log('message is', message);
-
     const processingPromise = (async () => {
-      console.log('processingPromise');
       try {
         if (message.entityId === runtime.agentId) {
           logger.debug(`[Bootstrap] Skipping message from self (${runtime.agentId})`);
@@ -313,26 +311,20 @@ const messageReceivedHandler = async ({
 
         let state = await runtime.composeState(
           message,
-          ['ANXIETY', 'SHOULD_RESPOND', 'ENTITIES', 'CHARACTER', 'RECENT_MESSAGES'],
+          ['ANXIETY', 'SHOULD_RESPOND', 'ENTITIES', 'CHARACTER', 'RECENT_MESSAGES', 'ACTIONS'],
           true
         );
 
         // Skip shouldRespond check for DM and VOICE_DM channels
         const room = await runtime.getRoom(message.roomId);
 
-        console.log('room is', room);
-        console.log('message is', message);
-
         const shouldSkipShouldRespond =
           room?.type === ChannelType.DM ||
           room?.type === ChannelType.VOICE_DM ||
           room?.type === ChannelType.SELF ||
           room?.type === ChannelType.API ||
-          message.content.source?.includes('client_chat');
-
-        logger.debug(
-          `[Bootstrap] Skipping shouldRespond check for ${runtime.character.name} because ${room?.type} ${room?.source}`
-        );
+          message.content.source?.includes('client_chat') ||
+          message.content.source?.includes('livekit');
 
         if (message.content.attachments && message.content.attachments.length > 0) {
           message.content.attachments = await processAttachments(
@@ -371,6 +363,9 @@ const messageReceivedHandler = async ({
 
           shouldRespond = responseObject?.action && responseObject.action === 'RESPOND';
         } else {
+          logger.debug(
+            `[Bootstrap] Skipping shouldRespond check for ${runtime.character.name} because ${room?.type} ${room?.source}`
+          );
           shouldRespond = true;
         }
 
@@ -380,7 +375,10 @@ const messageReceivedHandler = async ({
         console.log('shouldSkipShouldRespond', shouldSkipShouldRespond);
 
         if (shouldRespond) {
-          state = await runtime.composeState(message);
+          state = await runtime.composeState(message, ['ACTIONS']);
+          if (!state.values.actionNames) {
+            logger.warn('actionNames data missing from state, even though it was requested');
+          }
 
           const prompt = composePromptFromState({
             state,
@@ -473,11 +471,50 @@ const messageReceivedHandler = async ({
           }
 
           if (responseContent && responseContent.simple && responseContent.text) {
+            // Log provider usage for simple responses
+            if (responseContent.providers && responseContent.providers.length > 0) {
+              logger.debug('[Bootstrap] Simple response used providers', responseContent.providers);
+            }
+
+            // without actions there can't be more than one message
             await callback(responseContent);
           } else {
-            await runtime.processActions(message, responseMessages, state, callback);
+            await runtime.processActions(
+              message,
+              responseMessages,
+              state,
+              async (memory: Content) => {
+                return [];
+              }
+            );
+            if (responseMessages.length) {
+              // Log provider usage for complex responses
+              for (const responseMessage of responseMessages) {
+                if (
+                  responseMessage.content.providers &&
+                  responseMessage.content.providers.length > 0
+                ) {
+                  logger.debug(
+                    '[Bootstrap] Complex response used providers',
+                    responseMessage.content.providers
+                  );
+                }
+              }
+
+              for (const memory of responseMessages) {
+                await callback(memory.content);
+              }
+            }
           }
-          await runtime.evaluate(message, state, shouldRespond, callback, responseMessages);
+          await runtime.evaluate(
+            message,
+            state,
+            shouldRespond,
+            async (memory: Content) => {
+              return [];
+            },
+            responseMessages
+          );
         } else {
           // Handle the case where the agent decided not to respond
           logger.debug('[Bootstrap] Agent decided not to respond (shouldRespond is false).');
@@ -562,9 +599,6 @@ const messageReceivedHandler = async ({
         });
       }
     })();
-
-    console.log('processingPromise is', processingPromise);
-    console.log('timeoutPromise is', timeoutPromise);
 
     await Promise.race([processingPromise, timeoutPromise]);
   } finally {
@@ -1002,9 +1036,7 @@ const handleServerSync = async ({
     onComplete?.();
   } catch (error) {
     logger.error(
-      `Error processing standardized server data: ${
-        error instanceof Error ? error.message : String(error)
-      }`
+      `Error processing standardized server data: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 };

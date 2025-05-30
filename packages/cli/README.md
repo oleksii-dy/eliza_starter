@@ -22,9 +22,7 @@ This is useful for trying out commands without installing the CLI globally.
 
 Below is a comprehensive reference for all ElizaOS CLI commands, including their options, arguments, and subcommands. For the most up-to-date usage, run `elizaos [command] --help`.
 
-### Project Creation
-
-#### `elizaos create [name]`
+### `elizaos create [name]`
 
 Initialize a new project, plugin, or agent.
 
@@ -45,13 +43,13 @@ Initialize a new project, plugin, or agent.
 
 #### `elizaos dev`
 
-Start the project or plugin in development mode and rebuild on file changes.
+Start the project or plugin in development mode with auto-rebuild, detailed logging, and file change detection.
 
 - **Options:**
-  - `-c, --configure`: Reconfigure services and AI models
+  - `-c, --configure`: Reconfigure services and AI models (skips using saved configuration)
   - `-char, --character [paths...]`: Character file(s) to use - accepts paths or URLs
   - `-b, --build`: Build the project before starting
-  - `-p, --port <port>`: Port number to run the server on
+  - `-p, --port <port>`: Port to listen on
 
 **Character Handling:**
 
@@ -112,12 +110,13 @@ Clone ElizaOS monorepo from a specific branch (defaults to v2-develop).
 Manage an ElizaOS plugin.
 
 - **Subcommands:**
-  - `list` (aliases: `l`, `ls`): List all available plugins
+  - `list` (alias: `l`): List all available plugins
   - `add <plugin>` (alias: `install`): Add a plugin to the project
     - Arguments: `<plugin>` (plugin name)
-    - Options: `-n, --no-env-prompt`, `-b, --branch <branchName>`
+    - Options: `-n, --no-env-prompt`, `-b, --branch <branchName>`, `-T, --tag <tagname>`
+  - `update` (alias: `refresh`): Fetch the latest plugin registry and update local cache
   - `installed-plugins`: List plugins found in the project dependencies
-  - `remove <plugin>` (aliases: `delete`, `del`, `rm`): Remove a plugin from the project
+  - `remove <plugin>` (alias: `delete`): Remove a plugin from the project
     - Arguments: `<plugin>` (plugin name)
 
 ### Agent Management
@@ -128,29 +127,42 @@ Manage ElizaOS agents.
 
 - **Subcommands:**
   - `list` (alias: `ls`): List available agents
-    - Options: `-j, --json` (output as JSON)
+    - Options:
+      - `-j, --json`: Output as JSON
+      - `-r, --remote-url <url>`: URL of the remote agent runtime
+      - `-p, --port <port>`: Port to listen on
   - `get` (alias: `g`): Get agent details
     - Options:
-      - `-n, --name <n>`: Agent id, name, or index number from list
+      - `-n, --name <name>`: Agent id, name, or index number from list
       - `-j, --json`: Display JSON output in terminal
       - `-o, --output <file>`: Save agent data to file
+      - `-r, --remote-url <url>`: URL of the remote agent runtime
+      - `-p, --port <port>`: Port to listen on
   - `start` (alias: `s`): Start an agent
     - Options:
-      - `-n, --name <n>`: Name of an existing agent to start
+      - `-n, --name <name>`: Name of an existing agent to start
       - `-j, --json <json>`: Character JSON configuration string
       - `--path <path>`: Local path to character JSON file
       - `--remote-character <url>`: URL to remote character JSON file
+      - `-r, --remote-url <url>`: URL of the remote agent runtime
+      - `-p, --port <port>`: Port to listen on
   - `stop` (alias: `st`): Stop an agent
     - Options:
-      - `-n, --name <n>`: Agent id, name, or index number from list
+      - `-n, --name <name>`: Agent id, name, or index number from list
+      - `-r, --remote-url <url>`: URL of the remote agent runtime
+      - `-p, --port <port>`: Port to listen on
   - `remove` (alias: `rm`): Remove an agent
     - Options:
-      - `-n, --name <n>`: Agent id, name, or index number from list
+      - `-n, --name <name>`: Agent id, name, or index number from list
+      - `-r, --remote-url <url>`: URL of the remote agent runtime
+      - `-p, --port <port>`: Port to listen on
   - `set`: Update agent configuration
     - Options:
-      - `-n, --name <n>`: Agent id, name, or index number from list
+      - `-n, --name <name>`: Agent id, name, or index number from list
       - `-c, --config <json>`: Agent configuration as JSON string
       - `-f, --file <path>`: Path to agent configuration JSON file
+      - `-r, --remote-url <url>`: URL of the remote agent runtime
+      - `-p, --port <port>`: Port to listen on
 
 **Note:** All agent commands support interactive mode when run without key parameters.
 
@@ -158,12 +170,34 @@ Manage ElizaOS agents.
 
 #### `elizaos publish`
 
-Publish a plugin or project to the registry, GitHub, or npm.
+Publish a plugin to the registry.
 
 - **Options:**
-  - `-t, --test`: Run publish tests without actually publishing
-  - `-n, --npm`: Publish to npm
-  - `-s, --skip-registry`: Skip publishing to the registry
+  - `-t, --test`: Test publish process without making changes
+  - `-n, --npm`: Publish to npm instead of GitHub
+  - `-sr, --skip-registry`: Skip publishing to the registry
+  - `-d, --dry-run`: Generate registry files locally without publishing
+
+**Default behavior:**
+
+- Publishes to npm
+- Creates/updates GitHub repository
+- Submits to ElizaOS registry
+
+**npm-only mode:**
+
+- Use `--npm` flag to publish only to npm
+- Skips GitHub repository creation and registry submission
+
+**Important for continuous development:**
+
+The `elizaos publish` command is designed for **initial plugin publishing only**. After initial publishing, use standard npm and git workflows for updates:
+
+- `npm version patch|minor|major` to update version
+- `npm publish` to publish to npm
+- `git push origin main && git push --tags` to update GitHub
+
+The ElizaOS registry automatically syncs with npm updates.
 
 ### Agent/Server Management
 
@@ -172,7 +206,7 @@ Publish a plugin or project to the registry, GitHub, or npm.
 Start the Eliza agent with configurable plugins and services.
 
 - **Options:**
-  - `-c, --configure`: Force reconfiguration of services and AI models
+  - `-c, --configure`: Force reconfiguration of services and AI models (bypasses saved configuration)
   - `-char, --character [paths...]`: Character file(s) to use - accepts paths or URLs
   - `-b, --build`: Build the project before starting
   - `-p, --port <port>`: Port to listen on (default: 3000)
@@ -266,15 +300,13 @@ Manage environment variables and secrets.
   - `interactive`: Start interactive environment variable manager
     - Options: `-y, --yes`
 
-### Publishing
+### Process Management
 
-#### `elizaos publish`
+#### `elizaos stop`
 
-Publishes the current project or plugin.
+Stop all running ElizaOS agents running locally.
 
-- **Options:**
-  - `--dry-run`: Test run without publishing
-  - `--registry <repo>`: Specify target registry (default: 'elizaOS/registry')
+This command uses `pkill` to terminate all ElizaOS processes and does not accept any options.
 
 ## Development Guide
 
@@ -380,22 +412,47 @@ Plugins extend the functionality of ElizaOS agents by providing additional capab
 5. **Test your plugin**:
 
    ```bash
-   bun run test
+   # Run tests during development
+   elizaos test
    # Or with the CLI directly:
-   elizaos test --plugin
+   elizaos test
+
+   # Test specific components
+   elizaos test component
+
+   # Test end-to-end functionality
+   elizaos test e2e
    ```
 
 6. **Publish your plugin**:
 
    ```bash
+   # Login to npm first
+   npm login
+
+   # Test your plugin thoroughly
+   elizaos test
+
    # Test publishing process
-   elizaos plugins publish --test
+   elizaos publish --test
 
-   # Publish to registry
-   elizaos plugins publish
+   # Publish to npm + GitHub + registry (recommended)
+   elizaos publish
+   ```
 
-   # Or publish to npm
-   elizaos plugins publish --npm
+7. **Continuous development workflow**:
+
+   ```bash
+   # Make changes to your plugin
+   elizaos dev  # Test locally
+
+   # Test your changes
+   elizaos test
+
+   # Update version and publish updates
+   npm version patch  # or minor/major
+   npm publish
+   git push origin main && git push --tags
    ```
 
 ### Developing Projects (Agents)
@@ -451,31 +508,48 @@ Projects contain agent configurations and code for building agent-based applicat
 4. **Add plugins to your project**:
 
    ```bash
-   elizaos project add-plugin @elizaos/plugin-openai
+   elizaos plugins add @elizaos/plugin-openai
    ```
 
 5. **Run your project in development mode**:
 
    ```bash
-   bun run dev
-   # Or with the CLI directly:
    elizaos dev
    ```
 
 6. **Build and start your project**:
 
    ```bash
-   bun run build
-   bun run start
-   # Or with the CLI directly:
    elizaos start
    ```
 
 7. **Test your project**:
+
    ```bash
-   bun run test
-   # Or with the CLI directly:
+   # Run all tests
    elizaos test
+
+   # Run component tests only
+   elizaos test component
+
+   # Run e2e tests only
+   elizaos test e2e
+
+   # Test with specific options
+   elizaos test --port 4000 --name specific-test
+   ```
+
+8. **Development workflow**:
+
+   ```bash
+   # Make changes to your project
+   elizaos dev  # Development mode with hot-reload
+
+   # Test your changes
+   elizaos test
+
+   # Build and start in production mode
+   elizaos start
    ```
 
 ## Contributing

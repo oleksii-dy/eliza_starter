@@ -1,5 +1,5 @@
 import type { AgentServer } from '@/src/server';
-import { upload } from '@/src/server/loader';
+import { upload } from '@/src/server/upload';
 import { convertToAudioBuffer } from '@/src/utils';
 import type {
   Agent,
@@ -9,7 +9,6 @@ import type {
   IAgentRuntime,
   Memory,
   UUID,
-  KnowledgeItem,
 } from '@elizaos/core';
 import {
   ChannelType,
@@ -27,6 +26,13 @@ import {
 } from '@elizaos/core';
 import express from 'express';
 import fs from 'node:fs';
+import path from 'node:path';
+import FormData from 'form-data';
+import axios from 'axios';
+import sharp from 'sharp';
+
+// Cache for compiled regular expressions to improve performance
+const regexCache = new Map<string, RegExp>();
 
 // Utility functions for response handling
 const sendError = (
@@ -63,7 +69,7 @@ const cleanupFile = (filePath: string) => {
   }
 };
 
-const cleanupFiles = (files: Express.Multer.File[]) => {
+const cleanupFiles = (files: any[]) => {
   if (files) {
     files.forEach((file) => cleanupFile(file.path));
   }
@@ -85,21 +91,21 @@ const getRuntime = (agents: Map<UUID, IAgentRuntime>, agentId: UUID) => {
  * @property {Express.Multer.File[]} [files] - Optional property representing multiple files uploaded with the request
  * @property {Object} params - Object representing parameters included in the request
  * @property {string} params.agentId - The unique identifier for the agent associated with the request
- * @property {string} [params.knowledgeId] - Optional knowledge ID parameter
  */
 interface CustomRequest extends express.Request {
+  query: any;
+  body: any;
   file?: Express.Multer.File;
   files?: Express.Multer.File[];
   params: {
     agentId: string;
-    knowledgeId?: string;
   };
 }
 
 /**
  * Creates and configures an Express router for managing agents and their related resources.
  *
- * The returned router provides RESTful endpoints for agent lifecycle management (creation, update, start, stop, deletion), memory and log operations, audio processing (transcription and speech synthesis), message handling, knowledge uploads, and group chat management. It integrates with agent runtimes and optionally an {@link AgentServer} instance for database operations.
+ * The returned router provides RESTful endpoints for agent lifecycle management (creation, update, start, stop, deletion), memory and log operations, audio processing (transcription and speech synthesis), message handling, and group chat management. It integrates with agent runtimes and optionally an {@link AgentServer} instance for database operations.
  *
  * @param agents - Map of agent UUIDs to their runtime instances.
  * @param server - Optional server instance providing database and agent management utilities.
@@ -111,6 +117,40 @@ export function agentRouter(
 ): express.Router {
   const router = express.Router();
   const db = server?.database;
+
+  // Helper function to extract filename from Catbox URLs
+  const extractFilenameFromCatboxUrl = (url: string): string | null => {
+    try {
+      // Handle various Catbox URL formats:
+      // https://files.catbox.moe/abc123.jpg
+      // https://catbox.moe/abc123.jpg
+      // abc123.jpg (just the filename)
+      const patterns = [
+        /https?:\/\/files\.catbox\.moe\/([^\/\?]+)/,
+        /https?:\/\/catbox\.moe\/([^\/\?]+)/,
+        /^([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)$/,
+      ];
+
+      for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+          return match[1];
+        }
+      }
+
+      // Fallback: try to extract from the end of any URL
+      const parts = url.split('/');
+      const lastPart = parts[parts.length - 1];
+      if (lastPart && lastPart.includes('.')) {
+        return lastPart.split('?')[0]; // Remove query parameters if any
+      }
+
+      return null;
+    } catch (error) {
+      logger.error('[FILENAME EXTRACT] Error extracting filename from URL:', error);
+      return null;
+    }
+  };
 
   // Get all worlds
   router.get('/worlds', async (req, res) => {
@@ -312,7 +352,7 @@ export function agentRouter(
             },
           });
 
-          // Construct Memory for the agent's HTTP response
+          // Construct Memory for the agent's HTTP response with provider information
           sentMemory = {
             id: createUniqueUuid(runtime, `api-response-${userMessageMemory.id}-${Date.now()}`),
             entityId: runtime.agentId, // Agent is the sender
@@ -321,11 +361,17 @@ export function agentRouter(
               ...responseContent,
               text: responseContent.text || '',
               inReplyTo: userMessageMemory.id,
+              ...(responseContent.providers &&
+                responseContent.providers.length > 0 && {
+                  providers: responseContent.providers,
+                }),
             },
             roomId: roomId,
             worldId,
             createdAt: Date.now(),
           };
+
+          logger.debug('Response content sent via HTTP API:', responseContent.providers);
 
           await runtime.createMemory(sentMemory, 'messages');
         }
@@ -365,6 +411,7 @@ export function agentRouter(
         .map((agent: Agent) => ({
           id: agent.id,
           name: agent.name,
+          characterName: agent.name, // Since Agent extends Character, agent.name is the character name
           bio: agent.bio[0] ?? '',
           status: runtimes.includes(agent.id) ? 'active' : 'inactive',
         }))
@@ -382,81 +429,163 @@ export function agentRouter(
     }
   });
 
-  router.all('/:agentId/plugins/:pluginName/*', async (req, res, next) => {
-    const agentId = req.params.agentId as UUID;
-    if (!agentId) {
-      logger.debug('[AGENT PLUGINS MIDDLEWARE] Params required');
-      res.status(400).json({
-        success: false,
-        error: {
-          code: 'INVALID_ID',
-          message: 'Invalid agent ID format',
-        },
-      });
-      return;
-    }
-
-    try {
-      let runtime: IAgentRuntime | undefined;
-      if (validateUuid(agentId)) {
-        runtime = agents.get(agentId);
-      }
-      // if runtime is null, look for runtime with the same name
-      if (!runtime) {
-        runtime = Array.from(agents.values()).find((r) => r.character.name === agentId);
-      }
-      if (!runtime) {
-        logger.debug('[AGENT PLUGINS MIDDLEWARE] Agent not found');
-        res.status(404).json({
+  // Plugin middleware - handles all plugin routes
+  router.use(
+    '/:agentId/plugins/:pluginName',
+    upload.array('files', 12),
+    async (req: any, res, next) => {
+      const agentId = req.params.agentId as UUID;
+      if (!agentId) {
+        logger.debug('[AGENT PLUGINS MIDDLEWARE] Params required');
+        res.status(400).json({
           success: false,
           error: {
-            code: 'NOT_FOUND',
-            message: 'Agent not found',
+            code: 'INVALID_ID',
+            message: 'Invalid agent ID format',
           },
         });
         return;
       }
-      // short circuit
-      if (!runtime.plugins?.length) next();
 
-      let path = req.path.substr(1 + agentId.length + 9 + req.params.pluginName.length);
+      try {
+        let runtime: IAgentRuntime | undefined;
+        if (validateUuid(agentId)) {
+          runtime = agents.get(agentId);
+        }
+        // if runtime is null, look for runtime with the same name
+        if (!runtime) {
+          runtime = Array.from(agents.values()).find((r) => r.character.name === agentId);
+        }
+        if (!runtime) {
+          logger.debug('[AGENT PLUGINS MIDDLEWARE] Agent not found');
+          res.status(404).json({
+            success: false,
+            error: {
+              code: 'NOT_FOUND',
+              message: 'Agent not found',
+            },
+          });
+          return;
+        }
+        // short circuit
+        if (!runtime.plugins?.length) {
+          next();
+          return;
+        }
 
-      // Check each plugin
-      for (const plugin of runtime.plugins) {
-        if (!plugin.name) continue;
-        if (plugin.routes && plugin.name === req.params.pluginName) {
-          for (const r of plugin.routes) {
-            if (r.type === req.method) {
-              // r.path can contain /*
-              if (r.path.match(/\*/)) {
-                // hacky af
-                if (path.match(r.path.replace('*', ''))) {
-                  r.handler(req, res, runtime);
-                  return;
-                }
-              } else {
-                if (path === r.path) {
-                  r.handler(req, res, runtime);
-                  return;
+        // Get the path after the plugin name
+        const baseUrl = req.baseUrl; // e.g., /:agentId/plugins/:pluginName
+        const fullPath = req.path; // The path after the baseUrl
+        let path = fullPath;
+
+        // Ensure path starts with /
+        if (!path.startsWith('/')) {
+          path = '/' + path;
+        }
+
+        // Check each plugin
+        for (const plugin of runtime.plugins) {
+          if (!plugin.name) continue;
+          if (plugin.routes && plugin.name === req.params.pluginName) {
+            for (const r of plugin.routes) {
+              if (r.type === req.method) {
+                // Path matching logic remains the same
+                // ... (wildcard and exact path matching) ...
+
+                // Original handler call (simplified for brevity):
+                // if (matched_condition) {
+                //   r.handler(req, res, runtime);
+                //   return;
+                // }
+
+                // New logic with potential Multer application:
+                const executeHandler = () => {
+                  // The actual path matching happens here before calling the handler
+                  if (r.path.match(/\*/)) {
+                    // Wildcard route like /assets/*
+                    if (path.match(r.path.replace('*', ''))) {
+                      logger.debug(`Calling wildcard plugin route: ${r.path} for ${path}`);
+                      r.handler(req, res, runtime);
+                      return true; // Handled
+                    }
+                  } else if (r.path.includes(':')) {
+                    // Parameterized route like /documents/:knowledgeId
+                    // Convert Express-style route to regex pattern
+                    const regexPattern = r.path.replace(/:([^/]+)/g, '([^/]+)');
+
+                    // Use cached regex or create and cache a new one
+                    if (!regexCache.has(r.path)) {
+                      regexCache.set(r.path, new RegExp(`^${regexPattern}$`));
+                    }
+                    const regex = regexCache.get(r.path)!;
+
+                    if (regex.test(path)) {
+                      logger.debug(`Calling parameterized plugin route: ${r.path} for ${path}`);
+
+                      // Extract parameter names from route pattern
+                      const paramNames = [];
+                      let match;
+                      const paramRegex = /:([^/]+)/g;
+                      while ((match = paramRegex.exec(r.path)) !== null) {
+                        paramNames.push(match[1]);
+                      }
+
+                      // Extract parameter values from actual path
+                      const valueMatches = path.match(regex);
+                      if (valueMatches && valueMatches.length > 1) {
+                        // Initialize req.params if it doesn't exist
+                        if (!req.params) {
+                          req.params = {};
+                        }
+
+                        // Populate req.params with extracted values
+                        for (let i = 0; i < paramNames.length; i++) {
+                          req.params[paramNames[i]] = valueMatches[i + 1];
+                        }
+                      }
+
+                      r.handler(req, res, runtime);
+                      return true; // Handled
+                    }
+                  } else {
+                    // Exact match
+                    if (path === r.path) {
+                      logger.debug(`Calling exact match plugin route: ${r.path} for ${path}`);
+                      r.handler(req, res, runtime);
+                      return true; // Handled
+                    }
+                  }
+                  return false; // Not handled by this specific route object r
+                };
+
+                if (r.isMultipart) {
+                  // This specific CLI route handler for plugins doesn't easily support adding Multer per-route from plugin def.
+                  // The `upload.array` was moved to be at the start of this middleware for all plugin routes.
+                  // If a route isMultipart, Multer has already run. req.files should be populated.
+                  logger.debug(`Executing multipart handler for plugin route: ${r.path}`);
+                  if (executeHandler()) return;
+                } else {
+                  logger.debug(`Executing non-multipart handler for plugin route: ${r.path}`);
+                  if (executeHandler()) return;
                 }
               }
             }
           }
         }
+        next(); // Only call next if no route in this plugin matched
+      } catch (error) {
+        logger.error('[AGENT PLUGINS MIDDLEWARE] Error agent middleware:', error);
+        res.status(500).json({
+          success: false,
+          error: {
+            code: 500,
+            message: 'Error getting agent',
+            details: error.message,
+          },
+        });
       }
-      next();
-    } catch (error) {
-      logger.error('[AGENT PLUGINS MIDDLEWARE] Error agent middleware:', error);
-      res.status(500).json({
-        success: false,
-        error: {
-          code: 500,
-          message: 'Error getting agent',
-          details: error.message,
-        },
-      });
     }
-  });
+  );
 
   // Get specific agent details
   router.get('/:agentId', async (req, res) => {
@@ -591,7 +720,7 @@ export function agentRouter(
         await server?.startAgent(updatedAgent);
       }
 
-      // check if agent got started successfully
+      // Verify agent started successfully
       const runtime = agents.get(agentId);
       const status = runtime ? 'active' : 'inactive';
 
@@ -875,96 +1004,6 @@ export function agentRouter(
         },
       });
     }
-  });
-
-  router.delete('/:agentId/memories/all/:roomId/', async (req, res) => {
-    try {
-      const agentId = validateUuid(req.params.agentId);
-      const roomId = validateUuid(req.params.roomId);
-
-      if (!agentId) {
-        res.status(400).json({
-          success: false,
-          error: {
-            code: 'INVALID_ID',
-            message: 'Invalid agent ID',
-          },
-        });
-        return;
-      }
-
-      if (!roomId) {
-        res.status(400).json({
-          success: false,
-          error: {
-            code: 'INVALID_ID',
-            message: 'Invalid room ID',
-          },
-        });
-        return;
-      }
-
-      const runtime = agents.get(agentId);
-      if (!runtime) {
-        res.status(404).json({
-          success: false,
-          error: {
-            code: 'NOT_FOUND',
-            message: 'Agent not found',
-          },
-        });
-        return;
-      }
-
-      await runtime.deleteAllMemories(roomId, 'messages');
-      await runtime.deleteAllMemories(roomId, 'knowledge');
-      await runtime.deleteAllMemories(roomId, 'documents');
-
-      res.status(204).send();
-    } catch (e) {
-      logger.error('[DELETE ALL MEMORIES] Error deleting all memories:', e);
-      res.status(500).json({
-        success: false,
-        error: {
-          code: 'DELETE_ERROR',
-          message: 'Error deleting all memories',
-          details: e instanceof Error ? e.message : String(e),
-        },
-      });
-    }
-  });
-
-  // Delete Memory
-  router.delete('/:agentId/memories/:memoryId', async (req, res) => {
-    const agentId = validateUuid(req.params.agentId);
-    const memoryId = validateUuid(req.params.memoryId);
-
-    if (!agentId || !memoryId) {
-      res.status(400).json({
-        success: false,
-        error: {
-          code: 'INVALID_ID',
-          message: 'Invalid agent ID or memory ID format',
-        },
-      });
-      return;
-    }
-
-    const runtime = agents.get(agentId);
-    if (!runtime) {
-      res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Agent not found',
-        },
-      });
-      return;
-    }
-
-    await runtime.deleteMemory(memoryId);
-
-    res.status(204).send();
   });
 
   // Get Agent Panels (public GET routes)
@@ -1454,7 +1493,7 @@ export function agentRouter(
       return;
     }
 
-    const { text, roomId: rawRoomId, entityId: rawUserId } = req.body;
+    const { text, roomId: rawRoomId, entityId: rawUserId, worldId: rawWorldId } = req.body;
     if (!text) {
       res.status(400).json({
         success: false,
@@ -1482,6 +1521,7 @@ export function agentRouter(
     try {
       const roomId = createUniqueUuid(runtime, rawRoomId ?? `default-room-${agentId}`);
       const entityId = createUniqueUuid(runtime, rawUserId ?? 'Anon');
+      const worldId = rawWorldId ?? createUniqueUuid(runtime, 'direct');
 
       logger.debug('[SPEECH CONVERSATION] Ensuring connection');
       await runtime.ensureConnection({
@@ -1491,7 +1531,7 @@ export function agentRouter(
         name: req.body.name,
         source: 'direct',
         type: ChannelType.API,
-        worldId: createUniqueUuid(runtime, 'direct'),
+        worldId,
         worldName: 'Direct',
       });
 
@@ -1500,31 +1540,25 @@ export function agentRouter(
         text,
         attachments: [],
         source: 'direct',
-        inReplyTo: undefined,
+        inReplyTo: undefined, // Handled by response memory if needed
         channelType: ChannelType.API,
       };
 
-      const userMessage = {
-        content,
-        entityId,
-        roomId,
-        agentId: runtime.agentId,
-      };
-
-      const memory: Memory = {
+      const userMessageMemory: Memory = {
         id: messageId,
-        agentId: runtime.agentId,
         entityId,
         roomId,
+        worldId,
+        agentId: runtime.agentId, // The agent this message is directed to
         content,
         createdAt: Date.now(),
       };
 
       logger.debug('[SPEECH CONVERSATION] Creating memory');
-      await runtime.createMemory(memory, 'messages');
+      await runtime.createMemory(userMessageMemory, 'messages');
 
       logger.debug('[SPEECH CONVERSATION] Composing state');
-      const state = await runtime.composeState(userMessage);
+      const state = await runtime.composeState(userMessageMemory);
 
       logger.debug('[SPEECH CONVERSATION] Creating context');
       const prompt = composePrompt({
@@ -1560,18 +1594,21 @@ export function agentRouter(
       logger.debug('[SPEECH CONVERSATION] Creating response memory');
 
       const responseMessage = {
-        ...userMessage,
+        ...userMessageMemory,
         content: { text: response },
         roomId: roomId as UUID,
         agentId: runtime.agentId,
       };
 
       await runtime.createMemory(responseMessage, 'messages');
-      await runtime.evaluate(memory, state);
+      await runtime.evaluate(userMessageMemory, state);
 
-      await runtime.processActions(memory, [responseMessage as Memory], state, async () => [
-        memory,
-      ]);
+      await runtime.processActions(
+        userMessageMemory,
+        [responseMessage as Memory],
+        state,
+        async () => [userMessageMemory]
+      );
 
       logger.debug('[SPEECH CONVERSATION] Generating speech response');
 
@@ -1729,26 +1766,26 @@ export function agentRouter(
         ? Number.parseInt(req.query.before as string, 10)
         : Date.now();
       const _worldId = req.query.worldId as string;
+      const includeEmbedding = req.query.includeEmbedding === 'true';
+      const tableName = (req.query.tableName as string) || 'messages';
 
       const memories = await runtime.getMemories({
-        tableName: 'messages',
+        tableName,
         roomId,
         count: limit,
         end: before,
       });
 
-      const cleanMemories = memories.map((memory) => {
-        return {
-          ...memory,
-          embedding: undefined,
-        };
-      });
+      const cleanMemories = includeEmbedding
+        ? memories
+        : memories.map((memory) => ({
+            ...memory,
+            embedding: undefined,
+          }));
 
       res.json({
         success: true,
-        data: {
-          memories: cleanMemories,
-        },
+        data: { memories: cleanMemories },
       });
     } catch (error) {
       logger.error('[MEMORIES GET] Error retrieving memories for room:', error);
@@ -1794,22 +1831,23 @@ export function agentRouter(
 
     // Get tableName from query params, default to "messages"
     const tableName = (req.query.tableName as string) || 'messages';
+    const includeEmbedding = req.query.includeEmbedding === 'true';
 
     const memories = await runtime.getMemories({
       agentId,
       tableName,
     });
 
-    const cleanMemories = memories.map((memory) => {
-      return {
-        ...memory,
-        embedding: undefined,
-      };
-    });
+    const cleanMemories = includeEmbedding
+      ? memories
+      : memories.map((memory) => ({
+          ...memory,
+          embedding: undefined,
+        }));
 
     res.json({
       success: true,
-      data: cleanMemories,
+      data: { memories: cleanMemories },
     });
   });
 
@@ -1873,134 +1911,283 @@ export function agentRouter(
     }
   });
 
-  // Knowledge management routes
-  router.post('/:agentId/memories/upload-knowledge', upload.array('files'), async (req, res) => {
+  // Media upload endpoint for images and videos
+  router.post('/:agentId/upload-media', upload.single('file'), async (req: CustomRequest, res) => {
+    logger.debug('[MEDIA UPLOAD] Processing media upload');
     const agentId = validateUuid(req.params.agentId);
 
     if (!agentId) {
-      sendError(res, 400, 'INVALID_ID', 'Invalid agent ID format');
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_ID',
+          message: 'Invalid agent ID format',
+        },
+      });
       return;
     }
 
-    const runtime = agents.get(agentId);
-
-    if (!runtime) {
-      sendError(res, 404, 'NOT_FOUND', 'Agent not found');
+    const mediaFile = req.file;
+    if (!mediaFile) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_REQUEST',
+          message: 'No media file provided',
+        },
+      });
       return;
     }
 
-    const files = req.files as Express.Multer.File[];
+    // Check if it's a valid media file (image or video)
+    const validImageTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/svg+xml',
+      'image/bmp',
+    ];
+    const validVideoTypes = [
+      'video/mp4',
+      'video/webm',
+      'video/mov',
+      'video/avi',
+      'video/mkv',
+      'video/quicktime',
+    ];
+    const allValidTypes = [...validImageTypes, ...validVideoTypes];
 
-    if (!files || files.length === 0) {
-      sendError(res, 400, 'NO_FILES', 'No files uploaded');
+    if (!allValidTypes.includes(mediaFile.mimetype)) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_FILE_TYPE',
+          message: 'File must be an image or video',
+        },
+      });
       return;
     }
 
     try {
-      // Process files in parallel
-      const processingPromises = files.map(async (file, index) => {
-        let knowledgeId: UUID;
-        const originalFilename = file.originalname;
-        const worldId = (req.body.worldId as UUID) || runtime.agentId;
-        const filePath = file.path;
+      const isImage = validImageTypes.includes(mediaFile.mimetype);
 
-        // Create a unique knowledge ID
-        knowledgeId =
-          (req.body?.documentIds && req.body.documentIds[index]) ||
-          req.body?.documentId ||
-          (createUniqueUuid(runtime, `knowledge-${originalFilename}`) as UUID);
+      if (isImage) {
+        // Upload image to Catbox.moe with compression and timeout handling
+        logger.debug('[MEDIA UPLOAD] Processing image for Catbox.moe upload');
 
-        try {
-          // Read file content into a buffer
-          const fileBuffer = await fs.promises.readFile(filePath);
+        // Check file size
+        const fileSizeInMB = mediaFile.size / (1024 * 1024);
+        const MAX_SIZE_MB = 180; // Leave some buffer under 200MB limit
+        const COMPRESSION_THRESHOLD_MB = 1; // Compress files larger than 1MB
 
-          // Determine the file extension
-          const fileExt = file.originalname.split('.').pop()?.toLowerCase() || '';
-          const filename = file.originalname;
-          const title = filename.replace(`.${fileExt}`, '');
+        let processedFilePath = mediaFile.path;
+        let shouldCompress = fileSizeInMB > COMPRESSION_THRESHOLD_MB;
 
-          // Convert file buffer to base64 string for all file types
-          const base64Content = fileBuffer.toString('base64');
+        // Compress image if it's too large
+        if (shouldCompress) {
+          logger.debug(`[MEDIA UPLOAD] Image size: ${fileSizeInMB.toFixed(2)}MB, compressing...`);
 
-          // Create knowledge item with proper metadata
-          const knowledgeItem: KnowledgeItem = {
-            id: knowledgeId,
-            content: {
-              text: base64Content, // Always use base64 content
-            },
-            metadata: {
-              type: MemoryType.DOCUMENT,
-              timestamp: Date.now(),
-              filename: filename,
-              fileExt: fileExt,
-              title: title,
-              path: originalFilename,
-              fileType: file.mimetype,
-              fileSize: file.size,
-              source: 'upload',
-            },
-          };
-
-          // Add knowledge to agent - wait for the complete processing
-          await runtime.addKnowledge(
-            knowledgeItem,
-            undefined, // Default options
-            {
-              worldId,
-              entityId: runtime.agentId,
-              roomId: runtime.agentId,
-            }
+          const compressedPath = path.join(
+            path.dirname(mediaFile.path),
+            `compressed_${mediaFile.filename}`
           );
 
-          // Clean up temp file immediately after successful processing
-          cleanupFile(filePath);
+          try {
+            let quality = 85;
+            let width = null;
 
-          return {
-            id: knowledgeId,
-            filename: originalFilename,
-            type: file.mimetype,
-            size: file.size,
-            uploadedAt: Date.now(),
-            status: 'success',
+            // Determine compression strategy based on file size
+            if (fileSizeInMB > 50) {
+              quality = 60;
+              width = 1920; // Max width for very large images
+            } else if (fileSizeInMB > 20) {
+              quality = 70;
+              width = 2560;
+            } else if (fileSizeInMB > 10) {
+              quality = 80;
+            } else if (fileSizeInMB > 5) {
+              quality = 85;
+            } else {
+              quality = 90; // Light compression for smaller files
+            }
+
+            const sharpInstance = sharp(mediaFile.path);
+
+            if (width) {
+              sharpInstance.resize(width, null, {
+                withoutEnlargement: true,
+                fit: 'inside',
+              });
+            }
+
+            // Convert to JPEG for better compression (except for PNG with transparency)
+            if (mediaFile.mimetype === 'image/png') {
+              // Check if PNG has transparency
+              const metadata = await sharpInstance.metadata();
+              if (metadata.channels === 4 || metadata.hasAlpha) {
+                // Keep as PNG but compress
+                await sharpInstance.png({ quality }).toFile(compressedPath);
+              } else {
+                // Convert to JPEG for better compression
+                await sharpInstance.jpeg({ quality }).toFile(compressedPath);
+              }
+            } else {
+              // For JPEG and other formats
+              await sharpInstance.jpeg({ quality }).toFile(compressedPath);
+            }
+
+            // Check compressed file size
+            const compressedStats = fs.statSync(compressedPath);
+            const compressedSizeMB = compressedStats.size / (1024 * 1024);
+
+            logger.debug(
+              `[MEDIA UPLOAD] Compressed from ${fileSizeInMB.toFixed(2)}MB to ${compressedSizeMB.toFixed(2)}MB`
+            );
+
+            if (compressedSizeMB < MAX_SIZE_MB) {
+              processedFilePath = compressedPath;
+            } else {
+              logger.warn(
+                `[MEDIA UPLOAD] Even after compression, file is ${compressedSizeMB.toFixed(2)}MB, using fallback`
+              );
+              // Clean up compressed file and use fallback
+              cleanupFile(compressedPath);
+              throw new Error('File too large even after compression');
+            }
+          } catch (compressionError) {
+            logger.error('[MEDIA UPLOAD] Compression failed:', compressionError);
+            // If compression fails and file is too large, use fallback
+            if (fileSizeInMB > MAX_SIZE_MB) {
+              throw new Error('File too large and compression failed');
+            }
+            // Otherwise, try uploading original file
+          }
+        }
+
+        // Upload to Catbox.moe
+        try {
+          const form = new FormData();
+          form.append('reqtype', 'fileupload');
+          form.append('fileToUpload', fs.createReadStream(processedFilePath));
+
+          // Set timeout based on file size (minimum 30s, up to 3 minutes for large files)
+          const currentFileSizeMB = fs.statSync(processedFilePath).size / (1024 * 1024);
+          const timeoutMs = Math.max(30000, Math.min(180000, currentFileSizeMB * 2000)); // 2 seconds per MB
+
+          logger.debug(
+            `[MEDIA UPLOAD] Uploading ${currentFileSizeMB.toFixed(2)}MB to Catbox with ${timeoutMs / 1000}s timeout`
+          );
+
+          // Next.js proxy URL for Catbox.moe upload
+          const catboxApiUrl = 'https://vercel-api-psi.vercel.app/api/catbox';
+
+          const requestConfig: any = {
+            timeout: timeoutMs,
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
           };
-        } catch (fileError) {
-          logger.error(`[KNOWLEDGE POST] Error processing file ${file.originalname}: ${fileError}`);
-          cleanupFile(filePath); // Ensure cleanup on error too
 
-          let status = 'error_processing';
-          let errorMessage = fileError.message;
+          const response = await axios.post(
+            `${catboxApiUrl}?timeout=${timeoutMs}`,
+            form,
+            requestConfig
+          );
 
-          // Check if the error is related to RAG being required for PDFs/DOCX
-          if (fileError.message && fileError.message.includes('RAG plugin is required')) {
-            status = 'error_requires_rag_plugin';
-          } else if (fileError.message && fileError.message.includes('base64')) {
-            status = 'error_encoding';
-            errorMessage = 'Error encoding file content as base64. The file may be corrupted.';
+          const catboxUrl = response.data.trim();
+
+          if (!catboxUrl) {
+            throw new Error('Invalid response from Catbox Proxy API');
           }
 
-          return {
-            id: knowledgeId,
-            filename: originalFilename,
-            status,
-            error: errorMessage,
-          };
+          // Extract filename from catbox URL to create our proxy URL
+          // This masks the direct catbox URL behind our API
+          const filename = extractFilenameFromCatboxUrl(catboxUrl);
+          if (!filename) {
+            throw new Error('Could not extract filename from Catbox URL');
+          }
+
+          // Create proxy URL that routes through our bidirectional proxy
+          // Users will access: /api/catbox/filename.ext instead of https://files.catbox.moe/filename.ext
+          const proxyUrl = `${catboxApiUrl}/${filename}`;
+
+          // Get file size before cleanup
+          const finalFileSize = fs.statSync(processedFilePath).size;
+
+          // Clean up temporary files
+          cleanupFile(mediaFile.path);
+          if (processedFilePath !== mediaFile.path) {
+            cleanupFile(processedFilePath);
+          }
+
+          logger.info(`[MEDIA UPLOAD] Serving via proxy URL: ${proxyUrl}`);
+
+          res.json({
+            success: true,
+            data: {
+              url: proxyUrl, // Return proxy URL instead of direct catbox URL
+              type: 'image',
+              filename: mediaFile.filename,
+              originalName: mediaFile.originalname,
+              size: finalFileSize,
+              compressed: shouldCompress,
+            },
+          });
+        } catch (uploadError) {
+          logger.error('[MEDIA UPLOAD] Catbox upload failed:', uploadError.message);
+
+          // Clean up temporary files
+          if (processedFilePath !== mediaFile.path) {
+            cleanupFile(processedFilePath);
+          }
+
+          // Fallback to local storage
+          logger.debug('[MEDIA UPLOAD] Falling back to local storage');
+          const fileUrl = `http://localhost:${req.get('host')?.split(':')[1] || '3000'}/media/uploads/${agentId}/${mediaFile.filename}`;
+
+          logger.info(`[MEDIA UPLOAD] Using local storage fallback: ${mediaFile.filename}`);
+
+          res.json({
+            success: true,
+            data: {
+              url: fileUrl,
+              type: 'image',
+              filename: mediaFile.filename,
+              originalName: mediaFile.originalname,
+              size: mediaFile.size,
+              fallback: true,
+            },
+          });
         }
-      });
+      } else {
+        // For non-image files (videos), use the existing local upload logic
+        const fileUrl = `http://localhost:${req.get('host')?.split(':')[1] || '3000'}/media/uploads/${agentId}/${mediaFile.filename}`;
+        const mediaType = 'video';
 
-      const results = await Promise.all(processingPromises);
-      sendSuccess(res, results);
+        logger.info(`[MEDIA UPLOAD] Successfully uploaded ${mediaType}: ${mediaFile.filename}`);
+
+        res.json({
+          success: true,
+          data: {
+            url: fileUrl,
+            type: mediaType,
+            filename: mediaFile.filename,
+            originalName: mediaFile.originalname,
+            size: mediaFile.size,
+          },
+        });
+      }
     } catch (error) {
-      logger.error(`[KNOWLEDGE POST] Error uploading knowledge: ${error}`);
+      logger.error(`[MEDIA UPLOAD] Error processing upload: ${error.message}`);
 
-      // Clean up any remaining files
-      cleanupFiles(files);
+      // Clean up the temporary file in case of error
+      cleanupFile(mediaFile.path);
 
       res.status(500).json({
         success: false,
         error: {
-          code: 500,
-          message: 'Failed to upload knowledge',
-          details: error.message,
+          code: 'UPLOAD_ERROR',
+          message: 'Failed to process media upload',
         },
       });
     }
@@ -2113,32 +2300,60 @@ export function agentRouter(
     }
   });
 
-  router.delete('/groups/:serverId/memories/:memoryId', async (req, res) => {
-    const worldId = validateUuid(req.params.serverId);
-    const memoryId = validateUuid(req.params.memoryId);
-
+  router.delete('/:agentId/memories/all/:roomId', async (req, res) => {
     try {
-      const memory = await db.getMemoryById(memoryId);
-      if (!memory) {
-        sendError(res, 404, 'NOT_FOUND', 'Memory not found');
+      const agentId = validateUuid(req.params.agentId);
+      const roomId = validateUuid(req.params.roomId);
+
+      if (!agentId) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_ID',
+            message: 'Invalid agent ID',
+          },
+        });
         return;
       }
 
-      // Optional: verify the memory belongs to the provided serverId
-      if (memory.roomId) {
-        const rooms = await db.getRoomsByWorld(memory.worldId as UUID);
-        const room = rooms.find((r) => r.id === memory.roomId);
-        if (room && room.serverId !== worldId) {
-          sendError(res, 400, 'BAD_REQUEST', 'Memory does not belong to server');
-          return;
-        }
+      if (!roomId) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_ID',
+            message: 'Invalid room ID',
+          },
+        });
+        return;
       }
 
-      await db.deleteMemory(memoryId);
+      const runtime = agents.get(agentId);
+      if (!runtime) {
+        res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Agent not found',
+          },
+        });
+        return;
+      }
+
+      await runtime.deleteAllMemories(roomId, 'messages');
+      await runtime.deleteAllMemories(roomId, 'knowledge');
+      await runtime.deleteAllMemories(roomId, 'documents');
+
       res.status(204).send();
-    } catch (error) {
-      logger.error('[GROUP MEMORY DELETE] Error deleting memory:', error);
-      sendError(res, 500, 'DELETE_ERROR', 'Error deleting memory', error.message);
+    } catch (e) {
+      logger.error('[DELETE ALL MEMORIES] Error deleting all memories:', e);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'DELETE_ERROR',
+          message: 'Error deleting all memories',
+          details: e instanceof Error ? e.message : String(e),
+        },
+      });
     }
   });
 

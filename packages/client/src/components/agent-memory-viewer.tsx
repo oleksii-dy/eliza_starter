@@ -1,7 +1,19 @@
-import type { UUID } from '@elizaos/core';
-import { Database, LoaderIcon, Pencil, Search, Brain, User, Bot, Clock, Copy } from 'lucide-react';
+import type { Memory, UUID } from '@elizaos/core';
+import {
+  Database,
+  LoaderIcon,
+  Pencil,
+  Search,
+  Brain,
+  User,
+  Bot,
+  Clock,
+  Copy,
+  BarChart3,
+  List,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAgentMemories, useDeleteMemory } from '@/hooks/use-query-hooks';
+import { useAgentMemories } from '@/hooks/use-query-hooks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,7 +24,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import MemoryEditOverlay from './memory-edit-overlay';
+import MemoryEditOverlay from './agent-memory-edit-overlay';
+import MemoryGraph from './memory-graph';
 
 // Number of items to load per batch
 const ITEMS_PER_PAGE = 15;
@@ -59,6 +72,7 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
   const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
   const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'graph'>('list');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Determine table name based on selected type
@@ -70,7 +84,6 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
         : undefined;
 
   const { data: memories = [], isLoading, error } = useAgentMemories(agentId, tableName);
-  const { mutate: deleteMemory } = useDeleteMemory();
 
   // Filter and search memories
   const filteredMemories = memories.filter((memory: Memory) => {
@@ -89,12 +102,7 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       const content = memory.content as ChatMemoryContent;
-      const searchableText = [
-        content?.text,
-        content?.thought,
-        memory.id,
-        memory.metadata?.entityName,
-      ]
+      const searchableText = [content?.text, content?.thought, memory.id, memory.metadata]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
@@ -247,11 +255,13 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
   );
 
   // Memory card component
-  const MemoryCard = ({ memory, index }: { memory: Memory; index: number }) => {
+  const MemoryCard = ({ memory }: { memory: Memory }) => {
     const content = memory.content as ChatMemoryContent;
     const IconComponent = getMemoryIcon(memory, content);
-    const entityName = memory.metadata?.entityName || agentName;
     const isAgent = memory.entityId === memory.agentId;
+    const entityName = isAgent
+      ? memory.metadata?.source || agentName
+      : memory.metadata?.source || 'User';
 
     return (
       <div className="border rounded-lg p-4 bg-card hover:bg-accent/5 transition-colors group">
@@ -337,6 +347,7 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
                 <span
                   key={action}
                   className="text-xs px-2 py-1 bg-muted rounded text-muted-foreground"
+                  title="Action"
                 >
                   {action}
                 </span>
@@ -345,6 +356,7 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
                 <span
                   key={provider}
                   className="text-xs px-2 py-1 bg-muted rounded text-muted-foreground"
+                  title="Provider"
                 >
                   {provider}
                 </span>
@@ -381,11 +393,30 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
           <h3 className="text-lg font-medium">Memories</h3>
           {!isLoading && (
             <span className="ml-2 text-xs px-2 py-1 rounded bg-muted text-muted-foreground">
-              {filteredMemories.length} memories
+              {filteredMemories.length}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
+          {/* View Mode Toggle */}
+          <Button
+            variant={viewMode === 'graph' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode(viewMode === 'list' ? 'graph' : 'list')}
+            className="h-8 px-3"
+          >
+            {viewMode === 'graph' ? (
+              <>
+                <List className="h-4 w-4 mr-1" />
+                List View
+              </>
+            ) : (
+              <>
+                <BarChart3 className="h-4 w-4 mr-1" />
+                Graph View
+              </>
+            )}
+          </Button>
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -416,8 +447,15 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
       </div>
 
       {/* Content */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 pb-4">
-        {filteredMemories.length === 0 ? (
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4">
+        {viewMode === 'graph' ? (
+          <div className="h-full">
+            <MemoryGraph
+              memories={filteredMemories}
+              onSelect={(memory) => setEditingMemory(memory)}
+            />
+          </div>
+        ) : filteredMemories.length === 0 ? (
           <EmptyState />
         ) : (
           <div className="space-y-4">
@@ -429,8 +467,8 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
                   <Separator className="flex-1" />
                 </div>
                 <div className="space-y-3">
-                  {messages.map((memory, index) => (
-                    <MemoryCard key={memory.id || index} memory={memory} index={index} />
+                  {messages.map((memory) => (
+                    <MemoryCard key={memory.id || memory.createdAt} memory={memory} />
                   ))}
                 </div>
               </div>

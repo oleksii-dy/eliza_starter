@@ -50,6 +50,9 @@ export interface Content {
   /** Array of media attachments */
   attachments?: Media[];
 
+  /** room type */
+  channelType?: string;
+
   /**
    * Additional dynamic properties
    * Use specific properties above instead of this when possible
@@ -684,6 +687,7 @@ export type Route = {
   public?: boolean;
   name?: string extends { public: true } ? string : string | undefined;
   handler?: (req: any, res: any, runtime: IAgentRuntime) => Promise<void>;
+  isMultipart?: boolean; // Indicates if the route expects multipart/form-data (file uploads)
 };
 
 /**
@@ -726,6 +730,8 @@ export interface Plugin {
   events?: PluginEvents;
   routes?: Route[];
   tests?: TestSuite[];
+
+  dependencies?: string[]; // Names of plugins this plugin depends on
 
   priority?: number;
 }
@@ -927,8 +933,6 @@ export interface IDatabaseAdapter {
     roomIds: UUID[];
     limit?: number;
   }): Promise<Memory[]>;
-
-  getMemoriesByServerId(params: { serverId: UUID; count?: number }): Promise<Memory[]>;
 
   getCachedEmbeddings(params: {
     query_table_name: string;
@@ -2152,11 +2156,14 @@ export function createMessageMemory(params: {
  * @template ConfigType The configuration type for this service
  * @template ResultType The result type returned by the service operations
  */
-export interface TypedService<ConfigType = unknown, ResultType = unknown> extends Service {
+export interface TypedService<
+  ConfigType extends { [key: string]: any } = { [key: string]: any },
+  ResultType = unknown,
+> extends Service {
   /**
    * The configuration for this service instance
    */
-  config: ConfigType;
+  config?: ConfigType;
 
   /**
    * Process an input with this service

@@ -244,7 +244,8 @@ async function ensureDir(dirPath: string) {
 }
 
 /**
- * Sets up the .env file by creating it if it doesn't exist or populating it with examples if it's empty
+ * Sets up the .env file by creating it if it doesn't exist or populating it with a hybrid
+ * merge of process.env variables and example variables if it's empty
  * @param envFilePath Path to the .env file
  */
 export async function setupEnvFile(envFilePath: string): Promise<void> {
@@ -253,18 +254,36 @@ export async function setupEnvFile(envFilePath: string): Promise<void> {
     const envExists = existsSync(envFilePath);
 
     if (!envExists) {
-      // Create the file with sample template
-      await fs.writeFile(envFilePath, SAMPLE_ENV_TEMPLATE, 'utf8');
-      logger.info(`[Config] Created .env file with example variables at: ${envFilePath}`);
+      // Create the file with hybrid merge of process.env and example variables
+      const mergedVars = mergeProcessEnvWithTemplate(SAMPLE_ENV_TEMPLATE);
+      const formattedContent = formatEnvFileWithTemplate(mergedVars, SAMPLE_ENV_TEMPLATE);
+      await fs.writeFile(envFilePath, formattedContent, 'utf8');
+
+      const processEnvCount = Object.keys(process.env).filter(
+        (key) => process.env[key] && process.env[key]!.trim() !== ''
+      ).length;
+
+      logger.info(
+        `[Config] Created .env file with ${processEnvCount} variables from process.env merged with example variables at: ${envFilePath}`
+      );
     } else {
       // File exists, check if it's empty
       const content = await fs.readFile(envFilePath, 'utf8');
       const trimmedContent = content.trim();
 
       if (trimmedContent === '') {
-        // File is empty, write the sample template
-        await fs.writeFile(envFilePath, SAMPLE_ENV_TEMPLATE, 'utf8');
-        logger.info(`[Config] Populated empty .env file with example variables at: ${envFilePath}`);
+        // File is empty, write the hybrid merge
+        const mergedVars = mergeProcessEnvWithTemplate(SAMPLE_ENV_TEMPLATE);
+        const formattedContent = formatEnvFileWithTemplate(mergedVars, SAMPLE_ENV_TEMPLATE);
+        await fs.writeFile(envFilePath, formattedContent, 'utf8');
+
+        const processEnvCount = Object.keys(process.env).filter(
+          (key) => process.env[key] && process.env[key]!.trim() !== ''
+        ).length;
+
+        logger.info(
+          `[Config] Populated empty .env file with ${processEnvCount} variables from process.env merged with example variables at: ${envFilePath}`
+        );
       } else {
         logger.debug(`[Config] .env file already exists and has content at: ${envFilePath}`);
       }
@@ -344,9 +363,14 @@ export async function setupPgLite(
 }
 
 /**
- * Stores Postgres URL in the .env file
- * @param url The Postgres URL to store
- * @param envFilePath Path to the .env file
+ * Stores the provided Postgres connection URL in the specified `.env` file, replacing any existing entry.
+ *
+ * Updates the `POSTGRES_URL` environment variable in both the file and the current process.
+ *
+ * @param url - The Postgres connection URL to store.
+ * @param envFilePath - Path to the `.env` file where the URL should be saved.
+ *
+ * @throws {Error} If reading from or writing to the `.env` file fails.
  */
 export async function storePostgresUrl(url: string, envFilePath: string): Promise<void> {
   if (!url) return;
@@ -374,10 +398,6 @@ export async function storePostgresUrl(url: string, envFilePath: string): Promis
 
 /**
  * Prompts the user for a Postgres URL, validates it, and stores it
- * @returns The configured Postgres URL or null if user skips
- */
-/**
- * Prompts the user for a Postgres URL, validates it, and stores it
  * @returns The configured Postgres URL or null if user cancels
  */
 export async function promptAndStorePostgresUrl(envFilePath: string): Promise<string | null> {
@@ -390,7 +410,7 @@ export async function promptAndStorePostgresUrl(envFilePath: string): Promise<st
 
       const isValid = isValidPostgresUrl(value);
       if (!isValid) {
-        return `Invalid URL format. Expected: postgresql://user:password@host:port/dbname.`;
+        return 'Invalid URL format. Expected: postgresql://user:password@host:port/dbname.';
       }
       return true;
     },
@@ -405,6 +425,158 @@ export async function promptAndStorePostgresUrl(envFilePath: string): Promise<st
   await storePostgresUrl(response.postgresUrl, envFilePath);
 
   return response.postgresUrl;
+}
+
+/**
+ * Validates an OpenAI API key format
+ * @param key The API key to validate
+ * @returns True if the key appears valid
+ */
+export function isValidOpenAIKey(key: string): boolean {
+  if (!key || typeof key !== 'string') return false;
+
+  // OpenAI API keys typically start with 'sk-' and are 51 characters long
+  return key.startsWith('sk-') && key.length >= 20;
+}
+
+/**
+ * Validates an Anthropic API key format
+ * @param key The API key to validate
+ * @returns True if the key appears valid
+ */
+export function isValidAnthropicKey(key: string): boolean {
+  if (!key || typeof key !== 'string') return false;
+
+  // Anthropic API keys typically start with 'sk-ant-'
+  return key.startsWith('sk-ant-') && key.length >= 20;
+}
+
+/**
+ * Stores OpenAI API key in the .env file
+ * @param key The OpenAI API key to store
+ * @param envFilePath Path to the .env file
+ */
+export async function storeOpenAIKey(key: string, envFilePath: string): Promise<void> {
+  if (!key) return;
+
+  try {
+    // Read existing content first to avoid duplicates
+    let content = '';
+    if (existsSync(envFilePath)) {
+      content = await fs.readFile(envFilePath, 'utf8');
+    }
+
+    // Remove existing OPENAI_API_KEY line if present
+    const lines = content.split('\n').filter((line) => !line.startsWith('OPENAI_API_KEY='));
+    lines.push(`OPENAI_API_KEY=${key}`);
+
+    await fs.writeFile(envFilePath, lines.join('\n'), 'utf8');
+    process.env.OPENAI_API_KEY = key;
+
+    logger.success('OpenAI API key saved to configuration');
+  } catch (error) {
+    logger.error('Error saving OpenAI API key:', error);
+    throw error;
+  }
+}
+
+/**
+ * Stores Anthropic API key in the .env file
+ * @param key The Anthropic API key to store
+ * @param envFilePath Path to the .env file
+ */
+export async function storeAnthropicKey(key: string, envFilePath: string): Promise<void> {
+  if (!key) return;
+
+  try {
+    // Read existing content first to avoid duplicates
+    let content = '';
+    if (existsSync(envFilePath)) {
+      content = await fs.readFile(envFilePath, 'utf8');
+    }
+
+    // Remove existing ANTHROPIC_API_KEY line if present
+    const lines = content.split('\n').filter((line) => !line.startsWith('ANTHROPIC_API_KEY='));
+    lines.push(`ANTHROPIC_API_KEY=${key}`);
+
+    await fs.writeFile(envFilePath, lines.join('\n'), 'utf8');
+    process.env.ANTHROPIC_API_KEY = key;
+
+    logger.success('Anthropic API key saved to configuration');
+  } catch (error) {
+    logger.error('Error saving Anthropic API key:', error);
+    throw error;
+  }
+}
+
+/**
+ * Prompts the user for an OpenAI API key, validates it, and stores it
+ * @param envFilePath Path to the .env file
+ * @returns The configured OpenAI API key or null if user cancels
+ */
+export async function promptAndStoreOpenAIKey(envFilePath: string): Promise<string | null> {
+  const response = await prompts({
+    type: 'password',
+    name: 'openaiKey',
+    message: 'Enter your OpenAI API key:',
+    validate: (value) => {
+      if (value.trim() === '') return 'OpenAI API key cannot be empty';
+      return true; // Always return true to allow continuation
+    },
+  });
+
+  // Handle user cancellation (Ctrl+C)
+  if (!response.openaiKey) {
+    return null;
+  }
+
+  // Check if the API key format is valid and warn if not
+  const isValid = isValidOpenAIKey(response.openaiKey);
+  if (!isValid) {
+    logger.warn('[!] Invalid API key format detected. Expected format: sk-...');
+    logger.warn('   You can get your API key from: https://platform.openai.com/api-keys');
+    logger.warn('   The key has been saved but may not work correctly.');
+  }
+
+  // Store the key in the .env file (even if invalid)
+  await storeOpenAIKey(response.openaiKey, envFilePath);
+
+  return response.openaiKey;
+}
+
+/**
+ * Prompts the user for an Anthropic API key, validates it, and stores it
+ * @param envFilePath Path to the .env file
+ * @returns The configured Anthropic API key or null if user cancels
+ */
+export async function promptAndStoreAnthropicKey(envFilePath: string): Promise<string | null> {
+  const response = await prompts({
+    type: 'password',
+    name: 'anthropicKey',
+    message: 'Enter your Anthropic API key:',
+    validate: (value) => {
+      if (value.trim() === '') return 'Anthropic API key cannot be empty';
+      return true; // Always return true to allow continuation
+    },
+  });
+
+  // Handle user cancellation (Ctrl+C)
+  if (!response.anthropicKey) {
+    return null;
+  }
+
+  // Check if the API key format is valid and warn if not
+  const isValid = isValidAnthropicKey(response.anthropicKey);
+  if (!isValid) {
+    logger.warn('[!] Invalid API key format detected. Expected format: sk-ant-...');
+    logger.warn('   You can get your API key from: https://console.anthropic.com/');
+    logger.warn('   The key has been saved but may not work correctly.');
+  }
+
+  // Store the key in the .env file (even if invalid)
+  await storeAnthropicKey(response.anthropicKey, envFilePath);
+
+  return response.anthropicKey;
 }
 
 /**
@@ -515,4 +687,103 @@ export async function loadEnvironment(projectDir: string = process.cwd()): Promi
   if (existsSync(envPath)) {
     dotenv.config({ path: envPath });
   }
+}
+
+/**
+ * Merges environment variables from process.env with example variables from template.
+ * Prioritizes process.env variables that have actual values, and uses example variables as fallback.
+ * @param templateContent The template content containing example variables
+ * @returns Merged environment variables object
+ */
+export function mergeProcessEnvWithTemplate(templateContent: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  const processedKeys = new Set<string>();
+
+  // First, parse the template to get example variables and their structure
+  const templateLines = templateContent.split('\n');
+  const templateVars: Record<string, string> = {};
+
+  for (const line of templateLines) {
+    const trimmedLine = line.trim();
+    if (trimmedLine && !trimmedLine.startsWith('#') && trimmedLine.includes('=')) {
+      const equalIndex = trimmedLine.indexOf('=');
+      const key = trimmedLine.substring(0, equalIndex).trim();
+      const value = trimmedLine.substring(equalIndex + 1).trim();
+      if (key) {
+        templateVars[key] = value;
+      }
+    }
+  }
+
+  // Add all process.env variables that have actual values (prioritized)
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value && value.trim() !== '') {
+      result[key] = value;
+      processedKeys.add(key);
+    }
+  }
+
+  // Add template variables that aren't already set from process.env
+  for (const [key, value] of Object.entries(templateVars)) {
+    if (!processedKeys.has(key)) {
+      result[key] = value;
+      processedKeys.add(key);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Converts environment variables object back to .env file format, preserving comments from template
+ * @param envVars Environment variables object
+ * @param templateContent Original template content for structure and comments
+ * @returns Formatted .env file content
+ */
+export function formatEnvFileWithTemplate(
+  envVars: Record<string, string>,
+  templateContent: string
+): string {
+  const lines: string[] = [];
+  const processedKeys = new Set<string>();
+  const templateLines = templateContent.split('\n');
+
+  // First pass: go through template preserving structure and comments
+  for (const line of templateLines) {
+    const trimmedLine = line.trim();
+
+    if (!trimmedLine || trimmedLine.startsWith('#') || !trimmedLine.includes('=')) {
+      // Preserve comments and empty lines
+      lines.push(line);
+    } else {
+      // This is a variable line
+      const equalIndex = trimmedLine.indexOf('=');
+      const key = trimmedLine.substring(0, equalIndex).trim();
+
+      if (key && envVars.hasOwnProperty(key)) {
+        lines.push(`${key}=${envVars[key]}`);
+        processedKeys.add(key);
+      } else {
+        // Variable not found, keep original line
+        lines.push(line);
+      }
+    }
+  }
+
+  // Second pass: add any new variables from process.env that weren't in template
+  const newVars: string[] = [];
+  for (const [key, value] of Object.entries(envVars)) {
+    if (!processedKeys.has(key)) {
+      newVars.push(`${key}=${value}`);
+    }
+  }
+
+  if (newVars.length > 0) {
+    lines.push('');
+    lines.push('### Additional Environment Variables from Runtime ###');
+    lines.push('# Variables found in process.env that were not in the template');
+    lines.push(...newVars);
+  }
+
+  return lines.join('\n');
 }
