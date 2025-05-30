@@ -26,6 +26,11 @@ import { getSamplingMarkets } from './actions/getSamplingMarkets';
 import { getClobMarkets } from './actions/getClobMarkets';
 import { getPriceHistory } from './actions/getPriceHistory';
 import { placeOrderAction } from './actions/placeOrder';
+import { getOrderDetailsAction } from './actions/getOrderDetails';
+import { checkOrderScoringAction } from './actions/checkOrderScoring';
+import { getActiveOrdersAction } from './actions/getActiveOrders';
+import { getAccountAccessStatusAction } from './actions/getAccountAccessStatus';
+import { getTradeHistoryAction } from './actions/getTradeHistory';
 
 /**
  * Define the configuration schema for the Polymarket plugin
@@ -180,6 +185,11 @@ const plugin: Plugin = {
     getMidpointPriceAction,
     getSpreadAction,
     placeOrderAction,
+    getOrderDetailsAction,
+    checkOrderScoringAction,
+    getActiveOrdersAction,
+    getAccountAccessStatusAction,
+    getTradeHistoryAction,
   ],
   providers: [polymarketProvider],
 };

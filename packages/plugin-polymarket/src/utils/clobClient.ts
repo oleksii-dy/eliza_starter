@@ -11,6 +11,16 @@ import type {
   SignedOrder,
   OrderResponse,
   OrderType,
+  DetailedOrder,
+  AreOrdersScoringRequest,
+  AreOrdersScoringResponse,
+  GetOpenOrdersParams,
+  OpenOrder,
+  GetTradesParams,
+  TradesResponse,
+  TradeEntry,
+  ApiKey,
+  ApiKeysResponse,
 } from '../types';
 import { OrderSide } from '../types';
 
@@ -67,6 +77,11 @@ export interface ClobClient {
   getPricesHistory(tokenId: string, interval: string): Promise<PricePoint[]>;
   createOrder(orderArgs: OrderArgs): Promise<SignedOrder>;
   postOrder(signedOrder: SignedOrder, orderType: OrderType): Promise<OrderResponse>;
+  getOrder(orderId: string): Promise<DetailedOrder>;
+  areOrdersScoring(orderIds: string[]): Promise<AreOrdersScoringResponse>;
+  getOpenOrders(params: GetOpenOrdersParams): Promise<OpenOrder[]>;
+  getTrades(params: GetTradesParams): Promise<TradesResponse>;
+  getApiKeys(): Promise<ApiKeysResponse>;
 }
 
 /**
@@ -265,6 +280,123 @@ class SimpleClobClient implements ClobClient {
 
     const result = (await response.json()) as PriceHistoryResponse;
     return result.history || [];
+  }
+
+  async getOrder(orderId: string): Promise<DetailedOrder> {
+    const response = await fetch(`${this.baseUrl}/data/order/${orderId}`, {
+      method: 'GET',
+      headers: this.headers,
+    });
+
+    if (!response.ok) {
+      // Attempt to parse error from response body for more details
+      try {
+        const errorData = await response.json() as { message?: string; error?: string };
+        const errorMessage = errorData?.message || errorData?.error || response.statusText;
+        throw new Error(`CLOB API error: ${response.status} ${errorMessage}`);
+      } catch (e) {
+        // Fallback if error body parsing fails
+        throw new Error(`CLOB API error: ${response.status} ${response.statusText}`);
+      }
+    }
+
+    return response.json() as Promise<DetailedOrder>;
+  }
+
+  async areOrdersScoring(orderIds: string[]): Promise<AreOrdersScoringResponse> {
+    const payload: AreOrdersScoringRequest = { order_ids: orderIds };
+    const response = await fetch(`${this.baseUrl}/orders-scoring`, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      try {
+        const errorData = await response.json() as { message?: string; error?: string; detail?: string };
+        const errorMessage = errorData?.message || errorData?.error || errorData?.detail || response.statusText;
+        throw new Error(`CLOB API error (${response.status}): ${errorMessage}`);
+      } catch (e) {
+        throw new Error(`CLOB API error: ${response.status} ${response.statusText}`);
+      }
+    }
+    return response.json() as Promise<AreOrdersScoringResponse>;
+  }
+
+  async getOpenOrders(params: GetOpenOrdersParams): Promise<OpenOrder[]> {
+    const url = new URL(`${this.baseUrl}/data/orders`);
+    if (params.market) url.searchParams.set('market', params.market);
+    if (params.assetId) url.searchParams.set('asset_id', params.assetId);
+    if (params.address) url.searchParams.set('address', params.address);
+    if (params.nextCursor) url.searchParams.set('next_cursor', params.nextCursor);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: this.headers,
+    });
+
+    if (!response.ok) {
+      try {
+        const errorData = await response.json() as { message?: string; error?: string; detail?: string };
+        const errorMessage = errorData?.message || errorData?.error || errorData?.detail || response.statusText;
+        throw new Error(`CLOB API error (${response.status}): ${errorMessage}`);
+      } catch (e) {
+        throw new Error(`CLOB API error: ${response.status} ${response.statusText}`);
+      }
+    }
+    // The API returns an object with a "data" field which is the array of orders, and a "next_cursor" field.
+    // For now, we just return the data array as per the Promise<OpenOrder[]> signature.
+    // We might need to adjust this if pagination control directly from the client method is needed later.
+    const result = await response.json() as { data: OpenOrder[]; next_cursor: string };
+    return result.data;
+  }
+
+  async getTrades(params: GetTradesParams): Promise<TradesResponse> {
+    const url = new URL(`${this.baseUrl}/data/trades`);
+    if (params.user_address) url.searchParams.set('user_address', params.user_address);
+    if (params.market_id) url.searchParams.set('market_id', params.market_id);
+    if (params.token_id) url.searchParams.set('token_id', params.token_id);
+    if (params.from_timestamp) url.searchParams.set('from_timestamp', params.from_timestamp.toString());
+    if (params.to_timestamp) url.searchParams.set('to_timestamp', params.to_timestamp.toString());
+    if (params.limit) url.searchParams.set('limit', params.limit.toString());
+    if (params.next_cursor) url.searchParams.set('next_cursor', params.next_cursor);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: this.headers,
+    });
+
+    if (!response.ok) {
+      try {
+        const errorData = await response.json() as { message?: string; error?: string; detail?: string };
+        const errorMessage = errorData?.message || errorData?.error || errorData?.detail || response.statusText;
+        throw new Error(`CLOB API error (${response.status}) getting trades: ${errorMessage}`);
+      } catch (e) {
+        throw new Error(`CLOB API error: ${response.status} ${response.statusText} while getting trades`);
+      }
+    }
+    return response.json() as Promise<TradesResponse>;
+  }
+
+  async getApiKeys(): Promise<ApiKeysResponse> {
+    if (!this.headers['Authorization']) {
+      throw new Error('CLOB_API_KEY is required for getApiKeys method.');
+    }
+    const response = await fetch(`${this.baseUrl}/auth/api-keys`, {
+      method: 'GET',
+      headers: this.headers,
+    });
+
+    if (!response.ok) {
+      try {
+        const errorData = await response.json() as { message?: string; error?: string; detail?: string };
+        const errorMessage = errorData?.message || errorData?.error || errorData?.detail || response.statusText;
+        throw new Error(`CLOB API error (${response.status}) getting API keys: ${errorMessage}`);
+      } catch (e) {
+        throw new Error(`CLOB API error: ${response.status} ${response.statusText} while getting API keys`);
+      }
+    }
+    return response.json() as Promise<ApiKeysResponse>;
   }
 
   async createOrder(orderArgs: OrderArgs): Promise<SignedOrder> {
