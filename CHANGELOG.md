@@ -176,7 +176,7 @@
 - bug: pnpm run dev not working with characterfiles [\#1452](https://github.com/elizaOS/eliza/issues/1452)
 - Not able to login in twitter [\#1398](https://github.com/elizaOS/eliza/issues/1398)
 - Multiple generateNewTweetLoop method invocations caused multiple tweets to be posted. [\#1395](https://github.com/elizaOS/eliza/issues/1395)
-- Postgres adapter doesnt apply settings [\#1378](https://github.com/elizaOS/eliza/issues/1378)
+- Postgres adapter doesn't apply settings [\#1378](https://github.com/elizaOS/eliza/issues/1378)
 - imageSettings in character files do not currently work \(providing fix PR\) [\#1370](https://github.com/elizaOS/eliza/issues/1370)
 - connect ETIMEDOUT 104.244.46.63:443 [\#1332](https://github.com/elizaOS/eliza/issues/1332)
 - v0.1.6 When running on the gitpod , not able to chat in terminal when pnpm start , "Error starting agent for character Eliza" [\#1328](https://github.com/elizaOS/eliza/issues/1328)
