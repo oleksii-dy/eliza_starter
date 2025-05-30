@@ -15,6 +15,7 @@ export { retrieveAllMarketsAction } from './actions/retrieveAllMarkets';
 export { getSimplifiedMarketsAction } from './actions/getSimplifiedMarkets';
 export { getSamplingMarkets } from './actions/getSamplingMarkets';
 export { getClobMarkets } from './actions/getClobMarkets';
+export { getOpenMarkets } from './actions/getOpenMarkets';
 export { getPriceHistory } from './actions/getPriceHistory';
 export { getMarketDetailsAction } from './actions/getMarketDetails';
 export { getOrderBookSummaryAction } from './actions/getOrderBookSummary';
@@ -23,6 +24,9 @@ export { getBestPriceAction } from './actions/getBestPrice';
 export { getMidpointPriceAction } from './actions/getMidpointPrice';
 export { getSpreadAction } from './actions/getSpread';
 export { placeOrderAction } from './actions/placeOrder';
+export { createApiKeyAction } from './actions/createApiKey';
+export { revokeApiKeyAction } from './actions/revokeApiKey';
+export { getAllApiKeysAction } from './actions/getAllApiKeys';
 
 // Export utilities and services for advanced use cases
 export { initializeClobClient } from './utils/clobClient';

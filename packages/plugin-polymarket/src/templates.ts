@@ -102,27 +102,37 @@ Review the recent messages:
 </recent_messages>
 
 Based on the conversation, identify:
-- tokenId: The token ID for the market position (required)
+- tokenId: The token ID for the market position (required) - can be explicit ID or extracted from market name
 - side: "buy" or "sell" (required)
 - price: The price per share (0-1.0) (required)
 - size: The quantity/size of the order (required)
 - orderType: "limit" or "market" (optional, defaults to "limit")
 
-Respond with a JSON object containing only the extracted values.
-The JSON should have this structure:
+**Token ID Extraction Rules:**
+1. Look for explicit token IDs (long numeric strings like "71321045679252212594626385532706912750332728571942532289631379312455583992563")
+2. Look for market names like "Nuggets NBA Champion", "Chiefs vs Raiders", "Ant-Man movie"
+3. If only market name is provided, set tokenId to "MARKET_NAME_LOOKUP" and include the market name in the response
+4. Accept shorter token IDs (like "123456") for testing purposes
+
+**Examples:**
+- "Buy 5 shares at $0.75 for the Nuggets NBA Champion market" → tokenId: "MARKET_NAME_LOOKUP", marketName: "Nuggets NBA Champion"
+- "Place buy order for token 71321045679252212594626385532706912750332728571942532289631379312455583992563" → tokenId: "71321045679252212594626385532706912750332728571942532289631379312455583992563"
+- "Buy tokens at 50 cents for Chiefs vs Raiders" → tokenId: "MARKET_NAME_LOOKUP", marketName: "Chiefs vs Raiders"
+
+Respond with a JSON object containing the extracted values:
 {
     "tokenId": string,
     "side": "buy" | "sell",
     "price": number,
     "size": number,
-    "orderType"?: "limit" | "market"
+    "orderType"?: "limit" | "market",
+    "marketName"?: string
 }
 
-If any required parameters are missing, you MUST respond with the following JSON structure:
+If any required parameters are missing, respond with:
 {
-    "error": "Missing required order parameters. Please specify tokenId, side (buy/sell), price, and size."
-}
-`;
+    "error": "Missing required order parameters. Please specify tokenId (or market name), side (buy/sell), price, and size."
+}`;
 
 export const getOrderBookTemplate = `You are an AI assistant. Your task is to extract token identification parameters for retrieving order book data.
 
@@ -138,7 +148,6 @@ Based on the conversation, identify:
 Look for:
 - Numbers following words like "token", "for token", "token ID", etc.
 - Standalone numbers that could be token IDs
-- Any numeric identifiers in the message
 
 Examples:
 - "Show order book for token 123456" → tokenId: "123456"

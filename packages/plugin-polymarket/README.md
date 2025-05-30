@@ -851,6 +851,337 @@ interface SpreadResponse {
 - Provides clear error messages for troubleshooting
 - Fallback regex extraction when LLM fails
 
+### CREATE_API_KEY
+
+Creates API key credentials for Polymarket CLOB authentication. This action generates the L2 authentication required for order posting and other authenticated operations.
+
+**Triggers**: `CREATE_API_KEY`, `CREATE_POLYMARKET_API_KEY`, `GENERATE_API_CREDENTIALS`, `CREATE_CLOB_CREDENTIALS`, `SETUP_API_ACCESS`
+
+**Usage Examples**:
+
+- "Create API key for Polymarket trading"
+- "Generate new CLOB API credentials"
+- "Setup API access for order posting"
+- "I need API credentials for trading"
+
+**Required Environment Variables**:
+
+- **WALLET_PRIVATE_KEY** or **PRIVATE_KEY** or **POLYMARKET_PRIVATE_KEY**: Private key for wallet signature
+
+**No Parameters Required**: API key generation is based on wallet signature
+
+**Response**: Returns newly created API credentials including:
+
+- API Key ID (for authentication headers)
+- Secret (truncated for security in response)
+- Passphrase (truncated for security in response)
+- Creation timestamp
+- Security warnings and next steps
+
+**Example Response**:
+
+```
+✅ API Key Created Successfully
+
+Credentials Generated:
+• API Key: 12345678-1234-5678-9abc-123456789012
+• Secret: abcd1234... (truncated for security)
+• Passphrase: xyz78901... (truncated for security)
+• Created: 2024-01-15T10:30:00.000Z
+
+⚠️ Security Notice:
+- Store these credentials securely
+- Never share your secret or passphrase
+- These credentials enable L2 authentication for order posting
+
+Next Steps:
+You can now place orders on Polymarket. The system will automatically use these credentials for authenticated operations.
+```
+
+**TypeScript Usage**:
+
+```typescript
+import { createApiKeyAction } from '@elizaos/plugin-polymarket';
+
+// Use in your ElizaOS agent
+const result = await createApiKeyAction.handler(runtime, message, state);
+
+// Access API key data
+const apiKey = result.data.apiKey.id; // API key ID
+const created = result.data.apiKey.created_at; // Creation timestamp
+```
+
+**API Key Response Schema**:
+
+```typescript
+interface ApiKeyResponse {
+  id: string; // API key identifier
+  secret: string; // API secret (store securely)
+  passphrase: string; // API passphrase (store securely)
+  created_at?: string; // Creation timestamp
+}
+```
+
+**Security Considerations**:
+
+- API credentials are generated using your wallet's private key signature
+- Store credentials securely in environment variables or secure storage
+- Never share or log the full secret or passphrase
+- Credentials enable authenticated trading operations
+- Use HTTPS connections when transmitting credentials
+
+**Use Cases**:
+
+- Setting up trading capabilities for the first time
+- Rotating API credentials for security
+- Enabling order placement and cancellation
+- Accessing authenticated market data endpoints
+- Preparing for automated trading strategies
+
+**What API Credentials Enable**:
+
+- **Order Placement**: Create buy/sell orders on markets
+- **Order Management**: Cancel or modify existing orders
+- **Account Operations**: View balances and positions
+- **Authenticated Endpoints**: Access private user data
+- **Rate Limit Benefits**: Higher rate limits for authenticated users
+
+**Error Handling**:
+
+- Validates private key availability in environment
+- Handles wallet signature failures
+- Provides clear error messages for troubleshooting
+- Network connectivity and API error handling
+
+**Integration with Order Placement**:
+
+Once API credentials are created, they are automatically used by other trading actions like PLACE_ORDER for authenticated operations.
+
+### DELETE_API_KEY
+
+Revokes/deletes an existing API key to disable L2 authentication for that specific key. This permanently invalidates the API credentials and any active sessions using them.
+
+**Triggers**: `DELETE_API_KEY`, `REVOKE_API_KEY`, `DELETE_POLYMARKET_API_KEY`, `REMOVE_API_CREDENTIALS`, `REVOKE_CLOB_CREDENTIALS`, `DELETE_API_ACCESS`, `DISABLE_API_KEY`
+
+**Usage Examples**:
+
+- "Revoke API key 12345678-1234-5678-9abc-123456789012"
+- "Delete API key abc12345-def6-7890-ghij-klmnopqrstuv"
+- "Remove my CLOB API credentials"
+- "Disable API access for key 98765432-1098-7654-3210-fedcba987654"
+
+**Required Parameter**:
+
+- **apiKeyId**: The UUID of the API key to revoke (format: 12345678-1234-5678-9abc-123456789012)
+
+**Response**: Returns revocation confirmation including:
+
+- Success/failure status
+- API key ID that was revoked
+- Revocation timestamp
+- Important security notices about invalidated sessions
+
+**Example Response**:
+
+```
+✅ API Key Revoked Successfully
+
+Revocation Details:
+• API Key ID: 12345678-1234-5678-9abc-123456789012
+• Revoked At: 2024-01-15T10:45:00.000Z
+• Status: Permanently disabled
+
+⚠️ Important Notice:
+- This API key can no longer be used for authentication
+- Any existing authenticated sessions using this key will be invalidated
+- You'll need to create a new API key for future trading operations
+
+Next Steps:
+If you need API access, use the CREATE_API_KEY action to generate new credentials.
+```
+
+**TypeScript Usage**:
+
+```typescript
+import { revokeApiKeyAction } from '@elizaos/plugin-polymarket';
+
+// Use in your ElizaOS agent
+const result = await revokeApiKeyAction.handler(runtime, message, state);
+
+// Access revocation data
+const revocationResult = result.data.revocation; // RevokeApiKeyResponse
+const success = result.data.success; // boolean
+```
+
+**Revocation Response Schema**:
+
+```typescript
+interface RevokeApiKeyResponse {
+  success: boolean; // Whether revocation succeeded
+  apiKeyId: string; // The revoked API key ID
+  revokedAt: string; // ISO timestamp of revocation
+  message: string; // Success message
+}
+```
+
+**Security Considerations**:
+
+- Revocation is permanent and cannot be undone
+- All active sessions using the revoked key will be immediately invalidated
+- This affects any automated systems or scripts using the revoked credentials
+- Revoked keys cannot be reactivated - new keys must be created instead
+- The revocation requires the private key for authentication (L1 auth)
+
+**Use Cases**:
+
+- **Security Incidents**: Immediately disable compromised API keys
+- **Access Management**: Remove API access for specific applications
+- **Key Rotation**: Disable old keys when implementing new ones
+- **Account Cleanup**: Remove unused or outdated API credentials
+- **Permission Changes**: Revoke access when authorization requirements change
+
+**Error Handling**:
+
+- Validates API key ID format (UUID)
+- Handles non-existent or already revoked keys
+- Provides clear error messages for troubleshooting
+- Network connectivity and API error handling
+- Authentication failure scenarios
+
+**Integration with API Key Management**:
+
+Use in combination with CREATE_API_KEY for complete API key lifecycle management. Best practice is to revoke old keys before creating new ones for security.
+
+**Security Notes**:
+
+- API key revocation is permanent and cannot be undone
+- Revoked keys cannot be used for any further authentication
+- Ensure you have other API keys available if needed for continued trading
+
+### GET_API_KEYS
+
+Retrieves all API keys associated with your Polymarket account address. This action uses the official Polymarket ClobClient.getApiKeys() method for reliable authentication.
+
+**Triggers**: `GET_API_KEYS`, `GET_ALL_API_KEYS`, `LIST_API_KEYS`, `RETRIEVE_API_KEYS`, `SHOW_API_KEYS`, `GET_POLYMARKET_API_KEYS`, `LIST_CLOB_CREDENTIALS`, `SHOW_MY_API_KEYS`
+
+**Usage Examples**:
+
+- "Get my API keys"
+- "Show all my API keys"
+- "List my CLOB credentials"
+- "Retrieve all Polymarket API keys"
+
+**Setup Requirements**:
+
+1. **Create API Keys First**: Use the CREATE_API_KEY action to generate credentials
+2. **Set Environment Variables**: Add the returned credentials to your .env file
+3. **Restart Application**: Reload to pick up the new environment variables
+
+**Required Environment Variables**:
+
+```bash
+# For L1 authentication (wallet operations)
+WALLET_PRIVATE_KEY=your_private_key_here
+
+# For L2 authentication (API operations) - REQUIRED for GET_API_KEYS
+CLOB_API_KEY=your_api_key_here
+CLOB_API_SECRET=your_api_secret_here
+CLOB_API_PASSPHRASE=your_api_passphrase_here
+
+# Optional - defaults to https://clob.polymarket.com
+CLOB_API_URL=https://clob.polymarket.com
+```
+
+**Alternative Environment Variable Names**:
+
+- `CLOB_SECRET` (instead of `CLOB_API_SECRET`)
+- `CLOB_PASS_PHRASE` (instead of `CLOB_API_PASSPHRASE`)
+
+**TypeScript Example**:
+
+```typescript
+// This action automatically uses your configured API credentials
+// No additional parameters needed
+
+interface GetAllApiKeysResponse {
+  success: boolean;
+  apiKeys: ApiKeyData[];
+  count: number;
+  address: string;
+}
+
+interface ApiKeyData {
+  key: string; // API key ID
+  secret: string; // API secret (truncated in response)
+  passphrase: string; // API passphrase (truncated in response)
+  created_at?: string; // Creation timestamp
+  active?: boolean; // Key status
+  permissions?: string[]; // Key permissions
+}
+```
+
+**Step-by-Step Setup**:
+
+1. **Generate API Keys**:
+
+   ```
+   User: "create an api key for polymarket"
+   ```
+
+2. **Copy Credentials**: When the action succeeds, copy the returned credentials
+
+3. **Update .env File**:
+
+   ```bash
+   # Add these lines to your .env file
+   CLOB_API_KEY=c6f85fb9-3b49-9726-9d15-e8584d975625
+   CLOB_API_SECRET=Yc8q_kEBtX...your_full_secret_here
+   CLOB_API_PASSPHRASE=6096fa1e...your_full_passphrase_here
+   ```
+
+4. **Restart Application**: Stop and restart ElizaOS to load the new variables
+
+5. **Test Retrieval**:
+   ```
+   User: "get my polymarket api keys"
+   ```
+
+**Response Format**:
+
+- **Success**: Returns array of API key objects with key details
+- **Empty**: Returns success with count: 0 if no API keys exist
+- **Error**: Returns detailed error message with troubleshooting steps
+
+**Enhanced Features**:
+
+- **Official ClobClient Integration**: Uses Polymarket's official TypeScript client
+- **Comprehensive Error Messages**: Clear instructions for setup and troubleshooting
+- **Multiple Environment Variable Support**: Flexible naming conventions
+- **Security-First Design**: Credentials are truncated in responses
+- **Validation**: Checks for required credentials before attempting requests
+
+**Common Issues & Solutions**:
+
+| Issue                       | Solution                                                       |
+| --------------------------- | -------------------------------------------------------------- |
+| "API credentials not found" | Set CLOB_API_KEY, CLOB_API_SECRET, CLOB_API_PASSPHRASE in .env |
+| "401 Unauthorized"          | Verify credentials are correct and restart application         |
+| "Connection refused"        | Check CLOB_API_URL setting and network connectivity            |
+| "No API keys found"         | Create API keys first using CREATE_API_KEY action              |
+
+**Security Considerations**:
+
+- API secrets and passphrases are truncated in responses for security
+- This action requires existing L2 authentication credentials
+- Use this to audit and manage your API key inventory
+- Consider revoking unused keys with DELETE_API_KEY action
+
+**Prerequisites**:
+
+- Must have created at least one API key using CREATE_API_KEY action
+- API credentials must be set in environment variables
+- Valid private key for wallet verification
+
 ## API Integration
 
 This plugin uses the Polymarket CLOB API:

@@ -13,6 +13,8 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
 import { initializeClobClient } from '../utils/clobClient';
 import { orderTemplate } from '../templates';
 import { OrderSide, OrderType } from '../types';
+import { ClobClient, Side } from '@polymarket/clob-client';
+import { ethers } from 'ethers';
 
 interface PlaceOrderParams {
   tokenId: string;
@@ -21,6 +23,7 @@ interface PlaceOrderParams {
   size: number;
   orderType?: string;
   feeRateBps?: string;
+  marketName?: string;
 }
 
 /**
@@ -121,6 +124,14 @@ export const placeOrderAction: Action = {
       orderType = llmResult?.orderType?.toUpperCase() || 'GTC';
       feeRateBps = llmResult?.feeRateBps || '0';
 
+      // Handle market name lookup
+      if (tokenId === 'MARKET_NAME_LOOKUP' && llmResult?.marketName) {
+        logger.info(`[placeOrderAction] Market name lookup requested: ${llmResult.marketName}`);
+        throw new Error(
+          `Market name lookup not yet implemented. Please provide a specific token ID. You requested: "${llmResult.marketName}"`
+        );
+      }
+
       if (!tokenId || !side || price <= 0 || size <= 0) {
         throw new Error('Invalid order parameters');
       }
@@ -203,20 +214,52 @@ Please provide order details in your request. Examples:
     try {
       const client = await initializeClobClient(runtime);
 
-      // Create order arguments
+      // Create order arguments matching the official ClobClient interface
       const orderArgs = {
-        tokenId,
-        side: side === 'BUY' ? OrderSide.BUY : OrderSide.SELL,
+        tokenID: tokenId, // Official package expects tokenID (capital ID)
         price,
+        side: side === 'BUY' ? Side.BUY : Side.SELL,
         size,
-        feeRateBps,
+        feeRateBps: parseFloat(feeRateBps), // Convert to number
       };
 
-      // Create the signed order
-      const signedOrder = await client.createOrder(orderArgs);
+      logger.info(`[placeOrderAction] Creating order with args:`, orderArgs);
 
-      // Post the order
-      const orderResponse = await client.postOrder(signedOrder, orderType as OrderType);
+      // Create the signed order with enhanced error handling
+      let signedOrder;
+      try {
+        signedOrder = await client.createOrder(orderArgs);
+        logger.info(`[placeOrderAction] Order created successfully`);
+      } catch (createError) {
+        logger.error(`[placeOrderAction] Error creating order:`, createError);
+
+        // Check for specific error types
+        if (createError instanceof Error) {
+          if (createError.message.includes('minimum_tick_size')) {
+            throw new Error(
+              `Invalid market data: The market may not exist or be inactive. Please verify the token ID is correct and the market is active.`
+            );
+          }
+          if (createError.message.includes('undefined is not an object')) {
+            throw new Error(
+              `Market data unavailable: The token ID may be invalid or the market may be closed.`
+            );
+          }
+        }
+        throw createError;
+      }
+
+      // Post the order with enhanced error handling
+      let orderResponse;
+      try {
+        orderResponse = await client.postOrder(signedOrder, orderType as OrderType);
+        logger.info(`[placeOrderAction] Order posted successfully`);
+      } catch (postError) {
+        logger.error(`[placeOrderAction] Error posting order:`, postError);
+        throw new Error(
+          `Failed to submit order: ${postError instanceof Error ? postError.message : 'Unknown error'}`
+        );
+      }
 
       // Format response based on success
       let responseText: string;
