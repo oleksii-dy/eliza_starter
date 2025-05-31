@@ -138,6 +138,12 @@ export const choiceAction: Action = {
 
     const room = state.data.room ?? (await runtime.getRoom(message.roomId));
 
+    // Check if room exists and has serverId before calling getUserServerRole
+    if (!room || !room.serverId) {
+      logger.warn('Room or serverId not found, skipping role validation for CHOOSE_OPTION action');
+      return false;
+    }
+
     const userRole = await getUserServerRole(runtime, message.entityId, room.serverId);
 
     if (userRole !== 'OWNER' && userRole !== 'ADMIN') {

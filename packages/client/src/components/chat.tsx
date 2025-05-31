@@ -193,7 +193,8 @@ export default function Page({
 }) {
   const [selectedFiles, setSelectedFiles] = useState<UploadingFile[]>([]);
   const [input, setInput] = useState('');
-  const [inputDisabled, setInputDisabled] = useState<boolean>(false);
+
+  const [inputDisabled, setInputDisabled] = useState<Set<string>>(new Set());
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -242,7 +243,7 @@ export default function Page({
 
       if (!isCurrentUser) {
         console.log('[Chat] Agent message received, re-enabling input');
-        setInputDisabled(false);
+        setInputDisabled((prev) => new Set(prev).add(agentId));
       }
 
       // Build a proper ContentWithUser object that matches what the messages query expects
@@ -315,7 +316,11 @@ export default function Page({
     };
 
     const handleMessageComplete = () => {
-      setInputDisabled(false);
+      setInputDisabled((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(agentId);
+        return newSet;
+      });
     };
 
     // Add listener for message broadcasts
@@ -350,11 +355,15 @@ export default function Page({
         clientLogger.info(`[Chat] Received control message: ${action} for room ${messageRoomId}`);
 
         if (action === 'disable_input') {
-          setInputDisabled(true);
-          // setMessageProcessing(true); // REMOVE
+          setInputDisabled((prev) => new Set(prev).add(agentId));
+          // Add agent ID to set
         } else if (action === 'enable_input') {
-          setInputDisabled(false);
-          // setMessageProcessing(false); // REMOVE
+          setInputDisabled((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(agentId);
+            return newSet;
+          });
+          // Remove agent ID from set
         }
       }
     };
@@ -409,7 +418,7 @@ export default function Page({
 
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if ((!input && selectedFiles.length === 0) || inputDisabled) return;
+    if ((!input && selectedFiles.length === 0) || inputDisabled.has(agentId)) return;
 
     const messageId = randomUUID();
     let messageText = input;
@@ -529,7 +538,7 @@ export default function Page({
       CHAT_SOURCE,
       allAttachments.length > 0 ? allAttachments : undefined
     );
-    setInputDisabled(true);
+    setInputDisabled((prev) => new Set(prev).add(agentId));
 
     // Clear files and input after successful send
     setSelectedFiles([]);
@@ -737,12 +746,12 @@ export default function Page({
           {/* Chat Input */}
           <div className="px-4 pb-4 mt-auto flex-shrink-0">
             {/* Keep input at bottom */}
-            {inputDisabled && (
+            {inputDisabled.has(agentId) && (
               <div className="px-2 pb-2 text-sm text-muted-foreground flex items-center gap-2">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:0ms]"></div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:150ms]"></div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:300ms]"></div>
+                <div className="flex gap-0.5 items-center justify-center">
+                  <span className="w-[6px] h-[6px] bg-white rounded-full animate-bounce [animation-delay:0s]" />
+                  <span className="w-[6px] h-[6px] bg-white rounded-full animate-bounce [animation-delay:0.2s]" />
+                  <span className="w-[6px] h-[6px] bg-white rounded-full animate-bounce [animation-delay:0.4s]" />
                 </div>
                 <span>{agentData.name} is thinking</span>
                 <div className="flex">
@@ -812,12 +821,12 @@ export default function Page({
                 value={input}
                 onChange={({ target }) => setInput(target.value)}
                 placeholder={
-                  inputDisabled
+                  inputDisabled.has(agentId)
                     ? 'Input disabled while agent is processing...'
                     : 'Type your message here...'
                 }
                 className="min-h-12 resize-none rounded-md bg-card border-0 p-3 shadow-none focus-visible:ring-0"
-                disabled={inputDisabled}
+                disabled={inputDisabled.has(agentId)}
               />
               <div className="flex items-center p-3 pt-0">
                 <Tooltip>
@@ -854,12 +863,12 @@ export default function Page({
                   onChange={(newInput: string) => setInput(newInput)}
                 />
                 <Button
-                  disabled={inputDisabled || selectedFiles.some((f) => f.isUploading)}
+                  disabled={inputDisabled.has(agentId) || selectedFiles.some((f) => f.isUploading)}
                   type="submit"
                   size="sm"
                   className="ml-auto gap-1.5 h-[30px]"
                 >
-                  {inputDisabled || selectedFiles.some((f) => f.isUploading) ? (
+                  {inputDisabled.has(agentId) || selectedFiles.some((f) => f.isUploading) ? (
                     <div className="flex gap-0.5 items-center justify-center">
                       <span className="w-[4px] h-[4px] bg-gray-500 rounded-full animate-bounce [animation-delay:0s]" />
                       <span className="w-[4px] h-[4px] bg-gray-500 rounded-full animate-bounce [animation-delay:0.2s]" />
