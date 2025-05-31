@@ -817,7 +817,7 @@ export default function Page({
               )}
               <ChatInput
                 ref={inputRef}
-                onKeyDown={handleKeyDown}
+                onKeyDown={agentData.status === 'inactive' ? undefined : handleKeyDown}
                 value={input}
                 onChange={({ target }) => setInput(target.value)}
                 placeholder={
@@ -863,7 +863,7 @@ export default function Page({
                   onChange={(newInput: string) => setInput(newInput)}
                 />
                 <Button
-                  disabled={inputDisabled.has(agentId) || selectedFiles.some((f) => f.isUploading)}
+                  disabled={inputDisabled.has(agentId) || agentData.status === 'inactive' || selectedFiles.some((f) => f.isUploading)}
                   type="submit"
                   size="sm"
                   className="ml-auto gap-1.5 h-[30px]"
