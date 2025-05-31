@@ -32,8 +32,10 @@
     "@elizaos/cli": "workspace:*",
     "@elizaos/core": "workspace:*",
     "@elizaos/plugin-sql": "workspace:*",
+    "@polymarket/clob-client": "^4.16.0",
     "ethers": "^6.13.1",
     "node-fetch": "^3.0.0",
+    "ws": "^8.17.0",
     "zod": "3.24.2"
   },
   "devDependencies": {

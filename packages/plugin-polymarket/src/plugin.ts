@@ -24,13 +24,20 @@ import { getMidpointPriceAction } from './actions/getMidpointPrice';
 import { getSpreadAction } from './actions/getSpread';
 import { getSamplingMarkets } from './actions/getSamplingMarkets';
 import { getClobMarkets } from './actions/getClobMarkets';
+import { getOpenMarkets } from './actions/getOpenMarkets';
 import { getPriceHistory } from './actions/getPriceHistory';
 import { placeOrderAction } from './actions/placeOrder';
+import { createApiKeyAction } from './actions/createApiKey';
+import { revokeApiKeyAction } from './actions/revokeApiKey';
+import { getAllApiKeysAction } from './actions/getAllApiKeys';
 import { getOrderDetailsAction } from './actions/getOrderDetails';
 import { checkOrderScoringAction } from './actions/checkOrderScoring';
 import { getActiveOrdersAction } from './actions/getActiveOrders';
 import { getAccountAccessStatusAction } from './actions/getAccountAccessStatus';
 import { getTradeHistoryAction } from './actions/getTradeHistory';
+import { handleAuthenticationAction } from './actions/handleAuthentication';
+import { setupWebsocketAction } from './actions/setupWebsocket';
+import { handleRealtimeUpdatesAction } from './actions/handleRealtimeUpdates';
 
 /**
  * Define the configuration schema for the Polymarket plugin
@@ -47,13 +54,33 @@ const configSchema = z.object({
       }
       return val;
     }),
+  WALLET_PRIVATE_KEY: z
+    .string()
+    .min(1, 'Wallet private key cannot be empty')
+    .optional()
+    .transform((val) => {
+      if (!val) {
+        console.warn('Warning: WALLET_PRIVATE_KEY not provided, trading features will be disabled');
+      }
+      return val;
+    }),
+  PRIVATE_KEY: z
+    .string()
+    .min(1, 'Private key cannot be empty')
+    .optional()
+    .transform((val) => {
+      if (!val) {
+        console.warn('Warning: PRIVATE_KEY not provided, will use WALLET_PRIVATE_KEY instead');
+      }
+      return val;
+    }),
   CLOB_API_KEY: z
     .string()
     .min(1, 'CLOB API key cannot be empty')
     .optional()
     .transform((val) => {
       if (!val) {
-        console.warn('Warning: CLOB_API_KEY not provided, some features may be limited');
+        console.warn('Warning: CLOB_API_KEY not provided, using wallet-based authentication');
       }
       return val;
     }),
@@ -64,7 +91,7 @@ const configSchema = z.object({
     .transform((val) => {
       if (!val) {
         console.warn(
-          'Warning: POLYMARKET_PRIVATE_KEY not provided, trading features will be disabled'
+          'Warning: POLYMARKET_PRIVATE_KEY not provided, will use WALLET_PRIVATE_KEY instead'
         );
       }
       return val;
@@ -148,6 +175,8 @@ const plugin: Plugin = {
   description: 'A plugin for interacting with Polymarket prediction markets',
   config: {
     CLOB_API_URL: process.env.CLOB_API_URL,
+    WALLET_PRIVATE_KEY: process.env.WALLET_PRIVATE_KEY,
+    PRIVATE_KEY: process.env.PRIVATE_KEY,
     CLOB_API_KEY: process.env.CLOB_API_KEY,
     POLYMARKET_PRIVATE_KEY: process.env.POLYMARKET_PRIVATE_KEY,
   },
@@ -177,6 +206,7 @@ const plugin: Plugin = {
     getSimplifiedMarketsAction,
     getSamplingMarkets,
     getClobMarkets,
+    getOpenMarkets,
     getPriceHistory,
     getMarketDetailsAction,
     getOrderBookSummaryAction,
@@ -185,11 +215,17 @@ const plugin: Plugin = {
     getMidpointPriceAction,
     getSpreadAction,
     placeOrderAction,
+    createApiKeyAction,
+    revokeApiKeyAction,
+    getAllApiKeysAction,
     getOrderDetailsAction,
     checkOrderScoringAction,
     getActiveOrdersAction,
     getAccountAccessStatusAction,
     getTradeHistoryAction,
+    handleAuthenticationAction,
+    setupWebsocketAction,
+    handleRealtimeUpdatesAction,
   ],
   providers: [polymarketProvider],
 };

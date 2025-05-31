@@ -353,3 +353,145 @@ export interface MarketOrderRequest {
   /** Slippage tolerance (optional) */
   slippage?: number;
 }
+
+/**
+ * Represents the status of an order in the CLOB API.
+ */
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  OPEN = 'OPEN',
+  FILLED = 'FILLED',
+  PARTIALLY_FILLED = 'PARTIALLY_FILLED',
+  CANCELLED = 'CANCELLED',
+  EXPIRED = 'EXPIRED',
+  REJECTED = 'REJECTED',
+}
+
+/**
+ * Detailed information about an order from the CLOB API.
+ * As per documentation: https://docs.polymarket.com/developers/CLOB/orders/get-order
+ */
+export interface DetailedOrder {
+  order_id: string;
+  user_id: string;
+  market_id: string;
+  token_id: string;
+  side: OrderSide; // Reuses existing OrderSide enum: 'BUY' | 'SELL'
+  type: string; // e.g., "LIMIT", API docs don't specify an enum
+  status: OrderStatus;
+  price: string;
+  size: string;
+  filled_size: string;
+  fees_paid: string;
+  created_at: string; // ISO datetime string
+  updated_at: string; // ISO datetime string
+  is_cancelled: boolean;
+  is_taker: boolean;
+  is_active_order: boolean;
+  error_code?: string | null; // Can be string or null
+  error_message?: string | null; // Can be string or null
+}
+
+/**
+ * Request body for the areOrdersScoring endpoint.
+ */
+export interface AreOrdersScoringRequest {
+  order_ids: string[];
+}
+
+/**
+ * Response from the areOrdersScoring endpoint.
+ * An object where keys are order_ids and values are booleans indicating if the order is scoring.
+ */
+export type AreOrdersScoringResponse = Record<string, boolean>;
+
+/**
+ * Parameters for the getOpenOrders ClobClient method.
+ */
+export interface GetOpenOrdersParams {
+  market?: string;      // Market condition ID
+  assetId?: string;     // Asset ID (token ID)
+  address?: string;     // User address
+  nextCursor?: string;  // Pagination cursor
+}
+
+/**
+ * Represents an open order from the CLOB API (/orders/open endpoint).
+ */
+export interface OpenOrder {
+  order_id: string;
+  user_id: string;
+  market_id: string; // This is the condition_id
+  token_id: string;
+  side: OrderSide;   // Reuses existing OrderSide enum: 'BUY' | 'SELL'
+  type: string;      // e.g., "LIMIT"
+  status: string;    // e.g., "OPEN" - could create an enum if more statuses are known for open orders
+  price: string;
+  size: string;
+  filled_size: string;
+  fees_paid: string;
+  created_at: string; // ISO datetime string
+  updated_at: string; // ISO datetime string
+}
+
+/**
+ * Parameters for the getTrades ClobClient method.
+ * Based on https://docs.polymarket.com/developers/CLOB/trades/get-trades
+ */
+export interface GetTradesParams {
+  user_address?: string;
+  market_id?: string;
+  token_id?: string;
+  from_timestamp?: number; // Unix timestamp (seconds)
+  to_timestamp?: number;   // Unix timestamp (seconds)
+  limit?: number;
+  next_cursor?: string;
+}
+
+/**
+ * Represents a trade entry from the CLOB API (/trades endpoint).
+ */
+export interface TradeEntry {
+  trade_id: string;
+  order_id: string;
+  user_id: string;
+  market_id: string;
+  token_id: string;
+  side: OrderSide; // 'BUY' or 'SELL'
+  type: string; // e.g., "LIMIT_TAKER", "LIMIT_MAKER"
+  price: string;
+  size: string;
+  fees_paid: string;
+  timestamp: string; // ISO datetime string
+  tx_hash: string;
+}
+
+/**
+ * Paginated response structure for the /trades endpoint.
+ */
+export interface TradesResponse {
+  data: TradeEntry[];
+  next_cursor: string;
+}
+
+/**
+ * Represents an API key for the Polymarket CLOB.
+ * Based on https://docs.polymarket.com/developers/CLOB/api-keys/get-api-keys
+ */
+export interface ApiKey {
+  key_id: string;
+  label: string;
+  type: 'read_only' | 'read_write';
+  status: 'active' | 'revoked';
+  created_at: string; // ISO datetime string
+  last_used_at: string | null; // ISO datetime string or null
+  is_cert_whitelisted: boolean;
+}
+
+/**
+ * Response structure for the /api-keys endpoint.
+ */
+export interface ApiKeysResponse {
+  api_keys: ApiKey[];
+  cert_required: boolean;
+}
