@@ -14,159 +14,174 @@ import {
   logger,
 } from '@elizaos/core';
 import { z } from 'zod';
+import { retrieveAllMarketsAction } from './actions/retrieveAllMarkets';
+import { getSimplifiedMarketsAction } from './actions/getSimplifiedMarkets';
+import { getMarketDetailsAction } from './actions/getMarketDetails';
+import { getOrderBookSummaryAction } from './actions/getOrderBookSummary';
+import { getOrderBookDepthAction } from './actions/getOrderBookDepth';
+import { getBestPriceAction } from './actions/getBestPrice';
+import { getMidpointPriceAction } from './actions/getMidpointPrice';
+import { getSpreadAction } from './actions/getSpread';
+import { getSamplingMarkets } from './actions/getSamplingMarkets';
+import { getClobMarkets } from './actions/getClobMarkets';
+import { getOpenMarkets } from './actions/getOpenMarkets';
+import { getPriceHistory } from './actions/getPriceHistory';
+import { placeOrderAction } from './actions/placeOrder';
+import { createApiKeyAction } from './actions/createApiKey';
+import { revokeApiKeyAction } from './actions/revokeApiKey';
+import { getAllApiKeysAction } from './actions/getAllApiKeys';
+import { getOrderDetailsAction } from './actions/getOrderDetails';
+import { checkOrderScoringAction } from './actions/checkOrderScoring';
+import { getActiveOrdersAction } from './actions/getActiveOrders';
+import { getAccountAccessStatusAction } from './actions/getAccountAccessStatus';
+import { getTradeHistoryAction } from './actions/getTradeHistory';
+import { handleAuthenticationAction } from './actions/handleAuthentication';
+import { setupWebsocketAction } from './actions/setupWebsocket';
+import { handleRealtimeUpdatesAction } from './actions/handleRealtimeUpdates';
 
 /**
- * Define the configuration schema for the plugin with the following properties:
- *
- * @param {string} EXAMPLE_PLUGIN_VARIABLE - The name of the plugin (min length of 1, optional)
- * @returns {object} - The configured schema object
+ * Define the configuration schema for the Polymarket plugin
  */
 const configSchema = z.object({
-  EXAMPLE_PLUGIN_VARIABLE: z
+  CLOB_API_URL: z
     .string()
-    .min(1, 'Example plugin variable is not provided')
+    .url('CLOB API URL must be a valid URL')
+    .optional()
+    .default('https://clob.polymarket.com')
+    .transform((val) => {
+      if (!val) {
+        console.warn('Warning: CLOB_API_URL not provided, using default');
+      }
+      return val;
+    }),
+  WALLET_PRIVATE_KEY: z
+    .string()
+    .min(1, 'Wallet private key cannot be empty')
     .optional()
     .transform((val) => {
       if (!val) {
-        console.warn('Warning: Example plugin variable is not provided');
+        console.warn('Warning: WALLET_PRIVATE_KEY not provided, trading features will be disabled');
+      }
+      return val;
+    }),
+  PRIVATE_KEY: z
+    .string()
+    .min(1, 'Private key cannot be empty')
+    .optional()
+    .transform((val) => {
+      if (!val) {
+        console.warn('Warning: PRIVATE_KEY not provided, will use WALLET_PRIVATE_KEY instead');
+      }
+      return val;
+    }),
+  CLOB_API_KEY: z
+    .string()
+    .min(1, 'CLOB API key cannot be empty')
+    .optional()
+    .transform((val) => {
+      if (!val) {
+        console.warn('Warning: CLOB_API_KEY not provided, using wallet-based authentication');
+      }
+      return val;
+    }),
+  POLYMARKET_PRIVATE_KEY: z
+    .string()
+    .min(1, 'Private key cannot be empty')
+    .optional()
+    .transform((val) => {
+      if (!val) {
+        console.warn(
+          'Warning: POLYMARKET_PRIVATE_KEY not provided, will use WALLET_PRIVATE_KEY instead'
+        );
       }
       return val;
     }),
 });
 
 /**
- * Example HelloWorld action
- * This demonstrates the simplest possible action structure
+ * Polymarket Service for managing CLOB connections and state
  */
-/**
- * Represents an action that responds with a simple hello world message.
- *
- * @typedef {Object} Action
- * @property {string} name - The name of the action
- * @property {string[]} similes - The related similes of the action
- * @property {string} description - Description of the action
- * @property {Function} validate - Validation function for the action
- * @property {Function} handler - The function that handles the action
- * @property {Object[]} examples - Array of examples for the action
- */
-const helloWorldAction: Action = {
-  name: 'HELLO_WORLD',
-  similes: ['GREET', 'SAY_HELLO'],
-  description: 'Responds with a simple hello world message',
-
-  validate: async (_runtime: IAgentRuntime, _message: Memory, _state: State): Promise<boolean> => {
-    // Always valid
-    return true;
-  },
-
-  handler: async (
-    _runtime: IAgentRuntime,
-    message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
-    _responses: Memory[]
-  ) => {
-    try {
-      logger.info('Handling HELLO_WORLD action');
-
-      // Simple response content
-      const responseContent: Content = {
-        text: 'hello world!',
-        actions: ['HELLO_WORLD'],
-        source: message.content.source,
-      };
-
-      // Call back with the hello world message
-      await callback(responseContent);
-
-      return responseContent;
-    } catch (error) {
-      logger.error('Error in HELLO_WORLD action:', error);
-      throw error;
-    }
-  },
-
-  examples: [
-    [
-      {
-        name: '{{name1}}',
-        content: {
-          text: 'Can you say hello?',
-        },
-      },
-      {
-        name: '{{name2}}',
-        content: {
-          text: 'hello world!',
-          actions: ['HELLO_WORLD'],
-        },
-      },
-    ],
-  ],
-};
-
-/**
- * Example Hello World Provider
- * This demonstrates the simplest possible provider implementation
- */
-const helloWorldProvider: Provider = {
-  name: 'HELLO_WORLD_PROVIDER',
-  description: 'A simple example provider',
-
-  get: async (
-    _runtime: IAgentRuntime,
-    _message: Memory,
-    _state: State
-  ): Promise<ProviderResult> => {
-    return {
-      text: 'I am a provider',
-      values: {},
-      data: {},
-    };
-  },
-};
-
-export class StarterService extends Service {
-  static serviceType = 'starter';
+export class PolymarketService extends Service {
+  static serviceType = 'polymarket';
   capabilityDescription =
-    'This is a starter service which is attached to the agent through the starter plugin.';
+    'This service provides access to Polymarket prediction markets through the CLOB API.';
 
   constructor(runtime: IAgentRuntime) {
     super(runtime);
   }
 
   static async start(runtime: IAgentRuntime) {
-    logger.info('*** Starting starter service ***');
-    const service = new StarterService(runtime);
+    logger.info('*** Starting Polymarket service ***');
+    const service = new PolymarketService(runtime);
     return service;
   }
 
   static async stop(runtime: IAgentRuntime) {
-    logger.info('*** Stopping starter service ***');
-    // get the service from the runtime
-    const service = runtime.getService(StarterService.serviceType);
+    logger.info('*** Stopping Polymarket service ***');
+    const service = runtime.getService(PolymarketService.serviceType);
     if (!service) {
-      throw new Error('Starter service not found');
+      throw new Error('Polymarket service not found');
     }
     service.stop();
   }
 
   async stop() {
-    logger.info('*** Stopping starter service instance ***');
+    logger.info('*** Stopping Polymarket service instance ***');
   }
 }
 
+/**
+ * Example provider for Polymarket market data
+ */
+const polymarketProvider: Provider = {
+  name: 'POLYMARKET_PROVIDER',
+  description: 'Provides current Polymarket market information and context',
+
+  get: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> => {
+    try {
+      const clobApiUrl = runtime.getSetting('CLOB_API_URL') || 'https://clob.polymarket.com';
+
+      return {
+        text: `Connected to Polymarket CLOB at ${clobApiUrl}. Ready to fetch market data and execute trades.`,
+        values: {
+          clobApiUrl,
+          serviceStatus: 'active',
+          featuresAvailable: ['market_data', 'price_feeds', 'order_book'],
+        },
+        data: {
+          timestamp: new Date().toISOString(),
+          service: 'polymarket',
+        },
+      };
+    } catch (error) {
+      logger.error('Error in Polymarket provider:', error);
+      return {
+        text: 'Polymarket service is currently unavailable.',
+        values: {
+          serviceStatus: 'error',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        data: {
+          timestamp: new Date().toISOString(),
+          service: 'polymarket',
+        },
+      };
+    }
+  },
+};
+
 const plugin: Plugin = {
-  name: 'starter',
-  description: 'A starter plugin for Eliza',
-  // Set lowest priority so real models take precedence
-  priority: -1000,
+  name: 'polymarket',
+  description: 'A plugin for interacting with Polymarket prediction markets',
   config: {
-    EXAMPLE_PLUGIN_VARIABLE: process.env.EXAMPLE_PLUGIN_VARIABLE,
+    CLOB_API_URL: process.env.CLOB_API_URL,
+    WALLET_PRIVATE_KEY: process.env.WALLET_PRIVATE_KEY,
+    PRIVATE_KEY: process.env.PRIVATE_KEY,
+    CLOB_API_KEY: process.env.CLOB_API_KEY,
+    POLYMARKET_PRIVATE_KEY: process.env.POLYMARKET_PRIVATE_KEY,
   },
   async init(config: Record<string, string>) {
-    logger.info('*** Initializing starter plugin ***');
+    logger.info('*** Initializing Polymarket plugin ***');
     try {
       const validatedConfig = await configSchema.parseAsync(config);
 
@@ -174,82 +189,45 @@ const plugin: Plugin = {
       for (const [key, value] of Object.entries(validatedConfig)) {
         if (value) process.env[key] = value;
       }
+
+      logger.info('Polymarket plugin initialized successfully');
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new Error(
-          `Invalid plugin configuration: ${error.errors.map((e) => e.message).join(', ')}`
+          `Invalid Polymarket plugin configuration: ${error.errors.map((e) => e.message).join(', ')}`
         );
       }
       throw error;
     }
   },
-  models: {
-    [ModelType.TEXT_SMALL]: async (
-      _runtime,
-      { prompt, stopSequences = [] }: GenerateTextParams
-    ) => {
-      return 'Never gonna give you up, never gonna let you down, never gonna run around and desert you...';
-    },
-    [ModelType.TEXT_LARGE]: async (
-      _runtime,
-      {
-        prompt,
-        stopSequences = [],
-        maxTokens = 8192,
-        temperature = 0.7,
-        frequencyPenalty = 0.7,
-        presencePenalty = 0.7,
-      }: GenerateTextParams
-    ) => {
-      return 'Never gonna make you cry, never gonna say goodbye, never gonna tell a lie and hurt you...';
-    },
-  },
-  routes: [
-    {
-      name: 'helloworld',
-      path: '/helloworld',
-      type: 'GET',
-      handler: async (_req: any, res: any) => {
-        // send a response
-        res.json({
-          message: 'Hello World!',
-        });
-      },
-    },
+  services: [PolymarketService],
+  actions: [
+    retrieveAllMarketsAction,
+    getSimplifiedMarketsAction,
+    getSamplingMarkets,
+    getClobMarkets,
+    getOpenMarkets,
+    getPriceHistory,
+    getMarketDetailsAction,
+    getOrderBookSummaryAction,
+    getOrderBookDepthAction,
+    getBestPriceAction,
+    getMidpointPriceAction,
+    getSpreadAction,
+    placeOrderAction,
+    createApiKeyAction,
+    revokeApiKeyAction,
+    getAllApiKeysAction,
+    getOrderDetailsAction,
+    checkOrderScoringAction,
+    getActiveOrdersAction,
+    getAccountAccessStatusAction,
+    getTradeHistoryAction,
+    handleAuthenticationAction,
+    setupWebsocketAction,
+    handleRealtimeUpdatesAction,
   ],
-  events: {
-    MESSAGE_RECEIVED: [
-      async (params) => {
-        logger.info('MESSAGE_RECEIVED event received');
-        // print the keys
-        logger.info(Object.keys(params));
-      },
-    ],
-    VOICE_MESSAGE_RECEIVED: [
-      async (params) => {
-        logger.info('VOICE_MESSAGE_RECEIVED event received');
-        // print the keys
-        logger.info(Object.keys(params));
-      },
-    ],
-    WORLD_CONNECTED: [
-      async (params) => {
-        logger.info('WORLD_CONNECTED event received');
-        // print the keys
-        logger.info(Object.keys(params));
-      },
-    ],
-    WORLD_JOINED: [
-      async (params) => {
-        logger.info('WORLD_JOINED event received');
-        // print the keys
-        logger.info(Object.keys(params));
-      },
-    ],
-  },
-  services: [StarterService],
-  actions: [helloWorldAction],
-  providers: [helloWorldProvider],
+  providers: [polymarketProvider],
 };
 
 export default plugin;

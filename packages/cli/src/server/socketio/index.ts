@@ -4,6 +4,7 @@ import { SOCKET_MESSAGE_TYPE } from '@elizaos/core';
 import type { Server as SocketIOServer } from 'socket.io';
 import type { RemoteSocket, Socket } from 'socket.io';
 import type { DefaultEventsMap } from 'socket.io/dist/typed-events';
+import { EventType } from '@elizaos/core';
 
 export class SocketIORouter {
   private agents: Map<UUID, IAgentRuntime>;
@@ -377,6 +378,38 @@ export class SocketIORouter {
     logger.info(`[SocketIO] Creating memory for message ${memory.id}`);
     await runtime.createMemory(memory, 'messages');
     logger.info(`[SocketIO] Created memory successfully`);
+
+    // MISSING: Emit MESSAGE_RECEIVED event to trigger message processing
+    logger.info(`[SocketIO] Emitting MESSAGE_RECEIVED event for message ${memory.id}`);
+    runtime.emitEvent(EventType.MESSAGE_RECEIVED, {
+      runtime: runtime,
+      message: memory,
+      callback: async (content: Content) => {
+        logger.info(`[SocketIO] Message handler callback triggered for ${memory.id}`);
+
+        // Create response memory
+        const responseMemory: Memory = {
+          id: createUniqueUuid(runtime, `${memory.id}-response-${Date.now()}`),
+          entityId: runtime.agentId,
+          agentId: runtime.agentId,
+          roomId: roomId,
+          content: {
+            ...content,
+            inReplyTo: memory.id,
+            channelType: ChannelType.API,
+          },
+          createdAt: Date.now(),
+        };
+
+        // Save agent's response as memory
+        await runtime.createMemory(responseMemory, 'messages');
+
+        logger.info(`[SocketIO] Created response memory ${responseMemory.id}`);
+
+        return [responseMemory];
+      },
+      source: 'socketio',
+    });
   }
 
   private broadcastMessageToRoom(socket: Socket, roomId: string, payload: any) {
