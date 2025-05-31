@@ -833,15 +833,38 @@ export class VoiceManager extends EventEmitter {
     let chosenChannel: BaseGuildVoiceChannel | null = null;
 
     try {
-      const channelId = this.runtime.getSetting('DISCORD_VOICE_CHANNEL_ID') as string;
-      if (channelId) {
-        const channel = await guild.channels.fetch(channelId);
-        if (channel?.isVoiceBased()) {
-          chosenChannel = channel as BaseGuildVoiceChannel;
+      const rawChannelId = this.runtime.getSetting('DISCORD_VOICE_CHANNEL_ID') as string;
+      logger.debug(`[scanGuild] Raw DISCORD_VOICE_CHANNEL_ID from settings: "${rawChannelId}"`);
+
+      // Clean up the channel ID - remove quotes and whitespace
+      const channelId = rawChannelId?.trim()?.replace(/["']/g, '');
+      logger.debug(`[scanGuild] Cleaned channel ID: "${channelId}"`);
+
+      if (channelId && channelId.length > 0) {
+        logger.debug(`[scanGuild] Attempting to fetch channel with ID: ${channelId}`);
+        try {
+          const channel = await guild.channels.fetch(channelId);
+          logger.debug(`[scanGuild] Fetched channel: ${channel?.name} (type: ${channel?.type})`);
+
+          if (channel?.isVoiceBased()) {
+            chosenChannel = channel as BaseGuildVoiceChannel;
+            logger.debug(`[scanGuild] Successfully selected voice channel: ${chosenChannel.name}`);
+          } else {
+            logger.warn(`[scanGuild] Channel ${channelId} is not a voice channel or not found`);
+          }
+        } catch (fetchError) {
+          logger.error(
+            `[scanGuild] Failed to fetch channel ${channelId}: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`
+          );
         }
+      } else {
+        logger.debug('[scanGuild] No DISCORD_VOICE_CHANNEL_ID configured');
       }
 
       if (!chosenChannel) {
+        logger.debug(
+          '[scanGuild] No specific channel configured, looking for populated channels...'
+        );
         const channels = (await guild.channels.fetch()).filter(
           (channel) => channel?.type === DiscordChannelType.GuildVoice
         );
@@ -864,6 +887,9 @@ export class VoiceManager extends EventEmitter {
       }
     } catch (error) {
       console.error('Error selecting or joining a voice channel:', error);
+      logger.error(
+        `[scanGuild] Error details: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
