@@ -747,6 +747,33 @@ export function createApiRouter(
     );
   });
 
+  // Add message queue stats endpoint
+  router.get('/message-queue/stats', (_req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+
+    // Import the bus to get stats
+    import('../bus')
+      .then((busModule) => {
+        const stats = busModule.default.getStats();
+        res.send(
+          JSON.stringify({
+            status: 'ok',
+            queue: stats || { error: 'Stats not available' },
+            timestamp: new Date().toISOString(),
+          })
+        );
+      })
+      .catch((err) => {
+        res.status(500).send(
+          JSON.stringify({
+            status: 'error',
+            error: err.message,
+            timestamp: new Date().toISOString(),
+          })
+        );
+      });
+  });
+
   // Check if the server is running
   router.get('/ping', (_req, res) => {
     res.setHeader('Content-Type', 'application/json');

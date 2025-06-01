@@ -19,13 +19,10 @@ import { createApiRouter, createPluginRouteHandler, setupSocketIO } from './api'
 import { apiKeyAuthMiddleware } from './authMiddleware';
 import { messageBusConnectorPlugin } from './services/message';
 
-// Central DB Imports
-import { PGlite } from '@electric-sql/pglite';
-import { and, desc, eq, lt } from 'drizzle-orm';
-import { drizzle, type PgliteDatabase } from 'drizzle-orm/pglite';
+// Central DB Imports - Replace PGLite with InMemoryMessageStore
 import { v4 as uuidv4 } from 'uuid';
 import internalMessageBus from './bus';
-import * as centralSchema from './database/schema';
+import { InMemoryMessageStore } from './memory-store';
 import type {
   MessageChannel,
   MessageServer,
@@ -78,8 +75,7 @@ export class AgentServer {
   public isInitialized: boolean = false; // Flag to prevent double initialization
 
   public database!: DatabaseAdapter;
-  public centralPgliteDB!: PGlite;
-  public centralDrizzleDB!: PgliteDatabase<typeof centralSchema>;
+  public messageStore!: InMemoryMessageStore;
 
   public startAgent!: (character: Character) => Promise<IAgentRuntime>;
   public stopAgent!: (runtime: IAgentRuntime) => void;
@@ -116,22 +112,9 @@ export class AgentServer {
     try {
       logger.debug('Initializing AgentServer (async operations)...');
 
-      const centralDbPath = './eliza-central.db';
-      logger.info(`[INIT] Central DB path: ${centralDbPath}`);
-      fs.mkdirSync(path.dirname(centralDbPath), { recursive: true });
-
-      this.centralPgliteDB = new PGlite(centralDbPath);
-      await this.centralPgliteDB.waitReady;
-      logger.info(`Central PGlite database instance created at ${centralDbPath}`);
-
-      this.centralDrizzleDB = drizzle(this.centralPgliteDB, {
-        schema: centralSchema,
-        logger: false,
-      });
-      logger.success('Central PGlite Drizzle ORM instance created with pglite driver.');
-
-      await this.applyCentralMigrations();
-      await this.ensureDefaultServer();
+      // Initialize the in-memory message store
+      this.messageStore = new InMemoryMessageStore();
+      logger.success('In-memory message store initialized');
 
       const agentDataDir = await resolvePgliteDir(options?.dataDir);
       logger.info(`[INIT] Agent Data Dir for SQL plugin: ${agentDataDir}`);
@@ -152,125 +135,6 @@ export class AgentServer {
     } catch (error) {
       logger.error('Failed to initialize AgentServer (async operations):', error);
       console.trace(error);
-      throw error;
-    }
-  }
-
-  private async applyCentralMigrations(): Promise<void> {
-    logger.info('[Migrations] Applying central database migrations...');
-    const possiblePath1 = path.resolve(process.cwd(), 'src/server/database/migrations/central');
-    const possiblePath2 = path.resolve(
-      process.cwd(),
-      'packages/cli/src/server/database/migrations/central'
-    );
-
-    let migrationsDir = possiblePath1;
-    if (!fs.existsSync(migrationsDir)) {
-      migrationsDir = possiblePath2;
-    }
-    logger.info(`[Migrations] Using migrations directory: ${migrationsDir}`);
-
-    try {
-      if (!fs.existsSync(migrationsDir)) {
-        logger.warn(
-          `[Migrations] Central migrations directory not found at tried paths. Attempting fallback table creation.`
-        );
-        await this.createCentralTablesIfNotExists();
-        return;
-      }
-
-      const migrationFiles = fs
-        .readdirSync(migrationsDir)
-        .filter((file) => file.endsWith('.sql'))
-        .sort();
-      if (migrationFiles.length === 0) {
-        logger.info(
-          '[Migrations] No central migration SQL files found. Assuming schema is up to date or tables will be created via fallback.'
-        );
-        await this.createCentralTablesIfNotExists();
-        return;
-      }
-
-      for (const file of migrationFiles) {
-        const filePath = path.join(migrationsDir, file);
-        const migrationSQL = fs.readFileSync(filePath, 'utf8');
-        logger.info(`[Migrations] Applying central migration: ${file}`);
-        await this.centralPgliteDB.exec(migrationSQL);
-        logger.info(`[Migrations] Successfully applied central migration: ${file}`);
-      }
-      logger.success('[Migrations] Central database migrations applied successfully.');
-    } catch (error: any) {
-      logger.error('[Migrations] Error applying central database migrations:', {
-        message: error.message,
-        stack: error.stack,
-        originalError: error,
-      });
-      throw new Error(`Failed to apply central database migrations: ${error.message}`);
-    }
-  }
-
-  private async ensureDefaultServer(): Promise<void> {
-    try {
-      // Check if any servers exist
-      const servers = await this.getCentralServers();
-      if (servers.length === 0) {
-        logger.info('[AgentServer] Creating default server with ID 0...');
-        // First try to create server with ID "0"
-        try {
-          // Create server with specific ID "0"
-          const now = new Date();
-          const serverWithId0 = {
-            id: '0' as UUID,
-            name: 'Default Server',
-            sourceType: 'eliza_default',
-            createdAt: now,
-            updatedAt: now,
-          };
-
-          await this.centralDrizzleDB
-            .insert(centralSchema.messageServerTable)
-            .values(serverWithId0)
-            .onConflictDoNothing();
-
-          logger.success('[AgentServer] Default server created or already exists with ID: 0');
-        } catch (error) {
-          logger.error('[AgentServer] Failed to create server with ID 0:', error);
-          // Fallback to regular creation
-          const server = await this.createCentralServer({
-            name: 'Default Server',
-            sourceType: 'eliza_default',
-          });
-          logger.success('[AgentServer] Default server created with ID:', server.id);
-        }
-      }
-    } catch (error) {
-      logger.error('[AgentServer] Error ensuring default server:', error);
-      // Non-fatal - continue startup
-    }
-  }
-
-  private async createCentralTablesIfNotExists(): Promise<void> {
-    logger.warn(
-      '[FallbackDB] Attempting to create central tables directly (using Postgres-like DDL)...'
-    );
-    const createStatements = [
-      `CREATE TABLE IF NOT EXISTS servers ( id TEXT PRIMARY KEY, name TEXT NOT NULL, source_type TEXT NOT NULL, source_id TEXT, metadata JSONB, created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL );`,
-      `CREATE TABLE IF NOT EXISTS channels ( id TEXT PRIMARY KEY, server_id TEXT NOT NULL REFERENCES servers(id) ON DELETE CASCADE, name TEXT NOT NULL, type TEXT NOT NULL, source_type TEXT, source_id TEXT, topic TEXT, metadata JSONB, created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL );`,
-      `CREATE TABLE IF NOT EXISTS messages ( id TEXT PRIMARY KEY, channel_id TEXT NOT NULL REFERENCES channels(id) ON DELETE CASCADE, author_id TEXT NOT NULL, content TEXT NOT NULL, raw_message JSONB, in_reply_to_root_message_id TEXT REFERENCES messages(id) ON DELETE SET NULL, source_type TEXT, source_id TEXT, metadata JSONB, created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL );`,
-      `CREATE TABLE IF NOT EXISTS channel_participants ( channel_id TEXT NOT NULL REFERENCES channels(id) ON DELETE CASCADE, user_id TEXT NOT NULL, PRIMARY KEY (channel_id, user_id) );`,
-      `CREATE TABLE IF NOT EXISTS server_agents ( server_id TEXT NOT NULL REFERENCES servers(id) ON DELETE CASCADE, agent_id TEXT NOT NULL, PRIMARY KEY (server_id, agent_id) );`,
-    ];
-    try {
-      for (const statement of createStatements) {
-        await this.centralPgliteDB.exec(statement);
-      }
-      logger.info('[FallbackDB] Central tables checked/created successfully.');
-    } catch (error: any) {
-      logger.error('[FallbackDB] Error creating central tables directly:', {
-        message: error.message,
-        stack: error.stack,
-        originalError: error,
-      });
       throw error;
     }
   }
@@ -703,15 +567,7 @@ export class AgentServer {
           }
         }
 
-        // Close central PGlite DB
-        if (this.centralPgliteDB) {
-          try {
-            await this.centralPgliteDB.close();
-            logger.info('Central PGlite database closed.');
-          } catch (error) {
-            logger.error('Error closing central PGlite database:', error);
-          }
-        }
+        // Message store doesn't need explicit closing - it's all in memory
 
         // Close server
         this.server.close(() => {
@@ -748,129 +604,54 @@ export class AgentServer {
     }
   }
 
-  // Central DB Data Access Methods
+  // Central DB Data Access Methods - Update to use InMemoryMessageStore
   async createCentralServer(
     data: Omit<MessageServer, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<MessageServer> {
-    const newId = uuidv4() as UUID;
-    const now = new Date();
-    const serverToInsert = {
-      ...data,
-      id: newId,
-      createdAt: now,
-      updatedAt: now,
-    };
-    const result = await this.centralDrizzleDB
-      .insert(centralSchema.messageServerTable)
-      .values(serverToInsert)
-      .returning();
-    return result[0] as MessageServer;
+    return this.messageStore.createServer(data);
   }
 
   async getCentralServers(): Promise<MessageServer[]> {
-    const results = await this.centralDrizzleDB.select().from(centralSchema.messageServerTable);
-    return results as MessageServer[];
+    return this.messageStore.getServers();
   }
 
   async getCentralServerById(serverId: UUID): Promise<MessageServer | null> {
-    const results = await this.centralDrizzleDB
-      .select()
-      .from(centralSchema.messageServerTable)
-      .where(eq(centralSchema.messageServerTable.id, serverId))
-      .limit(1);
-    return results.length > 0 ? (results[0] as MessageServer) : null;
+    return this.messageStore.getServerById(serverId);
   }
 
   async getCentralServerBySourceType(sourceType: string): Promise<MessageServer | null> {
-    const results = await this.centralDrizzleDB
-      .select()
-      .from(centralSchema.messageServerTable)
-      .where(eq(centralSchema.messageServerTable.sourceType, sourceType))
-      .orderBy(centralSchema.messageServerTable.createdAt) // Get the oldest one if multiple
-      .limit(1);
-    return results.length > 0 ? (results[0] as MessageServer) : null;
+    return this.messageStore.getServerBySourceType(sourceType);
   }
 
   async createCentralChannel(
     data: Omit<MessageChannel, 'id' | 'createdAt' | 'updatedAt'>,
     participantIds?: UUID[]
   ): Promise<MessageChannel> {
-    const newId = uuidv4() as UUID;
-    const now = new Date();
-    const channelToInsert = {
-      ...data,
-      id: newId,
-      createdAt: now,
-      updatedAt: now,
-    };
-    const result = await this.centralDrizzleDB
-      .insert(centralSchema.channelTable)
-      .values(channelToInsert)
-      .returning();
-
-    const newChannel = result[0] as MessageChannel;
-
-    if (participantIds && participantIds.length > 0) {
-      await this.addParticipantsToCentralChannel(newChannel.id, participantIds);
-    }
-    return newChannel;
+    return this.messageStore.createChannel(data, participantIds);
   }
 
   async addParticipantsToCentralChannel(channelId: UUID, userIds: UUID[]): Promise<void> {
-    if (!userIds || userIds.length === 0) return;
-    const participantValues = userIds.map((userId) => ({
-      channelId: channelId,
-      userId: userId,
-    }));
-    await this.centralDrizzleDB
-      .insert(centralSchema.channelParticipantsTable)
-      .values(participantValues)
-      .onConflictDoNothing(); // Avoid errors if a participant is already in the channel
-    logger.info(
-      `[AgentServer] Added ${userIds.length} participants to central channel ${channelId}`
-    );
+    return this.messageStore.addParticipantsToChannel(channelId, userIds);
   }
 
   async getCentralChannelsForServer(serverId: UUID): Promise<MessageChannel[]> {
-    const results = await this.centralDrizzleDB
-      .select()
-      .from(centralSchema.channelTable)
-      .where(eq(centralSchema.channelTable.messageServerId, serverId));
-    return results as MessageChannel[];
+    return this.messageStore.getChannelsForServer(serverId);
   }
 
   async getCentralChannelDetails(channelId: UUID): Promise<MessageChannel | null> {
-    const results = await this.centralDrizzleDB
-      .select()
-      .from(centralSchema.channelTable)
-      .where(eq(centralSchema.channelTable.id, channelId))
-      .limit(1);
-    return results.length > 0 ? (results[0] as MessageChannel) : null;
+    return this.messageStore.getChannelDetails(channelId);
   }
 
   async getCentralChannelParticipants(channelId: UUID): Promise<UUID[]> {
-    const results = await this.centralDrizzleDB
-      .select({
-        userId: centralSchema.channelParticipantsTable.userId,
-      })
-      .from(centralSchema.channelParticipantsTable)
-      .where(eq(centralSchema.channelParticipantsTable.channelId, channelId));
-
-    return results.map((r) => r.userId as UUID);
+    return this.messageStore.getChannelParticipants(channelId);
   }
 
   async deleteMessage(messageId: UUID): Promise<void> {
-    await this.centralDrizzleDB
-      .delete(centralSchema.centralRootMessageTable)
-      .where(eq(centralSchema.centralRootMessageTable.id, messageId));
-    logger.info(`[AgentServer] Deleted central message: ${messageId}`);
+    return this.messageStore.deleteMessage(messageId);
   }
 
   async clearCentralChannelMessages(channelId: UUID): Promise<void> {
-    await this.centralDrizzleDB
-      .delete(centralSchema.centralRootMessageTable)
-      .where(eq(centralSchema.centralRootMessageTable.channelId, channelId));
-    logger.info(`[AgentServer] Cleared all messages for central channel: ${channelId}`);
+    return this.messageStore.clearChannelMessages(channelId);
   }
 
   async findOrCreateCentralDmChannel(
@@ -878,64 +659,17 @@ export class AgentServer {
     user2Id: UUID,
     messageServerId: UUID
   ): Promise<MessageChannel> {
-    const ids = [user1Id, user2Id].sort();
-    const dmChannelName = `DM-${ids[0]}-${ids[1]}`;
-
-    let channels = await this.centralDrizzleDB
-      .select()
-      .from(centralSchema.channelTable)
-      .where(
-        and(
-          eq(centralSchema.channelTable.type, ChannelType.DM),
-          eq(centralSchema.channelTable.name, dmChannelName),
-          eq(centralSchema.channelTable.messageServerId, messageServerId)
-        )
-      )
-      .limit(1);
-
-    if (channels.length > 0) {
-      return channels[0] as MessageChannel;
-    }
-
-    const newChannelId = uuidv4() as UUID;
-    const now = new Date();
-    const newDmChannelData = {
-      id: newChannelId,
-      messageServerId: messageServerId,
-      name: dmChannelName,
-      type: ChannelType.DM,
-      createdAt: now,
-      updatedAt: now,
-      metadata: { user1: ids[0], user2: ids[1] },
-    };
-
-    const createdResults = await this.centralDrizzleDB
-      .insert(centralSchema.channelTable)
-      .values(newDmChannelData)
-      .returning();
-    // TODO: Add participants to a central channel participant table if you have one
-    return createdResults[0] as MessageChannel;
+    return this.messageStore.findOrCreateDmChannel(user1Id, user2Id, messageServerId);
   }
 
   async createMessage(
     data: Omit<CentralRootMessage, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<CentralRootMessage> {
-    const newId = uuidv4() as UUID;
-    const now = new Date();
-    const messageToInsert = {
-      ...data,
-      id: newId,
-      createdAt: now,
-      updatedAt: now,
-    };
-    const result = await this.centralDrizzleDB
-      .insert(centralSchema.centralRootMessageTable)
-      .values(messageToInsert)
-      .returning();
-    const createdMessage = result[0] as CentralRootMessage;
+    const createdMessage = await this.messageStore.createMessage(data);
 
     // Get the channel details to find the server ID
-    const channel = await this.getCentralChannelDetails(createdMessage.channelId);
+    const channel = await this.messageStore.getChannelDetails(createdMessage.channelId);
+
     if (channel) {
       // Emit to internal message bus for agent consumption
       const messageForBus: MessageServiceStructure = {
@@ -952,7 +686,7 @@ export class AgentServer {
         metadata: createdMessage.metadata,
       };
 
-      internalMessageBus.emit('new_message', messageForBus);
+      await internalMessageBus.emit('new_message', messageForBus);
       logger.info(`[AgentServer] Published message ${createdMessage.id} to internal message bus`);
     }
 
@@ -964,34 +698,11 @@ export class AgentServer {
     limit: number = 50,
     beforeTimestamp?: Date
   ): Promise<CentralRootMessage[]> {
-    let query = this.centralDrizzleDB
-      .select()
-      .from(centralSchema.centralRootMessageTable)
-      .where(
-        and(
-          eq(centralSchema.centralRootMessageTable.channelId, channelId),
-          beforeTimestamp
-            ? lt(centralSchema.centralRootMessageTable.createdAt, beforeTimestamp)
-            : undefined
-        )
-      )
-      .orderBy(centralSchema.centralRootMessageTable.createdAt)
-      .limit(limit);
-
-    return (await query) as CentralRootMessage[];
+    return this.messageStore.getMessagesForChannel(channelId, limit, beforeTimestamp);
   }
 
-  // Optional: Method to remove a participant
   async removeParticipantFromCentralChannel(channelId: UUID, userId: UUID): Promise<void> {
-    await this.centralDrizzleDB
-      .delete(centralSchema.channelParticipantsTable)
-      .where(
-        and(
-          eq(centralSchema.channelParticipantsTable.channelId, channelId),
-          eq(centralSchema.channelParticipantsTable.userId, userId)
-        )
-      );
-    logger.info(`[AgentServer] Removed participant ${userId} from central channel ${channelId}`);
+    return this.messageStore.removeParticipantFromChannel(channelId, userId);
   }
 
   // ===============================
@@ -1004,27 +715,8 @@ export class AgentServer {
    * @param {UUID} agentId - The agent ID to add
    */
   async addAgentToServer(serverId: UUID, agentId: UUID): Promise<void> {
-    // First, verify the server exists
-    const server = await this.getCentralServerById(serverId);
-    if (!server) {
-      throw new Error(`Server ${serverId} not found`);
-    }
-
-    try {
-      // Insert into server_agents association table
-      await this.centralDrizzleDB
-        .insert(centralSchema.serverAgentsTable)
-        .values({
-          serverId: serverId,
-          agentId: agentId,
-        })
-        .onConflictDoNothing(); // Avoid errors if agent is already in server
-
-      logger.info(`[AgentServer] Added agent ${agentId} to server ${serverId}`);
-    } catch (error) {
-      logger.error(`[AgentServer] Error adding agent ${agentId} to server ${serverId}:`, error);
-      throw error;
-    }
+    await this.messageStore.addAgentToServer(serverId, agentId);
+    logger.info(`[AgentServer] Added agent ${agentId} to server ${serverId}`);
   }
 
   /**
@@ -1033,14 +725,7 @@ export class AgentServer {
    * @param {UUID} agentId - The agent ID to remove
    */
   async removeAgentFromServer(serverId: UUID, agentId: UUID): Promise<void> {
-    await this.centralDrizzleDB
-      .delete(centralSchema.serverAgentsTable)
-      .where(
-        and(
-          eq(centralSchema.serverAgentsTable.serverId, serverId),
-          eq(centralSchema.serverAgentsTable.agentId, agentId)
-        )
-      );
+    await this.messageStore.removeAgentFromServer(serverId, agentId);
     logger.info(`[AgentServer] Removed agent ${agentId} from server ${serverId}`);
   }
 
@@ -1050,14 +735,7 @@ export class AgentServer {
    * @returns {Promise<UUID[]>} Array of agent IDs
    */
   async getAgentsForServer(serverId: UUID): Promise<UUID[]> {
-    const results = await this.centralDrizzleDB
-      .select({
-        agentId: centralSchema.serverAgentsTable.agentId,
-      })
-      .from(centralSchema.serverAgentsTable)
-      .where(eq(centralSchema.serverAgentsTable.serverId, serverId));
-
-    return results.map((r) => r.agentId as UUID);
+    return this.messageStore.getAgentsForServer(serverId);
   }
 
   /**
@@ -1066,13 +744,6 @@ export class AgentServer {
    * @returns {Promise<UUID[]>} Array of server IDs
    */
   async getServersForAgent(agentId: UUID): Promise<UUID[]> {
-    const results = await this.centralDrizzleDB
-      .select({
-        serverId: centralSchema.serverAgentsTable.serverId,
-      })
-      .from(centralSchema.serverAgentsTable)
-      .where(eq(centralSchema.serverAgentsTable.agentId, agentId));
-
-    return results.map((r) => r.serverId as UUID);
+    return this.messageStore.getServersForAgent(agentId);
   }
 }

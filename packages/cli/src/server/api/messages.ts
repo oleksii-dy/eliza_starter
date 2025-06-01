@@ -130,7 +130,7 @@ export function MessagesRouter(serverInstance: AgentServer): express.Router {
         metadata: createdRootMessage.metadata,
       };
 
-      internalMessageBus.emit('new_message', messageForBus);
+      await internalMessageBus.emit('new_message', messageForBus);
       logger.info(
         '[Central Messages Router /ingest-external] Published to internal message bus:',
         createdRootMessage.id
@@ -218,7 +218,7 @@ export function MessagesRouter(serverInstance: AgentServer): express.Router {
         source_id: createdRootMessage.sourceId, // Will be undefined here, which is fine
       };
 
-      internalMessageBus.emit('new_message', messageForBus);
+      await internalMessageBus.emit('new_message', messageForBus);
       logger.info(
         '[Central Messages Router /central-channels/:channelId/messages] GUI Message published to internal bus:',
         messageForBus.id
@@ -672,7 +672,7 @@ export function MessagesRouter(serverInstance: AgentServer): express.Router {
         serverId,
         agentId,
       };
-      internalMessageBus.emit('server_agent_update', messageForBus);
+      await internalMessageBus.emit('server_agent_update', messageForBus);
 
       res.status(201).json({
         success: true,
@@ -712,7 +712,7 @@ export function MessagesRouter(serverInstance: AgentServer): express.Router {
         serverId,
         agentId,
       };
-      internalMessageBus.emit('server_agent_update', messageForBus);
+      await internalMessageBus.emit('server_agent_update', messageForBus);
 
       res.status(200).json({
         success: true,
