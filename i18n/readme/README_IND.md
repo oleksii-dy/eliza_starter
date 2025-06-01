@@ -140,10 +140,28 @@ pnpm install --include=optional sharp
 
 ## Kontributor
 
-<a href="https://github.com/elizaos/eliza/graphs/contributors">
+<a 
+href="https://github.com/elizaos/eliza/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=elizaos/eliza" />
 </a>
 
 ## Riwayat Bintang
 
 [![Grafik Riwayat Bintang](https://api.star-history.com/svg?repos=elizaos/eliza\&type=Date)](https://star-history.com/#elizaos/eliza&Date)
+
+## 🛠️ Persyaratan Sistem 
+
+### Persyaratan Minimum 
+- CPU: Prosesor dual-core
+- RAM: 4GB
+- Penyimpanan: Ruang kosong 1GB
+- Koneksi internet: Broadband (1 Mbps+)
+## Persyaratan Perangkat Lunak 
+- Python 2.7+ (disarankan 3.8+)
+- Node.js 23+
+- pnpm
+- Git
+### Persyaratan Opsional 
+- GPU: Untuk menjalankan model LLM lokal 
+-  Penyimpanan tambahan: Untuk penyimpanan dokumen dan memori
+-  RAM yang lebih tinggi: Untuk menjalankan beberapa agen. 
