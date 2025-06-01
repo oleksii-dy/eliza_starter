@@ -12,7 +12,7 @@ import {
 import { callLLMWithTimeout } from '../utils/llmHelpers';
 import { initializeClobClient, type BookParams } from '../utils/clobClient';
 import { getOrderBookDepthTemplate } from '../templates';
-import type { OrderBook } from '../types';
+import type { PolymarketOrderBookSummary } from '../types';
 
 /**
  * Get order book depth for one or more market tokens action for Polymarket
@@ -182,11 +182,12 @@ Please provide one or more token IDs in your request. Examples:
       // Initialize CLOB client
       const clobClient = await initializeClobClient(runtime);
 
-      // Prepare book parameters
-      const bookParams: BookParams[] = tokenIds.map((tokenId) => ({ token_id: tokenId }));
+      // Prepare book parameters - casting to BookParams to satisfy the strict type from clob-client
+      // as the getOrderBooks example suggests side is not strictly needed for this call.
+      const bookParams: BookParams[] = tokenIds.map((tokenId) => ({ token_id: tokenId } as BookParams));
 
-      // Fetch order book data
-      const orderBooks: OrderBook[] = await clobClient.getOrderBooks(bookParams);
+      // Fetch order book data - expecting PolymarketOrderBookSummary[]
+      const orderBooks: PolymarketOrderBookSummary[] = await clobClient.getOrderBooks(bookParams);
 
       if (!orderBooks || orderBooks.length === 0) {
         throw new Error(`No order books found for the provided token IDs: ${tokenIds.join(', ')}`);
@@ -204,10 +205,11 @@ Please provide one or more token IDs in your request. Examples:
         const bestBid = bidCount > 0 ? orderBook.bids[0] : null;
         const bestAsk = askCount > 0 ? orderBook.asks[0] : null;
 
-        responseText += `**Token ${index + 1}: \`${orderBook.asset_id}\`**\n`;
-        responseText += `• Market: ${orderBook.market || 'N/A'}\n`;
-        responseText += `• Bid Levels: ${bidCount}\n`;
-        responseText += `• Ask Levels: ${askCount}\n`;
+        responseText += `**Token ${index + 1}: \`${orderBook.asset_id}\`** (Market: ${orderBook.market || 'N/A'})\\n`;
+        responseText += `• Timestamp: ${new Date(orderBook.timestamp).toLocaleString()}\\n`;
+        responseText += `• Hash: ${orderBook.hash}\\n`;
+        responseText += `• Bid Levels: ${bidCount}\\n`;
+        responseText += `• Ask Levels: ${askCount}\\n`;
 
         if (bestBid) {
           responseText += `• Best Bid: $${bestBid.price} (${bestBid.size})\n`;

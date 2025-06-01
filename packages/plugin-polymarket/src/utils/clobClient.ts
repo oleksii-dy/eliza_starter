@@ -2,9 +2,8 @@ import { type IAgentRuntime, logger } from '@elizaos/core';
 import { ClobClient } from '@polymarket/clob-client';
 import { ethers } from 'ethers';
 
-
-// Re-export the ClobClient type for other modules
-export type { ClobClient } from '@polymarket/clob-client';
+// Re-export types for other modules
+export type { ClobClient, BookParams } from '@polymarket/clob-client';
 
 // Define the ApiKeyCreds interface to match the official client
 export interface ApiKeyCreds {

@@ -13,25 +13,26 @@ import type { ClobClient } from '@polymarket/clob-client';
 import { getOrderDetailsTemplate } from '../templates';
 import type { OrderSide, OrderStatus } from '../types';
 
-interface OfficialOpenOrder {
-    order_id: string;
-    user_id: string;
-    market_id: string;
-    token_id: string;
-    side: OrderSide;
-    type: string;
-    status: string;
+// Aligned with OpenOrder from @polymarket/clob-client/src/types.ts
+// and assuming client.getOrder(orderId) returns this structure or a compatible one.
+interface PolymarketOrderDetail {
+    id: string;
+    status: OrderStatus; // Use local OrderStatus enum/type if it maps to API status strings
+    owner: string;
+    maker_address: string;
+    market: string; // condition_id
+    asset_id: string; // token_id
+    side: OrderSide; // Use local OrderSide enum/type
+    original_size: string;
+    size_matched: string;
     price: string;
-    size: string;
-    filled_size: string;
+    associate_trades?: string[];
+    outcome?: string;
+    created_at: number; // Unix timestamp (seconds or ms - client should clarify)
+    expiration?: string; // ISO date string or timestamp
+    order_type?: string; // e.g., "GTC"
+    // Optional fields that might be specific to getOrder response or can be derived
     fees_paid?: string;
-    created_at: string;
-    updated_at: string;
-    is_cancelled?: boolean;
-    is_taker?: boolean;
-    is_active_order?: boolean;
-    error_code?: string | null;
-    error_message?: string | null;
 }
 
 /**
@@ -126,8 +127,8 @@ export const getOrderDetailsAction: Action = {
         logger.info(`[getOrderDetailsAction] Attempting to fetch details for Order ID: ${orderId}`);
 
         try {
-            const client = await initializeClobClientWithCreds(runtime) as ClobClient;
-            const order: any = await client.getOrder(orderId);
+            const client = await initializeClobClientWithCreds(runtime);
+            const order = await client.getOrder(orderId);
 
             if (!order) {
                 logger.warn(`[getOrderDetailsAction] Order not found for ID: ${orderId}`);
@@ -140,20 +141,23 @@ export const getOrderDetailsAction: Action = {
                 return notFoundContent;
             }
 
-            const displayOrder = order as OfficialOpenOrder;
+            const displayOrder = order as PolymarketOrderDetail; // Cast to our aligned interface
 
-            let responseText = `📦 **Order Details: ${displayOrder.order_id}**\n\n`;
-            responseText += `  **Market ID**: ${displayOrder.market_id}\n`;
-            responseText += `  **Token ID**: ${displayOrder.token_id}\n`;
-            responseText += `  **Side**: ${displayOrder.side}, **Type**: ${displayOrder.type}\n`;
+            let responseText = `📦 **Order Details: ${displayOrder.id}**\n\n`;
+            responseText += `  **Market ID**: ${displayOrder.market}\n`;
+            responseText += `  **Token ID**: ${displayOrder.asset_id}\n`;
+            if (displayOrder.outcome) responseText += `  **Outcome**: ${displayOrder.outcome}\n`;
+            responseText += `  **Side**: ${displayOrder.side}, **Type**: ${displayOrder.order_type || 'N/A'}\n`;
             responseText += `  **Status**: ${displayOrder.status}\n`;
-            responseText += `  **Price**: ${displayOrder.price}, **Size**: ${displayOrder.size}\n`;
-            responseText += `  **Filled Size**: ${displayOrder.filled_size}\n`;
+            responseText += `  **Price**: ${displayOrder.price}\n`;
+            responseText += `  **Size (Original)**: ${displayOrder.original_size}\n`;
+            responseText += `  **Size (Matched)**: ${displayOrder.size_matched}\n`;
             if (displayOrder.fees_paid) responseText += `  **Fees Paid**: ${displayOrder.fees_paid}\n`;
-            responseText += `  **Created**: ${new Date(displayOrder.created_at).toLocaleString()}\n`;
-            responseText += `  **Updated**: ${new Date(displayOrder.updated_at).toLocaleString()}\n`;
-            if (displayOrder.is_cancelled !== undefined) responseText += `  **Cancelled**: ${displayOrder.is_cancelled ? 'Yes' : 'No'}\n`;
-            if (displayOrder.error_message) responseText += `  **Error**: ${displayOrder.error_message}\n`;
+            responseText += `  **Created**: ${new Date(displayOrder.created_at * 1000).toLocaleString()}\n`; // Assuming Unix seconds for created_at
+            if (displayOrder.expiration) responseText += `  **Expiration**: ${new Date(displayOrder.expiration).toLocaleString()}\n`; // Assuming ISO string or ms timestamp
+            if (displayOrder.associate_trades && displayOrder.associate_trades.length > 0) {
+                responseText += `  **Associated Trades**: ${displayOrder.associate_trades.join(', ')}\n`;
+            }
 
             const responseContent: Content = {
                 text: responseText,

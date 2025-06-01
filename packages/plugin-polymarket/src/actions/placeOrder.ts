@@ -214,13 +214,35 @@ Please provide order details in your request. Examples:
     try {
       const client = await initializeClobClient(runtime);
 
+      let finalOrderType: OrderType.GTC | OrderType.GTD;
+      switch (orderType) {
+        case 'LIMIT':
+        case 'GTC':
+          finalOrderType = OrderType.GTC;
+          break;
+        case 'GTD':
+          finalOrderType = OrderType.GTD;
+          break;
+        case 'MARKET':
+        case 'FOK':
+        case 'FAK':
+          logger.warn(`[placeOrderAction] Market order type ${orderType} requested. Defaulting to GTC for this call. True market orders require createAndPostMarketOrder.`);
+          finalOrderType = OrderType.GTC; // Default to GTC for createAndPostOrder
+          break;
+        default:
+          logger.warn(`[placeOrderAction] Unknown order type ${orderType}. Defaulting to GTC.`);
+          finalOrderType = OrderType.GTC;
+      }
+
+      const finalFeeRateBps = parseFloat(feeRateBps);
+
       // Create order arguments matching the official ClobClient interface
       const orderArgs = {
         tokenID: tokenId, // Official package expects tokenID (capital ID)
         price,
         side: side === 'BUY' ? Side.BUY : Side.SELL,
         size,
-        feeRateBps: parseFloat(feeRateBps), // Convert to number
+        feeRateBps: finalFeeRateBps,
       };
 
       logger.info(`[placeOrderAction] Creating order with args:`, orderArgs);
@@ -252,7 +274,7 @@ Please provide order details in your request. Examples:
       // Post the order with enhanced error handling
       let orderResponse;
       try {
-        orderResponse = await client.postOrder(signedOrder, orderType as OrderType);
+        orderResponse = await client.postOrder(signedOrder, finalOrderType);
         logger.info(`[placeOrderAction] Order posted successfully`);
       } catch (postError) {
         logger.error(`[placeOrderAction] Error posting order:`, postError);
@@ -268,7 +290,7 @@ Please provide order details in your request. Examples:
       if (orderResponse.success) {
         const sideText = side.toLowerCase();
         const orderTypeText =
-          orderType === 'GTC' ? 'limit' : orderType === 'FOK' ? 'market' : orderType.toLowerCase();
+          finalOrderType === OrderType.GTC ? 'limit' : finalOrderType === OrderType.FOK ? 'market' : finalOrderType.toLowerCase();
         const totalValue = (price * size).toFixed(4);
 
         responseText = `✅ **Order Placed Successfully**
@@ -285,19 +307,17 @@ Please provide order details in your request. Examples:
 **Order Response:**
 • **Order ID**: ${orderResponse.orderId || 'Pending'}
 • **Status**: ${orderResponse.status || 'submitted'}
-${
-  orderResponse.orderHashes && orderResponse.orderHashes.length > 0
-    ? `• **Transaction Hash(es)**: ${orderResponse.orderHashes.join(', ')}`
-    : ''
-}
+${orderResponse.orderHashes && orderResponse.orderHashes.length > 0
+            ? `• **Transaction Hash(es)**: ${orderResponse.orderHashes.join(', ')}`
+            : ''
+          }
 
-${
-  orderResponse.status === 'matched'
-    ? '🎉 Your order was immediately matched and executed!'
-    : orderResponse.status === 'delayed'
-      ? '⏳ Your order is subject to a matching delay due to market conditions.'
-      : '📋 Your order has been placed and is waiting to be matched.'
-}`;
+${orderResponse.status === 'matched'
+            ? '🎉 Your order was immediately matched and executed!'
+            : orderResponse.status === 'delayed'
+              ? '⏳ Your order is subject to a matching delay due to market conditions.'
+              : '📋 Your order has been placed and is waiting to be matched.'
+          }`;
 
         responseData = {
           success: true,

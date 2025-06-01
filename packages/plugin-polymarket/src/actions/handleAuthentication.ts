@@ -120,6 +120,11 @@ export const handleAuthenticationAction: Action = {
             await runtime.setSetting('CLOB_API_SECRET', storedCreds.secret);
             await runtime.setSetting('CLOB_API_PASSPHRASE', storedCreds.passphrase);
 
+            // Also set session-specific API key info
+            await runtime.setSetting('POLYMARKET_SESSION_API_KEY_ID', storedCreds.key_id || storedCreds.key);
+            await runtime.setSetting('POLYMARKET_SESSION_API_LABEL', storedCreds.label || 'derived-via-handleAuthentication');
+            await runtime.setSetting('POLYMARKET_SESSION_API_SOURCE', 'handleAuthenticationAction');
+
             logger.info('[handleAuthenticationAction] Derived API credentials have been stored in runtime settings.');
 
             let responseText = `🔑 **API Key Derived Successfully**\nAPI Key (ID): ${storedCreds.key_id}`;

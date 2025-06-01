@@ -12,7 +12,7 @@ import {
 import { callLLMWithTimeout } from '../utils/llmHelpers';
 import { initializeClobClient } from '../utils/clobClient';
 import { getOrderBookTemplate } from '../templates';
-import type { OrderBook } from '../types';
+import type { PolymarketOrderBookSummary } from '../types';
 
 /**
  * Get order book summary for a market token action for Polymarket
@@ -120,7 +120,7 @@ Please provide a token ID in your request. For example:
       if (
         error instanceof Error &&
         error.message ===
-          'Token identifier not found. Please specify a token ID for the order book.'
+        'Token identifier not found. Please specify a token ID for the order book.'
       ) {
         throw error;
       }
@@ -163,8 +163,8 @@ Please provide a token ID in your request. For example:
       // Initialize CLOB client
       const clobClient = await initializeClobClient(runtime);
 
-      // Fetch order book data
-      const orderBook: OrderBook = await clobClient.getBook(tokenId);
+      // Fetch order book data using getOrderBook
+      const orderBook: PolymarketOrderBookSummary = await clobClient.getOrderBook(tokenId);
 
       if (!orderBook) {
         throw new Error(`Order book not found for token ID: ${tokenId}`);

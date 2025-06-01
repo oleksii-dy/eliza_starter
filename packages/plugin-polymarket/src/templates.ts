@@ -508,38 +508,57 @@ Examples:
   { "error": "The query does not seem to be about account access status..." }
 `;
 
-export const setupWebsocketTemplate = `
-Your task is to extract parameters for subscribing to Polymarket WebSocket channels from the user query.
-Extract the following parameters if present:
-- markets: An array of market condition IDs (strings, usually 0x prefixed hex strings).
-- userId: The user's wallet address (a string, 0x prefixed hex string).
+export const setupWebsocketTemplate = `You are an AI assistant. Your task is to extract parameters for subscribing to Polymarket WebSocket channels.
 
-User query: """{{message.content.text}}"""
+Review the recent messages:
+<recent_messages>
+{{recentMessages}}
+</recent_messages>
 
-If you cannot find a required parameter, or if the query is ambiguous, set "error" to a brief explanation.
-If the user explicitly states they want to connect without specific market or user subscriptions (e.g., just to open the connection), output empty arrays/strings for optional fields if not specified.
+Based on the conversation, identify:
+- markets: An array of market condition IDs (strings, typically 0x prefixed 64-character hex strings, or alphanumeric strings ending in 'condition-ID').
+- userId: The user's wallet address (a string, typically a 0x prefixed 40-character hex string).
 
-Example 1:
-User query: "Subscribe to market 0x123 and 0x456, and my user ID 0xabc."
-Output:
+Look for:
+- Explicit mentions of "market", "markets", "condition ID" followed by one or more identifiers.
+- Phrases like "subscribe to updates for market X", "listen to market Y".
+- Explicit mentions of "user ID", "my trades", "my updates" which might imply a userId is needed or will be provided.
+- Hexadecimal strings (0x...). If it's 64 characters long (after 0x), it's likely a market ID. If 40 characters, it's likely a user ID.
+
+Examples:
+- User query: "Subscribe to market 0x123abc123abc123abc123abc123abc123abc123abc123abc123abc and 0xdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdef, and my user ID 0xabcabcabcabcabcabcabcabcabcabcabcabcabc."
+  Output:
+  {
+    "markets": ["0x123abc123abc123abc123abc123abc123abc123abc123abc123abc123abc", "0xdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdef"],
+    "userId": "0xabcabcabcabcabcabcabcabcabcabcabcabcabc"
+  }
+- User query: "Listen to my trades."
+  Output:
+  {
+    "error": "User ID (wallet address) is required to listen to your trades. Please provide it or ensure it's in your settings."
+  }
+- User query: "Connect to Polymarket websockets for market 0xdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdef."
+  Output:
+  {
+    "markets": ["0xdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdef"]
+  }
+- User query: "subscribe to market updates for 0x65db0b1ae01a5430da10926a40fedfb049ec1ddb273c3385a2c49b14b3f1e170"
+  Output:
+  {
+    "markets": ["0x65db0b1ae01a5430da10926a40fedfb049ec1ddb273c3385a2c49b14b3f1e170"]
+  }
+- User query: "Just open a websocket connection."
+  Output: {} // No specific markets or user, implies a general connection attempt if supported, or error if params are strictly needed by action.
+
+Respond with a JSON object containing only the extracted values.
+The JSON should have this structure if parameters are found:
 {
-  "markets": ["0x123", "0x456"],
-  "userId": "0xabc"
+    "markets"?: string[],
+    "userId"?: string
 }
 
-Example 2:
-User query: "Listen to my trades."
-Output:
+If no market IDs or user ID are found, and they seem necessary for the user's intent (e.g. "subscribe to updates" without specifying what), you MUST respond with the following JSON structure:
 {
-  "error": "User ID (wallet address) is required to listen to your trades. Please provide it."
+    "error": "No market IDs or user ID found. Please specify at least one market (condition ID) or a user ID for WebSocket subscriptions."
 }
-
-Example 3:
-User query: "Connect to Polymarket websockets for market 0xdef."
-Output:
-{
-  "markets": ["0xdef"]
-}
-
-Output JSON:
 `;

@@ -11,7 +11,7 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
 import { initializeClobClientWithCreds } from '../utils/clobClient';
 import type { ClobClient } from '@polymarket/clob-client';
 import { getActiveOrdersTemplate } from '../templates';
-import type { OpenOrder, GetOpenOrdersParams as LocalGetOpenOrdersParams } from '../types';
+import type { OpenOrder, GetOpenOrdersParams } from '../types';
 
 /**
  * Get active orders for a specific market and optionally asset ID.
@@ -105,67 +105,49 @@ export const getActiveOrdersAction: Action = {
             }
         }
 
-        const apiParams: LocalGetOpenOrdersParams = {
+        const apiParams: GetOpenOrdersParams = {
             market: extractedParams.marketId,
-            assetId: extractedParams.assetId,
-            // nextCursor and address can be added if needed from LLM or settings
+            asset_id: extractedParams.assetId,
         };
 
         // Remove undefined properties
         Object.keys(apiParams).forEach(key => {
-            const K = key as keyof LocalGetOpenOrdersParams;
+            const K = key as keyof GetOpenOrdersParams;
             if (apiParams[K] === undefined) delete apiParams[K];
         });
 
-        logger.info(`[getActiveOrdersAction] Attempting to fetch open orders for Market ID: ${apiParams.market}, Asset ID: ${apiParams.assetId || 'any'}`);
+        logger.info(`[getActiveOrdersAction] Attempting to fetch open orders for Market ID: ${apiParams.market}, Asset ID: ${apiParams.asset_id || 'any'}`);
 
         try {
-            const client = await initializeClobClientWithCreds(runtime) as ClobClient;
+            const client = await initializeClobClientWithCreds(runtime);
 
-            // The official client's getOpenOrders might return OpenOrdersResponse or OpenOrder[]
-            // For now, casting to any and then to OpenOrder[] to match previous logic.
-            // The official client's OpenOrderParams type should be used for apiParams if different.
-            const openOrdersResponse: any = await client.getOpenOrders(apiParams as any);
-
-            // Determine if the response is an array directly or an object with a data field
-            let actualOrders: OpenOrder[];
-            let nextCursor: string | undefined;
-
-            if (Array.isArray(openOrdersResponse)) {
-                actualOrders = openOrdersResponse;
-                // If it's just an array, pagination info might be lost or handled differently by official client
-            } else if (openOrdersResponse && Array.isArray(openOrdersResponse.data)) {
-                actualOrders = openOrdersResponse.data;
-                nextCursor = openOrdersResponse.next_cursor;
-            } else {
-                // Fallback if structure is unexpected, treat as empty or handle error
-                actualOrders = [];
-                logger.warn('[getActiveOrdersAction] Unexpected response structure from client.getOpenOrders');
-            }
+            // According to clob-client/src/types.ts, getOpenOrders(OpenOrderParams) returns OpenOrder[] directly.
+            // OpenOrdersResponse is an alias for OpenOrder[]
+            const actualOrders: OpenOrder[] = await client.getOpenOrders(apiParams);
+            const nextCursor: string | undefined = undefined; // No pagination info from this call signature
 
             let responseText = `📊 **Active Orders for Market ${apiParams.market}**`;
-            if (apiParams.assetId) {
-                responseText += ` (Asset ${apiParams.assetId})`;
+            if (apiParams.asset_id) {
+                responseText += ` (Asset ${apiParams.asset_id})`;
             }
             responseText += `\n\n`;
 
-            if (actualOrders.length > 0) {
+            if (actualOrders && actualOrders.length > 0) { // Added null check for actualOrders just in case
                 responseText += actualOrders.map(order =>
-                    `• **Order ID**: ${order.order_id}\n` +
+                    `• **Order ID**: ${order.id}\n` +
                     `  ◦ **Side**: ${order.side}\n` +
                     `  ◦ **Price**: ${order.price}\n` +
-                    `  ◦ **Size**: ${order.size}\n` +
-                    `  ◦ **Filled**: ${order.filled_size}\n` +
+                    `  ◦ **Original Size**: ${order.original_size}\n` +
+                    `  ◦ **Matched Size**: ${order.size_matched}\n` +
                     `  ◦ **Status**: ${order.status}\n` +
-                    `  ◦ **Created**: ${new Date(order.created_at).toLocaleString()}`
+                    `  ◦ **Type**: ${order.order_type || 'N/A'}\n` +
+                    `  ◦ **Created**: ${new Date(order.created_at * 1000).toLocaleString()}` // Assuming created_at is Unix seconds
                 ).join('\n\n');
-                if (nextCursor && nextCursor !== 'LTE=') {
-                    responseText += `\n\n🗒️ *More orders available. Use cursor \`${nextCursor}\` to fetch next page.*`;
-                }
+                // Pagination note removed as this call doesn't support it directly
             } else {
                 responseText += `No active orders found for Market ID ${apiParams.market}`;
-                if (apiParams.assetId) {
-                    responseText += ` and Asset ID ${apiParams.assetId}`;
+                if (apiParams.asset_id) {
+                    responseText += ` and Asset ID ${apiParams.asset_id}`;
                 }
                 responseText += `.`;
             }
@@ -173,7 +155,7 @@ export const getActiveOrdersAction: Action = {
             const responseContent: Content = {
                 text: responseText,
                 actions: ['GET_ACTIVE_ORDERS'],
-                data: { ...apiParams, orders: actualOrders, nextCursor, timestamp: new Date().toISOString() },
+                data: { ...apiParams, orders: actualOrders, next_cursor: nextCursor, timestamp: new Date().toISOString() }, // next_cursor will be undefined
             };
 
             if (callback) await callback(responseContent);

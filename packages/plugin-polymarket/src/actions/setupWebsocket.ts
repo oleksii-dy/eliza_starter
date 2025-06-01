@@ -11,6 +11,7 @@ import WebSocket from 'ws'; // Import WebSocket from 'ws'
 import { callLLMWithTimeout } from '../utils/llmHelpers';
 import { setupWebsocketTemplate } from '../templates';
 import { setActiveClobSocketClientReference, getActiveWebSocketClient } from './handleRealtimeUpdates'; // Adjusted for ws.WebSocket type
+import { initializeClobClient } from '../utils/clobClient';
 
 // Interface for WebSocket subscription message, based on socketExample.ts
 interface SubscriptionMessage {
@@ -72,6 +73,7 @@ export const setupWebsocketAction: Action = {
 
         let extractedMarkets: string[] | undefined;
         let extractedUserId: string | undefined;
+        let pingIntervalId: NodeJS.Timeout | null = null; // Declare pingIntervalId
 
         try {
             logger.info('[setupWebsocketAction] Attempting LLM parameter extraction...');
@@ -98,12 +100,22 @@ export const setupWebsocketAction: Action = {
         } catch (error: any) {
             logger.warn(`[setupWebsocketAction] LLM extraction failed or did not yield parameters (Error: ${error.message}). Attempting regex/manual extraction.`);
             const text = message.content?.text || '';
-            const marketRegex = /market(?:s)?(?:\\s*[:\\-]?\\s*)((?:0x)?[0-9a-fA-F]{40,}|[a-zA-Z0-9_.-]+condition-[0-9]+)/gi;
-            const marketMatches = Array.from(text.matchAll(marketRegex));
-            if (marketMatches.length > 0) {
-                extractedMarkets = marketMatches.map(m => m[1]);
-                logger.info(`[setupWebsocketAction] Regex fallback extracted markets: ${JSON.stringify(extractedMarkets)}`);
+
+            // Revised regex logic: first check for market keyword, then search for ID patterns.
+            const hasMarketKeyword = /market(s)?/i.test(text);
+            if (hasMarketKeyword) {
+                const idRegex = /(0x[0-9a-fA-F]{64})|([a-zA-Z0-9_.-]+condition-[0-9]+)/gi;
+                const idMatches = Array.from(text.matchAll(idRegex));
+                if (idMatches.length > 0) {
+                    // Filter out null/undefined matches and take the first actual captured group from each match
+                    const foundMarkets = idMatches.map(m => m[1] || m[2]).filter(id => !!id);
+                    if (foundMarkets.length > 0) {
+                        extractedMarkets = foundMarkets;
+                        logger.info(`[setupWebsocketAction] Regex fallback extracted markets: ${JSON.stringify(extractedMarkets)}`);
+                    }
+                }
             }
+
             const userRegex = /user(?:Id)?(?:\\s*[:\\-]?\\s*)((?:0x)?[0-9a-fA-F]{40})/i;
             const userMatch = text.match(userRegex);
             if (userMatch && userMatch[1]) {
@@ -152,25 +164,47 @@ export const setupWebsocketAction: Action = {
             subMsgPayload.auth = { apiKey, secret: apiSecret, passphrase: apiPassphrase };
         } else { // market subscription
             if (!extractedMarkets || extractedMarkets.length === 0) {
-                const errMsg = 'At least one market (condition ID or asset ID) is required for market channel subscription.';
+                const errMsg = 'At least one market (condition ID) is required for market channel subscription.';
                 logger.error(`[setupWebsocketAction] ${errMsg}`);
                 if (callback) await callback({ text: `❌ ${errMsg}` });
                 throw new Error(errMsg);
             }
-            // The example uses 'assets_ids' for market subscriptions with token IDs.
-            // We are getting 'condition_ids' from the user. This needs clarification from Polymarket docs
-            // if 'markets' (condition_ids) can be used directly or if they need to be converted/interpreted as asset_ids for 'market' type.
-            // For now, assuming 'markets' (condition_ids) are what's needed, as per 'user' channel example.
-            // If 'assets_ids' are strictly token_ids, this part might need adjustment or a new param in LLM extraction.
-            subMsgPayload.markets = extractedMarkets; // Using condition_ids here; documentation suggests 'assets_ids' with token_ids for market channel
-            logger.warn("[setupWebsocketAction] For 'market' channel, official docs suggest 'assets_ids' (token IDs). Currently using extracted 'markets' (condition IDs). This may need review.");
+
+            // For market channel, we need to resolve condition ID(s) to asset ID(s)
+            const conditionIdToFetch = extractedMarkets[0]; // Using the first market for now
+            logger.info(`[setupWebsocketAction] Market subscription: Fetching asset IDs for condition ID: ${conditionIdToFetch}`);
+
+            try {
+                const clobClient = await initializeClobClient(runtime);
+                const marketDetails = await clobClient.getMarket(conditionIdToFetch);
+                logger.info(`[setupWebsocketAction] Fetched market details for ${conditionIdToFetch}: ${JSON.stringify(marketDetails, null, 2)}`); // Log market details
+
+                if (marketDetails && marketDetails.tokens && marketDetails.tokens.length > 0) {
+                    const assetIds = marketDetails.tokens.map(token => token.token_id).filter(id => !!id);
+                    if (assetIds.length > 0) {
+                        subMsgPayload.assets_ids = assetIds;
+                        // Remove the markets field as we are using assets_ids for market type subscription
+                        delete subMsgPayload.markets;
+                        logger.info(`[setupWebsocketAction] Subscribing to asset IDs: ${JSON.stringify(assetIds)} for condition ID ${conditionIdToFetch}`);
+                    } else {
+                        throw new Error(`No asset IDs found for condition ID: ${conditionIdToFetch}`);
+                    }
+                } else {
+                    throw new Error(`Could not retrieve market details or tokens for condition ID: ${conditionIdToFetch}`);
+                }
+            } catch (marketError: any) {
+                const errMsg = `Error fetching market details to get asset IDs: ${marketError.message}`;
+                logger.error(`[setupWebsocketAction] ${errMsg}`);
+                if (callback) await callback({ text: `❌ ${errMsg}` });
+                throw new Error(errMsg);
+            }
         }
 
         return new Promise<Content>((resolvePromise, rejectPromise) => {
             try {
                 logger.info(`[setupWebsocketAction] Creating new WebSocket connection to: ${wsUrl}`);
                 const wsClient = new WebSocket(wsUrl);
-                setActiveClobSocketClientReference(wsClient as any); // Store the ws.WebSocket instance
+                setActiveClobSocketClientReference(wsClient as any);
 
                 wsClient.on('open', () => {
                     logger.info('[setupWebsocketAction] WebSocket connection opened. Sending subscription message...');
@@ -178,6 +212,7 @@ export const setupWebsocketAction: Action = {
                     wsClient.send(messageStr, (err?: Error) => {
                         if (err) {
                             logger.error('[setupWebsocketAction] Error sending subscription message:', err);
+                            if (pingIntervalId) { clearInterval(pingIntervalId); pingIntervalId = null; } // Clear interval on error
                             setActiveClobSocketClientReference(null);
                             wsClient.terminate();
                             const errorContent: Content = { text: `❌ WebSocket Error: Failed to send subscription - ${err.message}` };
@@ -191,6 +226,15 @@ export const setupWebsocketAction: Action = {
                         if (subMsgPayload.assets_ids && subMsgPayload.assets_ids.length > 0) responseText += ` Subscribed to assets: ${subMsgPayload.assets_ids.join(', ')}.`;
                         responseText += ' Waiting for real-time updates. Use HANDLE_REALTIME_UPDATES to process messages.';
 
+                        // Start sending pings every 30 seconds
+                        if (pingIntervalId) { clearInterval(pingIntervalId); } // Clear any existing (should not happen here)
+                        pingIntervalId = setInterval(() => {
+                            if (wsClient.readyState === WebSocket.OPEN) { // Use imported WebSocket for WebSocket.OPEN
+                                logger.info('[setupWebsocketAction] Sending WebSocket ping');
+                                wsClient.ping();
+                            }
+                        }, 30000);
+
                         const responseContent: Content = {
                             text: responseText,
                             actions: ['HANDLE_REALTIME_UPDATES'],
@@ -203,6 +247,7 @@ export const setupWebsocketAction: Action = {
 
                 wsClient.on('error', (error: Error) => {
                     logger.error('[setupWebsocketAction] WebSocket connection error:', error);
+                    if (pingIntervalId) { clearInterval(pingIntervalId); pingIntervalId = null; } // Clear interval
                     setActiveClobSocketClientReference(null);
                     // wsClient.terminate(); // No need to terminate, 'close' will be called
                     const errorContent: Content = { text: `❌ WebSocket Error: ${error.message}` };
@@ -212,6 +257,7 @@ export const setupWebsocketAction: Action = {
 
                 wsClient.on('close', (code: number, reason: Buffer) => {
                     logger.info(`[setupWebsocketAction] WebSocket connection closed. Code: ${code}, Reason: ${reason.toString()}`);
+                    if (pingIntervalId) { clearInterval(pingIntervalId); pingIntervalId = null; } // Clear interval
                     setActiveClobSocketClientReference(null);
                     // Only reject if it hasn't been resolved already (e.g. by 'open' and successful send)
                     // This might lead to double responses if an error occurs after successful connection
@@ -230,6 +276,7 @@ export const setupWebsocketAction: Action = {
 
             } catch (error: any) {
                 logger.error('[setupWebsocketAction] Critical error during WebSocket setup (outside of event handlers):', error);
+                if (pingIntervalId) { clearInterval(pingIntervalId); pingIntervalId = null; } // Clear interval
                 setActiveClobSocketClientReference(null);
                 const errorContent: Content = { text: `❌ Critical WebSocket Setup Error: ${error.message}` };
                 if (callback) callback(errorContent);
