@@ -901,6 +901,9 @@ describe('Choice Action (Extended)', () => {
       roomId: mockMessage.roomId,
       tags: ['AWAITING_CHOICE'],
     });
+    
+    // Clean up the spy
+    validateSpy.mockRestore();
   });
 
   it('should not validate choice action for non-admin users', async () => {
@@ -914,8 +917,22 @@ describe('Choice Action (Extended)', () => {
       },
     ]);
 
-    // Set user role to USER, which shouldn't have permission
-    mockRuntime.getUserServerRole = vi.fn().mockResolvedValue('USER');
+    // Mock getWorld to return a world where the test entity is not an admin
+    mockRuntime.getWorld = vi.fn().mockResolvedValue({
+      id: 'test-world-id',
+      name: 'Test World',
+      serverId: 'test-server-id',
+      metadata: {
+        roles: {
+          'test-agent-id': 'OWNER',
+          // test-entity-id is not in roles, so will default to Role.NONE
+        },
+        settings: [
+          { name: 'setting1', value: 'value1', description: 'Description 1' },
+          { name: 'setting2', value: 'value2', description: 'Description 2' },
+        ],
+      },
+    });
 
     const isValid = await choiceAction.validate(
       mockRuntime as IAgentRuntime,
