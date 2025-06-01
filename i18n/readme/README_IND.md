@@ -162,6 +162,39 @@ href="https://github.com/elizaos/eliza/graphs/contributors">
 - pnpm
 - Git
 ### Persyaratan Opsional 
-- GPU: Untuk menjalankan model LLM lokal 
+- GPU: Untuk menjalankan model LLM lokal
 -  Penyimpanan tambahan: Untuk penyimpanan dokumen dan memori
--  RAM yang lebih tinggi: Untuk menjalankan beberapa agen. 
+-  RAM yang lebih tinggi: Untuk menjalankan beberapa agen.
+
+## 📁 Struktur Project 
+```
+eliza/
+├── packages/
+│   ├── core/           # Core Eliza functionality
+│   ├── clients/        # Client implementations
+│   └── actions/        # Custom actions
+├── docs/              # Documentation
+├── scripts/           # Utility scripts
+└── examples/          # Example implementations
+```
+
+## 🤝 Kontribusi
+Kami menerima kontribusi! Berikut cara Anda dapat membantu: ### Memulai 
+1. Fork repositori
+2. Buat cabang baru: `git checkout -b feature/nama-fitur-Anda`
+3. Buat perubahan
+4. Jalankan pengujian: `pnpm test`
+5. Kirim permintaan tarik
+
+### Jenis Kontribusi 
+- 🐛 Perbaikan bug
+- ✨ Fitur baru
+- 📚 Peningkatan dokumentasi
+- 🌍 Terjemahan
+- 🧪 Peningkatan pengujian
+
+### Gaya Kode 
+- Mengikuti gaya kode yang ada
+- Menambahkan komentar untuk logika yang kompleks
+- Memperbarui dokumentasi untuk perubahan
+- Menambahkan pengujian untuk fitur baru
