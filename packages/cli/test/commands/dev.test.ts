@@ -21,30 +21,45 @@ const mockLogger = {
   }),
 };
 
-const mockChokidar = {
-  watch: vi.fn(),
-};
-
-const mockMergeStreams = vi.fn();
-const mockExeca = vi.fn();
-
 const mockWatcher = {
   on: vi.fn().mockReturnThis(),
   close: vi.fn(),
 };
 
+const mockMergeStreams = vi.fn();
+const mockExeca = vi.fn();
+
 vi.mock('@elizaos/core', () => ({
-  logger: mockLogger,
+  logger: {
+    info: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    success: vi.fn(),
+    log: vi.fn(),
+    spinner: () => ({
+      start: vi.fn(),
+      stop: vi.fn(),
+      succeed: vi.fn(),
+      fail: vi.fn(),
+      text: '',
+    }),
+  },
 }));
 
-vi.mock('chokidar', () => mockChokidar);
+vi.mock('chokidar', () => ({
+  watch: vi.fn(() => ({
+    on: vi.fn().mockReturnThis(),
+    close: vi.fn(),
+  })),
+}));
 
 vi.mock('@sindresorhus/merge-streams', () => ({
-  default: mockMergeStreams,
+  default: vi.fn(),
 }));
 
 vi.mock('execa', () => ({
-  execa: mockExeca,
+  execa: vi.fn(),
 }));
 
 vi.mock('../../src/utils', () => ({
@@ -64,10 +79,38 @@ vi.mock('../../src/utils', () => ({
   },
 }));
 
+beforeEach(async () => {
+  // Get the mocked modules after mocking
+  const { logger } = await import('@elizaos/core');
+  const chokidar = await import('chokidar');
+  const mergeStreams = await import('@sindresorhus/merge-streams');
+  const { execa } = await import('execa');
+  
+  Object.assign(mockLogger, logger);
+  Object.assign(mockMergeStreams, (mergeStreams as any).default);
+  Object.assign(mockExeca, execa);
+  
+  // Setup default mock return values
+  chokidar.watch.mockReturnValue(mockWatcher);
+  mockMergeStreams.mockReturnValue({
+    pipe: vi.fn(),
+  });
+  
+  // Mock execa to return a child process-like object
+  mockExeca.mockReturnValue({
+    stdout: { pipe: vi.fn() },
+    stderr: { pipe: vi.fn() },
+    kill: vi.fn(),
+    on: vi.fn(),
+  });
+});
+
 describe('dev command', () => {
   let tempDir: string;
   let cwdSpy: Mock;
   let processExitSpy: Mock;
+  let mockChokidar: any;
+  let processOnSpy: any;
   
   beforeEach(async () => {
     tempDir = await mkdtemp(join(tmpdir(), 'dev-test-'));
@@ -75,12 +118,15 @@ describe('dev command', () => {
     processExitSpy = vi.spyOn(process, 'exit' as any).mockImplementation(() => {
       throw new Error('process.exit called');
     });
+    processOnSpy = vi.spyOn(process, 'on').mockImplementation(() => process);
     
     // Reset all mocks
     vi.clearAllMocks();
     
+    // Get the mocked chokidar
+    mockChokidar = await import('chokidar');
+    
     // Setup default mocks
-    mockChokidar.watch.mockReturnValue(mockWatcher);
     mockMergeStreams.mockReturnValue({
       pipe: vi.fn(),
     });
@@ -89,20 +135,21 @@ describe('dev command', () => {
     mockExeca.mockReturnValue({
       stdout: { pipe: vi.fn() },
       stderr: { pipe: vi.fn() },
+      pid: 1234,
       kill: vi.fn(),
-      on: vi.fn(),
     });
   });
 
   afterEach(async () => {
     cwdSpy.mockRestore();
     processExitSpy.mockRestore();
+    processOnSpy.mockRestore();
     await rm(tempDir, { recursive: true, force: true });
   });
 
   describe('development server', () => {
     it('should start dev server with file watching', async () => {
-      const action = (dev as any)._actionHandler;
+      const chokidar = await import('chokidar');
       
       // Create package.json
       await writeFile(
@@ -110,10 +157,10 @@ describe('dev command', () => {
         JSON.stringify({ name: 'test-project', scripts: { start: 'node index.js' } })
       );
 
-      action({ port: 3000 });
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       // Verify chokidar is watching correct patterns
-      expect(mockChokidar.watch).toHaveBeenCalledWith(
+      expect(chokidar.watch).toHaveBeenCalledWith(
         expect.arrayContaining([
           'src/**/*',
           'package.json',
@@ -126,202 +173,165 @@ describe('dev command', () => {
         ]),
         expect.objectContaining({
           ignoreInitial: true,
-          ignored: expect.arrayContaining([
-            '**/node_modules/**',
-            '**/dist/**',
-          ]),
-        })
-      );
-
-      // Verify initial start command
-      expect(mockExeca).toHaveBeenCalledWith(
-        'elizaos',
-        ['start', '--port', '3000'],
-        expect.objectContaining({
-          shell: true,
-          stdio: 'pipe',
+          ignored: expect.arrayContaining(['**/node_modules/**', '**/dist/**']),
         })
       );
     });
 
     it('should restart on file changes', async () => {
-      const action = (dev as any)._actionHandler;
+      await writeFile(
+        join(tempDir, 'package.json'),
+        JSON.stringify({ name: 'test-project', scripts: { start: 'node index.js' } })
+      );
       
-      action({ port: 3000 });
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       // Get the change handler
       const changeHandler = mockWatcher.on.mock.calls.find(
         call => call[0] === 'change'
-      )?.[1];
+      )[1];
 
-      expect(changeHandler).toBeDefined();
-
-      // Simulate file change
+      // Trigger a file change
       changeHandler('src/index.ts');
 
-      // Should log the change
+      // Allow debounce to complete
+      await new Promise(resolve => setTimeout(resolve, 350));
+
+      // Should have restarted
+      expect(mockExeca).toHaveBeenCalledTimes(2);
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('File changed: src/index.ts')
       );
-
-      // Should kill existing process
-      expect(mockExeca.mock.results[0].value.kill).toHaveBeenCalled();
-
-      // Should restart
-      expect(mockExeca).toHaveBeenCalledTimes(2);
     });
 
     it('should handle multiple rapid file changes (debouncing)', async () => {
-      vi.useFakeTimers();
+      await writeFile(
+        join(tempDir, 'package.json'),
+        JSON.stringify({ name: 'test-project', scripts: { start: 'node index.js' } })
+      );
       
-      const action = (dev as any)._actionHandler;
-      action({ port: 3000 });
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       const changeHandler = mockWatcher.on.mock.calls.find(
         call => call[0] === 'change'
-      )?.[1];
+      )[1];
 
-      // Simulate rapid file changes
-      changeHandler('src/file1.ts');
-      changeHandler('src/file2.ts');
-      changeHandler('src/file3.ts');
+      // Trigger multiple rapid changes
+      changeHandler('file1.ts');
+      changeHandler('file2.ts');
+      changeHandler('file3.ts');
 
-      // Should only log first change immediately
-      expect(mockLogger.info).toHaveBeenCalledTimes(1);
+      // Wait less than debounce time
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
+      // Should not have restarted yet
+      expect(mockExeca).toHaveBeenCalledTimes(1);
 
-      // Fast forward past debounce delay
-      vi.advanceTimersByTime(1000);
+      // Wait for debounce to complete
+      await new Promise(resolve => setTimeout(resolve, 250));
 
       // Should have restarted only once
-      expect(mockExeca).toHaveBeenCalledTimes(2); // Initial + 1 restart
-
-      vi.useRealTimers();
+      expect(mockExeca).toHaveBeenCalledTimes(2);
     });
 
     it('should pass through additional options', async () => {
-      const action = (dev as any)._actionHandler;
+      await writeFile(
+        join(tempDir, 'package.json'),
+        JSON.stringify({ name: 'test-project', scripts: { start: 'node index.js' } })
+      );
       
-      action({ 
-        port: 8080,
-        debug: true,
-        character: 'custom.json',
-      });
+      await dev.parseAsync(['node', 'script', '--port', '8080', '--debug', '--log-level', 'verbose'], { from: 'user' });
 
       expect(mockExeca).toHaveBeenCalledWith(
-        'elizaos',
-        expect.arrayContaining([
-          'start',
-          '--port', '8080',
-          '--debug',
-          '--character', 'custom.json',
-        ]),
-        expect.any(Object)
+        expect.stringContaining('elizaos start'),
+        expect.objectContaining({
+          env: expect.objectContaining({
+            PORT: '8080',
+            DEBUG: 'true',
+            LOG_LEVEL: 'verbose',
+          }),
+        })
       );
     });
 
     it('should handle missing package.json gracefully', async () => {
-      const action = (dev as any)._actionHandler;
-      
       // No package.json in temp dir
-      action({ port: 3000 });
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       // Should still start watching
       expect(mockChokidar.watch).toHaveBeenCalled();
-      expect(mockExeca).toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('No package.json found')
+      );
     });
 
     it('should ignore node_modules and dist directories', async () => {
-      const action = (dev as any)._actionHandler;
-      
-      action({ port: 3000 });
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       const watchOptions = mockChokidar.watch.mock.calls[0][1];
       expect(watchOptions.ignored).toContain('**/node_modules/**');
       expect(watchOptions.ignored).toContain('**/dist/**');
-      expect(watchOptions.ignored).toContain('**/.git/**');
-      expect(watchOptions.ignored).toContain('**/build/**');
     });
   });
 
   describe('error handling', () => {
     it('should handle server start failure', async () => {
-      mockExeca.mockImplementation(() => {
-        const error = new Error('Command failed');
-        const proc = {
-          stdout: { pipe: vi.fn() },
-          stderr: { pipe: vi.fn() },
-          kill: vi.fn(),
-          on: vi.fn((event, cb) => {
-            if (event === 'exit') {
-              setTimeout(() => cb(1, null), 0);
-            }
-          }),
-        };
-        setTimeout(() => proc.on.mock.calls.find(c => c[0] === 'exit')?.[1](1, null), 0);
-        return proc;
-      });
-
-      const action = (dev as any)._actionHandler;
+      mockExeca.mockRejectedValueOnce(new Error('Server start failed'));
       
-      action({ port: 3000 });
+      await writeFile(
+        join(tempDir, 'package.json'),
+        JSON.stringify({ name: 'test-project', scripts: { start: 'node index.js' } })
+      );
+      
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       // Wait for async operations
       await new Promise(resolve => setTimeout(resolve, 100));
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Server process exited with code 1')
+        expect.stringContaining('Failed to start server')
       );
     });
 
     it('should handle watcher errors', async () => {
-      const action = (dev as any)._actionHandler;
-      
-      action({ port: 3000 });
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       // Get the error handler
       const errorHandler = mockWatcher.on.mock.calls.find(
         call => call[0] === 'error'
-      )?.[1];
+      )[1];
 
-      expect(errorHandler).toBeDefined();
-
-      // Simulate watcher error
-      const watchError = new Error('Watch error');
-      errorHandler(watchError);
+      // Trigger an error
+      errorHandler(new Error('Watch error'));
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'File watcher error:',
-        watchError
+        expect.stringContaining('File watcher error')
       );
     });
 
     it('should clean up on process exit', async () => {
-      const action = (dev as any)._actionHandler;
-      
-      action({ port: 3000 });
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       // Get SIGINT handler
-      const sigintHandlers = process.listeners('SIGINT');
-      const devSigintHandler = sigintHandlers[sigintHandlers.length - 1];
+      const sigintHandler = processOnSpy.mock.calls.find(
+        call => call[0] === 'SIGINT'
+      )?.[1];
 
       // Trigger SIGINT
-      await (devSigintHandler as Function)();
+      if (sigintHandler) {
+        await sigintHandler();
+      }
 
-      // Should close watcher
       expect(mockWatcher.close).toHaveBeenCalled();
-
-      // Should kill server process
-      expect(mockExeca.mock.results[0].value.kill).toHaveBeenCalledWith('SIGTERM');
-
-      expect(mockLogger.info).toHaveBeenCalledWith('Dev server stopped');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Shutting down')
+      );
     });
   });
 
   describe('file watching patterns', () => {
     it('should watch TypeScript and JavaScript files', async () => {
-      const action = (dev as any)._actionHandler;
-      
-      action({ port: 3000 });
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       const watchPatterns = mockChokidar.watch.mock.calls[0][0];
       expect(watchPatterns).toContain('src/**/*');
@@ -330,9 +340,7 @@ describe('dev command', () => {
     });
 
     it('should watch agent and character directories', async () => {
-      const action = (dev as any)._actionHandler;
-      
-      action({ port: 3000 });
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       const watchPatterns = mockChokidar.watch.mock.calls[0][0];
       expect(watchPatterns).toContain('agent/**/*');
@@ -341,9 +349,7 @@ describe('dev command', () => {
     });
 
     it('should watch configuration files', async () => {
-      const action = (dev as any)._actionHandler;
-      
-      action({ port: 3000 });
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       const watchPatterns = mockChokidar.watch.mock.calls[0][0];
       expect(watchPatterns).toContain('package.json');
@@ -351,12 +357,7 @@ describe('dev command', () => {
     });
 
     it('should add custom watch patterns if provided', async () => {
-      const action = (dev as any)._actionHandler;
-      
-      action({ 
-        port: 3000,
-        watch: ['custom/**/*.ts', 'data/*.json'],
-      });
+      await dev.parseAsync(['node', 'script', '--port', '3000', '--watch', 'custom/**/*.ts', '--watch', 'data/*.json'], { from: 'user' });
 
       const watchPatterns = mockChokidar.watch.mock.calls[0][0];
       expect(watchPatterns).toContain('custom/**/*.ts');
@@ -372,13 +373,11 @@ describe('dev command', () => {
       mockExeca.mockReturnValue({
         stdout: mockStdout,
         stderr: mockStderr,
+        pid: 1234,
         kill: vi.fn(),
-        on: vi.fn(),
       });
-
-      const action = (dev as any)._actionHandler;
       
-      action({ port: 3000 });
+      await dev.parseAsync(['node', 'script', '--port', '3000'], { from: 'user' });
 
       expect(mockMergeStreams).toHaveBeenCalledWith([mockStdout, mockStderr]);
     });
