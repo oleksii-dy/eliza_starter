@@ -274,7 +274,8 @@ describe('create command', () => {
       mockPrompts
         .mockResolvedValueOnce({ type: 'project' }) // For type selection
         .mockResolvedValueOnce({ nameResponse: 'myproject' }) // For name
-        .mockResolvedValueOnce({ database: 'pglite' }); // For database
+        .mockResolvedValueOnce({ database: 'pglite' }) // For database
+        .mockResolvedValueOnce({ aiModel: 'local' }); // For AI model
       const actionFn = getActionFn();
 
       await actionFn(undefined, { dir: '.', yes: false, type: '' }); // Pass type as empty to trigger prompt
@@ -285,7 +286,8 @@ describe('create command', () => {
     it('should prompt for project name when not provided', async () => {
       mockPrompts
         .mockResolvedValueOnce({ nameResponse: 'myproject' }) // For name
-        .mockResolvedValueOnce({ database: 'pglite' }); // For database
+        .mockResolvedValueOnce({ database: 'pglite' }) // For database
+        .mockResolvedValueOnce({ aiModel: 'local' }); // For AI model
       const actionFn = getActionFn();
       // Pass type explicitly to only test name prompt
       await actionFn(undefined, { dir: '.', yes: false, type: 'project' });
@@ -338,7 +340,7 @@ describe('create command', () => {
       await mkdir(projectPath, { recursive: true }); // Exists but empty
 
       // Ensure default prompt for database is covered if yes:true
-      mockPrompts.mockResolvedValue({ database: 'pglite' });
+      mockPrompts.mockResolvedValue({ database: 'pglite', aiModel: 'local' });
 
       await actionFn(projectName, { dir: '.', yes: true, type: 'project' });
       expect(mockCopyTemplate).toHaveBeenCalledWith('project', projectPath, projectName);
@@ -348,15 +350,16 @@ describe('create command', () => {
 
     it('should setup postgres database when selected via prompts', async () => {
       mockPrompts.mockReset();
-      // If name=undefined, type='project', yes=false. Prompts: 1. Name, 2. Database
+      // If name=undefined, type='project', yes=false. Prompts: 1. Name, 2. Database, 3. AI Model
       mockPrompts
         .mockResolvedValueOnce({ nameResponse: 'myproject' }) // For name
-        .mockResolvedValueOnce({ database: 'postgres' }); // For database
+        .mockResolvedValueOnce({ database: 'postgres' }) // For database
+        .mockResolvedValueOnce({ aiModel: 'local' }); // For AI model
       const actionFn = getActionFn();
 
       await actionFn(undefined, { dir: '.', yes: false, type: 'project' });
 
-      expect(mockPrompts).toHaveBeenCalledTimes(2);
+      expect(mockPrompts).toHaveBeenCalledTimes(3);
       expect(mockPromptAndStorePostgresUrl).toHaveBeenCalled();
       expect(mockSetupPgLite).not.toHaveBeenCalled();
     });
@@ -498,7 +501,7 @@ describe('create command', () => {
         type: 'project',
         nameResponse: 'testproject',
         database: 'pglite',
-      });
+      }).mockResolvedValueOnce({ aiModel: 'local' });
       const templateError = new Error('Template copy failed');
       mockCopyTemplate.mockRejectedValue(templateError);
       const actionFn = getActionFn();
@@ -516,6 +519,8 @@ describe('create command', () => {
       const projectName = 'newproject';
       const projectPath = resolvePath(tempDir, projectName);
       // ensure it doesn't exist initially by not creating it with mkdir
+
+      mockPrompts.mockResolvedValueOnce({ database: 'pglite' }).mockResolvedValueOnce({ aiModel: 'local' });
 
       await actionFn(projectName, { dir: '.', yes: true, type: 'project' });
       // The SUT (createProjectDirectory) is responsible for mkdir.
@@ -535,7 +540,7 @@ describe('create command', () => {
       await mkdir(customDirAbsolute, { recursive: true });
       const expectedFinalProjectPath = resolvePath(customDirAbsolute, projectName);
 
-      mockPrompts.mockResolvedValue({ database: 'pglite' });
+      mockPrompts.mockResolvedValue({ database: 'pglite', aiModel: 'local' });
 
       // SUT currently has a bug: it prematurely checks/errors on a non-target path.
       // This test will reflect that current failure mode.
