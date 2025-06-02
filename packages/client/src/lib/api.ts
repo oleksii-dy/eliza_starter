@@ -296,44 +296,46 @@ export const apiClient = {
     }),
 
   // Get all DM channels for a specific agent (using existing channels endpoint)
-  getDmChannelsForAgent: async (
-    agentId: UUID,
-    currentUserId: UUID
-  ): Promise<{ success: boolean; data: { channels: MessageChannel[] } }> => {
-    // Get all channels for the default DM server
-    const channelsResponse = await fetcher({
-      url: `/messages/central-servers/00000000-0000-0000-0000-000000000000/channels`,
-    });
+// Extracted at top of file for clarity and reuse
+const DEFAULT_DM_SERVER_ID = '00000000-0000-0000-0000-000000000000';
 
-    if (!channelsResponse.success) {
-      return channelsResponse;
-    }
+getDmChannelsForAgent: async (
+  agentId: UUID,
+  currentUserId: UUID
+): Promise<{ success: boolean; data: { channels: MessageChannel[] } }> => {
+  // Get all channels for the default DM server
+  const channelsResponse = await fetcher({
+    url: `/messages/central-servers/${DEFAULT_DM_SERVER_ID}/channels`,
+  });
 
-    // Filter channels where both currentUserId and agentId are participants
-    const allChannels = channelsResponse.data.channels;
-    const dmChannels = [];
+  if (!channelsResponse.success) {
+    return channelsResponse;
+  }
 
-    for (const channel of allChannels) {
-      try {
-        const participantsResponse = await fetcher({
-          url: `/messages/central-channels/${channel.id}/participants`,
-        });
+  // Filter channels where both currentUserId and agentId are participants
+  const allChannels = channelsResponse.data.channels;
+  const dmChannels: MessageChannel[] = [];
 
-        if (participantsResponse.success) {
-          const participants = participantsResponse.data;
-          // Check if this channel has exactly these two participants (or just these two among others)
-          if (participants.includes(currentUserId) && participants.includes(agentId)) {
-            dmChannels.push(channel);
-          }
+  for (const channel of allChannels) {
+    try {
+      const participantsResponse = await fetcher({
+        url: `/messages/central-channels/${channel.id}/participants`,
+      });
+
+      if (participantsResponse.success) {
+        const participants = participantsResponse.data;
+        // Check if this channel has exactly these two participants (or just these two among others)
+        if (participants.includes(currentUserId) && participants.includes(agentId)) {
+          dmChannels.push(channel);
         }
-      } catch (error) {
-        // Skip channels we can't check participants for
-        continue;
       }
+    } catch (error) {
+      // Skip channels we can't check participants for
     }
+  }
 
-    return { success: true, data: { channels: dmChannels } };
-  },
+  return { success: true, data: { channels: dmChannels } };
+},
 
   // Create a new DM channel with an agent (using existing channel creation)
   createDmChannelWithAgent: async (
