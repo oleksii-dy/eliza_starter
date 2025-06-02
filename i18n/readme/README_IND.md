@@ -165,3 +165,16 @@ href="https://github.com/elizaos/eliza/graphs/contributors">
 - GPU: Untuk menjalankan model LLM lokal 
 -  Penyimpanan tambahan: Untuk penyimpanan dokumen dan memori
 -  RAM yang lebih tinggi: Untuk menjalankan beberapa agen. 
+
+## Kutipan
+
+Kami Sekarang Mempunyai [paper](https://arxiv.org/pdf/2501.06781) 
+Anda dapat mengutip untuk Eliza OS :
+```bibtex
+@article{walters2025eliza,
+  title={Eliza: A Web3 friendly AI Agent Operating System},
+  author={Walters, Shaw and Gao, Sam and Nerd, Shakker and Da, Feng and Williams, Warren and Meng, Ting-Chien and Han, Hunter and He, Frank and Zhang, Allen and Wu, Ming and others},
+  journal={arXiv preprint arXiv:2501.06781},
+  year={2025}
+}
+```
