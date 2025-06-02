@@ -26,6 +26,7 @@ import { useSocketChat } from '@/hooks/use-socket-chat';
 import { useToast } from '@/hooks/use-toast';
 import clientLogger from '@/lib/logger';
 import { parseMediaFromText, removeMediaUrlsFromText, type MediaInfo } from '@/lib/media-utils';
+import { apiClient } from '@/lib/api';
 import {
   cn,
   getEntityId,
@@ -222,7 +223,6 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
   const [isCreatingNewGroupChannel, setIsCreatingNewGroupChannel] = useState(false);
 
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -277,9 +277,6 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
   );
 
   // DM channel management
-  const [dmChannelData, setDmChannelData] = useState<{ channelId: UUID; serverId: UUID } | null>(
-    null
-  );
   const [isCreatingDM, setIsCreatingDM] = useState(false);
 
   const { scrollRef, isAtBottom, scrollToBottom, disableAutoScroll, autoScrollEnabled } =
@@ -310,24 +307,18 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
     clientLogger.info(`[Chat] Creating new DM channel with agent ${agentIdForNewChannel}`);
     setIsCreatingDM(true);
     try {
-      // Create a real channel via API
-      const createResponse = await fetch('/api/messages/central-channels', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: `New Chat - ${moment().format('HH:mm')}`,
-          participantCentralUserIds: [currentClientEntityId, agentIdForNewChannel],
-          type: 'dm',
-          server_id: '00000000-0000-0000-0000-000000000000',
-          metadata: { isDm: true, agentId: agentIdForNewChannel, userId: currentClientEntityId },
-        }),
-      });
+      // Create a real channel via API using the existing method
+      const createResponse = await apiClient.createDmChannelWithAgent(
+        agentIdForNewChannel,
+        currentClientEntityId,
+        `New Chat - ${moment().format('HH:mm')}`
+      );
 
-      if (!createResponse.ok) {
-        throw new Error(`Failed to create channel: ${await createResponse.text()}`);
+      if (!createResponse.success) {
+        throw new Error('Failed to create channel');
       }
 
-      const { data: newChannel } = await createResponse.json();
+      const newChannel = createResponse.data;
       clientLogger.info(`[Chat] Successfully created real DM channel:`, newChannel);
 
       const newChannelEntry = {
@@ -422,19 +413,20 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
 
   // Req #1: Effect to fetch/simulate DM channels for the current agent
   useEffect(() => {
-    if (chatType === 'DM' && targetAgentData?.id) {
+    if (chatType === 'DM' && targetAgentData?.id && currentClientEntityId) {
       setIsLoadingAgentDmChannels(true);
       clientLogger.info(`[Chat] Fetching DM channels for agent ${targetAgentData.id}`);
 
-      // Fetch actual DM channels from the API
+      // Fetch actual DM channels from the API using the existing method
       const fetchDmChannels = async () => {
         try {
-          const response = await fetch(
-            `/api/messages/central-channels?participantId=${targetAgentData.id}&type=dm`
+          const response = await apiClient.getDmChannelsForAgent(
+            targetAgentData.id,
+            currentClientEntityId
           );
-          if (response.ok) {
-            const { data } = await response.json();
-            const fetchedChannels = data?.channels || [];
+
+          if (response.success) {
+            const fetchedChannels = response.data.channels || [];
 
             const formattedChannels = fetchedChannels
               .map((channel: any) => ({
@@ -453,6 +445,16 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
             // If we have a roomId from URL, make sure it's set as current
             if (roomId) {
               setCurrentDmChannelIdForAgent(roomId);
+              // Add the current room to the list if not already there
+              if (!formattedChannels.find((ch) => ch.id === roomId)) {
+                const placeholderChannel = {
+                  id: roomId,
+                  name: `Chat - ${moment().format('MMM DD, HH:mm')}`,
+                  createdAt: Date.now(),
+                  lastActivity: Date.now(),
+                };
+                setAgentDmChannels((prev) => [placeholderChannel, ...prev]);
+              }
             } else if (formattedChannels.length > 0) {
               setCurrentDmChannelIdForAgent(formattedChannels[0].id);
             } else {
@@ -463,6 +465,17 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
             clientLogger.warn('[Chat] Failed to fetch DM channels, creating new one');
             if (!roomId) {
               handleNewDmChannel(targetAgentData.id);
+            } else {
+              // If we have a roomId, create a placeholder for it
+              setCurrentDmChannelIdForAgent(roomId);
+              setAgentDmChannels([
+                {
+                  id: roomId,
+                  name: `Chat - ${moment().format('MMM DD, HH:mm')}`,
+                  createdAt: Date.now(),
+                  lastActivity: Date.now(),
+                },
+              ]);
             }
           }
         } catch (error) {
@@ -470,6 +483,17 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
           // Fallback to creating new channel if API fails
           if (!roomId) {
             handleNewDmChannel(targetAgentData.id);
+          } else {
+            // If we have a roomId, create a placeholder for it
+            setCurrentDmChannelIdForAgent(roomId);
+            setAgentDmChannels([
+              {
+                id: roomId,
+                name: `Chat - ${moment().format('MMM DD, HH:mm')}`,
+                createdAt: Date.now(),
+                lastActivity: Date.now(),
+              },
+            ]);
           }
         } finally {
           setIsLoadingAgentDmChannels(false);
@@ -481,7 +505,7 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
       setAgentDmChannels([]);
       setCurrentDmChannelIdForAgent(null);
     }
-  }, [chatType, targetAgentData?.id]);
+  }, [chatType, targetAgentData?.id, currentClientEntityId]);
 
   // Req #1: Effect to fetch/simulate related GROUP channels
   useEffect(() => {
