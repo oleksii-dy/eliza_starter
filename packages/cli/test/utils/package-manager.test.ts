@@ -202,7 +202,7 @@ describe('package-manager', () => {
 
       const result = await executeInstallation('lodash', '4.17.21');
 
-      expect(mockExeca).toHaveBeenCalledWith('npm', ['install', 'lodash@4.17.21'], {
+      expect(mockExeca).toHaveBeenCalledWith('npm', ['install', 'lodash@^4.17.21'], {
         cwd: process.cwd(),
         stdio: 'inherit',
       });
@@ -300,7 +300,7 @@ describe('package-manager', () => {
 
       const result = await executeInstallation('@scope/package', '1.0.0');
 
-      expect(mockExeca).toHaveBeenCalledWith('npm', ['install', '@scope/package@1.0.0'], {
+      expect(mockExeca).toHaveBeenCalledWith('npm', ['install', '@scope/package@^1.0.0'], {
         cwd: process.cwd(),
         stdio: 'inherit',
       });
@@ -326,6 +326,31 @@ describe('package-manager', () => {
       expect(result).toEqual({
         success: true,
         installedIdentifier: '@owner/repo',
+      });
+    });
+
+    it('should not add caret to versions with existing range specifiers', async () => {
+      mockExeca.mockResolvedValue({});
+
+      // Test with caret
+      await executeInstallation('package', '^2.0.0');
+      expect(mockExeca).toHaveBeenCalledWith('npm', ['install', 'package@^2.0.0'], {
+        cwd: process.cwd(),
+        stdio: 'inherit',
+      });
+
+      // Test with tilde
+      await executeInstallation('package', '~1.5.0');
+      expect(mockExeca).toHaveBeenCalledWith('npm', ['install', 'package@~1.5.0'], {
+        cwd: process.cwd(),
+        stdio: 'inherit',
+      });
+
+      // Test with greater than
+      await executeInstallation('package', '>1.0.0');
+      expect(mockExeca).toHaveBeenCalledWith('npm', ['install', 'package@>1.0.0'], {
+        cwd: process.cwd(),
+        stdio: 'inherit',
       });
     });
   });

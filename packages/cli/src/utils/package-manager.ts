@@ -79,10 +79,21 @@ export async function executeInstallation(
 
   logger.debug(`Attempting to install package: ${packageName} using ${packageManager}`);
 
+  // For npm packages with versions, ensure we use caret (^) for semver ranges
+  let finalVersion = versionOrTag;
+  if (versionOrTag && !packageName.startsWith('github:')) {
+    // Check if version already has a range specifier (^, ~, >, <, =, etc.)
+    const hasRangeSpecifier = /^[\^~><=]/.test(versionOrTag);
+    if (!hasRangeSpecifier && /^\d+\.\d+\.\d+/.test(versionOrTag)) {
+      // It's a plain version number like "1.0.0", add caret
+      finalVersion = `^${versionOrTag}`;
+    }
+  }
+
   const finalSpecifier = packageName.startsWith('github:')
     ? `${packageName}${versionOrTag ? `#${versionOrTag}` : ''}`
-    : versionOrTag
-      ? `${packageName}@${versionOrTag}`
+    : finalVersion
+      ? `${packageName}@${finalVersion}`
       : packageName;
   try {
     await execa(packageManager, [...installCommand, finalSpecifier], {
