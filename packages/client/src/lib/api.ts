@@ -61,6 +61,7 @@ type AgentLog = {
 
 const API_PREFIX = '/api';
 const getLocalStorageApiKey = () => `eliza-api-key-${window.location.origin}`;
+const DEFAULT_DM_SERVER_ID = '00000000-0000-0000-0000-000000000000';
 
 const fetcher = async ({
   url,
@@ -296,46 +297,43 @@ export const apiClient = {
     }),
 
   // Get all DM channels for a specific agent (using existing channels endpoint)
-// Extracted at top of file for clarity and reuse
-const DEFAULT_DM_SERVER_ID = '00000000-0000-0000-0000-000000000000';
+  getDmChannelsForAgent: async (
+    agentId: UUID,
+    currentUserId: UUID
+  ): Promise<{ success: boolean; data: { channels: MessageChannel[] } }> => {
+    // Get all channels for the default DM server
+    const channelsResponse = await fetcher({
+      url: `/messages/central-servers/${DEFAULT_DM_SERVER_ID}/channels`,
+    });
 
-getDmChannelsForAgent: async (
-  agentId: UUID,
-  currentUserId: UUID
-): Promise<{ success: boolean; data: { channels: MessageChannel[] } }> => {
-  // Get all channels for the default DM server
-  const channelsResponse = await fetcher({
-    url: `/messages/central-servers/${DEFAULT_DM_SERVER_ID}/channels`,
-  });
-
-  if (!channelsResponse.success) {
-    return channelsResponse;
-  }
-
-  // Filter channels where both currentUserId and agentId are participants
-  const allChannels = channelsResponse.data.channels;
-  const dmChannels: MessageChannel[] = [];
-
-  for (const channel of allChannels) {
-    try {
-      const participantsResponse = await fetcher({
-        url: `/messages/central-channels/${channel.id}/participants`,
-      });
-
-      if (participantsResponse.success) {
-        const participants = participantsResponse.data;
-        // Check if this channel has exactly these two participants (or just these two among others)
-        if (participants.includes(currentUserId) && participants.includes(agentId)) {
-          dmChannels.push(channel);
-        }
-      }
-    } catch (error) {
-      // Skip channels we can't check participants for
+    if (!channelsResponse.success) {
+      return channelsResponse;
     }
-  }
 
-  return { success: true, data: { channels: dmChannels } };
-},
+    // Filter channels where both currentUserId and agentId are participants
+    const allChannels = channelsResponse.data.channels;
+    const dmChannels: MessageChannel[] = [];
+
+    for (const channel of allChannels) {
+      try {
+        const participantsResponse = await fetcher({
+          url: `/messages/central-channels/${channel.id}/participants`,
+        });
+
+        if (participantsResponse.success) {
+          const participants = participantsResponse.data;
+          // Check if this channel has exactly these two participants (or just these two among others)
+          if (participants.includes(currentUserId) && participants.includes(agentId)) {
+            dmChannels.push(channel);
+          }
+        }
+      } catch (error) {
+        // Skip channels we can't check participants for
+      }
+    }
+
+    return { success: true, data: { channels: dmChannels } };
+  },
 
   // Create a new DM channel with an agent (using existing channel creation)
   createDmChannelWithAgent: async (
@@ -414,10 +412,7 @@ getDmChannelsForAgent: async (
           const commonParticipants = currentParticipants.filter((p) =>
             channelParticipants.includes(p)
           );
-          if (
-            commonParticipants.length >=
-            Math.min(2, currentParticipants.length)
-          ) {
+          if (commonParticipants.length >= Math.min(2, currentParticipants.length)) {
             relatedChannels.push(channel);
           }
         }
@@ -663,4 +658,22 @@ getDmChannelsForAgent: async (
     agentId: UUID
   ): Promise<{ success: boolean; data: { agentId: UUID; servers: UUID[] } }> =>
     fetcher({ url: `/messages/agents/${agentId}/servers` }),
+
+  // Group channel management
+  deleteCentralChannel: (channelId: UUID): Promise<{ success: boolean }> =>
+    fetcher({ url: `/messages/central-channels/${channelId}`, method: 'DELETE' }),
+
+  updateCentralGroupChat: (
+    channelId: UUID,
+    payload: {
+      name?: string;
+      participantCentralUserIds?: UUID[];
+      metadata?: any;
+    }
+  ): Promise<{ success: boolean; data: MessageChannel }> =>
+    fetcher({
+      url: `/messages/central-channels/${channelId}`,
+      method: 'PUT',
+      body: payload,
+    }),
 };
