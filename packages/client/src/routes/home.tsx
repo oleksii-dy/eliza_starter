@@ -62,14 +62,13 @@ export default function Home() {
             <div className="text-center space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
                 <Sparkles className="w-4 h-4" />
-                AI Agent Platform
+                ElizaOS Platform
               </div>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                Welcome to Your AI Workspace
+                Welcome to Your ElizaOS Workspace
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Create, manage, and interact with intelligent AI agents. Build collaborative groups
-                for enhanced productivity.
+                Create, manage, and interact with intelligent AI agents. Build collaborative agent groups!
               </p>
               <div className="flex items-center justify-center gap-4 pt-6">
                 <Button size="lg" onClick={() => navigate('/create')} className="gap-2">
