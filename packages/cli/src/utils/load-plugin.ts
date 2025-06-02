@@ -38,6 +38,30 @@ function resolveNodeModulesPath(repository: string, ...segments: string[]): stri
 }
 
 /**
+ * Helper function to resolve a path within workspace root node_modules
+ */
+function resolveWorkspaceNodeModulesPath(repository: string, ...segments: string[]): string {
+  // Find workspace root by looking for package.json with workspaces field
+  let currentDir = process.cwd();
+  while (currentDir !== path.dirname(currentDir)) {
+    const packageJsonPath = path.join(currentDir, 'package.json');
+    if (fs.existsSync(packageJsonPath)) {
+      try {
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        if (packageJson.workspaces) {
+          return path.resolve(currentDir, 'node_modules', repository, ...segments);
+        }
+      } catch (error) {
+        // Continue searching
+      }
+    }
+    currentDir = path.dirname(currentDir);
+  }
+  // Fallback to current directory if no workspace root found
+  return path.resolve(process.cwd(), 'node_modules', repository, ...segments);
+}
+
+/**
  * Helper function to read and parse package.json
  */
 async function readPackageJson(repository: string): Promise<PackageJson | null> {
@@ -74,9 +98,34 @@ async function tryImporting(
 }
 
 /**
+ * Helper function to resolve a module using Node's resolution algorithm
+ */
+function resolveModulePath(repository: string, entryPoint?: string): string | null {
+  try {
+    // Try to resolve using Node's module resolution algorithm
+    // This will check all node_modules directories in the hierarchy
+    const modulePath = entryPoint
+      ? require.resolve(`${repository}/${entryPoint}`)
+      : require.resolve(repository);
+    return modulePath;
+  } catch (error) {
+    // Module not found in npm paths
+    return null;
+  }
+}
+
+/**
  * Collection of import strategies
  */
 const importStrategies: ImportStrategy[] = [
+  // First try direct import for @elizaos packages (works with strict exports in monorepo)
+  {
+    name: 'direct import',
+    tryImport: async (repository: string) => {
+      if (!repository.startsWith('@elizaos/')) return null;
+      return tryImporting(repository, 'direct import', repository, true);
+    },
+  },
   // Most likely to succeed for installed packages - check package.json entry first
   {
     name: 'package.json entry',
@@ -114,6 +163,12 @@ const importStrategies: ImportStrategy[] = [
     tryImport: async (repository: string) =>
       tryImporting(resolveNodeModulesPath(repository), 'local node_modules', repository, true),
   },
+  // Try workspace root node_modules (for monorepo setups)
+  {
+    name: 'workspace node_modules',
+    tryImport: async (repository: string) =>
+      tryImporting(resolveWorkspaceNodeModulesPath(repository), 'workspace node_modules', repository, true),
+  },
   // Direct path import (for relative/absolute paths)
   {
     name: 'direct path',
@@ -137,29 +192,60 @@ const importStrategies: ImportStrategy[] = [
  * Determines the optimal import strategy based on what's available
  */
 async function getOptimalStrategy(repository: string): Promise<ImportStrategy | null> {
-  const packageJson = await readPackageJson(repository);
+  // First, try to resolve using Node's module resolution (npm paths)
+  const npmResolvedPath = resolveModulePath(repository);
+  if (npmResolvedPath) {
+    return {
+      name: 'npm resolved path',
+      tryImport: async () => tryImporting(npmResolvedPath, 'npm resolved path', repository),
+    };
+  }
 
+  // If not found via npm, check package.json for specific entry point
+  const packageJson = await readPackageJson(repository);
   if (packageJson) {
     const entryPoint = packageJson.module || packageJson.main || DEFAULT_ENTRY_POINT;
-    const entryPath = resolveNodeModulesPath(repository, entryPoint);
 
-    if (fs.existsSync(entryPath)) {
+    // Try npm resolution with specific entry point
+    const npmEntryPath = resolveModulePath(repository, entryPoint);
+    if (npmEntryPath) {
       return {
-        name: `package.json entry (${entryPoint})`,
+        name: `npm package.json entry (${entryPoint})`,
         tryImport: async () =>
-          tryImporting(entryPath, `package.json entry (${entryPoint})`, repository),
+          tryImporting(npmEntryPath, `npm package.json entry (${entryPoint})`, repository),
+      };
+    }
+
+    // Fall back to local node_modules with entry point
+    const localEntryPath = resolveNodeModulesPath(repository, entryPoint);
+    if (fs.existsSync(localEntryPath)) {
+      return {
+        name: `local package.json entry (${entryPoint})`,
+        tryImport: async () =>
+          tryImporting(localEntryPath, `local package.json entry (${entryPoint})`, repository),
       };
     }
   }
 
-  const commonDistPath = resolveNodeModulesPath(repository, DEFAULT_ENTRY_POINT);
-  if (fs.existsSync(commonDistPath)) {
+  // Try npm resolution with default entry point
+  const npmDefaultPath = resolveModulePath(repository, DEFAULT_ENTRY_POINT);
+  if (npmDefaultPath) {
     return {
-      name: 'common dist pattern',
-      tryImport: async () => tryImporting(commonDistPath, 'common dist pattern', repository),
+      name: 'npm common dist pattern',
+      tryImport: async () => tryImporting(npmDefaultPath, 'npm common dist pattern', repository),
     };
   }
 
+  // Fall back to local node_modules with common dist pattern
+  const commonDistPath = resolveNodeModulesPath(repository, DEFAULT_ENTRY_POINT);
+  if (fs.existsSync(commonDistPath)) {
+    return {
+      name: 'local common dist pattern',
+      tryImport: async () => tryImporting(commonDistPath, 'local common dist pattern', repository),
+    };
+  }
+
+  // Finally, try local node_modules root
   const localNodeModulesPath = resolveNodeModulesPath(repository);
   if (fs.existsSync(localNodeModulesPath)) {
     return {
