@@ -1,19 +1,15 @@
-import PageTitle from '@/components/page-title';
-import ProfileOverlay from '@/components/profile-overlay';
-import { useAgentsWithDetails, useChannels, useServers } from '@/hooks/use-query-hooks';
-import { getEntityId } from '@/lib/utils';
-import { type Agent, type UUID, ChannelType as CoreChannelType } from '@elizaos/core';
-import { Plus } from 'lucide-react';
-import { useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import AddAgentCard from '@/components/add-agent-card';
 import AgentCard from '@/components/agent-card';
 import GroupCard from '@/components/group-card';
 import GroupPanel from '@/components/group-panel';
-import { apiClient } from '@/lib/api';
-import { Button } from '../components/ui/button';
-import { Separator } from '../components/ui/separator';
+import ProfileOverlay from '@/components/profile-overlay';
+import { useAgentsWithDetails, useChannels, useServers } from '@/hooks/use-query-hooks';
 import clientLogger from '@/lib/logger';
+import { type Agent, type UUID, ChannelType as CoreChannelType } from '@elizaos/core';
+import { Bot, Plus, Sparkles, Users } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../components/ui/button';
 
 /**
  * Renders the main dashboard for managing agents and groups, providing interactive controls for viewing, starting, messaging, and configuring agents, as well as creating and editing groups.
@@ -23,7 +19,6 @@ import clientLogger from '@/lib/logger';
 export default function Home() {
   const { data: agentsData, isLoading, isError, error } = useAgentsWithDetails();
   const navigate = useNavigate();
-  const currentClientEntityId = getEntityId();
 
   // Extract agents properly from the response
   const agents = agentsData?.agents || [];
@@ -35,11 +30,6 @@ export default function Home() {
   const [isGroupPanelOpen, setIsGroupPanelOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Partial<Agent> | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<UUID | null>(null);
-
-  const openOverlay = (agent: Partial<Agent>) => {
-    setSelectedAgent(agent);
-    setOverlayOpen(true);
-  };
 
   const closeOverlay = () => {
     setSelectedAgent(null);
@@ -58,72 +48,172 @@ export default function Home() {
 
   useEffect(() => {
     clientLogger.info('[Home] Component mounted/re-rendered. Key might have changed.');
-    // You might want to trigger data re-fetching here if it's not automatic
-    // e.g., queryClient.invalidateQueries(['agents']);
-  }, []); // Empty dependency array means this runs on mount and when key changes
+  }, []);
+
+  const activeAgents = agents.filter((agent) => agent.enabled);
 
   return (
     <>
-      <div className="flex-1 p-3 w-full h-full">
-        <div className="flex flex-col gap-4 h-full w-full md:max-w-4xl mx-auto">
-          <div className="flex items-center justify-between gap-2 p-2">
-            <PageTitle title="Agents" />
-            <Button
-              variant="outline"
-              onClick={() => navigate('/create')}
-              className="create-agent-button"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
+      <div className="flex-1 w-full h-full bg-background">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-primary/3 to-background border-b">
+          <div className="absolute inset-0 bg-grid-white/10 bg-grid-8 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+          <div className="relative max-w-7xl mx-auto px-6 py-16">
+            <div className="text-center space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                <Sparkles className="w-4 h-4" />
+                AI Agent Platform
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                Welcome to Your AI Workspace
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Create, manage, and interact with intelligent AI agents. Build collaborative groups
+                for enhanced productivity.
+              </p>
+              <div className="flex items-center justify-center gap-4 pt-6">
+                <Button size="lg" onClick={() => navigate('/create')} className="gap-2">
+                  <Plus className="w-5 h-5" />
+                  Create Agent
+                </Button>
+                <Button size="lg" variant="outline" onClick={handleCreateGroup} className="gap-2">
+                  <Users className="w-5 h-5" />
+                  New Group
+                </Button>
+              </div>
+            </div>
           </div>
-          <Separator />
+        </div>
 
-          {isLoading && <div className="text-center py-8">Loading agents...</div>}
-
-          {isError && (
-            <div className="text-center py-8">
-              Error loading agents: {error instanceof Error ? error.message : 'Unknown error'}
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {isLoading && (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center space-y-4">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                <p className="text-muted-foreground">Loading your workspace...</p>
+              </div>
             </div>
           )}
 
-          {agents.length === 0 && !isLoading && (
-            <div className="text-center py-8 flex flex-col items-center gap-4">
-              <p className="text-muted-foreground">
-                No agents currently running. Start a character to begin.
+          {isError && (
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 text-center">
+              <p className="text-destructive">
+                Error loading agents: {error instanceof Error ? error.message : 'Unknown error'}
               </p>
             </div>
           )}
 
           {!isLoading && !isError && (
-            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2 auto-rows-fr agents-section">
-              <AddAgentCard />
-              {agents
-                .sort((a, b) => Number(b?.enabled) - Number(a?.enabled))
-                .map((agent) => {
-                  return (
-                    <AgentCard
-                      key={agent.id}
-                      agent={agent}
-                      onChat={() => handleNavigateToDm(agent)}
-                    />
-                  );
-                })}
-            </div>
-          )}
-          <div className="flex items-center justify-between gap-2 p-2">
-            <PageTitle title="Groups" />
-            <Button variant="outline" onClick={handleCreateGroup} className="groups-create-button">
-              <Plus className="w-2 h-2" />
-            </Button>
-          </div>
-          <Separator />
+            <>
+              {/* Agents Section */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-semibold flex items-center gap-2">
+                      <Bot className="w-6 h-6 text-primary" />
+                      AI Agents
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {agents.length} {agents.length === 1 ? 'agent' : 'agents'} •{' '}
+                      {activeAgents.length} active
+                    </p>
+                  </div>
+                  <Button variant="outline" onClick={() => navigate('/create')} className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Agent
+                  </Button>
+                </div>
 
-          {!isLoading && !isError && (
-            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2 auto-rows-fr groups-section">
-              {servers.map((server) => (
-                <ServerChannels key={server.id} serverId={server.id} />
-              ))}
-            </div>
+                {agents.length === 0 ? (
+                  <div className="bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/20 p-12">
+                    <div className="text-center space-y-4">
+                      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                        <Bot className="w-8 h-8 text-primary" />
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-medium">No agents yet</h3>
+                        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                          Create your first AI agent to start building intelligent conversations and
+                          automations.
+                        </p>
+                      </div>
+                      <Button onClick={() => navigate('/create')} className="gap-2">
+                        <Plus className="w-4 h-4" />
+                        Create Your First Agent
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <AddAgentCard />
+                    {agents
+                      .sort((a, b) => Number(b?.enabled) - Number(a?.enabled))
+                      .map((agent) => (
+                        <AgentCard
+                          key={agent.id}
+                          agent={agent}
+                          onChat={() => handleNavigateToDm(agent)}
+                        />
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Groups Section */}
+              <div className="space-y-6 mt-12">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-semibold flex items-center gap-2">
+                      <Users className="w-6 h-6 text-primary" />
+                      Groups
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Collaborative spaces for multiple agents
+                    </p>
+                  </div>
+                  <Button variant="outline" onClick={handleCreateGroup} className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Create Group
+                  </Button>
+                </div>
+
+                {isLoadingServers ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center space-y-4">
+                      <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                      <p className="text-sm text-muted-foreground">Loading groups...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {servers.length === 0 ? (
+                      <div className="col-span-full bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/20 p-12">
+                        <div className="text-center space-y-4">
+                          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                            <Users className="w-8 h-8 text-primary" />
+                          </div>
+                          <div className="space-y-2">
+                            <h3 className="text-lg font-medium">No groups yet</h3>
+                            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                              Create a group to enable collaboration between multiple agents.
+                            </p>
+                          </div>
+                          <Button onClick={handleCreateGroup} className="gap-2">
+                            <Plus className="w-4 h-4" />
+                            Create Your First Group
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      servers.map((server) => (
+                        <ServerChannels key={server.id} serverId={server.id} />
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -134,7 +224,6 @@ export default function Home() {
 
       {isGroupPanelOpen && (
         <GroupPanel
-          agents={agents as Agent[]}
           onClose={() => {
             setSelectedGroupId(null);
             setIsGroupPanelOpen(false);
@@ -154,17 +243,25 @@ const ServerChannels = ({ serverId }: { serverId: UUID }) => {
     [channelsData]
   );
 
-  if (isLoadingChannels) return <p>Loading channels for server...</p>;
-  if (!groupChannels || groupChannels.length === 0)
-    return <p className="text-sm text-muted-foreground">No group channels in this server.</p>;
+  if (isLoadingChannels) {
+    return (
+      <div className="bg-card rounded-lg border p-6 flex items-center justify-center min-h-[180px]">
+        <div className="text-center space-y-2">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!groupChannels || groupChannels.length === 0) {
+    return null;
+  }
 
   return (
     <>
       {groupChannels.map((channel) => (
-        <GroupCard
-          key={channel.id}
-          group={{ ...channel, server_id: serverId }} // Pass server_id for navigation context
-        />
+        <GroupCard key={channel.id} group={{ ...channel, server_id: serverId }} />
       ))}
     </>
   );

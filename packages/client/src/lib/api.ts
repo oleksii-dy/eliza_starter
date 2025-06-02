@@ -294,6 +294,72 @@ export const apiClient = {
     fetcher({
       url: `/messages/dm-channel?targetUserId=${targetCentralUserId}&currentUserId=${currentUserId}`,
     }),
+
+  // Get all DM channels for a specific agent (using existing channels endpoint)
+  getDmChannelsForAgent: async (
+    agentId: UUID,
+    currentUserId: UUID
+  ): Promise<{ success: boolean; data: { channels: MessageChannel[] } }> => {
+    // Get all channels for the default DM server
+    const channelsResponse = await fetcher({
+      url: `/messages/central-servers/00000000-0000-0000-0000-000000000000/channels`,
+    });
+
+    if (!channelsResponse.success) {
+      return channelsResponse;
+    }
+
+    // Filter channels where both currentUserId and agentId are participants
+    const allChannels = channelsResponse.data.channels;
+    const dmChannels = [];
+
+    for (const channel of allChannels) {
+      try {
+        const participantsResponse = await fetcher({
+          url: `/messages/central-channels/${channel.id}/participants`,
+        });
+
+        if (participantsResponse.success) {
+          const participants = participantsResponse.data;
+          // Check if this channel has exactly these two participants (or just these two among others)
+          if (participants.includes(currentUserId) && participants.includes(agentId)) {
+            dmChannels.push(channel);
+          }
+        }
+      } catch (error) {
+        // Skip channels we can't check participants for
+        continue;
+      }
+    }
+
+    return { success: true, data: { channels: dmChannels } };
+  },
+
+  // Create a new DM channel with an agent (using existing channel creation)
+  createDmChannelWithAgent: async (
+    agentId: UUID,
+    currentUserId: UUID,
+    name?: string
+  ): Promise<{ success: boolean; data: MessageChannel }> => {
+    return fetcher({
+      url: `/messages/central-channels`,
+      method: 'POST',
+      body: {
+        name: name || `Chat ${new Date().toLocaleTimeString()}`,
+        participantCentralUserIds: [currentUserId, agentId],
+        type: 'dm',
+        server_id: '00000000-0000-0000-0000-000000000000', // Default DM server
+        metadata: { isDm: true, agentId, userId: currentUserId },
+      },
+    });
+  },
+
+  // Delete a specific DM channel (clear all messages for now)
+  deleteDmChannel: (channelId: UUID, currentUserId: UUID): Promise<{ success: boolean }> =>
+    fetcher({
+      url: `/messages/central-channels/${channelId}/messages`,
+      method: 'DELETE',
+    }),
   createCentralGroupChat: (payload: {
     name: string;
     participantCentralUserIds: UUID[];
@@ -302,6 +368,92 @@ export const apiClient = {
     metadata?: any;
   }): Promise<{ data: MessageChannel }> =>
     fetcher({ url: '/messages/central-channels', method: 'POST', body: payload }),
+
+  // Get related group channels (channels with similar participants)
+  getRelatedGroupChannels: async (
+    channelId: UUID,
+    serverId?: UUID
+  ): Promise<{ success: boolean; data: { channels: MessageChannel[] } }> => {
+    // Get current channel's participants
+    const participantsResponse = await fetcher({
+      url: `/messages/central-channels/${channelId}/participants`,
+    });
+
+    if (!participantsResponse.success) {
+      return { success: false, data: { channels: [] } };
+    }
+
+    const currentParticipants = participantsResponse.data;
+
+    // Get all channels for the server
+    const channelsResponse = await fetcher({
+      url: `/messages/central-servers/${serverId || '00000000-0000-0000-0000-000000000000'}/channels`,
+    });
+
+    if (!channelsResponse.success) {
+      return channelsResponse;
+    }
+
+    // Find channels with similar participants (excluding the current channel)
+    const allChannels = channelsResponse.data.channels;
+    const relatedChannels = [];
+
+    for (const channel of allChannels) {
+      if (channel.id === channelId) continue; // Skip current channel
+
+      try {
+        const channelParticipantsResponse = await fetcher({
+          url: `/messages/central-channels/${channel.id}/participants`,
+        });
+
+        if (channelParticipantsResponse.success) {
+          const channelParticipants = channelParticipantsResponse.data;
+          // Check if there's significant overlap in participants
+          const commonParticipants = currentParticipants.filter((p) =>
+            channelParticipants.includes(p)
+          );
+          if (commonParticipants.length >= Math.min(2, currentParticipants.length)) {
+            relatedChannels.push(channel);
+          }
+        }
+      } catch (error) {
+        // Skip channels we can't check participants for
+        continue;
+      }
+    }
+
+    return { success: true, data: { channels: relatedChannels } };
+  },
+
+  // Create a new group channel based on an existing one
+  createRelatedGroupChannel: async (payload: {
+    basedOnChannelId: UUID;
+    name: string;
+    serverId?: UUID;
+    metadata?: any;
+  }): Promise<{ success: boolean; data: MessageChannel }> => {
+    // Get participants from the base channel
+    const participantsResponse = await fetcher({
+      url: `/messages/central-channels/${payload.basedOnChannelId}/participants`,
+    });
+
+    if (!participantsResponse.success) {
+      throw new Error('Failed to get participants from base channel');
+    }
+
+    // Create new channel with same participants
+    return fetcher({
+      url: '/messages/central-channels',
+      method: 'POST',
+      body: {
+        name: payload.name,
+        participantCentralUserIds: participantsResponse.data,
+        type: 'group',
+        server_id: payload.serverId || '00000000-0000-0000-0000-000000000000',
+        metadata: { ...payload.metadata, basedOnChannelId: payload.basedOnChannelId },
+      },
+    });
+  },
 
   // Ping, TTS, Transcription, Media Upload, Knowledge (agent-specific or global services)
   ping: (): Promise<{ pong: boolean; timestamp: number }> => fetcher({ url: '/ping' }),

@@ -15,14 +15,14 @@ import type { AgentWithStatus } from '../types';
  * Renders the chat panel for a specific agent, and conditionally shows a sidebar with agent details based on user interaction. If no agent ID is present in the URL, displays a "No data." message.
  */
 export default function AgentRoute() {
-  const { agentId } = useParams<{ agentId: UUID }>();
+  const { agentId, roomId } = useParams<{ agentId: UUID; roomId?: UUID }>();
 
   useEffect(() => {
-    clientLogger.info('[AgentRoute] Component mounted/updated', { agentId });
+    clientLogger.info('[AgentRoute] Component mounted/updated', { agentId, roomId });
     return () => {
-      clientLogger.info('[AgentRoute] Component unmounted', { agentId });
+      clientLogger.info('[AgentRoute] Component unmounted', { agentId, roomId });
     };
-  }, [agentId]);
+  }, [agentId, roomId]);
 
   const { data: agentDataResponse, isLoading: isLoadingAgent } = useAgent(agentId);
   const { startAgent, isAgentStarting } = useAgentManagement();
@@ -33,38 +33,38 @@ export default function AgentRoute() {
 
   const agentFromHook: Agent | undefined = agentDataResponse?.data
     ? ({
-      ...(agentDataResponse.data as AgentWithStatus),
-      status:
-        agentDataResponse.data.status === 'active'
-          ? CoreAgentStatusEnum.ACTIVE
-          : agentDataResponse.data.status === 'inactive'
-            ? CoreAgentStatusEnum.INACTIVE
-            : CoreAgentStatusEnum.INACTIVE,
-      username: agentDataResponse.data.username || agentDataResponse.data.name || 'Unknown',
-      bio: agentDataResponse.data.bio || '',
-      messageExamples: agentDataResponse.data.messageExamples || [],
-      postExamples: agentDataResponse.data.postExamples || [],
-      topics: agentDataResponse.data.topics || [],
-      adjectives: agentDataResponse.data.adjectives || [],
-      knowledge: agentDataResponse.data.knowledge || [],
-      plugins: agentDataResponse.data.plugins || [],
-      settings: agentDataResponse.data.settings || {},
-      secrets: (agentDataResponse.data as any).secrets || {},
-      style: agentDataResponse.data.style || {},
-      templates: agentDataResponse.data.templates || {},
-      enabled:
-        typeof agentDataResponse.data.enabled === 'boolean'
-          ? agentDataResponse.data.enabled
-          : true,
-      createdAt:
-        typeof agentDataResponse.data.createdAt === 'number'
-          ? agentDataResponse.data.createdAt
-          : Date.now(),
-      updatedAt:
-        typeof agentDataResponse.data.updatedAt === 'number'
-          ? agentDataResponse.data.updatedAt
-          : Date.now(),
-    } as Agent)
+        ...(agentDataResponse.data as AgentWithStatus),
+        status:
+          agentDataResponse.data.status === 'active'
+            ? CoreAgentStatusEnum.ACTIVE
+            : agentDataResponse.data.status === 'inactive'
+              ? CoreAgentStatusEnum.INACTIVE
+              : CoreAgentStatusEnum.INACTIVE,
+        username: agentDataResponse.data.username || agentDataResponse.data.name || 'Unknown',
+        bio: agentDataResponse.data.bio || '',
+        messageExamples: agentDataResponse.data.messageExamples || [],
+        postExamples: agentDataResponse.data.postExamples || [],
+        topics: agentDataResponse.data.topics || [],
+        adjectives: agentDataResponse.data.adjectives || [],
+        knowledge: agentDataResponse.data.knowledge || [],
+        plugins: agentDataResponse.data.plugins || [],
+        settings: agentDataResponse.data.settings || {},
+        secrets: (agentDataResponse.data as any).secrets || {},
+        style: agentDataResponse.data.style || {},
+        templates: agentDataResponse.data.templates || {},
+        enabled:
+          typeof agentDataResponse.data.enabled === 'boolean'
+            ? agentDataResponse.data.enabled
+            : true,
+        createdAt:
+          typeof agentDataResponse.data.createdAt === 'number'
+            ? agentDataResponse.data.createdAt
+            : Date.now(),
+        updatedAt:
+          typeof agentDataResponse.data.updatedAt === 'number'
+            ? agentDataResponse.data.updatedAt
+            : Date.now(),
+      } as Agent)
     : undefined;
 
   clientLogger.debug('[AgentRoute] Constructed agentFromHook:', agentFromHook);
@@ -108,8 +108,16 @@ export default function AgentRoute() {
 
   clientLogger.info('[AgentRoute] Agent is active, rendering chat for DM', {
     agentName: agentFromHook?.name,
+    roomId,
   });
   // AgentRoute no longer needs to manage its own ResizablePanelGroup for the chat and sidebar
   // chat will handle its own layout including the sidebar.
-  return <ChatComponent key={agentId} chatType="DM" contextId={agentId} />;
+  return (
+    <ChatComponent
+      key={`${agentId}-${roomId || 'default'}`}
+      chatType="DM"
+      contextId={agentId}
+      roomId={roomId}
+    />
+  );
 }

@@ -1,22 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Assuming Card components
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import { formatAgentName, cn } from '@/lib/utils';
-import type { Agent, UUID, Character } from '@elizaos/core';
+import type { Agent } from '@elizaos/core';
 import { AgentStatus as CoreAgentStatus } from '@elizaos/core';
-import { InfoIcon, MessageSquare, Settings, Play, UserX, Loader2, PowerOff } from 'lucide-react'; // Icons for actions
-import { useAgentManagement } from '@/hooks/use-agent-management'; // For start/stop logic
+import { MessageSquare, Play, Loader2, PowerOff, Bot, Sparkles } from 'lucide-react';
+import { useAgentManagement } from '@/hooks/use-agent-management';
 import type { AgentWithStatus } from '@/types';
-import clientLogger from '@/lib/logger'; // Assuming you have a logger
+import clientLogger from '@/lib/logger';
 
 interface AgentCardProps {
-  agent: Partial<AgentWithStatus>; // Use AgentWithStatus from client types
+  agent: Partial<AgentWithStatus>;
   onChat: (agent: Partial<AgentWithStatus>) => void;
-  // onInfo: (agent: Partial<AgentWithStatus>) => void; // If you have an info overlay
-  // onSettings: (agentId: UUID) => void; // If navigating to a specific settings page
 }
 
 const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
@@ -31,7 +28,7 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
       </Card>
     );
   }
-  const agentIdForNav = agent.id; // Store for logging
+  const agentIdForNav = agent.id;
   const agentName = agent.name || 'Unnamed Agent';
   const avatarUrl = agent.settings?.avatar;
   const isActive = agent.status === CoreAgentStatus.ACTIVE;
@@ -83,8 +80,6 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
       clientLogger.info(
         '[AgentCard] Agent is active. Click intended for chat button or other actions.'
       );
-      // Optionally, if click on active card should also do something (e.g., open chat if no specific button is hit):
-      // onChat(agent);
     }
   };
 
@@ -96,87 +91,138 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
   return (
     <Card
       className={cn(
-        'w-full aspect-square flex flex-col transition-all hover:shadow-xl cursor-pointer relative',
-        isActive ? '' : 'opacity-75 hover:opacity-100'
+        'group relative overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer',
+        'border bg-card hover:border-primary/20 hover:shadow-primary/5',
+        isActive ? 'ring-2 ring-emerald-500/20 shadow-emerald-500/5' : '',
+        'transform hover:scale-[1.02] active:scale-[0.98]'
       )}
       onClick={handleCardClick}
     >
-      <CardHeader className="flex flex-row items-center gap-3 absolute w-full h-16">
-        <Avatar className="h-10 w-10 border">
-          <AvatarImage src={avatarUrl} alt={agentName} />
-          {/* Fallback can be initials or generic icon */}
-        </Avatar>
-        <div className="flex-1">
-          <CardTitle className="text-lg truncate" title={agentName}>
-            {agentName}
-          </CardTitle>
-          {isActive ? (
-            <Button
-              onClick={handleChatClick}
-              className="w-full col-span-2 absolute bottom-0"
-              variant="default"
-              size="sm"
-              disabled={isStopping || isStarting} /* Also disable if starting */
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-            </Button>
-          ) : (
-            <Button
-              onClick={handleStart}
-              disabled={isStarting || isStopping}
-              className="w-full col-span-2"
-              variant="outline"
-              size="sm"
-            >
-              {isStarting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Play className="mr-2 h-4 w-4" />
-              )}
-              {isStarting ? 'Starting...' : 'Start'}
-            </Button>
+      {/* Enhanced status indicator */}
+      <div className="absolute top-4 right-4 z-10">
+        <Badge
+          variant={isActive ? 'default' : 'secondary'}
+          className={cn(
+            'transition-all duration-300 shadow-sm backdrop-blur-sm',
+            isActive
+              ? 'bg-emerald-500/90 text-white border-emerald-400/50 shadow-emerald-500/20'
+              : 'bg-slate-500/90 text-white border-slate-400/50'
           )}
-          <div className="flex items-center gap-1.5 mt-1">
-            <div
-              className={cn('w-2.5 h-2.5 rounded-full', isActive ? 'bg-green-500' : 'bg-red-500')}
-            />
-            <p className="text-xs text-muted-foreground">
-              {isStarting
-                ? 'Starting...'
-                : isStopping
-                  ? 'Stopping...'
-                  : agent.status?.toString() || CoreAgentStatus.INACTIVE}
-            </p>
-          </div>
+        >
+          <div
+            className={cn(
+              'w-2 h-2 rounded-full mr-2',
+              isActive ? 'bg-white animate-pulse' : 'bg-slate-300'
+            )}
+          />
+          {isStarting ? 'Starting' : isStopping ? 'Stopping' : isActive ? 'Active' : 'Inactive'}
+        </Badge>
+      </div>
+
+      {/* Enhanced avatar section */}
+      <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-primary/5 via-primary/3 to-primary/10">
+        {/* Subtle animated background pattern */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-primary/5 to-primary/10 group-hover:via-primary/10 transition-all duration-500" />
         </div>
-        {/* Action buttons in header */}
-        <div className="flex items-center gap-1 ml-auto">
-          {isActive && !isStopping && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button onClick={handleStop} variant="ghost" size="icon">
-                  <PowerOff className="h-4 w-4 text-red-500" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Stop Agent</TooltipContent>
-            </Tooltip>
-          )}
-          {isStopping && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-        </div>
-      </CardHeader>
-      <CardContent className="flex-grow flex items-center justify-center p-0 overflow-hidden">
+
         {avatarUrl ? (
           <img
             src={avatarUrl}
             alt={agentName}
-            className={cn('w-64 h-64 object-cover', isActive ? '' : 'grayscale')}
+            className={cn(
+              'w-full h-full object-cover transition-all duration-500',
+              isActive ? 'brightness-100' : 'grayscale brightness-75',
+              'group-hover:scale-110 group-hover:brightness-110'
+            )}
           />
         ) : (
-          <div className="w-full h-32 flex items-center justify-center bg-secondary text-2xl font-semibold text-muted-foreground">
-            {formatAgentName(agentName)}
+          <div className="w-full h-full flex items-center justify-center relative">
+            {/* Background icon */}
+            <Bot className="absolute inset-0 w-16 h-16 m-auto text-primary/10 group-hover:text-primary/20 transition-colors duration-300" />
+
+            {/* Main text */}
+            <div className="relative z-10 text-5xl font-bold text-primary/60 group-hover:text-primary/80 transition-colors duration-300">
+              {formatAgentName(agentName)}
+            </div>
+
+            {/* Sparkle effect for active agents */}
+            {isActive && (
+              <Sparkles className="absolute top-4 right-4 w-4 h-4 text-emerald-400 animate-pulse" />
+            )}
           </div>
         )}
-      </CardContent>
+      </div>
+
+      {/* Enhanced content section */}
+      <div className="p-6 space-y-4">
+        <div className="space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-semibold text-lg leading-tight truncate" title={agentName}>
+              {agentName}
+            </h3>
+            {isActive && (
+              <div className="flex-shrink-0">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
+              </div>
+            )}
+          </div>
+          {agent.bio && (
+            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+              {agent.bio}
+            </p>
+          )}
+        </div>
+
+        {/* Enhanced action buttons */}
+        <div className="flex gap-3">
+          {isActive ? (
+            <>
+              <Button
+                onClick={handleChatClick}
+                className="flex-1 shadow-sm hover:shadow-md transition-shadow"
+                size="sm"
+                disabled={isStopping || isStarting}
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Chat
+              </Button>
+              <Button
+                onClick={handleStop}
+                variant="outline"
+                size="sm"
+                disabled={isStopping}
+                className="px-4 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+              >
+                {isStopping ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <PowerOff className="h-4 w-4" />
+                )}
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={handleStart}
+              disabled={isStarting || isStopping}
+              className="w-full shadow-sm hover:shadow-md transition-shadow"
+              size="sm"
+            >
+              {isStarting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Starting...
+                </>
+              ) : (
+                <>
+                  <Play className="mr-2 h-4 w-4" />
+                  Start Agent
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
     </Card>
   );
 };

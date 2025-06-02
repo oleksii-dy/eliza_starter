@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 // import { Avatar, AvatarGroup } from '@/components/ui/avatar'; // AvatarGroup removed
 import type { UUID, Agent } from '@elizaos/core';
@@ -29,7 +29,11 @@ const GroupCard: React.FC<GroupCardProps> = ({ group /*, onEdit */ }) => {
 
   const groupName = generateGroupName(group, group.participants || [], currentClientId);
   // Assuming participant count might come from metadata or a separate query in the parent component
-  const participantCount = group.metadata?.participantCount || group.metadata?.member_count || group.participants?.length || 0;
+  const participantCount =
+    group.metadata?.participantCount ||
+    group.metadata?.member_count ||
+    group.participants?.length ||
+    0;
 
   const handleChatClick = () => {
     navigate(`/group/${group.id}?serverId=${group.server_id}`);
@@ -41,36 +45,42 @@ const GroupCard: React.FC<GroupCardProps> = ({ group /*, onEdit */ }) => {
   // };
 
   return (
-    <Card className="w-full min-h-[180px] flex flex-col transition-all hover:shadow-lg">
-      <CardHeader className="pb-2">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-muted rounded-full">
-            <Users className="h-6 w-6 text-muted-foreground" />
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg border bg-card hover:border-primary/20">
+      {/* Member count badge */}
+      {participantCount > 0 && (
+        <div className="absolute top-3 right-3 z-10">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm border">
+            <Users className="h-3 w-3" />
+            <span className="text-xs font-medium">{participantCount}</span>
           </div>
-          <CardTitle className="text-lg truncate" title={groupName}>
-            {groupName}
-          </CardTitle>
         </div>
-      </CardHeader>
-      <CardContent className="flex-grow">
-        {/* Placeholder for participant avatars or count */}
-        {participantCount > 0 && (
-          <p className="text-xs text-muted-foreground">{participantCount} members</p>
-        )}
-        {group.topic && (
-          <p className="text-sm text-muted-foreground mt-1 Dtruncate">{group.topic}</p>
-        )}
-      </CardContent>
-      <CardFooter className="p-3">
-        <Button onClick={handleChatClick} className="w-full" variant="outline" size="sm">
-          <MessageCircle className="mr-2 h-4 w-4" /> Open Group
+      )}
+
+      {/* Visual header */}
+      <div className="aspect-video relative overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="p-4 bg-background/50 backdrop-blur-sm rounded-full">
+            <Users className="h-12 w-12 text-primary/60" />
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4 space-y-3">
+        <div className="space-y-1">
+          <h3 className="font-semibold text-lg truncate" title={groupName}>
+            {groupName}
+          </h3>
+          {group.topic && (
+            <p className="text-sm text-muted-foreground line-clamp-2">{group.topic}</p>
+          )}
+        </div>
+
+        <Button onClick={handleChatClick} className="w-full" size="sm">
+          <MessageCircle className="mr-2 h-4 w-4" />
+          Open Group
         </Button>
-        {/* {onEdit && (
-          <Button onClick={handleEditClick} variant="ghost" size="icon" className="ml-2">
-            <Settings className="h-4 w-4" />
-          </Button>
-        )} */}
-      </CardFooter>
+      </div>
     </Card>
   );
 };

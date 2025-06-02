@@ -1166,3 +1166,144 @@ export function useClearChannelMessages() {
     },
   });
 }
+
+// ===============================
+// DM Channel Management Hooks
+// ===============================
+
+export function useDmChannelsForAgent(
+  agentId: UUID | undefined,
+  currentUserId: UUID | undefined,
+  options: UseQueryOptions<{ success: boolean; data: { channels: ClientMessageChannel[] } }> = {}
+) {
+  const network = useNetworkStatus();
+  return useQuery<{ success: boolean; data: { channels: ClientMessageChannel[] } }>({
+    queryKey: ['dmChannels', agentId, currentUserId],
+    queryFn: () => {
+      if (!agentId || !currentUserId)
+        return Promise.resolve({ success: true, data: { channels: [] } });
+      return apiClient.getDmChannelsForAgent(agentId, currentUserId);
+    },
+    enabled: !!agentId && !!currentUserId,
+    staleTime: STALE_TIMES.STANDARD,
+    refetchInterval: !network.isOffline && !!agentId ? STALE_TIMES.STANDARD : false,
+    ...options,
+  });
+}
+
+export function useCreateDmChannelWithAgent() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation<
+    { success: boolean; data: ClientMessageChannel },
+    Error,
+    { agentId: UUID; currentUserId: UUID; name?: string }
+  >({
+    mutationFn: async ({ agentId, currentUserId, name }) => {
+      return apiClient.createDmChannelWithAgent(agentId, currentUserId, name);
+    },
+    onSuccess: (data, variables) => {
+      toast({
+        title: 'New Chat Created',
+        description: `Created new chat session with agent.`,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['dmChannels', variables.agentId, variables.currentUserId],
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error Creating Chat',
+        description: error instanceof Error ? error.message : 'Failed to create new chat session',
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+export function useDeleteDmChannel() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation<
+    { success: boolean },
+    Error,
+    { channelId: UUID; currentUserId: UUID; agentId?: UUID }
+  >({
+    mutationFn: async ({ channelId, currentUserId }) => {
+      return apiClient.deleteDmChannel(channelId, currentUserId);
+    },
+    onSuccess: (_data, variables) => {
+      toast({
+        title: 'Chat Deleted',
+        description: `Chat session deleted successfully.`,
+      });
+      if (variables.agentId) {
+        queryClient.invalidateQueries({
+          queryKey: ['dmChannels', variables.agentId, variables.currentUserId],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['messages', variables.channelId] });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error Deleting Chat',
+        description: error instanceof Error ? error.message : 'Failed to delete chat session',
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+// ===============================
+// Related Group Channel Management Hooks
+// ===============================
+
+export function useRelatedGroupChannels(
+  channelId: UUID | undefined,
+  serverId?: UUID,
+  options: UseQueryOptions<{ success: boolean; data: { channels: ClientMessageChannel[] } }> = {}
+) {
+  const network = useNetworkStatus();
+  return useQuery<{ success: boolean; data: { channels: ClientMessageChannel[] } }>({
+    queryKey: ['relatedGroupChannels', channelId, serverId],
+    queryFn: () => {
+      if (!channelId) return Promise.resolve({ success: true, data: { channels: [] } });
+      return apiClient.getRelatedGroupChannels(channelId, serverId);
+    },
+    enabled: !!channelId,
+    staleTime: STALE_TIMES.STANDARD,
+    refetchInterval: !network.isOffline && !!channelId ? STALE_TIMES.STANDARD : false,
+    ...options,
+  });
+}
+
+export function useCreateRelatedGroupChannel() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation<
+    { success: boolean; data: ClientMessageChannel },
+    Error,
+    { basedOnChannelId: UUID; name: string; serverId?: UUID; metadata?: any }
+  >({
+    mutationFn: async (payload) => {
+      return apiClient.createRelatedGroupChannel(payload);
+    },
+    onSuccess: (data, variables) => {
+      toast({
+        title: 'New Group Session Created',
+        description: `Created new group chat session: ${variables.name}`,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['relatedGroupChannels', variables.basedOnChannelId],
+      });
+      queryClient.invalidateQueries({ queryKey: ['channels', variables.serverId] });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error Creating Group Session',
+        description: error instanceof Error ? error.message : 'Failed to create new group session',
+        variant: 'destructive',
+      });
+    },
+  });
+}
