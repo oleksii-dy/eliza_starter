@@ -389,7 +389,7 @@ getDmChannelsForAgent: async (
 
     // Get all channels for the server
     const channelsResponse = await fetcher({
-      url: `/messages/central-servers/${serverId || '00000000-0000-0000-0000-000000000000'}/channels`,
+      url: `/messages/central-servers/${serverId || DEFAULT_DM_SERVER_ID}/channels`,
     });
 
     if (!channelsResponse.success) {
@@ -398,7 +398,7 @@ getDmChannelsForAgent: async (
 
     // Find channels with similar participants (excluding the current channel)
     const allChannels = channelsResponse.data.channels;
-    const relatedChannels = [];
+    const relatedChannels: MessageChannel[] = [];
 
     for (const channel of allChannels) {
       if (channel.id === channelId) continue; // Skip current channel
@@ -414,13 +414,15 @@ getDmChannelsForAgent: async (
           const commonParticipants = currentParticipants.filter((p) =>
             channelParticipants.includes(p)
           );
-          if (commonParticipants.length >= Math.min(2, currentParticipants.length)) {
+          if (
+            commonParticipants.length >=
+            Math.min(2, currentParticipants.length)
+          ) {
             relatedChannels.push(channel);
           }
         }
       } catch (error) {
         // Skip channels we can't check participants for
-        continue;
       }
     }
 
