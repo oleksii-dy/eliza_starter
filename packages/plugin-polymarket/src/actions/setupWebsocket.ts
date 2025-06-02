@@ -171,7 +171,18 @@ export const setupWebsocketAction: Action = {
             }
 
             // For market channel, we need to resolve condition ID(s) to asset ID(s)
-            const conditionIdToFetch = extractedMarkets[0]; // Using the first market for now
+            // Prioritize markets mentioned in the current message
+            const currentMessageText = message.content?.text || '';
+            let conditionIdToFetch: string;
+
+            // Find market ID that appears in the current message
+            const currentMessageMarket = extractedMarkets.find(market =>
+                currentMessageText.toLowerCase().includes(market.toLowerCase())
+            );
+
+            // Use the market from current message, or fall back to the last (most recent) market
+            conditionIdToFetch = currentMessageMarket || extractedMarkets[extractedMarkets.length - 1];
+
             logger.info(`[setupWebsocketAction] Market subscription: Fetching asset IDs for condition ID: ${conditionIdToFetch}`);
 
             try {
@@ -201,87 +212,118 @@ export const setupWebsocketAction: Action = {
         }
 
         return new Promise<Content>((resolvePromise, rejectPromise) => {
-            try {
-                logger.info(`[setupWebsocketAction] Creating new WebSocket connection to: ${wsUrl}`);
-                const wsClient = new WebSocket(wsUrl);
-                setActiveClobSocketClientReference(wsClient as any);
+            let retryCount = 0;
+            const MAX_RETRIES = 3;
+            let hasResolved = false; // Flag to prevent multiple resolutions
 
-                wsClient.on('open', () => {
-                    logger.info('[setupWebsocketAction] WebSocket connection opened. Sending subscription message...');
-                    const messageStr = JSON.stringify(subMsgPayload);
-                    wsClient.send(messageStr, (err?: Error) => {
-                        if (err) {
-                            logger.error('[setupWebsocketAction] Error sending subscription message:', err);
-                            if (pingIntervalId) { clearInterval(pingIntervalId); pingIntervalId = null; } // Clear interval on error
-                            setActiveClobSocketClientReference(null);
-                            wsClient.terminate();
-                            const errorContent: Content = { text: `❌ WebSocket Error: Failed to send subscription - ${err.message}` };
-                            if (callback) callback(errorContent);
-                            rejectPromise(new Error(`Failed to send subscription: ${err.message}`));
+            const attemptConnection = () => {
+                try {
+                    logger.info(`[setupWebsocketAction] Creating new WebSocket connection to: ${wsUrl} (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
+                    const wsClient = new WebSocket(wsUrl);
+                    setActiveClobSocketClientReference(wsClient as any);
+
+                    wsClient.on('open', () => {
+                        logger.info('[setupWebsocketAction] WebSocket connection opened. Sending subscription message...');
+                        const messageStr = JSON.stringify(subMsgPayload);
+                        wsClient.send(messageStr, (err?: Error) => {
+                            if (err) {
+                                logger.error('[setupWebsocketAction] Error sending subscription message:', err);
+                                if (pingIntervalId) { clearInterval(pingIntervalId); pingIntervalId = null; } // Clear interval on error
+                                setActiveClobSocketClientReference(null);
+                                wsClient.terminate();
+                                const errorContent: Content = { text: `❌ WebSocket Error: Failed to send subscription - ${err.message}` };
+                                if (callback) callback(errorContent);
+                                if (!hasResolved) {
+                                    hasResolved = true;
+                                    rejectPromise(new Error(`Failed to send subscription: ${err.message}`));
+                                }
+                                return;
+                            }
+                            logger.info(`[setupWebsocketAction] Subscription message sent: ${messageStr}`);
+                            let responseText = `🔌 WebSocket connection to ${subscriptionType.toUpperCase()} channel established and subscription sent.`;
+                            if (subMsgPayload.markets && subMsgPayload.markets.length > 0) responseText += ` Subscribed to markets/conditions: ${subMsgPayload.markets.join(', ')}.`;
+                            if (subMsgPayload.assets_ids && subMsgPayload.assets_ids.length > 0) responseText += ` Subscribed to assets: ${subMsgPayload.assets_ids.join(', ')}.`;
+                            responseText += ' Waiting for real-time updates. Use HANDLE_REALTIME_UPDATES to process messages.';
+
+                            // Start sending pings every 30 seconds
+                            if (pingIntervalId) { clearInterval(pingIntervalId); } // Clear any existing (should not happen here)
+                            pingIntervalId = setInterval(() => {
+                                if (wsClient.readyState === WebSocket.OPEN) { // Use imported WebSocket for WebSocket.OPEN
+                                    logger.info('[setupWebsocketAction] Sending WebSocket ping');
+                                    wsClient.ping();
+                                }
+                            }, 30000);
+
+                            const responseContent: Content = {
+                                text: responseText,
+                                actions: ['HANDLE_REALTIME_UPDATES'],
+                                data: { status: 'subscribed', subscription: subMsgPayload, timestamp: new Date().toISOString() },
+                            };
+                            if (callback) callback(responseContent);
+                            if (!hasResolved) {
+                                hasResolved = true;
+                                resolvePromise(responseContent);
+                            }
+                        });
+                    });
+
+                    wsClient.on('error', (error: Error) => {
+                        logger.error('[setupWebsocketAction] WebSocket connection error:', error);
+                        if (pingIntervalId) { clearInterval(pingIntervalId); pingIntervalId = null; } // Clear interval
+                        setActiveClobSocketClientReference(null);
+                        // wsClient.terminate(); // No need to terminate, 'close' will be called
+                        const errorContent: Content = { text: `❌ WebSocket Error: ${error.message}` };
+                        if (callback) callback(errorContent);
+                        if (!hasResolved) {
+                            hasResolved = true;
+                            rejectPromise(error);
+                        }
+                    });
+
+                    wsClient.on('close', (code: number, reason: Buffer) => {
+                        logger.info(`[setupWebsocketAction] WebSocket connection closed. Code: ${code}, Reason: ${reason.toString()}`);
+                        if (pingIntervalId) { clearInterval(pingIntervalId); pingIntervalId = null; } // Clear interval
+                        setActiveClobSocketClientReference(null);
+
+                        // Retry logic for abnormal closures (code 1006) and other connection issues
+                        if ((code === 1006 || code === 1000) && retryCount < MAX_RETRIES && !hasResolved) {
+                            retryCount++;
+                            const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 2s, 4s, 8s
+                            logger.info(`[setupWebsocketAction] Connection closed (code ${code}). Retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})`);
+                            setTimeout(attemptConnection, delay);
                             return;
                         }
-                        logger.info(`[setupWebsocketAction] Subscription message sent: ${messageStr}`);
-                        let responseText = `🔌 WebSocket connection to ${subscriptionType.toUpperCase()} channel established and subscription sent.`;
-                        if (subMsgPayload.markets && subMsgPayload.markets.length > 0) responseText += ` Subscribed to markets/conditions: ${subMsgPayload.markets.join(', ')}.`;
-                        if (subMsgPayload.assets_ids && subMsgPayload.assets_ids.length > 0) responseText += ` Subscribed to assets: ${subMsgPayload.assets_ids.join(', ')}.`;
-                        responseText += ' Waiting for real-time updates. Use HANDLE_REALTIME_UPDATES to process messages.';
 
-                        // Start sending pings every 30 seconds
-                        if (pingIntervalId) { clearInterval(pingIntervalId); } // Clear any existing (should not happen here)
-                        pingIntervalId = setInterval(() => {
-                            if (wsClient.readyState === WebSocket.OPEN) { // Use imported WebSocket for WebSocket.OPEN
-                                logger.info('[setupWebsocketAction] Sending WebSocket ping');
-                                wsClient.ping();
-                            }
-                        }, 30000);
-
-                        const responseContent: Content = {
-                            text: responseText,
-                            actions: ['HANDLE_REALTIME_UPDATES'],
-                            data: { status: 'subscribed', subscription: subMsgPayload, timestamp: new Date().toISOString() },
-                        };
-                        if (callback) callback(responseContent);
-                        resolvePromise(responseContent);
+                        // If we've exhausted retries or this is a different close reason, and haven't resolved yet
+                        if (!hasResolved) {
+                            hasResolved = true;
+                            const closeError = new Error(`WebSocket closed after ${retryCount} retries. Code: ${code}, Reason: ${reason.toString()}`);
+                            rejectPromise(closeError);
+                        }
                     });
-                });
 
-                wsClient.on('error', (error: Error) => {
-                    logger.error('[setupWebsocketAction] WebSocket connection error:', error);
+                    // The 'message' handler should primarily live in handleRealtimeUpdatesAction
+                    // But we can log a generic message here for successful setup
+                    wsClient.once('message', (data: WebSocket.RawData) => {
+                        logger.info('[setupWebsocketAction] Received first message (indicates successful subscription setup). Further messages handled by HANDLE_REALTIME_UPDATES.');
+                        // Do not resolve/reject here as 'open' handles the primary success case.
+                    });
+
+                } catch (error: any) {
+                    logger.error('[setupWebsocketAction] Critical error during WebSocket setup (outside of event handlers):', error);
                     if (pingIntervalId) { clearInterval(pingIntervalId); pingIntervalId = null; } // Clear interval
                     setActiveClobSocketClientReference(null);
-                    // wsClient.terminate(); // No need to terminate, 'close' will be called
-                    const errorContent: Content = { text: `❌ WebSocket Error: ${error.message}` };
+                    const errorContent: Content = { text: `❌ Critical WebSocket Setup Error: ${error.message}` };
                     if (callback) callback(errorContent);
-                    rejectPromise(error);
-                });
+                    if (!hasResolved) {
+                        hasResolved = true;
+                        rejectPromise(error);
+                    }
+                }
+            };
 
-                wsClient.on('close', (code: number, reason: Buffer) => {
-                    logger.info(`[setupWebsocketAction] WebSocket connection closed. Code: ${code}, Reason: ${reason.toString()}`);
-                    if (pingIntervalId) { clearInterval(pingIntervalId); pingIntervalId = null; } // Clear interval
-                    setActiveClobSocketClientReference(null);
-                    // Only reject if it hasn't been resolved already (e.g. by 'open' and successful send)
-                    // This might lead to double responses if an error occurs after successful connection
-                    // Consider a flag to check if already resolved/rejected.
-                    // For now, let's assume if it closes unexpectedly, it's an error state not yet handled.
-                    // const closeError = new Error(`WebSocket closed. Code: ${code}, Reason: ${reason.toString()}`);
-                    // rejectPromise(closeError); // Avoid rejecting again if already resolved
-                });
-
-                // The 'message' handler should primarily live in handleRealtimeUpdatesAction
-                // But we can log a generic message here for successful setup
-                wsClient.once('message', (data: WebSocket.RawData) => {
-                    logger.info('[setupWebsocketAction] Received first message (indicates successful subscription setup). Further messages handled by HANDLE_REALTIME_UPDATES.');
-                    // Do not resolve/reject here as 'open' handles the primary success case.
-                });
-
-            } catch (error: any) {
-                logger.error('[setupWebsocketAction] Critical error during WebSocket setup (outside of event handlers):', error);
-                if (pingIntervalId) { clearInterval(pingIntervalId); pingIntervalId = null; } // Clear interval
-                setActiveClobSocketClientReference(null);
-                const errorContent: Content = { text: `❌ Critical WebSocket Setup Error: ${error.message}` };
-                if (callback) callback(errorContent);
-                rejectPromise(error);
-            }
+            // Start the initial connection attempt
+            attemptConnection();
         });
     },
 

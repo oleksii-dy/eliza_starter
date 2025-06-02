@@ -515,6 +515,8 @@ Review the recent messages:
 {{recentMessages}}
 </recent_messages>
 
+**IMPORTANT**: Focus primarily on the MOST RECENT message in the conversation above. If the most recent message contains new market IDs or subscription requests, prioritize those over any markets mentioned in earlier messages.
+
 Based on the conversation, identify:
 - markets: An array of market condition IDs (strings, typically 0x prefixed 64-character hex strings, or alphanumeric strings ending in 'condition-ID').
 - userId: The user's wallet address (a string, typically a 0x prefixed 40-character hex string).
@@ -525,11 +527,16 @@ Look for:
 - Explicit mentions of "user ID", "my trades", "my updates" which might imply a userId is needed or will be provided.
 - Hexadecimal strings (0x...). If it's 64 characters long (after 0x), it's likely a market ID. If 40 characters, it's likely a user ID.
 
+**PRIORITY RULES**:
+1. If the most recent message contains "subscribe" or "subscibe" with a market ID, extract ONLY that market ID
+2. If the most recent message contains a new market ID not mentioned in earlier messages, prioritize the new one
+3. Only include markets from earlier messages if the most recent message explicitly references them or contains no new market IDs
+
 Examples:
-- User query: "Subscribe to market 0x123abc123abc123abc123abc123abc123abc123abc123abc123abc and 0xdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdef, and my user ID 0xabcabcabcabcabcabcabcabcabcabcabcabcabc."
+- User query: "Subscribe to market 0x123abc123abc123abc123abc123abc123abc123abc123abc123abc123abc and 0xdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdef, and my user ID 0xabcabcabcabcabcabcabcabcabcabcabcabcabc."
   Output:
   {
-    "markets": ["0x123abc123abc123abc123abc123abc123abc123abc123abc123abc123abc", "0xdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdef"],
+    "markets": ["0x123abc123abc123abc123abc123abc123abc123abc123abc123abc123abc123abc", "0xdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdefdef"],
     "userId": "0xabcabcabcabcabcabcabcabcabcabcabcabcabc"
   }
 - User query: "Listen to my trades."
@@ -560,5 +567,4 @@ The JSON should have this structure if parameters are found:
 If no market IDs or user ID are found, and they seem necessary for the user's intent (e.g. "subscribe to updates" without specifying what), you MUST respond with the following JSON structure:
 {
     "error": "No market IDs or user ID found. Please specify at least one market (condition ID) or a user ID for WebSocket subscriptions."
-}
-`;
+}`;

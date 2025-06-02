@@ -91,9 +91,6 @@ export const getTradeHistoryAction: Action = {
     validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
         logger.info(`[getTradeHistoryAction] Validate called for message: "${message.content?.text}"`);
         const clobApiUrl = runtime.getSetting('CLOB_API_URL');
-        const clobApiKey = runtime.getSetting('CLOB_API_KEY');
-        const clobApiSecret = runtime.getSetting('CLOB_API_SECRET') || runtime.getSetting('CLOB_SECRET');
-        const clobApiPassphrase = runtime.getSetting('CLOB_API_PASSPHRASE') || runtime.getSetting('CLOB_PASS_PHRASE');
         const privateKey = runtime.getSetting('WALLET_PRIVATE_KEY') || runtime.getSetting('PRIVATE_KEY') || runtime.getSetting('POLYMARKET_PRIVATE_KEY');
 
         if (!clobApiUrl) {
@@ -102,14 +99,6 @@ export const getTradeHistoryAction: Action = {
         }
         if (!privateKey) {
             logger.warn('[getTradeHistoryAction] A private key (WALLET_PRIVATE_KEY, PRIVATE_KEY, or POLYMARKET_PRIVATE_KEY) is required.');
-            return false;
-        }
-        if (!clobApiKey || !clobApiSecret || !clobApiPassphrase) {
-            const missing = [];
-            if (!clobApiKey) missing.push('CLOB_API_KEY');
-            if (!clobApiSecret) missing.push('CLOB_API_SECRET or CLOB_SECRET');
-            if (!clobApiPassphrase) missing.push('CLOB_API_PASSPHRASE or CLOB_PASS_PHRASE');
-            logger.warn(`[getTradeHistoryAction] Missing required API credentials for L2 authentication: ${missing.join(', ')}.`);
             return false;
         }
         logger.info('[getTradeHistoryAction] Validation passed');

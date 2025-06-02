@@ -66,6 +66,19 @@ function registerEventHandlers(wsClient: WebSocket, runtime: IAgentRuntime, call
             // TODO: Add more specific parsing and handling based on eventData.type
             // For example, if (eventData.type === 'book_l2_update') { ... }
 
+            // Handle array of events (common in Polymarket WebSocket responses)
+            if (Array.isArray(eventData)) {
+                eventData.forEach((event, index) => {
+                    const notification: Content = {
+                        text: `🔔 **WebSocket Update ${index + 1}/${eventData.length}**: Type: \`${event.event_type || event.type || 'Unknown'}\`. Market: ${(event.market || '').substring(0, 10)}... Data: ${JSON.stringify(event.data || event).substring(0, 150)}...`,
+                        data: { eventType: 'polymarketUpdate', payload: event },
+                    };
+                    if (callback) callback(notification);
+                });
+                return; // Exit after processing array
+            }
+
+            // Handle single event
             const notification: Content = {
                 text: `🔔 **WebSocket Update**: Type: \`${eventData.event || eventData.type || 'Unknown'}\`. Data: ${JSON.stringify(eventData.data || eventData).substring(0, 200)}...`,
                 data: { eventType: 'polymarketUpdate', payload: eventData },
@@ -160,6 +173,8 @@ export const handleRealtimeUpdatesAction: Action = {
                 text: responseText,
                 data: { status: 'listening', clientState: activeWebSocketClient.readyState, timestamp: new Date().toISOString() },
             };
+
+            if (callback) await callback(responseContent);
             return responseContent;
 
         } catch (error: any) {
