@@ -1,4 +1,3 @@
-import AgentDetailsPanel from '@/components/AgentDetailsPanel';
 import CopyButton from '@/components/copy-button';
 import DeleteButton from '@/components/delete-button';
 import MediaContent from '@/components/media-content';
@@ -38,7 +37,6 @@ import {
 import type { Agent, Media, UUID } from '@elizaos/core';
 import { AgentStatus, ContentType as CoreContentType, validateUuid } from '@elizaos/core';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@radix-ui/react-collapsible';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   ChevronRight,
   Loader2,
@@ -291,14 +289,17 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
   // Define handlers before useEffect that might call them
   const handleSelectDmRoom = (channelIdToSelect: UUID) => {
     const selectedChannel = agentDmChannels.find((channel) => channel.id === channelIdToSelect);
-    if (selectedChannel) {
+    if (selectedChannel && targetAgentData?.id) {
       clientLogger.info(
         `[Chat] DM Channel selected: ${selectedChannel.name} (Channel ID: ${selectedChannel.id})`
       );
       setCurrentDmChannelIdForAgent(selectedChannel.id);
       setInput('');
+
+      // Navigate to the selected channel URL
+      navigate(`/chat/${targetAgentData.id}/${selectedChannel.id}`);
+
       setTimeout(() => safeScrollToBottom(), 150);
-      // TODO: Update URL if using /chat/:agentId/:channelId
     }
   };
 
@@ -310,7 +311,7 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
       // Create a real channel via API using the existing method
       const createResponse = await apiClient.createDmChannelWithAgent(
         agentIdForNewChannel,
-        currentClientEntityId,
+        currentClientEntityId!,
         `New Chat - ${moment().format('HH:mm')}`
       );
 
@@ -422,7 +423,7 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
         try {
           const response = await apiClient.getDmChannelsForAgent(
             targetAgentData.id,
-            currentClientEntityId
+            currentClientEntityId!
           );
 
           if (response.success) {
@@ -431,8 +432,7 @@ export default function chat({ chatType, contextId, serverId, roomId }: UnifiedC
             const formattedChannels = fetchedChannels
               .map((channel: any) => ({
                 id: channel.id,
-                name:
-                  channel.name || `Chat - ${moment(channel.created_at).format('MMM DD, HH:mm')}`,
+                name: channel.name || `Chat - ${moment().format('HH:mm')}`,
                 createdAt: new Date(channel.created_at).getTime(),
                 lastActivity: channel.updated_at
                   ? new Date(channel.updated_at).getTime()

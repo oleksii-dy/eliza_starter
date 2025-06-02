@@ -94,58 +94,55 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
   // Initialize for create mode, or load for edit mode
   useEffect(() => {
     console.log('[GroupPanel] Edit/Create Effect Triggered. channelId:', channelId);
-    if (channelId) {
-      // Edit mode
-      if (channelsData?.data?.channels) {
-        const channel = channelsData.data.channels.find((ch) => ch.id === channelId);
-        if (channel) {
-          console.log('[GroupPanel] Edit mode: Setting chat name to:', channel.name || '');
-          setChatName(channel.name || '');
-        } else {
-          console.log('[GroupPanel] Edit mode: Channel not found, resetting form.');
-          setChatName(''); // Channel for editing not found, reset
-          setSelectedAgents([]);
-          // toast({ title: "Error", description: "Group details not found for editing.", variant: "destructive" });
-        }
+
+    // Early return for create mode to prevent unnecessary processing
+    if (!channelId) {
+      // Only reset if we're transitioning from edit to create mode
+      if (chatName || selectedAgents.length > 0) {
+        console.log('[GroupPanel] Create mode: Resetting form.');
+        setChatName('');
+        setSelectedAgents([]);
       }
-      // Populate selectedAgents once participants are fetched and allAvailableAgents are loaded
-      // This check is crucial: only proceed if all data dependencies for this logic are met.
-      if (channelParticipantsData?.data?.participants && allAvailableAgents.length > 0) {
-        const participantIds = channelParticipantsData.data.participants as UUID[];
-        console.log('[GroupPanel] Edit mode: Fetched participant IDs:', participantIds);
-        const currentChannelParticipants = allAvailableAgents.filter((agent) =>
-          participantIds.includes(agent.id as UUID)
-        );
-        setSelectedAgents(currentChannelParticipants);
-        console.log(
-          '[GroupPanel] Edit mode: Populated selectedAgents from fetched participants:',
-          currentChannelParticipants
-        );
-      } else {
-        // If participant data isn't ready yet, or no participants, ensure selectedAgents is empty
-        // This prevents stale selections if channelId changes and participant data isn't immediately available.
-        // However, if channelParticipantsData is loading, we should wait, not clear.
-        if (!isLoadingChannelParticipants) {
-          console.log(
-            '[GroupPanel] Edit mode: No participant data or no allAvailableAgents, clearing selectedAgents.'
-          );
-          setSelectedAgents([]);
-        }
-      }
-    } else {
-      // Create mode
-      console.log('[GroupPanel] Create mode: Resetting form.');
-      setChatName('');
-      setSelectedAgents([]);
+      return;
     }
-  }, [
-    channelId,
-    channelsData,
-    channelParticipantsData,
-    allAvailableAgents,
-    isLoadingChannelParticipants,
-  ]);
-  // Added isLoadingChannelParticipants to dependencies
+
+    // Edit mode - only proceed if we have a valid channelId
+    if (channelsData?.data?.channels) {
+      const channel = channelsData.data.channels.find((ch) => ch.id === channelId);
+      if (channel) {
+        console.log('[GroupPanel] Edit mode: Setting chat name to:', channel.name || '');
+        setChatName(channel.name || '');
+      } else {
+        console.log('[GroupPanel] Edit mode: Channel not found, resetting form.');
+        setChatName(''); // Channel for editing not found, reset
+        setSelectedAgents([]);
+      }
+    }
+  }, [channelId, channelsData]);
+
+  // Separate effect for handling participants in edit mode
+  useEffect(() => {
+    // Only run this effect if we're in edit mode
+    if (!channelId) return;
+
+    // Populate selectedAgents once participants are fetched and allAvailableAgents are loaded
+    if (
+      channelParticipantsData?.data?.participants &&
+      allAvailableAgents.length > 0 &&
+      !isLoadingChannelParticipants
+    ) {
+      const participantIds = channelParticipantsData.data.participants as UUID[];
+      console.log('[GroupPanel] Edit mode: Fetched participant IDs:', participantIds);
+      const currentChannelParticipants = allAvailableAgents.filter((agent) =>
+        participantIds.includes(agent.id as UUID)
+      );
+      setSelectedAgents(currentChannelParticipants);
+      console.log(
+        '[GroupPanel] Edit mode: Populated selectedAgents from fetched participants:',
+        currentChannelParticipants
+      );
+    }
+  }, [channelId, channelParticipantsData, allAvailableAgents, isLoadingChannelParticipants]);
 
   // Log selected agents for Issue A
   useEffect(() => {
