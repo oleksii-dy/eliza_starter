@@ -409,7 +409,7 @@ export const apiClient = {
         if (channelParticipantsResponse.success) {
           const channelParticipants = channelParticipantsResponse.data;
           // Check if there's significant overlap in participants
-          const commonParticipants = currentParticipants.filter((p) =>
+          const commonParticipants = currentParticipants.filter((p: UUID) =>
             channelParticipants.includes(p)
           );
           if (commonParticipants.length >= Math.min(2, currentParticipants.length)) {
