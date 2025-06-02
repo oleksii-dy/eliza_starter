@@ -167,14 +167,14 @@ const GroupChannelListSection = ({
 
   return (
     <SidebarSection title="Groups" className={className}>
-      <div className="flex justify-end px-2 mb-1 absolute right-0 top-0">
+      <div className="flex justify-end px-2 -mt-8 mb-2">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('/group/new')}
-          className="text-xs"
+          className="text-xs h-6"
         >
-          <Plus className="h-3 w-3 mr-1" />
+          <Plus className="h-3 w-3" />
         </Button>
       </div>
       {isLoadingServers &&
@@ -422,7 +422,7 @@ export function AppSidebar({
             servers={servers}
             isLoadingServers={isLoadingServers}
             className="mt-2"
-            onManageServers={() => {}} // Server management hidden
+            onManageServers={() => { }} // Server management hidden
           />
         </SidebarContent>
 

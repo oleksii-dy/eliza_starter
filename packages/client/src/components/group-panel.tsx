@@ -60,36 +60,19 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
     queryKey: ['channelParticipants', channelId, serverId],
     queryFn: async () => {
       if (!channelId || !serverId) return { data: { participants: [] } };
-      console.log(`[GroupPanel] Simulating fetch for participants of channel: ${channelId}`);
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      console.log(`[GroupPanel] Fetching participants for channel: ${channelId}`);
 
-      // Improved simulation: If editing, and agents exist, simulate some are participants.
-      if (allAvailableAgents.length > 0) {
-        const simulatedParticipantIds = allAvailableAgents
-          .slice(0, Math.min(2, allAvailableAgents.length))
-          .map((a) => a.id as UUID);
-        console.log(
-          '[GroupPanel] Simulated participant IDs for edit mode:',
-          simulatedParticipantIds
-        );
-        return { data: { participants: simulatedParticipantIds } };
+      try {
+        const response = await apiClient.getChannelParticipants(channelId);
+        console.log('[GroupPanel] Fetched participant IDs:', response.data);
+        return { data: { participants: response.data } };
+      } catch (error) {
+        console.error('[GroupPanel] Error fetching participants:', error);
+        return { data: { participants: [] } };
       }
-      return { data: { participants: [] } }; // Default to no participants
     },
-    enabled: !!channelId && !!serverId && allAvailableAgents.length > 0, // Enable only if editing and agents are available to pick from
+    enabled: !!channelId && !!serverId, // Enable only if editing
   });
-
-  // Log for chatName and button disabled state
-  useEffect(() => {
-    console.log('[GroupPanel] chatName:', chatName, 'Trimmed length:', chatName.trim().length);
-    const buttonDisabled = !chatName.trim().length || !serverId || deleting || creating;
-    console.log('[GroupPanel] Create/Update button disabled state:', buttonDisabled, {
-      chatNameEmpty: !chatName.trim().length,
-      serverIdMissing: !serverId,
-      isDeleting: deleting,
-      isCreating: creating,
-    });
-  }, [chatName, serverId, deleting, creating]);
 
   // Initialize for create mode, or load for edit mode
   useEffect(() => {
@@ -103,34 +86,21 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
         setChatName('');
         setSelectedAgents([]);
       }
-      return;
+    } else {
+      // Create mode
+      console.log('[GroupPanel] Create mode: Resetting form.');
+      setChatName('');
+      setSelectedAgents([]);
     }
+  }, [
+    channelId,
+    channelsData,
+  ]);
+  // Removed allAvailableAgents, channelParticipantsData, and isLoadingChannelParticipants from dependencies
 
-    // Edit mode - only proceed if we have a valid channelId
-    if (channelsData?.data?.channels) {
-      const channel = channelsData.data.channels.find((ch) => ch.id === channelId);
-      if (channel) {
-        console.log('[GroupPanel] Edit mode: Setting chat name to:', channel.name || '');
-        setChatName(channel.name || '');
-      } else {
-        console.log('[GroupPanel] Edit mode: Channel not found, resetting form.');
-        setChatName(''); // Channel for editing not found, reset
-        setSelectedAgents([]);
-      }
-    }
-  }, [channelId, channelsData]);
-
-  // Separate effect for handling participants in edit mode
+  // Separate effect for handling participant selection in edit mode
   useEffect(() => {
-    // Only run this effect if we're in edit mode
-    if (!channelId) return;
-
-    // Populate selectedAgents once participants are fetched and allAvailableAgents are loaded
-    if (
-      channelParticipantsData?.data?.participants &&
-      allAvailableAgents.length > 0 &&
-      !isLoadingChannelParticipants
-    ) {
+    if (channelId && channelParticipantsData?.data?.participants && allAvailableAgents.length > 0 && !isLoadingChannelParticipants) {
       const participantIds = channelParticipantsData.data.participants as UUID[];
       console.log('[GroupPanel] Edit mode: Fetched participant IDs:', participantIds);
       const currentChannelParticipants = allAvailableAgents.filter((agent) =>
@@ -143,6 +113,18 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
       );
     }
   }, [channelId, channelParticipantsData, allAvailableAgents, isLoadingChannelParticipants]);
+
+  // Log for chatName and button disabled state
+  useEffect(() => {
+    console.log('[GroupPanel] chatName:', chatName, 'Trimmed length:', chatName.trim().length);
+    const buttonDisabled = !chatName.trim().length || !serverId || deleting || creating;
+    console.log('[GroupPanel] Create/Update button disabled state:', buttonDisabled, {
+      chatNameEmpty: !chatName.trim().length,
+      serverIdMissing: !serverId,
+      isDeleting: deleting,
+      isCreating: creating,
+    });
+  }, [chatName, serverId, deleting, creating]);
 
   // Log selected agents for Issue A
   useEffect(() => {
@@ -383,7 +365,15 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
 
                   if (response.data) {
                     toast({ title: 'Success', description: `Group "${chatName}" created.` });
+                    // Invalidate queries before navigation
+                    await queryClient.invalidateQueries({ queryKey: ['channels', serverId] });
+                    await queryClient.invalidateQueries({ queryKey: ['channels'] });
+
+                    // Navigate to the new group
                     navigate(`/group/${response.data.id}?serverId=${serverId}`);
+
+                    // Close the modal after navigation
+                    onClose();
                   }
                 } else {
                   console.warn('apiClient.updateCentralGroupChat is not implemented.');
@@ -392,6 +382,7 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
                     description: `Group "${chatName}" update simulated.`,
                   });
                   navigate(`/group/${channelId}?serverId=${serverId}`);
+                  onClose();
                 }
               } catch (error) {
                 console.error('Failed to create/update group', error);
@@ -403,9 +394,6 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
                 });
               } finally {
                 setCreating(false);
-                onClose();
-                queryClient.invalidateQueries({ queryKey: ['channels', serverId] });
-                queryClient.invalidateQueries({ queryKey: ['channels'] });
               }
             }}
             disabled={!chatName.trim().length || !serverId || deleting || creating}
