@@ -68,7 +68,8 @@ export default function Home() {
                 Welcome to Your ElizaOS Workspace
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Create, manage, and interact with intelligent AI agents. Build collaborative agent groups!
+                Create, manage, and interact with intelligent AI agents. Build collaborative agent
+                groups!
               </p>
               <div className="flex items-center justify-center gap-4 pt-6">
                 <Button size="lg" onClick={() => navigate('/create')} className="gap-2">
