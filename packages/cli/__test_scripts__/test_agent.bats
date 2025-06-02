@@ -77,6 +77,10 @@ setup_file() {
     exit 1
   fi
 
+  # Give server additional time to fully initialize
+  echo "[DEBUG] Waiting 5 seconds for server to fully initialize..." >&2
+  sleep 5
+
   # Pre‑load three reference character files.
   echo "[DEBUG] Pre-loading reference characters..." >&2
   for c in ada max shaw; do
@@ -94,7 +98,7 @@ setup_file() {
     fi
     echo "[DEBUG] Successfully loaded character: $c" >&2
   done
-  sleep 2  # give them a moment to register
+  sleep 5  # give them a moment to register
 }
 
 teardown_file() {
