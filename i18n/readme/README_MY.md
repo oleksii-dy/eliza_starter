@@ -81,6 +81,8 @@ Jika anda mahukan fail aksara contoh juga, jalankan ini:
 ```bash 
 # Muat turun submodule aksara daripada repo aksara kemas kini submodule git --init
 ```
+
+
 #### Edit fail .env Salin .env.example ke .env dan isikan nilai yang sesuai. 
 
 ```
@@ -89,4 +91,28 @@ cp .env.example .env
 ```
 Nota: .env adalah pilihan. Jika anda merancang untuk menjalankan berbilang ejen yang berbeza, anda boleh menyampaikan rahsia melalui watak JSON
 
+#### Mulakan Eliza
+```
+pnpm i
+pnpm build
+pnpm start
 
+# Projek berulang dengan pantas, kadangkala anda perlu membersihkan projek jika anda kembali ke projek itu pnpm clean
+```
+### Berinteraksi melalui Penyemak Imbas 
+
+Setelah ejen berjalan, anda sepatutnya melihat mesej untuk menjalankan "pnpm start:client" pada penghujungnya.
+
+Buka terminal lain, pindah ke direktori yang sama, jalankan arahan di bawah, kemudian ikuti URL untuk bersembang dengan ejen anda.
+
+```bash
+pnpm start:client
+```
+
+Then read the [Documentation](https://elizaos.github.io/eliza/) to learn how to customize your Eliza.
+
+---
+### Mulakan Eliza secara automatik 
+
+Skrip permulaan menyediakan cara automatik untuk menyediakan dan menjalankan Eliza:
+```bash skrip sh/start.sh ``` Untuk arahan terperinci tentang menggunakan skrip mula, termasuk pengurusan aksara dan penyelesaian masalah, lihat [Panduan Skrip Mula](./docs/docs/guides/start-script.md) kami.
