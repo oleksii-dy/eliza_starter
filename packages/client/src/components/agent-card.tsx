@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatAgentName, cn } from '@/lib/utils';
 import type { Agent } from '@elizaos/core';
 import { AgentStatus as CoreAgentStatus } from '@elizaos/core';
-import { MessageSquare, Play, Loader2, PowerOff, Bot, Sparkles } from 'lucide-react';
+import { MessageSquare, Play, Loader2, PowerOff } from 'lucide-react';
 import { useAgentManagement } from '@/hooks/use-agent-management';
 import type { AgentWithStatus } from '@/types';
 import clientLogger from '@/lib/logger';
@@ -91,96 +91,58 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
   return (
     <Card
       className={cn(
-        'group relative overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer',
-        'border bg-card hover:border-primary/20 hover:shadow-primary/5',
-        isActive ? 'ring-2 ring-emerald-500/20 shadow-emerald-500/5' : '',
-        'transform hover:scale-[1.02] active:scale-[0.98]'
+        'group relative transition-all duration-200 hover:shadow-md cursor-pointer',
+        'border bg-card hover:border-primary/30',
+        isActive ? 'border-green-200' : ''
       )}
       onClick={handleCardClick}
     >
-      {/* Enhanced status indicator */}
-      <div className="absolute top-4 right-4 z-10">
-        <Badge
-          variant={isActive ? 'default' : 'secondary'}
-          className={cn(
-            'transition-all duration-300 shadow-sm backdrop-blur-sm',
-            isActive
-              ? 'bg-emerald-500/90 text-white border-emerald-400/50 shadow-emerald-500/20'
-              : 'bg-slate-500/90 text-white border-slate-400/50'
-          )}
-        >
+      {/* Status indicator */}
+      <div className="absolute top-3 right-3">
+        <Badge variant={isActive ? 'default' : 'secondary'} className="text-xs">
           <div
             className={cn(
-              'w-2 h-2 rounded-full mr-2',
-              isActive ? 'bg-white animate-pulse' : 'bg-slate-300'
+              'w-1.5 h-1.5 rounded-full mr-1.5',
+              isActive ? 'bg-green-500' : 'bg-gray-400'
             )}
           />
           {isStarting ? 'Starting' : isStopping ? 'Stopping' : isActive ? 'Active' : 'Inactive'}
         </Badge>
       </div>
 
-      {/* Enhanced avatar section */}
-      <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-primary/5 via-primary/3 to-primary/10">
-        {/* Subtle animated background pattern */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-primary/5 to-primary/10 group-hover:via-primary/10 transition-all duration-500" />
-        </div>
-
+      {/* Avatar section */}
+      <div className="aspect-square relative overflow-hidden bg-muted/50">
         {avatarUrl ? (
           <img
             src={avatarUrl}
             alt={agentName}
-            className={cn(
-              'w-full h-full object-cover transition-all duration-500',
-              isActive ? 'brightness-100' : 'grayscale brightness-75',
-              'group-hover:scale-110 group-hover:brightness-110'
-            )}
+            className={cn('w-full h-full object-cover', !isActive && 'grayscale opacity-60')}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center relative">
-            {/* Background icon */}
-            <Bot className="absolute inset-0 w-16 h-16 m-auto text-primary/10 group-hover:text-primary/20 transition-colors duration-300" />
-
-            {/* Main text */}
-            <div className="relative z-10 text-5xl font-bold text-primary/60 group-hover:text-primary/80 transition-colors duration-300">
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-4xl font-semibold text-muted-foreground">
               {formatAgentName(agentName)}
             </div>
-
-            {/* Sparkle effect for active agents */}
-            {isActive && (
-              <Sparkles className="absolute top-4 right-4 w-4 h-4 text-emerald-400 animate-pulse" />
-            )}
           </div>
         )}
       </div>
 
-      {/* Enhanced content section */}
-      <div className="p-6 space-y-4">
-        <div className="space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-lg leading-tight truncate" title={agentName}>
-              {agentName}
-            </h3>
-            {isActive && (
-              <div className="flex-shrink-0">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
-              </div>
-            )}
-          </div>
-          {agent.bio && (
-            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-              {agent.bio}
-            </p>
-          )}
+      {/* Content section */}
+      <div className="p-4 space-y-3">
+        <div className="space-y-1">
+          <h3 className="font-medium text-base truncate" title={agentName}>
+            {agentName}
+          </h3>
+          {agent.bio && <p className="text-sm text-muted-foreground line-clamp-2">{agent.bio}</p>}
         </div>
 
-        {/* Enhanced action buttons */}
-        <div className="flex gap-3">
+        {/* Action buttons */}
+        <div className="flex gap-2">
           {isActive ? (
             <>
               <Button
                 onClick={handleChatClick}
-                className="flex-1 shadow-sm hover:shadow-md transition-shadow"
+                className="flex-1"
                 size="sm"
                 disabled={isStopping || isStarting}
               >
@@ -192,7 +154,7 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
                 variant="outline"
                 size="sm"
                 disabled={isStopping}
-                className="px-4 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                className="px-3"
               >
                 {isStopping ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -205,7 +167,7 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
             <Button
               onClick={handleStart}
               disabled={isStarting || isStopping}
-              className="w-full shadow-sm hover:shadow-md transition-shadow"
+              className="w-full"
               size="sm"
             >
               {isStarting ? (
