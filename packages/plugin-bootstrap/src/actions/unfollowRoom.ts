@@ -76,7 +76,7 @@ export const unfollowRoomAction: Action = {
 
       const parsedResponse = parseBooleanFromText(response.trim());
 
-      return parsedResponse as boolean;
+      return parsedResponse;
     }
 
     if (state && (await _shouldUnfollow(state))) {

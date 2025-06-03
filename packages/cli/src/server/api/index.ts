@@ -11,40 +11,31 @@ import {
 } from '@elizaos/core';
 import type { Tracer } from '@opentelemetry/api';
 import { SpanStatusCode } from '@opentelemetry/api';
-import bodyParser from 'body-parser';
+import * as bodyParser from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import crypto from 'node:crypto';
 import http from 'node:http';
 import { match, MatchFunction } from 'path-to-regexp';
 import { Server as SocketIOServer } from 'socket.io';
-import type { AgentServer } from '../index';
+import type { AgentServer } from '..';
 import { agentRouter } from './agent';
 import { envRouter } from './env';
 import { teeRouter } from './tee';
 import { worldRouter } from './world';
-import { MessagesRouter } from './messages';
 import { SocketIORouter } from '../socketio';
 import fs from 'fs';
 import path from 'path';
 
 // Custom levels from @elizaos/core logger
 const LOG_LEVELS = {
-  fatal: 60,
-  error: 50,
-  warn: 40,
-  info: 30,
-  log: 29,
-  progress: 28,
-  success: 27,
-  debug: 20,
-  trace: 10,
+  ...Logger.levels.values,
 } as const;
 
 /**
  * Defines a type `LogLevel` as the keys of the `LOG_LEVELS` object.
  */
-type LogLevel = keyof typeof LOG_LEVELS | 'all';
+type LogLevel = keyof typeof LOG_LEVELS;
 
 /**
  * Represents a log entry with specific properties.
@@ -209,7 +200,7 @@ async function processSocketMessage(
   runtime: IAgentRuntime,
   payload: any,
   socketId: string,
-  socketChannelId: string, // This is the channelId from the client
+  socketRoomId: string,
   io: SocketIOServer,
   tracer?: Tracer
 ) {
@@ -228,24 +219,22 @@ async function processSocketMessage(
   }
 
   const entityId = createUniqueUuid(runtime, senderId);
-  const uniqueChannelId = createUniqueUuid(runtime, socketChannelId);
+  const uniqueRoomId = createUniqueUuid(runtime, socketRoomId);
   const source = payload.source;
-  const serverId = payload.serverId; // Agent receives serverId from client
-  // Convert serverId to worldId for internal agent processing
-  const worldId = createUniqueUuid(runtime, serverId || 'client-chat');
+  const worldId = payload.worldId;
 
   const executeLogic = async () => {
-    // Ensure connection between entity and channel
+    // Ensure connection between entity and room
     await runtime.ensureConnection({
       entityId: entityId,
-      roomId: uniqueChannelId, // Agent runtime still uses roomId internally
+      roomId: uniqueRoomId,
       userName: payload.senderName || 'User',
       name: payload.senderName || 'User',
       source: 'client_chat',
-      channelId: uniqueChannelId,
-      serverId: serverId || 'client-chat',
+      channelId: uniqueRoomId,
+      serverId: 'client-chat',
       type: ChannelType.DM,
-      worldId: worldId, // Agent's unique worldId derived from serverId
+      worldId: worldId || createUniqueUuid(runtime, 'client-chat'),
     });
 
     // Create unique message ID
@@ -262,7 +251,7 @@ async function processSocketMessage(
       id: messageId,
       entityId: entityId,
       agentId: runtime.agentId,
-      roomId: uniqueChannelId, // Agent runtime still uses roomId internally
+      roomId: uniqueRoomId,
       content: {
         text: payload.message,
         source: `${source}:${payload.senderName}`,
@@ -289,9 +278,7 @@ async function processSocketMessage(
           senderId: runtime.agentId,
           senderName: runtime.character.name,
           text: content.text || '',
-          channelId: socketChannelId,
-          roomId: socketChannelId, // Keep for backward compatibility
-          serverId: serverId, // Send back serverId to client, not worldId
+          roomId: socketRoomId,
           createdAt: Date.now(),
           source,
         };
@@ -310,10 +297,10 @@ async function processSocketMessage(
         if (content.thought) broadcastData.thought = content.thought;
         if (content.actions) broadcastData.actions = content.actions;
 
-        logger.debug(`Broadcasting message to channel ${socketChannelId}`, {
-          channel: socketChannelId,
+        logger.debug(`Broadcasting message to room ${socketRoomId}`, {
+          room: socketRoomId,
         });
-        io.to(socketChannelId).emit('messageBroadcast', broadcastData);
+        io.to(socketRoomId).emit('messageBroadcast', broadcastData);
         io.emit('messageBroadcast', broadcastData);
 
         // Save agent's response as memory with provider information
@@ -331,21 +318,11 @@ async function processSocketMessage(
                 providers: content.providers,
               }),
           },
-          roomId: uniqueChannelId,
+          roomId: uniqueRoomId,
           createdAt: Date.now(),
         };
         logger.debug('Memory object for response:', memory);
-        try {
-          await runtime.createMemory(memory, 'messages');
-        } catch (error) {
-          // Handle duplicate key constraint gracefully
-          if (error.message && error.message.includes('memories_pkey')) {
-            logger.debug('Memory already exists, likely due to duplicate processing:', memory.id);
-          } else {
-            logger.error('Error creating memory:', error);
-            throw error;
-          }
-        }
+        await runtime.createMemory(memory, 'messages');
         return [content];
       } catch (error) {
         logger.error('Error in socket message callback:', error);
@@ -362,20 +339,18 @@ async function processSocketMessage(
       callback,
       onComplete: () => {
         // Emit completion event (client might use this for UI like stopping loading indicators)
-        io.to(socketChannelId).emit('messageComplete', {
-          channelId: socketChannelId,
-          roomId: socketChannelId, // Keep for backward compatibility
+        io.to(socketRoomId).emit('messageComplete', {
+          roomId: socketRoomId,
           agentId,
           senderId,
         });
         // Also explicitly send control message to re-enable input
-        io.to(socketChannelId).emit('controlMessage', {
+        io.to(socketRoomId).emit('controlMessage', {
           action: 'enable_input',
-          channelId: socketChannelId,
-          roomId: socketChannelId, // Keep for backward compatibility
+          roomId: socketRoomId,
         });
         logger.debug('[SOCKET] Sent messageComplete and enable_input controlMessage', {
-          channelId: socketChannelId,
+          roomId: socketRoomId,
           agentId,
           senderId,
         });
@@ -388,12 +363,12 @@ async function processSocketMessage(
     logger.debug('[SOCKET MESSAGE] Instrumentation enabled. Starting span.', {
       agentId,
       entityId,
-      channelId: uniqueChannelId,
+      roomId: uniqueRoomId,
     });
     await tracer.startActiveSpan('socket.message.received', async (span) => {
       span.setAttributes({
         'eliza.agent.id': agentId,
-        'eliza.channel.id': uniqueChannelId,
+        'eliza.room.id': uniqueRoomId,
         'eliza.entity.id': entityId,
         'eliza.channel.type': ChannelType.DM,
         'eliza.message.source': source,
@@ -413,7 +388,7 @@ async function processSocketMessage(
         logger.debug('[SOCKET MESSAGE] Ending instrumentation span.', {
           agentId,
           entityId,
-          channelId: uniqueChannelId,
+          roomId: uniqueRoomId,
         });
       }
     });
@@ -422,7 +397,7 @@ async function processSocketMessage(
     logger.debug('[SOCKET MESSAGE] Instrumentation disabled or unavailable, skipping span.', {
       agentId,
       entityId,
-      channelId: uniqueChannelId,
+      roomId: uniqueRoomId,
     });
     try {
       await executeLogic();
@@ -438,12 +413,11 @@ async function processSocketMessage(
  * @param agents Map of agent runtimes
  */
 // Global reference to SocketIO router for log streaming
-// let socketIORouter: SocketIORouter | null = null; // This can be removed if router is managed within setupSocketIO scope correctly
+let socketIORouter: SocketIORouter | null = null;
 
 export function setupSocketIO(
   server: http.Server,
-  agents: Map<UUID, IAgentRuntime>,
-  serverInstance: AgentServer
+  agents: Map<UUID, IAgentRuntime>
 ): SocketIOServer {
   const io = new SocketIOServer(server, {
     cors: {
@@ -452,14 +426,86 @@ export function setupSocketIO(
     },
   });
 
-  const centralSocketRouter = new SocketIORouter(agents, serverInstance);
-  centralSocketRouter.setupListeners(io);
+  // Setup the new SocketIO router
+  socketIORouter = new SocketIORouter(agents);
+  socketIORouter.setupListeners(io);
 
-  setupLogStreaming(io, centralSocketRouter);
+  // Setup log streaming integration
+  setupLogStreaming(io, socketIORouter);
 
-  // Old direct-to-agent processing path via sockets is now fully handled by SocketIORouter
-  // which routes messages through the message store and internal bus.
-  // The old code block is removed.
+  // Fallback to old behavior for compatibility
+  // Map to track which agents are in which rooms
+  const roomParticipants: Map<string, Set<UUID>> = new Map();
+
+  // Handle socket connections with existing logic as fallback
+  io.on('connection', (socket) => {
+    const { agentId, roomId } = socket.handshake.query as { agentId: string; roomId: string };
+
+    logger.debug('Socket connected', { agentId, roomId, socketId: socket.id });
+
+    // Join the specified room
+    if (roomId) {
+      socket.join(roomId);
+      logger.debug(`Socket ${socket.id} joined room ${roomId}`);
+    }
+
+    // Handle messages from clients
+    socket.on('message', async (messageData) => {
+      logger.debug('Socket message received', { messageData, socketId: socket.id });
+
+      if (messageData.type === SOCKET_MESSAGE_TYPE.SEND_MESSAGE) {
+        const payload = messageData.payload;
+        const socketRoomId = payload.roomId;
+        const senderId = payload.senderId;
+
+        // Get all agents associated with this room (using roomParticipants map)
+        const agentsInRoom = roomParticipants.get(socketRoomId) || new Set([socketRoomId as UUID]);
+
+        for (const agentId of agentsInRoom) {
+          const agentRuntime = agents.get(agentId);
+
+          if (!agentRuntime) {
+            logger.warn(`Agent runtime not found for ${agentId} in room ${socketRoomId}`);
+            continue;
+          }
+
+          // Extract tracer if instrumentation is available
+          const concreteRuntime = agentRuntime as AgentRuntime;
+          const tracer =
+            concreteRuntime.instrumentationService?.isEnabled?.() && concreteRuntime.tracer
+              ? concreteRuntime.tracer
+              : undefined;
+
+          // Call the unified processing function
+          await processSocketMessage(agentRuntime, payload, socket.id, socketRoomId, io, tracer);
+        }
+      } else if (messageData.type === SOCKET_MESSAGE_TYPE.ROOM_JOINING) {
+        const payload = messageData.payload;
+        const roomId = payload.roomId;
+        const agentIds = payload.agentIds;
+
+        roomParticipants.set(roomId, new Set());
+
+        agentIds?.forEach((agentId: UUID) => {
+          if (agents.has(agentId as UUID)) {
+            // Add agent to room participants
+            roomParticipants.get(roomId)!.add(agentId as UUID);
+            logger.debug(`Agent ${agentId} joined room ${roomId}`);
+          }
+        });
+        logger.debug('roomParticipants', roomParticipants);
+
+        logger.debug(`Client ${socket.id} joining room ${roomId}`);
+      }
+    });
+
+    // Handle disconnections
+    socket.on('disconnect', () => {
+      logger.debug('Socket disconnected', { socketId: socket.id });
+      // Note: We're not removing agents from rooms on disconnect
+      // as they should remain participants even when not connected
+    });
+  });
 
   return io;
 }
@@ -713,7 +759,7 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
  */
 export function createApiRouter(
   agents: Map<UUID, IAgentRuntime>,
-  serverInstance?: AgentServer // AgentServer is already serverInstance here
+  server?: AgentServer
 ): express.Router {
   const router = express.Router();
 
@@ -747,40 +793,28 @@ export function createApiRouter(
     );
   });
 
-  // Health check
-  router.get('/ping', (req, res) => {
-    res.json({ pong: true, timestamp: Date.now() });
+  // Check if the server is running
+  router.get('/ping', (_req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(
+      JSON.stringify({
+        pong: true,
+        timestamp: Date.now(),
+      })
+    );
   });
 
-  // Debug endpoint to check message servers (temporary)
-  router.get('/debug/servers', async (req, res) => {
-    try {
-      const servers = await serverInstance?.getServers();
-      res.json({
-        success: true,
-        servers: servers || [],
-        count: servers?.length || 0,
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-    }
-  });
-
-  // Setup routes
-  router.use('/agents', agentRouter(agents, serverInstance));
-  router.use('/world', worldRouter(serverInstance));
+  // Mount specific sub-routers FIRST
+  router.use('/agents', agentRouter(agents, server));
+  router.use('/world', worldRouter(server));
   router.use('/envs', envRouter());
   router.use('/tee', teeRouter(agents));
-  router.use('/messages', MessagesRouter(serverInstance));
 
   // Add the plugin routes middleware AFTER specific routers
   router.use(createPluginRouteHandler(agents));
 
   router.get('/stop', (_req, res) => {
-    serverInstance?.stop(); // Use optional chaining in case server is undefined
+    server?.stop(); // Use optional chaining in case server is undefined
     logger.log(
       {
         apiRoute: '/stop',

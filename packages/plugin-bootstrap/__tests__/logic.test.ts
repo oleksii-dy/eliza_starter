@@ -89,7 +89,7 @@ describe('Message Handler Logic', () => {
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
     mockState = setup.mockState;
-    mockCallback = setup.callbackFn as HandlerCallback;
+    mockCallback = setup.callbackFn;
 
     // Add required templates to character
     mockRuntime.character = {
