@@ -14,9 +14,6 @@ export const connectionStatusActions = {
   setUnauthorized: (message: string) => {
     console.warn('setUnauthorized called before ConnectionContext is ready', message);
   },
-  setOfflineStatus: (isOffline: boolean) => {
-    console.warn('setOfflineStatus called before ConnectionContext is ready', isOffline);
-  },
 };
 
 export type ConnectionStatusType =
@@ -30,7 +27,6 @@ interface ConnectionContextType {
   status: ConnectionStatusType;
   error: string | null;
   setUnauthorizedFromApi: (message: string) => void;
-  setOfflineStatusFromProvider: (isOffline: boolean) => void;
 }
 
 const ConnectionContext = createContext<ConnectionContextType | undefined>(undefined);
@@ -55,38 +51,14 @@ export const ConnectionProvider = ({ children }: { children: ReactNode }) => {
     [toast]
   );
 
-  const setOfflineStatusFromProvider = useCallback(
-    (isOffline: boolean) => {
-      if (isOffline) {
-        if (status !== 'error' && status !== 'unauthorized') {
-          setStatus('error');
-          setError('Network connection appears to be offline.');
-          toast({
-            title: 'Network Offline',
-            description: 'Please check your internet connection.',
-            variant: 'destructive',
-          });
-        }
-      } else {
-        if (status === 'error' && error?.includes('offline')) {
-        }
-      }
-    },
-    [status, error, toast]
-  );
-
   useEffect(() => {
     connectionStatusActions.setUnauthorized = setUnauthorizedFromApi;
-    connectionStatusActions.setOfflineStatus = setOfflineStatusFromProvider;
-  }, [setUnauthorizedFromApi, setOfflineStatusFromProvider]);
+  }, [setUnauthorizedFromApi]);
 
   useEffect(() => {
     const onConnect = () => {
       setStatus('connected');
       setError(null);
-      if (connectionStatusActions.setOfflineStatus) {
-        connectionStatusActions.setOfflineStatus(false);
-      }
 
       if (isFirstConnect.current) {
         isFirstConnect.current = false;
@@ -101,9 +73,7 @@ export const ConnectionProvider = ({ children }: { children: ReactNode }) => {
     const onDisconnect = (reason: string) => {
       setStatus('error');
       setError(`Connection lost: ${reason}`);
-      if (connectionStatusActions.setOfflineStatus) {
-        connectionStatusActions.setOfflineStatus(true);
-      }
+
       toast({
         title: 'Connection Lost',
         description: 'Attempting to reconnect to the Eliza server…',
@@ -119,9 +89,6 @@ export const ConnectionProvider = ({ children }: { children: ReactNode }) => {
     const onConnectError = (err: Error) => {
       setStatus('error');
       setError(err.message);
-      if (connectionStatusActions.setOfflineStatus) {
-        connectionStatusActions.setOfflineStatus(true);
-      }
     };
 
     const onUnauthorized = (reason: string) => {
@@ -137,6 +104,7 @@ export const ConnectionProvider = ({ children }: { children: ReactNode }) => {
     socketManager.on('connect_error', onConnectError);
     socketManager.on('unauthorized', onUnauthorized);
 
+    // trigger initial connect state
     if (SocketIOManager.isConnected()) {
       onConnect();
     }
@@ -149,12 +117,10 @@ export const ConnectionProvider = ({ children }: { children: ReactNode }) => {
       socketManager.off('connect_error', onConnectError);
       socketManager.off('unauthorized', onUnauthorized);
     };
-  }, [toast, socketManager, setOfflineStatusFromProvider]);
+  }, [toast]);
 
   return (
-    <ConnectionContext.Provider
-      value={{ status, error, setUnauthorizedFromApi, setOfflineStatusFromProvider }}
-    >
+    <ConnectionContext.Provider value={{ status, error, setUnauthorizedFromApi }}>
       {children}
     </ConnectionContext.Provider>
   );

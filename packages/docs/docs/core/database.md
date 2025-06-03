@@ -226,7 +226,7 @@ function createDatabaseAdapter(
   }
 
   // Default to PGLite
-  return new SqliteDatabaseAdapter(agentId, pgLiteClientManager);
+  return new PgliteDatabaseAdapter(agentId, pgLiteClientManager);
 }
 ```
 
@@ -239,7 +239,7 @@ Configure the database adapter using environment variables or settings:
 process.env.POSTGRES_URL = 'postgresql://username:password@localhost:5432/elizaos';
 
 // For PGLite (default)
-process.env.SQLITE_DATA_DIR = './.elizadb'; // Optional, defaults to './sqlite'
+process.env.PGLITE_DATA_DIR = './.elizadb'; // Optional, defaults to './pglite'
 ```
 
 ### Retry Logic & Error Handling
@@ -401,7 +401,7 @@ POSTGRES_URL=postgresql://username:password@localhost:5432/elizaos
 For PGLite, set the data directory (optional):
 
 ```
-SQLITE_DATA_DIR=./my-data
+PGLITE_DATA_DIR=./my-data
 ```
 
 ### How can I inspect the database contents?

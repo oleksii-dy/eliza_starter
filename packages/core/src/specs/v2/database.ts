@@ -13,6 +13,8 @@ import type {
   World,
   MemoryMetadata,
 } from './types';
+import { type Pool as PgPool } from 'pg';
+import { PGlite } from '@electric-sql/pglite';
 
 /**
  * Database adapter class to be extended by individual database adapters.
@@ -51,7 +53,7 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
    * Retrieves a connection to the database.
    * @returns A Promise that resolves to the database connection.
    */
-  abstract getConnection(): Promise<any>;
+  abstract getConnection(): Promise<PGlite | PgPool>;
 
   /**
    * Retrieves an account by its ID.

@@ -1,5 +1,6 @@
-@config "../tailwind.config.ts";
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
@@ -84,8 +85,4 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
   /* Chrome, Safari, Opera */
-}
-
-@utility container {
-  margin-inline: auto;
 }
