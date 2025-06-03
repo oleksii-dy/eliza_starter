@@ -107,13 +107,12 @@ function generateStatusMessage(
     }
 
     // Non-onboarding context - list all public settings with values and descriptions
-    return `## Current Configuration\n\n${
-      requiredUnconfigured > 0
+    return `## Current Configuration\n\n${requiredUnconfigured > 0
         ? `IMPORTANT!: ${requiredUnconfigured} required settings still need configuration. ${runtime.character.name} should get onboarded with the OWNER as soon as possible.\n\n`
         : 'All required settings are configured.\n\n'
-    }${formattedSettings
-      .map((s) => `### ${s?.name}\n**Value:** ${s?.value}\n**Description:** ${s?.description}`)
-      .join('\n\n')}`;
+      }${formattedSettings
+        .map((s) => `### ${s?.name}\n**Value:** ${s?.value}\n**Description:** ${s?.description}`)
+        .join('\n\n')}`;
   } catch (error) {
     logger.error(`Error generating status message: ${error}`);
     return 'Error generating configuration status.';
@@ -197,10 +196,10 @@ export const settingsProvider: Provider = {
 
           if (!world) {
             logger.error(`No world found for room ${room.worldId}`);
-            throw new Error(`No world found for room ${room.worldId}`);
+            // throw new Error(`No world found for room ${room.worldId}`);
           }
 
-          serverId = world.serverId;
+          serverId = world?.serverId;
 
           // Once we have the serverId, get the settings
           if (serverId) {
@@ -210,7 +209,7 @@ export const settingsProvider: Provider = {
           }
         } catch (error) {
           logger.error(`Error processing world data: ${error}`);
-          throw new Error('Failed to process world information');
+          // throw new Error('Failed to process world information');
         }
       }
 
@@ -221,48 +220,48 @@ export const settingsProvider: Provider = {
         );
         return isOnboarding
           ? {
-              data: {
-                settings: [],
-              },
-              values: {
-                settings:
-                  "The user doesn't appear to have ownership of any servers. They should make sure they're using the correct account.",
-              },
-              text: "The user doesn't appear to have ownership of any servers. They should make sure they're using the correct account.",
-            }
+            data: {
+              settings: [],
+            },
+            values: {
+              settings:
+                "The user doesn't appear to have ownership of any servers. They should make sure they're using the correct account.",
+            },
+            text: "The user doesn't appear to have ownership of any servers. They should make sure they're using the correct account.",
+          }
           : {
-              data: {
-                settings: [],
-              },
-              values: {
-                settings: 'Error: No configuration access',
-              },
-              text: 'Error: No configuration access',
-            };
+            data: {
+              settings: [],
+            },
+            values: {
+              settings: 'Error: No configuration access',
+            },
+            text: 'Error: No configuration access',
+          };
       }
 
       if (!worldSettings) {
         logger.info(`No settings state found for server ${serverId}`);
         return isOnboarding
           ? {
-              data: {
-                settings: [],
-              },
-              values: {
-                settings:
-                  "The user doesn't appear to have any settings configured for this server. They should configure some settings for this server.",
-              },
-              text: "The user doesn't appear to have any settings configured for this server. They should configure some settings for this server.",
-            }
+            data: {
+              settings: [],
+            },
+            values: {
+              settings:
+                "The user doesn't appear to have any settings configured for this server. They should configure some settings for this server.",
+            },
+            text: "The user doesn't appear to have any settings configured for this server. They should configure some settings for this server.",
+          }
           : {
-              data: {
-                settings: [],
-              },
-              values: {
-                settings: 'Configuration has not been completed yet.',
-              },
-              text: 'Configuration has not been completed yet.',
-            };
+            data: {
+              settings: [],
+            },
+            values: {
+              settings: 'Configuration has not been completed yet.',
+            },
+            text: 'Configuration has not been completed yet.',
+          };
       }
 
       // Generate the status message based on the settings
