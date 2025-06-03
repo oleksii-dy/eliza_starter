@@ -15,6 +15,8 @@ import type {
   UUID,
   World,
 } from '../types';
+import { PGlite } from '@electric-sql/pglite';
+import { Pool } from 'pg';
 
 /**
  * MockDatabaseAdapter class extends DatabaseAdapter class and provides mock implementations for various database operations.
@@ -44,7 +46,7 @@ import type {
  * @description Gets entities for a specific room
  */
 class MockDatabaseAdapter extends DatabaseAdapter {
-  getConnection(): Promise<any> {
+  getConnection(): Promise<PGlite | Pool> {
     throw new Error('Method not implemented.');
   }
   getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null> {

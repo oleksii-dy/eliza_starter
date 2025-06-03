@@ -4,14 +4,12 @@ import {
   ChannelType,
   composePromptFromState,
   type Content,
-  ContentType,
   createUniqueUuid,
   type Entity,
   type EntityPayload,
   type EvaluatorEventPayload,
   EventType,
   type IAgentRuntime,
-  imageDescriptionTemplate,
   type InvokePayload,
   logger,
   type Media,
@@ -20,15 +18,17 @@ import {
   type MessagePayload,
   type MessageReceivedHandlerParams,
   ModelType,
-  parseKeyValueXml,
   type Plugin,
-  PluginEvents,
   postCreationTemplate,
-  Room,
   shouldRespondTemplate,
   truncateToCompleteSentence,
+  parseKeyValueXml,
   type UUID,
   type WorldPayload,
+  PluginEvents,
+  imageDescriptionTemplate,
+  ContentType,
+  Room,
 } from '@elizaos/core';
 import { v4 } from 'uuid';
 
@@ -36,6 +36,7 @@ import * as actions from './actions/index.ts';
 import * as evaluators from './evaluators/index.ts';
 import * as providers from './providers/index.ts';
 
+import { ScenarioService } from './services/scenario.ts';
 import { TaskService } from './services/task.ts';
 
 export * from './actions/index.ts';
@@ -1336,7 +1337,7 @@ export const bootstrapPlugin: Plugin = {
     providers.recentMessagesProvider,
     providers.worldProvider,
   ],
-  services: [TaskService],
+  services: [TaskService, ScenarioService],
 };
 
 export default bootstrapPlugin;

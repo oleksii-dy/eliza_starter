@@ -27,10 +27,11 @@ export default function MultiSelectCombobox({
   const [isOpen, setIsOpen] = useState(false);
   const comboboxRef = useRef<HTMLDivElement>(null);
 
-  // Apply initialSelected when it changes - improved to handle both initial load and updates
+  // Apply initialSelected when it changes
   useEffect(() => {
-    console.log('[MultiSelectCombobox] initialSelected changed:', initialSelected);
-    setSelected(initialSelected);
+    if (initialSelected.length > 0) {
+      setSelected(initialSelected);
+    }
   }, [initialSelected]);
 
   useEffect(() => {
@@ -44,46 +45,11 @@ export default function MultiSelectCombobox({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Helper function to compare options using id if available, fallback to label
-  const isOptionSelected = (option: Option): boolean => {
-    return selected.some((item) => {
-      if (option.id && item.id) {
-        return item.id === option.id;
-      }
-      return item.label === option.label;
-    });
-  };
-
-  // Helper function to find option in selected array
-  const findSelectedOption = (option: Option): Option | undefined => {
-    return selected.find((item) => {
-      if (option.id && item.id) {
-        return item.id === option.id;
-      }
-      return item.label === option.label;
-    });
-  };
-
   const toggleSelection = (option: Option) => {
-    console.log('[MultiSelectCombobox] toggleSelection called with:', option);
     setSelected((prev) => {
-      const isCurrentlySelected = isOptionSelected(option);
-      let newSelection: Option[];
-
-      if (isCurrentlySelected) {
-        // Remove the option
-        newSelection = prev.filter((item) => {
-          if (option.id && item.id) {
-            return item.id !== option.id;
-          }
-          return item.label !== option.label;
-        });
-      } else {
-        // Add the option
-        newSelection = [...prev, option];
-      }
-
-      console.log('[MultiSelectCombobox] New selection:', newSelection);
+      const newSelection = prev.some((item) => item.label === option.label)
+        ? prev.filter((item) => item.label !== option.label)
+        : [...prev, option];
       if (onSelect) onSelect(newSelection);
       return newSelection;
     });
@@ -91,12 +57,7 @@ export default function MultiSelectCombobox({
 
   const removeSelection = (option: Option) => {
     setSelected((prev) => {
-      const newSelection = prev.filter((item) => {
-        if (option.id && item.id) {
-          return item.id !== option.id;
-        }
-        return item.label !== option.label;
-      });
+      const newSelection = prev.filter((item) => item.label !== option.label);
       if (onSelect) onSelect(newSelection);
       return newSelection;
     });
@@ -113,14 +74,14 @@ export default function MultiSelectCombobox({
   return (
     <div className={`relative w-80 ${className}`} ref={comboboxRef}>
       <div
-        className={`flex items-center gap-2 border p-2 bg-background rounded cursor-pointer ${isOpen ? 'border-primary' : 'border-input'}`}
+        className={`flex items-center gap-2 border p-2 bg-transparent rounded cursor-pointer ${isOpen ? 'border ' : 'border-input'}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex flex-wrap gap-1 w-full">
           {selected.length > 0 ? (
             <>
               {selected.slice(0, 3).map((item, index) => (
-                <Badge key={item.id || item.label || index} className="flex items-center gap-1 px-2">
+                <Badge key={index} className="flex items-center gap-1 px-2">
                   {item.label}
                   <X
                     size={12}
@@ -145,34 +106,31 @@ export default function MultiSelectCombobox({
               )}
             </>
           ) : (
-            <span className="text-muted-foreground">Select agents...</span>
+            <span className="text-gray-500">Select options...</span>
           )}
         </div>
         <ChevronDown size={16} />
       </div>
       {isOpen && (
-        <Card className="absolute left-0 mt-2 w-full shadow-md border border-border rounded z-40 max-h-60 overflow-y-auto">
-          {options.length === 0 ? (
-            <div className="p-2 text-muted-foreground text-sm">No agents available</div>
-          ) : (
-            options.map((option, index) => (
-              <div
-                key={option.id || option.label || index}
-                className={`flex items-center gap-2 p-2 cursor-pointer rounded hover:bg-muted ${isOptionSelected(option) ? 'bg-muted' : 'bg-card'
-                  }`}
-                onClick={() => toggleSelection(option)}
-              >
-                <div className="bg-gray-500 rounded-full w-4 h-4 flex justify-center items-center overflow-hidden text-xs">
-                  {option.icon ? (
-                    <img src={option.icon} alt={option.label} className="w-full h-full object-cover" />
-                  ) : (
-                    formatAgentName(option.label)
-                  )}
-                </div>
-                {option.label}
+        <Card className="absolute left-0 mt-2 w-full shadow-md border border rounded z-40 max-h-60 overflow-y-auto">
+          {options.map((option, index) => (
+            <div
+              key={index}
+              className={`flex items-center gap-2 p-2 cursor-pointer rounded ${
+                selected.some((item) => item.label === option.label) ? 'bg-muted' : 'bg-card'
+              }`}
+              onClick={() => toggleSelection(option)}
+            >
+              <div className="bg-gray-500 rounded-full w-4 h-4 flex justify-center items-center overflow-hidden text-xs">
+                {option.icon ? (
+                  <img src={option.icon} alt={option.label} className="w-full h-full" />
+                ) : (
+                  formatAgentName(option.label)
+                )}
               </div>
-            ))
-          )}
+              {option.label}
+            </div>
+          ))}
         </Card>
       )}
     </div>

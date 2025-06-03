@@ -115,10 +115,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
   public async initialize(): Promise<void> {
     try {
       await this.client.waitReady;
-      // Explicitly create extensions
-      await this.client.query('CREATE EXTENSION IF NOT EXISTS vector;');
-      await this.client.query('CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;');
-      logger.info('PGlite client initialized and extensions ensured successfully');
+      logger.info('PGlite client initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize PGlite client:', error);
       throw error;

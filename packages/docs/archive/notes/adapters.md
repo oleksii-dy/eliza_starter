@@ -156,6 +156,9 @@ bun add @elizaos/adapter-sqljs sql.js
 
 # Supabase
 bun add @elizaos/adapter-supabase @supabase/supabase-js
+
+# PgLite
+bun add @elizaos/adapter-pglite @electric-sql/pglite
 ```
 
 ---
@@ -219,7 +222,7 @@ const db = new SqliteDatabaseAdapter(
 ### PgLite Setup
 
 ```typescript
-import { PGLiteDatabaseAdapter } from '@elizaos/adapter-sqlite';
+import { PGLiteDatabaseAdapter } from '@elizaos/adapter-pglite';
 
 const db = new PGLiteDatabaseAdapter(
   new PGLite({

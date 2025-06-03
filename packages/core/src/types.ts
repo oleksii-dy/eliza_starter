@@ -1,3 +1,6 @@
+import { type Pool as PgPool } from 'pg';
+import { PGlite } from '@electric-sql/pglite';
+
 /**
  * Defines a custom type UUID representing a universally unique identifier
  */
@@ -855,7 +858,7 @@ export interface IDatabaseAdapter {
   /** Close database connection */
   close(): Promise<void>;
 
-  getConnection(): Promise<any>;
+  getConnection(): Promise<PGlite | PgPool>;
 
   getAgent(agentId: UUID): Promise<Agent | null>;
 
@@ -1180,7 +1183,7 @@ export interface IAgentRuntime extends IDatabaseAdapter {
 
   initialize(): Promise<void>;
 
-  getConnection(): Promise<any>;
+  getConnection(): Promise<PGlite | PgPool>;
 
   getService<T extends Service>(service: ServiceTypeName | string): T | null;
 

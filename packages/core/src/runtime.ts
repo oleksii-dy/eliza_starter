@@ -12,6 +12,8 @@ import {
   type MemoryMetadata,
 } from './types';
 
+import { PGlite } from '@electric-sql/pglite';
+import { Pool } from 'pg';
 import { BM25 } from './search';
 import type {
   Action,
@@ -38,6 +40,8 @@ import type {
   RuntimeSettings,
   SendHandlerFunction,
   Service,
+  ServiceInstance,
+  ServiceTypeRegistry,
   ServiceTypeName,
   State,
   TargetInfo,
@@ -651,8 +655,7 @@ export class AgentRuntime implements IAgentRuntime {
     });
   }
 
-  async getConnection(): Promise<unknown> {
-    // Updated return type
+  async getConnection(): Promise<PGlite | Pool> {
     if (!this.adapter) {
       throw new Error('Database adapter not registered');
     }
