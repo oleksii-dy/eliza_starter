@@ -1,0 +1,597 @@
+From 83db398236ea062412e10829e15e15c30e5248cd Mon Sep 17 00:00:00 2001
+From: anon <anon@anons-MacBook-Pro-2.local>
+Date: Tue, 3 Jun 2025 10:04:48 +0200
+Subject: [PATCH] feat: Initialize Alethea AI Plugin Structure and
+ Configuration (M4-00)
+
+- Create package directory and configuration files
+- Implement config validation with zod
+- Set up build system with tsup
+- Create placeholder action arrays for future implementation
+- Add documentation in README.md
+---
+ packages/plugins/plugin-alethea/.env.example  |  10 ++
+ packages/plugins/plugin-alethea/.eslintrc.cjs |  26 ++++
+ .../plugins/plugin-alethea/.prettierrc.cjs    |  10 ++
+ packages/plugins/plugin-alethea/README.md     | 106 +++++++++++++
+ packages/plugins/plugin-alethea/package.json  |  61 ++++++++
+ packages/plugins/plugin-alethea/src/index.ts  |  81 ++++++++++
+ packages/plugins/plugin-alethea/src/plugin.ts | 141 ++++++++++++++++++
+ .../plugin-alethea/tsconfig.build.json        |  13 ++
+ packages/plugins/plugin-alethea/tsconfig.json |  30 ++++
+ .../plugins/plugin-alethea/tsup.config.ts     |  22 +++
+ 10 files changed, 500 insertions(+)
+ create mode 100644 packages/plugins/plugin-alethea/.env.example
+ create mode 100644 packages/plugins/plugin-alethea/.eslintrc.cjs
+ create mode 100644 packages/plugins/plugin-alethea/.prettierrc.cjs
+ create mode 100644 packages/plugins/plugin-alethea/README.md
+ create mode 100644 packages/plugins/plugin-alethea/package.json
+ create mode 100644 packages/plugins/plugin-alethea/src/index.ts
+ create mode 100644 packages/plugins/plugin-alethea/src/plugin.ts
+ create mode 100644 packages/plugins/plugin-alethea/tsconfig.build.json
+ create mode 100644 packages/plugins/plugin-alethea/tsconfig.json
+ create mode 100644 packages/plugins/plugin-alethea/tsup.config.ts
+
+diff --git a/packages/plugins/plugin-alethea/.env.example b/packages/plugins/plugin-alethea/.env.example
+new file mode 100644
+index 000000000..222841de2
+--- /dev/null
++++ b/packages/plugins/plugin-alethea/.env.example
+@@ -0,0 +1,10 @@
++# Alethea AI Plugin Configuration
++
++# JSON-RPC endpoint for Alethea chain
++ALETHEA_RPC_URL=
++
++# Signer private key for authenticated operations
++PRIVATE_KEY=
++
++# Alethea API key for SDK authentication
++ALETHEA_API_KEY=
+diff --git a/packages/plugins/plugin-alethea/.eslintrc.cjs b/packages/plugins/plugin-alethea/.eslintrc.cjs
+new file mode 100644
+index 000000000..10d5f26ca
+--- /dev/null
++++ b/packages/plugins/plugin-alethea/.eslintrc.cjs
+@@ -0,0 +1,26 @@
++module.exports = {
++  root: true,
++  parser: '@typescript-eslint/parser',
++  plugins: ['@typescript-eslint'],
++  extends: [
++    'eslint:recommended',
++    'plugin:@typescript-eslint/recommended',
++    'prettier',
++  ],
++  env: {
++    node: true,
++    es6: true,
++  },
++  parserOptions: {
++    ecmaVersion: 2020,
++    sourceType: 'module',
++  },
++  rules: {
++    'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
++    '@typescript-eslint/explicit-module-boundary-types': 'off',
++    '@typescript-eslint/no-explicit-any': 'warn',
++    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
++    'prefer-const': 'warn',
++  },
++  ignorePatterns: ['dist', 'node_modules', '*.js'],
++};
+diff --git a/packages/plugins/plugin-alethea/.prettierrc.cjs b/packages/plugins/plugin-alethea/.prettierrc.cjs
+new file mode 100644
+index 000000000..c932723c4
+--- /dev/null
++++ b/packages/plugins/plugin-alethea/.prettierrc.cjs
+@@ -0,0 +1,10 @@
++module.exports = {
++  semi: true,
++  singleQuote: true,
++  tabWidth: 2,
++  trailingComma: 'es5',
++  printWidth: 100,
++  bracketSpacing: true,
++  arrowParens: 'always',
++  endOfLine: 'lf',
++};
+diff --git a/packages/plugins/plugin-alethea/README.md b/packages/plugins/plugin-alethea/README.md
+new file mode 100644
+index 000000000..16575fade
+--- /dev/null
++++ b/packages/plugins/plugin-alethea/README.md
+@@ -0,0 +1,106 @@
++# Alethea AI Plugin for ElizaOS
++
++This plugin bootstraps **Alethea AI** support for ElizaOS agents.  
++It lays the groundwork for future actions that will interact with Alethea’s AliAgent, INFT, Hive, token, governance and market-data APIs.
++
++> **Status:** **alpha / scaffold** – provides configuration handling and build pipeline only.  
++> Functional actions will be added in subsequent tickets of the _M4 Alethea AI Plugin Integration_ epic.
++
++---
++
++## ✨ Features (current)
++
++- Standard ElizaOS plugin skeleton (TypeScript, TSUP, Vitest, Prettier, ESLint)
++- Environment-variable validation with `zod`
++- Automatic loading and verification of required credentials at runtime
++- Ready-made build script (`npm run build`) that outputs ESM bundle in `dist/`
++- Placeholder action arrays exposed for upcoming functionality
++
++---
++
++## 📦 Installation / Build
++
++```bash
++# From ElizaOS monorepo root
++bun i        # or npm install
++bun run build --filter=@elizaos/plugin-alethea   # or npm run build --workspace @elizaos/plugin-alethea
++```
++
++The output bundle and type declarations are emitted to `packages/plugins/plugin-alethea/dist`.
++
++---
++
++## 🔧 Configuration
++
++The plugin reads its credentials from environment variables **or** from the agent’s `character.settings.secrets` block.
++
++| Variable          | Description                                     | Required |
++| ----------------- | ----------------------------------------------- | -------- |
++| `ALETHEA_RPC_URL` | JSON-RPC endpoint for Alethea chain             | ✅       |
++| `PRIVATE_KEY`     | Signer private key used for authenticated calls | ✅       |
++| `ALETHEA_API_KEY` | Alethea SDK / REST API key (if applicable)      | ✅       |
++
++Create/extend your project `.env`:
++
++```env
++# Alethea AI Plugin
++ALETHEA_RPC_URL=https://api.alethea.ai
++PRIVATE_KEY=0xYOUR_PRIVATE_KEY_HERE
++ALETHEA_API_KEY=your_alethea_api_key
++```
++
++If any required variable is missing at startup the plugin throws a descriptive error.
++
++---
++
++## 🚀 Activation
++
++Add the plugin to your character configuration (usually `eliza.ts`):
++
++```typescript
++...(process.env.ALETHEA_RPC_URL ? ['@elizaos/plugin-alethea'] : []),
++```
++
++The convention mirrors other ElizaOS plugins: **presence of `ALETHEA_RPC_URL` activates the plugin automatically**.
++
++---
++
++## 🗂️ Project Structure
++
++```
++plugin-alethea/
++├── src/
++│   ├── index.ts        # Entry point – exports plugin & placeholder arrays
++│   └── plugin.ts       # Config validation & initialization logic
++├── tsup.config.ts      # Build pipeline
++├── tsconfig*.json      # TypeScript configs
++└── README.md           # You are here
++```
++
++---
++
++## 🛠️ Roadmap
++
++Upcoming tickets will implement:
++
++1. **AliAgent Actions** – create / manage AliAgents
++2. **INFT Actions** – mint, edit & query intelligent NFTs
++3. **Hive Actions** – hive creation, membership, messaging
++4. **Token & Governance** – staking, proposals, voting
++5. **Market Data** – price feeds, analytics
++
++---
++
++## 🤝 Contributing
++
++Pull requests are welcome! Please follow existing code patterns:
++
++1. **Add tests** (`vitest`) for every new feature
++2. Run `npm run lint && npm run format`
++3. Document new actions in this README
++
++---
++
++## 📝 License
++
++MIT © ElizaOS Contributors
+diff --git a/packages/plugins/plugin-alethea/package.json b/packages/plugins/plugin-alethea/package.json
+new file mode 100644
+index 000000000..2415a3c13
+--- /dev/null
++++ b/packages/plugins/plugin-alethea/package.json
+@@ -0,0 +1,61 @@
++{
++  "name": "@elizaos/plugin-alethea",
++  "description": "ElizaOS plugin for Alethea AI integration",
++  "version": "0.1.0",
++  "type": "module",
++  "main": "dist/index.js",
++  "module": "dist/index.js",
++  "types": "dist/index.d.ts",
++  "keywords": [
++    "alethea",
++    "ai",
++    "elizaos",
++    "plugin"
++  ],
++  "repository": {
++    "type": "git",
++    "url": ""
++  },
++  "exports": {
++    "./package.json": "./package.json",
++    ".": {
++      "import": {
++        "types": "./dist/index.d.ts",
++        "default": "./dist/index.js"
++      }
++    }
++  },
++  "files": [
++    "dist"
++  ],
++  "dependencies": {
++    "@elizaos/cli": "workspace:*",
++    "@elizaos/core": "workspace:*",
++    "@alethea-ai/sdk": "^1.0.0",
++    "ethers": "^6.14.0",
++    "zod": "3.24.2"
++  },
++  "devDependencies": {
++    "tsup": "8.4.0",
++    "typescript": "5.8.2",
++    "prettier": "3.5.3",
++    "vitest": "2.1.5",
++    "@vitest/coverage-v8": "2.1.5"
++  },
++  "scripts": {
++    "start": "elizaos start",
++    "dev": "elizaos dev",
++    "build": "tsup",
++    "lint": "prettier --write ./src",
++    "test:component": "vitest run",
++    "test:e2e": "elizaos test",
++    "test": "npm run test:component && npm run test:e2e",
++    "test:coverage": "vitest run --coverage",
++    "test:watch": "vitest",
++    "format": "prettier --write ./src",
++    "format:check": "prettier --check ./src"
++  },
++  "publishConfig": {
++    "access": "public"
++  }
++}
+diff --git a/packages/plugins/plugin-alethea/src/index.ts b/packages/plugins/plugin-alethea/src/index.ts
+new file mode 100644
+index 000000000..2e8ed92e7
+--- /dev/null
++++ b/packages/plugins/plugin-alethea/src/index.ts
+@@ -0,0 +1,81 @@
++import {
++  logger,
++  type Character,
++  type IAgentRuntime,
++  type Project,
++  type ProjectAgent,
++} from '@elizaos/core';
++import aletheaPlugin from './plugin.ts';
++
++// Export the plugin directly for use in other configurations
++export { default as aletheaPlugin } from './plugin.ts';
++
++// Export action arrays for direct use
++export {
++  aliAgentActions,
++  inftActions,
++  hiveActions,
++  tokenActions,
++  governanceActions,
++  marketDataActions,
++} from './plugin.ts';
++
++// Export the AletheaService for advanced use cases
++export { AletheaService } from './plugin.ts';
++
++/**
++ * Default character configuration with Alethea AI plugin enabled
++ * This is an example that can be used as a starting point
++ */
++export const character: Character = {
++  name: 'Eliza',
++  plugins: [
++    '@elizaos/plugin-sql',
++    ...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),
++    ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
++    ...(!process.env.OPENAI_API_KEY ? ['@elizaos/plugin-local-ai'] : []),
++    ...(process.env.ALETHEA_RPC_URL ? ['@elizaos/plugin-alethea'] : []),
++  ],
++  settings: {
++    secrets: {},
++  },
++  system:
++    'Respond to all messages in a helpful, conversational manner. Provide assistance on a wide range of topics, including Alethea AI platform capabilities.',
++  bio: [
++    'Engages with all types of questions and conversations',
++    'Provides helpful, concise responses',
++    'Knowledgeable about Alethea AI platform',
++    'Can assist with AliAgents, INFTs, and Hive operations',
++  ],
++  topics: [
++    'general knowledge and information',
++    'Alethea AI platform',
++    'AliAgents and intelligent NFTs',
++    'blockchain and web3 technologies',
++  ],
++  style: {
++    all: [
++      'Keep responses concise but informative',
++      'Use clear and direct language',
++      'Be engaging and conversational',
++      'Provide helpful information about Alethea AI when relevant',
++    ],
++  },
++};
++
++const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
++  logger.info('Initializing character with Alethea AI plugin');
++  logger.info('Name: ', character.name);
++};
++
++export const projectAgent: ProjectAgent = {
++  character,
++  init: async (runtime: IAgentRuntime) => await initCharacter({ runtime }),
++  plugins: [aletheaPlugin],
++};
++
++const project: Project = {
++  agents: [projectAgent],
++};
++
++export default project;
+diff --git a/packages/plugins/plugin-alethea/src/plugin.ts b/packages/plugins/plugin-alethea/src/plugin.ts
+new file mode 100644
+index 000000000..da68ae582
+--- /dev/null
++++ b/packages/plugins/plugin-alethea/src/plugin.ts
+@@ -0,0 +1,141 @@
++import type { Plugin } from '@elizaos/core';
++import { type Action, type IAgentRuntime, type Service, logger } from '@elizaos/core';
++import { z } from 'zod';
++
++/**
++ * Define the configuration schema for the Alethea AI plugin
++ */
++const configSchema = z.object({
++  ALETHEA_RPC_URL: z
++    .string()
++    .url('ALETHEA_RPC_URL must be a valid URL')
++    .min(1, 'ALETHEA_RPC_URL cannot be empty'),
++  PRIVATE_KEY: z
++    .string()
++    .min(1, 'PRIVATE_KEY cannot be empty')
++    .transform((val) => {
++      if (!val) {
++        throw new Error('PRIVATE_KEY is required for Alethea AI operations');
++      }
++      return val;
++    }),
++  ALETHEA_API_KEY: z
++    .string()
++    .min(1, 'ALETHEA_API_KEY cannot be empty')
++    .transform((val) => {
++      if (!val) {
++        throw new Error('ALETHEA_API_KEY is required for Alethea AI SDK authentication');
++      }
++      return val;
++    }),
++});
++
++/**
++ * Alethea Service for managing connections and state
++ */
++export class AletheaService extends Service {
++  static serviceType = 'alethea';
++  capabilityDescription =
++    'This service provides access to Alethea AI platform, including AliAgents, INFTs, Hive, tokens, and governance.';
++
++  constructor(runtime: IAgentRuntime) {
++    super(runtime);
++  }
++
++  static async start(runtime: IAgentRuntime) {
++    logger.info('*** Starting Alethea AI service ***');
++    const service = new AletheaService(runtime);
++    return service;
++  }
++
++  static async stop(runtime: IAgentRuntime) {
++    logger.info('*** Stopping Alethea AI service ***');
++    const service = runtime.getService(AletheaService.serviceType);
++    if (!service) {
++      throw new Error('Alethea AI service not found');
++    }
++    service.stop();
++  }
++
++  async stop() {
++    logger.info('*** Stopping Alethea AI service instance ***');
++  }
++}
++
++// Placeholder action arrays for different Alethea AI functionalities
++// These will be populated in subsequent tickets
++
++/**
++ * Actions for AliAgent management (create, update, query)
++ */
++export const aliAgentActions: Action[] = [];
++
++/**
++ * Actions for intelligent NFT (INFT) operations
++ */
++export const inftActions: Action[] = [];
++
++/**
++ * Actions for Hive creation, membership, and messaging
++ */
++export const hiveActions: Action[] = [];
++
++/**
++ * Actions for token operations (transfer, balance check)
++ */
++export const tokenActions: Action[] = [];
++
++/**
++ * Actions for governance operations (proposals, voting)
++ */
++export const governanceActions: Action[] = [];
++
++/**
++ * Actions for market data retrieval and analysis
++ */
++export const marketDataActions: Action[] = [];
++
++/**
++ * The main Alethea AI plugin definition
++ */
++const plugin: Plugin = {
++  name: 'alethea',
++  description: 'A plugin for interacting with the Alethea AI platform',
++  config: {
++    ALETHEA_RPC_URL: process.env.ALETHEA_RPC_URL,
++    PRIVATE_KEY: process.env.PRIVATE_KEY,
++    ALETHEA_API_KEY: process.env.ALETHEA_API_KEY,
++  },
++  async init(config: Record<string, string>) {
++    logger.info('*** Initializing Alethea AI plugin ***');
++    try {
++      const validatedConfig = await configSchema.parseAsync(config);
++
++      // Set all environment variables at once
++      for (const [key, value] of Object.entries(validatedConfig)) {
++        if (value) process.env[key] = value;
++      }
++
++      logger.info('Alethea AI plugin initialized successfully');
++    } catch (error) {
++      if (error instanceof z.ZodError) {
++        throw new Error(
++          `Invalid Alethea AI plugin configuration: ${error.errors.map((e) => e.message).join(', ')}`
++        );
++      }
++      throw error;
++    }
++  },
++  services: [AletheaService],
++  actions: [
++    ...aliAgentActions,
++    ...inftActions,
++    ...hiveActions,
++    ...tokenActions,
++    ...governanceActions,
++    ...marketDataActions,
++  ],
++  providers: [], // No providers for now, can be added later if needed
++};
++
++export default plugin;
+diff --git a/packages/plugins/plugin-alethea/tsconfig.build.json b/packages/plugins/plugin-alethea/tsconfig.build.json
+new file mode 100644
+index 000000000..625391d02
+--- /dev/null
++++ b/packages/plugins/plugin-alethea/tsconfig.build.json
+@@ -0,0 +1,13 @@
++{
++  "extends": "./tsconfig.json",
++  "compilerOptions": {
++    "rootDir": "./src",
++    "outDir": "./dist",
++    "sourceMap": true,
++    "inlineSources": true,
++    "declaration": true,
++    "emitDeclarationOnly": true
++  },
++  "include": ["src/**/*.ts"],
++  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
++}
+diff --git a/packages/plugins/plugin-alethea/tsconfig.json b/packages/plugins/plugin-alethea/tsconfig.json
+new file mode 100644
+index 000000000..acae6045f
+--- /dev/null
++++ b/packages/plugins/plugin-alethea/tsconfig.json
+@@ -0,0 +1,30 @@
++{
++  "compilerOptions": {
++    "outDir": "dist",
++    "rootDir": "src",
++    "lib": ["ESNext"],
++    "target": "ESNext",
++    "module": "Preserve",
++    "moduleResolution": "Bundler",
++    "strict": false,
++    "esModuleInterop": true,
++    "skipLibCheck": true,
++    "forceConsistentCasingInFileNames": false,
++    "allowImportingTsExtensions": true,
++    "declaration": true,
++    "emitDeclarationOnly": true,
++    "resolveJsonModule": true,
++    "noImplicitAny": false,
++    "allowJs": true,
++    "checkJs": false,
++    "noEmitOnError": false,
++    "moduleDetection": "force",
++    "allowArbitraryExtensions": true,
++    "baseUrl": ".",
++    "paths": {
++      "@elizaos/core": ["../../../core/src"],
++      "@elizaos/core/*": ["../../../core/src/*"]
++    }
++  },
++  "include": ["src/**/*.ts"]
++}
+diff --git a/packages/plugins/plugin-alethea/tsup.config.ts b/packages/plugins/plugin-alethea/tsup.config.ts
+new file mode 100644
+index 000000000..852415057
+--- /dev/null
++++ b/packages/plugins/plugin-alethea/tsup.config.ts
+@@ -0,0 +1,22 @@
++import { defineConfig } from 'tsup';
++
++export default defineConfig({
++  entry: ['src/index.ts'],
++  outDir: 'dist',
++  tsconfig: './tsconfig.build.json', // Use build-specific tsconfig
++  sourcemap: true,
++  clean: true,
++  format: ['esm'], // Ensure you're targeting ESM
++  dts: false, // Skip DTS generation to avoid external import issues
++  external: [
++    'dotenv', // Externalize dotenv to prevent bundling
++    'fs', // Externalize fs to use Node.js built-in module
++    'path', // Externalize other built-ins if necessary
++    'https',
++    'http',
++    '@elizaos/core',
++    '@alethea-ai/sdk',
++    'ethers',
++    'zod',
++  ],
++});
+-- 
+2.39.5 (Apple Git-154)
+
