@@ -83,10 +83,6 @@ async function attemptInstallation(
       return false;
     }
 
-    // If installed via direct GitHub specifier, skip import verification
-    if (packageName.startsWith('github:')) {
-      return true;
-    }
     if (process.env.ELIZA_SKIP_PLUGIN_VERIFY) {
       logger.info(
         `Installation successful for ${installResult.installedIdentifier}, skipping verification`
@@ -198,7 +194,9 @@ export async function installPlugin(
     }
 
     if (cliDir) {
-      return await attemptInstallation(spec, '', cliDir, 'in CLI directory');
+      if (await attemptInstallation(spec, '', cliDir, 'in CLI directory')) {
+        return true;
+      }
     }
   }
 
@@ -210,7 +208,9 @@ export async function installPlugin(
     }
 
     if (cliDir) {
-      return await attemptInstallation(spec, '', cliDir, 'in CLI directory');
+      if (await attemptInstallation(spec, '', cliDir, 'in CLI directory')) {
+        return true;
+      }
     }
   }
 
