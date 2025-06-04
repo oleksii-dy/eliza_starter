@@ -189,9 +189,9 @@ export async function installPlugin(
   }
 
   // Tries to install from latest github release tag
-  if (info.git?.repo) {
-    const branchOrTag = info.git.v1?.version || info.git.v1?.branch || '';
-    const spec = `github:${info.git.repo}${branchOrTag ? `#${branchOrTag}` : ''}`;
+  if (info.git?.repo && info.git?.v1.version) {
+    const branch = info.git.v1.version;
+    const spec = `github:${info.git.repo}#${branch}`;
 
     if (await attemptInstallation(spec, '', cwd, '')) {
       return true;
@@ -203,7 +203,7 @@ export async function installPlugin(
   }
 
   // Tries to install from latest v1 branch from github
-  if (info.git?.v1.branch) {
+  if (info.git?.repo && info.git?.v1.branch) {
     const spec = `github:${info.git.repo}#${info.git.v1.branch}`;
     if (await attemptInstallation(spec, '', cwd, '')) {
       return true;
