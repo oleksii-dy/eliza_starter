@@ -172,15 +172,41 @@ export async function installPlugin(
   }
 
   const info = cache!.registry[key];
-  // Prefer npm installation if repository is available
+
+  console.log(info);
+  // Try npm installation first if repository is available
+  let npmFailed = false;
+  let installedNpmPackage = '';
+  
   if (info.npm?.repo) {
     const ver = versionSpecifier || info.npm.v1 || '';
+    installedNpmPackage = ver ? `${info.npm.repo}@${ver}` : info.npm.repo;
     if (await attemptInstallation(info.npm.repo, ver, cwd, '')) {
       return true;
     }
+    npmFailed = true;
   } else if (info.npm?.v1) {
+    installedNpmPackage = `${key}@${info.npm.v1}`;
     if (await attemptInstallation(key, info.npm.v1, cwd, '')) {
       return true;
+    }
+    npmFailed = true;
+  }
+
+  // If npm failed, clean up and try GitHub
+  if (npmFailed && installedNpmPackage) {
+    logger.debug(`NPM installation failed, cleaning up ${installedNpmPackage} before trying GitHub`);
+    try {
+      const { execa } = await import('execa');
+      const { getPackageManager, getRemoveCommand } = await import('./package-manager');
+      
+      const packageManager = await getPackageManager();
+      const removeCmd = getRemoveCommand(packageManager, false);
+      
+      // Remove the failed npm package to avoid conflicts
+      await execa(packageManager, [...removeCmd, installedNpmPackage], { cwd });
+    } catch (cleanupError) {
+      logger.debug(`Cleanup failed, proceeding anyway: ${cleanupError.message}`);
     }
   }
 

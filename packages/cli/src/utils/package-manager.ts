@@ -59,6 +59,21 @@ export function getInstallCommand(packageManager: string, isGlobal: boolean): st
 }
 
 /**
+ * Get the remove command for the specified package manager
+ * @param {string} packageManager - The package manager to use
+ * @param {boolean} isGlobal - Whether to remove globally
+ * @returns {string[]} - The remove command array
+ */
+export function getRemoveCommand(packageManager: string, isGlobal: boolean): string[] {
+  if (packageManager === 'npm') {
+    return ['uninstall', ...(isGlobal ? ['-g'] : [])];
+  } else {
+    // bun, yarn, pnpm
+    return ['remove', ...(isGlobal ? ['-g'] : [])];
+  }
+}
+
+/**
  * Installs a package using the appropriate package manager, attempting multiple strategies if necessary.
  *
  * Tries to install the specified package from the npm registry, GitHub repositories, or a monorepo, based on the provided options and available sources. Handles normalization of plugin package names and supports version or tag specification.
