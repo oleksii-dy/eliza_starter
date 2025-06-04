@@ -1,6 +1,15 @@
 import type { Plugin } from '@elizaos/core';
-import { type Action, type IAgentRuntime, type Service, logger } from '@elizaos/core';
+import { type Action, type IAgentRuntime, Service, logger } from '@elizaos/core';
 import { z } from 'zod';
+import {
+  convertNftToAliAgentAction,
+  convertInftToAliAgentAction,
+  getAliAgentKeyBuyPriceAction,
+  getAliAgentKeySellPriceAction,
+  buyKeysAction,
+  sellKeysAction,
+  // Other actions will be added here
+} from './actions'; // Import from actions/index.ts
 
 /**
  * Define the configuration schema for the Alethea AI plugin
@@ -28,6 +37,12 @@ const configSchema = z.object({
       }
       return val;
     }),
+  // Optional: Default Pod NFT Contract address if not provided in action call
+  POD_NFT_CONTRACT_ADDRESS: z
+    .string()
+    .startsWith('0x', { message: 'Pod NFT Contract address must start with 0x' })
+    .length(42, { message: 'Pod NFT Contract address must be 42 characters long' })
+    .optional(),
 });
 
 /**
@@ -68,7 +83,15 @@ export class AletheaService extends Service {
 /**
  * Actions for AliAgent management (create, update, query)
  */
-export const aliAgentActions: Action[] = [];
+export const aliAgentActions: Action[] = [
+  convertNftToAliAgentAction,
+  convertInftToAliAgentAction,
+  getAliAgentKeyBuyPriceAction,
+  getAliAgentKeySellPriceAction,
+  buyKeysAction,
+  sellKeysAction,
+  // Other actions will be added here
+];
 
 /**
  * Actions for intelligent NFT (INFT) operations
@@ -105,6 +128,7 @@ const plugin: Plugin = {
     ALETHEA_RPC_URL: process.env.ALETHEA_RPC_URL,
     PRIVATE_KEY: process.env.PRIVATE_KEY,
     ALETHEA_API_KEY: process.env.ALETHEA_API_KEY,
+    POD_NFT_CONTRACT_ADDRESS: process.env.POD_NFT_CONTRACT_ADDRESS,
   },
   async init(config: Record<string, string>) {
     logger.info('*** Initializing Alethea AI plugin ***');
