@@ -184,25 +184,11 @@ export async function installPlugin(
     }
   }
 
-  // Tries to install from latest github release tag
-  if (info.git?.repo && info.git?.v1.version) {
-    const branch = info.git.v1.version;
+  // Tries to install from latest github commit
+  if (info.git?.repo && info.git?.v1.branch) {
+    const branch = info.git.v1.branch;
     const spec = `github:${info.git.repo}#${branch}`;
 
-    if (await attemptInstallation(spec, '', cwd, '')) {
-      return true;
-    }
-
-    if (cliDir) {
-      if (await attemptInstallation(spec, '', cliDir, 'in CLI directory')) {
-        return true;
-      }
-    }
-  }
-
-  // Tries to install from latest v1 branch from github
-  if (info.git?.repo && info.git?.v1.branch) {
-    const spec = `github:${info.git.repo}#${info.git.v1.branch}`;
     if (await attemptInstallation(spec, '', cwd, '')) {
       return true;
     }
