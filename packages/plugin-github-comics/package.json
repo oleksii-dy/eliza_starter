@@ -1,0 +1,39 @@
+{
+  "name": "@elizaos/plugin-github-comics",
+  "version": "1.0.0",
+  "description": "Generate comic strips from GitHub repos using OpenAI images",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@elizaos/core": "^1.0.0",
+    "node-fetch": "^3.3.2",
+    "zod": "3.24.2"
+  },
+  "devDependencies": {
+    "@elizaos/cli": "^1.0.0",
+    "vitest": "3.1.4",
+    "typescript": "5.8.2",
+    "tsup": "8.4.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test:component": "vitest run",
+    "test:e2e": "elizaos test",
+    "test": "npm run test:component && npm run test:e2e"
+  },
+  "agentConfig": {
+    "pluginType": "elizaos:plugin:1.0.0",
+    "pluginParameters": {
+      "OPENAI_API_KEY": {
+        "type": "string",
+        "description": "OpenAI API key"
+      },
+      "GITHUB_TOKEN": {
+        "type": "string",
+        "description": "GitHub personal access token"
+      }
+    }
+  }
+}
