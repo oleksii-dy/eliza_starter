@@ -65,7 +65,6 @@ export const character: Character = {
   plugins: [
     '@elizaos/plugin-sql',
     '@elizaos/plugin-openrouter',
-    '@elizaos/plugin-elevenlabs',
     '@elizaos/plugin-openai',
     '@elizaos/plugin-discord',
     '@elizaos/plugin-bootstrap',
