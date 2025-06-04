@@ -1,15 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '@elizaos/core';
-import { execa } from 'execa';
+import { execa, type ExecaChildProcess } from 'execa';
 import * as fs from 'fs-extra';
 import { globby } from 'globby';
 import ora from 'ora';
-import * as path from 'path';
-import { dirname } from 'path';
-import simpleGit, { SimpleGit } from 'simple-git';
+import * as path from 'node:path';
+import { dirname } from 'node:path';
+import simpleGit, { type SimpleGit } from 'simple-git';
 import { encoding_for_model } from 'tiktoken';
-import { fileURLToPath } from 'url';
-import * as os from 'os';
+import { fileURLToPath } from 'node:url';
+import * as os from 'node:os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,7 +22,7 @@ const MAX_TOKENS = 100000;
 const BRANCH_NAME = '1.x-claude';
 const MAX_TEST_ITERATIONS = 5;
 const MAX_REVISION_ITERATIONS = 3;
-const CLAUDE_CODE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+const CLAUDE_CODE_TIMEOUT = 15 * 60 * 1000; // 5 minutes
 const MIN_DISK_SPACE_GB = 2; // Minimum 2GB free space required
 const LOCK_FILE_NAME = '.elizaos-migration.lock';
 
@@ -52,7 +52,7 @@ export class PluginMigrator {
   private changedFiles: Set<string>;
   private options: MigratorOptions;
   private lockFilePath: string | null = null;
-  private activeClaudeProcess: any = null;
+  private activeClaudeProcess: ExecaChildProcess | null = null;
 
   constructor(options: MigratorOptions = {}) {
     this.git = simpleGit();
@@ -113,7 +113,7 @@ export class PluginMigrator {
       await this.initializeAnthropic();
 
       // Check disk space
-      spinner.text = `Checking disk space...`;
+      spinner.text = 'Checking disk space...';
       await this.checkDiskSpace();
 
       // Check for Claude Code
@@ -150,34 +150,35 @@ export class PluginMigrator {
       const initialCommit = await this.git.revparse(['HEAD']);
 
       // Check if CLAUDE.md already exists
-      const claudeMdPath = path.join(this.repoPath!, 'CLAUDE.md');
+      if (!this.repoPath) throw new Error('Repository path not set');
+      const claudeMdPath = path.join(this.repoPath, 'CLAUDE.md');
       let skipGeneration = false;
 
       if (await fs.pathExists(claudeMdPath)) {
-        spinner.info(`CLAUDE.md already exists. Skipping generation.`);
+        spinner.info('CLAUDE.md already exists. Skipping generation.');
         skipGeneration = true;
       }
 
       if (!skipGeneration) {
         // Step 4: Analyze repository
-        spinner.text = `Analyzing repository structure...`;
+        spinner.text = 'Analyzing repository structure...';
         const context = await this.analyzeRepository();
-        spinner.succeed(`Repository analyzed`);
+        spinner.succeed('Repository analyzed');
 
         // Step 5: Generate migration strategy
-        spinner.text = `Generating migration strategy...`;
+        spinner.text = 'Generating migration strategy...';
         const specificStrategy = await this.generateMigrationStrategy(context);
-        spinner.succeed(`Migration strategy generated`);
+        spinner.succeed('Migration strategy generated');
 
         // Step 6: Create CLAUDE.md
-        spinner.text = `Creating migration instructions...`;
+        spinner.text = 'Creating migration instructions...';
         await this.createMigrationInstructions(specificStrategy);
-        spinner.succeed(`Migration instructions created`);
+        spinner.succeed('Migration instructions created');
       }
 
       // Step 7: Run migration with test loop
       if (!this.options.skipTests) {
-        spinner.text = `Running migration with test validation...`;
+        spinner.text = 'Running migration with test validation...';
         const migrationSuccess = await this.runMigrationWithTestLoop();
 
         if (!migrationSuccess) {
@@ -185,9 +186,9 @@ export class PluginMigrator {
         }
       } else {
         // Just run Claude Code once without test validation
-        spinner.text = `Running migration (tests skipped)...`;
+        spinner.text = 'Running migration (tests skipped)...';
         await this.runClaudeCode();
-        spinner.succeed(`Migration applied (test validation skipped)`);
+        spinner.succeed('Migration applied (test validation skipped)');
       }
 
       // Step 8: Track changed files
@@ -195,14 +196,14 @@ export class PluginMigrator {
 
       // Step 9: Production validation loop
       if (!this.options.skipValidation) {
-        spinner.text = `Validating migration for production readiness...`;
+        spinner.text = 'Validating migration for production readiness...';
         const validationSuccess = await this.runProductionValidationLoop();
 
         if (!validationSuccess) {
           throw new Error('Migration not production ready after maximum revision iterations');
         }
       } else {
-        spinner.info(`Production validation skipped`);
+        spinner.info('Production validation skipped');
       }
 
       // Step 10: Push branch
@@ -215,8 +216,9 @@ export class PluginMigrator {
         // If dry run succeeds, do the actual push
         await this.git.push('origin', BRANCH_NAME, { '--set-upstream': null });
         spinner.succeed(`Branch ${BRANCH_NAME} pushed`);
-      } catch (pushError: any) {
-        spinner.warn(`Could not push branch to origin: ${pushError.message}`);
+      } catch (pushError: unknown) {
+        const error = pushError as Error;
+        spinner.warn(`Could not push branch to origin: ${error.message}`);
         logger.warn('Branch created locally but not pushed. You may need to push manually.');
       }
 
@@ -225,7 +227,7 @@ export class PluginMigrator {
       return {
         success: true,
         branchName: BRANCH_NAME,
-        repoPath: this.repoPath!,
+        repoPath: this.repoPath,
       };
     } catch (error) {
       spinner.fail(`Migration failed for ${input}`);
@@ -268,9 +270,23 @@ export class PluginMigrator {
       if (testIteration === 1) {
         await this.runClaudeCode();
       } else {
-        // Re-run with test failure context
-        const testErrors = await this.getTestErrors();
-        await this.runClaudeCodeWithContext(testErrors);
+        // Check for build errors first
+        const buildErrors = await this.getBuildErrors();
+        if (buildErrors) {
+          logger.warn('Build errors detected, fixing...');
+          await this.runClaudeCodeWithContext(`BUILD ERRORS TO FIX:\n${buildErrors}`);
+        } else {
+          // Re-run with test failure context
+          const testErrors = await this.getTestErrors();
+          await this.runClaudeCodeWithContext(testErrors);
+        }
+      }
+
+      // Check if build passes before running tests
+      const buildResult = await this.checkBuild();
+      if (!buildResult.success) {
+        logger.warn(`Build failed: ${buildResult.errors}`);
+        continue; // Skip tests, go to next iteration
       }
 
       // Run tests
@@ -280,12 +296,63 @@ export class PluginMigrator {
       if (allTestsPass) {
         logger.info('✅ All tests passing!');
         return true;
-      } else {
-        logger.warn(`Tests failed. ${MAX_TEST_ITERATIONS - testIteration} attempts remaining.`);
       }
+      logger.warn(`Tests failed. ${MAX_TEST_ITERATIONS - testIteration} attempts remaining.`);
     }
 
     return allTestsPass;
+  }
+
+  private async checkBuild(): Promise<{ success: boolean; errors?: string }> {
+    try {
+      if (!this.repoPath) throw new Error('Repository path not set');
+      
+      logger.info('Checking build...');
+      
+      // Try to build the project
+      await execa('npm', ['run', 'build'], {
+        cwd: this.repoPath,
+        stdio: 'pipe',
+        timeout: 120000, // 2 minute timeout for build
+      });
+
+      return { success: true };
+    } catch (error: unknown) {
+      const err = error as { stdout?: string; stderr?: string };
+      const errorOutput = `${err.stdout || ''}\n${err.stderr || ''}`;
+      return { success: false, errors: errorOutput };
+    }
+  }
+
+  private async getBuildErrors(): Promise<string | null> {
+    try {
+      const buildResult = await this.checkBuild();
+      if (!buildResult.success && buildResult.errors) {
+        // Parse and enhance build errors
+        let errorContext = `BUILD ERRORS:\n${buildResult.errors}\n\n`;
+        
+        // Check for specific error patterns
+        if (buildResult.errors.includes('Expected "finally" but found "return"')) {
+          errorContext += 'SYNTAX ERROR DETECTED: Malformed try-catch-finally block. Fix the syntax error in the code.\n\n';
+        }
+        
+        if (buildResult.errors.includes('Cannot find module')) {
+          const moduleMatch = buildResult.errors.match(/Cannot find module '([^']+)'/);
+          if (moduleMatch) {
+            errorContext += `MISSING MODULE ERROR: Module '${moduleMatch[1]}' not found. Either create this module or fix the import path.\n\n`;
+          }
+        }
+
+        if (buildResult.errors.includes('Type') && buildResult.errors.includes('is not assignable to type')) {
+          errorContext += 'TYPE ERROR DETECTED: Fix the TypeScript type mismatches. Update types for 1.x compatibility.\n\n';
+        }
+
+        return errorContext;
+      }
+      return null;
+    } catch (error) {
+      return `Failed to get build errors: ${error}`;
+    }
   }
 
   private async runProductionValidationLoop(): Promise<boolean> {
@@ -304,7 +371,8 @@ export class PluginMigrator {
       if (productionReady) {
         logger.info('✅ Migration validated as production ready!');
         return true;
-      } else if (validationResult.revision_instructions) {
+      }
+      if (validationResult.revision_instructions) {
         logger.warn('Migration needs revisions. Applying changes...');
 
         // Apply revisions
@@ -324,7 +392,8 @@ export class PluginMigrator {
   private async runTests(): Promise<{ success: boolean; errors?: string }> {
     try {
       // Check if package.json exists
-      const packageJsonPath = path.join(this.repoPath!, 'package.json');
+      if (!this.repoPath) throw new Error('Repository path not set');
+      const packageJsonPath = path.join(this.repoPath, 'package.json');
       if (!(await fs.pathExists(packageJsonPath))) {
         return {
           success: false,
@@ -336,18 +405,19 @@ export class PluginMigrator {
       logger.info('Installing dependencies...');
       try {
         await execa('npm', ['install'], {
-          cwd: this.repoPath!,
+          cwd: this.repoPath,
           stdio: 'pipe',
           timeout: 300000, // 5 minute timeout for npm install
         });
-      } catch (installError: any) {
-        if (installError.timedOut) {
+      } catch (installError: unknown) {
+        const error = installError as { timedOut?: boolean; message: string };
+        if (error.timedOut) {
           return {
             success: false,
             errors: 'npm install timed out after 5 minutes. Check network connection.',
           };
         }
-        logger.warn(`npm install failed: ${installError.message}`);
+        logger.warn(`npm install failed: ${error.message}`);
         // Continue anyway - some tests might still work
       }
 
@@ -358,7 +428,7 @@ export class PluginMigrator {
       try {
         // Check if elizaos is available
         await execa('npx', ['elizaos', '--version'], {
-          cwd: this.repoPath!,
+          cwd: this.repoPath,
           stdio: 'pipe',
         });
         testCommand = 'npx';
@@ -367,7 +437,7 @@ export class PluginMigrator {
       } catch {
         // Fallback to npm/bun test
         const packageJson = JSON.parse(
-          await fs.readFile(path.join(this.repoPath!, 'package.json'), 'utf-8')
+          await fs.readFile(path.join(this.repoPath, 'package.json'), 'utf-8')
         );
 
         if (packageJson.scripts?.test) {
@@ -388,14 +458,15 @@ export class PluginMigrator {
       }
 
       // Run the test command
-      const result = await execa(testCommand, testArgs, {
-        cwd: this.repoPath!,
+      await execa(testCommand, testArgs, {
+        cwd: this.repoPath,
         stdio: 'pipe',
       });
 
       return { success: true };
-    } catch (error: any) {
-      const errorOutput = (error.stdout || '') + '\n' + (error.stderr || '');
+    } catch (error: unknown) {
+      const err = error as { stdout?: string; stderr?: string };
+      const errorOutput = `${err.stdout || ''}\n${err.stderr || ''}`;
       logger.error('Test execution failed:', errorOutput);
       return { success: false, errors: errorOutput };
     }
@@ -414,7 +485,9 @@ export class PluginMigrator {
   private async trackChangedFiles(initialCommit: string): Promise<void> {
     const diff = await this.git.diff(['--name-only', initialCommit, 'HEAD']);
     const files = diff.split('\n').filter((f) => f.trim());
-    files.forEach((file) => this.changedFiles.add(file));
+    for (const file of files) {
+      this.changedFiles.add(file);
+    }
   }
 
   private async validateProductionReadiness(): Promise<ProductionValidationResult> {
@@ -444,7 +517,8 @@ Respond with a JSON object:
   "revision_instructions": "Detailed instructions for what needs to be fixed (only if not production ready)"
 }`;
 
-    const message = await this.anthropic!.messages.create({
+    if (!this.anthropic) throw new Error('Anthropic client not initialized');
+    const message = await this.anthropic.messages.create({
       model: 'claude-opus-4-20250514',
       max_tokens: 8192,
       temperature: 0,
@@ -480,7 +554,8 @@ Respond with a JSON object:
     let totalTokens = 0;
 
     for (const file of this.changedFiles) {
-      const filePath = path.join(this.repoPath!, file);
+      if (!this.repoPath) throw new Error('Repository path not set');
+      const filePath = path.join(this.repoPath, file);
       if (await fs.pathExists(filePath)) {
         let fileContent = await fs.readFile(filePath, 'utf-8');
         let fileTokens = encoder.encode(fileContent).length;
@@ -492,13 +567,13 @@ Respond with a JSON object:
           let truncatedTokens = 0;
 
           for (const line of lines) {
-            const lineTokens = encoder.encode(line + '\n').length;
+            const lineTokens = encoder.encode(`${line}\n`).length;
             if (truncatedTokens + lineTokens > MAX_TOKENS * 0.8) {
               // Use 80% of MAX_TOKENS for single file
               truncatedContent += '\n... (file truncated due to size) ...';
               break;
             }
-            truncatedContent += line + '\n';
+            truncatedContent += `${line}\n`;
             truncatedTokens += lineTokens;
           }
 
@@ -527,74 +602,113 @@ Make all necessary changes to fix the issues and ensure the migration is complet
   }
 
   private async runClaudeCodeWithPrompt(prompt: string): Promise<void> {
-    process.chdir(this.repoPath!);
+    if (!this.repoPath) throw new Error('Repository path not set');
+    process.chdir(this.repoPath);
 
-    // Create a timeout promise
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(
-          new Error(`Claude Code execution timed out after ${CLAUDE_CODE_TIMEOUT / 1000} seconds`)
-        );
-      }, CLAUDE_CODE_TIMEOUT);
-    });
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY_MS = 30000; // 30 seconds
+    let lastError: Error | null = null;
 
-    // Create the execution promise
-    const executePromise = (async () => {
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        this.activeClaudeProcess = execa(
-          'claude',
-          [
-            '--print',
-            '--max-turns',
-            '30',
-            '--verbose',
-            '--model',
-            'opus',
-            '--dangerously-skip-permissions',
-            prompt,
-          ],
-          {
-            stdio: 'inherit',
-            cwd: this.repoPath!,
+        logger.info(`Claude Code attempt ${attempt}/${MAX_RETRIES}`);
+
+        // Create a timeout promise
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(
+              new Error(`Claude Code execution timed out after ${CLAUDE_CODE_TIMEOUT / 1000} seconds`)
+            );
+          }, CLAUDE_CODE_TIMEOUT);
+        });
+
+        // Create the execution promise
+        const executePromise = (async () => {
+          try {
+            this.activeClaudeProcess = execa(
+              'claude',
+              [
+                '--print',
+                '--max-turns',
+                '30',
+                '--verbose',
+                '--model',
+                'claude-3-5-sonnet-20241022', // Changed from 'opus' to sonnet
+                '--dangerously-skip-permissions',
+                prompt,
+              ],
+              {
+                stdio: 'inherit',
+                cwd: this.repoPath,
+              }
+            );
+
+            await this.activeClaudeProcess;
+            this.activeClaudeProcess = null;
+          } catch (error: unknown) {
+            this.activeClaudeProcess = null;
+            const err = error as { code?: string; message?: string };
+
+            if (err.code === 'ENOENT') {
+              throw new Error(
+                'Claude Code not found! Install with: npm install -g @anthropic-ai/claude-code'
+              );
+            }
+            throw error;
           }
-        );
+        })();
 
-        await this.activeClaudeProcess;
-        this.activeClaudeProcess = null;
-      } catch (error: any) {
-        this.activeClaudeProcess = null;
+        // Race between execution and timeout
+        await Promise.race([executePromise, timeoutPromise]);
+        
+        // If we get here, the command succeeded
+        logger.info(`✅ Claude Code succeeded on attempt ${attempt}`);
+        return;
 
-        if (error.code === 'ENOENT') {
-          throw new Error(
-            'Claude Code not found! Install with: npm install -g @anthropic-ai/claude-code'
-          );
+      } catch (error: unknown) {
+        // Kill the process if it's still running
+        if (this.activeClaudeProcess) {
+          try {
+            this.activeClaudeProcess.kill();
+            this.activeClaudeProcess = null;
+          } catch (killError) {
+            logger.error('Failed to kill timed-out process:', killError);
+          }
         }
-        throw error;
-      }
-    })();
 
-    // Race between execution and timeout
-    try {
-      await Promise.race([executePromise, timeoutPromise]);
-    } catch (error) {
-      // Kill the process if it's still running
-      if (this.activeClaudeProcess) {
-        try {
-          this.activeClaudeProcess.kill();
-          this.activeClaudeProcess = null;
-        } catch (killError) {
-          logger.error('Failed to kill timed-out process:', killError);
+        const err = error as { message?: string; stderr?: string; code?: number };
+        lastError = error as Error;
+
+        // Check if it's a rate limit or API error
+        const isRateLimit = err.message?.includes('rate limit') || 
+                           err.message?.includes('quota') ||
+                           err.message?.includes('too many requests') ||
+                           err.code === 1; // Claude Code often returns exit code 1 for rate limits
+
+        if (isRateLimit && attempt < MAX_RETRIES) {
+          const waitTime = RETRY_DELAY_MS * attempt; // Exponential backoff
+          logger.warn(`Attempt ${attempt} failed (likely rate limit). Waiting ${waitTime / 1000} seconds before retry...`);
+          logger.warn(`Error: ${err.message}`);
+          
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
         }
-      }
+        if (attempt < MAX_RETRIES) {
+          logger.warn(`Attempt ${attempt} failed. Retrying in ${RETRY_DELAY_MS / 1000} seconds...`);
+          logger.warn(`Error: ${err.message}`);
+          
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+          continue;
+        }
 
-      logger.error('Claude Code execution failed:', error);
-      throw error;
+        // If we've exhausted all retries, throw the last error
+        logger.error(`Claude Code failed after ${MAX_RETRIES} attempts`);
+        throw lastError;
+      }
     }
   }
-
-  // Include all the other methods from the original updater.ts
-  // (handleInput, analyzeRepository, generateMigrationStrategy, createMigrationInstructions,
-  // createBranch, runClaudeCode, etc.)
 
   private async handleInput(input: string): Promise<void> {
     if (input.startsWith('https://github.com/')) {
@@ -642,19 +756,21 @@ Make all necessary changes to fix the issues and ensure the migration is complet
       sourceFiles: [] as Array<{ path: string; content: string }>,
     };
 
-    const readmePath = path.join(this.repoPath!, 'README.md');
+    if (!this.repoPath) throw new Error('Repository path not set');
+
+    const readmePath = path.join(this.repoPath, 'README.md');
     if (await fs.pathExists(readmePath)) {
       files.readme = await fs.readFile(readmePath, 'utf-8');
     }
 
-    const packagePath = path.join(this.repoPath!, 'package.json');
+    const packagePath = path.join(this.repoPath, 'package.json');
     if (await fs.pathExists(packagePath)) {
       files.packageJson = await fs.readFile(packagePath, 'utf-8');
     }
 
     const indexPaths = ['index.ts', 'src/index.ts', 'index.js', 'src/index.js'];
     for (const indexPath of indexPaths) {
-      const fullPath = path.join(this.repoPath!, indexPath);
+      const fullPath = path.join(this.repoPath, indexPath);
       if (await fs.pathExists(fullPath)) {
         files.index = {
           path: indexPath,
@@ -665,7 +781,7 @@ Make all necessary changes to fix the issues and ensure the migration is complet
     }
 
     const sourceFiles = await globby(['**/*.ts', '**/*.js'], {
-      cwd: this.repoPath!,
+      cwd: this.repoPath,
       ignore: [
         'node_modules/**',
         'dist/**',
@@ -697,7 +813,7 @@ Make all necessary changes to fix the issues and ensure the migration is complet
 
     for (const file of sortedFiles) {
       if (file === files.index?.path) continue;
-      const filePath = path.join(this.repoPath!, file);
+      const filePath = path.join(this.repoPath, file);
 
       // Check file size before reading
       const stats = await fs.stat(filePath);
@@ -722,9 +838,9 @@ Make all necessary changes to fix the issues and ensure the migration is complet
     }
 
     let context = '';
-    if (files.readme) context += '# README.md\n\n' + files.readme + '\n\n';
+    if (files.readme) context += `# README.md\n\n${files.readme}\n\n`;
     if (files.packageJson)
-      context += '# package.json\n\n```json\n' + files.packageJson + '\n```\n\n';
+      context += `# package.json\n\n\`\`\`json\n${files.packageJson}\n\`\`\`\n\n`;
     if (files.index)
       context += `# ${files.index.path}\n\n\`\`\`typescript\n${files.index.content}\n\`\`\`\n\n`;
     for (const file of files.sourceFiles) {
@@ -774,7 +890,8 @@ Format your response as a clear, actionable migration plan.`;
 
     while (retries > 0) {
       try {
-        const message = await this.anthropic!.messages.create({
+        if (!this.anthropic) throw new Error('Anthropic client not initialized');
+        const message = await this.anthropic.messages.create({
           model: 'claude-opus-4-20250514',
           max_tokens: 8192,
           temperature: 0,
@@ -787,8 +904,8 @@ Format your response as a clear, actionable migration plan.`;
         });
 
         return message.content.map((block) => (block.type === 'text' ? block.text : '')).join('');
-      } catch (error: any) {
-        lastError = error;
+      } catch (error: unknown) {
+        lastError = error as Error;
         retries--;
 
         if (retries > 0) {
@@ -802,13 +919,12 @@ Format your response as a clear, actionable migration plan.`;
       `Failed to generate migration strategy after 3 attempts: ${lastError?.message}`
     );
   }
-
   private async createMigrationInstructions(specificStrategy: string): Promise<void> {
-    const baseClaude = await fs.readFile(path.join(__dirname, './CLAUDE.md'), 'utf-8');
+    // Read CLAUDE.md from the build output directory (copied during tsup build)
+    const claudeMdPath = path.join(__dirname, 'CLAUDE.md');
+    const baseClaude = await fs.readFile(claudeMdPath, 'utf-8');
 
-    const combinedInstructions =
-      baseClaude +
-      `
+    const combinedInstructions = `${baseClaude}
 
 ## SPECIFIC MIGRATION STRATEGY FOR THIS PLUGIN
 
@@ -830,7 +946,8 @@ Work systematically through the strategy. Make all changes, create all tests, an
 The goal is a fully migrated, tested, and working 1.x plugin.
 `;
 
-    const outputPath = path.join(this.repoPath!, 'CLAUDE.md');
+    if (!this.repoPath) throw new Error('Repository path not set');
+    const outputPath = path.join(this.repoPath, 'CLAUDE.md');
     await fs.writeFile(outputPath, combinedInstructions);
   }
 
@@ -860,7 +977,7 @@ The goal is a fully migrated, tested, and working 1.x plugin.
   }
 
   private async runClaudeCode(): Promise<void> {
-    const migrationPrompt = `Please read the CLAUDE.md file in this repository and execute all the migration steps described there. Apply all changes systematically, create all tests, and ensure everything works.`;
+    const migrationPrompt = 'Please read the CLAUDE.md file in this repository and execute all the migration steps described there. Apply all changes systematically, create all tests, and ensure everything works.';
     await this.runClaudeCodeWithPrompt(migrationPrompt);
   }
 
@@ -879,7 +996,7 @@ The goal is a fully migrated, tested, and working 1.x plugin.
       const lines = result.stdout.split('\n');
       const dataLine = lines[1]; // Second line contains the data
       const parts = dataLine.split(/\s+/);
-      const availableKB = parseInt(parts[3]);
+      const availableKB = Number.parseInt(parts[3]);
       return availableKB / 1024 / 1024; // Convert to GB
     } catch (error) {
       logger.warn('Could not check disk space, proceeding anyway');
@@ -895,12 +1012,11 @@ The goal is a fully migrated, tested, and working 1.x plugin.
     // Check if lock file exists
     if (await fs.pathExists(this.lockFilePath)) {
       const lockData = await fs.readFile(this.lockFilePath, 'utf-8');
-      throw new Error(
-        `Another migration is already running on this repository.\n` +
-          `Lock file: ${this.lockFilePath}\n` +
-          `Lock data: ${lockData}\n` +
-          `If this is an error, manually delete the lock file and try again.`
-      );
+      const errorMessage = `Another migration is already running on this repository.
+Lock file: ${this.lockFilePath}
+Lock data: ${lockData}
+If this is an error, manually delete the lock file and try again.`;
+      throw new Error(errorMessage);
     }
 
     // Create lock file with process info
