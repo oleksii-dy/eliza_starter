@@ -36,6 +36,43 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
+ * Detects and prevents circular plugin loading during testing
+ */
+function handleCircularPluginLoading(pluginName: string): {
+  isCircular: boolean;
+  localPluginPath?: string;
+} {
+  const isTestingMode = process.env.ELIZA_TESTING_PLUGIN === 'true';
+  const currentDir = process.cwd();
+  const currentDirName = path.basename(currentDir);
+  const isInPluginDir = currentDirName.startsWith('plugin-') || currentDir.includes('/plugin-');
+
+  // Quick exit if not in testing context
+  if (!isTestingMode && !isInPluginDir) {
+    return { isCircular: false };
+  }
+
+  // Normalize plugin names for comparison - more precise logic
+  const normalizePluginName = (name: string) =>
+    name.replace(/^@elizaos(-plugins)?\//, '').replace(/^plugin-/, '');
+
+  const normalizedPlugin = normalizePluginName(pluginName);
+  const normalizedDir = normalizePluginName(currentDirName);
+
+  // Use exact match only - no partial matching to avoid false positives
+  const isSamePlugin = normalizedPlugin === normalizedDir;
+
+  if ((isTestingMode || isInPluginDir) && isSamePlugin) {
+    return {
+      isCircular: true,
+      localPluginPath: path.join(currentDir, 'dist', 'index.js'),
+    };
+  }
+
+  return { isCircular: false };
+}
+
+/**
  * Attempts to load a plugin module, installing it if necessary.
  * Handles various export patterns (default, named export).
  *
@@ -48,35 +85,44 @@ async function loadAndPreparePlugin(pluginName: string, version: string): Promis
   let pluginModule: any;
 
   try {
-    // Use the centralized loader first
-    pluginModule = await loadPluginModule(pluginName);
+    // Check for circular dependency
+    const { isCircular, localPluginPath } = handleCircularPluginLoading(pluginName);
 
-    if (!pluginModule) {
-      // If loading failed, try installing and then loading again
-      logger.info(`Plugin ${pluginName} not available, installing into ${process.cwd()}...`);
-      try {
-        await installPlugin(pluginName, process.cwd(), version);
-        // Try loading again after installation using the centralized loader
-        pluginModule = await loadPluginModule(pluginName);
-      } catch (installError) {
-        logger.error(`Failed to install plugin ${pluginName}: ${installError}`);
-        return null; // Installation failed
+    if (isCircular) {
+      // Prevent installation and try local build
+      if (localPluginPath && fs.existsSync(localPluginPath)) {
+        try {
+          pluginModule = await import(localPluginPath);
+          logger.debug(`Successfully loaded ${pluginName} from local build: ${localPluginPath}`);
+        } catch (localError) {
+          logger.warn(`Failed to load ${pluginName} from local build: ${localError}`);
+        }
       }
 
       if (!pluginModule) {
-        logger.error(`Failed to load plugin ${pluginName} even after installation.`);
-        return null; // Loading failed post-installation
+        logger.error(
+          `Cannot install plugin ${pluginName} - would create circular dependency during testing`
+        );
+        return null;
+      }
+    } else {
+      // Normal plugin loading flow
+      pluginModule = await loadPluginModule(pluginName);
+
+      if (!pluginModule) {
+        // Install if not found
+        logger.info(`Plugin ${pluginName} not available, installing into ${process.cwd()}...`);
+        await installPlugin(pluginName, process.cwd(), version);
+        pluginModule = await loadPluginModule(pluginName);
       }
     }
-  } catch (error) {
-    // Catch any unexpected error during the combined load/install/load process
-    logger.error(`An unexpected error occurred while processing plugin ${pluginName}: ${error}`);
-    return null;
-  }
 
-  if (!pluginModule) {
-    // This check might be redundant now, but kept for safety.
-    logger.error(`Failed to process plugin ${pluginName} (module is null/undefined unexpectedly)`);
+    if (!pluginModule) {
+      logger.error(`Failed to load plugin ${pluginName} even after installation.`);
+      return null;
+    }
+  } catch (error) {
+    logger.error(`An unexpected error occurred while processing plugin ${pluginName}: ${error}`);
     return null;
   }
 
@@ -85,10 +131,6 @@ async function loadAndPreparePlugin(pluginName: string, version: string): Promis
     .replace(/^@elizaos\/plugin-/, '') // Remove prefix
     .replace(/^@elizaos-plugins\//, '') // Remove alternative prefix
     .replace(/-./g, (match) => match[1].toUpperCase())}Plugin`; // Convert kebab-case to camelCase and add 'Plugin' suffix
-
-  //logger.debug(`Looking for plugin export: ${expectedFunctionName} or default`);
-  //logger.debug(`Available exports: ${Object.keys(pluginModule).join(', ')}`);
-  //logger.debug(`Has default export: ${!!pluginModule.default}`);
 
   // --- Improved Export Resolution Logic ---
 
@@ -110,9 +152,6 @@ async function loadAndPreparePlugin(pluginName: string, version: string): Promis
   }
 
   // 3. If neither primary method worked, search all exports aggressively
-  //logger.debug(
-  //`Primary exports (named: ${expectedFunctionName}, default) not found or invalid, searching all exports...`
-  //);
   for (const key of Object.keys(pluginModule)) {
     // Skip keys we already checked (or might be checking)
     if (key === expectedFunctionName || key === 'default') {
