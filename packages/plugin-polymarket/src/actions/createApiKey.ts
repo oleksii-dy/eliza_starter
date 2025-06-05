@@ -32,14 +32,14 @@ export const createApiKeyAction = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Create API key for Polymarket trading',
+          text: 'Create API key for Polymarket',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: "I'll generate new API credentials for your Polymarket account. This will create the L2 authentication needed for order posting.",
-          action: 'CREATE_API_KEY',
+          text: "I'll create API credentials for your Polymarket account using your wallet signature.",
+          actions: ['CREATE_API_KEY'],
         },
       },
     ],
@@ -47,14 +47,134 @@ export const createApiKeyAction = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Generate new CLOB API credentials',
+          text: 'Generate new API credentials',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Creating new API key credentials for Polymarket CLOB access...',
-          action: 'CREATE_API_KEY',
+          text: 'Generating new API credentials for authenticated trading on Polymarket.',
+          actions: ['CREATE_API_KEY'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'I need API keys for trading',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: "I'll create the API keys you need for trading. This will enable order placement and management.",
+          actions: ['CREATE_API_KEY'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'CREATE_API_KEY',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Creating API key with your wallet signature for L2 authentication.',
+          actions: ['CREATE_API_KEY'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'Set up API credentials for my account',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Setting up API credentials for your account to enable trading functionality.',
+          actions: ['CREATE_API_KEY'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'Get me trading credentials',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Getting your trading credentials by creating secure API keys.',
+          actions: ['CREATE_API_KEY'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'Enable API access for orders',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Enabling API access by creating the necessary credentials for order management.',
+          actions: ['CREATE_API_KEY'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'Generate Polymarket API keys',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Generating your Polymarket API keys for secure, authenticated trading.',
+          actions: ['CREATE_API_KEY'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'Setup L2 authentication',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Setting up L2 authentication by creating your API credentials.',
+          actions: ['CREATE_API_KEY'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'I want to start trading, create keys',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: "Perfect! I'll create the API keys you need to start trading on Polymarket.",
+          actions: ['CREATE_API_KEY'],
         },
       },
     ],
