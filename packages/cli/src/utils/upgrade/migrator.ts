@@ -8,8 +8,9 @@ import * as path from 'node:path';
 import { dirname } from 'node:path';
 import simpleGit, { type SimpleGit } from 'simple-git';
 import { encoding_for_model } from 'tiktoken';
-import { fileURLToPath } from 'node:url';
-import * as os from 'node:os';
+import { fileURLToPath } from 'url';
+import * as os from 'os';
+import { emoji } from '../emoji-handler';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -121,7 +122,7 @@ export class PluginMigrator {
         await execa('claude', ['--version'], { stdio: 'pipe' });
       } catch {
         throw new Error(
-          'Claude Code is required for migration. Install with: npm install -g @anthropic-ai/claude-code'
+          'Claude Code is required for migration. Install with: bun install -g @anthropic-ai/claude-code'
         );
       }
 
@@ -134,7 +135,9 @@ export class PluginMigrator {
       await this.createLockFile();
 
       // Security warning
-      logger.warn('⚠️  SECURITY WARNING: This command will execute code from the repository.');
+      logger.warn(
+        `${emoji.warning('SECURITY WARNING: This command will execute code from the repository.')}`
+      );
       logger.warn('Only run this on trusted repositories you own or have reviewed.');
 
       // Step 2: Save current branch for recovery
@@ -222,7 +225,7 @@ export class PluginMigrator {
         logger.warn('Branch created locally but not pushed. You may need to push manually.');
       }
 
-      logger.info(`✅ Migration complete for ${input}!`);
+      logger.info(`${emoji.success(`Migration complete for ${input}!`)}`);
 
       return {
         success: true,
@@ -404,20 +407,20 @@ export class PluginMigrator {
       // First ensure dependencies are installed
       logger.info('Installing dependencies...');
       try {
-        await execa('npm', ['install'], {
-          cwd: this.repoPath,
+        await execa('bun', ['install'], {
+          cwd: this.repoPath!,
           stdio: 'pipe',
-          timeout: 300000, // 5 minute timeout for npm install
+          timeout: 300000, // 5 minute timeout for bun install
         });
       } catch (installError: unknown) {
         const error = installError as { timedOut?: boolean; message: string };
         if (error.timedOut) {
           return {
             success: false,
-            errors: 'npm install timed out after 5 minutes. Check network connection.',
+            errors: 'bun install timed out after 5 minutes. Check network connection.',
           };
         }
-        logger.warn(`npm install failed: ${error.message}`);
+        logger.warn(`bun install failed: ${installError.message}`);
         // Continue anyway - some tests might still work
       }
 
@@ -427,31 +430,23 @@ export class PluginMigrator {
 
       try {
         // Check if elizaos is available
-        await execa('npx', ['elizaos', '--version'], {
-          cwd: this.repoPath,
+        await execa('bunx', ['elizaos', '--version'], {
+          cwd: this.repoPath!,
           stdio: 'pipe',
         });
-        testCommand = 'npx';
+        testCommand = 'bunx';
         testArgs = ['elizaos', 'test'];
         logger.info('Running tests with elizaos test...');
       } catch {
-        // Fallback to npm/bun test
+        // Fallback to bun test
         const packageJson = JSON.parse(
           await fs.readFile(path.join(this.repoPath, 'package.json'), 'utf-8')
         );
 
         if (packageJson.scripts?.test) {
-          // Check if bun is available
-          try {
-            await execa('bun', ['--version'], { stdio: 'pipe' });
-            testCommand = 'bun';
-            testArgs = ['test'];
-            logger.info('Running tests with bun test...');
-          } catch {
-            testCommand = 'npm';
-            testArgs = ['test'];
-            logger.info('Running tests with npm test...');
-          }
+          testCommand = 'bun';
+          testArgs = ['test'];
+          logger.info('Running tests with bun test...');
         } else {
           throw new Error('No test script found in package.json and elizaos not available');
         }
@@ -665,15 +660,10 @@ Make all necessary changes to fix the issues and ensure the migration is complet
         logger.info(`✅ Claude Code succeeded on attempt ${attempt}`);
         return;
 
-      } catch (error: unknown) {
-        // Kill the process if it's still running
-        if (this.activeClaudeProcess) {
-          try {
-            this.activeClaudeProcess.kill();
-            this.activeClaudeProcess = null;
-          } catch (killError) {
-            logger.error('Failed to kill timed-out process:', killError);
-          }
+        if (error.code === 'ENOENT') {
+          throw new Error(
+            'Claude Code not found! Install with: bun install -g @anthropic-ai/claude-code'
+          );
         }
 
         const err = error as { message?: string; stderr?: string; code?: number };
