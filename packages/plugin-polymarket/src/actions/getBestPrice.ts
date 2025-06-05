@@ -18,6 +18,16 @@ interface BestPriceParams {
   side: string;
 }
 
+// Define the response structure for the callback data property
+export interface BestPriceResponseData {
+  tokenId: string;
+  side: 'buy' | 'sell';
+  price: string;
+  formattedPrice: string;
+  percentagePrice: string;
+  timestamp: string;
+}
+
 /**
  * Get best bid/ask price for a market token action for Polymarket
  * Fetches the best price for a specific token and side (buy/sell)
