@@ -364,6 +364,15 @@ export const createApiKeyAction = {
         runtime.setSetting('CLOB_API_SECRET', responseData.secret, true); // Mark secret as sensitive
         runtime.setSetting('CLOB_API_PASSPHRASE', responseData.passphrase, true); // Mark passphrase as sensitive
 
+        // Also set session-specific API key info for getAccountAccessStatusAction
+        runtime.setSetting('POLYMARKET_SESSION_API_KEY_ID', responseData.id, false);
+        runtime.setSetting(
+          'POLYMARKET_SESSION_API_LABEL',
+          isNewKey ? 'newly-created-key' : 'derived-existing-key',
+          false
+        );
+        runtime.setSetting('POLYMARKET_SESSION_API_SOURCE', 'createApiKeyAction', false);
+
         logger.info('[createApiKeyAction] API credentials stored successfully');
 
         // Verify storage by immediately retrieving the values
