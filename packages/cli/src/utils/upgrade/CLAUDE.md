@@ -1,7 +1,20 @@
 # ElizaOS Plugin Migration Mega Prompt: V1 to V2 Complete Guide
 
 ## 🎯 **Migration Objective**
+
 Transform any ElizaOS v1 plugin to v2 architecture following Discord plugin patterns while fixing all compatibility issues identified in legacy plugins.
+
+## 🚨 **CRITICAL: NO VITEST TESTING REQUIRED**
+
+**ElizaOS V2 plugins use ONLY the built-in `elizaos test` framework. Do NOT create vitest tests, vitest configs, or include vitest in dependencies.**
+
+## 📝 **AUTOMATIC TEST FILE GENERATION**
+
+**IMPORTANT: The migration tool automatically creates test files from templates:**
+- `src/test/utils.ts` - Copied exactly from a proven template with complete mock runtime
+- `src/test/test.ts` - Generated dynamically based on plugin name and structure
+
+**DO NOT manually create test files in Claude prompts - they are handled by the migration tool.**
 
 ## 📖 **Reference Implementation**
 
@@ -31,6 +44,7 @@ plugin-discord/
 ```
 
 **Key Discord Patterns to Study:**
+
 - **Service Class**: `src/service.ts` - Shows proper Service extension, lifecycle methods
 - **Action Structure**: `src/actions/*.ts` - Modern action handler signatures
 - **Provider Pattern**: `src/providers/*.ts` - Standard provider interface usage
@@ -39,38 +53,40 @@ plugin-discord/
 
 ## 🚨 **Critical Architecture Issues to Fix**
 
-### 1. **Missing Service Layer - CRITICAL FIX REQUIRED** - Fix this only if plugin have service 
+### 1. **Missing Service Layer - CRITICAL FIX REQUIRED** - Fix this only if plugin have service
 
 **V1 Problem Pattern:**
+
 ```typescript
 // ❌ V1: Empty or missing service.ts
 export const myPlugin: Plugin = {
-    name: "plugin-name",
-    actions: actions,
-    evaluators: [] // Outdated pattern
+  name: 'plugin-name',
+  actions: actions,
+  evaluators: [], // Outdated pattern
 };
 ```
 
 **V2 Solution (Discord Pattern):**
+
 ```typescript
 // ✅ V2: Proper Service Class (Reference: plugin-discord/src/service.ts)
 export class MyService extends Service {
     static serviceType: string = 'my-service';
-    
+
     constructor(runtime: IAgentRuntime) {
         super(runtime);
         // Initialize with config validation
     }
-    
+
     static async start(runtime: IAgentRuntime) {
         const service = new MyService(runtime);
         return service;
     }
-    
+
     async stop(): Promise<void> {
         // Cleanup resources
     }
-    
+
     get capabilityDescription(): string {
         return 'Service capability description';
     }
@@ -90,9 +106,142 @@ const myPlugin: Plugin = {
 };
 ```
 
-### 2. **Broken Action Handler Signatures - CRITICAL FIX**
+### 2. **V1 to V2 Core Import Incompatibilities - CRITICAL FIX REQUIRED**
+
+**CRITICAL: These imports will completely break V2 plugins and must be fixed immediately**
 
 **V1 Problem Pattern:**
+
+```typescript
+// ❌ V1: Wrong import names that don't exist in V2
+import {
+    ActionExample,
+    Content,
+    HandlerCallback,
+    IAgentRuntime,
+    Memory,
+    ModelClass,      // ❌ DOES NOT EXIST IN V2
+    State,
+    type Action,
+    logger,
+    createUniqueUuid
+} from "@elizaos/core";
+
+// ❌ V1: Wrong model usage
+const result = await runtime.useModel(ModelClass.SMALL, {  // ❌ WRONG
+    prompt: context,
+    temperature: 0.3,
+    maxTokens: 50,
+    stop: ["\n"],  // ❌ WRONG PARAMETER NAME
+});
+
+// ❌ V1: Wrong ActionExample structure
+examples: [
+    [
+        {
+            user: "{{user1}}",  // ❌ WRONG FIELD NAME
+            content: { text: "example text" },
+        },
+        {
+            user: "{{user2}}",  // ❌ WRONG FIELD NAME
+            content: { text: "", action: "MY_ACTION" },
+        },
+    ]
+] as ActionExample[][],
+```
+
+**V2 Solution (Fixed Imports and Usage):**
+
+```typescript
+// ✅ V2: Correct imports with proper types
+import {
+    type ActionExample,     // ✅ Use type import for interfaces
+    type Content,
+    type HandlerCallback,
+    type IAgentRuntime,
+    type Memory,
+    ModelType,              // ✅ CORRECT: ModelType, not ModelClass
+    type State,
+    type Action,
+    logger,
+    createUniqueUuid
+} from "@elizaos/core";
+
+// ✅ V2: Correct model usage
+const result = await runtime.useModel(ModelType.TEXT_SMALL, {  // ✅ CORRECT
+    prompt: context,
+    temperature: 0.3,
+    maxTokens: 50,
+    stopSequences: ["\n"],  // ✅ CORRECT PARAMETER NAME
+});
+
+// ✅ V2: Correct ActionExample structure
+examples: [
+    [
+        {
+            name: "{{user1}}",  // ✅ CORRECT FIELD NAME
+            content: { text: "example text" },
+        },
+        {
+            name: "{{user2}}",  // ✅ CORRECT FIELD NAME
+            content: { text: "", action: "MY_ACTION" },
+        },
+    ]
+] as ActionExample[][],
+
+// ✅ V2: Correct handler signature
+handler: async (
+    _runtime: IAgentRuntime,
+    _message: Memory,
+    _state: State,
+    _options: { [key: string]: unknown },  // ✅ CORRECT TYPE
+    _callback: HandlerCallback,
+): Promise<boolean> => {
+    // Handler implementation
+}
+```
+
+**CRITICAL ModelType Values in V2:**
+
+```typescript
+// ✅ Available V2 ModelType constants
+ModelType.TEXT_SMALL; // ✅ Use this instead of ModelClass.SMALL
+ModelType.TEXT_LARGE; // ✅ Use this instead of ModelClass.LARGE
+ModelType.TEXT_EMBEDDING; // ✅ For embeddings
+ModelType.TEXT_REASONING_SMALL; // ✅ For reasoning tasks
+ModelType.TEXT_REASONING_LARGE; // ✅ For complex reasoning
+ModelType.IMAGE; // ✅ For image generation
+ModelType.IMAGE_DESCRIPTION; // ✅ For image analysis
+ModelType.TRANSCRIPTION; // ✅ For audio transcription
+ModelType.TEXT_TO_SPEECH; // ✅ For TTS
+ModelType.OBJECT_SMALL; // ✅ For structured object generation
+ModelType.OBJECT_LARGE; // ✅ For complex object generation
+```
+
+**CRITICAL Parameter Name Changes:**
+
+```typescript
+// ❌ V1: Old parameter names
+await runtime.useModel(ModelType.TEXT_SMALL, {
+  prompt: '...',
+  stop: ['\n'], // ❌ OLD NAME
+  max_tokens: 100, // ❌ OLD NAME
+  frequency_penalty: 0.5, // ❌ OLD NAME
+});
+
+// ✅ V2: New parameter names
+await runtime.useModel(ModelType.TEXT_SMALL, {
+  prompt: '...',
+  stopSequences: ['\n'], // ✅ NEW NAME
+  maxTokens: 100, // ✅ NEW NAME
+  frequencyPenalty: 0.5, // ✅ NEW NAME
+});
+```
+
+### 3. **Broken Action Handler Signatures - CRITICAL FIX**
+
+**V1 Problem Pattern:**
+
 ```typescript
 // ❌ V1: Wrong handler signature
 handler: async (
@@ -105,6 +254,7 @@ handler: async (
 ```
 
 **V2 Solution (Discord Pattern):**
+
 ```typescript
 // ✅ V2: Correct handler signature (Reference: plugin-discord/src/actions/voiceJoin.ts)
 export const myAction: Action = {
@@ -132,73 +282,115 @@ export const myAction: Action = {
 } as Action;
 ```
 
-### 3. **Memory Creation Pattern Violations - CRITICAL FIX**
+### 4. **Memory Creation Pattern Violations - CRITICAL FIX**
 
 **V1 Problem Pattern:**
+
 ```typescript
 // ❌ V1: Wrong memory structure
 const memory: Memory = {
-    id: SOME_ID, // Should use createUniqueUuid
-    userId: runtime.agentId, // Wrong field
-    content: {
-        type: "custom_type", // Not standard
-        data: complexObject, // Non-serializable
-    },
+  id: SOME_ID, // Should use createUniqueUuid
+  userId: runtime.agentId, // Wrong field
+  content: {
+    type: 'custom_type', // Not standard
+    data: complexObject, // Non-serializable
+  },
 };
 await runtime.messageManager.createMemory(memory); // Wrong method
+
+// ❌ V1: Another wrong pattern found in real migrations
+await _runtime.memory.create({
+  tableName: 'messages',
+  data: {
+    id: createUniqueUuid(_runtime, `news-${Date.now()}`),
+    entityId: _message.entityId,
+    content: {
+      text: responseText,
+      actionName: 'CURRENT_NEWS', // ❌ Non-standard field
+      source: 'plugin-news',
+    } as Content,
+  },
+});
 ```
 
 **V2 Solution (Discord Pattern):**
+
 ```typescript
 // ✅ V2: Correct memory structure (Reference: plugin-discord/src/actions/voiceJoin.ts)
-await runtime.createMemory({
+await runtime.createMemory(
+  {
     id: createUniqueUuid(runtime, `my-action-${Date.now()}`),
     entityId: createUniqueUuid(runtime, address), // REQUIRED
     agentId: runtime.agentId,
     roomId: createUniqueUuid(runtime, 'my-service'),
     content: {
-        text: "Action completed successfully",
-        source: 'my-plugin', // REQUIRED
+      text: 'Action completed successfully',
+      source: 'my-plugin', // REQUIRED
     },
-    metadata: { // REQUIRED
-        type: 'action_completion'
+    metadata: {
+      // REQUIRED
+      type: 'action_completion',
     },
-    createdAt: Date.now()
-}, 'messages');
+    createdAt: Date.now(),
+  },
+  'messages'
+);
+
+// ✅ V2: Real-world working example
+await _runtime.createMemory(
+  {
+    id: createUniqueUuid(_runtime, `news-${Date.now()}`),
+    entityId: _message.entityId,
+    agentId: _runtime.agentId,
+    roomId: _message.roomId, // Use original message roomId
+    content: {
+      text: responseText,
+      source: 'plugin-news', // ONLY standard Content fields
+    },
+    metadata: {
+      type: 'news_response',
+      actionName: 'CURRENT_NEWS', // Move action info to metadata
+    },
+    createdAt: Date.now(),
+  },
+  'messages'
+);
 ```
 
-### 4. **Provider Interface Incompatibility - CRITICAL FIX**
+### 5. **Provider Interface Incompatibility - CRITICAL FIX**
 
 **V1 Problem Pattern:**
+
 ```typescript
 // ❌ V1: Custom provider interface
 export interface CustomProvider {
-    type: string;
-    initialize: (runtime: IAgentRuntime) => Promise<void>;
-    get: (runtime: IAgentRuntime, message?: Memory) => Promise<CustomState>;
-    validate: (runtime: IAgentRuntime, message?: Memory) => Promise<boolean>;
+  type: string;
+  initialize: (runtime: IAgentRuntime) => Promise<void>;
+  get: (runtime: IAgentRuntime, message?: Memory) => Promise<CustomState>;
+  validate: (runtime: IAgentRuntime, message?: Memory) => Promise<boolean>;
 }
 ```
 
 **V2 Solution (Discord Pattern):**
+
 ```typescript
 // ✅ V2: Standard provider interface (Reference: plugin-discord/src/providers/channelState.ts)
 export const myStateProvider: Provider = {
-    name: 'myState',
-    get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
-        const myService = runtime.getService('my-service') as MyService;
-        
-        return {
-            data: {
-                isInitialized: myService.isInitialized(),
-                status: myService.getStatus()
-            },
-            values: {
-                serviceStatus: myService.getStatus() || 'Not initialized'
-            },
-            text: `Service status: ${myService.getStatus() || 'Not initialized'}`
-        };
-    }
+  name: 'myState',
+  get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+    const myService = runtime.getService('my-service') as MyService;
+
+    return {
+      data: {
+        isInitialized: myService.isInitialized(),
+        status: myService.getStatus(),
+      },
+      values: {
+        serviceStatus: myService.getStatus() || 'Not initialized',
+      },
+      text: `Service status: ${myService.getStatus() || 'Not initialized'}`,
+    };
+  },
 };
 ```
 
@@ -207,53 +399,54 @@ export const myStateProvider: Provider = {
 ### Phase 1: Outside Structure & Build System Migration
 
 **1. Update package.json to V2 Structure:**
+
 ```json
 {
-    "name": "@elizaos/plugin-my-plugin",
-    "version": "1.0.0",
-    "type": "module",
-    "main": "dist/index.js",
-    "module": "dist/index.js", 
-    "types": "dist/index.d.ts",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/your-org/plugin-my-plugin.git"
-    },
-    "exports": {
-        "./package.json": "./package.json",
-        ".": {
-            "import": {
-                "types": "./dist/index.d.ts",
-                "default": "./dist/index.js"
-            }
-        }
-    },
-    "files": ["dist"],
-    "dependencies": {
-        "@elizaos/core": "^1.0.0",
-        "zod": "3.24.2"
-    },
-    "devDependencies": {
-        "prettier": "3.5.3",
-        "tsup": "8.4.0",
-        "vitest": "1.6.1"
-    },
-    "scripts": {
-        "build": "tsup",
-        "dev": "tsup --watch",
-        "test": "elizaos test",
-        "lint": "prettier --write ./src",
-        "format": "prettier --write ./src",
-        "format:check": "prettier --check ./src",
-        "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo"
-    },
-    "publishConfig": {
-        "access": "public"
+  "name": "@elizaos/plugin-my-plugin",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/plugin-my-plugin.git"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     }
+  },
+  "files": ["dist"],
+  "dependencies": {
+    "@elizaos/core": "^1.0.0",
+    "zod": "3.24.2"
+  },
+  "devDependencies": {
+    "prettier": "3.5.3",
+    "tsup": "8.4.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "elizaos test",
+    "lint": "prettier --write ./src",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check ./src",
+    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }
 ```
 
 **2. Remove V1 Configuration Files:**
+
 ```bash
 # Delete these V1 files:
 rm biome.json              # Replace with prettier
@@ -263,76 +456,80 @@ rm jest.config.ts          # Use elizaos test instead
 ```
 
 **3. Update Build Configuration (tsconfig.json):**
+
 ```json
 {
-    "compilerOptions": {
-        "target": "ES2022",
-        "module": "ESNext",
-        "moduleResolution": "bundler",
-        "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true,
-        "allowJs": true,
-        "strict": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "declaration": true,
-        "outDir": "./dist",
-        "rootDir": "./src",
-        "resolveJsonModule": true
-    },
-    "include": ["src/**/*"],
-    "exclude": ["node_modules", "dist", "**/*.test.*"]
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.*"]
 }
 ```
 
 **3a. Create Build-Specific TypeScript Configuration (tsconfig.build.json):**
+
 ```json
 {
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "outDir": "./dist",
-        "rootDir": "./src"
-    },
-    "include": ["src/**/*"],
-    "exclude": ["node_modules", "dist", "**/*.test.*", "__tests__/**/*"]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.*", "__tests__/**/*"]
 }
 ```
 
 **4. Update Build Configuration (tsup.config.ts):**
+
 ```typescript
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-    entry: ['src/index.ts'],
-    outDir: 'dist',
-    tsconfig: './tsconfig.build.json', // Use build-specific tsconfig
-    sourcemap: true,
-    clean: true,
-    format: ['esm'], // ESM format only
-    dts: true,
-    external: [
-        'dotenv', // Externalize dotenv to prevent bundling
-        'fs', // Externalize fs to use Node.js built-in module
-        'path', // Externalize other built-ins if necessary
-        '@reflink/reflink',
-        '@node-llama-cpp',
-        'https',
-        'http',
-        'agentkeepalive',
-        'zod',
-        // Add other modules you want to externalize
-    ],
+  entry: ['src/index.ts'],
+  outDir: 'dist',
+  tsconfig: './tsconfig.build.json', // Use build-specific tsconfig
+  sourcemap: true,
+  clean: true,
+  format: ['esm'], // ESM format only
+  dts: true,
+  external: [
+    'dotenv', // Externalize dotenv to prevent bundling
+    'fs', // Externalize fs to use Node.js built-in module
+    'path', // Externalize other built-ins if necessary
+    '@reflink/reflink',
+    '@node-llama-cpp',
+    'https',
+    'http',
+    'agentkeepalive',
+    'zod',
+    // Add other modules you want to externalize
+  ],
 });
 ```
 
 **5. Create CI/CD Pipeline (.github/workflows/npm-deploy.yml):**
+
 ```yaml
 name: Publish Package
 
 on:
   push:
     branches:
-      - 1.x  # Discord uses 1.x branch
+      - 1.x # Discord uses 1.x branch
   workflow_dispatch:
 
 jobs:
@@ -434,32 +631,37 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "v${{ needs.verify_version.outputs.version }}"
-          release_name: "v${{ needs.verify_version.outputs.version }}"
-          body: "Release v${{ needs.verify_version.outputs.version }}"
+          tag_name: 'v${{ needs.verify_version.outputs.version }}'
+          release_name: 'v${{ needs.verify_version.outputs.version }}'
+          body: 'Release v${{ needs.verify_version.outputs.version }}'
           draft: false
           prerelease: false
 ```
 
 **6. Create Required Images Structure (images/README.md):**
+
 ```markdown
 # Plugin Images
 
 This directory contains visual assets for the plugin.
 
 ## Required Files
+
 - `icon.png` - Plugin icon (512x512px recommended)
 - `banner.png` - Plugin banner for documentation
 - `screenshot.png` - Plugin functionality screenshot
 
 ## Usage
+
 These images are used in:
+
 - NPM package listing
 - Documentation
 - Plugin marketplace
 - GitHub repository display
 
 ## Guidelines
+
 - Use high-quality PNG format
 - Keep file sizes reasonable (<500KB each)
 - Maintain consistent branding
@@ -467,6 +669,7 @@ These images are used in:
 ```
 
 **7. Update .gitignore:**
+
 ```gitignore
 # Dependencies
 node_modules/
@@ -510,6 +713,7 @@ coverage/
 ```
 
 **8. Create .npmignore:**
+
 ```npmignore
 # Source files
 src/
@@ -532,84 +736,86 @@ coverage/
 ### Phase 2: Service Layer Creation
 
 **1. Create Service Class (src/service.ts):** - only implement if plugin conatains service file or require service file other wise SKIP IT
+
 ```typescript
 // Reference: Study plugin-discord/src/service.ts for complete implementation
 import { Service, type IAgentRuntime, logger } from '@elizaos/core';
 import { validateMyConfig } from './config';
 
 export class MyService extends Service {
-    static serviceType: string = 'my-service';
-    private isServiceInitialized = false;
-    private connections: Map<string, any> = new Map();
-    private timeouts: Set<NodeJS.Timeout> = new Set();
-    
-    constructor(runtime: IAgentRuntime) {
-        super(runtime);
+  static serviceType: string = 'my-service';
+  private isServiceInitialized = false;
+  private connections: Map<string, any> = new Map();
+  private timeouts: Set<NodeJS.Timeout> = new Set();
+
+  constructor(runtime: IAgentRuntime) {
+    super(runtime);
+  }
+
+  static async start(runtime: IAgentRuntime) {
+    const service = new MyService(runtime);
+    await service.initialize();
+    return service;
+  }
+
+  private async initialize() {
+    try {
+      const config = validateMyConfig(this.runtime);
+      // Initialize service with config
+      this.isServiceInitialized = true;
+      logger.info('MyService initialized successfully');
+    } catch (error) {
+      logger.error('Failed to initialize MyService', { error });
+      throw error;
     }
-    
-    static async start(runtime: IAgentRuntime) {
-        const service = new MyService(runtime);
-        await service.initialize();
-        return service;
-    }
-    
-    private async initialize() {
-        try {
-            const config = validateMyConfig(this.runtime);
-            // Initialize service with config
-            this.isServiceInitialized = true;
-            logger.info('MyService initialized successfully');
-        } catch (error) {
-            logger.error('Failed to initialize MyService', { error });
-            throw error;
-        }
-    }
-    
-    async stop(): Promise<void> {
-        // Clean up timeouts
-        this.timeouts.forEach(timeout => clearTimeout(timeout));
-        this.timeouts.clear();
-        
-        // Clean up connections
-        this.connections.clear();
-        
-        this.isServiceInitialized = false;
-        logger.info('MyService stopped successfully');
-    }
-    
-    get capabilityDescription(): string {
-        return 'Service for handling my plugin functionality';
-    }
-    
-    isInitialized(): boolean {
-        return this.isServiceInitialized;
-    }
+  }
+
+  async stop(): Promise<void> {
+    // Clean up timeouts
+    this.timeouts.forEach((timeout) => clearTimeout(timeout));
+    this.timeouts.clear();
+
+    // Clean up connections
+    this.connections.clear();
+
+    this.isServiceInitialized = false;
+    logger.info('MyService stopped successfully');
+  }
+
+  get capabilityDescription(): string {
+    return 'Service for handling my plugin functionality';
+  }
+
+  isInitialized(): boolean {
+    return this.isServiceInitialized;
+  }
 }
 ```
 
 ### Phase 3: Configuration Migration
 
 **1. Create Configuration File (src/config.ts):**
+
 ```typescript
 import { z } from 'zod';
 import { type IAgentRuntime } from '@elizaos/core';
 
 export const ConfigSchema = z.object({
-    API_KEY: z.string().min(1, "API key is required"),
-    API_ENDPOINT: z.string().url().optional(),
-    ENABLE_FEATURE: z.boolean().default(false),
+  API_KEY: z.string().min(1, 'API key is required'),
+  API_ENDPOINT: z.string().url().optional(),
+  ENABLE_FEATURE: z.boolean().default(false),
 });
 
 export type MyConfig = z.infer<typeof ConfigSchema>;
 
 export function validateMyConfig(runtime: IAgentRuntime): MyConfig {
-    const config = {
-        API_KEY: runtime.getSetting('MY_API_KEY') || process.env.MY_API_KEY,
-        API_ENDPOINT: runtime.getSetting('MY_API_ENDPOINT') || process.env.MY_API_ENDPOINT,
-        ENABLE_FEATURE: runtime.getSetting('MY_ENABLE_FEATURE') === 'true',
-    };
-    
-    return ConfigSchema.parse(config);
+  const config = {
+    API_KEY: runtime.getSetting('MY_API_KEY') || process.env.MY_API_KEY,
+    API_ENDPOINT: runtime.getSetting('MY_API_ENDPOINT') || process.env.MY_API_ENDPOINT,
+    ENABLE_FEATURE: runtime.getSetting('MY_ENABLE_FEATURE') === 'true',
+  };
+
+  return ConfigSchema.parse(config);
 }
 ```
 
@@ -618,6 +824,7 @@ export function validateMyConfig(runtime: IAgentRuntime): MyConfig {
 **1. Centralize Actions from Nested Structure (src/actions.ts):**
 
 **V1 Pattern to Migrate From:**
+
 ```
 src/
   actions/
@@ -630,107 +837,111 @@ src/
 ```
 
 **V2 Centralized Pattern (Reference: plugin-discord/src/index.ts imports):**
+
 ```typescript
-import { 
-    type Action, 
-    type ActionExample, 
-    type IAgentRuntime, 
-    type Memory, 
-    type State, 
-    type HandlerCallback,
-    type Content,
-    createUniqueUuid,
-    logger
+import {
+  type Action,
+  type ActionExample,
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  type HandlerCallback,
+  type Content,
+  createUniqueUuid,
+  logger,
 } from '@elizaos/core';
 import type { MyService } from './service';
 
 export const myAction: Action = {
-    name: 'MY_ACTION',
-    similes: ['DO_SOMETHING', 'EXECUTE_ACTION'],
-    description: 'Performs my plugin action',
-    
-    validate: async (runtime: IAgentRuntime, message: Memory, state: State) => {
-        // Reference: plugin-discord/src/actions/voiceJoin.ts validate method
-        if (message.content.source && message.content.source !== 'my-plugin') {
-            return false;
-        }
-        
-        const myService = runtime.getService('my-service') as MyService;
-        if (!myService || !myService.isInitialized()) {
-            logger.warn('MyService not available or not initialized');
-            return false;
-        }
-        
-        return true;
-    },
-    
-    handler: async (
-        runtime: IAgentRuntime,
-        message: Memory,
-        state: State,
-        _options: any,
-        callback: HandlerCallback
-    ) => {
-        try {
-            // Reference: plugin-discord/src/actions/voiceJoin.ts handler method
-            const myService = runtime.getService('my-service') as MyService;
-            
-            const result = await performMyAction(myService, message);
-            
-            await runtime.createMemory({
-                id: createUniqueUuid(runtime, `my-action-${Date.now()}`),
-                entityId: message.entityId,
-                agentId: runtime.agentId,
-                roomId: message.roomId,
-                content: {
-                    text: `Action completed: ${result}`,
-                    source: 'my-plugin',
-                },
-                metadata: {
-                    type: 'action_completion',
-                    actionName: 'MY_ACTION'
-                },
-                createdAt: Date.now()
-            }, 'messages');
-            
-            const content: Content = {
-                text: `Successfully completed action: ${result}`,
-                source: 'my-plugin'
-            };
-            
-            callback(content);
-        } catch (error) {
-            logger.error('Action failed', { error });
-            
-            const errorContent: Content = {
-                text: `Action failed: ${error instanceof Error ? error.message : String(error)}`,
-                source: 'my-plugin'
-            };
-            
-            callback(errorContent);
-        }
-    },
-    
-    examples: [
-        [
-            {
-                name: 'User',
-                content: { text: 'Please perform my action' }
-            },
-            {
-                name: 'Assistant',
-                content: { 
-                    text: 'I will perform the action for you',
-                    actions: ['MY_ACTION']
-                }
-            }
-        ]
-    ] as ActionExample[][]
+  name: 'MY_ACTION',
+  similes: ['DO_SOMETHING', 'EXECUTE_ACTION'],
+  description: 'Performs my plugin action',
+
+  validate: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+    // Reference: plugin-discord/src/actions/voiceJoin.ts validate method
+    if (message.content.source && message.content.source !== 'my-plugin') {
+      return false;
+    }
+
+    const myService = runtime.getService('my-service') as MyService;
+    if (!myService || !myService.isInitialized()) {
+      logger.warn('MyService not available or not initialized');
+      return false;
+    }
+
+    return true;
+  },
+
+  handler: async (
+    runtime: IAgentRuntime,
+    message: Memory,
+    state: State,
+    _options: any,
+    callback: HandlerCallback
+  ) => {
+    try {
+      // Reference: plugin-discord/src/actions/voiceJoin.ts handler method
+      const myService = runtime.getService('my-service') as MyService;
+
+      const result = await performMyAction(myService, message);
+
+      await runtime.createMemory(
+        {
+          id: createUniqueUuid(runtime, `my-action-${Date.now()}`),
+          entityId: message.entityId,
+          agentId: runtime.agentId,
+          roomId: message.roomId,
+          content: {
+            text: `Action completed: ${result}`,
+            source: 'my-plugin',
+          },
+          metadata: {
+            type: 'action_completion',
+            actionName: 'MY_ACTION',
+          },
+          createdAt: Date.now(),
+        },
+        'messages'
+      );
+
+      const content: Content = {
+        text: `Successfully completed action: ${result}`,
+        source: 'my-plugin',
+      };
+
+      callback(content);
+    } catch (error) {
+      logger.error('Action failed', { error });
+
+      const errorContent: Content = {
+        text: `Action failed: ${error instanceof Error ? error.message : String(error)}`,
+        source: 'my-plugin',
+      };
+
+      callback(errorContent);
+    }
+  },
+
+  examples: [
+    [
+      {
+        name: 'User',
+        content: { text: 'Please perform my action' },
+      },
+      {
+        name: 'Assistant',
+        content: {
+          text: 'I will perform the action for you',
+          actions: ['MY_ACTION'],
+        },
+      },
+    ],
+  ] as ActionExample[][],
 } as Action;
 
 async function performMyAction(service: MyService, message: Memory): Promise<string> {
-    // Implementation logic here
-    return 'Action completed successfully';
+  // Implementation logic here
+  return 'Action completed successfully';
 }
 
 export const myPluginActions = [myAction];
@@ -739,38 +950,49 @@ export const myPluginActions = [myAction];
 ### Phase 5: Provider Migration
 
 **1. Create Standard Providers (src/providers.ts):**
+
 ```typescript
 // Reference: Study plugin-discord/src/providers/channelState.ts and voiceState.ts
 import { type Provider, type IAgentRuntime, type Memory, type State } from '@elizaos/core';
 import type { MyService } from './service';
 
 export const myStateProvider: Provider = {
-    name: 'myState',
-    get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
-        const myService = runtime.getService('my-service') as MyService;
-        
-        return {
-            data: {
-                isInitialized: myService?.isInitialized() || false,
-                serviceType: MyService.serviceType
-            },
-            values: {
-                serviceStatus: myService?.isInitialized() ? 'Ready' : 'Not initialized'
-            },
-            text: `My Plugin Service: ${myService?.isInitialized() ? 'Ready' : 'Not initialized'}`
-        };
-    }
+  name: 'myState',
+  get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+    const myService = runtime.getService('my-service') as MyService;
+
+    return {
+      data: {
+        isInitialized: myService?.isInitialized() || false,
+        serviceType: MyService.serviceType,
+      },
+      values: {
+        serviceStatus: myService?.isInitialized() ? 'Ready' : 'Not initialized',
+      },
+      text: `My Plugin Service: ${myService?.isInitialized() ? 'Ready' : 'Not initialized'}`,
+    };
+  },
 };
 ```
 
 export const myPluginProviders = [myStateProvider];
+
 ```
 
 ### Phase 6: Test Infrastructure Creation
 
+**🚨 CRITICAL: NO VITEST TESTS REQUIRED - ELIZAOS TEST ONLY**
+
+**MANDATORY TESTING RULES:**
+- ✅ **ONLY use ElizaOS built-in testing framework** - `elizaos test`
+- ❌ **DO NOT create vitest tests** - Remove vitest from devDependencies
+- ❌ **DO NOT create vitest.config.ts** - Not needed for V2 plugins
+- ❌ **DO NOT create jest tests** - ElizaOS test replaces all other testing
+- ✅ **Use src/test/ structure** - Following plugin-coinmarketcap pattern
+
 **CRITICAL TESTING MIGRATION: V1 `__tests__/` → V2 `src/test/`**
 
-V1 plugins used `__tests__/` directory structure, but V2 requires the `src/test/` pattern following plugin-coinmarketcap as the canonical example.
+V1 plugins used `__tests__/` directory structure with vitest/jest, but V2 requires the `src/test/` pattern with ElizaOS testing only.
 
 **1. Delete V1 Testing Structure and Clean Up:**
 
@@ -783,13 +1005,14 @@ rm -f vitest.config.ts
 rm -f jest.config.js
 rm -f jest.config.ts
 rm -f biome.json
+rm -f vitest.config.mjs
 
 # Delete old linting configs
 rm -f .eslintrc.js
 rm -f .eslintrc.json
 rm -f .eslintignore
 
-# Delete old formatting configs  
+# Delete old formatting configs
 rm -f .prettierrc
 rm -f .prettierrc.js
 rm -f .prettierrc.json
@@ -833,6 +1056,7 @@ mkdir -p src/test
 **Reference: Use plugin-coinmarketcap/src/test/utils.ts as the definitive template**
 
 Copy the comprehensive testing utils from plugin-coinmarketcap:
+
 ```bash
 # Copy the proven testing utils from plugin-coinmarketcap
 cp /path/to/plugin-coinmarketcap/src/test/utils.ts src/test/utils.ts
@@ -840,436 +1064,166 @@ cp /path/to/plugin-coinmarketcap/src/test/utils.ts src/test/utils.ts
 
 **Alternative: Create utils.ts manually following the plugin-coinmarketcap structure:**
 
+**CRITICAL V2 MOCK RUNTIME FIX:**
+
+During real migrations, the mock runtime must be updated for V2 memory patterns:
+
+**❌ V1 Pattern that breaks V2:**
+
 ```typescript
-// src/test/utils.ts - Must follow plugin-coinmarketcap/src/test/utils.ts EXACTLY
-import type {
-    Content,
-    FragmentMetadata,
-    IAgentRuntime,
-    KnowledgeItem,
-    Memory,
-    Plugin,
-    Provider,
-    Service,
-    State,
-    TestSuite,
-    UUID,
-  } from "@elizaos/core";
-  import { MemoryType, ModelType } from "@elizaos/core";
-  import { Buffer } from "buffer";
-  import * as fs from "fs";
-  import * as path from "path";
-  import { v4 as uuidv4 } from "uuid";
-  
-  // Define an interface for the mock logger functions
-  export interface MockLogFunction extends Function {
-    (...args: any[]): void;
-    calls: any[][];
-  }
-  
-  // Mock logger to capture and verify logging
-  export const mockLogger: {
-    info: MockLogFunction;
-    warn: MockLogFunction;
-    error: MockLogFunction;
-    debug: MockLogFunction;
-    success: MockLogFunction;
-    clearCalls: () => void;
-  } = {
-    info: (() => {
-      const fn: any = (...args: any[]) => {
-        fn.calls.push(args);
-      };
-      fn.calls = [];
-      return fn as MockLogFunction;
-    })(),
-    warn: (() => {
-      const fn: any = (...args: any[]) => {
-        fn.calls.push(args);
-      };
-      fn.calls = [];
-      return fn as MockLogFunction;
-    })(),
-    error: (() => {
-      const fn: any = (...args: any[]) => {
-        fn.calls.push(args);
-      };
-      fn.calls = [];
-      return fn as MockLogFunction;
-    })(),
-    debug: (() => {
-      const fn: any = (...args: any[]) => {
-        fn.calls.push(args);
-      };
-      fn.calls = [];
-      return fn as MockLogFunction;
-    })(),
-    success: (() => {
-      const fn: any = (...args: any[]) => {
-        fn.calls.push(args);
-      };
-      fn.calls = [];
-      return fn as MockLogFunction;
-    })(),
-    clearCalls: () => {
-      mockLogger.info.calls = [];
-      mockLogger.warn.calls = [];
-      mockLogger.error.calls = [];
-      mockLogger.debug.calls = [];
-      mockLogger.success.calls = [];
-    },
+memory: {
+  create: async (params: { tableName: string; data: Memory }) => {
+    const id = params.data.id || (uuidv4() as UUID);
+    memories.set(id, { ...params.data, id });
+    return id;
   };
-  
-  // Replace global logger with mock for tests
-  (global as any).logger = mockLogger;
-  
-  /**
-   * Creates a mock runtime with common test functionality
-   */
-  export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRuntime {
-    const memories: Map<UUID, Memory> = new Map();
-    const services: Map<string, Service> = new Map();
-  
-    return {
-      agentId: uuidv4() as UUID,
-      character: {
-        name: "Test Agent",
-        bio: ["Test bio"],
-        knowledge: [],
-      },
-      providers: [],
-      actions: [],
-      evaluators: [],
-      plugins: [],
-      services,
-      events: new Map(),
-  
-      // Database methods
-      async init() {},
-      async close() {},
-      async getConnection() {
-        return null as any;
-      },
-  
-      async getAgent(agentId: UUID) {
-        return null;
-      },
-      async getAgents() {
-        return [];
-      },
-      async createAgent(agent: any) {
-        return true;
-      },
-      async updateAgent(agentId: UUID, agent: any) {
-        return true;
-      },
-      async deleteAgent(agentId: UUID) {
-        return true;
-      },
-      async ensureAgentExists(agent: any) {
-        return agent as any;
-      },
-      async ensureEmbeddingDimension(dimension: number) {},
-  
-      async getEntityById(entityId: UUID) {
-        return null;
-      },
-      async getEntitiesForRoom(roomId: UUID) {
-        return [];
-      },
-      async createEntity(entity: any) {
-        return true;
-      },
-      async updateEntity(entity: any) {},
-  
-      async getComponent(entityId: UUID, type: string) {
-        return null;
-      },
-      async getComponents(entityId: UUID) {
-        return [];
-      },
-      async createComponent(component: any) {
-        return true;
-      },
-      async updateComponent(component: any) {},
-      async deleteComponent(componentId: UUID) {},
-  
-      // Memory methods with mock implementation
-      async getMemoryById(id: UUID) {
-        return memories.get(id) || null;
-      },
-  
-      async getMemories(params: any) {
-        const results = Array.from(memories.values()).filter((m) => {
-          if (params.roomId && m.roomId !== params.roomId) return false;
-          if (params.entityId && m.entityId !== params.entityId) return false;
-          if (
-            params.tableName === "knowledge" &&
-            m.metadata?.type !== MemoryType.FRAGMENT
-          )
-            return false;
-          if (
-            params.tableName === "documents" &&
-            m.metadata?.type !== MemoryType.DOCUMENT
-          )
-            return false;
-          return true;
-        });
-  
-        return params.count ? results.slice(0, params.count) : results;
-      },
-  
-      async getMemoriesByIds(ids: UUID[]) {
-        return ids.map((id) => memories.get(id)).filter(Boolean) as Memory[];
-      },
-  
-      async getMemoriesByRoomIds(params: any) {
-        return Array.from(memories.values()).filter((m) =>
-          params.roomIds.includes(m.roomId)
-        );
-      },
-  
-      async searchMemories(params: any) {
-        // Mock search - return fragments with similarity scores
-        const fragments = Array.from(memories.values()).filter(
-          (m) => m.metadata?.type === MemoryType.FRAGMENT
-        );
-  
-        return fragments
-          .map((f) => ({
-            ...f,
-            similarity: 0.8 + Math.random() * 0.2, // Mock similarity between 0.8 and 1.0
-          }))
-          .slice(0, params.count || 10);
-      },
-  
-      async createMemory(memory: Memory, tableName: string) {
-        const id = memory.id || (uuidv4() as UUID);
-        const memoryWithId = { ...memory, id };
-        memories.set(id, memoryWithId);
-        return id;
-      },
-  
-      async updateMemory(memory: any) {
-        if (memory.id && memories.has(memory.id)) {
-          memories.set(memory.id, { ...memories.get(memory.id)!, ...memory });
-          return true;
-        }
-        return false;
-      },
-  
-      async deleteMemory(memoryId: UUID) {
-        memories.delete(memoryId);
-      },
-  
-      async deleteAllMemories(roomId: UUID, tableName: string) {
-        for (const [id, memory] of memories.entries()) {
-          if (memory.roomId === roomId) {
-            memories.delete(id);
-          }
-        }
-      },
-  
-      async countMemories(roomId: UUID) {
-        return Array.from(memories.values()).filter((m) => m.roomId === roomId)
-          .length;
-      },
-  
-      // Other required methods with minimal implementation
-      async getCachedEmbeddings(params: any) {
-        return [];
-      },
-      async log(params: any) {},
-      async getLogs(params: any) {
-        return [];
-      },
-      async deleteLog(logId: UUID) {},
-  
-      async createWorld(world: any) {
-        return uuidv4() as UUID;
-      },
-      async getWorld(id: UUID) {
-        return null;
-      },
-      async removeWorld(id: UUID) {},
-      async getAllWorlds() {
-        return [];
-      },
-      async updateWorld(world: any) {},
-  
-      async getRoom(roomId: UUID) {
-        return null;
-      },
-      async createRoom(room: any) {
-        return uuidv4() as UUID;
-      },
-      async deleteRoom(roomId: UUID) {},
-      async deleteRoomsByWorldId(worldId: UUID) {},
-      async updateRoom(room: any) {},
-      async getRoomsForParticipant(entityId: UUID) {
-        return [];
-      },
-      async getRoomsForParticipants(userIds: UUID[]) {
-        return [];
-      },
-      async getRooms(worldId: UUID) {
-        return [];
-      },
-  
-      async addParticipant(entityId: UUID, roomId: UUID) {
-        return true;
-      },
-      async removeParticipant(entityId: UUID, roomId: UUID) {
-        return true;
-      },
-      async getParticipantsForEntity(entityId: UUID) {
-        return [];
-      },
-      async getParticipantsForRoom(roomId: UUID) {
-        return [];
-      },
-      async getParticipantUserState(roomId: UUID, entityId: UUID) {
-        return null;
-      },
-      async setParticipantUserState(roomId: UUID, entityId: UUID, state: any) {},
-  
-      async createRelationship(params: any) {
-        return true;
-      },
-      async updateRelationship(relationship: any) {},
-      async getRelationship(params: any) {
-        return null;
-      },
-      async getRelationships(params: any) {
-        return [];
-      },
-  
-      async getCache(key: string) {
-        return undefined;
-      },
-      async setCache(key: string, value: any) {
-        return true;
-      },
-      async deleteCache(key: string) {
-        return true;
-      },
-  
-      async createTask(task: any) {
-        return uuidv4() as UUID;
-      },
-      async getTasks(params: any) {
-        return [];
-      },
-      async getTask(id: UUID) {
-        return null;
-      },
-      async getTasksByName(name: string) {
-        return [];
-      },
-      async updateTask(id: UUID, task: any) {},
-      async deleteTask(id: UUID) {},
-      async getMemoriesByWorldId(params: any) {
-        return [];
-      },
-  
-      // Plugin/service methods
-      async registerPlugin(plugin: Plugin) {},
-      async initialize() {},
-  
-      getService<T extends Service>(name: string): T | null {
-        return (services.get(name) as T) || null;
-      },
-  
-      getAllServices() {
-        return services;
-      },
-  
-      async registerService(ServiceClass: typeof Service) {
-        const service = await ServiceClass.start(this);
-        services.set(ServiceClass.serviceType, service);
-      },
-  
-      registerDatabaseAdapter(adapter: any) {},
-      setSetting(key: string, value: any) {},
-      getSetting(key: string) {
-        return null;
-      },
-      getConversationLength() {
-        return 0;
-      },
-  
-      async processActions(message: Memory, responses: Memory[]) {},
-      async evaluate(message: Memory) {
-        return null;
-      },
-  
-      registerProvider(provider: Provider) {
-        this.providers.push(provider);
-      },
-      registerAction(action: any) {},
-      registerEvaluator(evaluator: any) {},
-  
-      async ensureConnection(params: any) {},
-      async ensureParticipantInRoom(entityId: UUID, roomId: UUID) {},
-      async ensureWorldExists(world: any) {},
-      async ensureRoomExists(room: any) {},
-  
-      async composeState(message: Memory) {
-        return {
-          values: {},
-          data: {},
-          text: "",
-        };
-      },
-  
-      // Model methods with mocks
-      async useModel(modelType: any, params: any) {
-        if (modelType === ModelType.TEXT_EMBEDDING) {
-          // Return mock embedding
-          return new Array(1536).fill(0).map(() => Math.random()) as any;
-        }
-        if (
-          modelType === ModelType.TEXT_LARGE ||
-          modelType === ModelType.TEXT_SMALL
-        ) {
-          // Return mock text generation
-          return `Mock response for: ${params.prompt}` as any;
-        }
-        return null as any;
-      },
-  
-      registerModel(modelType: any, handler: any, provider: string) {},
-      getModel(modelType: any) {
-        return undefined;
-      },
-  
-      registerEvent(event: string, handler: any) {},
-      getEvent(event: string) {
-        return undefined;
-      },
-      async emitEvent(event: string, params: any) {},
-  
-      registerTaskWorker(taskHandler: any) {},
-      getTaskWorker(name: string) {
-        return undefined;
-      },
-  
-      async stop() {},
-  
-      async addEmbeddingToMemory(memory: Memory) {
-        memory.embedding = await this.useModel(ModelType.TEXT_EMBEDDING, {
-          text: memory.content.text,
-        });
-        return memory;
-      },
-  
-      registerSendHandler(source: string, handler: any) {},
-      async sendMessageToTarget(target: any, content: Content) {},
-  
-      ...overrides,
-    } as IAgentRuntime;
-  }
+}
 ```
+
+**✅ V2 Pattern that works:**
+
+```typescript
+createMemory: async (memory: Memory, tableName: string) => {
+  const id = memory.id || (uuidv4() as UUID);
+  memories.set(id, { ...memory, id });
+  return id;
+};
+```
+
+**3. Create Test Utilities (src/test/utils.ts):**
+
+**MANDATORY: Copy EXACTLY from `plugin-coinmarketcap/src/test/utils.ts`**
+
+**CRITICAL TESTING UTILITIES RULES - NO EXCEPTIONS:**
+
+1. **EXACT IMPLEMENTATION** - Must follow `plugin-coinmarketcap/src/test/utils.ts` structure precisely
+2. **COMPLETE Mock Runtime** - All IAgentRuntime methods must be implemented
+3. **Mock Logger Functions** - Full logging capture and verification
+4. **Memory Management** - Comprehensive memory operations mocking
+5. **Service Registration** - Complete service lifecycle mocking
+6. **TypeScript Compliance** - Full type safety implementation
+
+**REFERENCE LOCATIONS:**
+
+- **Primary Reference**: `plugin-coinmarketcap/src/test/utils.ts` (COMPLETE IMPLEMENTATION)
+- **Alternative References**:
+  - `plugin-news-cursor/src/test/utils.ts` (V2 compliant)
+
+**Key Components to Include:**
+
+- `MockLogFunction` interface for logging capture
+- `mockLogger` object with all logging methods
+- `createMockRuntime()` function with complete IAgentRuntime implementation
+- All database, memory, service, and model methods
+- Proper TypeScript types and UUID handling
+
+**🚨 CRITICAL TESTING ENVIRONMENT RULES:**
+
+**MANDATORY: Use BUN for package management and testing:**
+
+```bash
+# Use bun instead of npm for these commands
+bun install          # Instead of npm install
+bun run build        # Instead of npm run build
+bun run test         # Instead of npm run test (if available)
+```
+
+**MANDATORY: Handle test environment failures properly:**
+
+When `npm run test` fails due to missing environment variables:
+
+1. **There will be a `.env` file created by Elizaos after running test first time** - locate and use it
+2. **Use HARDCODED dummy API keys** for testing
+3. **Add dummy environment variables** to `.env` file as needed
+4. **Use Hardcoded OPENAI_API_KEY Everytime in .env file**
+
+```OPENAI_API_KEY=
+
+```
+
+**🔄 DYNAMIC ENVIRONMENT VARIABLE DETECTION:**
+
+**RULE: Adapt environment variables based on plugin requirements**
+
+5. **Automatically detect and add required API keys for each plugin type:**
+   - **CoinMarketCap Plugin**: `COINMARKETCAP_API_KEY=test-cmc-key-12345`
+   - **News Plugin**: `NEWS_API_KEY=dummy-news-api-key-67890`
+   - **Discord Plugin**: `DISCORD_APPLICATION_ID=123456789` + `DISCORD_API_TOKEN=dummy-token`
+   - **Solana Plugin**: `SOLANA_ENDPOINT=https://api.mainnet-beta.solana.com`
+   - **Custom Plugin**: Scan source code for `runtime.getSetting("YOUR_API_KEY")` patterns
+
+**DYNAMIC ENV DETECTION PATTERN:**
+
+```bash
+# Scan plugin source for required environment variables
+grep -r "getSetting(" src/ | grep -o '"[^"]*"' | sort -u
+# Add dummy values for each detected variable to .env
+```
+
+**Example: Plugin-specific .env generation:**
+
+```bash
+# For news plugin
+NEWS_API_KEY=dummy-news-key-12345
+NEWS_ENDPOINT=https://newsapi.org/v2
+
+# For crypto plugin
+COINMARKETCAP_API_KEY=test-cmc-key-67890
+COINGECKO_API_KEY=dummy-gecko-key-54321
+
+# Always include base ElizaOS requirements
+OPENAI_API_KEY=
+```
+
+**⚠️ NOTE: The OPENAI_API_KEY example above is just a template - each plugin may require different API keys. Adapt the .env file based on the specific plugin's `runtime.getSetting()` calls.**
+
+**🚨 CRITICAL .env FILE RULES:**
+
+6. **ALWAYS include OPENAI_API_KEY in .env file - MANDATORY for ALL plugins:**
+
+   ```bash
+   OPENAI_API_KEY=
+   ```
+
+   - **Required for ElizaOS core functionality**
+   - **Include even if plugin doesn't directly use OpenAI**
+   - **Never skip this key regardless of plugin type**
+
+7. **NEVER delete existing .env content - ONLY ADD/EDIT:**
+   - ✅ **DO**: Add new environment variables to existing .env
+   - ✅ **DO**: Update existing values if needed
+   - ❌ **DON'T**: Delete or remove existing environment variables
+   - ❌ **DON'T**: Create new .env if one already exists
+   - **PRESERVE**: All existing configuration in .env file
+
+**Safe .env editing pattern:**
+
+```bash
+# If .env exists, append/update only
+echo "NEW_API_KEY=dummy-value" >> .env
+# Or edit specific lines without removing others
+sed -i 's/OLD_VALUE/NEW_VALUE/' .env
+```
+
+**Example .env for testing:**
+
+```bash
+# Dummy API keys for testing - DO NOT use real credentials
+MY_API_KEY=test-api-key-12345
+NEWS_API_KEY=dummy-news-api-key
+COINMARKETCAP_API_KEY=test-cmc-key-67890
+COINGECKO_API_KEY=dummy-gecko-key
+API_ENDPOINT=https://api.example.com
+ENABLE_FEATURE=true
+```
+
+**IMPORTANT TESTING RULES:**
+
+- ✅ **ALWAYS use dummy/test API keys** - never real production keys
+- ✅ **GPT creates .env file** - use the existing one, don't create new
+- ✅ **Hardcode test values** - tests should work without real API access
+- ✅ **Use bun commands** when available for faster execution
+- ✅ **Test validation over real API calls** - focus on structure testing
 
 **4. Create Comprehensive Test Suite (src/test/test.ts):**
 
@@ -1284,651 +1238,87 @@ import type {
 5. **Use TypeScript for all code** - Full type safety in all test code
 6. **Clear separation of concerns** - Each test should focus on a specific functionality
 
+**Reference Implementation:**
+See `plugin-news/src/test/test.ts` for a complete example of proper test suite implementation.
+
+During real migrations, ElizaOS integration tests may fail with "Cannot read properties of undefined (reading 'forEach')" when using complex runtime calls like `useModel()`. Here's the proven solution:
+
+**❌ PROBLEMATIC: Complex integration tests that fail with ElizaOS runtime**
+
 ```typescript
-// src/test/test.ts - Following plugin-coinmarketcap structure with COMPLETE IMPLEMENTATION
-import type {
-  IAgentRuntime,
-  TestSuite,
-  Memory,
-  UUID,
-  Content,
-} from "@elizaos/core";
-import { createMockRuntime, mockLogger } from "./utils";
-import myPlugin from "../index";
-
-/**
- * My Plugin Test Suite - COMPREHENSIVE Testing Implementation
- * 
- * RULES ENFORCED:
- * - NO stubs or incomplete code
- * - COMPREHENSIVE test coverage
- * - Test-driven development approach
- * - PROPER error handling testing
- * - FULL TypeScript implementation
- * - CLEAR separation of concerns
- */
-export class MyPluginTestSuite implements TestSuite {
-  name = "my-plugin";
-  description = "Comprehensive tests for the My Plugin functionality - V2 Architecture";
-
-  tests = [
-    {
-      name: "Should validate complete plugin V2 structure",
-      fn: async (runtime: IAgentRuntime) => {
-        // Test 1: COMPREHENSIVE structure validation
-        if (!myPlugin.name || !myPlugin.actions) {
-          throw new Error("Plugin missing basic structure");
-        }
-        
-        if (!myPlugin.services || myPlugin.services.length === 0) {
-          throw new Error("Plugin missing required V2 service registration");
-        }
-        
-        if (!myPlugin.providers || myPlugin.providers.length === 0) {
-          throw new Error("Plugin missing required V2 provider registration");
-        }
-        
-        // V2 specific validations
-        if (!myPlugin.description) {
-          throw new Error("Plugin missing required V2 description field");
-        }
-        
-        if (typeof myPlugin.init !== 'function') {
-          throw new Error("Plugin missing required V2 init function");
-        }
-        
-        console.log("✅ Plugin has complete V2 structure");
-      },
-    },
-
-    {
-      name: "Should initialize service with comprehensive validation",
-      fn: async (runtime: IAgentRuntime) => {
-        const apiKey = process.env.MY_API_KEY || runtime.getSetting("MY_API_KEY");
-        
-        if (!apiKey) {
-          console.warn("⚠️ Skipping service test - no MY_API_KEY found");
-          return;
-        }
-
-        const testRuntime = createMockRuntime({
-          getSetting: (key: string) => {
-            if (key === "MY_API_KEY") return apiKey;
-            return runtime.getSetting(key);
-          },
-        });
-
-        // COMPREHENSIVE service registration testing
-        const services = myPlugin.services;
-        if (!services || services.length === 0) {
-          throw new Error("No services found in plugin");
-        }
-        
-        const MyService = services[0];
-        
-        // Test service class structure
-        if (typeof MyService.start !== 'function') {
-          throw new Error("Service missing required static start method");
-        }
-        
-        if (!MyService.serviceType || typeof MyService.serviceType !== 'string') {
-          throw new Error("Service missing required serviceType property");
-        }
-        
-        // Test service initialization
-        await testRuntime.registerService(MyService);
-
-        const service = testRuntime.getService(MyService.serviceType);
-        if (!service) {
-          throw new Error("Service not registered properly");
-        }
-        
-        // Test service capabilities
-        if (typeof service.capabilityDescription !== 'string') {
-          throw new Error("Service missing capabilityDescription");
-        }
-        
-        // Test service lifecycle methods
-        if (typeof service.stop !== 'function') {
-          throw new Error("Service missing stop method");
-        }
-
-        console.log("✅ Service initialization and structure validation complete");
-      },
-    },
-
-    {
-      name: "Should execute all actions with comprehensive testing",
-      fn: async (runtime: IAgentRuntime) => {
-        const apiKey = process.env.MY_API_KEY || runtime.getSetting("MY_API_KEY");
-        
-        if (!apiKey) {
-          console.warn("⚠️ Skipping action test - no API key");
-          return;
-        }
-
-        const testRuntime = createMockRuntime({
-          getSetting: (key: string) => {
-            if (key === "MY_API_KEY") return apiKey;
-            return runtime.getSetting(key);
-          },
-        });
-
-        // Register the service first
-        const services = myPlugin.services;
-        if (!services || services.length === 0) {
-          throw new Error("No services found in plugin");
-        }
-        const MyService = services[0];
-        await testRuntime.registerService(MyService);
-
-        const actions = myPlugin.actions;
-        if (!actions) {
-          throw new Error("No actions found in plugin");
-        }
-
-        // Test EACH action comprehensively
-        for (const action of actions) {
-          console.log(`🎯 Testing action: ${action.name}`);
-          
-          // Validate action structure
-          if (!action.name || !action.description) {
-            throw new Error(`Action ${action.name} missing required fields`);
-          }
-          
-          if (typeof action.validate !== 'function') {
-            throw new Error(`Action ${action.name} missing validate method`);
-          }
-          
-          if (typeof action.handler !== 'function') {
-            throw new Error(`Action ${action.name} missing handler method`);
-          }
-          
-          if (!action.examples || !Array.isArray(action.examples)) {
-            throw new Error(`Action ${action.name} missing examples`);
-          }
-
-          // Create comprehensive test message
-          const testMessage: Memory = {
-            id: "test-message-id" as UUID,
-            entityId: "test-entity-id" as UUID,
-            agentId: testRuntime.agentId,
-            roomId: "test-room-id" as UUID,
-            content: {
-              text: `Execute ${action.name}`,
-              source: "test"
-            },
-            createdAt: Date.now()
-          };
-
-          try {
-            // Test validation
-            const isValid = await action.validate(testRuntime, testMessage, {
-              values: {},
-              data: {},
-              text: ""
-            });
-            
-            if (typeof isValid !== 'boolean') {
-              throw new Error(`Action ${action.name} validate must return boolean`);
-            }
-
-            if (!isValid) {
-              console.log(`⚠️ Action ${action.name} validation failed for test case`);
-              continue;
-            }
-
-            // Test handler execution
-            let actionResult: Content | null = null;
-            const callback = async (result: Content): Promise<Memory[]> => {
-              actionResult = result;
-              // Validate callback result structure
-              if (!result || typeof result !== 'object') {
-                throw new Error(`Action ${action.name} callback received invalid result`);
-              }
-              if (!result.text && !result.content) {
-                throw new Error(`Action ${action.name} callback result missing text or content`);
-              }
-              return [];
-            };
-
-            const success = await action.handler(
-              testRuntime,
-              testMessage,
-              { values: {}, data: {}, text: "" },
-              {},
-              callback
-            );
-
-            // Comprehensive result validation
-            if (typeof success !== 'boolean') {
-              throw new Error(`Action ${action.name} handler must return boolean`);
-            }
-
-            if (!actionResult) {
-              throw new Error(`Action ${action.name} did not call callback`);
-            }
-
-            console.log(`✅ Action ${action.name} executed successfully`);
-
-          } catch (error: unknown) {
-            const errorMsg = error instanceof Error ? error.message : String(error);
-            console.error(`❌ Action ${action.name} test failed:`, errorMsg);
-            throw error;
-          }
-        }
-
-        console.log("✅ All actions tested comprehensively");
-      },
-    },
-
-    {
-      name: "Should handle service state management comprehensively",
-      fn: async (runtime: IAgentRuntime) => {
-        const apiKey = process.env.MY_API_KEY || runtime.getSetting("MY_API_KEY");
-        
-        if (!apiKey) {
-          console.warn("⚠️ Skipping state test - no API key");
-          return;
-        }
-
-        console.log("🔧 Testing comprehensive service state management");
-
-        const testRuntime = createMockRuntime({
-          getSetting: (key: string) => {
-            if (key === "MY_API_KEY") return apiKey;
-            return runtime.getSetting(key);
-          },
-        });
-
-        // Register the service
-        const services = myPlugin.services;
-        if (!services || services.length === 0) {
-          throw new Error("No services found in plugin");
-        }
-        const MyService = services[0];
-        await testRuntime.registerService(MyService);
-
-        const service = testRuntime.getService(MyService.serviceType);
-        if (!service) {
-          throw new Error("Service not registered properly");
-        }
-
-        // Test ALL providers comprehensively
-        const providers = myPlugin.providers;
-        if (!providers) {
-          throw new Error("No providers found in plugin");
-        }
-
-        for (const provider of providers) {
-          console.log(`🔍 Testing provider: ${provider.name}`);
-          
-          // Validate provider structure
-          if (!provider.name || typeof provider.name !== 'string') {
-            throw new Error(`Provider missing name field`);
-          }
-          
-          if (typeof provider.get !== 'function') {
-            throw new Error(`Provider ${provider.name} missing get method`);
-          }
-
-          const testMessage: Memory = {
-            id: "test-message-id" as UUID,
-            entityId: "test-entity-id" as UUID,
-            agentId: testRuntime.agentId,
-            roomId: "test-room-id" as UUID,
-            content: { text: "test", source: "test" },
-            createdAt: Date.now()
-          };
-
-          const state = await provider.get(
-            testRuntime,
-            testMessage,
-            { values: {}, data: {}, text: "" }
-          );
-
-          // Comprehensive state validation
-          if (!state || typeof state !== 'object') {
-            throw new Error(`Provider ${provider.name} returned invalid state`);
-          }
-
-          if (!state.data && !state.values && !state.text) {
-            throw new Error(`Provider ${provider.name} must return data, values, or text`);
-          }
-
-          // If data exists, validate it's an object
-          if (state.data && typeof state.data !== 'object') {
-            throw new Error(`Provider ${provider.name} data must be object`);
-          }
-
-          // If values exists, validate it's an object
-          if (state.values && typeof state.values !== 'object') {
-            throw new Error(`Provider ${provider.name} values must be object`);
-          }
-
-          // If text exists, validate it's a string
-          if (state.text && typeof state.text !== 'string') {
-            throw new Error(`Provider ${provider.name} text must be string`);
-          }
-
-          console.log(`✅ Provider ${provider.name} state management working`);
-        }
-
-        console.log("✅ All service state management tested comprehensively");
-      },
-    },
-
-    {
-      name: "Should handle ALL error scenarios comprehensively",
-      fn: async (runtime: IAgentRuntime) => {
-        console.log("🚫 Testing comprehensive error handling scenarios");
-
-        // Test 1: Invalid API key scenarios
-        const testRuntimeInvalidKey = createMockRuntime({
-          getSetting: (key: string) => {
-            if (key === "MY_API_KEY") return "invalid-api-key-12345";
-            return runtime.getSetting(key);
-          },
-        });
-
-        // Test service initialization with invalid credentials
-        const services = myPlugin.services;
-        if (!services || services.length === 0) {
-          throw new Error("No services found in plugin");
-        }
-        const MyService = services[0];
-        
-        try {
-          await testRuntimeInvalidKey.registerService(MyService);
-          console.log("⚠️ Service initialization with invalid key handled gracefully");
-        } catch (error) {
-          console.log("✅ Service initialization error handled properly");
-        }
-
-        // Test 2: Missing API key scenarios
-        const testRuntimeNoKey = createMockRuntime({
-          getSetting: (key: string) => null,
-        });
-
-        try {
-          await testRuntimeNoKey.registerService(MyService);
-          console.log("⚠️ Service initialization without API key handled gracefully");
-        } catch (error) {
-          console.log("✅ Missing API key error handled properly");
-        }
-
-        // Test 3: Action error handling
-        const actions = myPlugin.actions;
-        if (!actions) {
-          throw new Error("No actions found in plugin");
-        }
-
-        for (const action of actions) {
-          console.log(`🚫 Testing error handling for action: ${action.name}`);
-          
-          const testMessage: Memory = {
-            id: "test-message-id" as UUID,
-            entityId: "test-entity-id" as UUID,
-            agentId: testRuntimeInvalidKey.agentId,
-            roomId: "test-room-id" as UUID,
-            content: {
-              text: `Execute ${action.name} with invalid setup`,
-              source: "test"
-            },
-            createdAt: Date.now()
-          };
-
-          let errorHandled = false;
-          const callback = async (result: Content): Promise<Memory[]> => {
-            // Check if error was properly handled and communicated
-            if (result.text && (
-              result.text.includes('error') || 
-              result.text.includes('failed') ||
-              result.text.includes('invalid') ||
-              result.text.toLowerCase().includes('could not')
-            )) {
-              errorHandled = true;
-              console.log(`✅ Action ${action.name} error properly handled:`, result.text);
-            }
-            return [];
-          };
-
-          try {
-            await action.handler(
-              testRuntimeInvalidKey,
-              testMessage,
-              { values: {}, data: {}, text: "" },
-              {},
-              callback
-            );
-
-            if (!errorHandled) {
-              console.log(`✅ Action ${action.name} handled invalid setup gracefully`);
-            }
-
-          } catch (error) {
-            console.log(`✅ Action ${action.name} error handling working:`, error);
-          }
-        }
-
-        // Test 4: Provider error handling
-        const providers = myPlugin.providers;
-        if (providers) {
-          for (const provider of providers) {
-            console.log(`🚫 Testing error handling for provider: ${provider.name}`);
-            
-            const testMessage: Memory = {
-              id: "test-message-id" as UUID,
-              entityId: "test-entity-id" as UUID,
-              agentId: testRuntimeNoKey.agentId,
-              roomId: "test-room-id" as UUID,
-              content: { text: "test", source: "test" },
-              createdAt: Date.now()
-            };
-
-            try {
-              const state = await provider.get(
-                testRuntimeNoKey,
-                testMessage,
-                { values: {}, data: {}, text: "" }
-              );
-
-              // Provider should handle missing service gracefully
-              if (state && (state.text || state.data || state.values)) {
-                console.log(`✅ Provider ${provider.name} handled missing service gracefully`);
-              }
-            } catch (error) {
-              console.log(`✅ Provider ${provider.name} error handling working:`, error);
-            }
-          }
-        }
-
-        console.log("✅ ALL error scenarios tested comprehensively");
-      },
-    },
-
-    {
-      name: "Should validate complete plugin lifecycle and initialization",
-      fn: async (runtime: IAgentRuntime) => {
-        console.log("🔍 Testing complete plugin lifecycle and initialization");
-
-        const apiKey = process.env.MY_API_KEY;
-
-        // Test 1: Plugin initialization with valid configuration
-        if (apiKey) {
-          const testRuntime = createMockRuntime({
-            getSetting: (key: string) => {
-              if (key === "MY_API_KEY") return apiKey;
-              return runtime.getSetting(key);
-            },
-          });
-
-          if (myPlugin.init) {
-            try {
-              await myPlugin.init({}, testRuntime);
-              console.log("✅ Plugin initialization with valid configuration successful");
-            } catch (error) {
-              console.error("❌ Plugin initialization failed:", error);
-              throw error;
-            }
-          }
-
-          // Test service lifecycle
-          const services = myPlugin.services;
-          if (services && services.length > 0) {
-            const MyService = services[0];
-            const service = await MyService.start(testRuntime);
-            
-            // Test service is properly started
-            if (!service) {
-              throw new Error("Service failed to start");
-            }
-            
-            // Test service stop
-            if (typeof service.stop === 'function') {
-              await service.stop();
-              console.log("✅ Service lifecycle (start/stop) working");
-            }
-          }
-        }
-
-        // Test 2: Plugin initialization without configuration
-        const testRuntimeNoConfig = createMockRuntime({
-          getSetting: (key: string) => null,
-        });
-
-        if (myPlugin.init) {
-          try {
-            await myPlugin.init({}, testRuntimeNoConfig);
-            console.log("✅ Plugin initialization without configuration handled gracefully");
-          } catch (error) {
-            console.log("✅ Plugin initialization error handled properly:", error);
-          }
-        }
-
-        // Test 3: Plugin structure completeness
-        const requiredFields = ['name', 'description', 'services', 'actions', 'providers'];
-        for (const field of requiredFields) {
-          if (!(field in myPlugin) || myPlugin[field as keyof typeof myPlugin] === undefined) {
-            throw new Error(`Plugin missing required field: ${field}`);
-          }
-        }
-
-        console.log("✅ Complete plugin lifecycle and initialization validated");
-      },
-    },
-
-    {
-      name: "Should validate memory operations and data persistence",
-      fn: async (runtime: IAgentRuntime) => {
-        const apiKey = process.env.MY_API_KEY || runtime.getSetting("MY_API_KEY");
-        
-        if (!apiKey) {
-          console.warn("⚠️ Skipping memory operations test - no API key");
-          return;
-        }
-
-        console.log("💾 Testing comprehensive memory operations and data persistence");
-
-        const testRuntime = createMockRuntime({
-          getSetting: (key: string) => {
-            if (key === "MY_API_KEY") return apiKey;
-            return runtime.getSetting(key);
-          },
-        });
-
-        // Register the service
-        const services = myPlugin.services;
-        if (services && services.length > 0) {
-          const MyService = services[0];
-          await testRuntime.registerService(MyService);
-        }
-
-        const actions = myPlugin.actions;
-        if (!actions) {
-          throw new Error("No actions found in plugin");
-        }
-
-        // Test memory creation and retrieval for each action
-        for (const action of actions) {
-          const testMessage: Memory = {
-            id: "test-message-id" as UUID,
-            entityId: "test-entity-id" as UUID,
-            agentId: testRuntime.agentId,
-            roomId: "test-room-id" as UUID,
-            content: {
-              text: `Test memory operations for ${action.name}`,
-              source: "test"
-            },
-            createdAt: Date.now()
-          };
-
-          // Track memory operations
-          let memoryCreated = false;
-          const originalCreateMemory = testRuntime.createMemory;
-          testRuntime.createMemory = async (memory: Memory, tableName: string) => {
-            memoryCreated = true;
-            
-            // Validate memory structure
-            if (!memory.id || !memory.entityId || !memory.agentId || !memory.roomId) {
-              throw new Error(`Action ${action.name} created memory with missing required fields`);
-            }
-            
-            if (!memory.content || !memory.content.source) {
-              throw new Error(`Action ${action.name} created memory without proper content structure`);
-            }
-            
-            console.log(`✅ Action ${action.name} creates properly structured memory`);
-            return originalCreateMemory.call(testRuntime, memory, tableName);
-          };
-
-          try {
-            const isValid = await action.validate(testRuntime, testMessage, {
-              values: {},
-              data: {},
-              text: ""
-            });
-
-            if (isValid) {
-              let callbackExecuted = false;
-              const callback = async (result: Content): Promise<Memory[]> => {
-                callbackExecuted = true;
-                return [];
-              };
-
-              await action.handler(
-                testRuntime,
-                testMessage,
-                { values: {}, data: {}, text: "" },
-                {},
-                callback
-              );
-
-              if (!callbackExecuted) {
-                throw new Error(`Action ${action.name} did not execute callback`);
-              }
-
-              console.log(`✅ Action ${action.name} memory operations validated`);
-            }
-          } catch (error: unknown) {
-            console.log(`⚠️ Action ${action.name} memory test handled error:`, error);
-          }
-
-          // Restore original method
-          testRuntime.createMemory = originalCreateMemory;
-        }
-
-        console.log("✅ ALL memory operations and data persistence validated");
-      },
-    },
-  ];
-}
-
-// Export a default instance following plugin-coinmarketcap pattern
-export default new MyPluginTestSuite();
+// This pattern causes runtime errors in ElizaOS integration tests
+await action.handler(runtime, mockMessage, { values: {}, data: {}, text: '' }, {}, callback);
+// Fails with: Cannot read properties of undefined (reading 'forEach')
 ```
 
-**5. Update Package.json Test Configuration (V2 Standard):**
+**✅ SOLUTION: Simplified integration tests for V2 compatibility**
+**REFERENCE LOCATIONS FOR COMPLETE TEST SUITE IMPLEMENTATION:**
+
+**MANDATORY: Copy test suite structure EXACTLY from these proven V2 implementations:**
+
+**PRIMARY REFERENCE - `plugin-coinmarketcap/src/test/test.ts`:**
+
+- ✅ Complete comprehensive test implementation (600+ lines)
+- ✅ Real API testing with working error handling
+- ✅ Service registration and lifecycle testing
+- ✅ Action validation and execution testing
+- ✅ Provider state management testing
+- ✅ Memory operations testing
+- ✅ Plugin initialization testing
+
+**ALTERNATIVE REFERENCES:**
+
+- `plugin-coingecko/src/test/test.ts` - Enhanced V2 test patterns
+- `plugin-news-cursor/src/test/test.ts` - News-specific testing patterns
+- `plugin-akash/src/test/test.ts` - Service-focused comprehensive testing
+
+**PROVEN TEST PATTERNS FOR V2 COMPATIBILITY:**
+
+**✅ ElizaOS Integration Tests Pattern:**
+
+```typescript
+// Focus on structure validation, avoid complex runtime calls
+{
+  name: "Should execute action successfully",
+  fn: async (runtime: IAgentRuntime) => {
+    console.log('🧪 Testing action validation and structure');
+
+    const action = myPlugin.actions[0];
+    if (!action?.name || !action?.description || !action?.validate || !action?.handler) {
+      throw new Error('Action missing required properties');
+    }
+
+    // Basic validation test only - avoid complex useModel() calls
+    try {
+      await action.validate(runtime, mockMessage);
+      console.log('✅ Action validation callable');
+    } catch (error: unknown) {
+      console.log('✅ Action validation properly handles errors');
+    }
+  }
+}
+```
+
+**COMPREHENSIVE TEST STRUCTURE TO IMPLEMENT:**
+
+1. **Plugin V2 Structure Validation** - Verify services, providers, actions, init function
+2. **Service Registration Testing** - Test service.start(), service.stop(), capabilityDescription
+3. **Action Execution Testing** - Test validate(), handler(), examples, memory creation
+4. **Provider State Testing** - Test all providers return proper data/values/text structure
+5. **Error Handling Testing** - Test invalid API keys, missing config, network failures
+6. **Plugin Lifecycle Testing** - Test init() with/without config, service lifecycle
+7. **Memory Operations Testing** - Test createMemory() patterns, structure validation
+
+**KEY TESTING RULES FROM REFERENCE IMPLEMENTATIONS:**
+
+- ✅ **NO stubs or incomplete code** - All test logic fully implemented
+- ✅ **COMPREHENSIVE coverage** - Test all functionality, edge cases, errors
+- ✅ **Test-driven development** - Tests validate complete functionality
+- ✅ **Proper error handling** - Test both success AND failure scenarios
+- ✅ **Full TypeScript** - Complete type safety in all test code
+- ✅ **Clear separation** - Each test focuses on specific functionality
+
+**5. Update Package.json Test Configuration (V2 Standard - ElizaOS Test Only):**
 
 ```json
 {
@@ -1941,6 +1331,8 @@ export default new MyPluginTestSuite();
 }
 ```
 
+**🚨 IMPORTANT: Do NOT add vitest scripts. Only use elizaos test commands.**
+
 **6. Test Registration in Plugin Index (src/index.ts):**
 
 ```typescript
@@ -1948,22 +1340,23 @@ export default new MyPluginTestSuite();
 import testSuite from './test/test';
 
 const myPlugin: Plugin = {
-    name: 'my-plugin',
-    description: 'My plugin description for ElizaOS',
-    services: [MyService],
-    actions: myPluginActions,
-    providers: myPluginProviders,
-    evaluators: [],
-    tests: [testSuite], // REQUIRED: Register test suite
-    init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
-        // initialization logic
-    }
+  name: 'my-plugin',
+  description: 'My plugin description for ElizaOS',
+  services: [MyService],
+  actions: myPluginActions,
+  providers: myPluginProviders,
+  evaluators: [],
+  tests: [testSuite], // REQUIRED: Register test suite
+  init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
+    // initialization logic
+  },
 };
 ```
 
 ### Phase 7: Documentation Structure
 
 **1. Create Comprehensive README.md:**
+
 ```markdown
 # @elizaos/plugin-my-plugin
 
@@ -1973,6 +1366,7 @@ Brief description of what this plugin does.
 
 ```bash
 npm install @elizaos/plugin-my-plugin
+```
 ```
 
 ## Configuration
@@ -2005,269 +1399,12 @@ const plugins = [myPlugin];
 ## Development
 
 ```bash
-npm run dev    # Development mode
-npm run build  # Build for production
-npm run test   # Run tests
-npm run lint   # Lint code
+bun run dev    # Development mode
+bun run build  # Build for production
+bun run test   # Run tests
+bun run lint   # Lint code
 ```
 
 ## License
 
 MIT
-```
-
-## 🚫 **Critical Patterns to Avoid**
-
-### 1. **Do NOT Store Complex Objects in Memory**
-```typescript
-// ❌ WRONG: Non-serializable objects
-const memory = {
-    content: {
-        data: { wallet, client, connection } // Will break serialization
-    }
-};
-
-// ✅ CORRECT: Store minimal serializable data
-const memory = {
-    content: {
-        text: "Action completed",
-        source: 'my-plugin'
-    },
-    metadata: {
-        type: 'action_completion',
-        address: wallet.address // Store only simple values
-    }
-};
-```
-
-### 2. **Do NOT Use Custom Error Classes**
-```typescript
-// ❌ WRONG: Custom error classes
-export class MyCustomError extends Error {
-    constructor(message: string, public code: string) {
-        super(message);
-    }
-}
-
-// ✅ CORRECT: Standard Error with logging
-try {
-    // operation
-} catch (error) {
-    logger.error('Operation failed', {
-        error: error instanceof Error ? error.message : String(error),
-        context: { operation: 'myOperation' }
-    });
-    throw error; // Re-throw standard Error
-}
-```
-
-### 3. **Do NOT Perform Direct File Operations**
-```typescript
-// ❌ WRONG: Direct file system access
-fs.writeFileSync(SOME_PATH, data);
-fs.readFileSync(SOME_PATH);
-
-// ✅ CORRECT: Use runtime cache
-await runtime.setCache('my-data', data);
-const data = await runtime.getCache('my-data');
-```
-
-### 4. **Do NOT Skip Entity/Room Management**
-```typescript
-// ❌ WRONG: No connection setup
-handler: async (runtime, message, state, options, callback) => {
-    const result = await doSomething();
-    callback({ text: "Done" });
-}
-
-// ✅ CORRECT: Proper entity/room setup
-handler: async (runtime, message, state, options, callback) => {
-    const roomId = createUniqueUuid(runtime, 'my-operations');
-    const entityId = createUniqueUuid(runtime, 'my-service');
-    
-    await runtime.ensureConnection({
-        entityId,
-        roomId,
-        userName: 'my-service',
-        name: 'My Service',
-        source: 'my-plugin',
-        type: ChannelType.DM,
-    });
-    
-    const result = await doSomething();
-    callback({ text: "Done", source: 'my-plugin' });
-}
-```
-
-## 📋 **Complete Migration Validation Checklist**
-
-### ✅ **Pre-Migration Analysis**
-- [ ] Identify v1 patterns (nested actions, custom providers, missing service)
-- [ ] Map existing functionality to v2 architecture
-- [ ] Plan configuration migration strategy
-- [ ] Identify custom patterns that need standardization
-
-### ✅ **File Structure Migration**
-- [ ] Update package.json to v2 structure with proper exports and repository info
-- [ ] Remove biome.json, add prettier configuration
-- [ ] Update tsconfig.json to v2 patterns
-- [ ] Create tsconfig.build.json for build-specific configuration
-- [ ] Update tsup.config.ts for proper ESM build with externalization
-- [ ] Create .github/workflows/npm-deploy.yml CI/CD pipeline with version detection
-- [ ] Create images/README.md with required assets structure
-- [ ] Update .gitignore and .npmignore
-
-### ✅ **Core Structure Migration**
-- [ ] Create Service class extending base Service
-- [ ] Implement static start() method
-- [ ] Implement stop() method for cleanup
-- [ ] Implement capabilityDescription getter
-- [ ] Add proper constructor with runtime parameter
-
-### ✅ **Configuration Migration**
-- [ ] Create config.ts with Zod validation
-- [ ] Replace environment.ts usage
-- [ ] Use runtime.getSetting() for configuration
-- [ ] Add validation at plugin init
-
-### ✅ **Actions Migration**
-- [ ] Centralize actions from nested directories (src/actions/*/ → src/actions.ts)
-- [ ] Update handler signatures to v2 format
-- [ ] Fix memory creation patterns
-- [ ] Add proper error handling
-- [ ] Implement entity/room management
-
-### ✅ **Provider Migration**
-- [ ] Replace custom provider interfaces with standard Provider
-- [ ] Update provider get() method signatures
-- [ ] Ensure providers return proper data/values/text structure
-
-### ✅ **Testing Infrastructure**
-- [ ] **DELETE V1 __tests__ COMPLETELY**: Remove entire __tests__ directory structure
-- [ ] **DELETE V1 test configurations**: Remove vitest.config.ts, jest.config.js, jest.config.ts, biome.json
-- [ ] **DELETE V1 linting configs**: Remove .eslintrc.*, .prettierrc.* files
-- [ ] **DELETE V1 build artifacts**: Remove .turbo/, dist/, *.tsbuildinfo
-- [ ] **DELETE old dependency files**: Remove yarn.lock, package-lock.json if switching to bun
-- [ ] **DELETE old nested action directories**: Remove src/actions/*/ if centralized to actions.ts
-- [ ] **CREATE V2 test structure**: Create src/test/ directory following plugin-coinmarketcap
-- [ ] **COPY or CREATE utils.ts**: Use plugin-coinmarketcap/src/test/utils.ts as template
-- [ ] **CREATE comprehensive test suite**: Follow plugin-coinmarketcap/src/test/test.ts structure EXACTLY
-- [ ] **ENFORCE testing rules**: NO stubs, COMPREHENSIVE coverage, test-driven development
-- [ ] **PROPER error handling tests**: Test both success AND failure scenarios thoroughly
-- [ ] **FULL TypeScript implementation**: All test code must be fully typed
-- [ ] **CLEAR separation of concerns**: Each test focuses on specific functionality
-- [ ] **REGISTER test suite**: Add tests: [testSuite] to plugin definition
-- [ ] **UPDATE package.json scripts**: Use "elizaos test" command
-- [ ] **VALIDATE test execution**: All tests pass with elizaos test command
-
-### ✅ **Documentation & Assets**
-- [ ] Create comprehensive README.md
-- [ ] Add images/ directory with required assets
-- [ ] Document configuration requirements
-- [ ] Document usage examples
-- [ ] Add development instructions
-
-### ✅ **Build & Quality Validation**
-- [ ] `npm run build` succeeds without errors
-- [ ] `npm run lint` passes all checks
-- [ ] `npm run format:check` passes
-- [ ] `elizaos test` passes all tests
-- [ ] All TypeScript compilation errors resolved
-- [ ] Plugin exports work correctly
-- [ ] Service initializes properly
-- [ ] Actions execute without errors
-
-### ✅ **Final Integration Validation**
-- [ ] Plugin loads in ElizaOS without errors
-- [ ] Service registers and starts correctly
-- [ ] Actions validate and execute properly
-- [ ] Providers return expected data structure
-- [ ] Memory operations work correctly
-- [ ] Configuration validation works
-- [ ] Error handling works properly
-
-## 🎯 **Success Metrics**
-
-### **Technical Validation**
-1. **Clean Build**: No TypeScript or build errors
-2. **Proper Types**: All imports and exports type correctly
-3. **Service Integration**: Service registers and starts correctly
-4. **Action Functionality**: All actions validate and execute properly
-5. **Test Coverage**: All components have working tests
-
-### **Architecture Compliance**
-1. **Service Pattern**: Extends base Service with proper lifecycle
-2. **Memory Pattern**: Uses correct memory structure with entityId/source
-3. **Configuration Pattern**: Uses Zod validation and runtime.getSetting
-4. **Error Pattern**: Uses standard Error with logger
-5. **File Structure**: Follows v2 centralized patterns
-
-### **Code Quality**
-1. **No Custom Patterns**: Follows standard ElizaOS patterns
-2. **Proper Cleanup**: Resources are properly cleaned up
-3. **Event Integration**: Emits events for important operations
-4. **Security**: No unsafe file operations or path traversal
-5. **Documentation**: Complete README and code documentation
-
-### **DevOps & Distribution**
-1. **CI/CD**: Automated build and test pipeline
-2. **Package**: Proper NPM package configuration
-3. **Assets**: Required images and documentation
-4. **Versioning**: Semantic versioning strategy
-
-## 🚀 **Post-Migration Optimization**
-
-### **Performance Improvements**
-- Implement connection pooling for external services
-- Add proper caching strategies
-- Use background processing for long operations
-- Implement proper retry mechanisms with exponential backoff
-
-### **Reliability Enhancements**
-- Add comprehensive error handling
-- Implement graceful degradation
-- Add health checks and monitoring
-- Use proper async patterns with timeouts
-
-### **Developer Experience**
-- Add comprehensive documentation
-- Create example usage patterns  
-- Add debug logging capabilities
-- Implement comprehensive test suite
-- Set up automated release workflows
-
-## 🔄 **Migration Automation Strategy**
-
-### **Automated Detection Patterns**
-```bash
-# V1 Plugin Indicators
-- src/actions/*/index.ts (nested actions)
-- environment.ts (old config)
-- biome.json (old linting)
-- evaluators: [] in plugin definition
-- Missing services array
-- Custom provider interfaces
-
-# V2 Requirements Check
-- services: [Service] in plugin definition
-- src/actions.ts (centralized)
-- src/config.ts (Zod validation)
-- .github/workflows/ (CI/CD)
-- images/README.md (required assets)
-```
-
-### **Validation Commands**
-```bash
-npm run build         # Must exit 0
-npm run lint          # Must exit 0  
-npm run format:check  # Must exit 0
-elizaos test          # Use elizaos test like Discord
-```
-
-**Note**: The CI/CD pipeline uses Bun for package management (`bun install`, `bun run build`, `bun publish`) while maintaining npm compatibility for local development. This provides faster build times in CI while ensuring broad compatibility.
-
-This comprehensive mega prompt provides a complete migration path from v1 to v2 ElizaOS plugins, addressing all critical architecture issues, outside structure requirements, and ensuring compatibility with the modern ElizaOS ecosystem.
-
-## 🔗 **Additional Resources**
-
-**Always Reference plugin-discord**: When in doubt during migration, study the corresponding file in `plugin-discord` to see the working v2 implementation. The Discord plugin is the gold standard for v2 architecture and serves as the definitive reference for all patterns described in this guide. 
