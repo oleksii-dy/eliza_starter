@@ -10,10 +10,13 @@ vi.mock('../src/utils/llmHelpers', () => ({
 
 vi.mock('../src/utils/clobClient', () => ({
   initializeClobClient: vi.fn(),
+  initializeClobClientWithCreds: vi.fn(),
 }));
 
 const { callLLMWithTimeout } = await import('../src/utils/llmHelpers');
-const { initializeClobClient } = await import('../src/utils/clobClient');
+const { initializeClobClient, initializeClobClientWithCreds } = await import(
+  '../src/utils/clobClient'
+);
 
 describe('placeOrderAction', () => {
   let mockRuntime: IAgentRuntime;
@@ -47,6 +50,7 @@ describe('placeOrderAction', () => {
     };
 
     vi.mocked(initializeClobClient).mockResolvedValue(mockClient);
+    vi.mocked(initializeClobClientWithCreds).mockResolvedValue(mockClient);
   });
 
   describe('Action Properties', () => {
@@ -129,11 +133,11 @@ describe('placeOrderAction', () => {
       )) as Content;
 
       expect(mockClient.createOrder).toHaveBeenCalledWith({
-        tokenId: '123456',
+        tokenID: '123456',
         side: OrderSide.BUY,
         price: 0.5,
         size: 100,
-        feeRateBps: '0',
+        feeRateBps: 0,
       });
 
       expect(mockClient.postOrder).toHaveBeenCalledWith(expect.any(Object), 'GTC');
@@ -165,11 +169,11 @@ describe('placeOrderAction', () => {
       )) as Content;
 
       expect(mockClient.createOrder).toHaveBeenCalledWith({
-        tokenId: '789012',
+        tokenID: '789012',
         side: OrderSide.SELL,
         price: 0.75,
         size: 50,
-        feeRateBps: '10',
+        feeRateBps: 10,
       });
 
       expect(mockClient.postOrder).toHaveBeenCalledWith(expect.any(Object), 'FOK');
@@ -235,11 +239,11 @@ describe('placeOrderAction', () => {
       await placeOrderAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
       expect(mockClient.createOrder).toHaveBeenCalledWith({
-        tokenId: '999999',
+        tokenID: '999999',
         side: OrderSide.BUY,
         price: 0.25,
         size: 200,
-        feeRateBps: '5',
+        feeRateBps: 5,
       });
     });
 
@@ -257,11 +261,11 @@ describe('placeOrderAction', () => {
       await placeOrderAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
       expect(mockClient.createOrder).toHaveBeenCalledWith({
-        tokenId: '555555',
+        tokenID: '555555',
         side: OrderSide.BUY,
         price: 0.8,
         size: 75,
-        feeRateBps: '0',
+        feeRateBps: 0,
       });
     });
 
@@ -395,7 +399,7 @@ describe('placeOrderAction', () => {
         size: 100,
       });
 
-      vi.mocked(initializeClobClient).mockRejectedValue(new Error('Client init failed'));
+      vi.mocked(initializeClobClientWithCreds).mockRejectedValue(new Error('Client init failed'));
 
       await expect(
         placeOrderAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback)
@@ -449,11 +453,11 @@ describe('placeOrderAction', () => {
       await placeOrderAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
 
       expect(mockClient.createOrder).toHaveBeenCalledWith({
-        tokenId: '777888',
+        tokenID: '777888',
         side: OrderSide.SELL,
         price: 0.6,
         size: 25,
-        feeRateBps: '0',
+        feeRateBps: 0,
       });
     });
 
@@ -538,8 +542,13 @@ describe('placeOrderAction', () => {
           totalValue: '50.0000',
         },
         orderResponse: {
-          success: true,
           orderId: 'order_456',
+          status: undefined,
+          orderHashes: undefined,
+          originalResponse: {
+            success: true,
+            orderId: 'order_456',
+          },
         },
         timestamp: expect.any(String),
       });
