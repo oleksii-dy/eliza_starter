@@ -59,6 +59,11 @@ jobs:
           SHARP_IGNORE_GLOBAL_LIBVIPS: '1'
         run: bun install
 
+      - name: Configure git author
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI Runner"
+
       - name: Check for API key
         run: |
           if [ -z "$OPENAI_API_KEY" ]; then
