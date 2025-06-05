@@ -163,7 +163,15 @@ const runE2eTests = async (
 
     // Set up standard paths and load .env
     const elizaDir = path.join(process.cwd(), '.eliza');
-    const elizaDbDir = await resolvePgliteDir();
+
+    // Handle edge case: when testing template directories directly (e.g., project-starter, plugin-starter)
+    // Use project-specific path to avoid database contamination in monorepo root
+    const isTemplateDirectory =
+      process.cwd().includes('/project-starter') || process.cwd().includes('/plugin-starter');
+    const elizaDbDir = isTemplateDirectory
+      ? path.join(process.cwd(), '.elizadb') // Project-specific for templates
+      : await resolvePgliteDir(); // Normal resolution for created projects
+
     const envInfo = await UserEnvironment.getInstanceInfo();
     const envFilePath = envInfo.paths.envFilePath;
 
