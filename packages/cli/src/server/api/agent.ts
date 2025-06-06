@@ -11,6 +11,8 @@ import type {
   Memory,
   UUID,
   MemoryMetadata,
+  Route,
+  Plugin,
 } from '@elizaos/core';
 import {
   ChannelType,
@@ -34,6 +36,45 @@ type MulterFile = Express.Multer.File;
 
 // Cache for compiled regular expressions to improve performance
 const regexCache = new Map<string, RegExp>();
+
+// Track which runtimes have had their routes validated
+const validatedRuntimes = new Set<IAgentRuntime>();
+
+// Extend the Route type to include precompiled matcher and validation status
+interface ExtendedRoute extends Route {
+  matcher?: MatchFunction<object>;
+  disabled?: boolean;
+  path: string;
+}
+
+// Validate and precompile plugin routes at startup
+const validateAndPrecompileRoutes = (plugins: Plugin[]) => {
+  plugins.forEach(plugin => {
+    if (!(plugin as any).routes) return;
+    
+    (plugin as any).routes.forEach((route: ExtendedRoute) => {
+      if (!route.path) return;
+      
+      if (route.path.match(/\*/)) {
+        // Wildcard routes don't need precompilation
+        logger.debug(`[ROUTE VALIDATION] Wildcard route in plugin "${plugin.name}": ${route.path}`);
+        return;
+      }
+      
+      try {
+        // Test and precompile the pattern
+        route.matcher = match(route.path, { decode: decodeURIComponent });
+        logger.debug(`[ROUTE VALIDATION] ✅ Valid route pattern in plugin "${plugin.name}": ${route.path}`);
+      } catch (err) {
+        logger.error(`[ROUTE VALIDATION] ❌ Invalid route pattern in plugin "${plugin.name}": "${route.path}" - ${err.message}`);
+        // Mark route as disabled to skip at runtime
+        route.disabled = true;
+      }
+    });
+  });
+};
+
+
 
 // Utility functions for response handling
 const sendError = (
@@ -434,6 +475,12 @@ export function agentRouter(
           return;
         }
 
+        // Validate and precompile routes only once per runtime
+        if (!validatedRuntimes.has(runtime)) {
+          validateAndPrecompileRoutes(runtime.plugins);
+          validatedRuntimes.add(runtime);
+        }
+
         const fullPath = req.path;
         let path = fullPath;
 
@@ -444,42 +491,46 @@ export function agentRouter(
         for (const plugin of runtime.plugins) {
           if (!plugin.name) continue;
           if (plugin.routes && plugin.name === req.params.pluginName) {
-            for (const r of plugin.routes) {
-              if (r.type === req.method) {
+                        for (const r of (plugin as any).routes) {
+              const extRoute = r as ExtendedRoute;
+              
+              // Skip disabled routes (invalid patterns detected at startup)
+              if (extRoute.disabled) {
+                logger.debug(`Skipping disabled route: ${extRoute.path}`);
+                continue;
+              }
+              
+              if (extRoute.type === req.method) {
                 const executeHandler = () => {
-                  if (r.path.match(/\*/)) {
-                    if (path.match(r.path.replace('*', ''))) {
-                      logger.debug(`Calling wildcard plugin route: ${r.path} for ${path}`);
-                      r.handler(req, res, runtime);
+                  if (extRoute.path.match(/\*/)) {
+                    if (path.match(extRoute.path.replace('*', ''))) {
+                      logger.debug(`Calling wildcard plugin route: ${extRoute.path} for ${path}`);
+                      extRoute.handler(req, res, runtime);
                       return true;
                     }
                   } else {
-                    // Use path-to-regexp for parameter matching
-                    let matcher: MatchFunction<object>;
-                    try {
-                      matcher = match(r.path, { decode: decodeURIComponent });
-                    } catch (err) {
-                      logger.error(`Invalid plugin route path syntax: "${r.path}"`, err);
+                    // Use precompiled matcher for parameter matching
+                    const matcher = extRoute.matcher;
+                    if (!matcher) {
+                      logger.error(`Matcher not precompiled for route: "${extRoute.path}"`);
                       return false;
                     }
 
                     const matched = matcher(path);
                     if (matched) {
-                      logger.debug(`Calling plugin route: ${r.path} for ${path}`);
+                      logger.debug(`Calling plugin route: ${extRoute.path} for ${path}`);
                       // Set matched parameters in req.params
                       req.params = { ...req.params, ...(matched.params || {}) };
-                      r.handler(req, res, runtime);
+                      extRoute.handler(req, res, runtime);
                       return true;
                     }
                   }
                   return false;
                 };
 
-                if (r.isMultipart) {
-                  logger.debug(`Executing multipart handler for plugin route: ${r.path}`);
+                if (extRoute.isMultipart) {
                   if (executeHandler()) return;
                 } else {
-                  logger.debug(`Executing non-multipart handler for plugin route: ${r.path}`);
                   if (executeHandler()) return;
                 }
               }
