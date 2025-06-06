@@ -28,6 +28,7 @@ import {
 } from '@elizaos/core';
 import express from 'express';
 import fs from 'node:fs';
+import { match, MatchFunction } from 'path-to-regexp';
 // Using Express.Multer.File type instead of importing from multer directly
 type MulterFile = Express.Multer.File;
 
@@ -453,8 +454,20 @@ export function agentRouter(
                       return true;
                     }
                   } else {
-                    if (path === r.path) {
-                      logger.debug(`Calling exact match plugin route: ${r.path} for ${path}`);
+                    // Use path-to-regexp for parameter matching
+                    let matcher: MatchFunction<object>;
+                    try {
+                      matcher = match(r.path, { decode: decodeURIComponent });
+                    } catch (err) {
+                      logger.error(`Invalid plugin route path syntax: "${r.path}"`, err);
+                      return false;
+                    }
+
+                    const matched = matcher(path);
+                    if (matched) {
+                      logger.debug(`Calling plugin route: ${r.path} for ${path}`);
+                      // Set matched parameters in req.params
+                      req.params = { ...req.params, ...(matched.params || {}) };
                       r.handler(req, res, runtime);
                       return true;
                     }
