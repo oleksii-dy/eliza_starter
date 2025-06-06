@@ -5,7 +5,6 @@ import type {
   Agent,
   Character,
   Content,
-  HandlerCallback,
   IAgentRuntime,
   Log,
   Memory,
@@ -16,7 +15,6 @@ import type {
 } from '@elizaos/core';
 import {
   ChannelType,
-  EventType,
   MemoryType,
   ModelType,
   composePrompt,
@@ -57,16 +55,16 @@ const validateAndPrecompileRoutes = (plugins: Plugin[]) => {
       
       if (route.path.match(/\*/)) {
         // Wildcard routes don't need precompilation
-        logger.debug(`[ROUTE VALIDATION] Wildcard route in plugin "${plugin.name}": ${route.path}`);
+        logger.debug(`[ROUTE VALIDATION] Wildcard route in plugin "${plugin.name}": ${route.type} ${route.path}`);
         return;
       }
       
       try {
         // Test and precompile the pattern
         route.matcher = match(route.path, { decode: decodeURIComponent });
-        logger.debug(`[ROUTE VALIDATION] ✅ Valid route pattern in plugin "${plugin.name}": ${route.path}`);
+        logger.debug(`[ROUTE VALIDATION] ✅ Valid route pattern in plugin "${plugin.name}": ${route.type} ${route.path}`);
       } catch (err) {
-        logger.error(`[ROUTE VALIDATION] ❌ Invalid route pattern in plugin "${plugin.name}": "${route.path}" - ${err.message}`);
+        logger.error(`[ROUTE VALIDATION] ❌ Invalid route pattern in plugin "${plugin.name}": ${route.type} ${route.path} - ${err.message}`);
         // Mark route as disabled to skip at runtime
         route.disabled = true;
       }
