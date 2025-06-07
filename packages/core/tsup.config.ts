@@ -29,6 +29,7 @@ export default defineConfig({
     'sharp',
     '@solana/web3.js',
     'zod',
+    '@elizaos/core',
     '@hapi/shot',
     '@opentelemetry/api',
     '@opentelemetry/context-async-hooks',

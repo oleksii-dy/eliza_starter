@@ -484,14 +484,9 @@ ${spec.services ? `Services: ${spec.services.join(', ')}` : ''}
 ## CRITICAL REQUIREMENTS
 
 ### 1. Database Compatibility (MANDATORY)
-This plugin MUST work with both Pglite and PostgreSQL. The specification must include:
-- Database-agnostic design patterns
-- Use of runtime APIs only (no direct database access)
-- Memory operations using runtime.createMemory(), runtime.searchMemories()
-- Goal operations using runtime.createGoal(), runtime.updateGoal()
-- Relationship operations using runtime.ensureConnection()
-- NO database-specific code or SQL queries
-- NO direct database adapter imports
+This plugin MUST work with both Pglite and PostgreSQL without any code changes.
+- Use ONLY runtime APIs for all data operations (e.g., runtime.createMemory(), runtime.searchMemories()).
+- NO direct database imports or SQL queries.
 
 ### 2. Import Requirements (MANDATORY)
 - ALL imports must come from @elizaos/core ONLY
@@ -562,155 +557,38 @@ Remember: The plugin must work with BOTH Pglite and PostgreSQL without any code 
   ): Promise<void> {
     const content = `# Plugin Specification: ${spec.name}
 
-## Overview
-${spec.description}
+## 1. Overview
 
-## Features
-${spec.features.map((f) => `- ${f}`).join('\n')}
+- **Plugin Name:** \`${spec.name}\`
+- **Description:** ${spec.description}
+- **Main Features:** 
+${spec.features.map((f) => `  - ${f}`).join('\n')}
 
-## Components
-${spec.actions ? `### Actions\n${spec.actions.map((a) => `- ${a}`).join('\n')}` : ''}
-${spec.providers ? `### Providers\n${spec.providers.map((p) => `- ${p}`).join('\n')}` : ''}
-${spec.evaluators ? `### Evaluators\n${spec.evaluators.map((e) => `- ${e}`).join('\n')}` : ''}
-${spec.services ? `### Services\n${spec.services.map((s) => `- ${s}`).join('\n')}` : ''}
+## 2. AI-Suggested Components
 
-## CRITICAL REQUIREMENTS
+- **Actions:** ${spec.actions ? spec.actions.join(', ') : 'None suggested'}
+- **Providers:** ${spec.providers ? spec.providers.join(', ') : 'None suggested'}
+- **Evaluators:** ${spec.evaluators ? spec.evaluators.join(', ') : 'None suggested'}
+- **Services:** ${spec.services ? spec.services.join(', ') : 'None suggested'}
+
+## 3. CRITICAL REQUIREMENTS
 
 ### Database Compatibility (MANDATORY)
 This plugin MUST work with both Pglite and PostgreSQL without any code changes.
+- Use ONLY runtime APIs for all data operations (e.g., runtime.createMemory(), runtime.searchMemories()).
+- NO direct database imports or SQL queries.
 
-#### Database Abstraction Rules:
-- ✅ Use ONLY runtime.databaseAdapter for database operations
-- ✅ Use runtime.createMemory(), runtime.searchMemories(), runtime.createGoal()
-- ✅ Use runtime.ensureConnection() for relationships
-- ❌ NEVER import database adapters directly (PgliteDatabaseAdapter, PgDatabaseAdapter)
-- ❌ NEVER use database-specific SQL or queries
-- ❌ NEVER make assumptions about database type
+### Import Compliance (MANDATORY)
+- ALL imports must come from @elizaos/core ONLY.
 
-#### Example Database-Agnostic Code:
-\`\`\`typescript
-// ✅ CORRECT - Memory operations
-await runtime.createMemory({
-  entityId: message.entityId,
-  agentId: runtime.agentId,
-  content: { text: 'Information to store' },
-  roomId: message.roomId,
-  embedding: await runtime.embed('Information to store'),
-});
-
-// ✅ CORRECT - Search operations
-const memories = await runtime.searchMemories({
-  text: searchQuery,
-  entityId: message.entityId,
-  count: 10,
-});
-
-// ❌ WRONG - Direct database imports
-import { PgliteDatabaseAdapter } from '@elizaos/plugin-sql';
-\`\`\`
-
-### Import Requirements (MANDATORY)
-ALL imports must come from @elizaos/core ONLY:
-
-\`\`\`typescript
-// ✅ CORRECT - All from @elizaos/core
-import {
-  Plugin,
-  Action,
-  AgentRuntime,
-  logger,
-  Memory,
-  State,
-  Content,
-  HandlerCallback,
-  Service,
-} from '@elizaos/core';
-
-// ❌ WRONG - These packages don't exist
-import { logger } from '@elizaos/logger';
-import { Action } from '@elizaos/types';
-import { PgliteDatabaseAdapter } from '@elizaos/plugin-sql';
-\`\`\`
-
-## Detailed Technical Specification
+## 4. Detailed Technical Specification
 
 ${detailedSpec}
 
-## Implementation Instructions
+---
 
-You are now going to implement this plugin following ElizaOS 1.0.0 best practices:
-
-### 1. Core Implementation
-- **Use TypeScript** for all code
-- **Follow the ElizaOS plugin structure** exactly
-- **Implement all components** specified above
-- **Create comprehensive tests** for each component
-- **Use proper error handling** throughout
-- **Add detailed logging** using the ElizaOS logger
-
-### 2. Database Compatibility
-- **MANDATORY**: Plugin must work with both Pglite and PostgreSQL
-- **Use ONLY runtime APIs** for all data operations
-- **NO direct database imports** or database-specific code
-- **Test with both databases** in test suite
-
-### 3. Import Compliance
-- **ALL imports from @elizaos/core ONLY**
-- **NO imports from non-existent packages**
-- **Follow import examples above exactly**
-
-### 4. Component Requirements
-- **Services**: Must extend the base Service class with lifecycle methods (initialize, start, stop)
-- **Actions**: Must implement validate and handler functions
-- **Providers**: Must return formatted context strings using runtime APIs
-- **Evaluators**: Run after interactions, store data using runtime APIs
-- **All components**: Must be properly exported in index.ts
-
-### 5. Testing Requirements
-- **Tests must use vitest** and cover all functionality
-- **Database compatibility tests**:
-  \`\`\`typescript
-  describe('Database Compatibility', () => {
-    it('should work with Pglite', async () => {
-      process.env.PGLITE_DATA_DIR = './.test-db';
-      delete process.env.POSTGRES_URL;
-      // Test plugin functionality
-    });
-    
-    it('should work with PostgreSQL', async () => {
-      process.env.POSTGRES_URL = 'postgresql://test:test@localhost:5432/test';
-      delete process.env.PGLITE_DATA_DIR;
-      // Test plugin functionality
-    });
-  });
-  \`\`\`
-
-### 6. Quality Requirements
-- **NO stubs or incomplete code**
-- **Production-ready implementation**
-- **Proper error handling**
-- **Clean, well-organized code**
-
-## Production Readiness Checklist
-
-Before considering implementation complete, verify:
-
-- ✅ All imports come from @elizaos/core only
-- ✅ No direct database adapter imports
-- ✅ Uses runtime APIs for all data operations
-- ✅ Works with both Pglite and PostgreSQL
-- ✅ Has comprehensive tests for both database types
-- ✅ No database-specific code or SQL
-- ✅ Proper error handling throughout
-- ✅ No stubs or incomplete code
-- ✅ Services extend base Service class
-- ✅ Actions have validation and handlers
-- ✅ All components properly exported
-
-Work systematically through each component, implementing it completely before moving to the next.
-Remember: Database compatibility is MANDATORY - the plugin MUST work with both Pglite and PostgreSQL.
+*This document was auto-generated by the ElizaOS Plugin Creator.*
 `;
-
     await fs.writeFile(path.join(this.pluginPath!, 'PLUGIN_SPEC.md'), content);
   }
 
