@@ -35,6 +35,7 @@ import { v4 } from 'uuid';
 import * as actions from './actions/index.ts';
 import * as evaluators from './evaluators/index.ts';
 import * as providers from './providers/index.ts';
+import { replyAction } from './actions/reply.ts';
 
 import { TaskService } from './services/task.ts';
 import { agentScenariosSuite } from './e2e/scenarios.ts';
@@ -55,6 +56,8 @@ type MediaData = {
 };
 
 const latestResponseIds = new Map<string, Map<string, string>>();
+
+
 
 /**
  * Escapes special characters in a string to make it JSON-safe.
@@ -427,9 +430,6 @@ const messageReceivedHandler = async ({
 
         let responseMessages: Memory[] = [];
 
-        console.log('shouldRespond is', shouldRespond);
-        console.log('shouldSkipShouldRespond', shouldSkipShouldRespond);
-
         if (shouldRespond) {
           state = await runtime.composeState(message, ['ACTIONS']);
           if (!state.values.actionNames) {
@@ -504,7 +504,7 @@ const messageReceivedHandler = async ({
 
             responseContent.simple = isSimple;
 
-            const responseMesssage = {
+            const responseMessage = {
               id: asUUID(v4()),
               entityId: runtime.agentId,
               agentId: runtime.agentId,
@@ -513,7 +513,7 @@ const messageReceivedHandler = async ({
               createdAt: Date.now(),
             };
 
-            responseMessages = [responseMesssage];
+            responseMessages = [responseMessage];
           }
 
           // Clean up the response ID
@@ -535,14 +535,34 @@ const messageReceivedHandler = async ({
             // without actions there can't be more than one message
             await callback(responseContent);
           } else {
-            await runtime.processActions(
-              message,
-              responseMessages,
-              state,
-              async (memory: Content) => {
-                return [];
-              }
+
+            // Get all actions and filter out reply actions
+            const filterOutReplyActions = responseMessages
+              .flatMap(m => m.content.actions || [])
+              .filter(action => action && action !== 'IGNORE' && action !== 'REPLY' && action !== 'NONE');
+
+
+            logger.info(`[Bootstrap] Filtering out reply actions: ${JSON.stringify(filterOutReplyActions)}`);
+
+            // Only add REPLY if there are no other actions, or if REPLY was explicitly included in the response
+            const hasReplyAction = responseMessages.some(m =>
+              m.content.actions?.includes('REPLY')
             );
+
+            const actionsToProcess = hasReplyAction || filterOutReplyActions.length === 0
+              ? ['REPLY', ...filterOutReplyActions]
+              : filterOutReplyActions;
+
+            const messageWithActions = {
+              ...message,
+              content: {
+                ...message.content,
+                actions: actionsToProcess,
+              },
+            };
+
+            await runtime.processActions(messageWithActions, responseMessages, state, callback);
+
             if (responseMessages.length) {
               // Log provider usage for complex responses
               for (const responseMessage of responseMessages) {
@@ -557,8 +577,15 @@ const messageReceivedHandler = async ({
                 }
               }
 
-              for (const memory of responseMessages) {
-                await callback(memory.content);
+              // Only call callback for messages that weren't already handled by REPLY actions
+              // REPLY actions handle their own callbacks, so we should avoid duplicate calls
+              const hasReplyAction = actionsToProcess.includes('REPLY');
+              logger.debug(`[Bootstrap] Actions to process: ${JSON.stringify(actionsToProcess)}, will ${hasReplyAction ? 'skip' : 'call'} additional callback`);
+
+              if (!hasReplyAction) {
+                for (const memory of responseMessages) {
+                  await callback(memory.content);
+                }
               }
             }
           }
@@ -566,9 +593,7 @@ const messageReceivedHandler = async ({
             message,
             state,
             shouldRespond,
-            async (memory: Content) => {
-              return [];
-            },
+            callback,
             responseMessages
           );
         } else {
@@ -768,9 +793,6 @@ const postGeneratedHandler = async ({
     const response = await runtime.useModel(ModelType.TEXT_SMALL, {
       prompt,
     });
-
-    console.log('prompt is', prompt);
-    console.log('response is', response);
 
     // Parse XML
     const parsedXml = parseKeyValueXml(response);
