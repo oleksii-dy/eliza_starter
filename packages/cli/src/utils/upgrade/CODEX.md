@@ -14,7 +14,7 @@ Transform any ElizaOS v1 plugin to v2 architecture following Discord plugin patt
 - `src/test/utils.ts` - Copied exactly from a proven template with complete mock runtime
 - `src/test/test.ts` - Generated dynamically based on plugin name and structure
 
-**DO NOT manually create test files in Claude prompts - they are handled by the migration tool.**
+**DO NOT manually create test files in Codex prompts - they are handled by the migration tool.**
 
 ## 📖 **Reference Implementation**
 

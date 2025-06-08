@@ -1,4 +1,33 @@
-import { execa } from 'execa';
+import { spawn } from 'child_process';
+
+// Helper function to replace execa
+function execCommand(command: string, args: string[], options: { stdio?: 'pipe' | 'inherit'; cwd?: string }): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: options.cwd || process.cwd(),
+      stdio: options.stdio || 'pipe'
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    if (options.stdio === 'pipe' && child.stdout && child.stderr) {
+      child.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      child.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+    }
+
+    child.on('close', (code) => {
+      resolve({ stdout, stderr, exitCode: code || 0 });
+    });
+
+    child.on('error', reject);
+  });
+}
 import * as fs from 'fs-extra';
 import * as path from 'node:path';
 import { logger } from '@elizaos/core';
@@ -8,7 +37,11 @@ import { logger } from '@elizaos/core';
  */
 export async function ensureDependenciesInstalled(): Promise<void> {
   try {
-    await execa('bun', ['install'], { stdio: 'inherit' });
+    const installResult = await execCommand('bun', ['install'], { stdio: 'inherit' });
+  
+  if (installResult.exitCode !== 0) {
+    throw new Error(`Install failed with exit code ${installResult.exitCode}`);
+  }
   } catch (error) {
     throw new Error(`Failed to install dependencies: ${error}`);
   }
@@ -19,7 +52,8 @@ export async function ensureDependenciesInstalled(): Promise<void> {
  */
 export async function getAvailableDiskSpace(): Promise<number> {
   try {
-    const { stdout } = await execa('df', ['-h', '.'], { stdio: 'pipe' });
+    const result = await execCommand('df', ['-h', '.'], { stdio: 'pipe' });
+    const stdout = result.stdout;
     const lines = stdout.trim().split('\n');
     
     // Find the line with filesystem data (may be wrapped)
@@ -68,7 +102,11 @@ export async function getAvailableDiskSpace(): Promise<number> {
  */
 export async function isCommandAvailable(command: string): Promise<boolean> {
   try {
-    await execa('which', [command], { stdio: 'pipe' });
+    const whichResult = await execCommand('which', [command], { stdio: 'pipe' });
+    
+    if (whichResult.exitCode !== 0) {
+      throw new Error(`Command '${command}' not found`);
+    }
     return true;
   } catch {
     return false;
@@ -99,11 +137,9 @@ export async function executeWithTimeout(
   } = {}
 ): Promise<{ success: boolean; output?: string; error?: string }> {
   try {
-    const result = await execa(command, args, {
+    const result = await execCommand(command, args, {
       cwd: options.cwd || process.cwd(),
-      timeout: options.timeout || 120000,
       stdio: options.stdio || 'pipe',
-      reject: false
     });
 
     return {

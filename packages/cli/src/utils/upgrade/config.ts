@@ -1,7 +1,7 @@
 // Configuration constants for the migration system
 export const MAX_TOKENS = 100000;
-export const BRANCH_NAME = '1.x-claude';
-export const CLAUDE_CODE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+export const BRANCH_NAME = '1.x-codex';
+export const CODEX_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 export const MIN_DISK_SPACE_GB = 2; // Minimum 2GB free space required
 export const LOCK_FILE_NAME = '.elizaos-migration.lock';
 
@@ -15,7 +15,7 @@ export const MIGRATION_CONFIG = {
   MAX_POST_MIGRATION_ITERATIONS: 5,
   BUILD_TIMEOUT: 120000, // 2 minutes
   TEST_TIMEOUT: 300000,  // 5 minutes
-  CLAUDE_TIMEOUT: 30 * 60 * 1000, // 30 minutes
+  CODEX_TIMEOUT: 30 * 60 * 1000, // 30 minutes
   INSTALL_TIMEOUT: 300000, // 5 minutes
 } as const;
 
@@ -120,7 +120,7 @@ export const ENV_VAR_PATTERNS = {
 
 // Validation functions
 export function validateMigrationConfig() {
-  const required = ['ANTHROPIC_API_KEY'];
+  const required = ['OPENAI_API_KEY'];
   const missing = required.filter(key => !process.env[key]);
   
   if (missing.length > 0) {
@@ -128,12 +128,12 @@ export function validateMigrationConfig() {
   }
 }
 
-export function getTimeoutForOperation(operation: 'build' | 'test' | 'install' | 'claude'): number {
+export function getTimeoutForOperation(operation: 'build' | 'test' | 'install' | 'codex'): number {
   switch (operation) {
     case 'build': return MIGRATION_CONFIG.BUILD_TIMEOUT;
     case 'test': return MIGRATION_CONFIG.TEST_TIMEOUT;
     case 'install': return MIGRATION_CONFIG.INSTALL_TIMEOUT;
-    case 'claude': return MIGRATION_CONFIG.CLAUDE_TIMEOUT;
+    case 'codex': return MIGRATION_CONFIG.CODEX_TIMEOUT;
     default: return 120000; // 2 minutes default
   }
 }

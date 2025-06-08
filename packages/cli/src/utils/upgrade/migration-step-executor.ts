@@ -1,7 +1,8 @@
 import * as fs from 'fs-extra';
 import * as path from 'node:path';
 import { logger } from '@elizaos/core';
-import { execa } from 'execa';
+import { spawn } from 'child_process';
+import { promisify } from 'util';
 import { globby } from 'globby';
 import type { MigrationStep, StepResult, MigrationContext, FilePattern } from './types.js';
 import {
@@ -578,12 +579,12 @@ export class MyService extends Service {
 }
 \`\`\``;
 
-    ctx.claudePrompts.set('create-service', promptContent);
+          ctx.codexPrompts.set('create-service', promptContent);
 
     return {
       success: true,
       message: 'Prepared Service class creation prompt',
-      warnings: ['Requires Claude to implement Service class'],
+              warnings: ['Requires Codex to implement Service class'],
     };
   }
 
@@ -625,12 +626,12 @@ export function validateMyConfig(runtime: IAgentRuntime): MyConfig {
 }
 \`\`\``;
 
-    ctx.claudePrompts.set('create-config', promptContent);
+          ctx.codexPrompts.set('create-config', promptContent);
 
     return {
       success: true,
       message: 'Prepared config.ts creation prompt',
-      warnings: ['Requires Claude to implement configuration'],
+              warnings: ['Requires Codex to implement configuration'],
     };
   }
 
@@ -664,12 +665,12 @@ ${ARCHITECTURE_ISSUES.filter((i) => i.type === 'broken-handler')
   .map((i) => i.codeExample?.wrong)
   .join('\n\n')}`;
 
-    ctx.claudePrompts.set('centralize-actions', promptContent);
+          ctx.codexPrompts.set('centralize-actions', promptContent);
 
     return {
       success: true,
       message: 'Prepared actions centralization prompt',
-      warnings: ['Requires Claude to centralize actions'],
+              warnings: ['Requires Codex to centralize actions'],
     };
   }
 
@@ -697,12 +698,12 @@ export const myStateProvider: Provider = {
 };
 \`\`\``;
 
-    ctx.claudePrompts.set('migrate-providers', promptContent);
+          ctx.codexPrompts.set('migrate-providers', promptContent);
 
     return {
       success: true,
       message: 'Prepared providers migration prompt',
-      warnings: ['Requires Claude to migrate providers'],
+              warnings: ['Requires Codex to migrate providers'],
     };
   }
 
@@ -833,20 +834,32 @@ Key changes:
 4. Update all parameter names (stop → stopSequences, etc.)
 5. Fix ActionExample structure (user → name)`;
 
-    ctx.claudePrompts.set('fix-imports', promptContent);
+          ctx.codexPrompts.set('fix-imports', promptContent);
 
     return {
       success: true,
       message: 'Prepared import fixing prompt',
-      warnings: ['Requires Claude to fix imports'],
+              warnings: ['Requires Codex to fix imports'],
     };
   }
 
   private async runFormatter(ctx: MigrationContext): Promise<StepResult> {
     try {
-      await execa('bun', ['run', 'format'], {
-        cwd: ctx.repoPath,
-        stdio: 'pipe',
+      await new Promise<void>((resolve, reject) => {
+        const child = spawn('bun', ['run', 'format'], {
+          cwd: ctx.repoPath,
+          stdio: 'pipe'
+        });
+        
+        child.on('close', (code) => {
+          if (code === 0) {
+            resolve();
+          } else {
+            reject(new Error(`Format command exited with code ${code}`));
+          }
+        });
+        
+        child.on('error', reject);
       });
 
       return {
@@ -896,12 +909,12 @@ Ensure:
 3. Tests are included
 4. Remove any V1 patterns`;
 
-    ctx.claudePrompts.set('update-plugin-export', promptContent);
+          ctx.codexPrompts.set('update-plugin-export', promptContent);
 
     return {
       success: true,
       message: 'Prepared plugin export update prompt',
-      warnings: ['Requires Claude to update plugin export'],
+              warnings: ['Requires Codex to update plugin export'],
     };
   }
 

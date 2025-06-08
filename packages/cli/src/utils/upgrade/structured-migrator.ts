@@ -1,7 +1,44 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '@elizaos/core';
-import { execa } from 'execa';
+import { spawn } from 'child_process';
 import * as fs from 'fs-extra';
+
+// Helper function to replace execa
+function execCommand(command: string, args: string[], options: { cwd?: string; stdio?: 'pipe' | 'inherit'; timeout?: number; env?: Record<string, string> }): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: options.cwd || process.cwd(),
+      stdio: options.stdio || 'pipe',
+      env: options.env ? { ...process.env, ...options.env } : process.env
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    if (options.stdio === 'pipe' && child.stdout && child.stderr) {
+      child.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      child.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+    }
+
+    child.on('close', (code) => {
+      resolve({ stdout, stderr, exitCode: code || 0 });
+    });
+
+    child.on('error', reject);
+
+    // Handle timeout if specified
+    if (options.timeout) {
+      setTimeout(() => {
+        child.kill();
+        reject(new Error(`Command timed out after ${options.timeout}ms`));
+      }, options.timeout);
+    }
+  });
+}
 import ora from 'ora';
 import * as path from 'node:path';
 import simpleGit, { type SimpleGit } from 'simple-git';
@@ -31,7 +68,7 @@ export class StructuredMigrator {
   private repoPath: string | null;
   private isGitHub: boolean;
   private originalPath: string | null;
-  private anthropic: Anthropic | null;
+
   private changedFiles: Set<string>;
   private options: MigratorOptions;
   private lockFilePath: string | null = null;
@@ -43,7 +80,7 @@ export class StructuredMigrator {
     this.repoPath = null;
     this.isGitHub = false;
     this.originalPath = null;
-    this.anthropic = null;
+
     this.changedFiles = new Set();
     this.options = options;
 
@@ -66,39 +103,54 @@ export class StructuredMigrator {
     });
   }
 
-  async initializeAnthropic(): Promise<void> {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+  async initializeOpenAI(): Promise<void> {
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      logger.error('ANTHROPIC_API_KEY not found in environment.');
-      throw new Error('ANTHROPIC_API_KEY is required for migration');
+      logger.error('OPENAI_API_KEY not found in environment.');
+      throw new Error('OPENAI_API_KEY is required for migration');
     }
-
-    this.anthropic = new Anthropic({ apiKey });
+    logger.info('✅ OpenAI API key configured');
   }
 
   async migrate(input: string): Promise<MigrationResult> {
+    logger.info(`🚀 Starting migration with input: "${input}"`);
+    logger.info(`📂 Current working directory: ${process.cwd()}`);
+    
     const spinner = ora(`Starting structured migration for ${input}...`).start();
     let originalBranch: string | undefined;
 
     try {
-      await this.initializeAnthropic();
+      logger.info('🔑 Initializing OpenAI...');
+      await this.initializeOpenAI();
 
       // Check disk space
       spinner.text = 'Checking disk space...';
       await this.checkDiskSpace();
 
-      // Check for Claude Code
+      // Check for OpenAI Codex CLI
       try {
-        await execa('claude', ['--version'], { stdio: 'pipe' });
-      } catch {
+        logger.info('🔍 Checking for OpenAI Codex CLI...');
+        const result = await execCommand('npx', ['@openai/codex', '--version'], { 
+          stdio: 'pipe',
+          env: { 
+            OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+            // Unset NODE_OPTIONS to prevent read-only process.noDeprecation issue
+            NODE_OPTIONS: undefined
+          }
+        });
+        logger.info(`✅ Found Codex CLI: ${result.stdout || 'version check passed'}`);
+      } catch (error) {
+        logger.error('❌ OpenAI Codex CLI not found');
+        logger.error('Error details:', error);
         throw new Error(
-          'Claude Code is required for migration. Install with: bun install -g @anthropic-ai/claude-code'
+          'OpenAI Codex CLI is required for migration. Install with: npm install -g @openai/codex'
         );
       }
 
       // Step 1: Handle input (clone if GitHub URL, validate if folder)
       spinner.text = `Setting up repository for ${input}...`;
       await this.handleInput(input);
+      logger.info(`✅ Repository path set to: ${this.repoPath}`);
       spinner.succeed(`Repository setup complete for ${input}`);
 
       // Create lock file to prevent concurrent migrations
@@ -202,12 +254,12 @@ export class StructuredMigrator {
         spinner.succeed(`${chunk.title} completed`);
       }
 
-      // Apply Claude prompts if any were generated (for structural changes only)
-      if (migrationContext.claudePrompts.size > 0) {
-        spinner.text = 'Applying structural migrations...';
-        await this.applyClaudePrompts(migrationContext);
-        spinner.succeed('Structural migrations applied');
-      }
+              // Apply Codex prompts if any were generated (for structural changes only)
+        if (migrationContext.codexPrompts.size > 0) {
+          spinner.text = 'Applying structural migrations...';
+          await this.applyCodexPrompts(migrationContext);
+          spinner.succeed('Structural migrations applied');
+        }
 
       // Iterative validation and fixing loop
       let iterationCount = 0;
@@ -232,10 +284,14 @@ export class StructuredMigrator {
         if (lastValidationResult.warnings?.includes('Formatting issues')) {
           spinner.text = 'Running code formatter...';
           try {
-            await execa('bun', ['run', 'format'], {
-              cwd: this.repoPath || process.cwd(),
-              stdio: 'pipe'
-            });
+                      const formatResult = await execCommand('bun', ['run', 'format'], {
+            cwd: this.repoPath || process.cwd(),
+            stdio: 'pipe'
+          });
+          
+          if (formatResult.exitCode !== 0) {
+            logger.warn('Format command failed but continuing...');
+          }
             logger.info('✅ Code formatted successfully');
           } catch (error) {
             logger.warn('⚠️  Format command failed, continuing...');
@@ -438,6 +494,8 @@ export class StructuredMigrator {
   private async createMigrationContext(): Promise<MigrationContext> {
     if (!this.repoPath) throw new Error('Repository path not set');
 
+    logger.info(`📋 Creating migration context for: ${this.repoPath}`);
+
     // Read package.json
     const packageJsonPath = path.join(this.repoPath, 'package.json');
     const packageJson = await fs.readJson(packageJsonPath);
@@ -472,16 +530,16 @@ export class StructuredMigrator {
       packageJson,
       existingFiles,
       changedFiles: this.changedFiles,
-      claudePrompts: new Map(),
+      codexPrompts: new Map(),
       startTime: Date.now(),
       errors: [],
     };
   }
 
-  private async applyClaudePrompts(context: MigrationContext): Promise<void> {
-    if (context.claudePrompts.size === 0) return;
+  private async applyCodexPrompts(context: MigrationContext): Promise<void> {
+    if (context.codexPrompts.size === 0) return;
 
-    logger.info(`📋 Applying ${context.claudePrompts.size} Claude-based migrations...`);
+    logger.info(`📋 Applying ${context.codexPrompts.size} Codex-based migrations...`);
 
     // Create a comprehensive prompt from all collected prompts
     let megaPrompt = `# ElizaOS V1 to V2 Migration Tasks
@@ -512,7 +570,7 @@ ${issue.codeExample?.correct}
 `;
 
     // Add all collected prompts
-    for (const [stepId, prompt] of context.claudePrompts) {
+    for (const [stepId, prompt] of context.codexPrompts) {
       megaPrompt += `\n### Task: ${stepId}\n${prompt}\n`;
     }
 
@@ -528,47 +586,79 @@ ${issue.codeExample?.correct}
 
 Apply all the tasks above to migrate this plugin to V2 architecture.`;
 
-    // Apply with Claude
-    await this.runClaudeCodeWithPrompt(megaPrompt);
+    // Apply with OpenAI Codex
+    await this.runCodexWithPrompt(megaPrompt);
   }
 
-  private async runClaudeCodeWithPrompt(prompt: string): Promise<void> {
-    if (!this.repoPath) throw new Error('Repository path not set');
-    process.chdir(this.repoPath);
+  private async runCodexWithPrompt(prompt: string): Promise<void> {
+    if (!this.repoPath) {
+      logger.error('❌ Repository path is null or undefined');
+      throw new Error('Repository path not set - cannot run OpenAI Codex');
+    }
+    
+    logger.info(`📍 Working directory: ${this.repoPath}`);
+    logger.info(`📁 Repository path exists: ${await fs.pathExists(this.repoPath)}`);
+    logger.info('🤖 Running OpenAI Codex...');
 
     try {
-      logger.info('🤖 Running Claude Code...');
+      // Write the prompt to a temporary file since Codex expects file input
+      const tempPromptFile = path.join(this.repoPath, '.codex-prompt.txt');
+      await fs.writeFile(tempPromptFile, prompt);
 
-      await execa(
-        'claude',
+      const codexResult = await execCommand(
+        'npx',
         [
-          '--print',
-          '--max-turns',
-          '30',
-          '--verbose',
-          '--model',
-          'claude-3-5-sonnet-20241022',
-          '--dangerously-skip-permissions',
-          prompt,
+          '@openai/codex',
+          '--quiet',
+          '--auto-edit',
+          tempPromptFile,
         ],
         {
           stdio: 'inherit',
           cwd: this.repoPath,
           timeout: 15 * 60 * 1000, // 15 minutes
+          env: {
+            OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+            // Unset NODE_OPTIONS to prevent read-only process.noDeprecation issue
+            NODE_OPTIONS: undefined,
+          },
         }
       );
+      
+      if (codexResult.exitCode !== 0) {
+        throw new Error(`Codex failed with exit code ${codexResult.exitCode}`);
+      }
 
-      logger.info('✅ Claude Code completed successfully');
+      logger.info('✅ OpenAI Codex completed successfully');
+      
+      // Clean up temporary prompt file
+      await fs.remove(tempPromptFile);
     } catch (error: unknown) {
       const err = error as { code?: string; message?: string };
 
       if (err.code === 'ENOENT') {
         throw new Error(
-          'Claude Code not found! Install with: npm install -g @anthropic-ai/claude-code'
+          'OpenAI Codex CLI not found! Install with: npm install -g @openai/codex'
+        );
+      }
+      
+      if (err.message?.includes('noDeprecation') || err.message?.includes('read only property')) {
+        throw new Error(
+          'OpenAI Codex CLI compatibility issue with Node.js v22+. Try using Node.js v18 or v20, or run with: npx --node-options="--no-deprecation" @openai/codex'
         );
       }
 
-      logger.error('❌ Claude Code failed:', err.message);
+      logger.error('❌ OpenAI Codex failed:', err.message);
+      logger.error(`Working directory was: ${this.repoPath}`);
+      
+      // Clean up temporary prompt file even on error
+      try {
+        const tempPromptFile = path.join(this.repoPath, '.codex-prompt.txt');
+        await fs.remove(tempPromptFile);
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+      
       throw error;
     }
   }
@@ -585,11 +675,15 @@ Apply all the tasks above to migrate this plugin to V2 architecture.`;
 
     // Check build
     try {
-      await execa('bun', ['run', 'build'], {
-        cwd: this.repoPath || process.cwd(),
-        stdio: 'pipe',
-        timeout: 120000,
-      });
+                const buildResult = await execCommand('bun', ['run', 'build'], {
+            cwd: this.repoPath || process.cwd(),
+            stdio: 'pipe',
+            timeout: 120000,
+          });
+          
+          if (buildResult.exitCode !== 0) {
+            throw new Error(`Build failed with exit code ${buildResult.exitCode}`);
+          }
       results.build = true;
       logger.info('✅ Build check passed');
     } catch (error) {
@@ -611,10 +705,14 @@ Apply all the tasks above to migrate this plugin to V2 architecture.`;
 
     // Check formatting
     try {
-      await execa('bun', ['run', 'format:check'], {
+      const formatResult = await execCommand('bun', ['run', 'format:check'], {
         cwd: this.repoPath || process.cwd(),
         stdio: 'pipe',
       });
+      
+      if (formatResult.exitCode !== 0) {
+        throw new Error(`Format check failed with exit code ${formatResult.exitCode}`);
+      }
       results.format = true;
       logger.info('✅ Format check passed');
     } catch (error) {
@@ -642,7 +740,10 @@ Apply all the tasks above to migrate this plugin to V2 architecture.`;
   }
 
   private async handleInput(input: string): Promise<void> {
+    logger.info(`📥 Processing input: "${input}"`);
+    
     if (input.startsWith('https://github.com/')) {
+      logger.info('🌐 Detected GitHub URL, will clone repository');
       this.isGitHub = true;
       this.originalPath = input;
       const repoName = input.split('/').slice(-2).join('/').replace('.git', '');
@@ -671,11 +772,18 @@ Apply all the tasks above to migrate this plugin to V2 architecture.`;
         if (branches.current !== 'main') await this.git.checkout('main');
       }
     } else {
+      logger.info('📁 Detected local path, resolving...');
       this.repoPath = path.resolve(input);
+      logger.info(`📍 Resolved path: ${this.repoPath}`);
+      
       if (!(await fs.pathExists(this.repoPath))) {
+        logger.error(`❌ Path does not exist: ${this.repoPath}`);
         throw new Error(`Folder not found: ${this.repoPath}`);
       }
+      
+      logger.info('✅ Path exists, initializing git');
       this.git = simpleGit(this.repoPath);
+      logger.info(`✅ Repository path successfully set to: ${this.repoPath}`);
     }
   }
 
@@ -750,16 +858,21 @@ If this is an error, manually delete the lock file and try again.`;
 
     try {
       // Run build and capture errors
-      const result = await execa('bun', ['run', 'build'], {
+      const result = await execCommand('bun', ['run', 'build'], {
         cwd: this.repoPath,
-        reject: false,
-        all: true
+        stdio: 'pipe',
       });
+      
+      // Convert our result format to match execa's all property
+      const buildResult = {
+        exitCode: result.exitCode,
+        all: result.stderr + result.stdout, // Combine stderr and stdout like execa's 'all' option
+      };
 
-      if (result.exitCode !== 0 && result.all) {
+      if (buildResult.exitCode !== 0 && buildResult.all) {
         logger.info('📋 Analyzing build errors...');
         
-        const buildErrors = result.all;
+        const buildErrors = buildResult.all;
         const errorLines = buildErrors.split('\n');
         
         // Create a focused prompt for fixing build errors
@@ -781,16 +894,20 @@ Please fix these build errors following V2 patterns:
 
 Fix only the errors shown above. Make minimal changes required to fix the build.`;
 
-        await this.runClaudeCodeWithPrompt(buildFixPrompt);
+        await this.runCodexWithPrompt(buildFixPrompt);
         
-        // After Claude fixes, verify the build works
+        // After Codex fixes, verify the build works
         logger.info('🔨 Verifying build after fixes...');
         try {
-          await execa('bun', ['run', 'build'], {
-            cwd: this.repoPath,
-            stdio: 'pipe',
-            timeout: 120000,
-          });
+                      const buildResult2 = await execCommand('bun', ['run', 'build'], {
+              cwd: this.repoPath,
+              stdio: 'pipe',
+              timeout: 120000,
+            });
+            
+            if (buildResult2.exitCode !== 0) {
+              throw new Error(`Build verification failed with exit code ${buildResult2.exitCode}`);
+            }
           logger.info('✅ Build successful after fixes');
           
           // CRITICAL: Run tests after successful build fix
@@ -948,7 +1065,7 @@ Fix only the errors shown above. Make minimal changes required to fix the build.
             return;
           }
           
-          // If still failing, continue to Claude fix
+          // If still failing, continue to Codex fix
           testResult.error = retryResult.error;
         }
         
@@ -990,9 +1107,9 @@ Important:
 
 Fix only the test issues shown above.`;
 
-        await this.runClaudeCodeWithPrompt(testFixPrompt);
+        await this.runCodexWithPrompt(testFixPrompt);
         
-        // After Claude fixes, verify tests work
+        // After Codex fixes, verify tests work
         logger.info('🧪 Verifying tests after fixes...');
         const verifyResult = await this.runTestsWithDetailedError();
         
@@ -1126,14 +1243,21 @@ Fix only the test issues shown above.`;
       // IMPORTANT: Use 'bun run test' to invoke the test script defined in package.json
       // ElizaOS uses 'elizaos test' which is configured as the test script
       // Direct 'bun test' would use bun's test runner which expects .test.ts files
-      const result = await execa('bun', ['run', 'test'], {
+      const result = await execCommand('bun', ['run', 'test'], {
         cwd: this.repoPath,
-        reject: false,
-        all: true,
+        stdio: 'pipe',
         timeout: 300000, // 5 minute timeout
       });
+      
+      // Convert our result format to match execa's all property
+      const testResult = {
+        exitCode: result.exitCode,
+        all: result.stderr + result.stdout,
+        stderr: result.stderr,
+        stdout: result.stdout,
+      };
 
-      if (result.exitCode === 0) {
+      if (testResult.exitCode === 0) {
         logger.info('✅ Tests passed successfully');
         return {
           success: true,
@@ -1142,7 +1266,7 @@ Fix only the test issues shown above.`;
       }
 
       // Tests failed - analyze the output
-      const output = result.all || result.stderr || result.stdout || '';
+      const output = testResult.all || testResult.stderr || testResult.stdout || '';
       logger.error('❌ Test execution failed');
       logger.error('Test output:', output);
 

@@ -1,5 +1,35 @@
 import { logger } from '@elizaos/core';
-import { execa } from 'execa';
+import { spawn } from 'child_process';
+
+// Helper function to replace execa
+function execCommand(command: string, args: string[], options: { cwd: string; stdio?: 'pipe' | 'inherit'; env?: Record<string, string> }): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: options.cwd,
+      stdio: options.stdio || 'pipe',
+      env: options.env ? { ...process.env, ...options.env } : process.env
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    if (options.stdio === 'pipe' && child.stdout && child.stderr) {
+      child.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      child.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+    }
+
+    child.on('close', (code) => {
+      resolve({ stdout, stderr, exitCode: code || 0 });
+    });
+
+    child.on('error', reject);
+  });
+}
 import * as fs from 'fs-extra';
 import * as path from 'node:path';
 import { globby } from 'globby';
@@ -190,7 +220,7 @@ export class MyService extends Service {
 
 Migrate this service file to V2 patterns. Make all necessary changes.`;
 
-    await this.runClaudeOnFile(prompt);
+    await this.runCodexOnFile(prompt);
   }
 
   /**
@@ -237,7 +267,7 @@ Requirements:
 
 Fix ALL issues in this action file to be fully V2 compliant.`;
 
-    await this.runClaudeOnFile(prompt);
+    await this.runCodexOnFile(prompt);
   }
 
   /**
@@ -286,7 +316,7 @@ export const myStateProvider: Provider = {
 
 Migrate this provider to V2 standard interface.`;
 
-    await this.runClaudeOnFile(prompt);
+    await this.runCodexOnFile(prompt);
   }
 
   /**
@@ -338,7 +368,7 @@ export default myPlugin;
 
 Migrate this index file to proper V2 plugin export.`;
 
-    await this.runClaudeOnFile(prompt);
+    await this.runCodexOnFile(prompt);
   }
 
   /**
@@ -393,7 +423,7 @@ export function validateMyConfig(runtime: IAgentRuntime): MyConfig {
 
 Migrate this config to V2 patterns with Zod validation.`;
 
-    await this.runClaudeOnFile(prompt);
+    await this.runCodexOnFile(prompt);
   }
 
   /**
@@ -439,7 +469,7 @@ Requirements:
 
 Make all necessary changes for V2 compatibility.`;
 
-    await this.runClaudeOnFile(prompt);
+    await this.runCodexOnFile(prompt);
   }
 
   /**
@@ -529,31 +559,43 @@ Make all necessary changes for V2 compatibility.`;
   }
 
   /**
-   * Run Claude on a specific file with a prompt
+   * Run OpenAI Codex on a specific file with a prompt
    */
-  private async runClaudeOnFile(prompt: string): Promise<void> {
+  private async runCodexOnFile(prompt: string): Promise<void> {
     if (!this.context.repoPath) return;
 
     try {
-      await execa(
-        'claude',
+      // Write prompt to temporary file
+      const tempPromptFile = path.join(this.context.repoPath, '.codex-prompt.txt');
+      await fs.writeFile(tempPromptFile, prompt);
+
+      const codexResult = await execCommand(
+        'npx',
         [
-          '--print',
-          '--max-turns',
-          '10',
-          '--model',
-          'claude-sonnet-4-20250514',
-          '--dangerously-skip-permissions',
-          prompt,
+          '@openai/codex',
+          '--quiet',
+          '--auto-edit',
+          tempPromptFile,
         ],
         {
           stdio: 'inherit',
           cwd: this.context.repoPath,
-          timeout: 5 * 60 * 1000, // 5 minutes per file
+          env: {
+            OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+            // Unset NODE_OPTIONS to prevent read-only process.noDeprecation issue
+            NODE_OPTIONS: undefined,
+          },
         }
       );
+
+      // Clean up temporary file
+      await fs.remove(tempPromptFile);
+
+      if (codexResult.exitCode !== 0) {
+        throw new Error(`Codex failed with exit code ${codexResult.exitCode}`);
+      }
     } catch (error) {
-      logger.error('Claude failed to process file:', error);
+      logger.error('OpenAI Codex failed to process file:', error);
       throw error;
     }
   }

@@ -47,7 +47,7 @@ const require = createRequire(import.meta.url);
           to: './dist',
         },
         {
-          from: './src/utils/upgrade/CLAUDE.md',
+          from: './src/utils/upgrade/CODEX.md',
           to: './dist/utils/upgrade',
         },
       ],

@@ -69,7 +69,7 @@ export interface MigrationContext {
   packageJson: PackageJsonV2;
   existingFiles: string[];
   changedFiles: Set<string>;
-  claudePrompts: Map<string, string>;
+  codexPrompts: Map<string, string>;
   startTime: number;
   errors: MigrationError[];
 }
@@ -107,7 +107,7 @@ export interface PackageJsonV2 {
 
 // Error tracking
 export interface MigrationError {
-  type: 'build' | 'test' | 'lint' | 'claude' | 'file-operation' | 'validation';
+  type: 'build' | 'test' | 'lint' | 'codex' | 'file-operation' | 'validation';
   severity: 'critical' | 'high' | 'medium' | 'low';
   message: string;
   file?: string;

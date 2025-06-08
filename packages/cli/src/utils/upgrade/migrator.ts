@@ -2,7 +2,37 @@ import { logger } from '@elizaos/core';
 import { StructuredMigrator } from './structured-migrator.js';
 import type { MigrationResult, MigratorOptions } from './types.js';
 import { emoji } from '../emoji-handler';
-import { execa } from 'execa';
+import { spawn } from 'child_process';
+import { BRANCH_NAME } from './config.js';
+
+// Helper function to replace execa
+function execCommand(command: string, args: string[], options: { cwd: string; stdio?: 'pipe' | 'inherit' }): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: options.cwd,
+      stdio: options.stdio || 'pipe'
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    if (options.stdio === 'pipe' && child.stdout && child.stderr) {
+      child.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      child.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+    }
+
+    child.on('close', (code) => {
+      resolve({ stdout, stderr, exitCode: code || 0 });
+    });
+
+    child.on('error', reject);
+  });
+}
 
 // Re-export for external usage
 export type { MigrationResult, MigratorOptions };
@@ -48,11 +78,14 @@ export class PluginMigrator {
         // Step 1: Run final build check
         logger.info('\n🔨 Running final build check...');
         try {
-          await execa('bun', ['run', 'build'], {
-            stdio: 'inherit',
+          const buildResult = await execCommand('bun', ['run', 'build'], {
             cwd: result.repoPath,
-            timeout: 120000,
+            stdio: 'inherit',
           });
+          
+          if (buildResult.exitCode !== 0) {
+            throw new Error(`Build failed with exit code ${buildResult.exitCode}`);
+          }
           logger.info('✅ Final build check passed');
         } catch (error) {
           logger.error('❌ Final build check failed');
@@ -63,11 +96,14 @@ export class PluginMigrator {
         if (!this.options.skipTests && result.success) {
           logger.info('\n🧪 Running final test suite...');
           try {
-            await execa('bun', ['run', 'test'], {
-              stdio: 'inherit',
+            const testResult = await execCommand('bun', ['run', 'test'], {
               cwd: result.repoPath,
-              timeout: 300000,
+              stdio: 'inherit',
             });
+            
+            if (testResult.exitCode !== 0) {
+              throw new Error(`Tests failed with exit code ${testResult.exitCode}`);
+            }
             logger.info('✅ Final test suite passed');
           } catch (error) {
             logger.error('❌ Final test suite failed');
@@ -79,19 +115,29 @@ export class PluginMigrator {
         if (result.success) {
           logger.info('\n🎨 Running format check...');
           try {
-            await execa('bun', ['run', 'format:check'], {
-              stdio: 'pipe',
+            const formatCheckResult = await execCommand('bun', ['run', 'format:check'], {
               cwd: result.repoPath,
+              stdio: 'pipe',
             });
-            logger.info('✅ Format check passed');
+            
+            if (formatCheckResult.exitCode === 0) {
+              logger.info('✅ Format check passed');
+            } else {
+              throw new Error('Format check failed');
+            }
           } catch (error) {
             logger.info('⚠️  Format check failed, running formatter...');
             try {
-              await execa('bun', ['run', 'format'], {
-                stdio: 'pipe',
+              const formatResult = await execCommand('bun', ['run', 'format'], {
                 cwd: result.repoPath,
+                stdio: 'pipe',
               });
-              logger.info('✅ Code formatted successfully');
+              
+              if (formatResult.exitCode === 0) {
+                logger.info('✅ Code formatted successfully');
+              } else {
+                logger.warn('⚠️  Could not run formatter');
+              }
             } catch (formatError) {
               logger.warn('⚠️  Could not run formatter');
             }
@@ -102,16 +148,18 @@ export class PluginMigrator {
         if (result.success) {
           logger.info('\n📊 Git diff summary:');
           try {
-            const gitStatus = await execa('git', ['status', '--short'], {
+            const gitStatus = await execCommand('git', ['status', '--short'], {
               cwd: result.repoPath,
+              stdio: 'pipe',
             });
             if (gitStatus.stdout) {
               logger.info('Modified files:');
               logger.info(gitStatus.stdout);
             }
             
-            const gitDiff = await execa('git', ['diff', '--stat', `main...${result.branchName}`], {
+            const gitDiff = await execCommand('git', ['diff', '--stat', `main...${result.branchName}`], {
               cwd: result.repoPath,
+              stdio: 'pipe',
             });
             if (gitDiff.stdout) {
               logger.info('\nChange statistics:');
@@ -149,11 +197,19 @@ export class PluginMigrator {
 
       return {
         success: false,
-        branchName: '1.x-claude',
+        branchName: BRANCH_NAME,
         repoPath: '',
         error: error as Error,
       };
     }
+  }
+
+  /**
+   * Initialize OpenAI API client  
+   * @deprecated Now handled internally by StructuredMigrator
+   */
+  async initializeOpenAI(): Promise<void> {
+    logger.warn('initializeOpenAI() is deprecated and handled internally');
   }
 
   /**
