@@ -542,7 +542,7 @@ Make all necessary changes for V2 compatibility.`;
           '--max-turns',
           '10',
           '--model',
-          'claude-3-5-sonnet-20241022',
+          'claude-sonnet-4-20250514',
           '--dangerously-skip-permissions',
           prompt,
         ],
