@@ -460,6 +460,8 @@ const messageReceivedHandler = async ({
 
             // Map parsed XML to Content type, handling potential missing fields
             if (parsedXml) {
+              logger.info('parsedXml Actions', parsedXml.actions);
+
               responseContent = {
                 ...parsedXml,
                 thought: parsedXml.thought || '',
@@ -532,61 +534,50 @@ const messageReceivedHandler = async ({
               logger.debug('[Bootstrap] Simple response used providers', responseContent.providers);
             }
 
-            // without actions there can't be more than one message
+            // Simple response - just call callback directly
             await callback(responseContent);
           } else {
+            // Complex response - process the original actions from LLM
+            const actionsToProcess = responseContent?.actions || ['IGNORE'];
+            logger.info(`[Bootstrap] Processing actions: ${JSON.stringify(actionsToProcess)}`);
 
-            // Get all actions and filter out reply actions
-            const filterOutReplyActions = responseMessages
-              .flatMap(m => m.content.actions || [])
-              .filter(action => action && action !== 'IGNORE' && action !== 'REPLY' && action !== 'NONE');
-
-
-            logger.info(`[Bootstrap] Filtering out reply actions: ${JSON.stringify(filterOutReplyActions)}`);
-
-            // Only add REPLY if there are no other actions, or if REPLY was explicitly included in the response
-            const hasReplyAction = responseMessages.some(m =>
-              m.content.actions?.includes('REPLY')
+            // Special handling for tool + reply combinations to prevent double responses
+            const hasToolAction = actionsToProcess.some(action =>
+              action.toUpperCase().includes('TOOL') || action.toUpperCase().includes('MCP')
+            );
+            const hasReplyAction = actionsToProcess.some(action =>
+              action.toUpperCase() === 'REPLY'
             );
 
-            const actionsToProcess = hasReplyAction || filterOutReplyActions.length === 0
-              ? ['REPLY', ...filterOutReplyActions]
-              : filterOutReplyActions;
+            if (hasToolAction && hasReplyAction) {
+              // When both tool and reply actions are present, only process the tool action
+              // The tool action should handle both execution and response
+              const toolActions = actionsToProcess.filter(action =>
+                action.toUpperCase().includes('TOOL') || action.toUpperCase().includes('MCP')
+              );
 
-            const messageWithActions = {
-              ...message,
-              content: {
-                ...message.content,
-                actions: actionsToProcess,
-              },
-            };
+              logger.info(`[Bootstrap] Tool + Reply detected, processing only tool actions: ${JSON.stringify(toolActions)}`);
 
-            await runtime.processActions(messageWithActions, responseMessages, state, callback);
+              const messageWithActions = {
+                ...message,
+                content: {
+                  ...message.content,
+                  actions: toolActions,
+                },
+              };
 
-            if (responseMessages.length) {
-              // Log provider usage for complex responses
-              for (const responseMessage of responseMessages) {
-                if (
-                  responseMessage.content.providers &&
-                  responseMessage.content.providers.length > 0
-                ) {
-                  logger.debug(
-                    '[Bootstrap] Complex response used providers',
-                    responseMessage.content.providers
-                  );
-                }
-              }
+              await runtime.processActions(messageWithActions, responseMessages, state, callback);
+            } else {
+              // Normal action processing
+              const messageWithActions = {
+                ...message,
+                content: {
+                  ...message.content,
+                  actions: actionsToProcess,
+                },
+              };
 
-              // Only call callback for messages that weren't already handled by REPLY actions
-              // REPLY actions handle their own callbacks, so we should avoid duplicate calls
-              const hasReplyAction = actionsToProcess.includes('REPLY');
-              logger.debug(`[Bootstrap] Actions to process: ${JSON.stringify(actionsToProcess)}, will ${hasReplyAction ? 'skip' : 'call'} additional callback`);
-
-              if (!hasReplyAction) {
-                for (const memory of responseMessages) {
-                  await callback(memory.content);
-                }
-              }
+              await runtime.processActions(messageWithActions, responseMessages, state, callback);
             }
           }
           await runtime.evaluate(
