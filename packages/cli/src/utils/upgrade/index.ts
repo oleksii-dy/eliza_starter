@@ -5,21 +5,33 @@ export { PluginMigrator } from './migrator.js';
 export { StructuredMigrator } from './structured-migrator.js';
 export { MigrationStepExecutor } from './migration-step-executor.js';
 
+// Error handling
+export { MigrationErrorHandler } from './error-handler.js';
+
 // Types
 export type {
   MigrationResult,
+  MigrationMetrics,
   MigratorOptions,
   MigrationPhase,
   MigrationStep,
   StepResult,
   MigrationContext,
+  MigrationError,
+  PackageJsonV2,
   ArchitectureIssue,
   FilePattern,
+  FileOperation,
   ImportMapping,
   ModelTypeMapping,
   TestingPattern,
   SuccessMetrics,
-  PromptChunk
+  PromptChunk,
+  CommandResult,
+  EnvironmentValidation,
+  PluginStructureValidation,
+  ValidationResult,
+  ProgressTracker
 } from './types.js';
 
 // Mega prompt parser
@@ -46,7 +58,14 @@ export { analyzeRepository } from './repository-analyzer.js';
 export {
   ensureDependenciesInstalled,
   getAvailableDiskSpace,
-  isCommandAvailable
+  isCommandAvailable,
+  safeFileOperation,
+  executeWithTimeout,
+  createFileWithContent,
+  deleteFileOrDirectory,
+  createProgressTracker,
+  validateEnvironmentFile,
+  parseErrorOutput
 } from './utils.js';
 
 // Configuration
@@ -55,5 +74,15 @@ export {
   BRANCH_NAME,
   CLAUDE_CODE_TIMEOUT,
   MIN_DISK_SPACE_GB,
-  LOCK_FILE_NAME
+  LOCK_FILE_NAME,
+  DEFAULT_OPENAI_API_KEY,
+  MIGRATION_CONFIG,
+  FILE_PATTERNS,
+  ERROR_PATTERNS,
+  V2_DEPENDENCIES,
+  V2_DEV_DEPENDENCIES,
+  V2_SCRIPTS,
+  ENV_VAR_PATTERNS,
+  validateMigrationConfig,
+  getTimeoutForOperation
 } from './config.js';

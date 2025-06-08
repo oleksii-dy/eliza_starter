@@ -213,8 +213,6 @@ export class StructuredMigrator {
       let iterationCount = 0;
       const maxIterations = 10;
       let lastValidationResult: StepResult;
-      let previousBuildFailed = false;
-      let previousTestsFailed = false;
 
       do {
         iterationCount++;
@@ -248,7 +246,6 @@ export class StructuredMigrator {
         if (lastValidationResult.warnings?.includes('Build failed')) {
           spinner.text = 'Analyzing build errors...';
           await this.analyzeBuildErrorsAndFix(migrationContext);
-          previousBuildFailed = true;
           
           // After fixing build, immediately run a build to verify fix
           spinner.text = 'Verifying build fix...';
@@ -274,7 +271,6 @@ export class StructuredMigrator {
         if (lastValidationResult.warnings?.includes('Tests failed')) {
           spinner.text = 'Analyzing test failures...';
           await this.analyzeTestErrorsAndFix(migrationContext);
-          previousTestsFailed = true;
           
           // After fixing tests, immediately run tests to verify fix
           if (!this.options.skipTests) {
@@ -477,6 +473,8 @@ export class StructuredMigrator {
       existingFiles,
       changedFiles: this.changedFiles,
       claudePrompts: new Map(),
+      startTime: Date.now(),
+      errors: [],
     };
   }
 

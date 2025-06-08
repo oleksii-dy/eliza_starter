@@ -3,11 +3,24 @@ export interface MigrationResult {
   branchName: string;
   repoPath: string;
   error?: Error;
+  metrics?: MigrationMetrics;
+}
+
+export interface MigrationMetrics {
+  totalSteps: number;
+  completedSteps: number;
+  failedSteps: number;
+  duration: number;
+  filesChanged: number;
+  iterations: number;
+  postMigrationIterations: number;
 }
 
 export interface MigratorOptions {
   skipTests?: boolean;
   skipValidation?: boolean;
+  maxIterations?: number;
+  timeout?: number;
 }
 
 // Migration phases from the mega prompt
@@ -23,7 +36,7 @@ export type MigrationPhase =
   | 'build-quality-validation'
   | 'final-integration-validation';
 
-// Detailed step interface
+// Enhanced step interface with better error handling
 export interface MigrationStep {
   id: string;
   phase: MigrationPhase;
@@ -32,6 +45,8 @@ export interface MigrationStep {
   required: boolean;
   skipCondition?: (context: MigrationContext) => boolean;
   execute: (context: MigrationContext) => Promise<StepResult>;
+  retryCount?: number;
+  timeout?: number;
 }
 
 export interface StepResult {
@@ -40,6 +55,8 @@ export interface StepResult {
   error?: Error;
   changes?: string[];
   warnings?: string[];
+  duration?: number;
+  retryable?: boolean;
 }
 
 export interface MigrationContext {
@@ -49,20 +66,59 @@ export interface MigrationContext {
   hasProviders: boolean;
   hasActions: boolean;
   hasTests: boolean;
-  packageJson: {
-    name: string;
-    version: string;
-    dependencies?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-    scripts?: Record<string, string>;
-    [key: string]: unknown;
-  };
+  packageJson: PackageJsonV2;
   existingFiles: string[];
   changedFiles: Set<string>;
   claudePrompts: Map<string, string>;
+  startTime: number;
+  errors: MigrationError[];
 }
 
-// Critical architecture issues from mega prompt
+// Enhanced package.json type for V2 structure
+export interface PackageJsonV2 {
+  name: string;
+  version: string;
+  type: 'module';
+  main: string;
+  module: string;
+  types: string;
+  exports: {
+    './package.json': string;
+    '.': {
+      import: {
+        types: string;
+        default: string;
+      };
+    };
+  };
+  files: string[];
+  repository?: {
+    type: string;
+    url: string;
+  };
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  scripts?: Record<string, string>;
+  publishConfig?: {
+    access: string;
+  };
+  [key: string]: unknown;
+}
+
+// Error tracking
+export interface MigrationError {
+  type: 'build' | 'test' | 'lint' | 'claude' | 'file-operation' | 'validation';
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  message: string;
+  file?: string;
+  line?: number;
+  phase?: MigrationPhase;
+  step?: string;
+  timestamp: number;
+  fixed?: boolean;
+}
+
+// Architecture issue tracking
 export interface ArchitectureIssue {
   type:
     | 'missing-service'
@@ -80,12 +136,21 @@ export interface ArchitectureIssue {
   };
 }
 
-// File structure patterns
+// File operation types
 export interface FilePattern {
   v1Pattern: string;
   v2Pattern: string;
   action: 'delete' | 'move' | 'create' | 'update';
   content?: string;
+}
+
+export interface FileOperation {
+  type: 'create' | 'update' | 'delete' | 'move';
+  source?: string;
+  target: string;
+  content?: string;
+  success?: boolean;
+  error?: string;
 }
 
 // Import mapping
@@ -109,7 +174,7 @@ export interface TestingPattern {
   requiredImports: string[];
 }
 
-// Success metrics from mega prompt
+// Enhanced success metrics
 export interface SuccessMetrics {
   technicalValidation: {
     cleanBuild: boolean;
@@ -148,61 +213,50 @@ export interface PromptChunk {
   }>;
 }
 
-// Legacy types for backward compatibility
-export interface AnalyzedError {
-  category: 'syntax' | 'import' | 'type' | 'runtime' | 'test' | 'build' | 'linting';
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  message: string;
-  file?: string;
-  line?: number;
-  column?: number;
-  autoFixable: boolean;
-  blocking: boolean;
-  elizaosSpecific: boolean;
-  priority: number;
-}
-
-export interface PrioritizedIssue extends AnalyzedError {
-  priorityScore: number;
-  context: string;
-  suggestedFix?: string;
-}
-
-export interface IterationRecord {
-  iteration: number;
-  timestamp: Date;
-  duration: number;
-  issuesAddressed: number;
-  successfulFixes: number;
-  codebaseHealth: number;
-  consecutiveSuccesses: number;
-  errors: AnalyzedError[];
-  fixes: FixAttempt[];
-}
-
-export interface FixAttempt {
-  issue: PrioritizedIssue;
-  prompt: string;
+// Command execution result
+export interface CommandResult {
   success: boolean;
-  newErrors?: AnalyzedError[];
+  exitCode: number;
+  stdout?: string;
+  stderr?: string;
   duration: number;
+  timedOut?: boolean;
 }
 
-export interface SuccessPattern {
-  signature: string;
-  approach: string;
-  count: number;
-  successRate: number;
-  lastUsed: Date;
-  context: string;
+// Environment validation
+export interface EnvironmentValidation {
+  requiredVars: string[];
+  missingVars: string[];
+  invalidVars: string[];
+  recommendations: string[];
 }
 
-export interface ErrorPattern {
-  pattern: RegExp;
-  category: AnalyzedError['category'];
-  severity: AnalyzedError['severity'];
-  autoFixable: boolean;
-  elizaosSpecific: boolean;
-  promptTemplate: string;
-  priority: number;
+// V2 Plugin structure validation
+export interface PluginStructureValidation {
+  hasValidExports: boolean;
+  hasService: boolean;
+  hasActions: boolean;
+  hasProviders: boolean;
+  hasTests: boolean;
+  hasConfig: boolean;
+  issues: string[];
+  recommendations: string[];
+}
+
+// Remove legacy types and replace with simpler, more focused ones
+export interface ValidationResult {
+  category: 'build' | 'test' | 'lint' | 'structure';
+  success: boolean;
+  issues: string[];
+  fixes: string[];
+}
+
+// Progress tracking
+export interface ProgressTracker {
+  currentStep: number;
+  totalSteps: number;
+  currentPhase: MigrationPhase;
+  phaseProgress: number;
+  overallProgress: number;
+  estimatedTimeRemaining?: number;
 }

@@ -6,28 +6,11 @@ import { logger } from '@elizaos/core';
 /**
  * Check if dependencies are installed and install them if needed
  */
-export async function ensureDependenciesInstalled(repoPath: string): Promise<void> {
-  // Check if package.json exists
-  const packageJsonPath = path.join(repoPath, 'package.json');
-  if (!(await fs.pathExists(packageJsonPath))) {
-    throw new Error('No package.json found in repository. Cannot install dependencies.');
-  }
-
-  // First ensure dependencies are installed
-  logger.info('Installing dependencies...');
+export async function ensureDependenciesInstalled(): Promise<void> {
   try {
-    await execa('bun', ['install'], {
-      cwd: repoPath,
-      stdio: 'pipe',
-      timeout: 300000, // 5 minute timeout for bun install
-    });
-  } catch (installError: unknown) {
-    const error = installError as { timedOut?: boolean; message?: string };
-    if (error.timedOut) {
-      throw new Error('bun install timed out after 5 minutes. Check network connection.');
-    }
-    logger.warn(`bun install failed: ${error.message || 'Unknown error'}`);
-    // Continue anyway - some operations might still work
+    await execa('bun', ['install'], { stdio: 'inherit' });
+  } catch (error) {
+    throw new Error(`Failed to install dependencies: ${error}`);
   }
 }
 
@@ -36,15 +19,47 @@ export async function ensureDependenciesInstalled(repoPath: string): Promise<voi
  */
 export async function getAvailableDiskSpace(): Promise<number> {
   try {
-    const result = await execa('df', ['-k', require('node:os').tmpdir()]);
-    const lines = result.stdout.split('\n');
-    const dataLine = lines[1]; // Second line contains the data
-    const parts = dataLine.split(/\s+/);
-    const availableKB = Number.parseInt(parts[3]);
-    return availableKB / 1024 / 1024; // Convert to GB
+    const { stdout } = await execa('df', ['-h', '.'], { stdio: 'pipe' });
+    const lines = stdout.trim().split('\n');
+    
+    // Find the line with filesystem data (may be wrapped)
+    let dataLine = lines[1];
+    let columns = dataLine.split(/\s+/);
+    
+    // Handle wrapped lines - if columns[3] doesn't look like a size, try combining lines
+    if (columns.length < 4 || !columns[3].match(/\d+[KMGT]?i?/)) {
+      dataLine = lines[1] + ' ' + lines[2];
+      columns = dataLine.split(/\s+/);
+    }
+    
+    const availableStr = columns[3];
+    logger.info(`Debug: Available disk space raw: ${availableStr}`);
+    
+    // Updated regex to handle both single char (G, M, K, T) and double char (Gi, Mi, Ki, Ti) units
+    const match = availableStr.match(/^(\d+(?:\.\d+)?)([KMGT]i?)$/i);
+    if (!match) {
+      logger.warn(`Could not parse disk space format: ${availableStr}`);
+      return 10; // Default assumption
+    }
+    
+    const [, size, unit] = match;
+    const sizeNum = parseFloat(size);
+    
+    // Handle both binary (i) and decimal units
+    switch (unit.toLowerCase()) {
+      case 't':
+      case 'ti': return sizeNum * 1024;
+      case 'g':
+      case 'gi': return sizeNum;
+      case 'm':
+      case 'mi': return sizeNum / 1024;
+      case 'k':
+      case 'ki': return sizeNum / (1024 * 1024);
+      default: return sizeNum / (1024 * 1024 * 1024);
+    }
   } catch (error) {
-    logger.warn('Could not check disk space, proceeding anyway');
-    return 10; // Assume enough space if check fails
+    logger.warn(`Failed to check disk space: ${error}. Assuming sufficient space.`);
+    return 10; // Default assumption
   }
 }
 
@@ -53,9 +68,169 @@ export async function getAvailableDiskSpace(): Promise<number> {
  */
 export async function isCommandAvailable(command: string): Promise<boolean> {
   try {
-    await execa(command, ['--version'], { stdio: 'pipe' });
+    await execa('which', [command], { stdio: 'pipe' });
     return true;
   } catch {
     return false;
   }
+}
+
+// New utility functions to reduce duplication
+
+export async function safeFileOperation<T>(
+  operation: () => Promise<T>,
+  errorMessage: string
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    logger.error(`${errorMessage}: ${error}`);
+    throw error;
+  }
+}
+
+export async function executeWithTimeout(
+  command: string,
+  args: string[],
+  options: {
+    cwd?: string;
+    timeout?: number;
+    stdio?: 'pipe' | 'inherit';
+  } = {}
+): Promise<{ success: boolean; output?: string; error?: string }> {
+  try {
+    const result = await execa(command, args, {
+      cwd: options.cwd || process.cwd(),
+      timeout: options.timeout || 120000,
+      stdio: options.stdio || 'pipe',
+      reject: false
+    });
+
+    return {
+      success: result.exitCode === 0,
+      output: result.stdout,
+      error: result.stderr
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+
+export async function createFileWithContent(
+  filePath: string,
+  content: string,
+  options: { overwrite?: boolean } = {}
+): Promise<boolean> {
+  try {
+    if (!options.overwrite && await fs.pathExists(filePath)) {
+      logger.warn(`File already exists: ${filePath}`);
+      return false;
+    }
+
+    await fs.ensureDir(path.dirname(filePath));
+    await fs.writeFile(filePath, content);
+    logger.info(`Created file: ${filePath}`);
+    return true;
+  } catch (error) {
+    logger.error(`Failed to create file ${filePath}: ${error}`);
+    return false;
+  }
+}
+
+export async function deleteFileOrDirectory(filePath: string): Promise<boolean> {
+  try {
+    if (await fs.pathExists(filePath)) {
+      await fs.remove(filePath);
+      logger.info(`Deleted: ${filePath}`);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    logger.error(`Failed to delete ${filePath}: ${error}`);
+    return false;
+  }
+}
+
+export function createProgressTracker(totalSteps: number) {
+  let currentStep = 0;
+
+  return {
+    next: (stepName: string) => {
+      currentStep++;
+      const percentage = Math.round((currentStep / totalSteps) * 100);
+      logger.info(`[${currentStep}/${totalSteps} - ${percentage}%] ${stepName}`);
+    },
+    complete: () => {
+      logger.info(`✅ All ${totalSteps} steps completed successfully`);
+    }
+  };
+}
+
+export async function validateEnvironmentFile(repoPath: string): Promise<string[]> {
+  const envPath = path.join(repoPath, '.env');
+  const missingVars: string[] = [];
+
+  if (!await fs.pathExists(envPath)) {
+    return ['OPENAI_API_KEY']; // Always required
+  }
+
+  const envContent = await fs.readFile(envPath, 'utf-8');
+  
+  // Check for required variables
+  const requiredVars = ['OPENAI_API_KEY'];
+  
+  for (const varName of requiredVars) {
+    if (!envContent.includes(`${varName}=`)) {
+      missingVars.push(varName);
+    }
+  }
+
+  return missingVars;
+}
+
+export function parseErrorOutput(output: string): {
+  type: 'build' | 'test' | 'lint' | 'unknown';
+  critical: boolean;
+  message: string;
+  file?: string;
+  line?: number;
+} {
+  // Build errors
+  if (output.includes('TS') && output.includes('error')) {
+    const fileMatch = output.match(/(\S+\.ts)\((\d+),\d+\):/);
+    return {
+      type: 'build',
+      critical: true,
+      message: output,
+      file: fileMatch?.[1],
+      line: fileMatch?.[2] ? parseInt(fileMatch[2]) : undefined
+    };
+  }
+
+  // Test errors
+  if (output.includes('FAIL') || output.includes('Test failed')) {
+    return {
+      type: 'test',
+      critical: true,
+      message: output
+    };
+  }
+
+  // Lint errors
+  if (output.includes('prettier') || output.includes('format')) {
+    return {
+      type: 'lint',
+      critical: false,
+      message: output
+    };
+  }
+
+  return {
+    type: 'unknown',
+    critical: true,
+    message: output
+  };
 }
