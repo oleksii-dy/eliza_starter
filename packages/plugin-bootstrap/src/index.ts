@@ -430,6 +430,9 @@ const messageReceivedHandler = async ({
 
         let responseMessages: Memory[] = [];
 
+        console.log('shouldRespond is', shouldRespond);
+        console.log('shouldSkipShouldRespond', shouldSkipShouldRespond);
+
         if (shouldRespond) {
           state = await runtime.composeState(message, ['ACTIONS']);
           if (!state.values.actionNames) {
@@ -460,7 +463,7 @@ const messageReceivedHandler = async ({
 
             // Map parsed XML to Content type, handling potential missing fields
             if (parsedXml) {
-              logger.info('parsedXml Actions', parsedXml.actions);
+              console.log('parsedXml Actions are ', parsedXml.actions);
 
               responseContent = {
                 ...parsedXml,
