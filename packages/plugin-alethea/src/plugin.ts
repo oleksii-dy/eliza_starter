@@ -8,6 +8,12 @@ import {
   getAliAgentKeySellPriceAction,
   buyKeysAction,
   sellKeysAction,
+  fusePodWithAliAgentAction,
+  distributeHiveTokensAction,
+  createLiquidityPoolAction,
+  deployAliAgentTokenAction,
+  deployHiveUtilityTokenAction,
+  executeAirdropAction,
   // Other actions will be added here
 } from './actions'; // Import from actions/index.ts
 
@@ -28,15 +34,7 @@ const configSchema = z.object({
       }
       return val;
     }),
-  ALETHEA_API_KEY: z
-    .string()
-    .min(1, 'ALETHEA_API_KEY cannot be empty')
-    .transform((val) => {
-      if (!val) {
-        throw new Error('ALETHEA_API_KEY is required for Alethea AI SDK authentication');
-      }
-      return val;
-    }),
+  ALETHEA_API_KEY: z.string().min(1, 'ALETHEA_API_KEY cannot be empty').optional(),
   // Optional: Default Pod NFT Contract address if not provided in action call
   POD_NFT_CONTRACT_ADDRESS: z
     .string()
@@ -90,7 +88,7 @@ export const aliAgentActions: Action[] = [
   getAliAgentKeySellPriceAction,
   buyKeysAction,
   sellKeysAction,
-  // Other actions will be added here
+  fusePodWithAliAgentAction,
 ];
 
 /**
@@ -101,12 +99,16 @@ export const inftActions: Action[] = [];
 /**
  * Actions for Hive creation, membership, and messaging
  */
-export const hiveActions: Action[] = [];
+export const hiveActions: Action[] = [
+  distributeHiveTokensAction,
+  createLiquidityPoolAction,
+  deployHiveUtilityTokenAction,
+];
 
 /**
  * Actions for token operations (transfer, balance check)
  */
-export const tokenActions: Action[] = [];
+export const tokenActions: Action[] = [deployAliAgentTokenAction, executeAirdropAction];
 
 /**
  * Actions for governance operations (proposals, voting)

@@ -1,106 +1,117 @@
 # Alethea AI Plugin for ElizaOS
 
-This plugin bootstraps **Alethea AI** support for ElizaOS agents.  
-It lays the groundwork for future actions that will interact with Alethea’s AliAgent, INFT, Hive, token, governance and market-data APIs.
+This plugin enables interaction with the Alethea AI ecosystem, including creating ALI Agents from NFTs/iNFTs and trading keys.
 
-> **Status:** **alpha / scaffold** – provides configuration handling and build pipeline only.  
-> Functional actions will be added in subsequent tickets of the _M4 Alethea AI Plugin Integration_ epic.
+## Features
 
----
+- **Convert NFT to ALI Agent**: Transform an ERC-721 NFT into an intelligent ALI Agent (Base Network)
+- **Convert iNFT to ALI Agent**: Transform an iNFT into an ALI Agent (Ethereum Mainnet)
+- **Keys Trading**: Buy and sell keys for ALI Agents
+- **Pod Operations**: Fuse pods with ALI Agents
+- **Hive Operations**: Create liquidity pools and distribute tokens
+- **Token Operations**: Deploy and airdrop ALI Agent or Hive utility tokens
 
-## ✨ Features (current)
+## Core Workflow
 
-- Standard ElizaOS plugin skeleton (TypeScript, TSUP, Vitest, Prettier, ESLint)
-- Environment-variable validation with `zod`
-- Automatic loading and verification of required credentials at runtime
-- Ready-made build script (`npm run build`) that outputs ESM bundle in `dist/`
-- Placeholder action arrays exposed for upcoming functionality
+The main Alethea AI workflow is:
+1. **Start with existing NFT/iNFT** (user owns)
+2. **Convert to ALI Agent** using Keys Factory contract
+3. **Trade keys** for the ALI Agent
+4. **Additional operations** like pods, hives, etc.
 
----
+**No custom token deployment needed** - ALI Agents are created from existing NFTs!
 
-## 📦 Installation / Build
+## Installation
 
 ```bash
-# From ElizaOS monorepo root
-bun i        # or npm install
-bun run build --filter=@elizaos/plugin-alethea   # or npm run build --workspace @elizaos/plugin-alethea
+npm install
 ```
 
-The output bundle and type declarations are emitted to `packages/plugins/plugin-alethea/dist`.
+## Configuration
 
----
-
-## 🔧 Configuration
-
-The plugin reads its credentials from environment variables **or** from the agent’s `character.settings.secrets` block.
-
-| Variable          | Description                                     | Required |
-| ----------------- | ----------------------------------------------- | -------- |
-| `ALETHEA_RPC_URL` | JSON-RPC endpoint for Alethea chain             | ✅       |
-| `PRIVATE_KEY`     | Signer private key used for authenticated calls | ✅       |
-| `ALETHEA_API_KEY` | Alethea SDK / REST API key (if applicable)      | ✅       |
-
-Create/extend your project `.env`:
+Create a `.env` file with the following variables:
 
 ```env
-# Alethea AI Plugin
-ALETHEA_RPC_URL=https://api.alethea.ai
-PRIVATE_KEY=0xYOUR_PRIVATE_KEY_HERE
-ALETHEA_API_KEY=your_alethea_api_key
+ALETHEA_RPC_URL=https://base-mainnet.infura.io/v3/your-project-id  # For Base Network NFTs
+PRIVATE_KEY=your-wallet-private-key
+ALETHEA_API_KEY=your-alethea-api-key  # Optional
 ```
 
-If any required variable is missing at startup the plugin throws a descriptive error.
+**Required for Airdrop Operations:**
+- `ALETHEA_RPC_URL`: Base Network RPC endpoint
+- `PRIVATE_KEY`: Wallet private key with tokens to distribute
 
----
+## Usage
 
-## 🚀 Activation
-
-Add the plugin to your character configuration (usually `eliza.ts`):
+### Convert NFT to ALI Agent (Base Network)
 
 ```typescript
-...(process.env.ALETHEA_RPC_URL ? ['@elizaos/plugin-alethea'] : []),
+"Convert my NFT at address 0x123... token ID 42 to an ALI Agent using ETH implementation"
 ```
 
-The convention mirrors other ElizaOS plugins: **presence of `ALETHEA_RPC_URL` activates the plugin automatically**.
+### Convert iNFT to ALI Agent (Ethereum Mainnet)
 
----
-
-## 🗂️ Project Structure
-
-```
-plugin-alethea/
-├── src/
-│   ├── index.ts        # Entry point – exports plugin & placeholder arrays
-│   └── plugin.ts       # Config validation & initialization logic
-├── tsup.config.ts      # Build pipeline
-├── tsconfig*.json      # TypeScript configs
-└── README.md           # You are here
+```typescript
+"Convert my iNFT at address 0x456... token ID 123 to an ALI Agent"
 ```
 
----
+### Trade Keys
 
-## 🛠️ Roadmap
+```typescript
+"Buy 5 keys for ALI Agent 0x789..."
+"Sell 3 keys for ALI Agent 0x789..."
+"What's the price to buy 10 keys for agent 0x789...?"
+```
 
-Upcoming tickets will implement:
+### Execute Token Airdrop
 
-1. **AliAgent Actions** – create / manage AliAgents
-2. **INFT Actions** – mint, edit & query intelligent NFTs
-3. **Hive Actions** – hive creation, membership, messaging
-4. **Token & Governance** – staking, proposals, voting
-5. **Market Data** – price feeds, analytics
+```typescript
+"Airdrop 1000 tokens to 0x123...abc, 2000 to 0x456...def using token 0x789...ghi"
+"Execute airdrop of ALI tokens at 0xABC...DEF to 5 addresses with different amounts"
+"Send 500 tokens each to 0x111...222, 0x333...444, 0x555...666 from token contract 0x777...888"
+```
 
----
+## Contract Addresses
 
-## 🤝 Contributing
+- **Keys Factory (Base)**: `0x80f5bcc38b18c0f0a18af3c6fba515c890689342`
+- **Keys Factory (Ethereum)**: `0xABA615044d5640bd151A1B0bdac1C04806AF1AD5`
+- **ALI Token**: `0x6B0b3a982b4634aC68dD83a4DBF02311cE324181`
 
-Pull requests are welcome! Please follow existing code patterns:
+## How It Works
 
-1. **Add tests** (`vitest`) for every new feature
-2. Run `npm run lint && npm run format`
-3. Document new actions in this README
+1. **NFT Ownership**: User must own an ERC-721 NFT or iNFT
+2. **Keys Factory**: Smart contract that converts NFTs to ALI Agents
+3. **ALI Agent Creation**: `deploySharesContract()` creates a shares contract for the NFT
+4. **Keys Trading**: Users can buy/sell keys (shares) of the ALI Agent
+5. **Implementation Types**: 
+   - `0` = ETH-based keys
+   - `1` = ALI token-based keys
 
----
+## Network Support
 
-## 📝 License
+- **Base Network**: For converting regular NFTs to ALI Agents
+- **Ethereum Mainnet**: For converting iNFTs to ALI Agents
 
-MIT © ElizaOS Contributors
+## Development
+
+```bash
+# Build
+npm run build
+
+# Test
+npm test
+
+# Lint
+npm run lint
+```
+
+## Security Notes
+
+- Keep private keys secure
+- Verify NFT ownership before conversion
+- Test on testnets first
+- Understand keys trading mechanics
+
+## License
+
+MIT
