@@ -725,6 +725,7 @@ export interface Plugin {
   tests?: TestSuite[];
 
   dependencies?: string[]; // Names of plugins this plugin depends on
+  testDependencies?: string[]; // Names of plugins this plugin depends on only during testing
 
   priority?: number;
 }
