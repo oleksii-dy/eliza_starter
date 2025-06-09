@@ -41,6 +41,10 @@ export {
   generateTestContent
 } from './test-templates.js';
 
+// Test enhancement
+export { TestEnhancer } from './test-enhancer.js';
+export type { TestEnhancementResult } from './test-enhancer.js';
+
 // Utilities
 export { analyzeRepository } from './repository-analyzer.js';
 export {
