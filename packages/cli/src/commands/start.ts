@@ -17,6 +17,7 @@ import {
   UserEnvironment,
 } from '@/src/utils';
 import { detectPluginContext, provideLocalPluginGuidance } from '@/src/utils/plugin-context';
+import { loadPluginDependenciesUnified, validateDependencyResult } from '@/src/utils/plugin-loader';
 import {
   AgentRuntime,
   encryptedCharacter,
@@ -255,31 +256,25 @@ export async function startAgent(
     }
   }
 
-  while (pluginsToLoad.size > 0) {
-    const currentBatch = Array.from(pluginsToLoad);
-    pluginsToLoad.clear();
+  // Use unified dependency loading for consistent behavior
+  if (pluginsToLoad.size > 0) {
+    logger.info(`Loading ${pluginsToLoad.size} plugins with dependencies...`);
 
-    for (const pluginName of currentBatch) {
-      if (loadedPlugins.has(pluginName)) {
-        continue;
-      }
+    const result = await loadPluginDependenciesUnified(Array.from(pluginsToLoad), {
+      includeTestDependencies: false, // For startup, only load regular dependencies
+      maxDepth: 10,
+    });
 
-      const loadedPlugin = await loadAndPreparePlugin(pluginName);
+    // Validate the result and log errors if any
+    if (!validateDependencyResult(result)) {
+      logger.warn('Some plugin dependencies failed to load, continuing with available plugins');
+    }
 
-      if (loadedPlugin) {
-        if (!loadedPlugins.has(loadedPlugin.name)) {
-          logger.success(`Successfully loaded plugin: ${loadedPlugin.name}`);
-          loadedPlugins.set(loadedPlugin.name, loadedPlugin);
-          if (loadedPlugin.dependencies) {
-            for (const dep of loadedPlugin.dependencies) {
-              if (!loadedPlugins.has(dep)) {
-                pluginsToLoad.add(dep);
-              }
-            }
-          }
-        }
-      } else {
-        logger.warn(`Failed to load or prepare plugin, and it will be skipped: ${pluginName}`);
+    // Add all loaded plugins to the loadedPlugins map
+    for (const [name, plugin] of result.plugins) {
+      if (!loadedPlugins.has(name)) {
+        loadedPlugins.set(name, plugin);
+        logger.success(`Successfully loaded plugin: ${name}`);
       }
     }
   }
