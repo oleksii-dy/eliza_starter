@@ -29,17 +29,21 @@ export class FileByFileMigrator {
       // First, handle structural changes (package.json, configs, etc.)
       await this.migrateStructuralFiles();
 
-      // Get all TypeScript and JavaScript files
-      const codeFiles = await globby(['src/**/*.ts', 'src/**/*.js'], {
+      // Process each file that hasn't been processed yet
+      const files = await globby(['src/**/*.ts', 'src/**/*.js'], {
         cwd: this.context.repoPath,
-        ignore: ['node_modules/**', 'dist/**', '.git/**'],
+        ignore: ['node_modules/**', 'dist/**', 'build/**'],
       });
 
-      logger.info(`📂 Found ${codeFiles.length} code files to process`);
+      logger.info(`Found ${files.length} source files to process`);
 
-      // Process each file completely
-      for (const file of codeFiles) {
+      for (const file of files) {
         if (!this.processedFiles.has(file)) {
+          // Skip test files - they will be created with exact templates in Phase 6
+          if (file.startsWith('src/test/') || file.startsWith('src/tests/')) {
+            logger.info(`⏭️  Skipping test file ${file} - will be created from templates`);
+            continue;
+          }
           await this.processFileCompletely(file);
         }
       }
@@ -78,7 +82,7 @@ export class FileByFileMigrator {
     this.processedFiles.add('.gitignore');
     this.processedFiles.add('.npmignore');
 
-    // Mark V1 files for deletion
+    // Mark V1 files for deletion - comprehensive list from plugin-news analysis
     const v1ConfigFiles = [
       'biome.json',
       'vitest.config.ts',
@@ -95,11 +99,23 @@ export class FileByFileMigrator {
       'environment.ts',
       'src/environment.ts',
       'environment.d.ts',
+      '.env.example',
+      '.env.template',
+      'CHANGELOG.md',
+      'CONTRIBUTING.md',
     ];
 
     for (const file of v1ConfigFiles) {
       if (await fs.pathExists(path.join(this.context.repoPath, file))) {
         this.filesToDelete.add(file);
+      }
+    }
+
+    // Also check for V1 test directories to mark for deletion
+    const v1TestDirs = ['__tests__', 'test'];
+    for (const dir of v1TestDirs) {
+      if (await fs.pathExists(path.join(this.context.repoPath, dir))) {
+        this.foldersToDelete.add(dir);
       }
     }
   }
@@ -139,11 +155,13 @@ export class FileByFileMigrator {
   private async migrateServiceFile(filePath: string, content: string): Promise<void> {
     // Check if service is actually needed
     if (!this.context.hasService) {
-      logger.info(`⏭️  Skipping service file ${filePath} - service not required`);
+      logger.warn(`⚠️  Found service file ${filePath} but no service in main branch - DELETING`);
+      // Mark for deletion since service shouldn't exist
+      this.filesToDelete.add(filePath);
       return;
     }
 
-    logger.info(`🔧 Migrating service file: ${filePath}`);
+    logger.info(`🔧 Migrating service file: ${filePath} (verified: existed in V1)`);
 
     const prompt = `# Migrate Service File to V2
 
@@ -349,7 +367,7 @@ Migrate this index file to proper V2 plugin export.`;
 
     // Skip if it's the new config.ts we created
     if (filePath === 'src/config.ts' && content.includes('zod')) {
-      logger.info(`✅ Config file already migrated`);
+      logger.info('✅ Config file already migrated');
       return;
     }
 
@@ -400,23 +418,61 @@ Migrate this config to V2 patterns with Zod validation.`;
    * Migrate generic TypeScript files
    */
   private async migrateGenericFile(filePath: string, content: string): Promise<void> {
+    // Enhanced V1 pattern detection from plugin-news analysis
+    const v1Patterns = [
+      { pattern: /ModelClass/g, found: false, name: 'ModelClass usage' },
+      { pattern: /elizaLogger/g, found: false, name: 'elizaLogger usage' },
+      { pattern: /runtime\.memory\.create/g, found: false, name: 'memory.create usage' },
+      { pattern: /runtime\.messageManager\.createMemory/g, found: false, name: 'messageManager usage' },
+      { pattern: /runtime\.language\.generateText/g, found: false, name: 'generateText usage' },
+      { pattern: /user:\s*["']/g, found: false, name: 'role property in examples' },
+      { pattern: /role:\s*["']/g, found: false, name: 'role property' },
+      { pattern: /stop:\s*\[/g, found: false, name: 'stop parameter' },
+      { pattern: /max_tokens:/g, found: false, name: 'max_tokens parameter' },
+      { pattern: /frequency_penalty:/g, found: false, name: 'frequency_penalty parameter' },
+      { pattern: /import\s+{\s*type\s+\w+\s*}/g, found: false, name: 'type imports needing conversion' },
+      { pattern: /import\s+{[^}]*,\s*type\s+[^}]+}/g, found: false, name: 'mixed imports' },
+      { pattern: /state:\s*{}\s*[,)]/g, found: false, name: 'empty State objects' },
+      { pattern: /\sany\s*[,)]/g, found: false, name: 'any type usage' },
+      { pattern: /Promise<boolean>/g, found: false, name: 'Promise<boolean> return type' },
+      { pattern: /static serviceType:\s*ServiceType/g, found: false, name: 'explicit ServiceType' },
+      { pattern: /private config:/g, found: false, name: 'private config field' },
+      { pattern: /z\.number\(\)/g, found: false, name: 'non-coerced Zod numbers' },
+      // Additional patterns from plugin-news migration
+      { pattern: /import\s+{\s*TestSuite\s*}/g, found: false, name: 'TestSuite value import' },
+      { pattern: /import\s+{\s*AgentTest/g, found: false, name: 'AgentTest import' },
+      { pattern: /export\s+(const|let|var)\s+testSuite/g, found: false, name: 'testSuite export name' },
+      { pattern: /_options:\s*any/g, found: false, name: 'options any type' },
+      { pattern: /context:\s*["']/g, found: false, name: 'context parameter in useModel' },
+      { pattern: /model:\s*ModelType/g, found: false, name: 'model in options object' },
+      { pattern: /import\s+{\s*(\w+),\s*type\s+(\w+)\s*}\s+from\s+["']@elizaos\/core["']/g, found: false, name: 'mixed @elizaos/core imports' },
+      { pattern: /state\s*\|\s*undefined/g, found: false, name: 'State | undefined type' },
+      { pattern: /callback\?:/g, found: false, name: 'optional callback parameter' },
+      { pattern: /options.*=\s*{}/g, found: false, name: 'options default empty object' },
+    ];
+
     // Check for V1 patterns
-    const hasV1Patterns = 
-      content.includes('ModelClass') ||
-      content.includes('elizaLogger') ||
-      content.includes('runtime.memory.create') ||
-      content.includes('user:') ||
-      content.includes('stop:') ||
-      content.includes('max_tokens:');
+    let hasV1Patterns = false;
+    for (const p of v1Patterns) {
+      if (p.pattern.test(content)) {
+        p.found = true;
+        hasV1Patterns = true;
+      }
+    }
 
     if (!hasV1Patterns) {
       logger.info(`✅ File ${filePath} appears to be V2 compatible`);
       return;
     }
 
+    // Log detected patterns
+    const detectedPatterns = v1Patterns.filter(p => p.found).map(p => p.name);
     logger.info(`🔄 Migrating generic file: ${filePath}`);
+    if (detectedPatterns.length > 0) {
+      logger.info(`   Detected V1 patterns: ${detectedPatterns.join(', ')}`);
+    }
 
-    const prompt = `# Migrate TypeScript File to V2
+    const prompt = `# Comprehensive V2 Migration for TypeScript File
 
 File: ${filePath}
 
@@ -425,19 +481,66 @@ Current content:
 ${content}
 \`\`\`
 
-Apply these V2 migrations:
-${IMPORT_MAPPINGS.map(m => `- ${m.description}`).join('\n')}
-${MODEL_TYPE_MAPPINGS.map(m => `- ${m.v1} → ${m.v2}`).join('\n')}
+Detected V1 patterns that MUST be fixed:
+${detectedPatterns.map(p => `- ${p}`).join('\n')}
 
-Requirements:
-1. Update all imports to V2 patterns
-2. Add 'type' prefix for interface imports
-3. Fix all model usage (ModelType not ModelClass)
-4. Fix all parameter names (stopSequences, maxTokens, etc.)
-5. Use double quotes consistently
-6. Fix any memory operations to use runtime.createMemory()
+## Critical Import Fixes:
+${IMPORT_MAPPINGS.map(m => `- ${m.description}
+  Old: ${m.oldImport}
+  New: ${m.newImport}`).join('\n')}
 
-Make all necessary changes for V2 compatibility.`;
+## Model/API Changes:
+${MODEL_TYPE_MAPPINGS.map(m => `- ${m.v1} → ${m.v2} (${m.description})`).join('\n')}
+
+## Type Import Rules:
+1. Separate ALL type imports from value imports
+   Wrong: import { Service, type IAgentRuntime } from "@elizaos/core";
+   Right: import { Service } from "@elizaos/core";
+          import type { IAgentRuntime } from "@elizaos/core";
+
+2. Use type-only imports for interfaces
+   Wrong: import { TestSuite } from "@elizaos/core";
+   Right: import type { TestSuite } from "@elizaos/core";
+
+## State Object Rules:
+1. Never use empty objects as State
+   Wrong: state: {}
+   Right: state: { values: {}, data: {}, text: "" }
+
+2. Create proper State helper if needed:
+   export function createTestState(): State {
+     return { values: {}, data: {}, text: "" };
+   }
+
+## Handler Signature Rules:
+1. Remove Promise<boolean> return type
+2. Use proper options type: { [key: string]: unknown }
+3. Always include callback parameter
+
+## Memory API Rules:
+1. Use runtime.createMemory() not runtime.memory.create()
+2. Include all required fields: entityId, agentId, roomId, content, metadata, createdAt
+3. Content should only have text and source fields
+
+## Config/Zod Rules:
+1. Use z.coerce.number() for ALL numeric environment variables
+   Wrong: z.number()
+   Right: z.coerce.number()
+
+## Service Rules:
+1. Remove explicit ServiceType annotation
+   Wrong: static serviceType: ServiceType = "my-service";
+   Right: static serviceType = "my-service";
+
+2. Make config public for test access if needed
+
+## Additional Rules:
+1. Use double quotes consistently
+2. Add null safety with optional chaining (?.)
+3. Replace 'any' with proper types or { [key: string]: unknown }
+4. Fix ALL occurrences, not just the first one
+
+IMPORTANT: Fix ALL detected patterns comprehensively. Make the file fully V2 compliant.`;
 
     await this.runClaudeOnFile(prompt);
   }
@@ -449,6 +552,7 @@ Make all necessary changes for V2 compatibility.`;
     logger.info('\n🧪 Migrating test structure...');
 
     const oldTestDir = path.join(this.context.repoPath, '__tests__');
+    const oldTestsDir = path.join(this.context.repoPath, 'src', 'tests');
     const newTestDir = path.join(this.context.repoPath, 'src', 'test');
 
     // Check if __tests__ exists
@@ -457,25 +561,16 @@ Make all necessary changes for V2 compatibility.`;
       this.foldersToDelete.add('__tests__');
     }
 
+    // Check if src/tests exists (V1 pattern)
+    if (await fs.pathExists(oldTestsDir)) {
+      logger.info('📁 Found src/tests directory (V1 pattern), marking for deletion');
+      this.foldersToDelete.add('src/tests');
+    }
+
     // Ensure new test directory exists
     await fs.ensureDir(newTestDir);
 
-    // Create test files if they don't exist
-    const utilsPath = path.join(newTestDir, 'utils.ts');
-    const testPath = path.join(newTestDir, 'test.ts');
-
-    if (!(await fs.pathExists(utilsPath))) {
-      logger.info('📝 Creating test utils.ts based on plugin-coinmarketcap pattern');
-      // Utils creation handled by step executor
-    }
-
-    if (!(await fs.pathExists(testPath))) {
-      logger.info('📝 Creating test suite based on plugin-coinmarketcap pattern');
-      // Test suite creation handled by step executor
-    }
-
-    this.processedFiles.add('src/test/utils.ts');
-    this.processedFiles.add('src/test/test.ts');
+    logger.info('📝 Test directory prepared, files will be created in testing infrastructure phase');
   }
 
   /**
@@ -502,6 +597,16 @@ Make all necessary changes for V2 compatibility.`;
       }
     }
 
+    // Clean up test files that shouldn't exist
+    const testFiles = await globby(['src/test/*.test.ts', 'src/test/*.spec.ts'], {
+      cwd: this.context.repoPath,
+    });
+    
+    for (const testFile of testFiles) {
+      logger.info(`🗑️  Deleting extra test file: ${testFile}`);
+      await fs.remove(path.join(this.context.repoPath, testFile));
+    }
+
     // Check for nested action directories to clean up if actions were centralized
     const actionDirs = await globby(['src/actions/*'], {
       cwd: this.context.repoPath,
@@ -516,15 +621,51 @@ Make all necessary changes for V2 compatibility.`;
       }
     }
 
-    // Delete any .bak or .orig files
-    const backupFiles = await globby(['**/*.bak', '**/*.orig'], {
+    // Clean up additional V1 patterns from comprehensive analysis
+    const additionalCleanupPatterns = [
+      '**/*.bak',
+      '**/*.orig',
+      '**/yarn.lock', // If switching to bun
+      '**/package-lock.json', // If switching to bun
+      '**/pnpm-lock.yaml', // If switching to bun
+      '**/.turbo/',
+      '**/dist/',
+      '**/build/',
+      '**/*.tsbuildinfo',
+      '**/.turbo-tsconfig.json',
+      '**/coverage/',
+      '**/*.lcov',
+    ];
+
+    for (const pattern of additionalCleanupPatterns) {
+      const files = await globby([pattern], {
+        cwd: this.context.repoPath,
+        ignore: ['node_modules/**', '.git/**'],
+      });
+
+      for (const file of files) {
+        logger.info(`🗑️  Deleting: ${file}`);
+        await fs.remove(path.join(this.context.repoPath, file));
+      }
+    }
+
+    // Clean up any V1 lib directories if present
+    const libDir = path.join(this.context.repoPath, 'lib');
+    if (await fs.pathExists(libDir)) {
+      logger.info('🗑️  Deleting V1 lib directory');
+      await fs.remove(libDir);
+    }
+
+    // Clean up V1 vendor directories
+    const vendorPatterns = await globby(['**/vendor'], {
       cwd: this.context.repoPath,
-      ignore: ['node_modules/**', '.git/**'],
+      onlyDirectories: true,
+      ignore: ['node_modules/**'],
     });
 
-    for (const backup of backupFiles) {
-      logger.info(`🗑️  Deleting backup file: ${backup}`);
-      await fs.remove(path.join(this.context.repoPath, backup));
+    for (const vendor of vendorPatterns) {
+      logger.info(`🗑️  Deleting vendor directory: ${vendor}`);
+      await fs.remove(path.join(this.context.repoPath, vendor));
     }
   }
 
@@ -542,7 +683,7 @@ Make all necessary changes for V2 compatibility.`;
           '--max-turns',
           '10',
           '--model',
-          'claude-3-5-sonnet-20241022',
+          'claude-sonnet-4-20250514',
           '--dangerously-skip-permissions',
           prompt,
         ],
