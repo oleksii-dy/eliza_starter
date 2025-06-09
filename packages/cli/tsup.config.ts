@@ -48,7 +48,7 @@ const require = createRequire(import.meta.url);
         },
         {
           from: './src/utils/upgrade/CLAUDE.md',
-          to: './dist/utils/upgrade',
+          to: './dist/',
         },
       ],
       // Setting this to true will output a list of copied files
