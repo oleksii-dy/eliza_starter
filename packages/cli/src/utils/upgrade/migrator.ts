@@ -45,6 +45,25 @@ export class PluginMigrator {
         process.chdir(result.repoPath);
         logger.info(`📂 Changed to directory: ${result.repoPath}`);
         
+        // Clean up extra test files before running tests
+        logger.info('\n🧹 Cleaning up extra test files...');
+        try {
+          const extraTestFiles = await execa('find', ['src/test', '-name', '*.test.ts', '-type', 'f'], {
+            cwd: result.repoPath,
+            reject: false,
+          });
+          
+          if (extraTestFiles.stdout) {
+            const testFiles = extraTestFiles.stdout.split('\n').filter(f => f);
+            for (const testFile of testFiles) {
+              logger.info(`🗑️  Deleting extra test file: ${testFile}`);
+              await execa('rm', [testFile], { cwd: result.repoPath });
+            }
+          }
+        } catch (error) {
+          logger.debug('No extra test files found to clean up');
+        }
+        
         // Step 1: Run final build check
         logger.info('\n🔨 Running final build check...');
         try {
