@@ -70,7 +70,16 @@ export interface ArchitectureIssue {
     | 'broken-handler'
     | 'memory-pattern'
     | 'provider-interface'
-    | 'config-validation';
+    | 'config-validation'
+    | 'test-import-issue'
+    | 'test-runtime-mock'
+    | 'test-state-object'
+    | 'service-registration'
+    | 'test-command-issue'
+    | 'test-export-name'
+    | 'action-example-role'
+    | 'config-field-visibility'
+    | 'handler-options-type';
   severity: 'critical' | 'high' | 'medium';
   pattern: string;
   solution: string;
