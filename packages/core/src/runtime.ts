@@ -496,7 +496,7 @@ export class AgentRuntime implements IAgentRuntime {
       span.setAttributes({
         'agent.id': this.agentId,
         'agent.name': this.character?.name || 'unknown',
-        'plugins.count': this.plugins.length,
+        'plugins.count': this.characterPlugins.length,
       });
       if (this.isInitialized) {
         span.addEvent('agent_already_initialized');
@@ -504,21 +504,13 @@ export class AgentRuntime implements IAgentRuntime {
         return;
       }
       span.addEvent('initialization_started');
-      const registeredPluginNames = new Set<string>(); // This can be removed if registerPlugin handles duplicates
       const pluginRegistrationPromises = [];
 
-      // Resolve plugin dependencies and get the final list of plugins to load
-      const pluginsToLoad = await this.resolvePluginDependencies(this.characterPlugins);
-      // (this.plugins as Plugin[]) = pluginsToLoad; // This line is removed. this.plugins will be built by registerPlugin calls.
+      // The CLI's dependency loader now provides the correctly sorted list of plugins.
+      const pluginsToLoad = this.characterPlugins;
       span.setAttributes({ 'plugins.resolved_count': pluginsToLoad.length });
 
       for (const plugin of pluginsToLoad) {
-        // Iterate over the resolved list
-        // The check for registeredPluginNames can be removed if registerPlugin handles its own idempotency by name.
-        // if (plugin && !registeredPluginNames.has(plugin.name)) {
-        //   registeredPluginNames.add(plugin.name);
-        //   pluginRegistrationPromises.push(this.registerPlugin(plugin));
-        // }
         if (plugin) {
           // Ensure plugin is not null/undefined
           pluginRegistrationPromises.push(this.registerPlugin(plugin));
@@ -526,9 +518,7 @@ export class AgentRuntime implements IAgentRuntime {
       }
       await Promise.all(pluginRegistrationPromises);
       span.addEvent('plugins_setup');
-      span.setAttributes({
-        registered_plugins: Array.from(registeredPluginNames).join(','),
-      });
+
       if (!this.adapter) {
         this.logger.error(
           'Database adapter not initialized. Make sure @elizaos/plugin-sql is included in your plugins.'
