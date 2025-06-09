@@ -27,43 +27,72 @@ import { promisify } from 'node:util';
 import { pathToFileURL } from 'url';
 import { startAgent } from './start';
 import { getElizaCharacter } from '../characters/eliza';
-import { installPlugin, loadPluginModule } from '@/src/utils';
-import { getCliInstallTag } from '@/src/utils';
-import { detectPluginContext, provideLocalPluginGuidance } from '@/src/utils/plugin-context';
-import which from 'which';
+import {
+  loadPluginDependenciesUnified,
+  validateDependencyResult,
+  loadAndPreparePlugin,
+} from '@/src/utils/plugin-loader';
 const execAsync = promisify(exec);
 
 /**
- * Loads the plugin modules for a plugin's dependencies.
- * Assumes dependencies have already been installed by `installPluginDependencies`.
+ * Loads the plugin modules for a plugin's dependencies using the unified dependency loader.
+ * Includes both regular dependencies and testDependencies with proper deduplication.
  * @param projectInfo Information about the current directory
- * @returns An array of loaded plugin modules.
+ * @returns An array of loaded plugin modules in topological order.
  */
 async function loadPluginDependencies(projectInfo: DirectoryInfo): Promise<Plugin[]> {
   if (projectInfo.type !== 'elizaos-plugin') {
     return [];
   }
-  const project = await loadProject(process.cwd());
-  const dependencyPlugins: Plugin[] = [];
 
-  if (project.isPlugin && project.pluginModule?.dependencies?.length > 0) {
-    const projectPluginsPath = path.join(process.cwd(), '.eliza', 'plugins');
-    for (const dependency of project.pluginModule.dependencies) {
-      const pluginPath = path.join(projectPluginsPath, 'node_modules', dependency);
-      if (fs.existsSync(pluginPath)) {
-        try {
-          // Dependencies from node_modules are pre-built. We just need to load them.
-          const pluginProject = await loadProject(pluginPath);
-          if (pluginProject.pluginModule) {
-            dependencyPlugins.push(pluginProject.pluginModule);
-          }
-        } catch (error) {
-          logger.error(`Failed to load or build dependency ${dependency}:`, error);
-        }
-      }
+  try {
+    const project = await loadProject(process.cwd());
+
+    if (!project.isPlugin || !project.pluginModule) {
+      return [];
     }
+
+    // Get all dependencies (regular + test dependencies)
+    const allDependencies: string[] = [];
+
+    if (project.pluginModule.dependencies) {
+      allDependencies.push(...project.pluginModule.dependencies);
+    }
+
+    if (project.pluginModule.testDependencies) {
+      allDependencies.push(...project.pluginModule.testDependencies);
+    }
+
+    if (allDependencies.length === 0) {
+      return [];
+    }
+
+    logger.info(
+      `Loading ${allDependencies.length} plugin dependencies (including test dependencies)...`
+    );
+
+    // Use the unified dependency loader with test dependencies enabled
+    const result = await loadPluginDependenciesUnified(allDependencies, {
+      includeTestDependencies: true,
+      maxDepth: 10,
+    });
+
+    // Validate the result and log errors if any
+    if (!validateDependencyResult(result)) {
+      logger.warn('Some plugin dependencies failed to load, continuing with available plugins');
+    }
+
+    // Return plugins in topological order
+    const dependencyPlugins = result.loadOrder
+      .map((name) => result.plugins.get(name))
+      .filter((plugin): plugin is Plugin => plugin !== undefined);
+
+    logger.success(`Successfully loaded ${dependencyPlugins.length} dependency plugins`);
+    return dependencyPlugins;
+  } catch (error) {
+    logger.error('Failed to load plugin dependencies:', error);
+    return [];
   }
-  return dependencyPlugins;
 }
 
 function isValidPluginShape(obj: any): obj is Plugin {
@@ -87,99 +116,6 @@ function isValidPluginShape(obj: any): obj is Plugin {
     obj.config ||
     obj.description // description is also mandatory technically
   );
-}
-
-async function loadAndPreparePlugin(pluginName: string): Promise<Plugin | null> {
-  const version = getCliInstallTag();
-  let pluginModule: any;
-
-  // Check if this is a local development scenario BEFORE attempting any loading
-  const context = detectPluginContext(pluginName);
-
-  if (context.isLocalDevelopment) {
-    // For local development, we should never try to install - just load directly
-    try {
-      pluginModule = await loadPluginModule(pluginName);
-      if (!pluginModule) {
-        logger.error(`Failed to load local plugin ${pluginName}.`);
-        provideLocalPluginGuidance(pluginName, context);
-        return null;
-      }
-    } catch (error) {
-      logger.error(`Error loading local plugin ${pluginName}: ${error}`);
-      provideLocalPluginGuidance(pluginName, context);
-      return null;
-    }
-  } else {
-    // External plugin - use existing logic
-    try {
-      // Use the centralized loader first
-      pluginModule = await loadPluginModule(pluginName);
-
-      if (!pluginModule) {
-        // If loading failed, try installing and then loading again
-        try {
-          await installPlugin(pluginName, process.cwd(), version);
-          // Try loading again after installation using the centralized loader
-          pluginModule = await loadPluginModule(pluginName);
-        } catch (installError) {
-          logger.error(`Failed to install plugin ${pluginName}: ${installError}`);
-          return null; // Installation failed
-        }
-
-        if (!pluginModule) {
-          logger.error(`Failed to load plugin ${pluginName} even after installation.`);
-          return null; // Loading failed post-installation
-        }
-      }
-    } catch (error) {
-      // Catch any unexpected error during the combined load/install/load process
-      logger.error(`An unexpected error occurred while processing plugin ${pluginName}: ${error}`);
-      return null;
-    }
-  }
-
-  if (!pluginModule) {
-    logger.error(`Failed to process plugin ${pluginName} (module is null/undefined unexpectedly)`);
-    return null;
-  }
-
-  // Construct the expected camelCase export name (e.g., @elizaos/plugin-foo-bar -> fooBarPlugin)
-  const expectedFunctionName = `${pluginName
-    .replace(/^@elizaos\/plugin-/, '') // Remove prefix
-    .replace(/^@elizaos-plugins\//, '') // Remove alternative prefix
-    .replace(/-./g, (match) => match[1].toUpperCase())}Plugin`; // Convert kebab-case to camelCase and add 'Plugin' suffix
-
-  // 1. Prioritize the expected named export if it exists
-  const expectedExport = pluginModule[expectedFunctionName];
-  if (isValidPluginShape(expectedExport)) {
-    return expectedExport as Plugin;
-  }
-
-  // 2. Check the default export if the named one wasn't found or valid
-  const defaultExport = pluginModule.default;
-  if (isValidPluginShape(defaultExport)) {
-    if (expectedExport !== defaultExport) {
-      return defaultExport as Plugin;
-    }
-  }
-
-  // 3. If neither primary method worked, search all exports aggressively
-  for (const key of Object.keys(pluginModule)) {
-    if (key === expectedFunctionName || key === 'default') {
-      continue;
-    }
-
-    const potentialPlugin = pluginModule[key];
-    if (isValidPluginShape(potentialPlugin)) {
-      return potentialPlugin as Plugin;
-    }
-  }
-
-  logger.warn(
-    `Could not find a valid plugin export in ${pluginName}. Checked exports: ${expectedFunctionName} (if exists), default (if exists), and others. Available exports: ${Object.keys(pluginModule).join(', ')}`
-  );
-  return null;
 }
 
 // Helper function to check port availability
@@ -598,22 +534,28 @@ const runE2eTests = async (
             }
             const defaultElizaCharacter = getElizaCharacter();
 
-            // 1. Consolidate all plugin names: dependencies AND default plugins
-            const requiredPluginNames = new Set<string>([
-              ...(pluginUnderTest.dependencies || []),
-              ...(defaultElizaCharacter.plugins || []),
-            ]);
+            // 1. Load plugin dependencies using our enhanced dependency loader
+            logger.info('Loading plugin dependencies for E2E tests...');
+            const projectInfo = getProjectType();
+            const dependencyPlugins = await loadPluginDependencies(projectInfo);
 
-            // 2. Load all required plugins into objects
-            const dependencyPlugins: Plugin[] = [];
-            for (const name of requiredPluginNames) {
+            // 2. Load default character plugins separately (these are not dependencies)
+            const defaultCharacterPlugins: Plugin[] = [];
+            for (const name of defaultElizaCharacter.plugins || []) {
               const loadedPlugin = await loadAndPreparePlugin(name);
               if (loadedPlugin) {
-                dependencyPlugins.push(loadedPlugin);
+                // Check if this plugin is already loaded as a dependency to avoid duplicates
+                const isDuplicate = dependencyPlugins.some((dep) => dep.name === loadedPlugin.name);
+                if (!isDuplicate) {
+                  defaultCharacterPlugins.push(loadedPlugin);
+                }
               } else {
-                logger.warn(`Failed to load dependency plugin for test: ${name}`);
+                logger.warn(`Failed to load default character plugin for test: ${name}`);
               }
             }
+
+            // 3. Combine dependency plugins and default character plugins
+            const allPluginsForRuntime = [...dependencyPlugins, ...defaultCharacterPlugins];
 
             // 3. Manually create the runtime and register plugins in order
             const runtime = new AgentRuntime({
@@ -626,11 +568,13 @@ const runE2eTests = async (
               },
             });
 
-            // 3a. Register all dependencies FIRST
-            for (const depPlugin of dependencyPlugins) {
-              await runtime.registerPlugin(depPlugin);
+            // 3a. Register all dependencies and default character plugins FIRST
+            for (const plugin of allPluginsForRuntime) {
+              await runtime.registerPlugin(plugin);
             }
-            logger.info(`Registered ${dependencyPlugins.length} dependency and default plugins.`);
+            logger.info(
+              `Registered ${allPluginsForRuntime.length} dependency and default plugins.`
+            );
 
             // 3b. Register the plugin under test SECOND
             await runtime.registerPlugin(pluginUnderTest);
@@ -784,9 +728,6 @@ const runE2eTests = async (
 async function runAllTests(options: { port?: number; name?: string; skipBuild?: boolean }) {
   // Run component tests first
   const projectInfo = getProjectType();
-  if (!options.skipBuild) {
-    await installPluginDependencies(projectInfo);
-  }
   const componentResult = await runComponentTests(options, projectInfo);
 
   // Run e2e tests with the same processed filter name
@@ -887,52 +828,4 @@ test
 // This is the function that registers the command with the CLI
 export default function registerCommand(cli: Command) {
   return cli.addCommand(test);
-}
-
-async function installPluginDependencies(projectInfo: DirectoryInfo) {
-  if (projectInfo.type !== 'elizaos-plugin') {
-    return;
-  }
-  const project = await loadProject(process.cwd());
-  if (project.isPlugin && project.pluginModule?.dependencies?.length > 0) {
-    const pluginsDir = path.join(process.cwd(), '.eliza', 'plugins');
-    if (!fs.existsSync(pluginsDir)) {
-      await fs.promises.mkdir(pluginsDir, { recursive: true });
-    }
-    const packageJsonPath = path.join(pluginsDir, 'package.json');
-    if (!fs.existsSync(packageJsonPath)) {
-      const packageJsonContent = {
-        name: 'test-plugin-dependencies',
-        version: '1.0.0',
-        description: 'A temporary package for installing test plugin dependencies',
-        dependencies: {},
-      };
-      await fs.promises.writeFile(packageJsonPath, JSON.stringify(packageJsonContent, null, 2));
-    }
-
-    for (const dependency of project.pluginModule.dependencies) {
-      await installPlugin(dependency, pluginsDir);
-      const dependencyPath = path.join(pluginsDir, 'node_modules', dependency);
-      if (fs.existsSync(dependencyPath)) {
-        try {
-          const bunPath = await which('bun');
-          await new Promise<void>((resolve, reject) => {
-            const child = spawn(bunPath, ['install'], {
-              cwd: dependencyPath,
-              stdio: 'inherit',
-              env: process.env,
-            });
-            child.on('close', (code) =>
-              code === 0 ? resolve() : reject(`bun install failed with code ${code}`)
-            );
-            child.on('error', reject);
-          });
-        } catch (error) {
-          logger.warn(
-            `[Test Command] Failed to install devDependencies for ${dependency}: ${error}`
-          );
-        }
-      }
-    }
-  }
 }
