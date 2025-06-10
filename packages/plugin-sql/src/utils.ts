@@ -48,22 +48,34 @@ export function resolveEnvFile(startDir: string = process.cwd()): string {
  * Resolves the directory used for PGlite database storage.
  *
  * Resolution order:
- * 1. The `dir` argument if provided.
- * 2. The `PGLITE_DATA_DIR` environment variable.
- * 3. The `fallbackDir` argument if provided.
- * 4. `./.elizadb` relative to the current working directory.
+ * 1. The `dir` argument if provided (explicit override)
+ * 2. The `PGLITE_DATA_DIR` environment variable (if `respectEnvVars` is true)
+ * 3. The `fallbackDir` argument if provided
+ * 4. `./.elizadb` relative to the current working directory
  *
- * @param dir - Optional directory preference.
- * @param fallbackDir - Optional fallback directory when env var is not set.
+ * @param dir - Optional directory preference (highest priority)
+ * @param fallbackDir - Optional fallback directory when env var is not set
+ * @param respectEnvVars - Whether to respect PGLITE_DATA_DIR env var (default: true for plugin compatibility)
  * @returns The resolved data directory with any tilde expanded.
  */
-export function resolvePgliteDir(dir?: string, fallbackDir?: string): string {
+export function resolvePgliteDir(
+  dir?: string,
+  fallbackDir?: string,
+  respectEnvVars: boolean = true
+): string {
   const envPath = resolveEnvFile();
   if (existsSync(envPath)) {
     dotenv.config({ path: envPath });
   }
 
+  // Apply resolution hierarchy explicitly
+  const envVarValue = respectEnvVars ? process.env.PGLITE_DATA_DIR : undefined;
+
   const base =
-    dir ?? process.env.PGLITE_DATA_DIR ?? fallbackDir ?? path.join(process.cwd(), '.elizadb');
+    dir ?? // 1. Explicit override
+    envVarValue ?? // 2. Environment variable (if allowed)
+    fallbackDir ?? // 3. Fallback directory
+    path.join(process.cwd(), '.elizadb'); // 4. Default
+
   return expandTildePath(base);
 }
