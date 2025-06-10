@@ -216,7 +216,9 @@ export async function getElizaDirectories(targetProjectDir?: string) {
   const userEnv = UserEnvironment.getInstance();
   const paths = await userEnv.getPathInfo();
 
-  const projectRoot = targetProjectDir || paths.monorepoRoot || process.cwd();
+  // Use targetProjectDir if provided, otherwise use the same directory logic as getPathInfo()
+  // This ensures consistency between config and database paths
+  const projectRoot = targetProjectDir || process.cwd();
   const elizaDir = targetProjectDir ? path.resolve(targetProjectDir, '.eliza') : paths.elizaDir;
   const envFilePath = targetProjectDir ? path.resolve(targetProjectDir, '.env') : paths.envFilePath;
 
