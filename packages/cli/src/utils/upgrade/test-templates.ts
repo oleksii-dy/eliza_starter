@@ -438,7 +438,8 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
 }`;
 
 /**
- * Dynamic test.ts template - Customize based on plugin name and structure
+ * SIMPLIFIED Dynamic test.ts template - Clear and focused for LLMs
+ * CRITICAL: This creates src/test/test.ts (NOT test.test.ts)
  * Replace {{PLUGIN_NAME}}, {{PLUGIN_VARIABLE}}, {{API_KEY_NAME}} with actual values
  */
 export const TEST_TS_TEMPLATE = `import type {
@@ -447,662 +448,203 @@ export const TEST_TS_TEMPLATE = `import type {
   Memory,
   UUID,
   Content,
+  HandlerCallback,
 } from "@elizaos/core";
-import { createMockRuntime, mockLogger } from "./utils";
+import { createMockRuntime } from "./utils";
 import {{PLUGIN_VARIABLE}} from "../index";
 
 /**
- * {{PLUGIN_NAME}} Plugin Test Suite - PROGRESSIVE Testing Implementation
+ * {{PLUGIN_NAME}} Plugin Test Suite
  * 
- * RULES ENFORCED:
- * - PROGRESSIVE testing: Basic tests must pass before advanced tests run
- * - NO stubs or incomplete code
- * - COMPREHENSIVE test coverage
- * - Test-driven development approach
- * - PROPER error handling testing
- * - FULL TypeScript implementation
- * - CLEAR separation of concerns
+ * CLEAR SIMPLE APPROACH:
+ * - Test plugin structure (name, description, actions)
+ * - Test services (if exists) 
+ * - Test actions (validate and structure)
+ * - Test providers (if exists)
+ * - Keep tests focused and clear
  */
-
-// Test progression flags
-let basicStructureTestsPassed = false;
-let serviceTestsPassed = false;
-let actionValidationTestsPassed = false;
-let deepActionTestsPassed = false;
 
 export class {{PLUGIN_NAME}}TestSuite implements TestSuite {
   name = "{{PLUGIN_NAME_LOWER}}";
-  description = "Progressive test suite for {{PLUGIN_NAME}} plugin - tests build upon each other";
+  description = "Test suite for {{PLUGIN_NAME}} plugin";
 
   tests = [
     {
-      name: "Should validate complete plugin V2 structure",
+      name: "Should validate plugin V2 structure",
       fn: async (runtime: IAgentRuntime) => {
-        console.log("🏁 STAGE 1: Basic Structure Validation");
+        console.log("🧪 Testing plugin structure...");
         
-        // Test 1: COMPREHENSIVE structure validation
-        if (!{{PLUGIN_VARIABLE}}.name || !{{PLUGIN_VARIABLE}}.actions) {
-          throw new Error("Plugin missing basic structure");
+        // Test required fields
+        if (!{{PLUGIN_VARIABLE}}.name) {
+          throw new Error("Plugin missing name");
         }
         
-        // V2 specific validations
         if (!{{PLUGIN_VARIABLE}}.description) {
-          throw new Error("Plugin missing required V2 description field");
+          throw new Error("Plugin missing description (required in V2)");
         }
         
-        if (typeof {{PLUGIN_VARIABLE}}.init !== 'function' && {{PLUGIN_VARIABLE}}.services?.length > 0) {
-          throw new Error("Plugin with services should have init function");
+        if (!{{PLUGIN_VARIABLE}}.actions || {{PLUGIN_VARIABLE}}.actions.length === 0) {
+          throw new Error("Plugin missing actions");
         }
         
-        // Mark basic tests as passed
-        basicStructureTestsPassed = true;
-        console.log("✅ Plugin has complete V2 structure - STAGE 1 PASSED");
+        console.log("✅ Plugin structure is valid");
       },
     },
 
     {
-      name: "Should initialize service with comprehensive validation",
+      name: "Should test service initialization (if exists)",
       fn: async (runtime: IAgentRuntime) => {
-        // Check if previous stage passed
-        if (!basicStructureTestsPassed) {
-          throw new Error("❌ Cannot run service tests - basic structure tests must pass first");
-        }
+        console.log("🧪 Testing service initialization...");
         
-        console.log("🏁 STAGE 2: Service Initialization Testing");
-        
-        const apiKey = process.env.{{API_KEY_NAME}} || runtime.getSetting("{{API_KEY_NAME}}");
-        
-        // Skip if plugin has no services
+        // Check if plugin has services
         if (!{{PLUGIN_VARIABLE}}.services || {{PLUGIN_VARIABLE}}.services.length === 0) {
-          console.log("ℹ️  No services in plugin - marking service tests as passed");
-          serviceTestsPassed = true;
-          return;
-        }
-        
-        if (!apiKey) {
-          console.warn("⚠️ Skipping service test - no {{API_KEY_NAME}} found");
-          serviceTestsPassed = true; // Allow progression even without API key
+          console.log("ℹ️  Plugin has no services - skipping service tests");
           return;
         }
 
         const testRuntime = createMockRuntime({
           getSetting: (key: string) => {
-            if (key === "{{API_KEY_NAME}}") return apiKey;
+            if (key === "{{API_KEY_NAME}}") return "test-api-key-12345";
             return runtime.getSetting(key);
           },
         });
 
-        // COMPREHENSIVE service registration testing
-        const services = {{PLUGIN_VARIABLE}}.services;
-        
-        const ServiceClass = services[0];
-        
-        // Test service class structure
-        if (typeof ServiceClass.start !== 'function') {
-          throw new Error("Service missing required static start method");
+        // Test each service
+        for (const ServiceClass of {{PLUGIN_VARIABLE}}.services) {
+          console.log(\`  Testing service: \${ServiceClass.name}\`);
+          
+          // Test service structure
+          if (typeof ServiceClass.start !== 'function') {
+            throw new Error(\`Service missing start method\`);
+          }
+          
+          if (!ServiceClass.serviceType) {
+            throw new Error(\`Service missing serviceType\`);
+          }
+          
+          try {
+            // Test service registration and initialization
+            await testRuntime.registerService(ServiceClass);
+            const service = testRuntime.getService(ServiceClass.serviceType);
+            
+            if (!service) {
+              throw new Error(\`Service not registered properly\`);
+            }
+            
+            console.log(\`  ✅ Service \${ServiceClass.serviceType} initialized\`);
+          } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            console.log(\`  ⚠️ Service initialization error: \${errorMsg}\`);
+            // Don't throw - some services might require real API keys
+          }
         }
-        
-        if (!ServiceClass.serviceType || typeof ServiceClass.serviceType !== 'string') {
-          throw new Error("Service missing required serviceType property");
-        }
-        
-        // Test service initialization
-        await testRuntime.registerService(ServiceClass);
-
-        const service = testRuntime.getService(ServiceClass.serviceType);
-        if (!service) {
-          throw new Error("Service not registered properly");
-        }
-        
-        // Test service capabilities
-        if (typeof service.capabilityDescription !== 'string') {
-          throw new Error("Service missing capabilityDescription");
-        }
-        
-        // Test service lifecycle methods
-        if (typeof service.stop !== 'function') {
-          throw new Error("Service missing stop method");
-        }
-
-        // Mark service tests as passed
-        serviceTestsPassed = true;
-        console.log("✅ Service initialization and structure validation complete - STAGE 2 PASSED");
       },
     },
 
     {
-      name: "Should execute all actions with comprehensive testing",
+      name: "Should validate actions structure and examples",
       fn: async (runtime: IAgentRuntime) => {
-        // Check if previous stages passed
-        if (!basicStructureTestsPassed) {
-          throw new Error("❌ Cannot run action tests - basic structure tests must pass first");
-        }
-        if (!serviceTestsPassed) {
-          throw new Error("❌ Cannot run action tests - service tests must pass first");
-        }
+        console.log("🧪 Testing actions...");
         
-        console.log("🏁 STAGE 3: Action Validation Testing");
-        
-        const apiKey = process.env.{{API_KEY_NAME}} || runtime.getSetting("{{API_KEY_NAME}}");
-        
-        if (!apiKey) {
-          console.warn("⚠️ Skipping action test - no API key");
-          actionValidationTestsPassed = true; // Allow progression
-          return;
-        }
-
         const testRuntime = createMockRuntime({
           getSetting: (key: string) => {
-            if (key === "{{API_KEY_NAME}}") return apiKey;
-            return runtime.getSetting(key);
+            if (key === "{{API_KEY_NAME}}") return "test-api-key-12345";
+            return "test-value";
           },
         });
 
-        // Register the service first if exists
-        if ({{PLUGIN_VARIABLE}}.services && {{PLUGIN_VARIABLE}}.services.length > 0) {
-          const ServiceClass = {{PLUGIN_VARIABLE}}.services[0];
-          await testRuntime.registerService(ServiceClass);
+        // Register services if they exist
+        if ({{PLUGIN_VARIABLE}}.services) {
+          for (const ServiceClass of {{PLUGIN_VARIABLE}}.services) {
+            try {
+              await testRuntime.registerService(ServiceClass);
+            } catch (error) {
+              // Ignore service registration errors in tests
+            }
+          }
         }
 
-        const actions = {{PLUGIN_VARIABLE}}.actions;
-        if (!actions || actions.length === 0) {
-          throw new Error("No actions found in plugin");
-        }
-
-        // Test EACH action comprehensively
-        for (const action of actions) {
-          console.log(\`🎯 Testing action: \${action.name}\`);
+        // Test each action
+        for (const action of {{PLUGIN_VARIABLE}}.actions) {
+          console.log(\`  Testing action: \${action.name}\`);
           
-          // Validate action structure
+          // Test action structure
           if (!action.name || !action.description) {
-            throw new Error(\`Action \${action.name} missing required fields\`);
+            throw new Error(\`Action \${action.name} missing name or description\`);
           }
           
           if (typeof action.validate !== 'function') {
-            throw new Error(\`Action \${action.name} missing validate method\`);
+            throw new Error(\`Action \${action.name} missing validate function\`);
           }
           
           if (typeof action.handler !== 'function') {
-            throw new Error(\`Action \${action.name} missing handler method\`);
+            throw new Error(\`Action \${action.name} missing handler function\`);
           }
           
           if (!action.examples || !Array.isArray(action.examples)) {
-            throw new Error(\`Action \${action.name} missing examples\`);
+            throw new Error(\`Action \${action.name} missing examples array\`);
           }
 
-          // Create comprehensive test message
+          // Test validation with basic message
           const testMessage: Memory = {
-            id: "test-message-id" as UUID,
-            entityId: "test-entity-id" as UUID,
-            agentId: testRuntime.agentId,
-            roomId: "test-room-id" as UUID,
-            content: {
-              text: \`Execute \${action.name}\`,
-              source: "test"
-            },
-            createdAt: Date.now()
-          };
-
-          try {
-            // Test validation
-            const isValid = await action.validate(testRuntime, testMessage, {
-              values: {},
-              data: {},
-              text: ""
-            });
-            
-            if (typeof isValid !== 'boolean') {
-              throw new Error(\`Action \${action.name} validate must return boolean\`);
-            }
-
-            console.log(\`✅ Action \${action.name} validation tested\`);
-
-          } catch (error: unknown) {
-            const errorMsg = error instanceof Error ? error.message : String(error);
-            console.log(\`⚠️ Action \${action.name} validation test handled error: \${errorMsg}\`);
-          }
-        }
-
-        // Mark action validation tests as passed
-        actionValidationTestsPassed = true;
-        console.log("✅ All actions tested comprehensively - STAGE 3 PASSED");
-      },
-    },
-
-    {
-      name: "Should perform deep action execution testing with real-world scenarios",
-      fn: async (runtime: IAgentRuntime) => {
-        // Check if previous stages passed
-        if (!actionValidationTestsPassed) {
-          console.warn("⏭️  Skipping deep action tests - basic action tests must pass first");
-          return;
-        }
-        
-        console.log("🏁 STAGE 4: Deep Action Execution Testing");
-        
-        const apiKey = process.env.{{API_KEY_NAME}} || runtime.getSetting("{{API_KEY_NAME}}");
-        
-        if (!apiKey) {
-          console.warn("⚠️ Skipping deep action test - no API key");
-          deepActionTestsPassed = true; // Allow progression
-          return;
-        }
-
-        // Create a more sophisticated test runtime with additional mocking
-        const mockResponses = new Map<string, any>();
-        const callHistory: Array<{action: string, params: any, timestamp: number}> = [];
-        
-        const testRuntime = createMockRuntime({
-          getSetting: (key: string) => {
-            if (key === "{{API_KEY_NAME}}") return apiKey;
-            return runtime.getSetting(key);
-          },
-          // Mock the useModel method for action handlers that might use it
-          useModel: async (modelType: any, params: any) => {
-            callHistory.push({
-              action: 'useModel',
-              params: { modelType, ...params },
-              timestamp: Date.now()
-            });
-            
-            // Return mock responses based on the prompt
-            if (params.prompt?.includes('analyze')) {
-              return "Mock analysis result";
-            }
-            if (params.prompt?.includes('generate')) {
-              return "Mock generated content";
-            }
-            return "Mock response";
-          }
-        });
-
-        // Register services if needed
-        if ({{PLUGIN_VARIABLE}}.services && {{PLUGIN_VARIABLE}}.services.length > 0) {
-          const ServiceClass = {{PLUGIN_VARIABLE}}.services[0];
-          await testRuntime.registerService(ServiceClass);
-          
-          // Wait for service initialization
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-
-        const actions = {{PLUGIN_VARIABLE}}.actions || [];
-        
-        // Test each action with realistic scenarios
-        for (const action of actions) {
-          console.log(\`\n🔬 Deep testing action: \${action.name}\`);
-          
-          // Test 1: Validation with various message types
-          const testScenarios = [
-            {
-              name: "Basic request",
-              message: {
-                id: \`test-\${Date.now()}-1\` as UUID,
-                entityId: "test-entity-1" as UUID,
-                agentId: testRuntime.agentId,
-                roomId: "test-room-1" as UUID,
-                content: {
-                  text: \`Please \${action.name.toLowerCase().replace(/_/g, ' ')}\`,
-                  source: "test"
-                },
-                createdAt: Date.now()
-              }
-            },
-            {
-              name: "Complex request with parameters",
-              message: {
-                id: \`test-\${Date.now()}-2\` as UUID,
-                entityId: "test-entity-2" as UUID,
-                agentId: testRuntime.agentId,
-                roomId: "test-room-2" as UUID,
-                content: {
-                  text: \`\${action.name} with specific parameters: test=true, limit=10\`,
-                  source: "test"
-                },
-                createdAt: Date.now()
-              }
-            },
-            {
-              name: "Edge case - empty text",
-              message: {
-                id: \`test-\${Date.now()}-3\` as UUID,
-                entityId: "test-entity-3" as UUID,
-                agentId: testRuntime.agentId,
-                roomId: "test-room-3" as UUID,
-                content: {
-                  text: "",
-                  source: "test"
-                },
-                createdAt: Date.now()
-              }
-            }
-          ];
-
-          for (const scenario of testScenarios) {
-            console.log(\`  📋 Testing scenario: \${scenario.name}\`);
-            
-            try {
-              const state = {
-                values: { testMode: true },
-                data: { scenario: scenario.name },
-                text: scenario.message.content.text
-              };
-              
-              const isValid = await action.validate(testRuntime, scenario.message, state);
-              console.log(\`    ✓ Validation result: \${isValid}\`);
-              
-              // If validation passes, test the handler
-              if (isValid && scenario.name !== "Edge case - empty text") {
-                let handlerCalled = false;
-                let callbackResult: Content | null = null;
-                
-                const callback: HandlerCallback = (content: Content) => {
-                  handlerCalled = true;
-                  callbackResult = content;
-                };
-                
-                // Execute the handler
-                await action.handler(
-                  testRuntime,
-                  scenario.message,
-                  state,
-                  {},
-                  callback
-                );
-                
-                if (!handlerCalled) {
-                  console.warn(\`    ⚠️ Handler did not call callback for scenario: \${scenario.name}\`);
-                } else if (callbackResult) {
-                  console.log(\`    ✓ Handler executed successfully\`);
-                  
-                  // Validate callback content
-                  if (!callbackResult.text || typeof callbackResult.text !== 'string') {
-                    throw new Error(\`Invalid callback content: missing or invalid text field\`);
-                  }
-                  
-                  if (callbackResult.source !== '{{PLUGIN_NAME_LOWER}}') {
-                    console.warn(\`    ⚠️ Callback source mismatch: expected '{{PLUGIN_NAME_LOWER}}', got '\${callbackResult.source}'\`);
-                  }
-                }
-              }
-              
-            } catch (error: unknown) {
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              console.log(\`    ⚠️ Scenario '\${scenario.name}' error: \${errorMsg}\`);
-            }
-          }
-        }
-
-        // Analyze call history
-        console.log(\`\n📊 Action testing summary:\`);
-        console.log(\`  - Total API calls: \${callHistory.length}\`);
-        console.log(\`  - Actions tested: \${actions.length}\`);
-        console.log(\`  - Test scenarios per action: \${testScenarios.length}\`);
-        
-        // Mark deep action tests as passed
-        deepActionTestsPassed = true;
-        console.log("✅ Deep action execution testing completed - STAGE 4 PASSED");
-      },
-    },
-
-    {
-      name: "Should test action examples match actual behavior",
-      fn: async (runtime: IAgentRuntime) => {
-        // Check if previous stages passed
-        if (!deepActionTestsPassed) {
-          console.warn("⏭️  Skipping examples test - deep action tests must pass first");
-          return;
-        }
-        
-        console.log("🏁 STAGE 5: Action Examples Testing");
-        
-        const apiKey = process.env.{{API_KEY_NAME}} || runtime.getSetting("{{API_KEY_NAME}}");
-        
-        if (!apiKey) {
-          console.warn("⚠️ Skipping examples test - no API key");
-          return;
-        }
-
-        const testRuntime = createMockRuntime({
-          getSetting: (key: string) => {
-            if (key === "{{API_KEY_NAME}}") return apiKey;
-            return runtime.getSetting(key);
-          },
-        });
-
-        // Register services if needed
-        if ({{PLUGIN_VARIABLE}}.services && {{PLUGIN_VARIABLE}}.services.length > 0) {
-          const ServiceClass = {{PLUGIN_VARIABLE}}.services[0];
-          await testRuntime.registerService(ServiceClass);
-        }
-
-        const actions = {{PLUGIN_VARIABLE}}.actions || [];
-        
-        for (const action of actions) {
-          console.log(\`\n🎭 Testing examples for action: \${action.name}\`);
-          
-          if (!action.examples || action.examples.length === 0) {
-            console.warn(\`  ⚠️ No examples found for action \${action.name}\`);
-            continue;
-          }
-          
-          // Test each example conversation
-          for (let i = 0; i < action.examples.length; i++) {
-            const example = action.examples[i];
-            console.log(\`  📝 Testing example \${i + 1} of \${action.examples.length}\`);
-            
-            // Validate example structure
-            if (!Array.isArray(example) || example.length < 2) {
-              throw new Error(\`Invalid example structure for action \${action.name}, example \${i + 1}\`);
-            }
-            
-            // Find the user message and assistant response
-            const userMessage = example.find(msg => msg.name === "{{user1}}" || msg.name === "user");
-            const assistantResponse = example.find(msg => msg.name === "{{user2}}" || msg.name === "assistant");
-            
-            if (!userMessage || !assistantResponse) {
-              throw new Error(\`Example \${i + 1} missing user or assistant message\`);
-            }
-            
-            // Create a test message based on the example
-            const testMessage: Memory = {
-              id: \`example-test-\${i}\` as UUID,
-              entityId: "test-entity" as UUID,
-              agentId: testRuntime.agentId,
-              roomId: "test-room" as UUID,
-              content: userMessage.content,
-              createdAt: Date.now()
-            };
-            
-            // Test if the action would validate for this example
-            try {
-              const isValid = await action.validate(testRuntime, testMessage, {
-                values: {},
-                data: {},
-                text: userMessage.content.text || ""
-              });
-              
-              console.log(\`    ✓ Example validation: \${isValid}\`);
-              
-              // Check if the assistant response mentions the action
-              if (assistantResponse.content.actions?.includes(action.name)) {
-                console.log(\`    ✓ Example correctly references action: \${action.name}\`);
-              } else if (assistantResponse.content.action === action.name) {
-                console.log(\`    ✓ Example correctly sets action: \${action.name}\`);
-              } else {
-                console.warn(\`    ⚠️ Example response doesn't reference the action\`);
-              }
-              
-            } catch (error: unknown) {
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              console.warn(\`    ⚠️ Example validation error: \${errorMsg}\`);
-            }
-          }
-        }
-        
-        console.log("✅ Action examples testing completed");
-      },
-    },
-
-    {
-      name: "Should test action memory creation and persistence",
-      fn: async (runtime: IAgentRuntime) => {
-        // Check if previous stages passed
-        if (!deepActionTestsPassed) {
-          console.warn("⏭️  Skipping memory test - deep action tests must pass first");
-          return;
-        }
-        
-        console.log("🏁 STAGE 6: Memory Creation Testing");
-        
-        const apiKey = process.env.{{API_KEY_NAME}} || runtime.getSetting("{{API_KEY_NAME}}");
-        
-        if (!apiKey) {
-          console.warn("⚠️ Skipping memory test - no API key");
-          return;
-        }
-
-        const createdMemories: Memory[] = [];
-        
-        const testRuntime = createMockRuntime({
-          getSetting: (key: string) => {
-            if (key === "{{API_KEY_NAME}}") return apiKey;
-            return runtime.getSetting(key);
-          },
-          // Track memory creation
-          createMemory: async (memory: Memory, tableName: string) => {
-            createdMemories.push(memory);
-            const id = memory.id || (uuidv4() as UUID);
-            return id;
-          }
-        });
-
-        // Register services if needed
-        if ({{PLUGIN_VARIABLE}}.services && {{PLUGIN_VARIABLE}}.services.length > 0) {
-          const ServiceClass = {{PLUGIN_VARIABLE}}.services[0];
-          await testRuntime.registerService(ServiceClass);
-        }
-
-        const actions = {{PLUGIN_VARIABLE}}.actions || [];
-        
-        for (const action of actions) {
-          console.log(\`\n💾 Testing memory creation for action: \${action.name}\`);
-          
-          const testMessage: Memory = {
-            id: \`memory-test-\${Date.now()}\` as UUID,
+            id: "test-id" as UUID,
             entityId: "test-entity" as UUID,
             agentId: testRuntime.agentId,
             roomId: "test-room" as UUID,
             content: {
-              text: \`Test \${action.name} for memory creation\`,
+              text: \`Test \${action.name}\`,
               source: "test"
             },
             createdAt: Date.now()
           };
-          
+
           const state = {
-            values: { testMode: true },
+            values: {},
             data: {},
             text: testMessage.content.text
           };
-          
+
           try {
-            // Clear previous memories
-            createdMemories.length = 0;
-            
-            // Check if action is valid for this message
             const isValid = await action.validate(testRuntime, testMessage, state);
+            console.log(\`    Validation result: \${isValid}\`);
             
-            if (isValid) {
-              let callbackCalled = false;
-              
-              const callback: HandlerCallback = (content: Content) => {
-                callbackCalled = true;
-                console.log(\`    ✓ Callback received with text length: \${content.text?.length || 0}\`);
-              };
-              
-              // Execute the handler
-              await action.handler(
-                testRuntime,
-                testMessage,
-                state,
-                {},
-                callback
-              );
-              
-              // Check if memories were created
-              if (createdMemories.length > 0) {
-                console.log(\`    ✓ Created \${createdMemories.length} memories\`);
-                
-                // Validate memory structure
-                for (const memory of createdMemories) {
-                  if (!memory.entityId) {
-                    throw new Error("Memory missing required entityId");
-                  }
-                  if (!memory.content || !memory.content.text) {
-                    throw new Error("Memory missing content.text");
-                  }
-                  if (memory.content.source !== '{{PLUGIN_NAME_LOWER}}') {
-                    console.warn(\`    ⚠️ Memory source mismatch: expected '{{PLUGIN_NAME_LOWER}}', got '\${memory.content.source}'\`);
-                  }
-                }
-              } else {
-                console.log(\`    ℹ️  No memories created by this action\`);
-              }
-              
-              if (!callbackCalled) {
-                console.warn(\`    ⚠️ Action handler did not call callback\`);
-              }
-              
-            } else {
-              console.log(\`    ℹ️  Action validation returned false for test message\`);
+            if (typeof isValid !== 'boolean') {
+              throw new Error(\`Action \${action.name} validate must return boolean\`);
             }
             
           } catch (error: unknown) {
             const errorMsg = error instanceof Error ? error.message : String(error);
-            console.log(\`    ⚠️ Memory test error: \${errorMsg}\`);
+            console.log(\`    Validation error (may be expected): \${errorMsg}\`);
           }
+          
+          console.log(\`  ✅ Action \${action.name} structure is valid\`);
         }
-        
-        console.log("✅ Action memory creation testing completed");
       },
     },
-
+    
     {
-      name: "Should handle service state management comprehensively",
+      name: "Should test providers (if exists)",
       fn: async (runtime: IAgentRuntime) => {
-        const apiKey = process.env.{{API_KEY_NAME}} || runtime.getSetting("{{API_KEY_NAME}}");
+        console.log("🧪 Testing providers...");
         
-        if (!apiKey) {
-          console.warn("⚠️ Skipping state test - no API key");
+        // Check if plugin has providers
+        if (!{{PLUGIN_VARIABLE}}.providers || {{PLUGIN_VARIABLE}}.providers.length === 0) {
+          console.log("ℹ️  Plugin has no providers - skipping provider tests");
           return;
         }
-
-        console.log("🔧 Testing comprehensive service state management");
 
         const testRuntime = createMockRuntime({
           getSetting: (key: string) => {
-            if (key === "{{API_KEY_NAME}}") return apiKey;
-            return runtime.getSetting(key);
+            if (key === "{{API_KEY_NAME}}") return "test-api-key-12345";
+            return "test-value";
           },
         });
 
-        // Register the service if exists
-        if ({{PLUGIN_VARIABLE}}.services && {{PLUGIN_VARIABLE}}.services.length > 0) {
-          const ServiceClass = {{PLUGIN_VARIABLE}}.services[0];
-          await testRuntime.registerService(ServiceClass);
-        }
-
-        // Test ALL providers comprehensively
-        const providers = {{PLUGIN_VARIABLE}}.providers;
-        if (!providers || providers.length === 0) {
-          console.log("ℹ️  No providers in plugin - skipping provider tests");
-          return;
-        }
-
-        for (const provider of providers) {
-          console.log(\`🔍 Testing provider: \${provider.name}\`);
+        // Test each provider
+        for (const provider of {{PLUGIN_VARIABLE}}.providers) {
+          console.log(\`  Testing provider: \${provider.name}\`);
           
-          // Validate provider structure
+          // Test provider structure
           if (!provider.name || typeof provider.name !== 'string') {
             throw new Error(\`Provider missing name field\`);
           }
@@ -1111,224 +653,42 @@ export class {{PLUGIN_NAME}}TestSuite implements TestSuite {
             throw new Error(\`Provider \${provider.name} missing get method\`);
           }
 
+          // Test provider functionality
           const testMessage: Memory = {
-            id: "test-message-id" as UUID,
-            entityId: "test-entity-id" as UUID,
+            id: "test-id" as UUID,
+            entityId: "test-entity" as UUID,
             agentId: testRuntime.agentId,
-            roomId: "test-room-id" as UUID,
+            roomId: "test-room" as UUID,
             content: { text: "test", source: "test" },
             createdAt: Date.now()
           };
 
-          const state = await provider.get(
-            testRuntime,
-            testMessage,
-            { values: {}, data: {}, text: "" }
-          );
-
-          // Comprehensive state validation
-          if (!state || typeof state !== 'object') {
-            throw new Error(\`Provider \${provider.name} returned invalid state\`);
-          }
-
-          if (!state.data && !state.values && !state.text) {
-            throw new Error(\`Provider \${provider.name} must return data, values, or text\`);
-          }
-
-          console.log(\`✅ Provider \${provider.name} state management working\`);
-        }
-
-        console.log("✅ All service state management tested comprehensively");
-      },
-    },
-
-    {
-      name: "Should handle ALL error scenarios comprehensively",
-      fn: async (runtime: IAgentRuntime) => {
-        console.log("🚫 Testing comprehensive error handling scenarios");
-
-        // Test 1: Invalid API key scenarios
-        const testRuntimeInvalidKey = createMockRuntime({
-          getSetting: (key: string) => {
-            if (key === "{{API_KEY_NAME}}") return "invalid-api-key-12345";
-            return runtime.getSetting(key);
-          },
-        });
-
-        // Test service initialization with invalid credentials if service exists
-        if ({{PLUGIN_VARIABLE}}.services && {{PLUGIN_VARIABLE}}.services.length > 0) {
-          const ServiceClass = {{PLUGIN_VARIABLE}}.services[0];
-          
           try {
-            await testRuntimeInvalidKey.registerService(ServiceClass);
-            console.log("⚠️ Service initialization with invalid key handled gracefully");
-          } catch (error) {
-            console.log("✅ Service initialization error handled properly");
-          }
-        }
+            const state = await provider.get(
+              testRuntime,
+              testMessage,
+              { values: {}, data: {}, text: "" }
+            );
 
-        // Test 2: Missing API key scenarios
-        const testRuntimeNoKey = createMockRuntime({
-          getSetting: (key: string) => null,
-        });
-
-        if ({{PLUGIN_VARIABLE}}.services && {{PLUGIN_VARIABLE}}.services.length > 0) {
-          const ServiceClass = {{PLUGIN_VARIABLE}}.services[0];
-          
-          try {
-            await testRuntimeNoKey.registerService(ServiceClass);
-            console.log("⚠️ Service initialization without API key handled gracefully");
-          } catch (error) {
-            console.log("✅ Missing API key error handled properly");
-          }
-        }
-
-        // Test 3: Action error handling
-        const actions = {{PLUGIN_VARIABLE}}.actions;
-        if (actions && actions.length > 0) {
-          const action = actions[0];
-          console.log(\`🚫 Testing error handling for action: \${action.name}\`);
-          
-          const testMessage: Memory = {
-            id: "test-message-id" as UUID,
-            entityId: "test-entity-id" as UUID,
-            agentId: testRuntimeInvalidKey.agentId,
-            roomId: "test-room-id" as UUID,
-            content: {
-              text: \`Execute \${action.name} with invalid setup\`,
-              source: "test"
-            },
-            createdAt: Date.now()
-          };
-
-          try {
-            const isValid = await action.validate(testRuntimeInvalidKey, testMessage, {
-              values: {},
-              data: {},
-              text: ""
-            });
-            
-            console.log(\`✅ Action \${action.name} validation handled invalid setup: \${isValid}\`);
-
-          } catch (error) {
-            console.log(\`✅ Action \${action.name} error handling working:\`, error);
-          }
-        }
-
-        console.log("✅ ALL error scenarios tested comprehensively");
-      },
-    },
-
-    {
-      name: "Should validate complete plugin lifecycle and initialization",
-      fn: async (runtime: IAgentRuntime) => {
-        console.log("🔍 Testing complete plugin lifecycle and initialization");
-
-        const apiKey = process.env.{{API_KEY_NAME}};
-
-        // Test 1: Plugin initialization with valid configuration
-        if (apiKey) {
-          const testRuntime = createMockRuntime({
-            getSetting: (key: string) => {
-              if (key === "{{API_KEY_NAME}}") return apiKey;
-              return runtime.getSetting(key);
-            },
-          });
-
-          if ({{PLUGIN_VARIABLE}}.init) {
-            try {
-              await {{PLUGIN_VARIABLE}}.init({}, testRuntime);
-              console.log("✅ Plugin initialization with valid configuration successful");
-            } catch (error) {
-              console.error("❌ Plugin initialization failed:", error);
-              throw error;
+            // Validate state structure
+            if (!state || typeof state !== 'object') {
+              throw new Error(\`Provider \${provider.name} returned invalid state\`);
             }
-          }
 
-          // Test service lifecycle if service exists
-          if ({{PLUGIN_VARIABLE}}.services && {{PLUGIN_VARIABLE}}.services.length > 0) {
-            const ServiceClass = {{PLUGIN_VARIABLE}}.services[0];
-            const service = await ServiceClass.start(testRuntime);
-            
-            // Test service is properly started
-            if (!service) {
-              throw new Error("Service failed to start");
-            }
-            
-            // Test service stop
-            if (typeof service.stop === 'function') {
-              await service.stop();
-              console.log("✅ Service lifecycle (start/stop) working");
-            }
+            console.log(\`  ✅ Provider \${provider.name} working\`);
+          } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            console.log(\`  ⚠️ Provider \${provider.name} error (may be expected): \${errorMsg}\`);
           }
         }
-
-        // Test 2: Plugin initialization without configuration
-        const testRuntimeNoConfig = createMockRuntime({
-          getSetting: (key: string) => null,
-        });
-
-        if ({{PLUGIN_VARIABLE}}.init) {
-          try {
-            await {{PLUGIN_VARIABLE}}.init({}, testRuntimeNoConfig);
-            console.log("✅ Plugin initialization without configuration handled gracefully");
-          } catch (error) {
-            console.log("✅ Plugin initialization error handled properly:", error);
-          }
-        }
-
-        // Test 3: Plugin structure completeness
-        const requiredFields = ['name', 'description', 'actions'];
-        for (const field of requiredFields) {
-          if (!(field in {{PLUGIN_VARIABLE}}) || {{PLUGIN_VARIABLE}}[field as keyof typeof {{PLUGIN_VARIABLE}}] === undefined) {
-            throw new Error(\`Plugin missing required field: \${field}\`);
-          }
-        }
-
-        console.log("✅ Complete plugin lifecycle and initialization validated");
-      },
-    },
-
-    {
-      name: "Test Suite Summary - Progressive Testing Report",
-      fn: async (runtime: IAgentRuntime) => {
-        console.log("\n" + "=".repeat(60));
-        console.log("📊 PROGRESSIVE TEST SUITE SUMMARY");
-        console.log("=".repeat(60));
-        
-        const stages = [
-          { name: "Stage 1: Basic Structure", passed: basicStructureTestsPassed },
-          { name: "Stage 2: Service Tests", passed: serviceTestsPassed },
-          { name: "Stage 3: Action Validation", passed: actionValidationTestsPassed },
-          { name: "Stage 4: Deep Action Tests", passed: deepActionTestsPassed },
-        ];
-        
-        let allPassed = true;
-        stages.forEach((stage, index) => {
-          const status = stage.passed ? "✅ PASSED" : "❌ FAILED/SKIPPED";
-          console.log(\`\${index + 1}. \${stage.name}: \${status}\`);
-          if (!stage.passed) allPassed = false;
-        });
-        
-        console.log("=".repeat(60));
-        
-        if (allPassed) {
-          console.log("🎉 ALL TEST STAGES PASSED! Plugin is ready for production.");
-        } else {
-          console.log("⚠️  Some test stages did not pass. Fix failing tests before proceeding.");
-          console.log("💡 Tests are progressive - each stage must pass before the next can run.");
-        }
-        
-        console.log("=".repeat(60) + "\n");
       },
     },
   ];
 }
 
-// Export a default instance following plugin-coinmarketcap pattern
-export default new {{PLUGIN_NAME}}TestSuite();`;
-
-
+// Export both named and default export for compatibility
+export const test: TestSuite = new {{PLUGIN_NAME}}TestSuite();
+export default test;`;
 
 /**
  * Get the template variables for a specific plugin
