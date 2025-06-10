@@ -54,7 +54,7 @@ export function createDatabaseAdapter(
   },
   agentId: UUID
 ): IDatabaseAdapter {
-  const dataDir = resolvePgliteDir(config.dataDir);
+  const dataDir = resolvePgliteDir(config.dataDir, undefined, true); // Respect env vars for plugin flexibility
 
   if (config.postgresUrl) {
     if (!globalSingletons.postgresConnectionManager) {
