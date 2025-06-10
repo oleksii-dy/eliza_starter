@@ -31,7 +31,7 @@ import { Command } from 'commander';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { detectDirectoryType } from '@/src/utils/directory-detection';
+import { detectDirectoryType, handleDirectoryContextErrors } from '@/src/utils/directory-detection';
 import { validatePort } from '@/src/utils/port-validation';
 import { plugin as sqlPlugin } from '@elizaos/plugin-sql';
 import dotenv from 'dotenv';
@@ -270,6 +270,12 @@ async function startAgents(options: {
       await startAgent(character, server);
     }
   } else {
+    // Check directory type and handle appropriately
+    const cwd = process.cwd();
+    const directoryInfo = detectDirectoryType(cwd);
+
+    handleDirectoryContextErrors(directoryInfo, 'start');
+
     const elizaCharacter = getElizaCharacter();
     await startAgent(elizaCharacter, server);
   }
