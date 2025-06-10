@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 // import { isMonorepoContext } from '@/src/utils'; // Replaced by UserEnvironment
 import { UserEnvironment } from './user-environment';
+import { logger } from '@elizaos/core';
 
 /**
  * Expands a file path starting with `~` to the project directory.
@@ -59,16 +60,21 @@ export function resolveEnvFile(startDir: string = process.cwd(), boundaryDir?: s
  * Resolves the directory used for PGlite database storage.
  *
  * Resolution order:
- * 1. The `dir` argument if provided.
- * 2. The `PGLITE_DATA_DIR` environment variable.
- * 3. The `fallbackDir` argument if provided.
- * 4. `./.elizadb` relative to the current working directory.
+ * 1. The `dir` argument if provided (explicit override)
+ * 2. The `PGLITE_DATA_DIR` environment variable (if `respectEnvVars` is true)
+ * 3. The `fallbackDir` argument if provided
+ * 4. Calculated project-relative default directory
  *
- * @param dir - Optional directory preference.
- * @param fallbackDir - Optional fallback directory when env var is not set.
+ * @param dir - Optional directory preference (highest priority)
+ * @param fallbackDir - Optional fallback directory when env var is not set
+ * @param respectEnvVars - Whether to respect PGLITE_DATA_DIR env var (default: false for monorepo consistency)
  * @returns The resolved data directory with any tilde expanded.
  */
-export async function resolvePgliteDir(dir?: string, fallbackDir?: string): Promise<string> {
+export async function resolvePgliteDir(
+  dir?: string,
+  fallbackDir?: string,
+  respectEnvVars: boolean = false
+): Promise<string> {
   const userEnv = UserEnvironment.getInstance();
   const pathsInfo = await userEnv.getPathInfo();
 
@@ -87,9 +93,22 @@ export async function resolvePgliteDir(dir?: string, fallbackDir?: string): Prom
   // then we construct the default path using projectRoot.
   const defaultBaseDir = path.join(projectRoot, '.elizadb');
 
-  // IMPORTANT: Always use our calculated defaultBaseDir for plugins/projects in monorepo
-  // Don't let environment variables override the correct directory structure
-  const base = dir ?? defaultBaseDir;
+  // Apply resolution hierarchy explicitly
+  const envVarValue = respectEnvVars ? process.env.PGLITE_DATA_DIR : undefined;
+
+  // Log when env vars are ignored to help with debugging
+  if (process.env.PGLITE_DATA_DIR && !respectEnvVars) {
+    logger.debug(
+      'PGLITE_DATA_DIR environment variable is set but ignored for monorepo consistency. ' +
+        `Using calculated path instead: ${defaultBaseDir}`
+    );
+  }
+
+  const base =
+    dir ?? // 1. Explicit override
+    envVarValue ?? // 2. Environment variable (if allowed)
+    fallbackDir ?? // 3. Fallback directory
+    defaultBaseDir; // 4. Calculated default
 
   // Pass projectRoot for tilde expansion, assuming ~ means project root.
   return expandTildePath(base, projectRoot);
