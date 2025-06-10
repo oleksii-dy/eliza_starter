@@ -4,73 +4,77 @@ import type { PromptChunk, ImportMapping, ModelTypeMapping, ArchitectureIssue, T
  * Critical import mappings from the mega prompt and plugin-news analysis
  */
 export const IMPORT_MAPPINGS: ImportMapping[] = [
+  // CRITICAL V2 Import Name Changes (Simple String Replacements)
   {
     oldImport: 'ModelClass',
     newImport: 'ModelType',
-    description: 'ModelClass is renamed to ModelType in V2',
+    description: 'CRITICAL: ModelClass is renamed to ModelType in V2',
   },
   {
     oldImport: 'elizaLogger',
     newImport: 'logger',
-    description: 'elizaLogger is renamed to logger in V2',
+    description: 'CRITICAL: elizaLogger is renamed to logger in V2',
   },
-  {
-    oldImport: /user:\s*["']{{user\d+}}["']/g,
-    newImport: 'name: "{{user1}}"',
-    description: 'ActionExample field "user" renamed to "name"',
-  },
-  // Type-only import patterns
-  {
-    oldImport: /import\s+{\s*type\s+(\w+)\s*}/g,
-    newImport: 'import type { $1 }',
-    description: 'Convert to type-only imports for better V2 compatibility',
-  },
-  {
-    oldImport: /import\s+{\s*([^,]+),\s*type\s+([^}]+)\s*}/g,
-    newImport: 'import { $1 } from "@elizaos/core";\nimport type { $2 } from "@elizaos/core"',
-    description: 'Separate type imports from value imports',
-  },
-  // Specific type imports that must be separated
-  {
-    oldImport: '{ Service, type IAgentRuntime }',
-    newImport: '{ Service } from "@elizaos/core";\nimport type { IAgentRuntime }',
-    description: 'Separate Service import from type imports',
-  },
-  {
-    oldImport: '{ Memory, type IAgentRuntime }',
-    newImport: '{ Memory } from "@elizaos/core";\nimport type { IAgentRuntime }',
-    description: 'Separate Memory import from type imports',
-  },
-  // Additional specific import patterns from plugin-news
+  
+  // CRITICAL Type-Only Imports (Must be separated)
   {
     oldImport: '{ TestSuite }',
     newImport: 'type { TestSuite }',
-    description: 'TestSuite is type-only export in V2',
+    description: 'CRITICAL: TestSuite is type-only export in V2',
   },
   {
-    oldImport: '{ AgentTest }',
-    newImport: '',
-    description: 'AgentTest does not exist in V2 - remove',
+    oldImport: '{ ActionExample }',
+    newImport: 'type { ActionExample }',
+    description: 'CRITICAL: ActionExample is type-only export in V2',
+  },
+  {
+    oldImport: '{ Content }',
+    newImport: 'type { Content }',
+    description: 'CRITICAL: Content is type-only export in V2',
+  },
+  {
+    oldImport: '{ HandlerCallback }',
+    newImport: 'type { HandlerCallback }',
+    description: 'CRITICAL: HandlerCallback is type-only export in V2',
+  },
+  {
+    oldImport: '{ IAgentRuntime }',
+    newImport: 'type { IAgentRuntime }',
+    description: 'CRITICAL: IAgentRuntime is type-only export in V2',
+  },
+  {
+    oldImport: '{ State }',
+    newImport: 'type { State }',
+    description: 'CRITICAL: State is type-only export in V2',
+  },
+  
+  // CRITICAL Mixed Import Separations (Common Patterns)
+  {
+    oldImport: '{ Service, type IAgentRuntime }',
+    newImport: '{ Service } from "@elizaos/core";\nimport type { IAgentRuntime }',
+    description: 'CRITICAL: Separate mixed imports - Service is value, IAgentRuntime is type',
+  },
+  {
+    oldImport: '{ Memory, type State }',
+    newImport: '{ Memory } from "@elizaos/core";\nimport type { State }',
+    description: 'CRITICAL: Separate mixed imports - Memory is value, State is type',
   },
   {
     oldImport: '{ ActionExample, Content }',
     newImport: 'type { ActionExample, Content }',
-    description: 'Both are type-only exports in V2',
-  },
-  {
-    oldImport: '{ State, Memory }',
-    newImport: '{ Memory } from "@elizaos/core";\nimport type { State }',
-    description: 'Memory is value, State is type-only',
+    description: 'CRITICAL: Both ActionExample and Content are type-only in V2',
   },
   {
     oldImport: '{ HandlerCallback, IAgentRuntime }',
     newImport: 'type { HandlerCallback, IAgentRuntime }',
-    description: 'Both are type-only exports',
+    description: 'CRITICAL: Both HandlerCallback and IAgentRuntime are type-only in V2',
   },
+  
+  // CRITICAL Removed Imports
   {
-    oldImport: '{ Service, type IAgentRuntime, type ServiceType }',
-    newImport: '{ Service } from "@elizaos/core";\nimport type { IAgentRuntime, ServiceType }',
-    description: 'Service is value, others are types',
+    oldImport: '{ AgentTest }',
+    newImport: '',
+    description: 'CRITICAL: AgentTest does not exist in V2 - remove completely',
   },
 ];
 
@@ -109,16 +113,31 @@ export const ARCHITECTURE_ISSUES: ArchitectureIssue[] = [
   {
     type: 'missing-service',
     severity: 'critical',
-    pattern: 'Missing Service Layer',
-    solution: 'Create Service class extending base Service with lifecycle methods',
+    pattern: 'Service Layer Required (ONLY if plugin had service in V1)',
+    solution: 'CRITICAL: Only create service if the plugin had a service in V1. Most plugins do NOT need services. Check main branch first.',
     codeExample: {
-      wrong: `export const myPlugin: Plugin = {
+      wrong: `// ❌ WRONG: Adding service to plugin that didn't have one in V1
+export const myPlugin: Plugin = {
     name: "plugin-name",
     actions: actions,
-    evaluators: [] // Outdated pattern
+    services: [NewService], // ❌ Don't add if not in V1
 };`,
-      correct: `export class MyService extends Service {
-    static serviceType: string = 'my-service';
+      correct: `// ✅ CORRECT: Two valid patterns depending on V1 plugin
+
+// Pattern 1: Plugin WITHOUT service (most common)
+const myPlugin: Plugin = {
+    name: 'my-plugin',
+    description: 'Plugin description',
+    services: [], // ✅ Empty array for plugins without services
+    actions: [...],
+    providers: [...],
+    tests: [...],
+    // No init function needed
+};
+
+// Pattern 2: Plugin WITH service (only if existed in V1)
+export class MyService extends Service {
+    static serviceType = 'my-service'; // ✅ No explicit type annotation
     
     constructor(runtime: IAgentRuntime) {
         super(runtime);
@@ -141,7 +160,7 @@ export const ARCHITECTURE_ISSUES: ArchitectureIssue[] = [
 const myPlugin: Plugin = {
     name: 'my-plugin',
     description: 'Plugin description',
-    services: [MyService],
+    services: [MyService], // ✅ Only if service existed in V1
     actions: [...],
     providers: [...],
     tests: [...],
@@ -457,20 +476,28 @@ Update .gitignore and create .npmignore.`,
     },
     {
       id: 'phase2-service-layer',
-      title: 'Phase 2: Service Layer Creation',
+      title: 'Phase 2: Service Layer (CONDITIONAL - Check V1 First)',
       phase: 'core-structure-migration',
-      content: `Create Service class extending base Service.
-Implement static serviceType property.
-Implement static start() method.
-Implement stop() method for cleanup.
-Implement capabilityDescription getter.
-Add proper constructor with runtime parameter.`,
+      content: `CRITICAL DECISION: Check if V1 plugin had a service/provider class.
+      
+If V1 plugin had NO service/provider:
+- Set services: [] in plugin definition
+- Skip service creation entirely
+- Most plugins fall into this category
+
+If V1 plugin had a service/provider:
+- Create Service class extending base Service
+- Implement static serviceType property (no explicit typing)
+- Implement static start() method
+- Implement stop() method for cleanup
+- Implement capabilityDescription getter
+- Add proper constructor with runtime parameter`,
       criticalPoints: [
-        'Only if plugin requires service',
-        'Must extend base Service class',
-        'Proper lifecycle methods required',
-        'Service registration in plugin definition',
-        'Remove explicit ServiceType annotation',
+        'CRITICAL: Check V1 plugin first - most plugins do NOT need services',
+        'If no service in V1, use services: [] in plugin definition',
+        'Only create service if V1 had one',
+        'Remove explicit ServiceType annotation (just string literal)',
+        'Services auto-register from services array',
       ],
     },
     {
