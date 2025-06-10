@@ -108,6 +108,13 @@ export class MessageBusService extends Service {
           logger.info(
             `[${this.runtime.character.name}] MessageBusService: Agent is subscribed to ${this.subscribedServers.size} servers`
           );
+
+          // Check if we need to show monorepo warning after agent initialization
+          if (global._elizaShowMonorepoWarning) {
+            const { showMonorepoWarning } = await import('../../utils/directory-detection.js');
+            showMonorepoWarning(global._elizaShowMonorepoWarning);
+            delete global._elizaShowMonorepoWarning;
+          }
         }
       }
     } catch (error) {
