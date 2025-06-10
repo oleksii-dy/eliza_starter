@@ -71,7 +71,11 @@ export function resolveEnvFile(startDir: string = process.cwd(), boundaryDir?: s
 export async function resolvePgliteDir(dir?: string, fallbackDir?: string): Promise<string> {
   const userEnv = UserEnvironment.getInstance();
   const pathsInfo = await userEnv.getPathInfo();
-  const projectRoot = pathsInfo.monorepoRoot || process.cwd(); // Base directory should be monorepo root or cwd
+
+  // Use the same directory as config (.eliza) but for database (.elizadb)
+  // This ensures config and database are always in the same base directory
+  const configBaseDir = path.dirname(pathsInfo.elizaDir);
+  const projectRoot = configBaseDir;
 
   // Use the envFilePath from UserEnvironment which is already correctly resolved
   if (pathsInfo.envFilePath && existsSync(pathsInfo.envFilePath)) {
@@ -83,7 +87,9 @@ export async function resolvePgliteDir(dir?: string, fallbackDir?: string): Prom
   // then we construct the default path using projectRoot.
   const defaultBaseDir = path.join(projectRoot, '.elizadb');
 
-  const base = dir ?? process.env.PGLITE_DATA_DIR ?? fallbackDir ?? defaultBaseDir;
+  // IMPORTANT: Always use our calculated defaultBaseDir for plugins/projects in monorepo
+  // Don't let environment variables override the correct directory structure
+  const base = dir ?? defaultBaseDir;
 
   // Pass projectRoot for tilde expansion, assuming ~ means project root.
   return expandTildePath(base, projectRoot);
