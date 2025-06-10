@@ -39,7 +39,11 @@
     "format:check": "prettier --check ./src",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
     "test": "vitest run",
-    "test:cli": "bun test tests/commands/"
+    "test:api": "vitest --config vitest.api.config.ts",
+    "test:cli": "bun test tests/commands/",
+    "test:coverage": "vitest --coverage",
+    "test:api:coverage": "vitest --config vitest.api.config.ts --coverage",
+    "test:watch": "vitest --watch"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.40.0",

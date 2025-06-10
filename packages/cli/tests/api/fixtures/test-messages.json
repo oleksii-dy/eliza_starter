@@ -1,0 +1,213 @@
+{
+  "basic": [
+    {
+      "text": "Hello",
+      "expectedResponsePatterns": ["hello", "hi", "greet"],
+      "category": "greeting"
+    },
+    {
+      "text": "How are you?",
+      "expectedResponsePatterns": ["well", "good", "fine", "doing"],
+      "category": "greeting"
+    },
+    {
+      "text": "What is your name?",
+      "expectedResponsePatterns": ["test", "agent", "name"],
+      "category": "identity"
+    },
+    {
+      "text": "Test message",
+      "expectedResponsePatterns": ["test", "response", "received"],
+      "category": "testing"
+    }
+  ],
+
+  "memory": [
+    {
+      "text": "Remember that I like cats",
+      "expectedResponsePatterns": ["remember", "cats", "like"],
+      "category": "memory_creation",
+      "memoryType": "preference"
+    },
+    {
+      "text": "My favorite color is blue",
+      "expectedResponsePatterns": ["blue", "favorite", "color"],
+      "category": "memory_creation", 
+      "memoryType": "preference"
+    },
+    {
+      "text": "I work as a software engineer",
+      "expectedResponsePatterns": ["software", "engineer", "work"],
+      "category": "memory_creation",
+      "memoryType": "personal_info"
+    },
+    {
+      "text": "What do you remember about me?",
+      "expectedResponsePatterns": ["remember", "recall", "know"],
+      "category": "memory_retrieval",
+      "memoryType": "query"
+    }
+  ],
+
+  "conversation": [
+    {
+      "text": "Let's talk about programming",
+      "expectedResponsePatterns": ["programming", "code", "develop"],
+      "category": "topic_introduction",
+      "topic": "programming"
+    },
+    {
+      "text": "What do you think about AI?",
+      "expectedResponsePatterns": ["AI", "artificial", "intelligence"],
+      "category": "opinion",
+      "topic": "technology"
+    },
+    {
+      "text": "Can you help me with a problem?",
+      "expectedResponsePatterns": ["help", "problem", "assist"],
+      "category": "assistance_request"
+    },
+    {
+      "text": "Tell me a joke",
+      "expectedResponsePatterns": ["joke", "funny", "humor"],
+      "category": "entertainment"
+    }
+  ],
+
+  "multimedia": [
+    {
+      "text": "Here's an image for you to analyze",
+      "attachments": [
+        {
+          "type": "image", 
+          "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+          "contentType": "image/png"
+        }
+      ],
+      "expectedResponsePatterns": ["image", "see", "analyze"],
+      "category": "image_processing"
+    },
+    {
+      "text": "Process this file attachment",
+      "attachments": [
+        {
+          "type": "text",
+          "content": "Sample file content for testing",
+          "filename": "test.txt",
+          "contentType": "text/plain"
+        }
+      ],
+      "expectedResponsePatterns": ["file", "attachment", "content"],
+      "category": "file_processing"
+    }
+  ],
+
+  "error_scenarios": [
+    {
+      "text": "",
+      "expectedResponsePatterns": ["empty", "message", "error"],
+      "category": "empty_message",
+      "expectError": true
+    },
+    {
+      "text": "A".repeat(10000),
+      "expectedResponsePatterns": ["long", "message", "limit"],
+      "category": "long_message",
+      "expectError": false
+    },
+    {
+      "text": "Special characters: !@#$%^&*(){}[]|\\:;\"'<>?,./",
+      "expectedResponsePatterns": ["special", "characters"],
+      "category": "special_characters"
+    }
+  ],
+
+  "performance": [
+    {
+      "text": "Quick response test",
+      "expectedResponseTime": 2000,
+      "category": "response_time"
+    },
+    {
+      "text": "Generate a detailed explanation of machine learning",
+      "expectedResponseTime": 10000,
+      "category": "complex_response"
+    }
+  ],
+
+  "context": [
+    {
+      "sequence": [
+        {
+          "text": "Let's start a story about a robot",
+          "expectedResponsePatterns": ["story", "robot", "start"]
+        },
+        {
+          "text": "What happens next in our story?",
+          "expectedResponsePatterns": ["story", "next", "continue"],
+          "requiresContext": true
+        },
+        {
+          "text": "How does the story end?", 
+          "expectedResponsePatterns": ["end", "story", "conclusion"],
+          "requiresContext": true
+        }
+      ],
+      "category": "story_continuation"
+    },
+    {
+      "sequence": [
+        {
+          "text": "I'm planning a trip to Japan",
+          "expectedResponsePatterns": ["Japan", "trip", "travel"]
+        },
+        {
+          "text": "What should I pack for the trip?",
+          "expectedResponsePatterns": ["pack", "Japan", "trip"],
+          "requiresContext": true
+        },
+        {
+          "text": "How long should I stay there?",
+          "expectedResponsePatterns": ["stay", "long", "duration"],
+          "requiresContext": true
+        }
+      ],
+      "category": "travel_planning"
+    }
+  ],
+
+  "agent_interaction": [
+    {
+      "text": "Start a collaborative task",
+      "targetAgents": ["multiple"],
+      "expectedResponsePatterns": ["collaborative", "task", "start"],
+      "category": "multi_agent"
+    },
+    {
+      "text": "Pass this message to another agent",
+      "targetAgents": ["specific"],
+      "expectedResponsePatterns": ["pass", "message", "agent"],
+      "category": "message_forwarding"
+    }
+  ],
+
+  "api_validation": [
+    {
+      "text": "Test API response format",
+      "validateResponse": {
+        "required_fields": ["messageId", "agentId", "timestamp"],
+        "response_format": "json"
+      },
+      "category": "api_format"
+    },
+    {
+      "text": "Test metadata inclusion",
+      "includeMetadata": true,
+      "validateResponse": {
+        "required_metadata": ["source", "processingTime"],
+        "response_format": "json"
+      },
+      "category": "metadata_validation"
+    }
+  ]
+}
