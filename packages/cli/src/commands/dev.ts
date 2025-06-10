@@ -1,5 +1,5 @@
 import { buildProject, handleError, UserEnvironment } from '@/src/utils';
-import { detectDirectoryType } from '@/src/utils/directory-detection';
+import { detectDirectoryType, handleDirectoryContextErrors } from '@/src/utils/directory-detection';
 import { validatePort } from '@/src/utils/port-validation';
 import { Command, Option } from 'commander';
 import chokidar from 'chokidar';
@@ -211,11 +211,8 @@ export const dev = new Command()
       const cwd = process.cwd();
       const directoryInfo = detectDirectoryType(cwd);
 
-      if (!directoryInfo) {
-        console.error('Cannot start development mode in this directory.');
-        console.info('This directory is not accessible or does not exist.');
-        process.exit(1);
-      }
+      // Use the centralized handler for directory-based errors and warnings
+      handleDirectoryContextErrors(directoryInfo, 'dev');
 
       // Determine if this is a project, plugin, or monorepo based on directory detection
       const isProject = directoryInfo.type === 'elizaos-project';
@@ -321,9 +318,13 @@ export const dev = new Command()
       };
 
       if (!isProject && !isPlugin && !isMonorepo) {
-        console.warn(
-          `Not in a recognized ElizaOS project, plugin, or monorepo directory. Current directory is: ${directoryInfo.type}. Running in standalone mode.`
-        );
+        // The handler function now takes care of the fatal error for 'elizaos-subdir'
+        // so we only need to warn for other non-recognized types.
+        if (directoryInfo.type !== 'elizaos-subdir') {
+          console.warn(
+            `Not in a recognized ElizaOS project, plugin, or monorepo directory. Current directory is: ${directoryInfo.type}. Running in standalone mode.`
+          );
+        }
       } else {
         const modeDescription = isMonorepo ? 'monorepo' : isProject ? 'project' : 'plugin';
         console.info(`Running in ${modeDescription} mode`);
