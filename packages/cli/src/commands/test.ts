@@ -92,9 +92,8 @@ async function checkPortAvailable(port: number): Promise<boolean> {
 /**
  * Determines the project type using comprehensive directory detection
  */
-function getProjectType(testPath?: string): DirectoryInfo {
-  const targetPath = testPath ? path.resolve(process.cwd(), testPath) : process.cwd();
-  return detectDirectoryType(targetPath);
+function getProjectType(): DirectoryInfo {
+  return detectDirectoryType(process.cwd());
 }
 
 /**
@@ -163,6 +162,26 @@ async function runComponentTests(
     }
 
     const targetPath = testPath ? path.resolve(process.cwd(), '..', testPath) : process.cwd();
+
+    // Check if there's a vitest config in the current directory
+    const vitestConfigFiles = ['vitest.config.ts', 'vitest.config.js', 'vitest.config.mjs'];
+    const hasLocalVitestConfig = vitestConfigFiles.some((file) =>
+      fs.existsSync(path.join(targetPath, file))
+    );
+
+    // If no local vitest config, create arguments to only test the current directory
+    if (!hasLocalVitestConfig) {
+      // Add the current directory as the test path
+      args.push('.');
+
+      // Exclude node_modules and common non-test directories
+      args.push('--exclude', '**/node_modules/**');
+      args.push('--exclude', '**/.elizadb/**');
+      args.push('--exclude', '**/.elizadb-test/**');
+      args.push('--exclude', '**/dist/**');
+      args.push('--exclude', '**/build/**');
+    }
+
     logger.info(`Executing: bun ${args.join(' ')} in ${targetPath}`);
 
     // Use spawn for real-time output streaming
@@ -395,7 +414,7 @@ const runE2eTests = async (
             runtimes.push(runtime);
             projectAgents.push({
               character: defaultElizaCharacter,
-              plugins: runtime.plugins,
+              plugins: [pluginUnderTest], // Only include the plugin being tested, not all runtime plugins
             });
 
             logger.info('Default test agent started successfully');
@@ -555,24 +574,44 @@ async function runAllTests(
   testPath: string | undefined,
   options: { port?: number; name?: string; skipBuild?: boolean }
 ) {
-  // Run component tests first
-  const projectInfo = getProjectType(testPath);
-  if (!options.skipBuild) {
-    const componentResult = await runComponentTests(testPath, options, projectInfo);
+  // Save original cwd
+  const originalCwd = process.cwd();
+
+  try {
+    // If a test path is provided, change to that directory
+    if (testPath) {
+      const targetPath = path.isAbsolute(testPath) ? testPath : path.resolve(originalCwd, testPath);
+      if (!fs.existsSync(targetPath)) {
+        logger.error(`Test path does not exist: ${targetPath}`);
+        process.exit(1);
+      }
+
+      logger.info(`Changing to test directory: ${targetPath}`);
+      process.chdir(targetPath);
+    }
+
+    // Get project info from the current (potentially changed) directory
+    const projectInfo = getProjectType();
+
+    // Run component tests first
+    const componentResult = await runComponentTests(undefined, options, projectInfo);
     if (componentResult.failed) {
       logger.error('Component tests failed. Continuing to e2e tests...');
     }
-  }
 
-  // Run e2e tests
-  const e2eResult = await runE2eTests(testPath, options, projectInfo);
-  if (e2eResult.failed) {
-    logger.error('E2E tests failed.');
-    process.exit(1);
-  }
+    // Run e2e tests
+    const e2eResult = await runE2eTests(undefined, options, projectInfo);
+    if (e2eResult.failed) {
+      logger.error('E2E tests failed.');
+      process.exit(1);
+    }
 
-  logger.success('All tests passed successfully!');
-  process.exit(0);
+    logger.success('All tests passed successfully!');
+    process.exit(0);
+  } finally {
+    // Restore original cwd
+    process.chdir(originalCwd);
+  }
 }
 
 // Create base test command with basic description only

@@ -1,6 +1,7 @@
 import { getElizaCharacter } from '@/src/characters/eliza';
 import { AgentServer } from '@/src/server/index';
 import { jsonToCharacter, loadCharacterTryPath } from '@/src/server/loader';
+import { loadProject } from '@/src/project';
 import {
   buildProject,
   configureDatabaseSettings,
@@ -244,6 +245,7 @@ async function startAgents(options: {
   configure?: boolean;
   port?: number;
   characters?: Character[];
+  build?: boolean;
 }) {
   const postgresUrl = await configureDatabaseSettings(options.configure);
   if (postgresUrl) process.env.POSTGRES_URL = postgresUrl;
@@ -265,13 +267,71 @@ async function startAgents(options: {
   process.env.SERVER_PORT = serverPort.toString();
   server.start(serverPort);
 
+  // If characters are explicitly provided, use them
   if (options.characters && options.characters.length > 0) {
     for (const character of options.characters) {
       await startAgent(character, server);
     }
   } else {
-    const elizaCharacter = getElizaCharacter();
-    await startAgent(elizaCharacter, server);
+    // Check if we're in a project or plugin directory
+    const cwd = process.cwd();
+    const directoryInfo = detectDirectoryType(cwd);
+    let projectLoaded = false;
+
+    if (
+      directoryInfo &&
+      (directoryInfo.type === 'elizaos-project' || directoryInfo.type === 'elizaos-plugin')
+    ) {
+      try {
+        logger.info(
+          `Detected ${directoryInfo.type === 'elizaos-plugin' ? 'plugin' : 'project'} directory, attempting to load...`
+        );
+
+        // Build if requested
+        if (options.build) {
+          logger.info('Building project...');
+          await buildProject(cwd, directoryInfo.type === 'elizaos-plugin');
+        }
+
+        const project = await loadProject(cwd);
+
+        if (project && project.agents && project.agents.length > 0) {
+          logger.info(
+            `Found ${project.agents.length} agents in ${project.isPlugin ? 'plugin' : 'project'}`
+          );
+
+          // Start each agent from the project
+          for (const agent of project.agents) {
+            const plugins = [...(agent.plugins || [])];
+
+            // If this is a plugin being tested, include the plugin module itself
+            if (project.isPlugin && project.pluginModule) {
+              plugins.push(project.pluginModule);
+            }
+
+            await startAgent(agent.character, server, agent.init, plugins);
+          }
+          projectLoaded = true;
+        } else if (project && project.isPlugin && project.pluginModule) {
+          // For plugins without agents, use the default Eliza character to test the plugin
+          logger.info(
+            'Plugin detected without agents, using default Eliza character to test plugin'
+          );
+          const elizaCharacter = getElizaCharacter();
+          await startAgent(elizaCharacter, server, undefined, [project.pluginModule]);
+          projectLoaded = true;
+        }
+      } catch (error) {
+        logger.warn(`Failed to load project/plugin: ${error}. Falling back to default agent.`);
+      }
+    }
+
+    // If no project was loaded, use the default Eliza character
+    if (!projectLoaded) {
+      logger.info('Using default Eliza character');
+      const elizaCharacter = getElizaCharacter();
+      await startAgent(elizaCharacter, server);
+    }
   }
 }
 
@@ -289,6 +349,7 @@ export const start = new Command()
   .option('-c, --configure', 'Reconfigure services and AI models')
   .option('-p, --port <port>', 'Port to listen on', validatePort)
   .option('-char, --character [paths...]', 'Character file(s) to use')
+  .option('-b, --build', 'Build the project before starting')
   .hook('preAction', async () => {
     await displayBanner();
   })
