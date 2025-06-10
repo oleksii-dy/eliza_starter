@@ -84,7 +84,7 @@ vi.mock('../src/utils/user-environment', () => ({
 vi.mock('../src/utils/resolve-utils', () => ({
   expandTildePath: vi.fn((p) => p),
   resolveEnvFile: vi.fn().mockReturnValue('/mock/globalDefault.env'), // Consistent global default
-  resolvePgliteDir: vi.fn().mockResolvedValue('/mock/.globalDefault-elizadb'),
+  resolvePgliteDir: vi.fn().mockResolvedValue('/mock/.globalDefault-elizadb'), // Mocks handle any signature
 }));
 
 // Mock for prompts, often used in commands
@@ -132,5 +132,6 @@ vi.mock('../src/utils', async (importOriginal) => {
   return {
     ...actual,
     resolveEnvFile: vi.fn().mockReturnValue('/mock/globalDefault.env'),
+    resolvePgliteDir: vi.fn().mockResolvedValue('/mock/.globalDefault-elizadb'), // Add resolvePgliteDir mock here too
   };
 });
