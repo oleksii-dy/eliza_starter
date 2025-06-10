@@ -14,6 +14,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ConnectionProvider, useConnection } from './context/ConnectionContext';
 import { STALE_TIMES } from './hooks/use-query-hooks';
 import useVersion from './hooks/use-version';
+import { useChannelEvents } from './hooks/use-channel-events';
 import './index.css';
 import { apiClient } from './lib/api';
 import Chat from './routes/chat';
@@ -72,6 +73,7 @@ prefetchInitialData();
 // Component containing the core application logic and routing
 function AppContent() {
   useVersion();
+  useChannelEvents(); // Add global channel events handling
   const { status } = useConnection();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [homeKey, setHomeKey] = useState(Date.now());

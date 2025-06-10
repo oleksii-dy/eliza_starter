@@ -3348,6 +3348,85 @@ export abstract class BaseDrizzleAdapter<
       );
     });
   }
+
+  /**
+   * Updates a channel's details
+   */
+  async updateChannel(
+    channelId: UUID,
+    updates: { name?: string; participantCentralUserIds?: UUID[]; metadata?: any }
+  ): Promise<{
+    id: UUID;
+    messageServerId: UUID;
+    name: string;
+    type: string;
+    sourceType?: string;
+    sourceId?: string;
+    topic?: string;
+    metadata?: any;
+    createdAt: Date;
+    updatedAt: Date;
+  }> {
+    return this.withDatabase(async () => {
+      const now = new Date();
+      const updateData: any = {
+        updatedAt: now,
+      };
+
+      // Add only the fields that are being updated
+      if (updates.name !== undefined) {
+        updateData.name = updates.name;
+      }
+      if (updates.metadata !== undefined) {
+        updateData.metadata = updates.metadata;
+      }
+
+      await this.db.transaction(async (tx) => {
+        // Update the channel
+        await tx.update(channelTable).set(updateData).where(eq(channelTable.id, channelId));
+
+        // Handle participant updates if provided
+        if (updates.participantCentralUserIds !== undefined) {
+          // Remove existing participants
+          await tx.delete(channelParticipantsTable).where(eq(channelParticipantsTable.channelId, channelId));
+
+          // Add new participants
+          if (updates.participantCentralUserIds.length > 0) {
+            const participantValues = updates.participantCentralUserIds.map((userId) => ({
+              channelId: channelId,
+              userId: userId,
+            }));
+            await tx.insert(channelParticipantsTable).values(participantValues).onConflictDoNothing();
+          }
+        }
+      });
+
+      // Return the updated channel
+      const updatedChannel = await this.getChannelDetails(channelId);
+      if (!updatedChannel) {
+        throw new Error(`Channel ${channelId} not found after update`);
+      }
+      return updatedChannel;
+    });
+  }
+
+  /**
+   * Deletes a channel and all its associated data
+   */
+  async deleteChannel(channelId: UUID): Promise<void> {
+    return this.withDatabase(async () => {
+      await this.db.transaction(async (tx) => {
+        // Delete all messages in the channel
+        await tx.delete(messageTable).where(eq(messageTable.channelId, channelId));
+
+        // Delete all channel participants
+        await tx.delete(channelParticipantsTable).where(eq(channelParticipantsTable.channelId, channelId));
+
+        // Delete the channel itself
+        await tx.delete(channelTable).where(eq(channelTable.id, channelId));
+      });
+    });
+  }
 }
 
 // Import tables at the end to avoid circular dependencies

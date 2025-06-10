@@ -46,6 +46,29 @@ export type LogStreamData = {
   [key: string]: string | number | boolean | null | undefined;
 };
 
+// Define types for channel events
+export type ChannelDeletedData = {
+  channelId: string;
+  [key: string]: any;
+};
+
+export type ChannelUpdatedData = {
+  channelId: string;
+  updates: any;
+  [key: string]: any;
+};
+
+export type ChannelClearedData = {
+  channelId: string;
+  [key: string]: any;
+};
+
+export type MessageDeletedData = {
+  messageId: string;
+  channelId: string;
+  [key: string]: any;
+};
+
 // A simple class that provides EventEmitter-like interface using Evt internally
 class EventAdapter {
   private events: Record<string, Evt<any>> = {};
@@ -56,6 +79,10 @@ class EventAdapter {
     this.events.messageComplete = Evt.create<MessageCompleteData>();
     this.events.controlMessage = Evt.create<ControlMessageData>();
     this.events.logStream = Evt.create<LogStreamData>();
+    this.events.channelDeleted = Evt.create<ChannelDeletedData>();
+    this.events.channelUpdated = Evt.create<ChannelUpdatedData>();
+    this.events.channelCleared = Evt.create<ChannelClearedData>();
+    this.events.messageDeleted = Evt.create<MessageDeletedData>();
   }
 
   on(eventName: string, listener: (...args: any[]) => void) {
@@ -137,6 +164,22 @@ export class SocketIOManager extends EventAdapter {
 
   public get evtLogStream() {
     return this._getEvt('logStream') as Evt<LogStreamData>;
+  }
+
+  public get evtChannelDeleted() {
+    return this._getEvt('channelDeleted') as Evt<ChannelDeletedData>;
+  }
+
+  public get evtChannelUpdated() {
+    return this._getEvt('channelUpdated') as Evt<ChannelUpdatedData>;
+  }
+
+  public get evtChannelCleared() {
+    return this._getEvt('channelCleared') as Evt<ChannelClearedData>;
+  }
+
+  public get evtMessageDeleted() {
+    return this._getEvt('messageDeleted') as Evt<MessageDeletedData>;
   }
 
   private constructor() {
@@ -303,6 +346,30 @@ export class SocketIOManager extends EventAdapter {
     this.socket.on('connect_error', (error) => {
       clientLogger.error('[SocketIO] Connection error:', error);
       this.emit('connect_error', error);
+    });
+
+    // Listen for channel deletion events
+    this.socket.on('channelDeleted', (data) => {
+      clientLogger.info(`[SocketIO] Channel deleted event received:`, data);
+      this.emit('channelDeleted', data);
+    });
+
+    // Listen for channel update events
+    this.socket.on('channelUpdated', (data) => {
+      clientLogger.info(`[SocketIO] Channel updated event received:`, data);
+      this.emit('channelUpdated', data);
+    });
+
+    // Listen for channel cleared events
+    this.socket.on('channelCleared', (data) => {
+      clientLogger.info(`[SocketIO] Channel cleared event received:`, data);
+      this.emit('channelCleared', data);
+    });
+
+    // Listen for message deleted events
+    this.socket.on('messageDeleted', (data) => {
+      clientLogger.info(`[SocketIO] Message deleted event received:`, data);
+      this.emit('messageDeleted', data);
     });
 
     // Handle log stream events

@@ -133,23 +133,42 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
     },
     onSuccess: () => {
       toast({ title: 'Group Deleted', description: 'The group has been successfully deleted.' });
+      // Invalidate channel queries - the real-time event will also handle this
       queryClient.invalidateQueries({ queryKey: ['channels', serverId] });
       queryClient.invalidateQueries({ queryKey: ['channels'] });
+      
+      // Remove specific cached data for this channel
+      if (channelId) {
+        queryClient.removeQueries({ queryKey: ['channelDetails', channelId] });
+        queryClient.removeQueries({ queryKey: ['channelParticipants', channelId] });
+        queryClient.removeQueries({ queryKey: ['messages', channelId] });
+      }
+      
       navigate('/');
       onClose();
     },
     onError: (error) => {
       clientLogger.error('Failed to delete channel', error);
-      const errorMsg = error instanceof Error ? error.message : 'Could not delete group.';
-      if (typeof error === 'object' && error !== null && (error as any).statusCode === 404) {
-        toast({
-          title: 'Error Deleting Group',
-          description: 'Delete operation not found on server.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({ title: 'Error Deleting Group', description: errorMsg, variant: 'destructive' });
+      let errorMessage = 'Failed to delete group. Please try again.';
+      
+      if (error instanceof Error) {
+        // Provide more specific error messages based on the error
+        if (error.message.includes('not found') || error.message.includes('404')) {
+          errorMessage = 'Group not found. It may have already been deleted.';
+        } else if (error.message.includes('permission') || error.message.includes('403')) {
+          errorMessage = 'You do not have permission to delete this group.';
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.trim()) {
+          errorMessage = `Error: ${error.message}`;
+        }
       }
+      
+      toast({ 
+        title: 'Delete Failed', 
+        description: errorMessage, 
+        variant: 'destructive' 
+      });
     },
   });
 

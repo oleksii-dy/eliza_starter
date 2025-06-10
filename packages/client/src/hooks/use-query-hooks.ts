@@ -1185,16 +1185,37 @@ export function useDeleteChannel() {
         title: 'Group Deleted',
         description: 'The group has been successfully deleted.',
       });
-      // Invalidate channel queries
+      // Invalidate channel queries - the real-time event will also handle this
       queryClient.invalidateQueries({ queryKey: ['channels', variables.serverId] });
       queryClient.invalidateQueries({ queryKey: ['channels'] });
+      
+      // Remove specific cached data for this channel
+      queryClient.removeQueries({ queryKey: ['channelDetails', variables.channelId] });
+      queryClient.removeQueries({ queryKey: ['channelParticipants', variables.channelId] });
+      queryClient.removeQueries({ queryKey: ['messages', variables.channelId] });
+      
       // Navigate back to home
       navigate('/');
     },
     onError: (error) => {
+      let errorMessage = 'Failed to delete group. Please try again.';
+      
+      if (error instanceof Error) {
+        // Provide more specific error messages based on the error
+        if (error.message.includes('not found') || error.message.includes('404')) {
+          errorMessage = 'Group not found. It may have already been deleted.';
+        } else if (error.message.includes('permission') || error.message.includes('403')) {
+          errorMessage = 'You do not have permission to delete this group.';
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.trim()) {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+      
       toast({
-        title: 'Error Deleting Group',
-        description: error instanceof Error ? error.message : 'Failed to delete group',
+        title: 'Delete Failed',
+        description: errorMessage,
         variant: 'destructive',
       });
     },

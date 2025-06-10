@@ -391,6 +391,9 @@ export default function Chat({
         try {
           await apiClient.deleteChannel(channelToDelete.id);
           toast({ title: 'Chat Deleted', description: `"${channelToDelete.name}" was deleted.` });
+          
+          // The real-time event handler will invalidate queries, but we can also do it here for immediate feedback
+          // Note: The useChannelEvents hook will handle the real-time updates, but this provides immediate local feedback
           const remainingChannels = agentDmChannels.filter(
             (ch) => ch.id !== channelToDelete.id
           );
@@ -403,9 +406,24 @@ export default function Chat({
           }
         } catch (error) {
           clientLogger.error('[Chat] Error deleting DM channel:', error);
+          let errorMessage = 'Failed to delete chat. Please try again.';
+          
+          if (error instanceof Error) {
+            // Provide more specific error messages based on the error
+            if (error.message.includes('not found') || error.message.includes('404')) {
+              errorMessage = 'Chat not found. It may have already been deleted.';
+            } else if (error.message.includes('permission') || error.message.includes('403')) {
+              errorMessage = 'You do not have permission to delete this chat.';
+            } else if (error.message.includes('network') || error.message.includes('fetch')) {
+              errorMessage = 'Network error. Please check your connection and try again.';
+            } else if (error.message.trim()) {
+              errorMessage = `Error: ${error.message}`;
+            }
+          }
+          
           toast({
-            title: 'Error',
-            description: 'Could not delete chat. The server might not support this action yet.',
+            title: 'Delete Failed',
+            description: errorMessage,
             variant: 'destructive',
           });
         }
@@ -892,8 +910,6 @@ export default function Chat({
               size="sm"
               onClick={chatType === ChannelType.DM ? handleDeleteCurrentDmChannel : handleClearChat}
               disabled={
-                !messages ||
-                messages.length === 0 ||
                 (chatType === ChannelType.DM && !chatState.currentDmChannelId)
               }
               title={
@@ -956,7 +972,7 @@ export default function Chat({
                 variant="outline"
                 size="sm"
                 onClick={handleClearChat}
-                disabled={!messages || messages.length === 0}
+                disabled={false}
                 className="xl:px-3"
               >
                 <Trash2 className="size-4" />
