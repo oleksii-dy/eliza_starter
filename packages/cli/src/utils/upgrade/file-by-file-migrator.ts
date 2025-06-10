@@ -597,13 +597,22 @@ IMPORTANT: Fix ALL detected patterns comprehensively. Make the file fully V2 com
       }
     }
 
-    // Clean up test files that shouldn't exist
-    const testFiles = await globby(['src/test/*.test.ts', 'src/test/*.spec.ts'], {
+    // Clean up WRONG test files but preserve ElizaOS V2 pattern
+    const wrongTestFiles = await globby([
+      'src/test/*.test.ts',  // Wrong: ElizaOS V2 uses test.ts not *.test.ts
+      'src/test/*.spec.ts',  // Wrong: ElizaOS V2 uses test.ts not *.spec.ts
+    ], {
       cwd: this.context.repoPath,
     });
     
-    for (const testFile of testFiles) {
-      logger.info(`🗑️  Deleting extra test file: ${testFile}`);
+    for (const testFile of wrongTestFiles) {
+      // PRESERVE src/test/test.ts - this is the CORRECT ElizaOS V2 pattern
+      if (testFile === 'src/test/test.ts') {
+        logger.info(`✅ Preserving correct ElizaOS V2 test file: ${testFile}`);
+        continue;
+      }
+      
+      logger.info(`🗑️  Deleting incorrect test file: ${testFile}`);
       await fs.remove(path.join(this.context.repoPath, testFile));
     }
 
