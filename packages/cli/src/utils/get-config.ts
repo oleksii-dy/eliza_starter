@@ -229,7 +229,7 @@ export async function getElizaDirectories(targetProjectDir?: string) {
   });
 
   const defaultElizaDbDir = path.resolve(projectRoot, '.elizadb');
-  const elizaDbDir = await resolvePgliteDir(undefined, defaultElizaDbDir);
+  const elizaDbDir = await resolvePgliteDir(undefined, defaultElizaDbDir, false); // Use false for monorepo consistency
 
   return { elizaDir, elizaDbDir, envFilePath };
 }
@@ -439,7 +439,7 @@ export async function storePgliteDataDir(dataDir: string, envFilePath: string): 
  */
 export async function promptAndStorePostgresUrl(envFilePath: string): Promise<string | null> {
   clack.intro('🗄️  PostgreSQL Configuration');
-  
+
   const response = await clack.text({
     message: 'Enter your Postgres URL:',
     placeholder: 'postgresql://user:password@host:port/dbname',
@@ -453,7 +453,7 @@ export async function promptAndStorePostgresUrl(envFilePath: string): Promise<st
       return undefined;
     },
   });
-  
+
   if (clack.isCancel(response)) {
     clack.cancel('Operation cancelled.');
     return null;
@@ -462,7 +462,7 @@ export async function promptAndStorePostgresUrl(envFilePath: string): Promise<st
   // Store the URL in the .env file
   const spinner = clack.spinner();
   spinner.start('Saving PostgreSQL configuration...');
-  
+
   try {
     await storePostgresUrl(response, envFilePath);
     spinner.stop('PostgreSQL configuration saved successfully!');
@@ -564,9 +564,9 @@ export async function storeAnthropicKey(key: string, envFilePath: string): Promi
  */
 export async function promptAndStoreOpenAIKey(envFilePath: string): Promise<string | null> {
   clack.intro('🤖 OpenAI API Configuration');
-  
+
   clack.note('Get your API key from: https://platform.openai.com/api-keys', 'API Key Information');
-  
+
   const response = await clack.password({
     message: 'Enter your OpenAI API key:',
     validate: (value) => {
@@ -590,7 +590,7 @@ export async function promptAndStoreOpenAIKey(envFilePath: string): Promise<stri
   // Store the key in the .env file (even if invalid)
   const spinner = clack.spinner();
   spinner.start('Saving OpenAI API key...');
-  
+
   try {
     await storeOpenAIKey(response, envFilePath);
     spinner.stop('OpenAI API key saved successfully!');
@@ -610,9 +610,12 @@ export async function promptAndStoreOpenAIKey(envFilePath: string): Promise<stri
  */
 export async function promptAndStoreAnthropicKey(envFilePath: string): Promise<string | null> {
   clack.intro('🤖 Anthropic Claude Configuration');
-  
-  clack.note('Get your API key from: https://console.anthropic.com/settings/keys', 'API Key Information');
-  
+
+  clack.note(
+    'Get your API key from: https://console.anthropic.com/settings/keys',
+    'API Key Information'
+  );
+
   const response = await clack.password({
     message: 'Enter your Anthropic API key:',
     validate: (value) => {
@@ -636,7 +639,7 @@ export async function promptAndStoreAnthropicKey(envFilePath: string): Promise<s
   // Store the key in the .env file (even if invalid)
   const spinner = clack.spinner();
   spinner.start('Saving Anthropic API key...');
-  
+
   try {
     await storeAnthropicKey(response, envFilePath);
     spinner.stop('Anthropic API key saved successfully!');
@@ -662,7 +665,7 @@ export async function configureDatabaseSettings(reconfigure = false): Promise<st
 
   // Check if we already have database configuration in env
   let postgresUrl = process.env.POSTGRES_URL;
-  const pgliteDataDir = await resolvePgliteDir(undefined, elizaDbDir);
+  const pgliteDataDir = await resolvePgliteDir(undefined, elizaDbDir, true); // Respect env vars when checking existing config
 
   // Add debug logging
   logger.debug(`Configuration check - POSTGRES_URL: ${postgresUrl ? 'SET' : 'NOT SET'}`);
