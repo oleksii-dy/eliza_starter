@@ -247,7 +247,9 @@ async function startAgents(options: {
 }) {
   const postgresUrl = await configureDatabaseSettings(options.configure);
   if (postgresUrl) process.env.POSTGRES_URL = postgresUrl;
-  const pgliteDataDir = postgresUrl ? undefined : await resolvePgliteDir();
+  const pgliteDataDir = postgresUrl
+    ? undefined
+    : await resolvePgliteDir(undefined, undefined, true); // Respect env vars for CLI start
 
   const server = new AgentServer();
   await server.initialize({ dataDir: pgliteDataDir, postgresUrl });
