@@ -9,6 +9,7 @@ import { execSync } from 'node:child_process';
 import { resolveEnvFile } from './resolve-utils';
 import { emoji } from './emoji-handler';
 import { autoInstallBun, shouldAutoInstall } from './auto-install-bun';
+import { detectDirectoryType } from './directory-detection';
 
 // Types
 interface OSInfo {
@@ -69,6 +70,7 @@ export class UserEnvironment {
 
   private static readonly instance: UserEnvironment = new UserEnvironment();
   private cachedInfo: { [key: string]: UserEnvironmentInfo } = {}; // Cache per directory
+  private hasLoggedPaths = false; // Flag to prevent spam
 
   private constructor() {}
 
@@ -269,14 +271,42 @@ export class UserEnvironment {
   }
 
   public async getPathInfo(): Promise<PathInfo> {
-    const monorepoRoot = this.findMonorepoRoot(process.cwd());
-    const projectRootForPaths = monorepoRoot || process.cwd();
+    const currentDir = process.cwd();
+    const monorepoRoot = this.findMonorepoRoot(currentDir);
+    const directoryInfo = detectDirectoryType(currentDir);
+
+    let projectRootForPaths: string;
+
+    switch (directoryInfo.type) {
+      case 'elizaos-plugin':
+      case 'elizaos-project':
+      case 'non-elizaos-dir':
+        // Use current directory for these cases
+        projectRootForPaths = currentDir;
+        break;
+
+      case 'elizaos-subdir':
+      case 'elizaos-monorepo':
+        // Use monorepo root for these cases
+        projectRootForPaths = monorepoRoot || currentDir;
+        break;
+
+      default:
+        // Fallback
+        projectRootForPaths = currentDir;
+    }
+
     const elizaDir = path.join(projectRootForPaths, '.eliza');
 
     // Resolve .env from current working directory up to monorepo root (if any), or only cwd if not in monorepo
-    const envFilePath = resolveEnvFile(process.cwd(), monorepoRoot ?? undefined);
+    const envFilePath = resolveEnvFile(currentDir, monorepoRoot ?? undefined);
 
-    logger.debug('[UserEnvironment] Detected monorepo root:', monorepoRoot || 'Not in monorepo');
+    // Only log once to prevent spam during startup
+    if (!this.hasLoggedPaths) {
+      logger.info(`[UserEnvironment] Detected directory type: ${directoryInfo.type}`);
+      logger.info(`[UserEnvironment] Config will be saved to: ${elizaDir}`);
+      this.hasLoggedPaths = true;
+    }
 
     return {
       elizaDir,
@@ -329,6 +359,7 @@ export class UserEnvironment {
    */
   public clearCache(): void {
     this.cachedInfo = {};
+    this.hasLoggedPaths = false; // Reset log flag when cache is cleared
   }
 
   /**
