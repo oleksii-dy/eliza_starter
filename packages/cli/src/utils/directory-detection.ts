@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { UserEnvironment } from './user-environment';
+import { logger } from '@elizaos/core';
 
 export interface DirectoryInfo {
   type:
@@ -15,6 +16,8 @@ export interface DirectoryInfo {
   elizaPackageCount: number;
   monorepoRoot?: string;
 }
+
+export type DirectoryTypeInfo = DirectoryInfo;
 
 interface PackageJson {
   name?: string;
@@ -186,13 +189,8 @@ function isElizaOSPlugin(packageJson: PackageJson): boolean {
     return true;
   }
 
-  // 3. OTHER heuristics (least reliable)
-  if (
-    packageJson.main &&
-    (packageJson.main.includes('plugin') ||
-      packageJson.main === 'src/index.ts' ||
-      packageJson.main === 'dist/index.js')
-  ) {
+  // 3. OTHER heuristics (least reliable) - Only for files that actually contain "plugin" in the path
+  if (packageJson.main && packageJson.main.includes('plugin')) {
     // Additional check for plugin-like dependencies
     const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
     const hasElizaCore = Object.keys(allDeps).some((dep) => dep.startsWith('@elizaos/core'));
@@ -299,4 +297,125 @@ export function isValidForUpdates(info: DirectoryInfo): boolean {
     info.type === 'elizaos-monorepo' ||
     info.type === 'elizaos-subdir'
   );
+}
+
+/**
+ * Display styled monorepo warning using the same styling as update notification
+ */
+export function showMonorepoWarning(commandName: string) {
+  const blue = '\x1b[38;5;27m'; // Blue border to match update notification
+  const orange = '\x1b[38;5;208m'; // Orange for warning text
+  const green = '\x1b[38;5;46m'; // Green for commands/highlights
+  const reset = '\x1b[0m';
+  const bold = '\x1b[1m';
+
+  // Use exact same width as update notification
+  const width = 68;
+  const border = `${blue}${'─'.repeat(width)}${reset}`;
+
+  console.log('');
+  console.log(border);
+  console.log(
+    `${blue}│${orange} ${bold}WARNING:${reset}${orange} Running from monorepo root is not best practice${' '.repeat(width - 2 - ` WARNING: Running from monorepo root is not best practice`.length)}${blue}│${reset}`
+  );
+  console.log(
+    `${blue}│${orange} Create your project outside monorepo: ${green}${bold}elizaos create${reset}${orange}${' '.repeat(width - 2 - ` Create your project outside monorepo: elizaos create`.length)}${blue}│${reset}`
+  );
+  console.log(border);
+  console.log('');
+
+  showDocsHelpBox();
+}
+
+/**
+ * Display styled error for running from wrong directory
+ */
+export function showDirectoryError(commandName: string) {
+  const red = '\x1b[38;5;196m'; // Red for error
+  const white = '\x1b[38;5;255m'; // White for error text
+  const green = '\x1b[38;5;46m'; // Green for commands/highlights
+  const reset = '\x1b[0m';
+  const bold = '\x1b[1m';
+
+  // Use exact same width as update notification
+  const width = 68;
+  const border = `${red}${'─'.repeat(width)}${reset}`;
+
+  console.log('');
+  console.log(border);
+  console.log(
+    `${red}│${white} ${bold}ERROR:${reset}${white} Must run elizaos ${commandName} from project or plugin directory${' '.repeat(width - 2 - ` ERROR: Must run elizaos ${commandName} from project or plugin directory`.length)}${red}│${reset}`
+  );
+  console.log(
+    `${red}│${white} Create a new project: ${green}${bold}elizaos create${reset}${white}${' '.repeat(width - 2 - ` Create a new project: elizaos create`.length)}${red}│${reset}`
+  );
+  console.log(border);
+  console.log('');
+
+  showDocsHelpBox();
+}
+
+/**
+ * Display smaller docs help box
+ */
+function showDocsHelpBox() {
+  const blue = '\x1b[38;5;27m'; // Blue border to match update notification
+  const cyan = '\x1b[38;5;51m'; // Cyan for URL
+  const reset = '\x1b[0m';
+
+  // Use same width as main boxes to avoid text overflow
+  const width = 68;
+  const border = `${blue}${'─'.repeat(width)}${reset}`;
+
+  console.log(border);
+  console.log(
+    `${blue}│${cyan} See docs for help: https://eliza.how/docs${' '.repeat(width - 2 - ` See docs for help: https://eliza.how/docs`.length)}${blue}│${reset}`
+  );
+  console.log(border);
+  console.log('');
+}
+
+/**
+ * Provides standardized error and warning messages based on the directory context.
+ *
+ * This function checks for common CLI usage errors, such as running commands
+ * from a subdirectory, and provides helpful feedback. It also warns users
+ * when running from within the monorepo, guiding them toward best practices.
+ *
+ * @param directoryInfo - The directory information object from `detectDirectoryType`.
+ * @param commandName - The name of the CLI command being run (e.g., 'start', 'dev').
+ * @returns {boolean} - Returns `true` if a warning was issued, `false` otherwise. The function will exit the process on critical errors.
+ */
+export function handleDirectoryContextErrors(
+  directoryInfo: DirectoryTypeInfo | null,
+  commandName: 'start' | 'dev'
+): boolean {
+  if (!directoryInfo) {
+    logger.error(
+      `Error: Could not determine directory type. 'elizaos ${commandName}' must be run from an ElizaOS project or plugin directory.`
+    );
+    process.exit(1);
+  }
+
+  // Error: Running from a subdirectory of a project/plugin
+  if (directoryInfo.type === 'elizaos-subdir') {
+    showDirectoryError(commandName);
+    process.exit(1);
+  }
+
+  // Warning: Running from within the monorepo
+  if (
+    directoryInfo.monorepoRoot &&
+    (directoryInfo.type === 'elizaos-project' ||
+      directoryInfo.type === 'elizaos-plugin' ||
+      directoryInfo.type === 'elizaos-monorepo')
+  ) {
+    // Store the fact that we need to show a warning later
+    // We'll show this after the agent is fully initialized
+    global._elizaShowMonorepoWarning = commandName;
+
+    return true; // Indicates a warning was issued
+  }
+
+  return false; // No error or warning
 }
