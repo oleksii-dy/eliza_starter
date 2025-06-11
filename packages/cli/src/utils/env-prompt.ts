@@ -5,6 +5,7 @@ import { logger } from '@elizaos/core';
 import * as clack from '@clack/prompts';
 import colors from 'yoctocolors';
 import { UserEnvironment } from './user-environment';
+import { readEnvFile, updateEnvVariables } from './env-file';
 
 /**
  * Interface for environment variable configuration
@@ -143,38 +144,16 @@ export async function getEnvFilePath(): Promise<string> {
  *
  * @returns A record containing environment variable names and their corresponding values.
  */
-export async function readEnvFile(): Promise<Record<string, string>> {
+export async function readEnvFileLocal(): Promise<Record<string, string>> {
   const envPath = await getEnvFilePath();
-  const result: Record<string, string> = {};
-
+  const envDir = path.dirname(envPath);
+  
   try {
-    // Read existing env file
-    if (
-      await fs
-        .access(envPath)
-        .then(() => true)
-        .catch(() => false)
-    ) {
-      const content = await fs.readFile(envPath, 'utf8');
-      const lines = content.split('\n');
-
-      for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (trimmedLine && !trimmedLine.startsWith('#')) {
-          const separatorIndex = trimmedLine.indexOf('=');
-          if (separatorIndex > 0) {
-            const key = trimmedLine.substring(0, separatorIndex).trim();
-            const value = trimmedLine.substring(separatorIndex + 1).trim();
-            result[key] = value;
-          }
-        }
-      }
-    }
+    return readEnvFile(envDir);
   } catch (error) {
     logger.error(`Error reading environment file: ${error}`);
+    return {};
   }
-
-  return result;
 }
 
 /**
@@ -324,7 +303,7 @@ export async function promptForEnvVars(pluginName: string): Promise<Record<strin
   }
 
   // Read existing environment variables
-  const envVars = await readEnvFile();
+  const envVars = await readEnvFileLocal();
   const result: Record<string, string> = {};
   let changes = false;
 
@@ -375,7 +354,7 @@ export async function validateEnvVars(pluginName: string): Promise<boolean> {
     return true; // No requirements means everything is fine
   }
 
-  const envVars = await readEnvFile();
+  const envVars = await readEnvFileLocal();
 
   // Check if all required variables are set
   for (const config of envVarConfigs) {
@@ -399,7 +378,7 @@ export async function getMissingEnvVars(pluginName: string): Promise<string[]> {
     return [];
   }
 
-  const envVars = await readEnvFile();
+  const envVars = await readEnvFileLocal();
   const missing: string[] = [];
 
   for (const config of envVarConfigs) {
@@ -423,7 +402,7 @@ export async function validatePluginEnvVars(pluginName: string): Promise<{
   valid: boolean;
   message: string;
 }> {
-  const envVars = await readEnvFile();
+  const envVars = await readEnvFileLocal();
 
   switch (pluginName.toLowerCase()) {
     case 'discord':

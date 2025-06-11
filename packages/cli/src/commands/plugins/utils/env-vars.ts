@@ -1,10 +1,13 @@
 import { logger } from '@elizaos/core';
-import fs from 'node:fs';
-import path from 'node:path';
 import readline from 'readline';
 import { emoji } from '@/src/utils/emoji-handler';
 import { EnvVarConfig } from '../types';
 import { readPackageJson } from '@/src/utils/package-json';
+import { 
+  readEnvFile, 
+  updateEnvVariable, 
+  parseEnvContent 
+} from '@/src/utils/env-file';
 
 /**
  * Attempts to find the package.json of an installed plugin and extract environment variable requirements
@@ -43,26 +46,7 @@ export const extractPluginEnvRequirements = async (
   }
 };
 
-/**
- * Reads the current .env file content
- */
-export const readEnvFile = (cwd: string): string => {
-  const envPath = path.join(cwd, '.env');
-  try {
-    return fs.readFileSync(envPath, 'utf-8');
-  } catch (error) {
-    // File doesn't exist, return empty string
-    return '';
-  }
-};
-
-/**
- * Writes content to the .env file
- */
-export const writeEnvFile = (cwd: string, content: string): void => {
-  const envPath = path.join(cwd, '.env');
-  fs.writeFileSync(envPath, content, 'utf-8');
-};
+// Note: readEnvFile and writeEnvFile functions now imported from @/src/utils/env-file
 
 /**
  * Prompts user for an environment variable value
@@ -86,29 +70,7 @@ export const promptForEnvVar = async (
   });
 };
 
-/**
- * Updates the .env file with a new environment variable
- */
-export const updateEnvFile = (cwd: string, varName: string, value: string): void => {
-  const envContent = readEnvFile(cwd);
-  const lines = envContent.split('\n');
-
-  // Check if the variable already exists
-  const existingLineIndex = lines.findIndex((line) => line.startsWith(`${varName}=`));
-
-  if (existingLineIndex >= 0) {
-    // Update existing line
-    lines[existingLineIndex] = `${varName}=${value}`;
-  } else {
-    // Add new line
-    if (envContent && !envContent.endsWith('\n')) {
-      lines.push(''); // Add empty line if file doesn't end with newline
-    }
-    lines.push(`${varName}=${value}`);
-  }
-
-  writeEnvFile(cwd, lines.join('\n'));
-};
+// Note: updateEnvFile function replaced by updateEnvVariable from @/src/utils/env-file
 
 /**
  * Prompts for environment variables based on the plugin's agentConfig.pluginParameters
@@ -126,15 +88,7 @@ export const promptForPluginEnvVars = async (packageName: string, cwd: string): 
   logger.info(`\n${emoji.rocket(`Plugin ${packageName} requires environment variables:`)}`);
 
   // Read current .env file to check for existing values
-  const envContent = readEnvFile(cwd);
-  const existingVars: Record<string, string> = {};
-
-  envContent.split('\n').forEach((line) => {
-    const match = line.match(/^([^=]+)=(.*)$/);
-    if (match) {
-      existingVars[match[1]] = match[2];
-    }
-  });
+  const existingVars = readEnvFile(cwd);
 
   for (const [varName, config] of Object.entries(envRequirements)) {
     const { type = 'string', description = 'No description available' } = config;
@@ -149,7 +103,7 @@ export const promptForPluginEnvVars = async (packageName: string, cwd: string): 
       const value = await promptForEnvVar(varName, description, type);
 
       if (value) {
-        updateEnvFile(cwd, varName, value);
+        updateEnvVariable(varName, value, cwd);
         console.log(`✓ Added ${varName} to .env file`);
       } else {
         console.log(`⚠ Skipped ${varName} (no value provided)`);
