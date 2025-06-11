@@ -693,7 +693,7 @@ export default test;`;
 /**
  * Get the template variables for a specific plugin
  */
-export function getTestTemplateVariables(pluginName: string, packageJson: { name?: string; [key: string]: unknown }): {
+function getTestTemplateVariables(pluginName: string, packageJson: { name?: string; [key: string]: unknown }): {
     PLUGIN_NAME: string;
     PLUGIN_NAME_LOWER: string;
     PLUGIN_VARIABLE: string;
@@ -729,19 +729,3 @@ export function getTestTemplateVariables(pluginName: string, packageJson: { name
     };
 }
 
-/**
- * Generate the test.ts content for a specific plugin
- */
-export function generateTestContent(pluginName: string, packageJson: { name?: string; [key: string]: unknown }): string {
-    const vars = getTestTemplateVariables(pluginName, packageJson);
-    
-    let content = TEST_TS_TEMPLATE;
-    
-    // Replace all template variables
-    for (const [key, value] of Object.entries(vars)) {
-        const regex = new RegExp(`{{${key}}}`, 'g');
-        content = content.replace(regex, value);
-    }
-    
-    return content;
-} 
