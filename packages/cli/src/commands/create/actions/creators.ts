@@ -36,7 +36,7 @@ export async function createPlugin(
 
   if (!isNonInteractive) {
     const confirmCreate = await clack.confirm({
-      message: `Create plugin "${pluginDirName}" in ${pluginTargetDir}?`,
+      message: `Create plugin "${colors.cyan(pluginDirName)}" with template in new dir ${colors.dim(pluginTargetDir)}?`,
     });
 
     if (clack.isCancel(confirmCreate) || !confirmCreate) {
@@ -53,62 +53,11 @@ export async function createPlugin(
 
   console.info(`\n${colors.green('✓')} Plugin "${pluginDirName}" created successfully!`);
   console.info(`\nNext steps:`);
-  console.info(`  cd ${pluginDirName}`);
+  console.info(`  cd ${pluginTargetDir}`);
   console.info(`  bun run build`);
-  console.info(`  bun run test\n`);
+  console.info(`  elizaos start\n`);
 }
 
-/**
- * Creates a new agent character file with the specified name.
- */
-export async function createAgent(
-  agentName: string,
-  targetDir: string,
-  isNonInteractive = false
-): Promise<void> {
-  const agentFilePath = join(targetDir, `${agentName}.json`);
-
-  // Check if agent file already exists
-  try {
-    await fs.access(agentFilePath);
-    throw new Error(`Agent file ${agentFilePath} already exists`);
-  } catch (error: any) {
-    if (error.code !== 'ENOENT') {
-      throw error;
-    }
-    // File doesn't exist, which is what we want
-  }
-
-  if (!isNonInteractive) {
-    const confirmCreate = await clack.confirm({
-      message: `Create agent "${agentName}" at ${agentFilePath}?`,
-    });
-
-    if (clack.isCancel(confirmCreate) || !confirmCreate) {
-      clack.cancel('Agent creation cancelled.');
-      process.exit(0);
-    }
-  }
-
-  // Create agent character based on Eliza template
-  const agentCharacter = {
-    ...elizaCharacter,
-    name: agentName,
-    bio: [
-      `${agentName} is a helpful AI assistant created to provide assistance and engage in meaningful conversations.`,
-      `${agentName} is knowledgeable, creative, and always eager to help users with their questions and tasks.`,
-    ],
-  };
-
-  await fs.writeFile(agentFilePath, JSON.stringify(agentCharacter, null, 2));
-
-  if (!isNonInteractive) {
-    console.info(`\n${colors.green('✓')} Agent "${agentName}" created successfully!`);
-  }
-  console.info(`Agent character created successfully at: ${agentFilePath}`);
-  console.info(`\nTo use this agent:`);
-  console.info(`  elizaos agent start --path ${agentFilePath}\n`);
-}
 
 /**
  * Creates a new TEE project with the specified name and configuration.
@@ -130,7 +79,7 @@ export async function createTEEProject(
 
   if (!isNonInteractive) {
     const confirmCreate = await clack.confirm({
-      message: `Create TEE project "${projectName}" in ${teeTargetDir}?`,
+      message: `Create TEE project "${colors.cyan(projectName)}" with ${database} + ${aiModel} in new dir ${colors.dim(teeTargetDir)}?`,
     });
 
     if (clack.isCancel(confirmCreate) || !confirmCreate) {
@@ -153,8 +102,9 @@ export async function createTEEProject(
 
   console.info(`\n${colors.green('✓')} TEE project "${projectName}" created successfully!`);
   console.info(`\nNext steps:`);
-  console.info(`  cd ${projectName}`);
-  console.info(`  bun run dev\n`);
+  console.info(`  cd ${teeTargetDir}`);
+  console.info(`  bun run build`);
+  console.info(`  elizaos start\n`);
 }
 
 /**
@@ -178,7 +128,7 @@ export async function createProject(
 
   if (!isNonInteractive) {
     const confirmCreate = await clack.confirm({
-      message: `Create project "${projectName}" in ${projectTargetDir}?`,
+      message: `Create project "${colors.cyan(projectName === '.' ? 'in current directory' : projectName)}" with ${database} + ${aiModel} in new dir ${colors.dim(projectTargetDir)}?`,
     });
 
     if (clack.isCancel(confirmCreate) || !confirmCreate) {
@@ -203,8 +153,9 @@ export async function createProject(
   await buildProject(projectTargetDir);
 
   const displayName = projectName === '.' ? 'Project' : `Project "${projectName}"`;
-  console.info(`\n${colors.green('✓')} ${displayName} initialized successfully!`);
+  console.info(`\n${colors.green('✓')} ${displayName} created successfully!`);
   console.info(`\nNext steps:`);
-  console.info(`  cd ${projectName}`);
-  console.info(`  bun run dev\n`);
+  console.info(`  cd ${projectTargetDir}`);
+  console.info(`  bun run build`);
+  console.info(`  elizaos start\n`);
 }

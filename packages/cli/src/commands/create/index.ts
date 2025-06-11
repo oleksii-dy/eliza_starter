@@ -7,12 +7,12 @@ import { logger } from '@elizaos/core';
 
 import { validateCreateOptions, validateProjectName } from './utils';
 import { selectDatabase, selectAIModel } from './utils';
-import { createProject, createPlugin, createAgent, createTEEProject } from './actions';
+import { createProject, createPlugin, createTEEProject } from './actions';
 import type { CreateOptions } from './types';
 
 export const create = new Command('create')
-  .description('Create a new ElizaOS project, plugin, agent, or TEE project')
-  .argument('[name]', 'name of the project/plugin/agent to create')
+  .description('Create a new ElizaOS project, custom plugin, or TEE project')
+  .argument('[name]', 'name of the project/plugin to create')
   .option('--dir <dir>', 'directory to create the project in', '.')
   .option('--yes, -y', 'skip prompts and use defaults')
   .option('--type <type>', 'type of project to create (project, plugin, agent, tee)', 'project')
@@ -53,17 +53,12 @@ export const create = new Command('create')
               {
                 label: 'Project - Full ElizaOS application',
                 value: 'project',
-                hint: 'Complete project with runtime, agents, and all features',
+                hint: 'Complete project with starter agent, plugin and all features',
               },
               {
-                label: 'Plugin - Custom ElizaOS plugin',
+                label: 'Plugin - New ElizaOS plugin',
                 value: 'plugin',
-                hint: 'Extend ElizaOS functionality with custom plugins',
-              },
-              {
-                label: 'Agent - Character definition file',
-                value: 'agent',
-                hint: 'Create a new agent character file',
+                hint: 'Extend ElizaOS functionality with custom plugins, develop with default eliza character',
               },
               {
                 label: 'TEE Project - Trusted Execution Environment project',
@@ -79,7 +74,7 @@ export const create = new Command('create')
             process.exit(0);
           }
 
-          projectType = selectedType as 'project' | 'plugin' | 'agent' | 'tee';
+          projectType = selectedType as 'project' | 'plugin' | 'tee';
         }
 
         // Prompt for name
