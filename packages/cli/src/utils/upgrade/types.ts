@@ -79,7 +79,15 @@ export interface ArchitectureIssue {
     | 'test-export-name'
     | 'action-example-role'
     | 'config-field-visibility'
-    | 'handler-options-type';
+    | 'handler-options-type'
+    | 'handler-promise-boolean'
+    | 'handler-optional-params'
+    | 'handler-default-options'
+    | 'handler-arrow-function'
+    | 'memory-upsert-pattern'
+    | 'memory-search-pattern'
+    | 'memory-content-fields'
+    | 'database-adapter-memory';
   severity: 'critical' | 'high' | 'medium';
   pattern: string;
   solution: string;
@@ -214,4 +222,23 @@ export interface ErrorPattern {
   elizaosSpecific: boolean;
   promptTemplate: string;
   priority: number;
+}
+
+// NEW: File analysis interface for migration assessment
+export interface FileAnalysis {
+  hasV1Imports: boolean;
+  hasV1ServicePattern: boolean;
+  hasV1ActionPattern: boolean;
+  hasV1MemoryPattern: boolean;
+  hasV1ConfigPattern: boolean;
+  hasV1ModelAPI: boolean;
+  hasV1TestPattern: boolean;
+  complexityScore: number;
+  v1PatternCount: number;
+}
+
+// NEW: Migration verification result interface
+export interface VerificationResult {
+  success: boolean;
+  issues: string[];
 }
