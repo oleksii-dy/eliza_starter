@@ -5,6 +5,10 @@ export { PluginMigrator } from './migrator.js';
 export { StructuredMigrator } from './structured-migrator.js';
 export { MigrationStepExecutor } from './migration-step-executor.js';
 
+// Environment variable prompting
+export { EnvPrompter } from './env-prompter.js';
+export type { EnvVarPrompt, CollectedEnvVars } from './env-prompter.js';
+
 // Types
 export type {
   MigrationResult,
