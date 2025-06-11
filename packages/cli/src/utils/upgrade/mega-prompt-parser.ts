@@ -48,6 +48,33 @@ export const IMPORT_MAPPINGS: ImportMapping[] = [
     description: 'CRITICAL: State is type-only export in V2',
   },
   
+  // NEW: Additional critical type-only imports
+  {
+    oldImport: '{ UUID }',
+    newImport: 'type { UUID }',
+    description: 'CRITICAL: UUID is type-only export in V2',
+  },
+  {
+    oldImport: '{ Plugin }',
+    newImport: 'type { Plugin }',
+    description: 'CRITICAL: Plugin is type-only export in V2',
+  },
+  {
+    oldImport: '{ Provider }',
+    newImport: 'type { Provider }',
+    description: 'CRITICAL: Provider is type-only export in V2',
+  },
+  {
+    oldImport: '{ Memory }',
+    newImport: 'type { Memory }',
+    description: 'CRITICAL: Memory is type-only export in V2',
+  },
+  {
+    oldImport: '{ Action }',
+    newImport: 'type { Action }',
+    description: 'CRITICAL: Action is type-only export in V2',
+  },
+  
   // CRITICAL Mixed Import Separations (Common Patterns)
   {
     oldImport: '{ Service, type IAgentRuntime }',
@@ -70,11 +97,62 @@ export const IMPORT_MAPPINGS: ImportMapping[] = [
     description: 'CRITICAL: Both HandlerCallback and IAgentRuntime are type-only in V2',
   },
   
+  // NEW: Complex mixed import patterns that need separation
+  {
+    oldImport: '{ Service, type Provider, type Action }',
+    newImport: '{ Service } from "@elizaos/core";\nimport type { Provider, Action }',
+    description: 'CRITICAL: Separate Service (value) from Provider, Action (types)',
+  },
+  {
+    oldImport: '{ logger, ModelType, type Memory, type State }',
+    newImport: '{ logger, ModelType } from "@elizaos/core";\nimport type { Memory, State }',
+    description: 'CRITICAL: Separate values (logger, ModelType) from types (Memory, State)',
+  },
+  {
+    oldImport: '{ createUniqueUuid, type UUID, type Content }',
+    newImport: '{ createUniqueUuid } from "@elizaos/core";\nimport type { UUID, Content }',
+    description: 'CRITICAL: Separate createUniqueUuid (value) from UUID, Content (types)',
+  },
+  
   // CRITICAL Removed Imports
   {
     oldImport: '{ AgentTest }',
     newImport: '',
     description: 'CRITICAL: AgentTest does not exist in V2 - remove completely',
+  },
+  
+  // NEW: Import patterns that frequently cause issues
+  {
+    oldImport: /import\s*{\s*([^}]*),\s*type\s+([^}]*)\s*}\s*from\s*["']@elizaos\/core["']/g,
+    newImport: 'import { $1 } from "@elizaos/core";\nimport type { $2 } from "@elizaos/core"',
+    description: 'CRITICAL: Auto-split all mixed imports from @elizaos/core',
+  },
+  
+  // NEW: Common value imports that should remain value imports
+  {
+    oldImport: 'type { Service }',
+    newImport: '{ Service }',
+    description: 'CRITICAL: Service is a value import, not type-only',
+  },
+  {
+    oldImport: 'type { ModelType }',
+    newImport: '{ ModelType }',
+    description: 'CRITICAL: ModelType is a value import, not type-only',
+  },
+  {
+    oldImport: 'type { logger }',
+    newImport: '{ logger }',
+    description: 'CRITICAL: logger is a value import, not type-only',
+  },
+  {
+    oldImport: 'type { createUniqueUuid }',
+    newImport: '{ createUniqueUuid }',
+    description: 'CRITICAL: createUniqueUuid is a value import, not type-only',
+  },
+  {
+    oldImport: 'type { MemoryType }',
+    newImport: '{ MemoryType }',
+    description: 'CRITICAL: MemoryType is a value import, not type-only',
   },
 ];
 
@@ -217,6 +295,49 @@ const myPlugin: Plugin = {
 }`,
     },
   },
+  
+  // NEW: Additional handler signature patterns
+  {
+    type: 'handler-promise-boolean',
+    severity: 'critical',
+    pattern: 'Handler returns Promise<boolean>',
+    solution: 'Remove Promise<boolean> return type from handler - V2 handlers do not return boolean',
+    codeExample: {
+      wrong: 'handler: async (...): Promise<boolean> => {\n    // ... logic\n    return true;\n}',
+      correct: 'handler: async (...) => {\n    // ... logic\n    callback(content);\n}',
+    },
+  },
+  {
+    type: 'handler-optional-params',
+    severity: 'high',
+    pattern: 'Handler has optional state or callback parameters',
+    solution: 'Make state and callback parameters required in V2 handler signature',
+    codeExample: {
+      wrong: 'handler: async (runtime, message, state?, options, callback?) => {}',
+      correct: 'handler: async (runtime, message, state, options, callback) => {}',
+    },
+  },
+  {
+    type: 'handler-default-options',
+    severity: 'medium',
+    pattern: 'Handler has default empty object for options',
+    solution: 'Remove default value from options parameter',
+    codeExample: {
+      wrong: 'handler: async (runtime, message, state, options = {}, callback) => {}',
+      correct: 'handler: async (runtime, message, state, _options, callback) => {}',
+    },
+  },
+  {
+    type: 'handler-arrow-function',
+    severity: 'medium',
+    pattern: 'Handler uses arrow function with explicit Promise<boolean>',
+    solution: 'Update arrow function handler signature to V2 format',
+    codeExample: {
+      wrong: 'handler: (runtime, message, state, options) => Promise<boolean>',
+      correct: 'handler: async (runtime, message, state, _options, callback) => { callback(content); }',
+    },
+  },
+  
   {
     type: 'memory-pattern',
     severity: 'critical',
@@ -244,6 +365,60 @@ await _runtime.memory.create({
     },
     createdAt: Date.now()
 }, 'messages');`,
+    },
+  },
+  
+  // NEW: Additional memory patterns that cause issues
+  {
+    type: 'memory-upsert-pattern',
+    severity: 'high',
+    pattern: 'Using runtime.memory.upsert pattern',
+    solution: 'Replace with runtime.createMemory or runtime.updateMemory',
+    codeExample: {
+      wrong: 'await runtime.memory.upsert({ ... });',
+      correct: 'await runtime.createMemory({ ... }, \'messages\');',
+    },
+  },
+  {
+    type: 'memory-search-pattern',
+    severity: 'high',
+    pattern: 'Using runtime.memory.search pattern',
+    solution: 'Replace with runtime.searchMemories',
+    codeExample: {
+      wrong: `await runtime.memory.search({ query: "..." });`,
+      correct: `await runtime.searchMemories({ query: "...", count: 10 });`,
+    },
+  },
+  {
+    type: 'memory-content-fields',
+    severity: 'high',
+    pattern: 'Memory content has non-standard fields',
+    solution: 'Move extra fields to metadata, keep only text and source in content',
+    codeExample: {
+      wrong: `content: {
+    text: "response",
+    actionName: "MY_ACTION",
+    data: extraData,
+    source: "plugin"
+}`,
+      correct: `content: {
+    text: "response", 
+    source: "plugin"
+},
+metadata: {
+    actionName: "MY_ACTION",
+    data: extraData
+}`,
+    },
+  },
+  {
+    type: 'database-adapter-memory',
+    severity: 'high',
+    pattern: 'Using runtime.databaseAdapter.createMemory',
+    solution: 'Replace with runtime.createMemory',
+    codeExample: {
+      wrong: 'await runtime.databaseAdapter.createMemory(memory);',
+      correct: 'await runtime.createMemory(memory, \'messages\');',
     },
   },
   {
@@ -581,144 +756,12 @@ Update package name in all documentation.`,
   ];
 }
 
-/**
- * Get critical patterns to avoid
- */
-export function getCriticalPatternsToAvoid(): string[] {
-  return [
-    'Do NOT store complex objects in Memory',
-    'Do NOT use custom error classes',
-    'Do NOT perform direct file operations',
-    'Do NOT skip entity/room management',
-    'Do NOT add non-standard fields to Content interface',
-    'Do NOT use vitest - only elizaos test',
-    'Do NOT create temporary files for iteration',
-    'Do NOT mix type and value imports',
-    'Do NOT use empty objects as State',
-    'Do NOT forget to add source field to Content',
-    'Do NOT use role in ActionExample - use name',
-  ];
-}
 
-/**
- * Get V2 code quality standards
- */
-export function getCodeQualityStandards(): string[] {
-  return [
-    'Use double quotes consistently',
-    'Proper parameter formatting with line breaks',
-    'Consistent trailing commas',
-    'Group type imports together',
-    'Run npm run format after changes',
-    'Separate type imports from value imports',
-    'Use proper State objects instead of empty objects',
-    'Add null safety with optional chaining',
-  ];
-}
 
-/**
- * Get success metrics checklist
- */
-export function getSuccessMetrics(): string[] {
-  return [
-    'Clean build with no TypeScript errors',
-    'All imports and exports type correctly',
-    'Service registers and starts correctly',
-    'Actions validate and execute properly',
-    'Tests pass with elizaos test',
-    'Memory operations use V2 patterns',
-    'No custom Content fields',
-    'All type imports use type-only syntax',
-    'No mixed value/type imports',
-    'Zod schemas use coerce for numeric env vars',
-  ];
-}
 
-/**
- * Get testing patterns from the mega prompt
- */
-export function getTestingPatterns(): TestingPattern[] {
-  return [
-    {
-      name: 'ElizaOS Test Framework',
-      template: 'elizaos test',
-      requiredImports: [
-        '@elizaos/core',
-        './utils',
-        '../index'
-      ],
-    },
-    {
-      name: 'Test File Templates',
-      template: 'Use exact utils.ts and dynamic test.ts templates',
-      requiredImports: [
-        '@elizaos/core',
-        './utils',
-        '../index',
-        'uuid'
-      ],
-    },
-    {
-      name: 'V2 Test Structure',
-      template: 'src/test/ directory with utils.ts and test.ts',
-      requiredImports: [
-        'import type { TestSuite } from "@elizaos/core"',
-        'import type { IAgentRuntime } from "@elizaos/core"',
-      ],
-    },
-  ];
-}
 
-/**
- * Get file cleanup patterns
- */
-export function getFileCleanupPatterns(): string[] {
-  return [
-    '__tests__/',
-    'test/',
-    'src/tests/',
-    'vitest.config.ts',
-    'vitest.config.mjs',
-    'jest.config.js',
-    'jest.config.ts',
-    'biome.json',
-    '.eslintrc.js',
-    '.eslintrc.json',
-    '.eslintignore',
-    '.prettierrc',
-    '.prettierrc.js',
-    '.prettierrc.json',
-    '.prettierignore',
-    'environment.ts',
-    'src/environment.ts',
-    'environment.d.ts',
-    '.env.example',
-    '.env.template',
-    'CHANGELOG.md',
-    'CONTRIBUTING.md',
-    '*.bak',
-    '*.orig',
-    // Additional patterns from plugin-news
-    'lib/',
-    'vendor/',
-    'yarn.lock',
-    'package-lock.json',
-    'pnpm-lock.yaml',
-    '.turbo/',
-    'dist/',
-    'build/',
-    '*.tsbuildinfo',
-    '.turbo-tsconfig.json',
-    'coverage/',
-    '*.lcov',
-    '*.eliza',
-    '*.elizadb',
-    // V1 nested action directories
-    'src/actions/*/',
-    // Old test patterns
-    '**/*.test.ts',
-    '**/*.spec.ts',
-    '**/*.test.js',
-    '**/*.spec.js',
-  ];
-}
+
+
+
+
+
