@@ -11,6 +11,7 @@ import {
   parseIntoChunks,
 } from './mega-prompt-parser.js';
 import { FileByFileMigrator } from './file-by-file-migrator.js';
+import { EnvPrompter } from './env-prompter.js';
 
 /**
  * Executes migration steps according to the mega prompt structure
@@ -959,8 +960,11 @@ Ensure:
       requiredEnvVars = await this.analyzeZodSchemaForRequiredFields(configContent);
     }
     
-    // If no required vars found, try to guess based on common patterns
-    if (requiredEnvVars.length === 0) {
+    // Always include OPENAI_API_KEY as it's mandatory for ElizaOS
+    const allRequiredVars = ['OPENAI_API_KEY', ...requiredEnvVars.filter(v => v !== 'OPENAI_API_KEY')];
+    
+    // If no other required vars found, try to guess based on common patterns
+    if (allRequiredVars.length === 1) { // Only OPENAI_API_KEY
       const pluginNameUpper = ctx.pluginName
         .replace('@elizaos/plugin-', '')
         .replace('plugin-', '')
@@ -968,35 +972,46 @@ Ensure:
         .replace(/-/g, '_');
       
       // Default to API_KEY as it's almost always required
-      requiredEnvVars = [`${pluginNameUpper}_API_KEY`];
+      allRequiredVars.push(`${pluginNameUpper}_API_KEY`);
     }
     
-    // Create minimal .env.example with only required fields
-    const envContent = requiredEnvVars
-      .map(varName => `# Required - Plugin will not function without this\n${varName}=your_${varName.toLowerCase()}_here`)
-      .join('\n\n');
+    // Create .env.example with all required fields
+    const envEntries = allRequiredVars.map(varName => {
+      if (varName === 'OPENAI_API_KEY') {
+        return `# Required - ElizaOS core functionality\n${varName}=your_openai_api_key_here`;
+      }
+      return `# Required - Plugin will not function without this\n${varName}=your_${varName.toLowerCase()}_here`;
+    });
     
     const headerComment = `# ${ctx.pluginName} Configuration
-# Only required fields are listed below (fields with defaults are omitted)
+# All required environment variables are listed below
+# 
+# NOTE: During migration, you will be prompted to enter these values interactively.
+# Alternatively, you can manually configure them here after migration.
 # 
 # To use this plugin:
-# 1. Run 'bun run test' to let ElizaOS create a .env file
-# 2. Copy these required values to the generated .env file
-# 3. Replace 'your_*_here' with actual values\n\n`;
+# 1. Run migration - you'll be prompted for values
+# 2. Or manually edit the .env file with actual values
+# 3. Replace 'your_*_here' with real values\n\n`;
     
-    const finalContent = `${headerComment}${envContent}\n`;
+    const finalContent = `${headerComment}${envEntries.join('\n\n')}\n`;
     
     await fs.writeFile(envExamplePath, finalContent);
     ctx.changedFiles.add('.env.example');
     
-    logger.info(`✅ Created minimal .env.example with ${requiredEnvVars.length} required field(s)`);
-    for (const v of requiredEnvVars) {
-      logger.info(`   - ${v} (required, no default)`);
+    logger.info(`✅ Created .env.example with ${allRequiredVars.length} required field(s)`);
+    logger.info('   💡 Environment variables will be collected interactively during migration');
+    for (const v of allRequiredVars) {
+      if (v === 'OPENAI_API_KEY') {
+        logger.info(`   - ${v} (required for ElizaOS core)`);
+      } else {
+        logger.info(`   - ${v} (required, no default)`);
+      }
     }
 
     return {
       success: true,
-      message: `Created minimal .env.example with only required fields: ${requiredEnvVars.join(', ')}`,
+      message: `Created .env.example with required fields including OPENAI_API_KEY: ${allRequiredVars.join(', ')}`,
       changes: ['.env.example'],
     };
   }
