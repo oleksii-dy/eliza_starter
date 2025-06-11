@@ -27,30 +27,22 @@ export {
   IMPORT_MAPPINGS,
   MODEL_TYPE_MAPPINGS,
   ARCHITECTURE_ISSUES,
-  parseIntoChunks,
-  getCriticalPatternsToAvoid,
-  getCodeQualityStandards,
-  getSuccessMetrics
+  parseIntoChunks
 } from './mega-prompt-parser.js';
 
 // Test templates
 export {
   UTILS_TS_EXACT_CONTENT,
-  TEST_TS_TEMPLATE,
-  getTestTemplateVariables,
-  generateTestContent
+  TEST_TS_TEMPLATE
 } from './test-templates.js';
 
-// Test enhancement
-export { TestEnhancer } from './test-enhancer.js';
-export type { TestEnhancementResult } from './test-enhancer.js';
+// Context-aware test generation
+export { ContextAwareTestGenerator } from './context-aware-test-generator.js';
 
 // Utilities
 export { analyzeRepository } from './repository-analyzer.js';
 export {
-  ensureDependenciesInstalled,
-  getAvailableDiskSpace,
-  isCommandAvailable
+  getAvailableDiskSpace
 } from './utils.js';
 
 // Configuration
