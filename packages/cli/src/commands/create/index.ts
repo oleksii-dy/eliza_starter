@@ -122,10 +122,6 @@ export const create = new Command('create')
           await createPlugin(projectName!, targetDir, isNonInteractive);
           break;
 
-        case 'agent':
-          await createAgent(projectName!, targetDir, isNonInteractive);
-          break;
-
         case 'tee': {
           // TEE projects need database and AI model selection
           let database = 'pglite';
