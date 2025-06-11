@@ -13,6 +13,8 @@ import type {
   MigrationContext,
   MigrationStep,
   StepResult,
+  FileAnalysis,
+  VerificationResult,
 } from './types.js';
 import { MigrationStepExecutor } from './migration-step-executor.js';
 import { parseIntoChunks, ARCHITECTURE_ISSUES } from './mega-prompt-parser.js';
@@ -101,6 +103,11 @@ export class StructuredMigrator {
       spinner.text = `Setting up repository for ${input}...`;
       await this.handleInput(input);
       spinner.succeed(`Repository setup complete for ${input}`);
+
+      // NEW: Pre-migration validation
+      spinner.text = 'Validating V1 plugin structure...';
+      await this.validateV1Structure();
+      spinner.succeed('V1 plugin structure validated');
 
       // Create lock file to prevent concurrent migrations
       await this.createLockFile();
@@ -310,23 +317,38 @@ export class StructuredMigrator {
       // CRITICAL: Actually run the verification steps instead of just telling user to do it
       logger.info('\n🔨 Running post-migration verification...');
       
-      // Step 1: Generate comprehensive tests BEFORE verification
-      logger.info('\n🧪 Generating comprehensive test suite...');
+      // Step 1: Generate comprehensive tests with iterative validation
+      logger.info('\n🧪 Generating comprehensive test suite with iterative validation...');
       const testGenerator = new ContextAwareTestGenerator(migrationContext);
       try {
-        // Generate the actual test suite
-        const testResult = await testGenerator.generateTestSuites();
+        // Use the complete generation and validation method
+        const testResult = await testGenerator.generateAndValidateTestSuites();
         if (testResult.success) {
-          logger.info('✅ Test generator completed successfully');
+          logger.info('✅ Test generation and validation completed successfully - all tests passing!');
         } else {
-          logger.warn('⚠️  Test generation had issues:', testResult.message);
+          logger.warn('⚠️  Test generation completed but some tests still failing:', testResult.message);
+          if (testResult.warnings) {
+            for (const warning of testResult.warnings) {
+              logger.warn(`   - ${warning}`);
+            }
+          }
         }
         
-        // Step 2: Include test suites in index.ts for build validation
-        logger.info('\n📋 Including test suites in index.ts...');
-        await this.includeTestSuitesInIndex(migrationContext);
+        // Step 2: Include test suites in index.ts for build validation (already done by iterative process)
+        logger.info('\n📋 Test suites included in index.ts');
       } catch (error) {
-        logger.warn('⚠️  Test generation error, continuing with basic tests:', error);
+        logger.warn('⚠️  Test generation error, continuing with basic validation:', error);
+        
+        // Fallback to basic test generation
+        try {
+          const basicResult = await testGenerator.generateTestSuites();
+          if (basicResult.success) {
+            await this.includeTestSuitesInIndex(migrationContext);
+            logger.info('✅ Basic test generation completed');
+          }
+        } catch (fallbackError) {
+          logger.error('❌ Even basic test generation failed:', fallbackError);
+        }
       }
       
       // Step 2: Build verification
@@ -512,28 +534,23 @@ export class StructuredMigrator {
       ignore: ['node_modules/**', 'dist/**', '.git/**'],
     });
 
-    // CRITICAL: Check main branch for service existence
+    // IMPROVED: Enhanced service detection with proper validation
     let hasServiceInMainBranch = false;
     try {
       // Get current branch to restore later
       const currentBranch = (await this.git.branch()).current;
       
-      // Check main branch for service files
+      // Check main branch for service files with more accurate detection
       const mainBranchFiles = await this.git.raw(['ls-tree', '-r', '--name-only', 'main']);
       const mainFiles = mainBranchFiles.split('\n').filter(f => f);
       
-      hasServiceInMainBranch = mainFiles.some(
-        (f) => f.includes('service.ts') || f.includes('Service.ts') || 
-               f.includes('service.js') || f.includes('Service.js')
-      );
+      hasServiceInMainBranch = await this.detectActualService(mainFiles);
       
-      logger.info(`🔍 Service check: ${hasServiceInMainBranch ? 'Found service in main branch' : 'No service in main branch'}`);
+      logger.info(`🔍 Enhanced service check: ${hasServiceInMainBranch ? 'Found valid service in main branch' : 'No service in main branch'}`);
     } catch (error) {
       logger.warn('Could not check main branch for service, checking current files only');
-      // Fallback to current branch check
-      hasServiceInMainBranch = existingFiles.some(
-        (f) => f.includes('service.ts') || f.includes('Service.ts')
-      );
+      // Fallback to current branch check with improved detection
+      hasServiceInMainBranch = await this.detectActualService(existingFiles);
     }
 
     // Analyze plugin structure
@@ -937,13 +954,13 @@ If this is an error, manually delete the lock file and try again.`;
       });
 
       if (result.exitCode !== 0 && result.all) {
-        logger.info('📋 Analyzing build errors...');
+        logger.info('📋 Analyzing build errors with enhanced patterns...');
         
         const buildErrors = result.all;
-        const errorLines = buildErrors.split('\n');
+        const errorAnalysis = this.analyzeBuildErrorsWithPatterns(buildErrors);
         
         // Create a focused prompt for fixing build errors
-        const buildFixPrompt = `# Fix ElizaOS V2 Plugin Build Errors
+        const buildFixPrompt = `# Fix ElizaOS V2 Plugin Build Errors - Enhanced Analysis
 
 The ${context.pluginName} plugin has the following build errors:
 
@@ -951,7 +968,13 @@ The ${context.pluginName} plugin has the following build errors:
 ${buildErrors}
 \`\`\`
 
-## CLEAR INSTRUCTIONS: Fix ONLY the specific errors shown above.
+## Detected Error Types:
+${errorAnalysis.detectedTypes.map(type => `- ${type.type}: ${type.description}`).join('\n')}
+
+## Suggested Fixes:
+${errorAnalysis.suggestedFixes.join('\n')}
+
+CRITICAL INSTRUCTION: Fix ONLY the specific errors shown above.
 
 ### Most Common Fixes:
 1. **Import Errors**:
@@ -979,7 +1002,6 @@ ${buildErrors}
 - Do NOT create new files
 - Do NOT add features not in V1
 - Follow the exact error messages to guide fixes`;
-
 
         await this.runClaudeCodeWithPrompt(buildFixPrompt);
         
@@ -1016,6 +1038,73 @@ ${buildErrors}
     } catch (error) {
       logger.error('Failed to analyze build errors:', error);
     }
+  }
+
+  /**
+   * NEW: Enhanced build error analysis with specific TypeScript patterns
+   */
+  private analyzeBuildErrorsWithPatterns(buildErrors: string): {
+    detectedTypes: Array<{type: string, description: string}>,
+    suggestedFixes: string[]
+  } {
+    const errorPatterns = [
+      {
+        pattern: /Property '(\w+)' does not exist on type '([^']+)'/g,
+        type: 'missing-property',
+        description: 'Missing properties on types',
+        fix: (match: RegExpMatchArray) => 
+          `Add property '${match[1]}' to type '${match[2]}' or use type assertion`
+      },
+      {
+        pattern: /Type '([^']+)' is not assignable to type '([^']+)'/g,
+        type: 'type-mismatch',
+        description: 'Type assignment errors',
+        fix: (match: RegExpMatchArray) => 
+          `Convert type '${match[1]}' to '${match[2]}' or update type definition`
+      },
+      {
+        pattern: /Cannot find name '(\w+)'/g,
+        type: 'missing-import',
+        description: 'Missing imports or declarations',
+        fix: (match: RegExpMatchArray) => 
+          `Import '${match[1]}' or check if it's available in current scope`
+      },
+      {
+        pattern: /Module '"[^"]+"' has no exported member '(\w+)'/g,
+        type: 'wrong-import',
+        description: 'Incorrect import names',
+        fix: (match: RegExpMatchArray) => 
+          `Check if '${match[1]}' should be a type import or has been renamed in V2`
+      },
+      {
+        pattern: /Argument of type '([^']+)' is not assignable to parameter of type '([^']+)'/g,
+        type: 'parameter-mismatch',
+        description: 'Function parameter type mismatches',
+        fix: (match: RegExpMatchArray) => 
+          `Adjust parameter type from '${match[1]}' to match expected '${match[2]}'`
+      }
+    ];
+
+    const detectedTypes: Array<{type: string, description: string}> = [];
+    const suggestedFixes: string[] = [];
+
+    for (const errorPattern of errorPatterns) {
+      let match: RegExpExecArray | null;
+      errorPattern.pattern.lastIndex = 0; // Reset regex state
+      match = errorPattern.pattern.exec(buildErrors);
+      while (match !== null) {
+        if (!detectedTypes.some(dt => dt.type === errorPattern.type)) {
+          detectedTypes.push({
+            type: errorPattern.type,
+            description: errorPattern.description
+          });
+        }
+        suggestedFixes.push(`- ${errorPattern.fix(match)}`);
+        match = errorPattern.pattern.exec(buildErrors);
+      }
+    }
+
+    return { detectedTypes, suggestedFixes };
   }
 
   private async setupTestEnvironment(): Promise<void> {
@@ -1640,15 +1729,6 @@ _options: { [key: string]: unknown }, // Not 'any'
         return;
       }
 
-      // Read current index.ts content
-      let indexContent = await fs.readFile(indexPath, 'utf-8');
-
-      // Check if test exports already exist
-      if (indexContent.includes('testSuite') || indexContent.includes('test/test')) {
-        logger.info('✅ Test suites already included in index.ts');
-        return;
-      }
-
       // Check if test file exists (must be test.ts, not test.test.ts)
       const testFilePath = path.join(this.repoPath, 'src', 'test', 'test.ts');
       const hasTestFile = await fs.pathExists(testFilePath);
@@ -1658,26 +1738,120 @@ _options: { [key: string]: unknown }, // Not 'any'
         logger.info('   Expected: src/test/test.ts (ElizaOS V2 standard)');
         return;
       }
+
+      // Read current files
+      const indexContent = await fs.readFile(indexPath, 'utf-8');
+      const testContent = await fs.readFile(testFilePath, 'utf-8');
+
+      // Check if test imports/exports already exist
+      if (indexContent.includes('test/test') || indexContent.includes('tests:')) {
+        logger.info('✅ Test suites already included in index.ts');
+        return;
+      }
       
-      logger.info('✅ Found src/test/test.ts - including in index.ts');
+      logger.info('🤖 Using Claude to integrate test suite into index.ts...');
 
-      // Add test suite export to index.ts
-      const testSuiteExport = `
-// Export test suite for build validation
-export { testSuite } from './test/test.js';`;
+      // Create Claude prompt for test suite integration
+      const testIntegrationPrompt = `# Fix ElizaOS V2 Plugin Test Suite Integration
 
-      // Add the export at the end of the file
-      indexContent = `${indexContent.trim()}\n${testSuiteExport}\n`;
+## Current src/index.ts:
+\`\`\`typescript
+${indexContent}
+\`\`\`
 
-      // Write updated index.ts
-      await fs.writeFile(indexPath, indexContent);
+## Current src/test/test.ts (test file exists):
+\`\`\`typescript
+${testContent.slice(0, 200)}...
+\`\`\`
+
+## 🎯 TASK: Fix the plugin to properly include the test suite
+
+### CRITICAL REQUIREMENTS:
+1. **Import the test suite** from "./test/test.js" (note .js extension)
+2. **Add tests array** to the plugin definition
+3. **Detect the correct export** from test.ts (could be default export or named export)
+4. **Preserve all existing functionality**
+
+### EXAMPLES:
+
+**If test.ts has default export:**
+\`\`\`typescript
+import testSuite from "./test/test.js";
+
+const myPlugin: Plugin = {
+  name: "plugin-name",
+  // ... existing fields
+  tests: [testSuite],
+};
+\`\`\`
+
+**If test.ts has named export 'test':**
+\`\`\`typescript
+import { test as testSuite } from "./test/test.js";
+
+const myPlugin: Plugin = {
+  name: "plugin-name", 
+  // ... existing fields
+  tests: [testSuite],
+};
+\`\`\`
+
+### 🚨 CRITICAL RULES:
+- Use .js extension in import (not .ts)
+- Add import after existing imports
+- Add tests array to plugin object
+- Don't break existing functionality
+- Handle any plugin naming pattern (alloraPlugin, newsPlugin, etc.)
+
+Fix the src/index.ts file to properly include the test suite!`;
+
+      // Use Claude to fix the test integration
+      await this.runClaudeWithPrompt(testIntegrationPrompt);
       
-      logger.info('✅ Test suite exports added to index.ts');
+      logger.info('✅ Test suite integration completed via Claude');
       context.changedFiles.add('src/index.ts');
 
     } catch (error) {
       logger.error('❌ Failed to include test suites in index.ts:', error);
       // Don't throw - this is not critical for migration success
+    }
+  }
+
+  /**
+   * Run Claude with a specific prompt for the current repository
+   */
+  private async runClaudeWithPrompt(prompt: string): Promise<void> {
+    if (!this.repoPath) throw new Error('Repository path not set');
+
+    try {
+      await execa(
+        'claude',
+        [
+          '--print',
+          '--max-turns',
+          '5',
+          '--model',
+          'claude-sonnet-4-20250514',
+          '--dangerously-skip-permissions',
+          prompt,
+        ],
+        {
+          stdio: 'inherit',
+          cwd: this.repoPath,
+          timeout: 2 * 60 * 1000, // 2 minutes
+        }
+      );
+    } catch (error) {
+      const err = error as { code?: string; message?: string };
+      
+      if (err.code === 'ENOENT') {
+        throw new Error(
+          'Claude Code not found! Install with: npm install -g @anthropic-ai/claude-code'
+        );
+      }
+
+      logger.error('Claude prompt execution failed:', err.message);
+      throw error;
     }
   }
 
@@ -1772,5 +1946,245 @@ Apply these fixes to prevent ANY import-related TypeScript errors.`;
 
     await this.runClaudeCodeWithPrompt(importFixPrompt);
     logger.info('✅ All imports fixed using Claude with real examples');
+  }
+
+  /**
+   * NEW: Validate that this is actually a V1 plugin that needs migration
+   */
+  private async validateV1Structure(): Promise<void> {
+    if (!this.repoPath) throw new Error('Repository path not set');
+    
+    const packageJsonPath = path.join(this.repoPath, 'package.json');
+    
+    if (!(await fs.pathExists(packageJsonPath))) {
+      throw new Error('No package.json found - this does not appear to be a Node.js project');
+    }
+    
+    const packageJson = await fs.readJson(packageJsonPath);
+    
+    // Check if it's a plugin
+    const isPlugin = packageJson.name?.includes('plugin');
+    
+    if (!isPlugin) {
+      throw new Error('This does not appear to be a plugin project');
+    }
+    
+    // Check if it's V1 (has old dependencies or patterns)
+    const hasV1Dependencies = 
+      packageJson.dependencies?.['@ai16z/eliza'] ||
+      packageJson.dependencies?.['@elizaos/core']?.startsWith('0.') ||
+      packageJson.devDependencies?.['vitest'] ||
+      packageJson.devDependencies?.['jest'];
+    
+    // Check for V1 file patterns
+    const hasV1Files = await fs.pathExists(path.join(this.repoPath, '__tests__')) ||
+                       await fs.pathExists(path.join(this.repoPath, 'vitest.config.ts')) ||
+                       await fs.pathExists(path.join(this.repoPath, 'biome.json'));
+    
+    if (!hasV1Dependencies && !hasV1Files) {
+      logger.warn('⚠️  This plugin may already be V2 compatible or not need migration');
+      logger.warn('Continuing anyway, but migration may not be necessary');
+    }
+    
+    logger.info('✅ V1 plugin structure validated');
+  }
+
+  /**
+   * IMPROVED: More accurate service detection that avoids false positives
+   */
+  private async detectActualService(files: string[]): Promise<boolean> {
+    // First check: Look for service files in the right location
+    const serviceFiles = files.filter(f => {
+      const fileName = path.basename(f);
+      const isInSrc = f.includes('src/');
+      const isServiceFile = fileName === 'service.ts' || 
+                           fileName === 'Service.ts' ||
+                           fileName.endsWith('/service.ts') ||
+                           fileName.endsWith('/Service.ts');
+      
+      return isInSrc && isServiceFile;
+    });
+    
+    if (serviceFiles.length === 0) {
+      return false;
+    }
+    
+    // Second check: Analyze the content to confirm it's an actual ElizaOS service
+    for (const serviceFile of serviceFiles) {
+      const fullPath = path.join(this.repoPath || '', serviceFile);
+      
+      if (await fs.pathExists(fullPath)) {
+        const content = await fs.readFile(fullPath, 'utf-8');
+        
+        // Check for ElizaOS service patterns
+        const hasServiceClass = /class\s+\w+Service\s+extends\s+Service/.test(content);
+        const hasServiceType = /static\s+serviceType/.test(content);
+        const hasStartMethod = /static\s+async\s+start/.test(content);
+        const hasElizaImports = /@elizaos\/core|@ai16z\/eliza/.test(content);
+        
+        // If it has service patterns, it's likely a real service
+        if ((hasServiceClass || hasServiceType || hasStartMethod) && hasElizaImports) {
+          logger.info(`✅ Found valid ElizaOS service in ${serviceFile}`);
+          return true;
+        }
+      }
+    }
+    
+    // Third check: Look for service exports in index.ts
+    const indexFiles = files.filter(f => 
+      f.endsWith('src/index.ts') || f.endsWith('index.ts')
+    );
+    
+    for (const indexFile of indexFiles) {
+      const fullPath = path.join(this.repoPath || '', indexFile);
+      
+      if (await fs.pathExists(fullPath)) {
+        const content = await fs.readFile(fullPath, 'utf-8');
+        
+        // Check if services array has entries
+        const servicesPattern = /services:\s*\[([^\]]+)\]/;
+        const match = content.match(servicesPattern);
+        
+        if (match && match[1].trim() !== '') {
+          logger.info(`✅ Found service registration in ${indexFile}`);
+          return true;
+        }
+      }
+    }
+    
+    logger.info('🔍 No valid ElizaOS service detected');
+    return false;
+  }
+
+  /**
+   * NEW: Analyze file content for migration complexity and patterns
+   */
+  private async analyzeFileContent(filePath: string): Promise<FileAnalysis> {
+    const content = await fs.readFile(filePath, 'utf-8');
+    
+    return {
+      hasV1Imports: /from\s+["']@ai16z\/eliza["']/.test(content),
+      hasV1ServicePattern: /export\s+(const|let|var)\s+\w+Service\s*=/.test(content),
+      hasV1ActionPattern: /handler:\s*async.*Promise<boolean>/.test(content),
+      hasV1MemoryPattern: /runtime\.memory\.create|runtime\.messageManager\.createMemory/.test(content),
+      hasV1ConfigPattern: /process\.env\.\w+(?!\s*\|\|\s*runtime\.getSetting)/.test(content),
+      hasV1ModelAPI: /runtime\.language\.generateText|ModelClass/.test(content),
+      hasV1TestPattern: /__tests__|vitest|jest/.test(content),
+      complexityScore: this.calculateComplexity(content),
+      v1PatternCount: this.countV1Patterns(content)
+    };
+  }
+
+  /**
+   * Calculate complexity score for migration planning
+   */
+  private calculateComplexity(content: string): number {
+    let score = 0;
+    
+    // Basic complexity indicators
+    score += (content.match(/class\s+\w+/g) || []).length * 2; // Classes
+    score += (content.match(/function\s+\w+|const\s+\w+\s*=\s*async/g) || []).length; // Functions
+    score += (content.match(/import\s+.*from/g) || []).length * 0.5; // Imports
+    score += (content.match(/export\s+/g) || []).length * 0.5; // Exports
+    
+    // V1 specific complexity
+    score += (content.match(/ModelClass|elizaLogger|runtime\.memory\./g) || []).length * 3;
+    score += (content.match(/Promise<boolean>/g) || []).length * 2;
+    
+    return Math.round(score);
+  }
+
+  /**
+   * Count V1 patterns for migration assessment
+   */
+  private countV1Patterns(content: string): number {
+    const v1Patterns = [
+      /ModelClass/g,
+      /elizaLogger/g,
+      /runtime\.memory\.create/g,
+      /runtime\.messageManager\.createMemory/g,
+      /runtime\.language\.generateText/g,
+      /user:\s*["']/g,
+      /stop:\s*\[/g,
+      /max_tokens:/g,
+      /Promise<boolean>/g
+    ];
+    
+    return v1Patterns.reduce((count, pattern) => {
+      return count + (content.match(pattern) || []).length;
+    }, 0);
+  }
+
+  /**
+   * Validate that all imports are V2 compliant
+   */
+  private async validateV2Imports(): Promise<string[]> {
+    const issues: string[] = [];
+    const sourceFiles = await globby(['src/**/*.ts'], {
+      cwd: this.repoPath,
+      ignore: ['node_modules/**', 'dist/**']
+    });
+
+    for (const file of sourceFiles) {
+      if (!this.repoPath) continue;
+      
+      const filePath = path.join(this.repoPath, file);
+      const content = await fs.readFile(filePath, 'utf-8');
+
+      // Check for mixed imports that should be separated
+      const mixedImportPattern = /import\s*{\s*([^}]*),\s*type\s+([^}]*)\s*}\s*from\s*["']@elizaos\/core["']/g;
+      if (mixedImportPattern.test(content)) {
+        issues.push(`${file}: Contains mixed imports that should be separated`);
+      }
+
+      // Check for value imports that should be type imports
+      const typeOnlyImports = ['TestSuite', 'ActionExample', 'Content', 'HandlerCallback', 'IAgentRuntime', 'State', 'UUID', 'Plugin'];
+      for (const typeImport of typeOnlyImports) {
+        const valueImportPattern = new RegExp(`import\\s*{[^}]*\\b${typeImport}\\b[^}]*}\\s*from\\s*["']@elizaos\\/core["']`, 'g');
+        if (valueImportPattern.test(content) && !content.includes('import type')) {
+          issues.push(`${file}: '${typeImport}' should be imported as type`);
+        }
+      }
+    }
+
+    return issues;
+  }
+
+  /**
+   * Validate package.json V2 compliance
+   */
+  private async validatePackageJson(): Promise<string[]> {
+    const issues: string[] = [];
+    
+    if (!this.repoPath) {
+      return ['No repository path available'];
+    }
+    
+    const packageJsonPath = path.join(this.repoPath, 'package.json');
+    const packageJson = await fs.readJson(packageJsonPath);
+
+    // Check required fields
+    if (packageJson.type !== 'module') {
+      issues.push('package.json missing "type": "module"');
+    }
+
+    if (!packageJson.exports) {
+      issues.push('package.json missing exports field');
+    }
+
+    // Check for V1 dependencies that should be removed
+    const v1Dependencies = ['vitest', 'jest', '@ai16z/eliza'];
+    for (const dep of v1Dependencies) {
+      if (packageJson.dependencies?.[dep] || packageJson.devDependencies?.[dep]) {
+        issues.push(`package.json contains V1 dependency: ${dep}`);
+      }
+    }
+
+    // Check for required V2 dependencies
+    if (!packageJson.dependencies?.['@elizaos/core']) {
+      issues.push('package.json missing @elizaos/core dependency');
+    }
+
+    return issues;
   }
 }
