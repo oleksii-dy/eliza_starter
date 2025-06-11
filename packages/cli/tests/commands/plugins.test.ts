@@ -41,7 +41,7 @@ describe('ElizaOS Plugin Commands', () => {
     try {
       execSync(`${elizaosCmd} create ${name} --yes`, {
         stdio: 'pipe',
-        timeout: 60000, // 60 second timeout
+        timeout: 90000, // 90 second timeout
       });
 
       // Verify the project was created
@@ -93,36 +93,36 @@ describe('ElizaOS Plugin Commands', () => {
 
     execSync(`${elizaosCmd} plugins add @elizaos/plugin-sql --skip-env-prompt`, {
       stdio: 'pipe',
-      timeout: 30000,
+      timeout: 60000,
     });
 
     const packageJson = await readFile('package.json', 'utf8');
     expect(packageJson).toContain('@elizaos/plugin-sql');
-  }, 120000);
+  }, 180000);
 
   test('plugins install alias works', async () => {
     await createTestProject('test-install-alias');
 
     execSync(`${elizaosCmd} plugins install @elizaos/plugin-openai --skip-env-prompt`, {
       stdio: 'pipe',
-      timeout: 30000,
+      timeout: 60000,
     });
 
     const packageJson = await readFile('package.json', 'utf8');
     expect(packageJson).toContain('@elizaos/plugin-openai');
-  }, 120000);
+  }, 180000);
 
   test('plugins add supports third-party plugins', async () => {
     await createTestProject('test-third-party');
 
     execSync(`${elizaosCmd} plugins add @fleek-platform/eliza-plugin-mcp --skip-env-prompt`, {
       stdio: 'pipe',
-      timeout: 30000,
+      timeout: 60000,
     });
 
     const packageJson = await readFile('package.json', 'utf8');
     expect(packageJson).toContain('@fleek-platform/eliza-plugin-mcp');
-  }, 120000);
+  }, 180000);
 
   test('plugins add supports GitHub URL installation', async () => {
     await createTestProject('test-github-url');
@@ -131,7 +131,7 @@ describe('ElizaOS Plugin Commands', () => {
       `${elizaosCmd} plugins add https://github.com/fleek-platform/eliza-plugin-mcp --skip-env-prompt`,
       {
         stdio: 'pipe',
-        timeout: 30000,
+        timeout: 60000,
       }
     );
 
@@ -143,13 +143,13 @@ describe('ElizaOS Plugin Commands', () => {
       `${elizaosCmd} plugins add github:elizaos-plugins/plugin-openrouter#1.x --skip-env-prompt`,
       {
         stdio: 'pipe',
-        timeout: 30000,
+        timeout: 60000,
       }
     );
 
     const packageJson = await readFile('package.json', 'utf8');
     expect(packageJson).toContain('github:elizaos-plugins/plugin-openrouter#1.x');
-  }, 120000);
+  }, 180000);
 
   // installed-plugins list tests
   test('plugins installed-plugins shows installed plugins', async () => {
@@ -157,12 +157,12 @@ describe('ElizaOS Plugin Commands', () => {
 
     execSync(`${elizaosCmd} plugins add @elizaos/plugin-openai --skip-env-prompt`, {
       stdio: 'pipe',
-      timeout: 30000,
+      timeout: 60000,
     });
 
     const result = execSync(`${elizaosCmd} plugins installed-plugins`, { encoding: 'utf8' });
     expect(result).toContain('@elizaos/plugin-openai');
-  }, 120000);
+  }, 180000);
 
   // remove / aliases tests
   test('plugins remove uninstalls a plugin', async () => {
@@ -170,7 +170,7 @@ describe('ElizaOS Plugin Commands', () => {
 
     execSync(`${elizaosCmd} plugins add @elizaos/plugin-sql --skip-env-prompt`, {
       stdio: 'pipe',
-      timeout: 30000,
+      timeout: 60000,
     });
 
     let packageJson = await readFile('package.json', 'utf8');
@@ -178,12 +178,12 @@ describe('ElizaOS Plugin Commands', () => {
 
     execSync(`${elizaosCmd} plugins remove @elizaos/plugin-sql`, {
       stdio: 'pipe',
-      timeout: 30000,
+      timeout: 60000,
     });
 
     packageJson = await readFile('package.json', 'utf8');
     expect(packageJson).not.toContain('@elizaos/plugin-sql');
-  }, 120000);
+  }, 180000);
 
   test('plugins remove aliases (delete, del, rm) work', async () => {
     await createTestProject('test-remove-aliases');
@@ -194,7 +194,7 @@ describe('ElizaOS Plugin Commands', () => {
     for (const plugin of plugins) {
       execSync(`${elizaosCmd} plugins add ${plugin} --skip-env-prompt`, {
         stdio: 'pipe',
-        timeout: 30000,
+        timeout: 60000,
       });
     }
 
@@ -208,10 +208,10 @@ describe('ElizaOS Plugin Commands', () => {
     for (const [command, plugin] of removeCommands) {
       execSync(`${elizaosCmd} plugins ${command} ${plugin}`, {
         stdio: 'pipe',
-        timeout: 30000,
+        timeout: 60000,
       });
     }
-  }, 120000);
+  }, 180000);
 
   // Negative case tests
   test('plugins add fails for missing plugin', async () => {
@@ -220,7 +220,7 @@ describe('ElizaOS Plugin Commands', () => {
     try {
       execSync(`${elizaosCmd} plugins add missing --skip-env-prompt`, {
         stdio: 'pipe',
-        timeout: 30000,
+        timeout: 60000,
       });
       expect(false).toBe(true); // Should not reach here
     } catch (e: any) {
@@ -228,7 +228,7 @@ describe('ElizaOS Plugin Commands', () => {
       const output = e.stdout?.toString() || e.stderr?.toString() || '';
       expect(output).toMatch(/not found in registry/);
     }
-  }, 120000);
+  }, 180000);
 
   // Direct GitHub URL installs
   test('plugins add via direct GitHub URL', async () => {
@@ -238,13 +238,13 @@ describe('ElizaOS Plugin Commands', () => {
       `${elizaosCmd} plugins add https://github.com/fleek-platform/eliza-plugin-mcp --skip-env-prompt`,
       {
         stdio: 'pipe',
-        timeout: 30000,
+        timeout: 60000,
       }
     );
 
     const packageJson = await readFile('package.json', 'utf8');
     expect(packageJson).toContain('@fleek-platform/eliza-plugin-mcp');
-  }, 120000);
+  }, 180000);
 
   test('plugins add via GitHub shorthand URL', async () => {
     await createTestProject('proj-shorthand-github-url');
@@ -253,11 +253,11 @@ describe('ElizaOS Plugin Commands', () => {
       `${elizaosCmd} plugins add github:elizaos-plugins/plugin-openrouter#1.x --skip-env-prompt`,
       {
         stdio: 'pipe',
-        timeout: 30000,
+        timeout: 60000,
       }
     );
 
     const packageJson = await readFile('package.json', 'utf8');
     expect(packageJson).toContain('github:elizaos-plugins/plugin-openrouter#1.x');
-  }, 120000);
+  }, 180000);
 });

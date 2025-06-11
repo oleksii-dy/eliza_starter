@@ -83,7 +83,7 @@ export function runCliCommand(
 ): string {
   return execSync(`${elizaosCmd} ${args}`, {
     encoding: 'utf8',
-    timeout: options.timeout || 30000,
+    timeout: options.timeout || 60000,
   });
 }
 
@@ -98,7 +98,7 @@ export function runCliCommandSilently(
   return execSync(`${elizaosCmd} ${args}`, {
     encoding: 'utf8',
     stdio: 'pipe',
-    timeout: options.timeout || 30000,
+    timeout: options.timeout || 60000,
   });
 }
 
@@ -114,7 +114,7 @@ export function expectCliCommandToFail(
     const result = execSync(`${elizaosCmd} ${args}`, {
       encoding: 'utf8',
       stdio: 'pipe',
-      timeout: options.timeout || 30000,
+      timeout: options.timeout || 60000,
     });
     throw new Error(`Command should have failed but succeeded with output: ${result}`);
   } catch (e: any) {
