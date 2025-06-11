@@ -187,9 +187,11 @@ export async function executeInstallationWithFallback(
   githubFallback?: string
 ): Promise<{ success: boolean; installedIdentifier: string | null }> {
   // First try normal installation
+  console.log('packageName IN EXECUTE INSTALLATION WITH FALLBACK', packageName);
   const result = await executeInstallation(packageName, versionOrTag, directory);
 
   if (result.success || !githubFallback) {
+    console.log('result IN EXECUTE INSTALLATION WITH FALLBACK', result);
     return result;
   }
 
@@ -201,5 +203,6 @@ export async function executeInstallationWithFallback(
 
   // Try GitHub installation
   const githubSpecifier = `github:${githubFallback}${versionOrTag ? `#${versionOrTag}` : ''}`;
+  console.log('githubSpecifier', githubSpecifier);
   return await executeInstallation(githubSpecifier, '', directory);
 }

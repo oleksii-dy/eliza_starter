@@ -119,6 +119,7 @@ export async function installPlugin(
   cwd: string,
   versionSpecifier?: string
 ): Promise<boolean> {
+  console.log('packageName IN INSTALL PLUGIN', packageName);
   logger.debug(`Installing plugin: ${packageName}`);
 
   // Check if we're trying to install a plugin into its own directory
@@ -149,7 +150,9 @@ export async function installPlugin(
   }
 
   const cache = await fetchPluginRegistry();
+  console.log('cache', cache);
   const possible = normalizePluginName(packageName);
+  console.log('possible', possible);
 
   let key: string | null = null;
   for (const name of possible) {
@@ -179,6 +182,11 @@ export async function installPlugin(
     }
   }
 
+  console.log('key', key);
+  console.log('packageName', packageName);
+  console.log('versionSpecifier', versionSpecifier);
+  console.log('cwd', cwd);
+
   if (!key) {
     logger.warn(
       `Plugin ${packageName} not found in registry cache, attempting direct installation`
@@ -192,9 +200,14 @@ export async function installPlugin(
   const githubFallback = info.git?.repo;
   const githubVersion = info.git?.v1?.branch || info.git?.v1?.version || '';
 
+  console.log('info', info);
+
   // Prefer npm installation with GitHub fallback if repository is available
   if (info.npm?.repo) {
     const ver = versionSpecifier || info.npm.v1 || '';
+    console.log('ver', ver);
+    console.log('info.npm.repo', info.npm.repo);
+    console.log('githubFallback', githubFallback);
     const result = await executeInstallationWithFallback(info.npm.repo, ver, cwd, githubFallback);
 
     if (result.success) {
@@ -226,7 +239,11 @@ export async function installPlugin(
 
   // If both npm approaches failed, try direct GitHub installation as final fallback
   if (info.git?.repo && cliDir) {
+    console.log('cliDir', cliDir);
+    console.log('info.git.repo', info.git.repo);
+    console.log('githubVersion', githubVersion);
     const spec = `github:${info.git.repo}${githubVersion ? `#${githubVersion}` : ''}`;
+    console.log('spec', spec);
     return await attemptInstallation(spec, '', cliDir, 'in CLI directory');
   }
 

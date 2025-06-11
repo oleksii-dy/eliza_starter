@@ -30,8 +30,10 @@
   "dependencies": {
     "@elizaos/cli": "workspace:*",
     "@elizaos/core": "workspace:*",
-    "@elizaos/plugin-sql": "workspace:*",
     "@elizaos/plugin-bootstrap": "workspace:*",
+    "@elizaos/plugin-cronoszkevm": "^0.25.6-alpha.1",
+    "@elizaos/plugin-discord": "1.0.10",
+    "@elizaos/plugin-sql": "workspace:*",
     "zod": "3.24.2"
   },
   "devDependencies": {

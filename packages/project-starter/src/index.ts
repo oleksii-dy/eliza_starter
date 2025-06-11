@@ -14,6 +14,7 @@ import starterPlugin from './plugin.ts';
  * Eliza's responses are geared towards providing assistance on various topics while maintaining a friendly demeanor.
  */
 export const character: Character = {
+  // TODO: your character here!
   name: 'Eliza',
   plugins: [
     '@elizaos/plugin-sql',
@@ -24,6 +25,7 @@ export const character: Character = {
     ...(process.env.TWITTER_USERNAME ? ['@elizaos/plugin-twitter'] : []),
     ...(process.env.TELEGRAM_BOT_TOKEN ? ['@elizaos/plugin-telegram'] : []),
     ...(!process.env.IGNORE_BOOTSTRAP ? ['@elizaos/plugin-bootstrap'] : []),
+    '@elizaos/plugin-reveel-payid',
   ],
   settings: {
     secrets: {},
