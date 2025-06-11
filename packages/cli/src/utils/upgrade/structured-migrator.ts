@@ -22,6 +22,7 @@ import { getAvailableDiskSpace } from './utils.js';
 import { analyzeRepository } from './repository-analyzer.js';
 import { BRANCH_NAME, MIN_DISK_SPACE_GB, LOCK_FILE_NAME, DEFAULT_OPENAI_API_KEY } from './config.js';
 import { ContextAwareTestGenerator } from './context-aware-test-generator.js';
+import { EnvPrompter, type EnvVarPrompt } from './env-prompter.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1120,20 +1121,100 @@ CRITICAL INSTRUCTION: Fix ONLY the specific errors shown above.
       envContent = await fs.readFile(envPath, 'utf-8');
     }
     
-    // MANDATORY: Always include OPENAI_API_KEY
-    if (!envContent.includes('OPENAI_API_KEY=')) {
-      envContent += '\n# MANDATORY for all ElizaOS plugins\n';
-      envContent += `OPENAI_API_KEY=${DEFAULT_OPENAI_API_KEY}\n`;
-    }
-    
     // Dynamically detect required environment variables from source
     const requiredEnvVars = await this.detectRequiredEnvVars();
     
-    // Add dummy values for detected variables if not present
-    for (const envVar of requiredEnvVars) {
-      if (!envContent.includes(`${envVar}=`)) {
-        envContent += '\n# Detected from plugin source\n';
-        envContent += `${envVar}=${this.getDummyValueForEnvVar(envVar)}\n`;
+    // Always include OPENAI_API_KEY as it's mandatory for ElizaOS
+    const allRequiredVars = ['OPENAI_API_KEY', ...requiredEnvVars.filter(v => v !== 'OPENAI_API_KEY')];
+    
+    if (allRequiredVars.length > 0) {
+      // Check if we already have collected environment variables
+      let collectedVars: Record<string, string> = {};
+      
+      if (this.context?.collectedEnvVars) {
+        logger.info('♻️  Using previously collected environment variables');
+        collectedVars = this.context.collectedEnvVars;
+      } else {
+        // Only prompt if we haven't collected them yet
+        try {
+          // Ask user if they want to configure now
+          const shouldConfigure = await EnvPrompter.askConfigureNow();
+          
+          if (shouldConfigure) {
+            // Create prompts for all required variables including OPENAI_API_KEY
+            const pluginName = this.context?.pluginName || 'unknown';
+            const envPrompts = EnvPrompter.createEnvPrompts(allRequiredVars, pluginName);
+            
+            // Prompt user for values
+            const envPrompter = new EnvPrompter();
+            collectedVars = await envPrompter.promptForEnvVars(envPrompts);
+            
+            // Store collected variables in context to avoid re-prompting
+            if (this.context) {
+              this.context.collectedEnvVars = collectedVars;
+            }
+            
+            logger.info(`✅ Collected ${Object.keys(collectedVars).filter(k => collectedVars[k]).length} environment variables from user`);
+            
+            // Warn about empty OPENAI_API_KEY if not provided
+            if (!collectedVars.OPENAI_API_KEY) {
+              logger.warn('⚠️  OPENAI_API_KEY was not provided - tests may fail without a valid OpenAI API key');
+            }
+            
+          } else {
+            // User chose to skip - create dummy values
+            logger.info('⏭️  User chose to configure environment variables later');
+            logger.info('   Creating placeholder values for testing...');
+            
+            for (const envVar of allRequiredVars) {
+              if (envVar === 'OPENAI_API_KEY') {
+                collectedVars[envVar] = DEFAULT_OPENAI_API_KEY;
+              } else {
+                collectedVars[envVar] = this.getDummyValueForEnvVar(envVar);
+              }
+            }
+            
+            // Store dummy values in context to avoid re-prompting
+            if (this.context) {
+              this.context.collectedEnvVars = collectedVars;
+            }
+          }
+        } catch (error) {
+          logger.error('❌ Error during environment variable configuration:', error);
+          logger.info('   Falling back to dummy values for testing...');
+          
+          // Fallback: create dummy values for all required vars
+          for (const envVar of allRequiredVars) {
+            if (envVar === 'OPENAI_API_KEY') {
+              collectedVars[envVar] = DEFAULT_OPENAI_API_KEY;
+            } else {
+              collectedVars[envVar] = this.getDummyValueForEnvVar(envVar);
+            }
+          }
+          
+          // Store fallback values in context
+          if (this.context) {
+            this.context.collectedEnvVars = collectedVars;
+          }
+        }
+      }
+      
+      // Apply collected variables to .env file
+      for (const [varName, value] of Object.entries(collectedVars)) {
+        if (!envContent.includes(`${varName}=`)) {
+          if (value) {
+            if (varName === 'OPENAI_API_KEY') {
+              envContent += `\n# MANDATORY for all ElizaOS plugins\n${varName}=${value}\n`;
+            } else {
+              envContent += `\n# Environment variable\n${varName}=${value}\n`;
+            }
+          }
+        }
+      }
+    } else {
+      // No plugin-specific vars detected, but still add OPENAI_API_KEY
+      if (!envContent.includes('OPENAI_API_KEY=')) {
+        envContent += `\n# MANDATORY for all ElizaOS plugins\nOPENAI_API_KEY=${DEFAULT_OPENAI_API_KEY}\n`;
       }
     }
     
@@ -1149,9 +1230,20 @@ CRITICAL INSTRUCTION: Fix ONLY the specific errors shown above.
     
     // Common patterns to search for environment variables
     const patterns = [
-      /runtime\.getSetting\(["']([^"']+)["']\)/g,
-      /process\.env\.([A-Z_]+)/g,
-      /getEnv\(["']([^"']+)["']\)/g
+      /runtime\.getSetting\(["'`]([^"'`]+)["'`]\)/g,
+      /process\.env\.([A-Z_][A-Z0-9_]*)/g,
+      /getEnv\(["'`]([^"'`]+)["'`]\)/g,
+
+      // Additional edge case patterns
+      /getSetting\(["'`]([^"'`]+)["'`]\)/g, // Direct getSetting calls
+      /env\.([A-Z_][A-Z0-9_]*)/g, // env.VAR_NAME patterns
+      /config\.([A-Z_][A-Z0-9_]*)/g, // config.VAR_NAME patterns
+
+      // Zod schema patterns (from config.ts)
+      /([A-Z_][A-Z0-9_]*)\s*:\s*z\./g, // VAR_NAME: z.string()
+
+      // Comment patterns
+      /\/\/.*([A-Z_]{2,}(?:_[A-Z0-9]+)*(?:_API_KEY|_TOKEN|_SECRET|_ENDPOINT))/g,
     ];
     
     // Search in src directory
@@ -1430,7 +1522,7 @@ DO NOT reduce the number of tests. Fix the errors while keeping all tests intact
     const missingVars = new Set<string>();
     
     for (const pattern of missingVarPatterns) {
-      let match: RegExpExecArray | null;
+              let match: RegExpExecArray | null;
       match = pattern.exec(output);
       while (match !== null) {
         missingVars.add(match[1]);
@@ -1678,7 +1770,7 @@ _options: { [key: string]: unknown }, // Not 'any'
         };
 
         return lastResult;
-      } catch (error) {
+          } catch (error) {
         // Check if it's a rate limit error in the exception
         const errorMessage = (error as Error).message || '';
         const isRateLimitError = 
@@ -2025,7 +2117,7 @@ Apply these fixes to prevent ANY import-related TypeScript errors.`;
         // If it has service patterns, it's likely a real service
         if ((hasServiceClass || hasServiceType || hasStartMethod) && hasElizaImports) {
           logger.info(`✅ Found valid ElizaOS service in ${serviceFile}`);
-          return true;
+    return true;
         }
       }
     }
