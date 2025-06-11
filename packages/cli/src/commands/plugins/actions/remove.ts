@@ -1,11 +1,11 @@
 import { detectDirectoryType } from '@/src/utils/directory-detection';
 import { handleError } from '@/src/utils';
 import { logger } from '@elizaos/core';
-import { execa } from 'execa';
 import fs from 'node:fs';
 import path from 'node:path';
 import { findPluginPackageName } from '../utils/naming';
 import { getDependenciesFromDirectory } from '../utils/directory';
+import { bunRemove } from '@/src/utils/run-bun';
 
 /**
  * Remove a plugin from the project
@@ -39,13 +39,10 @@ export async function removePlugin(plugin: string): Promise<void> {
 
   console.info(`Removing ${packageNameToRemove}...`);
   try {
-    await execa('bun', ['remove', packageNameToRemove], {
-      cwd,
-      stdio: 'inherit',
-    });
+    await bunRemove([packageNameToRemove], cwd);
   } catch (execError) {
     logger.error(`Failed to run 'bun remove ${packageNameToRemove}': ${execError.message}`);
-    if (execError.stderr?.includes('not found')) {
+    if (execError.message?.includes('not found')) {
       logger.info(
         `'bun remove' indicated package was not found. Continuing with directory removal attempt.`
       );

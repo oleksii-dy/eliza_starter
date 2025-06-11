@@ -86,26 +86,14 @@ export async function installPluginDependencies(projectInfo: DirectoryInfo): Pro
     }
 
     const { installPlugin } = await import('@/src/utils');
-    const { spawn } = await import('node:child_process');
-    const which = (await import('which')).default;
+    const { bunInstall } = await import('@/src/utils/run-bun');
 
     for (const dependency of project.pluginModule.dependencies) {
       await installPlugin(dependency, pluginsDir);
       const dependencyPath = path.join(pluginsDir, 'node_modules', dependency);
       if (fs.existsSync(dependencyPath)) {
         try {
-          const bunPath = await which('bun');
-          await new Promise<void>((resolve, reject) => {
-            const child = spawn(bunPath, ['install'], {
-              cwd: dependencyPath,
-              stdio: 'inherit',
-              env: process.env,
-            });
-            child.on('close', (code) =>
-              code === 0 ? resolve() : reject(`bun install failed with code ${code}`)
-            );
-            child.on('error', reject);
-          });
+          await bunInstall(dependencyPath);
         } catch (error) {
           logger.warn(
             `[Test Command] Failed to install devDependencies for ${dependency}: ${error}`
