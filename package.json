@@ -1,27 +1,28 @@
 {
   "name": "eliza",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "module": "index.ts",
   "type": "module",
   "engines": {
     "node": "23.3.0"
   },
   "scripts": {
-    "start": "turbo run start --filter=./packages/cli --log-prefix=none --force",
+    "postinstall": "bash ./scripts/init-submodules.sh",
+    "start": "turbo run start --filter=./packages/cli --log-prefix=none",
     "start:debug": "cross-env NODE_NO_WARNINGS=1 LOG_LEVEL=debug elizaos start",
     "start:app": "turbo run start --filter=./packages/app",
-    "dev": "turbo run start --filter=./packages/cli --no-cache --force",
+    "dev": "bun run scripts/dev-watch.js",
     "build:docs": "turbo run build --filter=@elizaos/docs",
-    "build": "turbo run build --filter=!@elizaos/docs --force",
+    "build": "turbo run build --filter=!@elizaos/docs",
     "build:client": "turbo run build --filter=@elizaos/client",
     "format": "turbo run format --filter=./packages/*",
     "format:check": "turbo run format:check --filter=./packages/*",
-    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo bun.lock* .eliza .elizadb && turbo run clean --filter=./packages/* && bun install && bun run build",
+    "clean": "turbo run clean --filter=./packages/* && rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo bun.lock* .eliza .elizadb && bun install && bun run build",
     "build:cli": "turbo run build --filter=@elizaos/cli --no-cache",
     "build:core": "turbo run build --filter=@elizaos/core --no-cache",
     "lint": "turbo run lint --filter=./packages/* && prettier --write . && prettier --check .",
     "pre-commit": "bun run scripts/pre-commit-lint.js",
-    "release": "bun run build && bun lint && lerna publish --no-private --force-publish && bun lint",
+    "release": "lerna version --no-private --force-publish --no-push --no-git-tag-version && bun run build && bun lint && lerna publish from-package --no-private --force-publish && bun lint",
     "release:alpha": "lerna publish prerelease --preid alpha --dist-tag alpha --no-private --force-publish --loglevel verbose",
     "migrate": "turbo run migrate --filter=./packages/plugin-sql --force",
     "migrate:generate": "turbo run migrate:generate --filter=./packages/plugin-sql",
@@ -74,5 +75,7 @@
     "protobufjs",
     "utf-8-validate"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "helmet": "^8.1.0"
+  }
 }

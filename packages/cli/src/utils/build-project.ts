@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { logger } from '@elizaos/core';
 import { execa } from 'execa';
-import { isMonorepoContext } from './get-package-info';
+import { detectDirectoryType } from './directory-detection';
 import { runBunCommand } from './run-bun';
 
 /**
@@ -15,8 +15,8 @@ import { runBunCommand } from './run-bun';
  *
  * @throws {Error} If no build method can be determined or if all build attempts fail.
  */
-export async function buildProject(cwd: string, isPlugin = false) {
-  logger.info(`Building ${isPlugin ? 'plugin' : 'project'}...`);
+export async function buildProject(cwd: string = process.cwd(), isPlugin = false) {
+  logger.info(`Building ${isPlugin ? 'plugin' : 'project'} in ${cwd}...`);
 
   // Validate that the project directory exists
   if (!fs.existsSync(cwd)) {
@@ -37,8 +37,8 @@ export async function buildProject(cwd: string, isPlugin = false) {
   }
 
   // Check if we're in a monorepo
-  const inMonorepo = await isMonorepoContext();
-  if (inMonorepo) {
+  const directoryInfo = detectDirectoryType(cwd);
+  if (directoryInfo.monorepoRoot) {
     logger.debug('Detected monorepo structure, skipping install');
   }
 

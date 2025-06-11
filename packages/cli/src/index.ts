@@ -8,7 +8,7 @@ import { dev } from '@/src/commands/dev';
 import { env } from '@/src/commands/env';
 import { plugins } from '@/src/commands/plugins';
 import { publish } from '@/src/commands/publish';
-import { setupMonorepo } from '@/src/commands/setup-monorepo';
+import { monorepo } from '@/src/commands/monorepo';
 import { start } from '@/src/commands/start';
 import { teeCommand as tee } from '@/src/commands/tee';
 import { test } from '@/src/commands/test';
@@ -33,6 +33,11 @@ async function main() {
   // Check for --no-emoji flag early (before command parsing)
   if (process.argv.includes('--no-emoji')) {
     configureEmojis({ forceDisable: true });
+  }
+
+  // Check for --no-auto-install flag early (before command parsing)
+  if (process.argv.includes('--no-auto-install')) {
+    process.env.ELIZA_NO_AUTO_INSTALL = 'true';
   }
 
   // For ESM modules we need to use import.meta.url instead of __dirname
@@ -68,7 +73,9 @@ async function main() {
 
   const program = new Command()
     .name('elizaos')
-    .version(version, '-v, --version', 'output the version number');
+    .version(version, '-v, --version', 'output the version number')
+    .option('--no-emoji', 'Disable emoji output')
+    .option('--no-auto-install', 'Disable automatic Bun installation');
 
   // Add global options but hide them from global help
   // They will still be passed to all commands for backward compatibility
@@ -97,7 +104,7 @@ async function main() {
 
   program
     .addCommand(create)
-    .addCommand(setupMonorepo)
+    .addCommand(monorepo)
     .addCommand(plugins)
     .addCommand(agent)
     .addCommand(tee)

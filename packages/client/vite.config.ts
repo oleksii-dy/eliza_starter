@@ -19,17 +19,26 @@ interface CustomUserConfig extends UserConfig {
 // Function to get version and write info.json
 const getVersionAndWriteInfo = () => {
   const lernaPath = path.resolve(__dirname, '../../lerna.json');
+  const packageJsonPath = path.resolve(__dirname, '../../package.json');
   const infoJsonDir = path.resolve(__dirname, 'src/lib');
   const infoJsonPath = path.resolve(infoJsonDir, 'info.json');
   let version = '0.0.0-error'; // Default/fallback version
 
   try {
+    // First try to get version from lerna.json
     if (fs.existsSync(lernaPath)) {
       const lernaContent = fs.readFileSync(lernaPath, 'utf-8');
       const lernaConfig = JSON.parse(lernaContent);
       version = lernaConfig.version || version;
     } else {
-      console.warn(`Warning: ${lernaPath} does not exist. Using fallback version.`);
+      console.warn(`Warning: ${lernaPath} does not exist. Trying package.json...`);
+
+      // Fallback to main package.json if lerna.json doesn't exist
+      if (fs.existsSync(packageJsonPath)) {
+        const packageContent = fs.readFileSync(packageJsonPath, 'utf-8');
+        const packageConfig = JSON.parse(packageContent);
+        version = packageConfig.version || version;
+      }
     }
 
     if (!fs.existsSync(infoJsonDir)) {
@@ -106,6 +115,52 @@ export default defineConfig(({ mode }): CustomUserConfig => {
     ],
     clearScreen: false,
     envDir,
+    server: {
+      port: 5173,
+      host: '0.0.0.0',
+      strictPort: true,
+      hmr: {
+        port: 5174,
+        host: '0.0.0.0',
+      },
+      watch: {
+        usePolling: false,
+        interval: 100,
+      },
+      cors: true,
+      proxy: {
+        // Proxy all API calls to backend server
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+        // Proxy WebSocket connections for real-time features
+        '/socket.io': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          ws: true,
+        },
+        // Proxy any other backend endpoints that might exist
+        '/v1': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+        // Proxy health check and ping endpoints
+        '/ping': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+        // Proxy any direct server endpoints
+        '/server': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+    },
     define: {
       'import.meta.env.VITE_SERVER_PORT': JSON.stringify(env.SERVER_PORT || '3000'),
       // Add empty shims for Node.js globals
@@ -155,7 +210,7 @@ export default defineConfig(({ mode }): CustomUserConfig => {
         '@elizaos/core': path.resolve(__dirname, '../core/src/index.ts'),
       },
     },
-    logLevel: 'error', // Only show errors, not warnings
+    logLevel: mode === 'development' ? 'info' : 'error',
     // Add Vitest configuration
     test: {
       globals: true, // Or false, depending on your preference

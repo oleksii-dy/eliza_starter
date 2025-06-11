@@ -4,10 +4,11 @@ import path from 'node:path';
 import * as semver from 'semver';
 import { fileURLToPath } from 'node:url';
 import { logger } from '@elizaos/core';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, statSync, readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { resolveEnvFile } from './resolve-utils';
 import { emoji } from './emoji-handler';
+import { autoInstallBun, shouldAutoInstall } from './auto-install-bun';
 
 // Types
 interface OSInfo {
@@ -138,35 +139,63 @@ export class UserEnvironment {
       version = stdout.trim();
       logger.debug(`[UserEnvironment] Bun version: ${version}`);
     } catch (e) {
-      logger.error(
+      logger.debug(
         `[UserEnvironment] Could not get bun version: ${e instanceof Error ? e.message : String(e)}`
       );
 
-      // Enhanced bun installation guidance
-      const platform = process.platform;
-      logger.error(
-        `${emoji.error('Bun is required for ElizaOS CLI but is not installed or not found in PATH.')}`
-      );
-      logger.error('');
-      logger.error(`${emoji.rocket('Install Bun using the appropriate command for your system:')}`);
-      logger.error('');
+      // Attempt auto-installation if conditions are met
+      if (shouldAutoInstall()) {
+        logger.info(`${emoji.info('Attempting to automatically install Bun...')}`);
+        const installSuccess = await autoInstallBun();
 
-      if (platform === 'win32') {
-        logger.error('   Windows: powershell -c "irm bun.sh/install.ps1 | iex"');
-      } else {
-        logger.error('   Linux/macOS: curl -fsSL https://bun.sh/install | bash');
-        if (platform === 'darwin') {
-          logger.error('   macOS (Homebrew): brew install bun');
+        if (installSuccess) {
+          // Try to get version again after installation
+          try {
+            const { stdout } = await import('execa').then(({ execa }) =>
+              execa('bun', ['--version'])
+            );
+            version = stdout.trim();
+            logger.debug(`[UserEnvironment] Bun version after auto-install: ${version}`);
+          } catch (retryError) {
+            logger.error(
+              `Failed to verify Bun installation after auto-install: ${
+                retryError instanceof Error ? retryError.message : String(retryError)
+              }`
+            );
+            // Continue to manual installation instructions
+          }
         }
       }
-      logger.error('');
-      logger.error('   More options: https://bun.sh/docs/installation');
-      logger.error('   After installation, restart your terminal or source your shell profile');
-      logger.error('');
 
-      // Force exit the process - Bun is required for ElizaOS CLI
-      logger.error('🔴 Exiting: Bun installation is required to continue.');
-      process.exit(1);
+      // If auto-installation failed or was not attempted, show manual instructions
+      if (!version) {
+        const platform = process.platform;
+        logger.error(
+          `${emoji.error('Bun is required for ElizaOS CLI but is not installed or not found in PATH.')}`
+        );
+        logger.error('');
+        logger.error(
+          `${emoji.rocket('Install Bun using the appropriate command for your system:')}`
+        );
+        logger.error('');
+
+        if (platform === 'win32') {
+          logger.error('   Windows: powershell -c "irm bun.sh/install.ps1 | iex"');
+        } else {
+          logger.error('   Linux/macOS: curl -fsSL https://bun.sh/install | bash');
+          if (platform === 'darwin') {
+            logger.error('   macOS (Homebrew): brew install bun');
+          }
+        }
+        logger.error('');
+        logger.error('   More options: https://bun.sh/docs/installation');
+        logger.error('   After installation, restart your terminal or source your shell profile');
+        logger.error('');
+
+        // Force exit the process - Bun is required for ElizaOS CLI
+        logger.error('🔴 Exiting: Bun installation is required to continue.');
+        process.exit(1);
+      }
     }
 
     const packageName = '@elizaos/cli';
@@ -202,16 +231,27 @@ export class UserEnvironment {
    * @param startDir The directory to start searching from.
    * @returns The path to the monorepo root if found, otherwise null.
    */
-  private findMonorepoRoot(startDir: string): string | null {
+  public findMonorepoRoot(startDir: string): string | null {
     let currentDir = path.resolve(startDir);
-    while (true) {
+    let levels = 0;
+    const MAX_LEVELS = 10; // Limit traversal to prevent excessive filesystem searching
+
+    while (levels < MAX_LEVELS) {
       const corePackagePath = path.join(currentDir, 'packages', 'core');
       if (existsSync(corePackagePath)) {
-        // Check if 'packages/core' itself exists and is a directory
         try {
           const stats = statSync(corePackagePath);
           if (stats.isDirectory()) {
-            return currentDir; // Found the root containing 'packages/core'
+            // Additional validation: check if this looks like the ElizaOS monorepo
+            const packageJsonPath = path.join(currentDir, 'package.json');
+            if (existsSync(packageJsonPath)) {
+              const packageJsonContent = readFileSync(packageJsonPath, 'utf8');
+              const packageJson = JSON.parse(packageJsonContent);
+              // Verify this is actually the ElizaOS monorepo
+              if (packageJson.name?.includes('eliza') || packageJson.workspaces) {
+                return currentDir;
+              }
+            }
           }
         } catch (e) {
           // Ignore errors like permission denied, continue search
@@ -220,11 +260,12 @@ export class UserEnvironment {
 
       const parentDir = path.dirname(currentDir);
       if (parentDir === currentDir) {
-        // Reached the filesystem root
-        return null;
+        return null; // Reached filesystem root
       }
       currentDir = parentDir;
+      levels++;
     }
+    return null;
   }
 
   public async getPathInfo(): Promise<PathInfo> {

@@ -101,7 +101,7 @@ describe('Reflection Evaluator', () => {
       expect.objectContaining({
         state: expect.objectContaining({
           ...(mockState.data?.values || {}), // Include actual values from mockState
-          roomType: 'group',
+          roomType: ChannelType.GROUP,
           senderId: 'test-entity-id',
           knownFacts: '', // Assuming formatFacts returns '' for empty knownFacts
           entitiesInRoom: JSON.stringify([

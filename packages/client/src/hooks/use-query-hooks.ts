@@ -310,6 +310,7 @@ export function useChannelMessages(
   addMessage: (newMessage: UiMessage) => void;
   updateMessage: (messageId: string, updates: Partial<UiMessage>) => void;
   removeMessage: (messageId: string) => void;
+  clearMessages: () => void;
 } {
   const currentClientCentralId = getEntityId(); // Central ID of the currently logged-in user
 
@@ -501,6 +502,13 @@ export function useChannelMessages(
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
   }, []);
 
+  // Add method to clear all messages
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+    setOldestMessageTimestamp(null);
+    setHasMoreMessages(true);
+  }, []);
+
   // This hook now manages its own state for messages
   // To integrate with React Query for caching of initial load or background updates:
   // One could use useInfiniteQuery, but given the manual state management already here for append/prepend,
@@ -518,6 +526,7 @@ export function useChannelMessages(
     addMessage,
     updateMessage,
     removeMessage,
+    clearMessages,
   };
 }
 
@@ -533,15 +542,17 @@ export function useGroupChannelMessages(channelId: UUID | null, initialServerId?
  * Custom hook to fetch agent actions for a specific agent and room.
  * @param {UUID} agentId - The ID of the agent.
  * @param {UUID} roomId - The ID of the room.
+ * @param {string[]} excludeTypes - Optional array of types to exclude from results.
  * @returns {QueryResult} The result of the query containing agent actions.
  */
-export function useAgentActions(agentId: UUID, roomId?: UUID) {
+export function useAgentActions(agentId: UUID, roomId?: UUID, excludeTypes?: string[]) {
   return useQuery({
-    queryKey: ['agentActions', agentId, roomId],
+    queryKey: ['agentActions', agentId, roomId, excludeTypes],
     queryFn: async () => {
       const response = await apiClient.getAgentLogs(agentId, {
         roomId,
         count: 50,
+        excludeTypes,
       });
       return response.data || [];
     },
@@ -633,6 +644,7 @@ export function useAgentMemories(
       // Handle response format
       return result.data?.memories || [];
     },
+    enabled: Boolean(agentId && tableName),
     staleTime: 1000,
     refetchInterval: 10 * 1000,
   });
@@ -1128,9 +1140,8 @@ export function useDeleteChannelMessage() {
     onSuccess: (_data, variables) => {
       toast({
         title: 'Message Deleted',
-        description: `Message ${variables.messageId} removed from channel ${variables.channelId}.`,
+        description: 'Message removed successfully.',
       });
-      queryClient.invalidateQueries({ queryKey: ['messages', variables.channelId] });
     },
     onError: (error) => {
       toast({

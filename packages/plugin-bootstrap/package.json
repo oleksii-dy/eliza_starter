@@ -1,6 +1,6 @@
 {
   "name": "@elizaos/plugin-bootstrap",
-  "version": "1.0.2",
+  "version": "1.0.6",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -27,16 +27,13 @@
   ],
   "dependencies": {
     "@elizaos/core": "workspace:*",
-    "@elizaos/plugin-anthropic": "1.0.0",
-    "@elizaos/plugin-discord": "1.0.3",
-    "@elizaos/plugin-sql": "^1.0.2",
-    "@elizaos/plugin-telegram": "1.0.0"
+    "@elizaos/plugin-sql": "workspace:*"
   },
   "devDependencies": {
     "@elizaos/cli": "workspace:*",
     "@types/node": "^22.15.3",
     "prettier": "3.5.3",
-    "tsup": "8.4.0",
+    "tsup": "8.5.0",
     "vitest": "3.1.4",
     "zod": "^3.22.4"
   },

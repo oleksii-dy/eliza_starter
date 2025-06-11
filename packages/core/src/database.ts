@@ -35,7 +35,26 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
    * Initialize the database adapter.
    * @returns A Promise that resolves when initialization is complete.
    */
+  abstract initialize(config?: any): Promise<void>;
+
+  /**
+   * Initialize the database adapter.
+   * @returns A Promise that resolves when initialization is complete.
+   */
   abstract init(): Promise<void>;
+
+  /**
+   * Run database migrations
+   * @param migrationsPaths Optional array of paths to migration folders
+   * @returns A Promise that resolves when migrations are complete.
+   */
+  abstract runMigrations(migrationsPaths?: string[]): Promise<void>;
+
+  /**
+   * Check if the database connection is ready.
+   * @returns A Promise that resolves to true if the database is ready, false otherwise.
+   */
+  abstract isReady(): Promise<boolean>;
 
   /**
    * Optional close method for the database adapter.
@@ -255,6 +274,13 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   abstract deleteMemory(memoryId: UUID): Promise<void>;
 
   /**
+   * Removes multiple memories from the database in a single batch operation.
+   * @param memoryIds An array of UUIDs of the memories to remove.
+   * @returns A Promise that resolves when all memories have been removed.
+   */
+  abstract deleteManyMemories(memoryIds: UUID[]): Promise<void>;
+
+  /**
    * Removes all memories associated with a specific room.
    * @param roomId The UUID of the room whose memories should be removed.
    * @param tableName The table from which the memories should be removed.
@@ -470,13 +496,6 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
    * @returns A Promise that resolves to a boolean indicating success or failure of the deletion.
    */
   abstract deleteAgent(agentId: UUID): Promise<boolean>;
-
-  /**
-   * Ensures an agent exists in the database.
-   * @param agent The agent object to ensure exists.
-   * @returns A Promise that resolves when the agent has been ensured to exist.
-   */
-  abstract ensureAgentExists(agent: Partial<Agent>): Promise<Agent>;
 
   /**
    * Ensures an embedding dimension exists in the database.
