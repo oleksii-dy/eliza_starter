@@ -4,6 +4,7 @@ import path from 'node:path';
 import readline from 'readline';
 import { emoji } from '@/src/utils/emoji-handler';
 import { EnvVarConfig } from '../types';
+import { readPackageJson } from '@/src/utils/package-json';
 
 /**
  * Attempts to find the package.json of an installed plugin and extract environment variable requirements
@@ -15,15 +16,14 @@ export const extractPluginEnvRequirements = async (
 ): Promise<Record<string, EnvVarConfig>> => {
   try {
     // Try to find the plugin's package.json in node_modules
-    const nodeModulesPath = path.join(cwd, 'node_modules', packageName, 'package.json');
+    const pluginDir = path.join(cwd, 'node_modules', packageName);
 
-    if (!fs.existsSync(nodeModulesPath)) {
-      logger.debug(`Plugin package.json not found at: ${nodeModulesPath}`);
+    if (!fs.existsSync(path.join(pluginDir, 'package.json'))) {
+      logger.debug(`Plugin package.json not found for: ${packageName}`);
       return {};
     }
 
-    const packageJsonContent = fs.readFileSync(nodeModulesPath, 'utf-8');
-    const packageJson = JSON.parse(packageJsonContent);
+    const packageJson = readPackageJson(pluginDir);
 
     // Extract environment variables from agentConfig.pluginParameters
     const agentConfig = packageJson.agentConfig;
@@ -38,7 +38,7 @@ export const extractPluginEnvRequirements = async (
 
     return agentConfig.pluginParameters;
   } catch (error) {
-    logger.debug(`Error reading plugin package.json for ${packageName}: ${error.message}`);
+    logger.debug(`Error reading plugin package.json for ${packageName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return {};
   }
 };

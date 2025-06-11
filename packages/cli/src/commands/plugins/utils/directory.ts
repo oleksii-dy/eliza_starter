@@ -1,7 +1,6 @@
 import { detectDirectoryType } from '@/src/utils/directory-detection';
+import { getDependencies, PackageJsonError } from '@/src/utils/package-json';
 import { logger } from '@elizaos/core';
-import fs from 'node:fs';
-import path from 'node:path';
 import { Dependencies } from '../types';
 
 /**
@@ -15,16 +14,10 @@ export const getDependenciesFromDirectory = (cwd: string): Dependencies | null =
   }
 
   try {
-    const packageJsonPath = path.join(cwd, 'package.json');
-    const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf-8');
-    const packageJson = JSON.parse(packageJsonContent);
-    const dependencies = packageJson.dependencies || {};
-    const devDependencies = packageJson.devDependencies || {};
-    return { ...dependencies, ...devDependencies };
+    const deps = getDependencies(cwd);
+    return deps.allDependencies;
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      logger.warn(`Could not parse package.json: ${error.message}`);
-    } else {
+    if (error instanceof Error) {
       logger.warn(`Error reading package.json: ${error.message}`);
     }
     return null;

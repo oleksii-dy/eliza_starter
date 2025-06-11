@@ -4,6 +4,7 @@ import { logger } from '@elizaos/core';
 import { execa } from 'execa';
 import { detectDirectoryType } from './directory-detection';
 import { runBunCommand } from './run-bun';
+import { readPackageJson, hasScript } from './package-json';
 
 /**
  * Builds a project or plugin in the specified directory using the most appropriate available build method.
@@ -43,9 +44,8 @@ export async function buildProject(cwd: string = process.cwd(), isPlugin = false
   }
 
   try {
-    // Read package.json (we already validated it exists)
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-    if (packageJson.scripts?.build) {
+    // Check if package has a build script
+    if (hasScript(cwd, 'build')) {
       // Package has a build script, use bun to run it
       logger.debug('Using build script from package.json with bun');
 
