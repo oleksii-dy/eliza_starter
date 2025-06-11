@@ -1,0 +1,1 @@
+export { erc20Table } from "./erc20";

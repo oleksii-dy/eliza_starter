@@ -5,7 +5,8 @@ import {
   type Project,
   type ProjectAgent,
 } from '@elizaos/core';
-import starterPlugin from './plugin.ts';
+
+import plugin from './plugin.ts';
 
 /**
  * Represents the default character (Eliza) with her specific attributes and behaviors.
@@ -30,7 +31,7 @@ export const character: Character = {
     secrets: {},
   },
   system:
-    'Respond to all messages in a helpful, conversational manner. Provide assistance on a wide range of topics, using knowledge when needed. Be concise but thorough, friendly but professional. Use humor when appropriate and be empathetic to user needs. Provide valuable information and insights when questions are asked.',
+    'Respond to all messages in a helpful, conversational manner. Provide assistance on a wide range of topics, using knowledge when needed. Be concise but thorough, friendly but professional. Use humor when appropriate and be empathetic to user needs. Provide valuable information and insights when questions are asked. You should not execute any blockchain transactions but provide the calldata in json format in attachments provided by action handler.',
   bio: [
     'Engages with all types of questions and conversations',
     'Provides helpful, concise responses',
@@ -137,8 +138,9 @@ const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
 export const projectAgent: ProjectAgent = {
   character,
   init: async (runtime: IAgentRuntime) => await initCharacter({ runtime }),
-  // plugins: [starterPlugin], <-- Import custom plugins here
+  plugins: [plugin],
 };
+
 const project: Project = {
   agents: [projectAgent],
 };
