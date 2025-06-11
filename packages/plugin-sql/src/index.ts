@@ -96,7 +96,7 @@ export const plugin: Plugin = {
       const existingAdapter = (runtime as any).databaseAdapter;
       if (existingAdapter) {
         logger.info('Database adapter already registered, skipping creation');
-        return;
+          return;
       }
     } catch (error) {
       // No adapter exists, continue with creation

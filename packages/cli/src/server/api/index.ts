@@ -489,7 +489,7 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
     });
 
     // Skip standard agent API routes - these should be handled by agentRouter
-    // Pattern: /agents/{uuid}/... but NOT /agents/{uuid}/plugins/{pluginName}/...
+    // Pattern: /agents/{uuid}/...
     const agentApiRoutePattern = /^\/agents\/[a-f0-9-]{36}\/(?!plugins\/)/i;
     if (agentApiRoutePattern.test(req.path)) {
       logger.debug(`Skipping agent API route in plugin handler: ${req.path}`);
@@ -609,13 +609,31 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
         } // End route loop
       } else {
         logger.warn(
-          `Agent ID ${agentIdFromQuery} provided in query, but agent runtime not found. Path: ${reqPath}. Passing to next middleware.`
+          `Agent ID ${agentIdFromQuery} provided in query, but agent runtime not found. Path: ${reqPath}.`
         );
+        // Return a specific error instead of passing to next middleware
+        res.status(404).json({
+          success: false,
+          error: {
+            message: 'Agent not found',
+            code: 'AGENT_NOT_FOUND'
+          }
+        });
+        return;
       }
     } else if (agentIdFromQuery && !validateUuid(agentIdFromQuery)) {
       logger.warn(
-        `Invalid Agent ID format in query: ${agentIdFromQuery}. Path: ${reqPath}. Passing to next middleware.`
+        `Invalid Agent ID format in query: ${agentIdFromQuery}. Path: ${reqPath}.`
       );
+      // Return a specific error for invalid UUID format
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid agent ID format',
+          code: 'INVALID_AGENT_ID'
+        }
+      });
+      return;
     } else {
       // No agentId in query, or it was invalid. Try matching globally for any agent that might have this route.
       // This allows for non-agent-specific plugin routes if any plugin defines them.
@@ -708,23 +726,48 @@ export function createApiRouter(
   const router = express.Router();
 
   // API-specific security headers (supplementing main app helmet)
-  router.use(
-    helmet({
-      // More restrictive CSP for API endpoints
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'none'"], // API should not load resources
-          scriptSrc: ["'none'"], // No scripts in API responses
-          objectSrc: ["'none'"],
-          baseUri: ["'none'"],
-          formAction: ["'none'"],
+  router.use((req, res, next) => {
+    // Different CSP for display endpoints (UI) vs pure API endpoints
+    const isDisplayEndpoint = req.path.endsWith('/display') || req.path.includes('/assets/');
+    
+    if (isDisplayEndpoint) {
+      // Relaxed CSP for UI endpoints that need scripts and assets
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts for UI
+            styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles for UI
+            imgSrc: ["'self'", "data:", "blob:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            frameSrc: ["'self'", "data:"], // Allow data URLs for PDF iframes
+          },
         },
-      },
-      // API-specific headers
-      crossOriginResourcePolicy: { policy: 'cross-origin' },
-      referrerPolicy: { policy: 'no-referrer' },
-    })
-  );
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+        referrerPolicy: { policy: 'no-referrer' },
+      })(req, res, next);
+    } else {
+      // Restrictive CSP for pure API endpoints
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'none'"], // API should not load resources
+            scriptSrc: ["'none'"], // No scripts in API responses
+            objectSrc: ["'none'"],
+            baseUri: ["'none'"],
+            formAction: ["'none'"],
+            frameSrc: ["'self'", "data:"], // Allow iframes from same origin and data URLs for plugin panels
+          },
+        },
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+        referrerPolicy: { policy: 'no-referrer' },
+      })(req, res, next);
+    }
+  });
 
   // API-specific CORS configuration
   router.use(

@@ -312,7 +312,7 @@ export class AgentServer {
               connectSrc: ["'self'", 'ws:', 'wss:', 'https:', 'http:'], // Allow WebSocket connections
               mediaSrc: ["'self'", 'blob:', 'data:'],
               objectSrc: ["'none'"],
-              frameSrc: ["'none'"],
+              frameSrc: ["'self'", "data:"], // Allow iframes from same origin and data URLs for document display
               baseUri: ["'self'"],
               formAction: ["'self'"],
             },
