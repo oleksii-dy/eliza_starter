@@ -1,11 +1,11 @@
 import { character as elizaCharacter } from '@/src/characters/eliza';
-import { copyTemplate as copyTemplateUtil, buildProject } from '@/src/utils';
-import { join } from 'path';
+import { copyTemplate as copyTemplateUtil, buildProject, handleError } from '@/src/utils';
+import { join, resolve } from 'path';
 import fs from 'node:fs/promises';
 import * as clack from '@clack/prompts';
 import colors from 'yoctocolors';
 import { processPluginName, validateTargetDirectory } from '../utils';
-import { installDependencies, setupProjectEnvironment } from './setup';
+import { installDependencies, installPluginDependencies, setupProjectEnvironment } from './setup';
 
 /**
  * Creates a new plugin with the specified name and configuration.
@@ -16,9 +16,15 @@ export async function createPlugin(
   isNonInteractive = false
 ): Promise<void> {
   // Process and validate the plugin name
-  const nameResult = processPluginName(pluginName);
-  if (!nameResult.isValid) {
-    throw new Error(nameResult.error || 'Invalid plugin name');
+  let nameResult;
+  try {
+    nameResult = processPluginName(pluginName);
+    if (!nameResult.isValid) {
+      throw new Error(nameResult.error || 'Invalid plugin name');
+    }
+  } catch (validationError) {
+    handleError(validationError);
+    // Let the error bubble up after handleError processes it
   }
 
   const processedName = nameResult.processedName!;
@@ -26,7 +32,8 @@ export async function createPlugin(
   const pluginDirName = processedName.startsWith('plugin-')
     ? processedName
     : `plugin-${processedName}`;
-  const pluginTargetDir = join(targetDir, pluginDirName);
+  const pluginTargetDir = resolve(targetDir, pluginDirName);
+  const packageName = `@elizaos/${pluginDirName}`;
 
   // Validate target directory
   const dirResult = await validateTargetDirectory(pluginTargetDir);
@@ -46,10 +53,16 @@ export async function createPlugin(
   }
 
   // Copy plugin template
-  await copyTemplateUtil('plugin', pluginTargetDir, pluginDirName);
+  await copyTemplateUtil('plugin', pluginTargetDir, packageName);
 
-  // Install dependencies
-  await installDependencies(pluginTargetDir);
+  // Install dependencies with graceful error handling
+  await installPluginDependencies(pluginTargetDir);
+
+  // Only skip build if ELIZA_NONINTERACTIVE environment variable is set
+  const isEnvNonInteractive = process.env.ELIZA_NONINTERACTIVE === '1' || process.env.ELIZA_NONINTERACTIVE === 'true';
+  if (!isEnvNonInteractive) {
+    await buildProject(pluginTargetDir, true);
+  }
 
   console.info(`\n${colors.green('✓')} Plugin "${pluginDirName}" created successfully!`);
   console.info(`\nNext steps:`);
@@ -66,7 +79,7 @@ export async function createAgent(
   targetDir: string,
   isNonInteractive = false
 ): Promise<void> {
-  const agentFilePath = join(targetDir, `${agentName}.json`);
+  const agentFilePath = resolve(targetDir, `${agentName}.json`);
 
   // Check if agent file already exists
   try {
@@ -98,6 +111,13 @@ export async function createAgent(
       `${agentName} is a helpful AI assistant created to provide assistance and engage in meaningful conversations.`,
       `${agentName} is knowledgeable, creative, and always eager to help users with their questions and tasks.`,
     ],
+    // Update message examples to use the new agent name
+    messageExamples: elizaCharacter.messageExamples?.map((example: any) => 
+      example.map((message: any) => ({
+        ...message,
+        name: message.name === 'Eliza' ? agentName : message.name
+      }))
+    ) || [],
   };
 
   await fs.writeFile(agentFilePath, JSON.stringify(agentCharacter, null, 2));
@@ -120,7 +140,7 @@ export async function createTEEProject(
   aiModel: string,
   isNonInteractive = false
 ): Promise<void> {
-  const teeTargetDir = join(targetDir, projectName);
+  const teeTargetDir = resolve(targetDir, projectName);
 
   // Validate target directory
   const dirResult = await validateTargetDirectory(teeTargetDir);
@@ -168,7 +188,7 @@ export async function createProject(
   isNonInteractive = false
 ): Promise<void> {
   // Handle current directory case
-  const projectTargetDir = projectName === '.' ? targetDir : join(targetDir, projectName);
+  const projectTargetDir = projectName === '.' ? resolve(targetDir) : resolve(targetDir, projectName);
 
   // Validate target directory
   const dirResult = await validateTargetDirectory(projectTargetDir);

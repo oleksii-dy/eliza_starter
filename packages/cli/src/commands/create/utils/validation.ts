@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
+import { basename } from 'node:path';
 import * as clack from '@clack/prompts';
 import { z } from 'zod';
 import type { CreateOptions } from '../types';
@@ -48,7 +49,13 @@ export const PluginNameSchema = z
  */
 export function validateCreateOptions(options: any): CreateOptions {
   try {
-    return initOptionsSchema.parse(options);
+    // Allow empty type to trigger prompting
+    const parsedOptions = { ...options };
+    if (parsedOptions.type === '') {
+      parsedOptions.type = 'project'; // Set default for validation, will be overridden by prompts
+    }
+    
+    return initOptionsSchema.parse(parsedOptions);
   } catch (error) {
     if (error instanceof z.ZodError) {
       const typeError = error.errors.find(
@@ -95,10 +102,8 @@ export function processPluginName(name: string): {
   error?: string;
 } {
   try {
-    // Remove common prefixes and suffixes
+    // Clean the name first
     let processedName = name
-      .replace(/^(eliza-?|elizaos-?|plugin-?)/i, '')
-      .replace(/(-?plugin|-?eliza|-?elizaos)$/i, '')
       .toLowerCase()
       .replace(/[^a-z0-9-_]/g, '-')
       .replace(/-+/g, '-')
@@ -108,6 +113,7 @@ export function processPluginName(name: string): {
       return { isValid: false, error: 'Plugin name cannot be empty after processing' };
     }
 
+    // Don't remove existing plugin- prefix, just validate
     PluginNameSchema.parse(processedName);
     return { isValid: true, processedName };
   } catch (error) {
@@ -131,9 +137,10 @@ export async function validateTargetDirectory(
 
     const entries = await fs.readdir(targetDir);
     if (entries.length > 0) {
+      const dirName = basename(targetDir);
       return {
         isValid: false,
-        error: `Directory ${targetDir} already exists and is not empty. Please choose an empty directory or a new name.`,
+        error: `Directory "${dirName}" is not empty`,
       };
     }
 

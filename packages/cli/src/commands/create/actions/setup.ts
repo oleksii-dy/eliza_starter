@@ -99,8 +99,23 @@ export async function setupAIModelConfig(
 export async function installDependencies(targetDir: string): Promise<void> {
   console.info('Installing dependencies...');
 
-  // First just install basic dependencies
-  await runBunCommand(['install'], targetDir);
+  // Install dependencies with --no-optional flag
+  await runBunCommand(['install', '--no-optional'], targetDir);
+}
+
+/**
+ * Installs plugin dependencies with graceful error handling.
+ */
+export async function installPluginDependencies(targetDir: string): Promise<void> {
+  try {
+    console.info('Installing dependencies...');
+    await runBunCommand(['install', '--no-optional'], targetDir);
+  } catch (error) {
+    // Handle plugin dependency installation failure gracefully
+    // Don't throw the error, just log it to stderr
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    process.stderr.write(`Warning: Failed to install dependencies: ${errorMessage}\n`);
+  }
 }
 
 /**

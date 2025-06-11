@@ -33,89 +33,109 @@ export const create = new Command('create')
       }
 
       // Validate and parse options
-      const options: CreateOptions = validateCreateOptions(opts || {});
+      let options: CreateOptions;
+      try {
+        options = validateCreateOptions(opts || {});
+      } catch (validationError) {
+        handleError(validationError);
+      }
       const isNonInteractive = options.yes;
 
+      await displayBanner();
+      
       if (!isNonInteractive) {
-        await displayBanner();
         clack.intro(colors.inverse(' Creating ElizaOS Project '));
       }
 
       let projectType = options.type;
       let projectName = name;
 
-      // If no name provided, prompt for type first then name
-      if (!projectName) {
+      // If type is empty string, we need to prompt for it
+      const needsTypePrompt = opts?.type === '' || (!opts?.type && !projectName);
+      
+      // If no name provided or need type prompt, handle prompting
+      if (!projectName || needsTypePrompt) {
         if (!isNonInteractive) {
-          const selectedType = await clack.select({
-            message: 'What would you like to create?',
-            options: [
-              {
-                label: 'Project - Full ElizaOS application',
-                value: 'project',
-                hint: 'Complete project with runtime, agents, and all features',
-              },
-              {
-                label: 'Plugin - Custom ElizaOS plugin',
-                value: 'plugin',
-                hint: 'Extend ElizaOS functionality with custom plugins',
-              },
-              {
-                label: 'Agent - Character definition file',
-                value: 'agent',
-                hint: 'Create a new agent character file',
-              },
-              {
-                label: 'TEE Project - Trusted Execution Environment project',
-                value: 'tee',
-                hint: 'Secure computing environment for privacy-focused applications',
-              },
-            ],
-            initialValue: 'project',
-          });
+          // Prompt for type if needed
+          if (needsTypePrompt) {
+            const selectedType = await clack.select({
+              message: 'What would you like to create?',
+              options: [
+                {
+                  label: 'Project - Full ElizaOS application',
+                  value: 'project',
+                  hint: 'Complete project with runtime, agents, and all features',
+                },
+                {
+                  label: 'Plugin - Custom ElizaOS plugin',
+                  value: 'plugin',
+                  hint: 'Extend ElizaOS functionality with custom plugins',
+                },
+                {
+                  label: 'Agent - Character definition file',
+                  value: 'agent',
+                  hint: 'Create a new agent character file',
+                },
+                {
+                  label: 'TEE Project - Trusted Execution Environment project',
+                  value: 'tee',
+                  hint: 'Secure computing environment for privacy-focused applications',
+                },
+              ],
+              initialValue: 'project',
+            });
 
-          if (clack.isCancel(selectedType)) {
-            clack.cancel('Operation cancelled.');
-            process.exit(0);
+            if (clack.isCancel(selectedType)) {
+              clack.cancel('Operation cancelled.');
+              process.exit(0);
+            }
+
+            projectType = selectedType as 'project' | 'plugin' | 'agent' | 'tee';
           }
 
-          projectType = selectedType as 'project' | 'plugin' | 'agent' | 'tee';
-        }
+          // Prompt for name if not provided
+          if (!projectName) {
+            const nameInput = await clack.text({
+              message: `What is the name of your ${projectType}?`,
+              placeholder: `my-${projectType}`,
+              validate: (value) => {
+                if (!value) return 'Name is required';
 
-        // Prompt for name
-        if (!isNonInteractive) {
-          const nameInput = await clack.text({
-            message: `What is the name of your ${projectType}?`,
-            placeholder: `my-${projectType}`,
-            validate: (value) => {
-              if (!value) return 'Name is required';
+                // Validate project/plugin names differently than agent names
+                if (projectType === 'agent') {
+                  return value.length > 0 ? undefined : 'Agent name cannot be empty';
+                }
 
-              // Validate project/plugin names differently than agent names
-              if (projectType === 'agent') {
-                return value.length > 0 ? undefined : 'Agent name cannot be empty';
-              }
+                const validation = validateProjectName(value);
+                return validation.isValid ? undefined : validation.error;
+              },
+            });
 
-              const validation = validateProjectName(value);
-              return validation.isValid ? undefined : validation.error;
-            },
-          });
+            if (clack.isCancel(nameInput)) {
+              clack.cancel('Operation cancelled.');
+              process.exit(0);
+            }
 
-          if (clack.isCancel(nameInput)) {
-            clack.cancel('Operation cancelled.');
-            process.exit(0);
+            projectName = nameInput as string;
           }
-
-          projectName = nameInput as string;
         } else {
-          throw new Error(`Project name is required. Usage: elizaos create [name]`);
+          // In non-interactive mode, we need a project name
+          if (!projectName) {
+            // Use default project name in non-interactive mode
+            projectName = 'myproject';
+          }
         }
       }
 
       // Validate project name for non-agent types
-      if (projectType !== 'agent') {
-        const nameValidation = validateProjectName(projectName!);
-        if (!nameValidation.isValid) {
-          throw new Error(nameValidation.error);
+      if (projectType !== 'agent' && projectName) {
+        try {
+          const nameValidation = validateProjectName(projectName);
+          if (!nameValidation.isValid) {
+            throw new Error(nameValidation.error);
+          }
+        } catch (validationError) {
+          handleError(validationError);
         }
       }
 
