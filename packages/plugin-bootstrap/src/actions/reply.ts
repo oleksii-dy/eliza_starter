@@ -8,6 +8,7 @@ import {
   type Memory,
   ModelType,
   type State,
+  logger,
 } from '@elizaos/core';
 import { v4 } from 'uuid';
 
@@ -90,12 +91,72 @@ export const replyAction = {
     runtime: IAgentRuntime,
     message: Memory,
     state: State,
-    _options: any,
+    options: any,
     callback: HandlerCallback,
     responses?: Memory[]
   ) => {
     const replyFieldKeys = ['message', 'text'];
 
+    // Check if we have an action queue service available in options
+    const actionQueue = options?.actionQueue;
+    const shouldUseQueue = actionQueue?.shouldQueueAction(message.roomId, 'REPLY');
+    
+    if (shouldUseQueue?.shouldQueue && shouldUseQueue.planId) {
+      logger.debug(`[Reply] Using action queue for REPLY action in plan ${shouldUseQueue.planId}`);
+      
+      // Register this callback with the action queue
+      const registered = actionQueue.registerStepCallback(
+        shouldUseQueue.planId,
+        'REPLY',
+        callback
+      );
+      
+      if (registered) {
+        // Process the reply content and complete the step
+        const existingReplies =
+          responses
+            ?.map((r) => extractReplyContent(r, replyFieldKeys))
+            .filter((reply): reply is Content => reply !== null) ?? [];
+
+        const allProviders = responses?.flatMap((res) => res.content?.providers ?? []) ?? [];
+
+        let replyContent: Content;
+
+        if (existingReplies.length > 0 && allProviders.length === 0) {
+          // Use existing reply content
+          replyContent = existingReplies[0];
+        } else {
+          // Generate new reply using LLM
+          const composedState = await runtime.composeState(message, [...(allProviders ?? []), 'RECENT_MESSAGES']);
+
+          const prompt = composePromptFromState({
+            state: composedState,
+            template: replyTemplate,
+          });
+
+          const response = await runtime.useModel(ModelType.OBJECT_LARGE, {
+            prompt,
+          });
+
+          replyContent = {
+            thought: response.thought,
+            text: (response.message as string) || '',
+          };
+        }
+
+        // Complete the step in the action queue
+        await actionQueue.completeStep(shouldUseQueue.planId, 'REPLY', replyContent);
+        
+        logger.debug(`[Reply] Completed REPLY step in action queue plan ${shouldUseQueue.planId}`);
+        return true;
+      } else {
+        logger.warn(`[Reply] Failed to register callback with action queue for plan ${shouldUseQueue.planId}`);
+      }
+    }
+
+    // Fallback to original behavior if not using queue
+    logger.debug(`[Reply] Using original (non-queued) REPLY behavior`);
+    
     const existingReplies =
       responses
         ?.map((r) => extractReplyContent(r, replyFieldKeys))

@@ -38,10 +38,12 @@ import * as evaluators from './evaluators/index.ts';
 import * as providers from './providers/index.ts';
 
 import { TaskService } from './services/task.ts';
+import { ActionQueueService } from './services/actionQueue.ts';
 
 export * from './actions/index.ts';
 export * from './evaluators/index.ts';
 export * from './providers/index.ts';
+export * from './services/actionQueue.ts';
 
 /**
  * Represents media data containing a buffer of data and the media type.
@@ -55,6 +57,184 @@ type MediaData = {
 };
 
 const latestResponseIds = new Map<string, Map<string, string>>();
+
+// Global action queue service instance
+let actionQueueService: ActionQueueService | null = null;
+
+function getActionQueueService(runtime: IAgentRuntime): ActionQueueService {
+  if (!actionQueueService) {
+    actionQueueService = new ActionQueueService(runtime);
+  }
+  return actionQueueService;
+}
+
+/**
+ * Custom processActions function that passes the action queue service to action handlers
+ */
+async function processActionsWithQueue(
+  runtime: IAgentRuntime,
+  message: Memory,
+  responses: Memory[],
+  state: any,
+  callback: any,
+  actionQueue: ActionQueueService
+): Promise<void> {
+  for (const response of responses) {
+    if (!response.content?.actions || response.content.actions.length === 0) {
+      logger.warn('No action found in the response content.');
+      continue;
+    }
+    
+    const actions = response.content.actions;
+    
+    function normalizeAction(actionString: string) {
+      return actionString.toLowerCase().replace('_', '');
+    }
+    
+    logger.debug(`Found actions: ${runtime.actions.map((a) => normalizeAction(a.name))}`);
+
+    for (const responseAction of actions) {
+      const currentState = await runtime.composeState(message, ['RECENT_MESSAGES']);
+
+      logger.debug(`Success: Calling action: ${responseAction}`);
+      const normalizedResponseAction = normalizeAction(responseAction);
+      
+      let action = runtime.actions.find(
+        (a: { name: string }) =>
+          normalizeAction(a.name).includes(normalizedResponseAction) ||
+          normalizedResponseAction.includes(normalizeAction(a.name))
+      );
+      
+      if (action) {
+        logger.debug(`Success: Found action: ${action?.name}`);
+      } else {
+        logger.debug('Attempting to find action in similes.');
+        for (const _action of runtime.actions) {
+          const simileAction = _action.similes?.find(
+            (simile) =>
+              simile.toLowerCase().replace('_', '').includes(normalizedResponseAction) ||
+              normalizedResponseAction.includes(simile.toLowerCase().replace('_', ''))
+          );
+          if (simileAction) {
+            action = _action;
+            logger.debug(`Success: Action found in similes: ${action.name}`);
+            break;
+          }
+        }
+      }
+      
+      if (!action) {
+        const errorMsg = `No action found for: ${responseAction}`;
+        logger.error(errorMsg);
+
+        const actionMemory: Memory = {
+          id: asUUID(v4()),
+          entityId: message.entityId,
+          roomId: message.roomId,
+          worldId: message.worldId,
+          content: {
+            thought: errorMsg,
+            source: 'auto',
+          },
+          createdAt: Date.now(),
+        };
+        await runtime.createMemory(actionMemory, 'messages');
+        continue;
+      }
+      
+      if (!action.handler) {
+        logger.error(`Action ${action.name} has no handler.`);
+        continue;
+      }
+      
+      try {
+        logger.debug(`Executing handler for action: ${action.name}`);
+
+        // Pass the action queue service in the options parameter
+        const result = await action.handler(
+          runtime, 
+          message, 
+          currentState, 
+          { actionQueue }, // Pass actionQueue in options
+          callback, 
+          responses
+        );
+        
+        logger.debug(`Success: Action ${action.name} executed successfully.`);
+
+        // log to database using runtime.log instead of runtime.adapter.log
+        await runtime.log({
+          entityId: message.entityId,
+          roomId: message.roomId,
+          type: 'action',
+          body: {
+            action: action.name,
+            message: message.content.text,
+            messageId: message.id,
+            state: currentState,
+            responses,
+          },
+        });
+      } catch (error: any) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error(error);
+
+        const actionMemory: Memory = {
+          id: asUUID(v4()),
+          content: {
+            thought: errorMessage,
+            source: 'auto',
+          },
+          entityId: message.entityId,
+          roomId: message.roomId,
+          worldId: message.worldId,
+          createdAt: Date.now(),
+        };
+        await runtime.createMemory(actionMemory, 'messages');
+        
+        // Also fail the step in the action queue if applicable
+        const activePlan = actionQueue.getActivePlan(message.roomId, message.id);
+        if (activePlan) {
+          await actionQueue.failStep(activePlan.id, action.name, errorMessage);
+        }
+        
+        throw error;
+      }
+    }
+  }
+  
+  // After processing all actions, handle any remaining responses
+  if (responses.length) {
+    // Log provider usage for complex responses
+    for (const responseMessage of responses) {
+      if (
+        responseMessage.content.providers &&
+        responseMessage.content.providers.length > 0
+      ) {
+        logger.debug(
+          '[Bootstrap] Complex response used providers',
+          responseMessage.content.providers
+        );
+      }
+    }
+
+    for (const memory of responses) {
+      // Skip the agent plan - it should never be sent to the user.
+      // Unless it's simple response but that was already triggered before
+      // we reach this part of the code.
+      if ('isPlan' in memory && memory.isPlan) {
+        logger.debug('[Bootstrap] Skipping agent plan in callback - internal use only');
+        continue;
+      }
+      
+      // Check if this should be handled by the action queue
+      const activePlan = actionQueue.getActivePlan(message.roomId, message.id);
+      if (!activePlan) {
+        await callback(memory.content);
+      }
+    }
+  }
+}
 
 /**
  * Escapes special characters in a string to make it JSON-safe.
@@ -515,6 +695,17 @@ const messageReceivedHandler = async ({
             };
 
             responseMessages = [agentPlan];
+
+            // Create action plan for queue management if actions are present
+            if (responseContent.actions && responseContent.actions.length > 0) {
+              const actionQueue = getActionQueueService(runtime);
+              const actionPlan = actionQueue.createActionPlan(
+                message.roomId,
+                message.id!,
+                responseContent.actions
+              );
+              logger.debug(`[Bootstrap] Created action plan ${actionPlan.id} for actions:`, responseContent.actions);
+            }
           }
 
           // Clean up the response ID
@@ -536,39 +727,30 @@ const messageReceivedHandler = async ({
             // without actions there can't be more than one message
             await callback(responseContent);
           } else {
-            await runtime.processActions(
+            // Create a queued callback that will be managed by the action queue
+            const actionQueue = getActionQueueService(runtime);
+            const queuedCallback = async (memory: Content) => {
+              // For simple responses or when no plan exists, execute callback immediately
+              const activePlan = actionQueue.getActivePlan(message.roomId, message.id);
+              if (!activePlan) {
+                await callback(memory);
+                return [];
+              }
+              
+              // If there's an active plan, the callback will be handled by the queue
+              logger.debug(`[Bootstrap] Callback queued for execution via action plan ${activePlan.id}`);
+              return [];
+            };
+
+            // Create custom processActions with action queue in options
+            await processActionsWithQueue(
+              runtime,
               message,
               responseMessages,
               state,
-              async (memory: Content) => {
-                return [];
-              }
+              queuedCallback,
+              actionQueue
             );
-            if (responseMessages.length) {
-              // Log provider usage for complex responses
-              for (const responseMessage of responseMessages) {
-                if (
-                  responseMessage.content.providers &&
-                  responseMessage.content.providers.length > 0
-                ) {
-                  logger.debug(
-                    '[Bootstrap] Complex response used providers',
-                    responseMessage.content.providers
-                  );
-                }
-              }
-
-              for (const memory of responseMessages) {
-                // Skip the agent plan - it should never be sent to the user.
-                // Unless it's simple response but that was already triggered before
-                // we reach this part of the code.
-                if ('isPlan' in memory && memory.isPlan) {
-                  logger.debug('[Bootstrap] Skipping agent plan in callback - internal use only');
-                  continue;
-                }
-                await callback(memory.content);
-              }
-            }
           }
           await runtime.evaluate(
             message,
