@@ -516,6 +516,7 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
             runtime.routes.map(r => `${r.type.toUpperCase()} ${r.path}`)
           );
 
+          // First, try direct route matching
           for (const route of runtime.routes) {
             const methodMatches = req.method.toLowerCase() === route.type.toLowerCase();
             if (!methodMatches) continue;
@@ -552,24 +553,29 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
             }
           }
 
-          // No matching route found - try knowledge plugin route mapping
-          // The knowledge plugin registers routes at root level with agentId query param
-          // Map /knowledge/* to /* with agentId query param
-          if (pluginPath.startsWith('/knowledge/')) {
-            const knowledgeRoute = pluginPath.replace('/knowledge', '');
-            const targetUrl = `${knowledgeRoute}?agentId=${agentIdFromPath}`;
+          // No direct match found - try generic plugin route mapping
+          // Extract plugin name from path: /pluginName/route -> pluginName, /route
+          const pluginRouteMatch = pluginPath.match(/^\/([^\/]+)(.*)$/);
+          if (pluginRouteMatch) {
+            const pluginNameFromPath = pluginRouteMatch[1];
+            const routeWithinPlugin = pluginRouteMatch[2] || '/';
 
-            logger.debug(`Mapping knowledge plugin route ${pluginPath} to ${targetUrl}`);
+            logger.debug(`Attempting plugin route mapping: ${pluginNameFromPath} -> ${routeWithinPlugin}`, {
+              originalPath: pluginPath,
+              pluginName: pluginNameFromPath,
+              targetRoute: routeWithinPlugin
+            });
 
-            // Create a request wrapper with modified query for knowledge plugin routes
+            // Create request wrapper with modified query and path for plugin routes
+            // This allows plugins to access the agentId via query parameter
             const requestWrapper = {
               ...req,
               query: { ...req.query, agentId: agentIdFromPath },
-              url: targetUrl,
-              path: knowledgeRoute
+              url: `${routeWithinPlugin}${Object.keys(req.query).length > 0 ? '&' : '?'}agentId=${agentIdFromPath}`,
+              path: routeWithinPlugin
             };
 
-            // Try to find a matching route with the knowledge route path
+            // Try to find a matching route with the mapped path  
             for (const route of runtime.routes) {
               const methodMatches = req.method.toLowerCase() === route.type.toLowerCase();
               if (!methodMatches) continue;
@@ -578,26 +584,26 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
 
               if (routePath.endsWith('/*')) {
                 const baseRoute = routePath.slice(0, -1);
-                if (knowledgeRoute.startsWith(baseRoute)) {
-                  logger.debug(`Knowledge plugin wildcard route matched: ${routePath} for ${knowledgeRoute}`);
+                if (routeWithinPlugin.startsWith(baseRoute)) {
+                  logger.debug(`Plugin wildcard route mapped and matched: ${routePath} for ${routeWithinPlugin}`);
                   try {
                     route.handler(requestWrapper as any, res, runtime);
                     return;
                   } catch (error) {
-                    logger.error(`Error handling knowledge plugin wildcard route: ${routePath}`, error);
+                    logger.error(`Error handling mapped plugin wildcard route: ${routePath}`, error);
                     if (!res.headersSent) {
                       res.status(500).json({ success: false, error: { message: error.message || 'Error processing route', code: 500 } });
                     }
                     return;
                   }
                 }
-              } else if (knowledgeRoute === routePath) {
-                logger.debug(`Knowledge plugin route matched: ${routePath} for ${knowledgeRoute}`);
+              } else if (routeWithinPlugin === routePath) {
+                logger.debug(`Plugin route mapped and matched: ${routePath} for ${routeWithinPlugin}`);
                 try {
                   route.handler(requestWrapper as any, res, runtime);
                   return;
                 } catch (error) {
-                  logger.error(`Error handling knowledge plugin route: ${routePath}`, error);
+                  logger.error(`Error handling mapped plugin route: ${routePath}`, error);
                   if (!res.headersSent) {
                     res.status(500).json({ success: false, error: { message: error.message || 'Error processing route', code: 500 } });
                   }
@@ -681,103 +687,35 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
           if (routePath.endsWith('/*')) {
             const baseRoute = routePath.slice(0, -1);
             if (reqPath.startsWith(baseRoute)) {
-              logger.debug(
-                `Agent ${agentIdFromQuery} plugin wildcard route: [${route.type.toUpperCase()}] ${routePath} for request: ${reqPath}`
-              );
+              logger.debug(`Wildcard route matched: ${routePath} for ${reqPath}`);
               try {
                 route.handler(req, res, runtime);
                 handled = true;
+                return;
               } catch (error) {
-                logger.error(
-                  `Error handling plugin wildcard route for agent ${agentIdFromQuery}: ${routePath}`,
-                  {
-                    error,
-                    path: reqPath,
-                    agent: agentIdFromQuery,
-                  }
-                );
+                logger.error(`Error handling wildcard route: ${routePath}`, error);
                 if (!res.headersSent) {
-                  const status =
-                    error.code === 'ENOENT' || error.message?.includes('not found') ? 404 : 500;
-                  res
-                    .status(status)
-                    .json({ error: error.message || 'Error processing wildcard route' });
+                  res.status(500).json({ success: false, error: { message: error.message || 'Error processing route', code: 500 } });
                 }
-                handled = true;
+                return;
               }
             }
-          } else {
-            logger.debug(
-              `Agent ${agentIdFromQuery} attempting plugin route match: [${route.type.toUpperCase()}] ${routePath} vs request path: ${reqPath}`
-            );
-            let matcher: MatchFunction<object>;
+          } else if (reqPath === routePath) {
+            logger.debug(`Exact route matched: ${routePath} for ${reqPath}`);
             try {
-              matcher = match(routePath, { decode: decodeURIComponent });
-            } catch (err) {
-              logger.error(
-                `Invalid plugin route path syntax for agent ${agentIdFromQuery}: "${routePath}"`,
-                err
-              );
-              continue;
-            }
-
-            const matched = matcher(reqPath);
-
-            if (matched) {
-              logger.debug(
-                `Agent ${agentIdFromQuery} plugin route matched: [${route.type.toUpperCase()}] ${routePath} vs request path: ${reqPath}`
-              );
-              req.params = { ...(matched.params || {}) };
-              try {
-                route.handler(req, res, runtime);
-                handled = true;
-              } catch (error) {
-                logger.error(
-                  `Error handling plugin route for agent ${agentIdFromQuery}: ${routePath}`,
-                  {
-                    error,
-                    path: reqPath,
-                    agent: agentIdFromQuery,
-                    params: req.params,
-                  }
-                );
-                if (!res.headersSent) {
-                  const status =
-                    error.code === 'ENOENT' || error.message?.includes('not found') ? 404 : 500;
-                  res.status(status).json({ error: error.message || 'Error processing route' });
-                }
-                handled = true;
+              route.handler(req, res, runtime);
+              handled = true;
+              return;
+            } catch (error) {
+              logger.error(`Error handling exact route: ${routePath}`, error);
+              if (!res.headersSent) {
+                res.status(500).json({ success: false, error: { message: error.message || 'Error processing route', code: 500 } });
               }
+              return;
             }
           }
-        } // End route loop
-      } else {
-        logger.warn(
-          `Agent ID ${agentIdFromQuery} provided in query, but agent runtime not found. Path: ${reqPath}.`
-        );
-        // Return a specific error instead of passing to next middleware
-        res.status(404).json({
-          success: false,
-          error: {
-            message: 'Agent not found',
-            code: 'AGENT_NOT_FOUND'
-          }
-        });
-        return;
-      }
-    } else if (agentIdFromQuery && !validateUuid(agentIdFromQuery)) {
-      logger.warn(
-        `Invalid Agent ID format in query: ${agentIdFromQuery}. Path: ${reqPath}.`
-      );
-      // Return a specific error for invalid UUID format
-      res.status(400).json({
-        success: false,
-        error: {
-          message: 'Invalid agent ID format',
-          code: 'INVALID_AGENT_ID'
         }
-      });
-      return;
+      }
     } else {
       // No agentId in query, or it was invalid. Try matching globally for any agent that might have this route.
       // This allows for non-agent-specific plugin routes if any plugin defines them.
@@ -802,58 +740,41 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
           if (routePath.endsWith('/*')) {
             const baseRoute = routePath.slice(0, -1);
             if (reqPath.startsWith(baseRoute)) {
-              logger.debug(
-                `Global plugin wildcard route: [${route.type.toUpperCase()}] ${routePath} (Agent: ${runtime.agentId}) for request: ${reqPath}`
-              );
+              logger.debug(`Global wildcard route matched: ${routePath} for ${reqPath}`);
               try {
                 route.handler(req, res, runtime);
                 handled = true;
+                return;
               } catch (error) {
-                logger.error(
-                  `Error handling global plugin wildcard route ${routePath} (Agent: ${runtime.agentId})`,
-                  { error, path: reqPath }
-                );
+                logger.error(`Error handling global wildcard route: ${routePath}`, error);
                 if (!res.headersSent) {
-                  const status =
-                    error.code === 'ENOENT' || error.message?.includes('not found') ? 404 : 500;
-                  res
-                    .status(status)
-                    .json({ error: error.message || 'Error processing wildcard route' });
+                  res.status(500).json({ success: false, error: { message: error.message || 'Error processing route', code: 500 } });
                 }
-                handled = true;
+                return;
               }
             }
           } else if (reqPath === routePath) {
-            // Exact match for global routes
-            logger.debug(
-              `Global plugin route matched: [${route.type.toUpperCase()}] ${routePath} (Agent: ${runtime.agentId}) for request: ${reqPath}`
-            );
+            logger.debug(`Global exact route matched: ${routePath} for ${reqPath}`);
             try {
               route.handler(req, res, runtime);
               handled = true;
+              return;
             } catch (error) {
-              logger.error(
-                `Error handling global plugin route ${routePath} (Agent: ${runtime.agentId})`,
-                { error, path: reqPath }
-              );
+              logger.error(`Error handling global exact route: ${routePath}`, error);
               if (!res.headersSent) {
-                const status =
-                  error.code === 'ENOENT' || error.message?.includes('not found') ? 404 : 500;
-                res.status(status).json({ error: error.message || 'Error processing route' });
+                res.status(500).json({ success: false, error: { message: error.message || 'Error processing route', code: 500 } });
               }
-              handled = true;
+              return;
             }
           }
-        } // End route loop for global matching
-      } // End agent loop for global matching
+        }
+      }
     }
 
-    if (handled) {
-      return;
+    if (!handled) {
+      logger.debug(`No plugin route matched for path: ${reqPath}, method: ${req.method}`);
+      return next(); // Pass to the next middleware if no plugin route was found
     }
-
-    logger.debug(`No plugin route handled ${req.method} ${req.path}, passing to next middleware.`);
-    next();
   };
 }
 
