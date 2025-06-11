@@ -8,6 +8,7 @@ concurrency:
 env:
   ELIZA_NONINTERACTIVE: true
   ELIZA_TEST_MODE: true
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
 on:
   push:
     branches:
