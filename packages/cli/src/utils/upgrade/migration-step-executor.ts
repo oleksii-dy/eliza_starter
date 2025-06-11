@@ -9,7 +9,6 @@ import {
   MODEL_TYPE_MAPPINGS,
   ARCHITECTURE_ISSUES,
   parseIntoChunks,
-  getCriticalPatternsToAvoid,
 } from './mega-prompt-parser.js';
 import { FileByFileMigrator } from './file-by-file-migrator.js';
 
@@ -949,41 +948,15 @@ Ensure:
   private async createEnvironmentTemplate(ctx: MigrationContext): Promise<StepResult> {
     const envExamplePath = path.join(ctx.repoPath, '.env.example');
     
-    // Analyze config.ts to find required fields
+    // Analyze config.ts to find required fields with improved analysis
     const configPath = path.join(ctx.repoPath, 'src', 'config.ts');
     let requiredEnvVars: string[] = [];
     
     if (await fs.pathExists(configPath)) {
       const configContent = await fs.readFile(configPath, 'utf-8');
       
-      // Parse Zod schema to find required fields without defaults
-      const schemaMatch = configContent.match(/z\.object\({[\s\S]*?\}\)/);
-      if (schemaMatch) {
-        const schemaContent = schemaMatch[0];
-        
-        // Find all field definitions
-        const fieldRegex = /(\w+):\s*z\.[^,}]+/g;
-        let match: RegExpExecArray | null;
-        
-        match = fieldRegex.exec(schemaContent);
-        while (match !== null) {
-          const fieldName = match[1];
-          const fieldDefinition = match[0];
-          
-          // Check if field has a default value
-          const hasDefault = fieldDefinition.includes('.default(') || 
-                           fieldDefinition.includes('.optional()');
-          
-          // Check if field is required (has .min() or similar validation but no default)
-          const isRequired = fieldDefinition.includes('.min(') && !hasDefault;
-          
-          if (isRequired) {
-            requiredEnvVars.push(fieldName);
-          }
-          
-          match = fieldRegex.exec(schemaContent);
-        }
-      }
+      // Use improved Zod schema analysis
+      requiredEnvVars = await this.analyzeZodSchemaForRequiredFields(configContent);
     }
     
     // If no required vars found, try to guess based on common patterns
@@ -1026,6 +999,159 @@ Ensure:
       message: `Created minimal .env.example with only required fields: ${requiredEnvVars.join(', ')}`,
       changes: ['.env.example'],
     };
+  }
+
+  /**
+   * IMPROVED: Enhanced Zod schema analysis for better environment variable detection
+   */
+  private async analyzeZodSchemaForRequiredFields(configContent: string): Promise<string[]> {
+    const requiredFields: string[] = [];
+    
+    try {
+      // Find the main ConfigSchema definition
+      const schemaMatch = configContent.match(/(?:export\s+)?const\s+\w*ConfigSchema\s*=\s*z\.object\s*\(\s*{([\s\S]*?)}\s*\)/);
+      if (!schemaMatch) {
+        logger.warn('Could not find Zod schema in config.ts');
+        return [];
+      }
+      
+      const schemaContent = schemaMatch[1];
+      
+      // Parse field definitions with improved multi-line support
+      const fields = this.parseZodSchemaFields(schemaContent);
+      
+      // Filter for required fields (no default, no optional)
+      for (const field of fields) {
+        if (field.required && !field.hasDefault && !field.isOptional) {
+          // Convert field name to environment variable name
+          const envVarName = this.fieldNameToEnvVar(field.name);
+          requiredFields.push(envVarName);
+        }
+      }
+      
+      logger.info(`✅ Analyzed Zod schema: found ${fields.length} fields, ${requiredFields.length} required`);
+      
+    } catch (error) {
+      logger.warn('Error analyzing Zod schema:', error);
+    }
+    
+    return requiredFields;
+  }
+
+  /**
+   * Parse Zod schema field definitions with support for multi-line and complex patterns
+   */
+  private parseZodSchemaFields(schemaContent: string): Array<{
+    name: string;
+    required: boolean;
+    hasDefault: boolean;
+    isOptional: boolean;
+    type: string;
+  }> {
+    const fields: Array<{
+      name: string;
+      required: boolean;
+      hasDefault: boolean;
+      isOptional: boolean;
+      type: string;
+    }> = [];
+    
+    // Handle multi-line field definitions
+    // This regex handles fields that may span multiple lines
+    const fieldPattern = /(\w+):\s*z\.([^,}]+(?:\n\s*[^,}]+)*)/g;
+    
+    let match: RegExpExecArray | null;
+    fieldPattern.lastIndex = 0; // Reset regex state
+    match = fieldPattern.exec(schemaContent);
+    while (match !== null) {
+      const [, fieldName, fieldDefinition] = match;
+      
+      // Clean up the field definition by removing extra whitespace
+      const cleanDef = fieldDefinition.replace(/\s+/g, ' ').trim();
+      
+      // Analyze the field definition
+      const analysis = this.analyzeZodFieldDefinition(cleanDef);
+      
+      fields.push({
+        name: fieldName,
+        required: analysis.required,
+        hasDefault: analysis.hasDefault,
+        isOptional: analysis.isOptional,
+        type: analysis.type
+      });
+      
+      match = fieldPattern.exec(schemaContent);
+    }
+    
+    return fields;
+  }
+
+  /**
+   * Analyze a single Zod field definition to determine its requirements
+   */
+  private analyzeZodFieldDefinition(fieldDef: string): {
+    required: boolean;
+    hasDefault: boolean;
+    isOptional: boolean;
+    type: string;
+  } {
+    // Check for default values
+    const hasDefault = /\.default\s*\(/.test(fieldDef);
+    
+    // Check for optional modifier
+    const isOptional = /\.optional\s*\(\s*\)/.test(fieldDef);
+    
+    // Check for validation that implies required (like .min())
+    const hasValidation = /\.min\s*\(/.test(fieldDef) || 
+                         /\.max\s*\(/.test(fieldDef) ||
+                         /\.length\s*\(/.test(fieldDef) ||
+                         /\.regex\s*\(/.test(fieldDef) ||
+                         /\.email\s*\(/.test(fieldDef) ||
+                         /\.url\s*\(/.test(fieldDef);
+    
+    // Determine base type
+    let type = 'unknown';
+    if (fieldDef.includes('z.string')) type = 'string';
+    else if (fieldDef.includes('z.number') || fieldDef.includes('z.coerce.number')) type = 'number';
+    else if (fieldDef.includes('z.boolean')) type = 'boolean';
+    else if (fieldDef.includes('z.array')) type = 'array';
+    else if (fieldDef.includes('z.object')) type = 'object';
+    
+    // A field is required if:
+    // 1. It has validation (like .min()) AND
+    // 2. It doesn't have a default value AND
+    // 3. It's not marked as optional
+    const required = hasValidation && !hasDefault && !isOptional;
+    
+    return {
+      required,
+      hasDefault,
+      isOptional,
+      type
+    };
+  }
+
+  /**
+   * Convert a field name to environment variable format
+   */
+  private fieldNameToEnvVar(fieldName: string): string {
+    // Convert camelCase to UPPER_SNAKE_CASE
+    const envVarName = fieldName
+      .replace(/([a-z])([A-Z])/g, '$1_$2') // Insert underscore before capital letters
+      .toUpperCase();
+    
+    // If it doesn't already end with common suffixes, it might need a prefix
+    // This is a heuristic based on common patterns
+    if (!envVarName.includes('API_KEY') && 
+        !envVarName.includes('TOKEN') && 
+        !envVarName.includes('SECRET') &&
+        !envVarName.includes('ENDPOINT') &&
+        !envVarName.includes('URL')) {
+      // This might be a field that maps to a prefixed env var
+      // We'll return it as-is and let the calling code handle prefixing
+    }
+    
+    return envVarName;
   }
 
   // Helper method to get CI/CD template
