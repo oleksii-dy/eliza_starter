@@ -305,8 +305,8 @@ async function processSocketMessage(
             source: `${source}:agent`,
             ...(content.providers &&
               content.providers.length > 0 && {
-                providers: content.providers,
-              }),
+              providers: content.providers,
+            }),
           },
           roomId: uniqueChannelId,
           createdAt: Date.now(),
@@ -489,11 +489,155 @@ export function createPluginRouteHandler(agents: Map<UUID, IAgentRuntime>): expr
     });
 
     // Skip standard agent API routes - these should be handled by agentRouter
-    // Pattern: /agents/{uuid}/...
+    // Pattern: /agents/{uuid}/... but NOT /agents/{uuid}/plugins/...
     const agentApiRoutePattern = /^\/agents\/[a-f0-9-]{36}\/(?!plugins\/)/i;
     if (agentApiRoutePattern.test(req.path)) {
       logger.debug(`Skipping agent API route in plugin handler: ${req.path}`);
       return next();
+    }
+
+    // Handle agent plugin routes: /agents/{uuid}/plugins/...
+    const agentPluginRouteMatch = req.path.match(/^\/agents\/([a-f0-9-]{36})\/plugins\/(.+)/i);
+    if (agentPluginRouteMatch) {
+      const agentIdFromPath = agentPluginRouteMatch[1] as UUID;
+      const pluginPath = `/${agentPluginRouteMatch[2]}`;
+
+      logger.debug(`Agent plugin route detected: ${req.path}`, {
+        agentId: agentIdFromPath,
+        pluginPath: pluginPath,
+        method: req.method,
+      });
+
+      if (validateUuid(agentIdFromPath)) {
+        const runtime = agents.get(agentIdFromPath);
+        if (runtime) {
+          logger.debug(`Processing plugin route for agent ${agentIdFromPath}: ${pluginPath}`);
+          logger.debug(`Agent ${agentIdFromPath} has ${runtime.routes.length} registered routes:`,
+            runtime.routes.map(r => `${r.type.toUpperCase()} ${r.path}`)
+          );
+
+          for (const route of runtime.routes) {
+            const methodMatches = req.method.toLowerCase() === route.type.toLowerCase();
+            if (!methodMatches) continue;
+
+            const routePath = route.path.startsWith('/') ? route.path : `/${route.path}`;
+
+            if (routePath.endsWith('/*')) {
+              const baseRoute = routePath.slice(0, -1);
+              if (pluginPath.startsWith(baseRoute)) {
+                logger.debug(`Agent ${agentIdFromPath} plugin wildcard route matched: ${routePath} for ${pluginPath}`);
+                try {
+                  route.handler(req, res, runtime);
+                  return;
+                } catch (error) {
+                  logger.error(`Error handling plugin wildcard route for agent ${agentIdFromPath}: ${routePath}`, error);
+                  if (!res.headersSent) {
+                    res.status(500).json({ success: false, error: { message: error.message || 'Error processing route', code: 500 } });
+                  }
+                  return;
+                }
+              }
+            } else if (pluginPath === routePath) {
+              logger.debug(`Agent ${agentIdFromPath} plugin route matched: ${routePath} for ${pluginPath}`);
+              try {
+                route.handler(req, res, runtime);
+                return;
+              } catch (error) {
+                logger.error(`Error handling plugin route for agent ${agentIdFromPath}: ${routePath}`, error);
+                if (!res.headersSent) {
+                  res.status(500).json({ success: false, error: { message: error.message || 'Error processing route', code: 500 } });
+                }
+                return;
+              }
+            }
+          }
+
+          // No matching route found - try knowledge plugin route mapping
+          // The knowledge plugin registers routes at root level with agentId query param
+          // Map /knowledge/* to /* with agentId query param
+          if (pluginPath.startsWith('/knowledge/')) {
+            const knowledgeRoute = pluginPath.replace('/knowledge', '');
+            const targetUrl = `${knowledgeRoute}?agentId=${agentIdFromPath}`;
+
+            logger.debug(`Mapping knowledge plugin route ${pluginPath} to ${targetUrl}`);
+
+            // Create a request wrapper with modified query for knowledge plugin routes
+            const requestWrapper = {
+              ...req,
+              query: { ...req.query, agentId: agentIdFromPath },
+              url: targetUrl,
+              path: knowledgeRoute
+            };
+
+            // Try to find a matching route with the knowledge route path
+            for (const route of runtime.routes) {
+              const methodMatches = req.method.toLowerCase() === route.type.toLowerCase();
+              if (!methodMatches) continue;
+
+              const routePath = route.path.startsWith('/') ? route.path : `/${route.path}`;
+
+              if (routePath.endsWith('/*')) {
+                const baseRoute = routePath.slice(0, -1);
+                if (knowledgeRoute.startsWith(baseRoute)) {
+                  logger.debug(`Knowledge plugin wildcard route matched: ${routePath} for ${knowledgeRoute}`);
+                  try {
+                    route.handler(requestWrapper as any, res, runtime);
+                    return;
+                  } catch (error) {
+                    logger.error(`Error handling knowledge plugin wildcard route: ${routePath}`, error);
+                    if (!res.headersSent) {
+                      res.status(500).json({ success: false, error: { message: error.message || 'Error processing route', code: 500 } });
+                    }
+                    return;
+                  }
+                }
+              } else if (knowledgeRoute === routePath) {
+                logger.debug(`Knowledge plugin route matched: ${routePath} for ${knowledgeRoute}`);
+                try {
+                  route.handler(requestWrapper as any, res, runtime);
+                  return;
+                } catch (error) {
+                  logger.error(`Error handling knowledge plugin route: ${routePath}`, error);
+                  if (!res.headersSent) {
+                    res.status(500).json({ success: false, error: { message: error.message || 'Error processing route', code: 500 } });
+                  }
+                  return;
+                }
+              }
+            }
+          }
+
+          logger.debug(`No matching plugin route found for agent ${agentIdFromPath}: ${pluginPath}`);
+          res.status(404).json({
+            success: false,
+            error: {
+              message: 'API endpoint not found',
+              code: 404
+            }
+          });
+          return;
+        } else {
+          logger.warn(`Agent ${agentIdFromPath} not found for plugin route: ${req.path}`);
+          res.status(404).json({
+            success: false,
+            error: {
+              message: 'Agent not found',
+              code: 'AGENT_NOT_FOUND'
+            }
+          });
+          return;
+        }
+      } else {
+        logger.warn(`Invalid agent ID in plugin route: ${agentIdFromPath}`);
+        res.status(400).json({
+          success: false,
+          error: {
+            message: 'Invalid agent ID format',
+            code: 'INVALID_AGENT_ID'
+          }
+        });
+        return;
+      }
     }
 
     // Skip messages API routes - these should be handled by MessagesRouter
@@ -727,9 +871,10 @@ export function createApiRouter(
 
   // API-specific security headers (supplementing main app helmet)
   router.use((req, res, next) => {
-    // Different CSP for display endpoints (UI) vs pure API endpoints
+    // Different CSP for different endpoint types
     const isDisplayEndpoint = req.path.endsWith('/display') || req.path.includes('/assets/');
-    
+    const isPluginEndpoint = req.path.includes('/plugins/');
+
     if (isDisplayEndpoint) {
       // Relaxed CSP for UI endpoints that need scripts and assets
       helmet({
@@ -750,16 +895,36 @@ export function createApiRouter(
         crossOriginResourcePolicy: { policy: 'cross-origin' },
         referrerPolicy: { policy: 'no-referrer' },
       })(req, res, next);
+    } else if (isPluginEndpoint) {
+      // More permissive CSP for plugin endpoints that need to handle various content types
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "blob:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            frameSrc: ["'self'", "data:"],
+          },
+        },
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+        referrerPolicy: { policy: 'no-referrer' },
+      })(req, res, next);
     } else {
       // Restrictive CSP for pure API endpoints
       helmet({
         contentSecurityPolicy: {
           directives: {
-            defaultSrc: ["'none'"], // API should not load resources
+            defaultSrc: ["'self'"], // Changed from 'none' to 'self' to allow API responses
             scriptSrc: ["'none'"], // No scripts in API responses
             objectSrc: ["'none'"],
-            baseUri: ["'none'"],
-            formAction: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
             frameSrc: ["'self'", "data:"], // Allow iframes from same origin and data URLs for plugin panels
           },
         },
