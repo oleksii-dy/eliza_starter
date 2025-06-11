@@ -60,6 +60,7 @@ export interface MigrationContext {
   existingFiles: string[];
   changedFiles: Set<string>;
   claudePrompts: Map<string, string>;
+  collectedEnvVars?: Record<string, string>;
 }
 
 // Critical architecture issues from mega prompt
