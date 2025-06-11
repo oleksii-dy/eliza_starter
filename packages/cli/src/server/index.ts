@@ -321,8 +321,8 @@ export class AgentServer {
           crossOriginEmbedderPolicy: false,
           // Cross-Origin Resource Policy
           crossOriginResourcePolicy: { policy: 'cross-origin' },
-          // Frame Options
-          frameguard: { action: 'deny' },
+          // Frame Options - allow same-origin iframes to align with frameSrc CSP
+          frameguard: { action: 'sameorigin' },
           // Hide Powered-By header
           hidePoweredBy: true,
           // HTTP Strict Transport Security - only in production
