@@ -473,14 +473,25 @@ export const summarizeContent= async (tweets: any[]): Promise<string> => {
             This is a collection of recent tweets from Sei ecosystem accounts.
 Please summarize them into a newsletter format following this structure:
 
-**NEWSLETTER FORMAT:**
-- Start with this header/title: "Here's your Twice-Daily Sei Newsletter:"
-- **@millicoinsei & @seinetwork Updates** (prioritize these accounts first)
-- **Ecosystem Highlights** (other important updates, @YakaFinance, @pebloescobarSEI, @bandosei, @ryuzaki_sei)
-- **Community Buzz** (smaller updates/mentions)
-- End with a brief outlook or key takeaway
+🌊 Here's your Daily Sei Newsletter
 
-For each section: Include image context (if any), article highlights, and main points. Keep summaries concise but informative.
+📊 @millicoinsei & @seinetwork Updates
+- [Key update 1]
+- [Key update 2]
+
+🚀 Ecosystem Highlights  
+- @YakaFinance: [update]
+- @pebloescobarSEI: [update] 
+- @bandosei: [update]
+- @ryuzaki_sei: [update]
+
+💬 Community Buzz
+- [Community highlight 1]
+- [Community highlight 2]
+
+🔮 Outlook: [Brief key takeaway]
+
+#Sei #SeiNetwork $SEI
 
 Text:
 ${tweetTexts}

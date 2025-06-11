@@ -281,6 +281,8 @@ export class TwitterPostClient {
         );
         try {
 
+            // Could be using a template here to generate the tweet
+
             const monitoredAccounts = this.runtime.getSetting("TWEET_ACCOUNTS_TO_MONITOR")?.split(",") ||
                                     ["MilliCoinSei", "pebloescobarSEI", "bandosei", "Ryuzaki_SEI", "SeiNetwork", "YakaFinance"];
                                     const maxTweets = parseInt(this.runtime.getSetting("MAX_TWEETS_PER_ACCOUNT") || "10");
