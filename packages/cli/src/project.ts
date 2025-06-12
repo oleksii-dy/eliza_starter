@@ -144,7 +144,9 @@ export async function loadProject(dir: string): Promise<Project> {
 
       // Try to find the plugin's entry point
       const entryPoints = [
-        path.join(dir, directoryInfo.packageInfo?.main || ''),
+        ...(directoryInfo.packageInfo?.main
+          ? [path.join(dir, directoryInfo.packageInfo.main)]
+          : []),
         path.join(dir, 'dist/index.js'),
         path.join(dir, 'src/index.ts'),
         path.join(dir, 'src/index.js'),
@@ -250,8 +252,9 @@ export async function loadProject(dir: string): Promise<Project> {
     const packageJson = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
     const main = packageJson.main;
     if (!main) {
-      logger.warn('No main field found in package.json, using default character');
-      return;
+      throw new Error(
+        `Project at ${dir} is missing required 'main' field in package.json. Please specify the entry point file in package.json.`
+      );
     }
 
     // Try to find the project's entry point
