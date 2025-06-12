@@ -37,13 +37,7 @@ export interface Credentials {
   token: string;
 }
 
-/**
- * Directory information from detection
- */
-export interface DirectoryInfo {
-  type: string;
-  hasPackageJson: boolean;
-}
+// DirectoryInfo now imported from central location in directory-detection.ts
 
 /**
  * Registry settings interface
