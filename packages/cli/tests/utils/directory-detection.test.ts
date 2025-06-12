@@ -17,11 +17,7 @@ describe('Directory Detection Utility', () => {
   afterEach(async () => {
     process.chdir(originalCwd);
     if (testTmpDir && testTmpDir.includes('eliza-test-dir-detection-')) {
-      try {
-        await rm(testTmpDir, { recursive: true });
-      } catch (e) {
-        // Ignore cleanup errors
-      }
+      await rm(testTmpDir, { recursive: true, force: true });
     }
   });
 
