@@ -37,8 +37,6 @@ export interface Credentials {
   token: string;
 }
 
-// DirectoryInfo now imported from central location in directory-detection.ts
-
 /**
  * Registry settings interface
  */
