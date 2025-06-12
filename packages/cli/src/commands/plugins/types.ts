@@ -84,13 +84,7 @@ export interface GenerationResult {
   error?: Error;
 }
 
-/**
- * Directory information from detection
- */
-export interface DirectoryInfo {
-  type: string;
-  hasPackageJson: boolean;
-}
+// DirectoryInfo now imported from central location in directory-detection.ts
 
 /**
  * Package.json dependencies
