@@ -48,8 +48,17 @@ export async function loadAndPreparePlugin(pluginName: string): Promise<Plugin |
       pluginModule = await loadPluginModule(pluginName);
       if (!pluginModule) {
         logger.info(`Plugin ${pluginName} not available, installing...`);
-        await installPlugin(pluginName, process.cwd(), version);
-        pluginModule = await loadPluginModule(pluginName);
+        try {
+          await installPlugin(pluginName, process.cwd(), version);
+          pluginModule = await loadPluginModule(pluginName);
+        } catch (installError) {
+          if (installError.message === 'plugin not found') {
+            logger.error(`Plugin not found: ${pluginName}`);
+          } else {
+            logger.error(`Failed to install plugin ${pluginName}: ${installError.message}`);
+          }
+          return null;
+        }
       }
     } catch (error) {
       logger.error(`Failed to process plugin ${pluginName}: ${error}`);

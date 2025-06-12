@@ -112,14 +112,18 @@ describe('ElizaOS Plugin Commands', () => {
     expect(packageJson).toContain('@elizaos/plugin-openai');
   }, TEST_TIMEOUTS.INDIVIDUAL_TEST);
 
-  test('plugins add supports third-party plugins', async () => {
-    execSync(`${elizaosCmd} plugins add @fleek-platform/eliza-plugin-mcp --skip-env-prompt`, {
-      stdio: 'pipe',
-      timeout: TEST_TIMEOUTS.STANDARD_COMMAND,
-    });
-
-    const packageJson = await readFile('package.json', 'utf8');
-    expect(packageJson).toContain('@fleek-platform/eliza-plugin-mcp');
+  test('plugins add fails for third-party plugins not in registry', async () => {
+    try {
+      execSync(`${elizaosCmd} plugins add @fleek-platform/eliza-plugin-mcp --skip-env-prompt`, {
+        stdio: 'pipe',
+        timeout: TEST_TIMEOUTS.STANDARD_COMMAND,
+      });
+      expect(false).toBe(true); // Should not reach here
+    } catch (e: any) {
+      expect(e.status).not.toBe(0);
+      const output = e.stdout?.toString() || e.stderr?.toString() || '';
+      expect(output).toMatch(/plugin not found/i);
+    }
   }, TEST_TIMEOUTS.INDIVIDUAL_TEST);
 
   test('plugins add supports GitHub URL installation', async () => {
@@ -207,7 +211,7 @@ describe('ElizaOS Plugin Commands', () => {
     } catch (e: any) {
       expect(e.status).not.toBe(0);
       const output = e.stdout?.toString() || e.stderr?.toString() || '';
-      expect(output).toMatch(/not found in registry/);
+      expect(output).toMatch(/plugin not found/i);
     }
   }, TEST_TIMEOUTS.INDIVIDUAL_TEST);
 

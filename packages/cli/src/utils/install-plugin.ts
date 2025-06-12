@@ -162,31 +162,9 @@ export async function installPlugin(
     }
   }
 
-  if (!key && cache && cache.registry) {
-    // Fuzzy search by stripped base name
-    let base = packageName;
-    if (base.includes('/')) {
-      const parts = base.split('/');
-      base = parts[parts.length - 1];
-    }
-    base = base.replace(/^@/, '').replace(/^(plugin|client)-/, '');
-    const lower = base.toLowerCase();
-
-    const matches = Object.keys(cache.registry).filter(
-      (cand) => cand.toLowerCase().includes(lower) && !cand.includes('client-')
-    );
-
-    if (matches.length > 0) {
-      const pluginMatch = matches.find((c) => c.includes('plugin-'));
-      key = pluginMatch || matches[0];
-    }
-  }
-
   if (!key) {
-    logger.warn(
-      `Plugin ${packageName} not found in registry cache, attempting direct installation`
-    );
-    return await attemptInstallation(packageName, versionSpecifier || '', cwd, '', skipVerification);
+    logger.error(`Plugin not found: ${packageName}`);
+    throw new Error('plugin not found');
   }
 
   const info = cache!.registry[key];

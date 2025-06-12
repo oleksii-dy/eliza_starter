@@ -27,28 +27,37 @@ export async function installPluginFromGitHub(
   const githubSpecifier = `github:${owner}/${repo}${ref ? `#${ref}` : ''}`;
   const pluginNameForPostInstall = repo;
 
-  const success = await installPlugin(githubSpecifier, cwd, undefined, opts.skipVerification);
+  try {
+    const success = await installPlugin(githubSpecifier, cwd, undefined, opts.skipVerification);
 
-  if (success) {
-    logger.info(`Successfully installed ${pluginNameForPostInstall} from ${githubSpecifier}.`);
+    if (success) {
+      logger.info(`Successfully installed ${pluginNameForPostInstall} from ${githubSpecifier}.`);
 
-    // Prompt for environment variables if not skipped
-    if (!opts.skipEnvPrompt) {
-      const packageName = extractPackageName(plugin);
-      console.log(`\n🔧 Checking environment variables for ${packageName}...`);
-      try {
-        await promptForPluginEnvVars(packageName, cwd);
-      } catch (error) {
-        logger.warn(`Warning: Could not prompt for environment variables: ${error.message}`);
-        // Don't fail the installation if env prompting fails
+      // Prompt for environment variables if not skipped
+      if (!opts.skipEnvPrompt) {
+        const packageName = extractPackageName(plugin);
+        console.log(`\n🔧 Checking environment variables for ${packageName}...`);
+        try {
+          await promptForPluginEnvVars(packageName, cwd);
+        } catch (error) {
+          logger.warn(`Warning: Could not prompt for environment variables: ${error.message}`);
+          // Don't fail the installation if env prompting fails
+        }
+      } else {
+        console.log(`\n⏭️  Skipping environment variable prompts due to --skip-env-prompt flag`);
       }
-    } else {
-      console.log(`\n⏭️  Skipping environment variable prompts due to --skip-env-prompt flag`);
-    }
 
-    process.exit(0);
-  } else {
-    logger.error(`Failed to install plugin from ${githubSpecifier}.`);
+      process.exit(0);
+    } else {
+      logger.error(`Failed to install plugin from ${githubSpecifier}.`);
+      process.exit(1);
+    }
+  } catch (error) {
+    if (error.message === 'plugin not found') {
+      logger.error(`Plugin not found: ${plugin}`);
+    } else {
+      logger.error(`Failed to install plugin from ${githubSpecifier}: ${error.message}`);
+    }
     process.exit(1);
   }
 }
@@ -72,34 +81,43 @@ export async function installPluginFromRegistry(
 
   const targetName = pluginKey || plugin;
 
-  const registryInstallResult = await installPlugin(targetName, cwd, opts.tag, opts.skipVerification);
+  try {
+    const registryInstallResult = await installPlugin(targetName, cwd, opts.tag, opts.skipVerification);
 
-  if (registryInstallResult) {
-    console.log(`Successfully installed ${targetName}`);
+    if (registryInstallResult) {
+      console.log(`Successfully installed ${targetName}`);
 
-    // Prompt for environment variables if not skipped
-    if (!opts.skipEnvPrompt) {
-      // Refresh dependencies after installation to find the actual installed package name
-      const updatedDependencies = getDependenciesFromDirectory(cwd);
-      const actualPackageName =
-        findPluginPackageName(targetName, updatedDependencies || {}) || targetName;
+      // Prompt for environment variables if not skipped
+      if (!opts.skipEnvPrompt) {
+        // Refresh dependencies after installation to find the actual installed package name
+        const updatedDependencies = getDependenciesFromDirectory(cwd);
+        const actualPackageName =
+          findPluginPackageName(targetName, updatedDependencies || {}) || targetName;
 
-      console.log(`\n🔧 Checking environment variables for ${actualPackageName}...`);
-      try {
-        await promptForPluginEnvVars(actualPackageName, cwd);
-      } catch (error) {
-        logger.warn(`Warning: Could not prompt for environment variables: ${error.message}`);
-        // Don't fail the installation if env prompting fails
+        console.log(`\n🔧 Checking environment variables for ${actualPackageName}...`);
+        try {
+          await promptForPluginEnvVars(actualPackageName, cwd);
+        } catch (error) {
+          logger.warn(`Warning: Could not prompt for environment variables: ${error.message}`);
+          // Don't fail the installation if env prompting fails
+        }
+      } else {
+        console.log(`\n⏭️  Skipping environment variable prompts due to --skip-env-prompt flag`);
       }
-    } else {
-      console.log(`\n⏭️  Skipping environment variable prompts due to --skip-env-prompt flag`);
+
+      process.exit(0);
     }
 
-    process.exit(0);
+    console.error(`Failed to install ${targetName} from registry.`);
+    process.exit(1);
+  } catch (error) {
+    if (error.message === 'plugin not found') {
+      logger.error(`Plugin not found: ${targetName}`);
+    } else {
+      logger.error(`Failed to install ${targetName}: ${error.message}`);
+    }
+    process.exit(1);
   }
-
-  console.error(`Failed to install ${targetName} from registry.`);
-  process.exit(1);
 }
 
 /**
