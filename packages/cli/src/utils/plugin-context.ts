@@ -52,7 +52,9 @@ export function detectPluginContext(pluginName: string): PluginContext {
   }
 
   // We're in the right plugin directory, now handle local dev specifics
-  const mainEntry = directoryInfo.packageName ? 'dist/index.js' : 'src/index.ts';
+  const mainEntry =
+    directoryInfo.packageInfo?.main ||
+    (fs.existsSync(path.join(cwd, 'dist/index.js')) ? 'dist/index.js' : 'src/index.ts');
   const localPath = path.resolve(cwd, mainEntry);
   const needsBuild = !fs.existsSync(localPath);
 
