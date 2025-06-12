@@ -37,7 +37,7 @@ export function detectPluginContext(pluginName: string): PluginContext {
   // Use existing directory detection to check if we're in a plugin
   const directoryInfo = detectDirectoryType(cwd);
 
-  if (directoryInfo.type !== 'elizaos-plugin' || !directoryInfo.hasPackageJson) {
+  if (!directoryInfo.isPlugin || !directoryInfo.hasPackageJson) {
     return { isLocalDevelopment: false };
   }
 

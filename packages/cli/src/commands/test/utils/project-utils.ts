@@ -63,7 +63,7 @@ export function processFilterName(name?: string): string | undefined {
  * Install plugin dependencies for testing
  */
 export async function installPluginDependencies(projectInfo: DirectoryInfo): Promise<void> {
-  if (projectInfo.type !== 'elizaos-plugin') {
+  if (!projectInfo.isPlugin) {
     return;
   }
 
