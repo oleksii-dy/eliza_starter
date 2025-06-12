@@ -537,6 +537,14 @@ const messageReceivedHandler = async ({
           } else {
             await runtime.processActions(message, responseMessages, state, callback);
           }
+
+
+          console.log('responseMessages are', responseMessages);
+
+          for (const responseMessage of responseMessages) {
+            await runtime.createMemory(responseMessage, 'messages');
+          }
+
           await runtime.evaluate(
             message,
             state,
@@ -716,13 +724,13 @@ const channelClearedHandler = async ({
 }) => {
   try {
     logger.info(`[Bootstrap] Clearing ${memoryCount} message memories from channel ${channelId} -> room ${roomId}`);
-    
+
     // Get all message memories for this room
     const memories = await runtime.getMemoriesByRoomIds({
       tableName: 'messages',
       roomIds: [roomId]
     });
-    
+
     // Delete each message memory
     let deletedCount = 0;
     for (const memory of memories) {
@@ -735,7 +743,7 @@ const channelClearedHandler = async ({
         }
       }
     }
-    
+
     logger.info(`[Bootstrap] Successfully cleared ${deletedCount}/${memories.length} message memories from channel ${channelId}`);
   } catch (error: unknown) {
     logger.error('[Bootstrap] Error in channel cleared handler:', error);
@@ -1249,7 +1257,7 @@ const events = {
   [EventType.ENTITY_JOINED]: [
     async (payload: EntityPayload) => {
       logger.debug(`[Bootstrap] ENTITY_JOINED event received for entity ${payload.entityId}`);
-      
+
       if (!payload.worldId) {
         logger.error('[Bootstrap] No worldId provided for entity joined');
         return;
