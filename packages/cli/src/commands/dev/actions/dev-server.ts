@@ -19,13 +19,13 @@ export async function startDevMode(options: DevOptions): Promise<void> {
 
   // Log project type using the new boolean flags
   if (directoryType.isProject) {
-    console.info('Identified as an ElizaOS project package');
+    logger.info('Identified as an ElizaOS project package');
   } else if (directoryType.isPlugin) {
-    console.info('Identified as an ElizaOS plugin package');
+    logger.info('Identified as an ElizaOS plugin package');
   } else if (directoryType.isMonorepo) {
-    console.info('Identified as an ElizaOS monorepo');
+    logger.info('Identified as an ElizaOS monorepo');
   } else {
-    console.warn(
+    logger.warn(
       `Not in a recognized ElizaOS project, plugin, or monorepo directory. Current directory is: ${directoryType.type}. Running in standalone mode.`
     );
   }
@@ -61,28 +61,31 @@ export async function startDevMode(options: DevOptions): Promise<void> {
       // Perform rebuild
       await performRebuild(context);
 
-      console.log('✓ Rebuild successful, restarting...');
+      logger.info('✓ Rebuild successful, restarting...');
 
       // Start the server with the args
       await serverManager.start(cliArgs);
     } catch (error) {
-      console.error(`Error during rebuild and restart: ${error.message}`);
+      logger.error(`Error during rebuild and restart: ${error.message}`);
       // Try to restart the server even if build fails
       if (!serverManager.process) {
-        console.info('Attempting to restart server regardless of build failure...');
+        logger.info('Attempting to restart server regardless of build failure...');
         await serverManager.start(cliArgs);
       }
     }
   };
 
+  // Helper function to determine mode description
+  const getModeDescription = (type: typeof directoryType) => {
+    if (type.isMonorepo) return 'monorepo';
+    if (type.isProject) return 'project';
+    return 'plugin';
+  };
+
   // Perform initial build if required
   if (directoryType.isProject || directoryType.isPlugin || directoryType.isMonorepo) {
-    const modeDescription = directoryType.isMonorepo
-      ? 'monorepo'
-      : directoryType.isProject
-        ? 'project'
-        : 'plugin';
-    console.info(`Running in ${modeDescription} mode`);
+    const modeDescription = getModeDescription(directoryType);
+    logger.info(`Running in ${modeDescription} mode`);
 
     await performInitialBuild(context);
   }
@@ -95,7 +98,7 @@ export async function startDevMode(options: DevOptions): Promise<void> {
     // Pass the rebuildAndRestart function as the onChange callback
     await watchDirectory(context.watchDirectory, rebuildAndRestart);
 
-    console.log('Dev mode is active! The server will restart when files change.');
-    console.log('Press Ctrl+C to exit');
+    logger.info('Dev mode is active! The server will restart when files change.');
+    logger.info('Press Ctrl+C to exit');
   }
 }
