@@ -1,5 +1,5 @@
 import type { IDatabaseAdapter, UUID } from '@elizaos/core';
-import { type IAgentRuntime, type Plugin, logger } from '@elizaos/core';
+import { type IAgentRuntime, type Plugin, logger, AgentRuntime } from '@elizaos/core';
 import { PgliteDatabaseAdapter } from './pglite/adapter';
 import { PGliteClientManager } from './pglite/manager';
 import { PgDatabaseAdapter } from './pg/adapter';
@@ -72,6 +72,8 @@ export function createDatabaseAdapter(
   return new PgliteDatabaseAdapter(agentId, globalSingletons.pgLiteClientManager);
 }
 
+let dbAdapter: IDatabaseAdapter | undefined;
+
 /**
  * SQL plugin for database adapter using Drizzle ORM with dynamic plugin schema migrations
  *
@@ -90,38 +92,20 @@ export const plugin: Plugin = {
   init: async (_, runtime: IAgentRuntime) => {
     logger.info('plugin-sql init starting...');
 
-    // Check if a database adapter is already registered
-    try {
-      // Try to access the database adapter to see if one exists
-      const existingAdapter = (runtime as any).databaseAdapter;
-      if (existingAdapter) {
-        logger.info('Database adapter already registered, skipping creation');
-        return;
-      }
-    } catch (error) {
-      // No adapter exists, continue with creation
-    }
-
-    // Get database configuration from runtime settings
-    const postgresUrl = runtime.getSetting('POSTGRES_URL');
-    const dataDir =
-      runtime.getSetting('PGLITE_PATH') ||
-      runtime.getSetting('DATABASE_PATH') ||
-      './.eliza/.elizadb';
-
-    const dbAdapter = createDatabaseAdapter(
+    // Create the adapter but don't register it
+    dbAdapter = createDatabaseAdapter(
       {
-        dataDir,
-        postgresUrl,
+        dataDir: process.env.PGLITE_PATH || process.env.DATABASE_PATH || './.eliza/.elizadb',
+        postgresUrl: process.env.POSTGRES_URL,
       },
-      runtime.agentId
+      (runtime as AgentRuntime).agentId
     );
-
-    runtime.registerDatabaseAdapter(dbAdapter);
-    logger.info('Database adapter created and registered');
 
     // Note: DatabaseMigrationService is not registered as a runtime service
     // because migrations are handled at the server level before agents are loaded
+  },
+  get adapter() {
+    return dbAdapter;
   },
 };
 
