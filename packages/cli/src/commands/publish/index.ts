@@ -69,9 +69,9 @@ export const publish = new Command()
       // Get the plugin directory name (should be plugin-*)
       const pluginDirName = path.basename(process.cwd());
 
-      // Validate we're in a plugin directory
-      if (!pluginDirName.startsWith('plugin-')) {
-        console.error('This command must be run from a plugin directory (plugin-*)');
+      // Validate we're in a plugin directory using proper detection logic
+      if (!directoryInfo.isPlugin) {
+        console.error('This command must be run from a plugin directory');
         process.exit(1);
       }
 
