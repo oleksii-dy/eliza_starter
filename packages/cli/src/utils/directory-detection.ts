@@ -158,7 +158,10 @@ function parsePackageJson(packageJsonPath: string): PackageJson | null {
 }
 
 function countElizaOSPackages(packageJson: PackageJson): number {
-  const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
+  const dependencies = {
+    ...(packageJson.dependencies ?? {}),
+    ...(packageJson.devDependencies ?? {}),
+  };
   return Object.keys(dependencies).filter((pkg) => pkg.startsWith('@elizaos/')).length;
 }
 
