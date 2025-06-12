@@ -1,8 +1,9 @@
-import { execSync } from 'child_process';
+import { execa } from 'execa';
 import { mkdtemp, rm, writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { existsSync } from 'fs';
+import { execSync } from 'child_process';
 
 export interface TestContext {
   testTmpDir: string;

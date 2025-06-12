@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { execSync, spawn } from 'child_process';
+import { spawn } from 'child_process';
+import { execa } from 'execa';
 import { mkdtemp, rm, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -19,7 +20,7 @@ describe('ElizaOS Start Commands', () => {
     // ---- Ensure port is free.
     testServerPort = 3000;
     try {
-      execSync(`lsof -t -i :${testServerPort} | xargs kill -9`, { stdio: 'ignore' });
+      await execa('sh', ['-c', `lsof -t -i :${testServerPort} | xargs kill -9`], { stdio: 'ignore' });
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (e) {
       // Ignore if no processes found
@@ -31,13 +32,18 @@ describe('ElizaOS Start Commands', () => {
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun run ${join(scriptDir, '../dist/index.js')}`;
+    elizaosCmd = join(scriptDir, '../dist/index.js');
 
     // Make PORT + model envs explicit.
     process.env.LOCAL_SMALL_MODEL = 'DeepHermes-3-Llama-3-3B-Preview-q4.gguf';
     process.env.LOCAL_MEDIUM_MODEL = process.env.LOCAL_SMALL_MODEL;
     process.env.TEST_SERVER_PORT = testServerPort.toString();
   });
+
+  // Helper function to run elizaos commands with execa
+  const runElizaosCommand = async (args: string[], options: any = {}) => {
+    return await execa('bun', ['run', elizaosCmd, ...args], options);
+  };
 
   afterEach(async () => {
     // Kill any running processes
@@ -101,11 +107,11 @@ describe('ElizaOS Start Commands', () => {
   };
 
   // Basic agent check
-  test('start command shows help', () => {
-    const result = execSync(`${elizaosCmd} start --help`, { encoding: 'utf8' });
-    expect(result).toContain('Usage: elizaos start');
-    expect(result).toContain('--character');
-    expect(result).toContain('--port');
+  test('start command shows help', async () => {
+    const result = await runElizaosCommand(['start', '--help'], { encoding: 'utf8' });
+    expect(result.stdout).toContain('Usage: elizaos start');
+    expect(result.stdout).toContain('--character');
+    expect(result.stdout).toContain('--port');
   });
 
   test('start and list shows Ada agent running', async () => {
@@ -123,15 +129,12 @@ describe('ElizaOS Start Commands', () => {
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
       // Test that agent list shows Ada
-      const result = execSync(
-        `${elizaosCmd} agent list --remote-url http://localhost:${testServerPort}`,
-        {
-          encoding: 'utf8',
-          timeout: 10000,
-        }
-      );
+      const result = await runElizaosCommand(['agent', 'list', '--remote-url', `http://localhost:${testServerPort}`], {
+        encoding: 'utf8',
+        timeout: 10000,
+      });
 
-      expect(result).toContain('Ada');
+      expect(result.stdout).toContain('Ada');
     } finally {
       // Clean up server
       serverProcess.kill();
@@ -185,37 +188,31 @@ describe('ElizaOS Start Commands', () => {
   }, 30000);
 
   // Multiple character input formats
-  test('multiple character formats parse', () => {
+  test('multiple character formats parse', async () => {
     const charactersDir = join(__dirname, '../test-characters');
     const adaPath = join(charactersDir, 'ada.json');
 
     const formats = [',', ' '];
 
     for (const fmt of formats) {
-      const result = execSync(
-        `${elizaosCmd} start --character "${adaPath}${fmt}${adaPath}" --help`,
-        { encoding: 'utf8' }
-      );
-      expect(result).toContain('start');
+      const result = await runElizaosCommand(['start', '--character', `${adaPath}${fmt}${adaPath}`, '--help'], { encoding: 'utf8' });
+      expect(result.stdout).toContain('start');
     }
   });
 
   // Mixed valid/invalid files should not crash CLI when running with --help (dry)
-  test('graceful acceptance of invalid character file list (dry)', () => {
+  test('graceful acceptance of invalid character file list (dry)', async () => {
     const charactersDir = join(__dirname, '../test-characters');
     const adaPath = join(charactersDir, 'ada.json');
 
-    const result = execSync(
-      `${elizaosCmd} start --character "${adaPath},does-not-exist.json" --help`,
-      { encoding: 'utf8' }
-    );
-    expect(result).toContain('start');
+    const result = await runElizaosCommand(['start', '--character', `${adaPath},does-not-exist.json`, '--help'], { encoding: 'utf8' });
+    expect(result.stdout).toContain('start');
   });
 
   // --build flag accepted
-  test('build option flag accepted', () => {
-    const result = execSync(`${elizaosCmd} start --build --help`, { encoding: 'utf8' });
-    expect(result).toContain('start');
+  test('build option flag accepted', async () => {
+    const result = await runElizaosCommand(['start', '--build', '--help'], { encoding: 'utf8' });
+    expect(result.stdout).toContain('start');
   });
 
   // --configure flag triggers reconfiguration message in log

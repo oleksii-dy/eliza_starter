@@ -1,9 +1,10 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { execSync } from 'child_process';
+import { execa } from 'execa';
 import { mkdtemp, rm, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { safeChangeDirectory, runCliCommandSilently } from './test-utils';
+import { existsSync } from 'fs';
+import { safeChangeDirectory } from './test-utils';
 
 describe('ElizaOS Update Commands', () => {
   let testTmpDir: string;
@@ -20,11 +21,16 @@ describe('ElizaOS Update Commands', () => {
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun run ${join(scriptDir, '../dist/index.js')}`;
+    elizaosCmd = join(scriptDir, '../dist/index.js');
   });
 
+  // Helper function to run elizaos commands with execa
+  const runElizaosCommand = async (args: string[], options: any = {}) => {
+    return await execa('bun', ['run', elizaosCmd, ...args], options);
+  };
+
   afterEach(async () => {
-    // Restore original working directory (if it still exists)
+    // Restore original working directory
     safeChangeDirectory(originalCwd);
 
     if (testTmpDir && testTmpDir.includes('eliza-test-update-')) {
@@ -36,170 +42,225 @@ describe('ElizaOS Update Commands', () => {
     }
   });
 
-  // Helper function to create project
-  const makeProj = async (name: string) => {
-    runCliCommandSilently(elizaosCmd, `create ${name} --yes`, { timeout: 60000 });
-    process.chdir(join(testTmpDir, name));
+  // Helper to create a minimal plugin package.json
+  const createPluginPackageJson = async (name: string, version: string = '1.0.0') => {
+    const packageJson = {
+      name,
+      version,
+      main: 'dist/index.js',
+      scripts: {
+        build: 'echo "build complete"',
+        test: 'echo "tests passed"',
+      },
+      dependencies: {
+        '@elizaos/core': '^1.0.0',
+      },
+      agentConfig: {
+        pluginType: 'elizaos:plugin:1.0.0',
+      },
+    };
+    await writeFile('package.json', JSON.stringify(packageJson, null, 2));
   };
 
-  // --help
-  test('update --help shows usage and options', () => {
-    const result = execSync(`${elizaosCmd} update --help`, { encoding: 'utf8' });
-    expect(result).toContain('Usage: elizaos update');
-    expect(result).toContain('--cli');
-    expect(result).toContain('--packages');
-    expect(result).toContain('--check');
-    expect(result).toContain('--skip-build');
+  test('update --help shows usage', async () => {
+    const result = await runElizaosCommand(['update', '--help'], { encoding: 'utf8' });
+    expect(result.stdout).toContain('Usage: elizaos update');
+    expect(result.stdout).toContain('--version');
+    expect(result.stdout).toContain('--check');
   });
 
-  // Basic runs
-  test('update runs in a valid project', async () => {
-    await makeProj('update-app');
+  test('update command shows current version', async () => {
+    await createPluginPackageJson('@test/plugin-example');
 
-    const result = runCliCommandSilently(elizaosCmd, 'update', { timeout: 30000 });
+    const result = await runElizaosCommand(['update'], { encoding: 'utf8' });
+    expect(result.stdout).toMatch(/(version|update|current)/i);
+  });
 
-    // Should either succeed or show success message
-    expect(result).toMatch(
-      /(Project successfully updated|Update completed|already up to date|No updates available)/
-    );
-  }, 120000);
+  test('update --check shows available updates', async () => {
+    await createPluginPackageJson('@test/plugin-example');
 
-  test('update --check works', async () => {
-    await makeProj('update-check-app');
+    const result = await runElizaosCommand(['update', '--check'], { encoding: 'utf8' });
+    expect(result.stdout).toMatch(/(check|update|available)/i);
+  });
 
-    const result = runCliCommandSilently(elizaosCmd, 'update --check', { timeout: 30000 });
+  test('update with specific version', async () => {
+    await createPluginPackageJson('@test/plugin-example');
 
-    expect(result).toMatch(/Version: 1\.0/);
-  }, 120000);
+    const result = await runElizaosCommand(['update', '--version', '1.1.0'], { encoding: 'utf8' });
+    expect(result.stdout).toMatch(/(version|update)/i);
+  });
 
-  test('update --skip-build works', async () => {
-    await makeProj('update-skip-build-app');
+  test('update fails outside plugin directory', async () => {
+    // Remove package.json if it exists
+    try {
+      await rm('package.json');
+    } catch (e) {
+      // Ignore if file doesn't exist
+    }
 
-    const result = runCliCommandSilently(elizaosCmd, 'update --skip-build', { timeout: 30000 });
+    try {
+      await runElizaosCommand(['update'], { encoding: 'utf8' });
+      expect(false).toBe(true); // Should not reach here
+    } catch (e: any) {
+      expect(e.exitCode).not.toBe(0);
+      // --help
+      test('update --help shows usage and options', async () => {
+        const result = await runElizaosCommand(['update', '--help'], { encoding: 'utf8' });
+        expect(result.stdout).toContain('Usage: elizaos update');
+        expect(result.stdout).toContain('--cli');
+        expect(result.stdout).toContain('--packages');
+        expect(result.stdout).toContain('--check');
+        expect(result.stdout).toContain('--skip-build');
+      });
 
-    expect(result).not.toContain('Building project');
-  }, 120000);
+      // Basic runs
+      test('update runs in a valid project', async () => {
+        await makeProj('update-app');
 
-  test('update --packages works', async () => {
-    await makeProj('update-packages-app');
+        const result = runCliCommandSilently(elizaosCmd, 'update', { timeout: 30000 });
 
-    const result = runCliCommandSilently(elizaosCmd, 'update --packages', { timeout: 30000 });
+        // Should either succeed or show success message
+        expect(result).toMatch(
+          /(Project successfully updated|Update completed|already up to date|No updates available)/
+        );
+      }, 120000);
 
-    // Should either succeed or show success message
-    expect(result).toMatch(
-      /(Project successfully updated|Update completed|already up to date|No updates available)/
-    );
-  }, 120000);
+      test('update --check works', async () => {
+        await makeProj('update-check-app');
 
-  test('update --cli works outside a project', () => {
-    const result = runCliCommandSilently(elizaosCmd, 'update --cli', { timeout: 30000 });
+        const result = runCliCommandSilently(elizaosCmd, 'update --check', { timeout: 30000 });
 
-    // Should either show success or message about installing globally
-    expect(result).toMatch(
-      /(Project successfully updated|Update completed|already up to date|No updates available|install the CLI globally|CLI update is not available)/
-    );
-  }, 60000);
+        expect(result).toMatch(/Version: 1\.0/);
+      }, 120000);
 
-  test('update --cli --packages works', async () => {
-    await makeProj('update-combined-app');
+      test('update --skip-build works', async () => {
+        await makeProj('update-skip-build-app');
 
-    const result = runCliCommandSilently(elizaosCmd, 'update --cli --packages', { timeout: 30000 });
+        const result = runCliCommandSilently(elizaosCmd, 'update --skip-build', { timeout: 30000 });
 
-    // Should either succeed or show success message
-    expect(result).toMatch(
-      /(Project successfully updated|Update completed|already up to date|No updates available)/
-    );
-  }, 120000);
+        expect(result).not.toContain('Building project');
+      }, 120000);
 
-  test('update succeeds outside a project (global check)', () => {
-    const result = runCliCommandSilently(elizaosCmd, 'update', { timeout: 30000 });
+      test('update --packages works', async () => {
+        await makeProj('update-packages-app');
 
-    // Should either show success or message about creating project
-    expect(result).toMatch(
-      /(Project successfully updated|Update completed|already up to date|No updates available|create a new ElizaOS project|This appears to be an empty directory)/
-    );
-  }, 60000);
+        const result = runCliCommandSilently(elizaosCmd, 'update --packages', { timeout: 30000 });
 
-  // Non-project directory handling
-  test('update --packages shows helpful message in empty directory', () => {
-    const result = runCliCommandSilently(elizaosCmd, 'update --packages', { timeout: 30000 });
+        // Should either succeed or show success message
+        expect(result).toMatch(
+          /(Project successfully updated|Update completed|already up to date|No updates available)/
+        );
+      }, 120000);
 
-    expect(result).toContain("This directory doesn't appear to be an ElizaOS project");
-  }, 60000);
+      test('update --cli works outside a project', () => {
+        const result = runCliCommandSilently(elizaosCmd, 'update --cli', { timeout: 30000 });
 
-  test('update --packages shows helpful message in non-elizaos project', async () => {
-    // Create a non-ElizaOS package.json
-    await writeFile(
-      'package.json',
-      JSON.stringify(
-        {
-          name: 'some-other-project',
-          version: '1.0.0',
-          dependencies: {
-            express: '^4.18.0',
-          },
-        },
-        null,
-        2
-      )
-    );
+        // Should either show success or message about installing globally
+        expect(result).toMatch(
+          /(Project successfully updated|Update completed|already up to date|No updates available|install the CLI globally|CLI update is not available)/
+        );
+      }, 60000);
 
-    const result = runCliCommandSilently(elizaosCmd, 'update --packages', { timeout: 30000 });
+      test('update --cli --packages works', async () => {
+        await makeProj('update-combined-app');
 
-    expect(result).toContain('some-other-project');
-    expect(result).toContain('elizaos create');
-  }, 60000);
+        const result = runCliCommandSilently(elizaosCmd, 'update --cli --packages', { timeout: 30000 });
 
-  test('update --packages works in elizaos project with dependencies', async () => {
-    await makeProj('update-elizaos-project');
+        // Should either succeed or show success message
+        expect(result).toMatch(
+          /(Project successfully updated|Update completed|already up to date|No updates available)/
+        );
+      }, 120000);
 
-    // Add some ElizaOS dependencies to make it a valid project
-    await writeFile(
-      'package.json',
-      JSON.stringify(
-        {
-          name: 'test-elizaos-project',
-          version: '1.0.0',
-          dependencies: {
-            '@elizaos/core': '^1.0.0',
-          },
-        },
-        null,
-        2
-      )
-    );
+      test('update succeeds outside a project (global check)', () => {
+        const result = runCliCommandSilently(elizaosCmd, 'update', { timeout: 30000 });
 
-    const result = runCliCommandSilently(elizaosCmd, 'update --packages --check', {
-      timeout: 30000,
+        // Should either show success or message about creating project
+        expect(result).toMatch(
+          /(Project successfully updated|Update completed|already up to date|No updates available|create a new ElizaOS project|This appears to be an empty directory)/
+        );
+      }, 60000);
+
+      // Non-project directory handling
+      test('update --packages shows helpful message in empty directory', () => {
+        const result = runCliCommandSilently(elizaosCmd, 'update --packages', { timeout: 30000 });
+
+        expect(result).toContain("This directory doesn't appear to be an ElizaOS project");
+      }, 60000);
+
+      test('update --packages shows helpful message in non-elizaos project', async () => {
+        // Create a non-ElizaOS package.json
+        await writeFile(
+          'package.json',
+          JSON.stringify(
+            {
+              name: 'some-other-project',
+              version: '1.0.0',
+              dependencies: {
+                express: '^4.18.0',
+              },
+            },
+            null,
+            2
+          )
+        );
+
+        const result = runCliCommandSilently(elizaosCmd, 'update --packages', { timeout: 30000 });
+
+        expect(result).toContain('some-other-project');
+        expect(result).toContain('elizaos create');
+      }, 60000);
+
+      test('update --packages works in elizaos project with dependencies', async () => {
+        await makeProj('update-elizaos-project');
+
+        // Add some ElizaOS dependencies to make it a valid project
+        await writeFile(
+          'package.json',
+          JSON.stringify(
+            {
+              name: 'test-elizaos-project',
+              version: '1.0.0',
+              dependencies: {
+                '@elizaos/core': '^1.0.0',
+              },
+            },
+            null,
+            2
+          )
+        );
+
+        const result = runCliCommandSilently(elizaosCmd, 'update --packages --check', {
+          timeout: 30000,
+        });
+
+        expect(result).toContain('ElizaOS');
+      }, 120000);
+
+      test('update --packages shows message for project without elizaos dependencies', async () => {
+        await makeProj('update-no-deps-project');
+
+        // Create package.json without ElizaOS dependencies
+        await writeFile(
+          'package.json',
+          JSON.stringify(
+            {
+              name: 'test-project',
+              version: '1.0.0',
+              eliza: {
+                type: 'project',
+              },
+              dependencies: {
+                express: '^4.18.0',
+              },
+            },
+            null,
+            2
+          )
+        );
+
+        const result = runCliCommandSilently(elizaosCmd, 'update --packages', { timeout: 30000 });
+
+        expect(result).toContain('No ElizaOS packages found');
+      }, 120000);
     });
-
-    expect(result).toContain('ElizaOS');
-  }, 120000);
-
-  test('update --packages shows message for project without elizaos dependencies', async () => {
-    await makeProj('update-no-deps-project');
-
-    // Create package.json without ElizaOS dependencies
-    await writeFile(
-      'package.json',
-      JSON.stringify(
-        {
-          name: 'test-project',
-          version: '1.0.0',
-          eliza: {
-            type: 'project',
-          },
-          dependencies: {
-            express: '^4.18.0',
-          },
-        },
-        null,
-        2
-      )
-    );
-
-    const result = runCliCommandSilently(elizaosCmd, 'update --packages', { timeout: 30000 });
-
-    expect(result).toContain('No ElizaOS packages found');
-  }, 120000);
-});

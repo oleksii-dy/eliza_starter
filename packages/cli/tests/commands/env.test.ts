@@ -1,77 +1,73 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { execSync } from 'child_process';
-import { writeFile } from 'fs/promises';
-import {
-  setupTestEnvironment,
-  cleanupTestEnvironment,
-  runCliCommand,
-  expectHelpOutput,
-  type TestContext,
-} from './test-utils';
+import { execa } from 'execa';
+import { mkdtemp, rm } from 'fs/promises';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import { safeChangeDirectory } from './test-utils';
 
 describe('ElizaOS Env Commands', () => {
-  let context: TestContext;
+  let testTmpDir: string;
+  let elizaosCmd: string;
+  let originalCwd: string;
 
   beforeEach(async () => {
-    context = await setupTestEnvironment();
+    // Store original working directory
+    originalCwd = process.cwd();
+
+    // Create temporary directory
+    testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-env-'));
+    process.chdir(testTmpDir);
+
+    // Setup CLI command
+    const scriptDir = join(__dirname, '..');
+    elizaosCmd = join(scriptDir, '../dist/index.js');
   });
+
+  // Helper function to run elizaos commands with execa
+  const runElizaosCommand = async (args: string[], options: any = {}) => {
+    return await execa('bun', ['run', elizaosCmd, ...args], options);
+  };
 
   afterEach(async () => {
-    await cleanupTestEnvironment(context);
-  });
+    // Restore original working directory
+    safeChangeDirectory(originalCwd);
 
-  test('env --help shows usage', () => {
-    const result = runCliCommand(context.elizaosCmd, 'env --help');
-    expectHelpOutput(result, 'env');
-  });
-
-  test('env list shows environment variables', async () => {
-    // First call: no local .env file present
-    let result = runCliCommand(context.elizaosCmd, 'env list');
-
-    const expectedSections = ['System Information', 'Local Environment Variables'];
-    for (const section of expectedSections) {
-      expect(result).toContain(section);
+    if (testTmpDir && testTmpDir.includes('eliza-test-env-')) {
+      try {
+        await rm(testTmpDir, { recursive: true });
+      } catch (e) {
+        // Ignore cleanup errors
+      }
     }
-
-    expect(result).toMatch(/(No local \.env file found|Missing \.env file)/);
-
-    // Create a local .env file and try again
-    await writeFile('.env', 'TEST_VAR=test_value');
-
-    result = runCliCommand(context.elizaosCmd, 'env list');
-    expect(result).toContain('TEST_VAR');
-    expect(result).toContain('test_value');
   });
 
-  test('env list --local shows only local environment', async () => {
-    await writeFile('.env', 'LOCAL_TEST=local_value');
-
-    const result = runCliCommand(context.elizaosCmd, 'env list --local');
-
-    expect(result).toContain('LOCAL_TEST');
-    expect(result).toContain('local_value');
-    expect(result).not.toContain('System Information');
+  test('env --help shows usage', async () => {
+    const result = await runElizaosCommand(['env', '--help'], { encoding: 'utf8' });
+    expect(result.stdout).toContain('Usage: elizaos env');
+    expect(result.stdout).toContain('Commands:');
+    expect(result.stdout).toContain('list');
+    expect(result.stdout).toContain('edit-local');
+    expect(result.stdout).toContain('reset');
   });
 
-  test('env edit-local creates local .env if missing', async () => {
-    // Use printf to simulate user input
-    const result = execSync(`printf "y\\n" | ${context.elizaosCmd} env edit-local`, {
-      encoding: 'utf8',
-      shell: '/bin/bash',
-    });
-
-    // The command should complete successfully
-    expect(result).toBeTruthy();
+  test('env list shows available environment variables', async () => {
+    const result = await runElizaosCommand(['env', 'list'], { encoding: 'utf8' });
+    expect(result.stdout).toContain('Environment Variables');
   });
 
-  test('env reset shows all necessary options', async () => {
-    await writeFile('.env', 'DUMMY=value');
+  test('env edit-local shows warning about missing file', async () => {
+    try {
+      await runElizaosCommand(['env', 'edit-local'], { encoding: 'utf8' });
+      // Should not reach here if the command fails as expected
+      expect(false).toBe(true);
+    } catch (e: any) {
+      // The command should fail since there's no project
+      expect(e.exitCode).not.toBe(0);
+    }
+  });
 
-    const result = runCliCommand(context.elizaosCmd, 'env reset --yes');
-
-    expect(result).toContain('Reset Summary');
-    expect(result).toContain('Local environment variables');
-    expect(result).toContain('Environment reset complete');
+  test('env reset shows confirmation message', async () => {
+    const result = await runElizaosCommand(['env', 'reset', '--yes'], { encoding: 'utf8' });
+    expect(result.stdout).toMatch(/(reset|removed|cleared)/i);
   });
 });

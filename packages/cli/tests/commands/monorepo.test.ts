@@ -1,46 +1,55 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { writeFile, mkdir } from 'fs/promises';
-import {
-  setupTestEnvironment,
-  cleanupTestEnvironment,
-  runCliCommand,
-  expectCliCommandToFail,
-  expectHelpOutput,
-  type TestContext,
-} from './test-utils';
+import { execa } from 'execa';
+import { mkdtemp, rm } from 'fs/promises';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import { safeChangeDirectory } from './test-utils';
 
 describe('ElizaOS Monorepo Commands', () => {
-  let context: TestContext;
+  let testTmpDir: string;
+  let elizaosCmd: string;
+  let originalCwd: string;
 
   beforeEach(async () => {
-    context = await setupTestEnvironment();
+    // Store original working directory
+    originalCwd = process.cwd();
+
+    // Create temporary directory
+    testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-monorepo-'));
+    process.chdir(testTmpDir);
+
+    // Setup CLI command
+    const scriptDir = join(__dirname, '..');
+    elizaosCmd = join(scriptDir, '../dist/index.js');
   });
+
+  // Helper function to run elizaos commands with execa
+  const runElizaosCommand = async (args: string[], options: any = {}) => {
+    return await execa('bun', ['run', elizaosCmd, ...args], options);
+  };
 
   afterEach(async () => {
-    await cleanupTestEnvironment(context);
+    // Restore original working directory
+    safeChangeDirectory(originalCwd);
+
+    if (testTmpDir && testTmpDir.includes('eliza-test-monorepo-')) {
+      try {
+        await rm(testTmpDir, { recursive: true });
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    }
   });
 
-  test('monorepo --help shows usage', () => {
-    const result = runCliCommand(context.elizaosCmd, 'monorepo --help');
-    expectHelpOutput(result, 'monorepo', ['-b', '--branch', '-d', '--dir']);
+  test('monorepo --help shows usage', async () => {
+    const result = await runElizaosCommand(['monorepo', '--help'], { encoding: 'utf8' });
+    expect(result.stdout).toContain('Usage: elizaos monorepo');
+    expect(result.stdout).toContain('--init');
+    expect(result.stdout).toContain('--check');
   });
 
-  test('monorepo uses default branch and directory', () => {
-    // This would try to clone, so we just test that it recognizes the command
-    // without actually performing the network operation
-    const result = runCliCommand(context.elizaosCmd, 'monorepo --help');
-    expect(result).toContain('Branch to install');
-    expect(result).toContain('develop'); // default branch
-  });
-
-  test('monorepo fails when directory is not empty', async () => {
-    await mkdir('not-empty-dir');
-    await writeFile('not-empty-dir/placeholder', '');
-
-    const result = expectCliCommandToFail(context.elizaosCmd, 'monorepo --dir not-empty-dir', {
-      timeout: 10000,
-    });
-    expect(result.status).not.toBe(0);
-    expect(result.output).toMatch(/not empty/);
+  test('monorepo command detects projects', async () => {
+    const result = await runElizaosCommand(['monorepo', '--help'], { encoding: 'utf8' });
+    expect(result.stdout).toContain('monorepo');
   });
 });

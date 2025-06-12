@@ -118,15 +118,6 @@ export async function copyTemplate(
   const packageJsonPath = path.join(targetDir, 'package.json');
 
   try {
-    // Get the CLI package version for dependency updates
-    const cliPackageJsonPath = path.resolve(
-      path.dirname(require.resolve('@elizaos/cli/package.json')),
-      'package.json'
-    );
-
-    const cliPackageJson = JSON.parse(await fs.readFile(cliPackageJsonPath, 'utf8'));
-    const cliPackageVersion = cliPackageJson.version;
-
     const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
 
     // Remove private field from template package.json since templates should be usable by users
@@ -139,7 +130,7 @@ export async function copyTemplate(
     if (packageJson.dependencies) {
       for (const depName of Object.keys(packageJson.dependencies)) {
         if (depName.startsWith('@elizaos/')) {
-          logger.info(`Setting ${depName} to use version ${cliPackageVersion}`);
+          logger.info(`Setting ${depName} to latest`);
           packageJson.dependencies[depName] = 'latest';
         }
       }
@@ -148,7 +139,7 @@ export async function copyTemplate(
     if (packageJson.devDependencies) {
       for (const depName of Object.keys(packageJson.devDependencies)) {
         if (depName.startsWith('@elizaos/')) {
-          logger.info(`Setting dev dependency ${depName} to use version ${cliPackageVersion}`);
+          logger.info(`Setting dev dependency ${depName} to latest`);
           packageJson.devDependencies[depName] = 'latest';
         }
       }

@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
-import { spawn, execSync } from 'child_process';
+import { spawn } from 'child_process';
+import { execa } from 'execa';
 import { mkdtemp, rm, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -19,11 +20,11 @@ describe('ElizaOS Agent Commands', () => {
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun run ${join(scriptDir, '../dist/index.js')}`;
+    elizaosCmd = join(scriptDir, '../dist/index.js');
 
     // Kill any existing processes on port 3000
     try {
-      execSync(`lsof -t -i :3000 | xargs kill -9`, { stdio: 'ignore' });
+      await execa('sh', ['-c', 'lsof -t -i :3000 | xargs kill -9'], { stdio: 'ignore' });
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (e) {
       // Ignore if no processes found
@@ -78,12 +79,9 @@ describe('ElizaOS Agent Commands', () => {
       console.log(`[DEBUG] Loading character: ${character}`);
 
       try {
-        execSync(
-          `${elizaosCmd} agent start --remote-url ${testServerUrl} --path ${characterPath}`,
-          {
-            stdio: 'pipe',
-          }
-        );
+        await execa('bun', ['run', elizaosCmd, 'agent', 'start', '--remote-url', testServerUrl, '--path', characterPath], {
+          stdio: 'pipe',
+        });
         console.log(`[DEBUG] Successfully loaded character: ${character}`);
       } catch (e) {
         console.error(`[ERROR] Failed to load character ${character}:`, e);
@@ -94,6 +92,11 @@ describe('ElizaOS Agent Commands', () => {
     // Give characters time to register
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }, 60000); // 60 second timeout for setup
+
+  // Helper function to run elizaos commands with execa
+  const runElizaosCommand = async (args: string[], options: any = {}) => {
+    return await execa('bun', ['run', elizaosCmd, ...args], options);
+  };
 
   afterAll(async () => {
     if (serverProcess) {
@@ -111,47 +114,44 @@ describe('ElizaOS Agent Commands', () => {
   });
 
   test('agent help displays usage information', async () => {
-    const result = execSync(`${elizaosCmd} agent --help`, { encoding: 'utf8' });
-    expect(result).toContain('Usage: elizaos agent');
+    const result = await runElizaosCommand(['agent', '--help'], { encoding: 'utf8' });
+    expect(result.stdout).toContain('Usage: elizaos agent');
   });
 
   test('agent list returns agents', async () => {
-    const result = execSync(`${elizaosCmd} agent list --remote-url ${testServerUrl}`, {
+    const result = await runElizaosCommand(['agent', 'list', '--remote-url', testServerUrl], {
       encoding: 'utf8',
     });
-    expect(result).toMatch(/(Ada|Max|Shaw)/);
+    expect(result.stdout).toMatch(/(Ada|Max|Shaw)/);
   });
 
   test('agent list works with JSON flag', async () => {
-    const result = execSync(`${elizaosCmd} agent list --remote-url ${testServerUrl} --json`, {
+    const result = await runElizaosCommand(['agent', 'list', '--remote-url', testServerUrl, '--json'], {
       encoding: 'utf8',
     });
-    expect(result).toContain('[');
-    expect(result).toContain('{');
-    expect(result).toMatch(/(name|Name)/);
+    expect(result.stdout).toContain('[');
+    expect(result.stdout).toContain('{');
+    expect(result.stdout).toMatch(/(name|Name)/);
   });
 
   test('agent get shows details with name parameter', async () => {
-    const result = execSync(`${elizaosCmd} agent get --remote-url ${testServerUrl} -n Ada`, {
+    const result = await runElizaosCommand(['agent', 'get', '--remote-url', testServerUrl, '-n', 'Ada'], {
       encoding: 'utf8',
     });
-    expect(result).toContain('Ada');
+    expect(result.stdout).toContain('Ada');
   });
 
   test('agent get with JSON flag shows character definition', async () => {
-    const result = execSync(`${elizaosCmd} agent get --remote-url ${testServerUrl} -n Ada --json`, {
+    const result = await runElizaosCommand(['agent', 'get', '--remote-url', testServerUrl, '-n', 'Ada', '--json'], {
       encoding: 'utf8',
     });
-    expect(result).toMatch(/(name|Name)/);
-    expect(result).toContain('Ada');
+    expect(result.stdout).toMatch(/(name|Name)/);
+    expect(result.stdout).toContain('Ada');
   });
 
   test('agent get with output flag saves to file', async () => {
     const outputFile = join(testTmpDir, 'output_ada.json');
-    execSync(
-      `${elizaosCmd} agent get --remote-url ${testServerUrl} -n Ada --output ${outputFile}`,
-      { encoding: 'utf8' }
-    );
+    await runElizaosCommand(['agent', 'get', '--remote-url', testServerUrl, '-n', 'Ada', '--output', outputFile], { encoding: 'utf8' });
 
     const { readFile } = await import('fs/promises');
     const fileContent = await readFile(outputFile, 'utf8');
@@ -163,11 +163,8 @@ describe('ElizaOS Agent Commands', () => {
     const adaPath = join(charactersDir, 'ada.json');
 
     try {
-      const result = execSync(
-        `${elizaosCmd} agent start --remote-url ${testServerUrl} --path ${adaPath}`,
-        { encoding: 'utf8' }
-      );
-      expect(result).toMatch(/(started successfully|created|already exists|already running)/);
+      const result = await runElizaosCommand(['agent', 'start', '--remote-url', testServerUrl, '--path', adaPath], { encoding: 'utf8' });
+      expect(result.stdout + result.stderr).toMatch(/(started successfully|created|already exists|already running)/);
     } catch (e: any) {
       // If it fails, check if it's because agent already exists
       expect(e.stdout || e.stderr).toMatch(/(already exists|already running)/);
@@ -176,7 +173,7 @@ describe('ElizaOS Agent Commands', () => {
 
   test('agent start works with name parameter', async () => {
     try {
-      execSync(`${elizaosCmd} agent start --remote-url ${testServerUrl} -n Ada`, {
+      await runElizaosCommand(['agent', 'start', '--remote-url', testServerUrl, '-n', 'Ada'], {
         encoding: 'utf8',
       });
       // Should succeed or already exist
@@ -189,7 +186,7 @@ describe('ElizaOS Agent Commands', () => {
     const nonExistentName = `NonExistent_${Date.now()}`;
 
     try {
-      execSync(`${elizaosCmd} agent start --remote-url ${testServerUrl} -n ${nonExistentName}`, {
+      await runElizaosCommand(['agent', 'start', '--remote-url', testServerUrl, '-n', nonExistentName], {
         encoding: 'utf8',
         stdio: 'pipe',
       });
@@ -197,23 +194,23 @@ describe('ElizaOS Agent Commands', () => {
       expect(false).toBe(true);
     } catch (e: any) {
       // The command should fail when agent doesn't exist
-      expect(e.status).not.toBe(0);
+      expect(e.exitCode).not.toBe(0);
     }
   });
 
   test('agent stop works after start', async () => {
     // Ensure Ada is started first
     try {
-      execSync(`${elizaosCmd} agent start --remote-url ${testServerUrl} -n Ada`, { stdio: 'pipe' });
+      await runElizaosCommand(['agent', 'start', '--remote-url', testServerUrl, '-n', 'Ada'], { stdio: 'pipe' });
     } catch (e) {
       // May already be running
     }
 
     try {
-      const result = execSync(`${elizaosCmd} agent stop --remote-url ${testServerUrl} -n Ada`, {
+      const result = await runElizaosCommand(['agent', 'stop', '--remote-url', testServerUrl, '-n', 'Ada'], {
         encoding: 'utf8',
       });
-      expect(result).toMatch(/(stopped|Stopped)/);
+      expect(result.stdout + result.stderr).toMatch(/(stopped|Stopped)/);
     } catch (e: any) {
       expect(e.stdout || e.stderr).toMatch(/(not running|not found)/);
     }
@@ -228,17 +225,14 @@ describe('ElizaOS Agent Commands', () => {
     const { writeFile } = await import('fs/promises');
     await writeFile(configFile, configContent);
 
-    const result = execSync(
-      `${elizaosCmd} agent set --remote-url ${testServerUrl} -n Ada -f ${configFile}`,
-      { encoding: 'utf8' }
-    );
-    expect(result).toMatch(/(updated|Updated)/);
+    const result = await runElizaosCommand(['agent', 'set', '--remote-url', testServerUrl, '-n', 'Ada', '-f', configFile], { encoding: 'utf8' });
+    expect(result.stdout + result.stderr).toMatch(/(updated|Updated)/);
   });
 
   test('agent full lifecycle management', async () => {
     // Start agent
     try {
-      execSync(`${elizaosCmd} agent start --remote-url ${testServerUrl} -n Ada`, {
+      await runElizaosCommand(['agent', 'start', '--remote-url', testServerUrl, '-n', 'Ada'], {
         encoding: 'utf8',
       });
       // Should succeed or already exist
@@ -248,7 +242,7 @@ describe('ElizaOS Agent Commands', () => {
 
     // Stop agent
     try {
-      execSync(`${elizaosCmd} agent stop --remote-url ${testServerUrl} -n Ada`, {
+      await runElizaosCommand(['agent', 'stop', '--remote-url', testServerUrl, '-n', 'Ada'], {
         encoding: 'utf8',
       });
       // Should succeed or not be running
