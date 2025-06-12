@@ -72,8 +72,6 @@ export function createDatabaseAdapter(
   return new PgliteDatabaseAdapter(agentId, globalSingletons.pgLiteClientManager);
 }
 
-let dbAdapter: IDatabaseAdapter | undefined;
-
 /**
  * SQL plugin for database adapter using Drizzle ORM with dynamic plugin schema migrations
  *
@@ -92,20 +90,24 @@ export const plugin: Plugin = {
   init: async (_, runtime: IAgentRuntime) => {
     logger.info('plugin-sql init starting...');
 
-    // Create the adapter but don't register it
-    dbAdapter = createDatabaseAdapter(
+    // Create and register the adapter for this runtime instance
+    const adapter = createDatabaseAdapter(
       {
         dataDir: process.env.PGLITE_PATH || process.env.DATABASE_PATH || './.eliza/.elizadb',
         postgresUrl: process.env.POSTGRES_URL,
       },
-      (runtime as AgentRuntime).agentId
+      runtime.agentId
     );
+
+    // Register the adapter with the runtime
+    runtime.registerDatabaseAdapter(adapter);
 
     // Note: DatabaseMigrationService is not registered as a runtime service
     // because migrations are handled at the server level before agents are loaded
   },
   get adapter() {
-    return dbAdapter;
+    // Return undefined since adapters are now managed by each runtime instance
+    return undefined;
   },
 };
 
