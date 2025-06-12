@@ -190,15 +190,15 @@ export async function loadProject(dir: string): Promise<Project> {
     const moduleIsPlugin = isPlugin(projectModule);
     logger.debug(`Module structure check: ${moduleIsPlugin}`);
 
-    // Use directory detection as primary source of truth
-    const isPluginDirectory = directoryInfo.isPlugin;
+    // Use both directory and module detection for more tolerant plugin detection
+    const isPluginDirectory = directoryInfo.isPlugin || moduleIsPlugin;
 
     // Warn if directory and module detection disagree
-    if (isPluginDirectory !== moduleIsPlugin) {
+    if (directoryInfo.isPlugin !== moduleIsPlugin) {
       logger.warn(
-        `Mismatch detected: Directory analysis says ${isPluginDirectory ? 'plugin' : 'project'}, ` +
+        `Mismatch detected: Directory analysis says ${directoryInfo.isPlugin ? 'plugin' : 'project'}, ` +
           `but module structure suggests ${moduleIsPlugin ? 'plugin' : 'project'}. ` +
-          `Using directory detection result.`
+          `Using combined detection result.`
       );
     }
 
