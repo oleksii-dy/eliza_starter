@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from 'bun:test';
 import { mkdtemp, rm, writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -8,8 +8,11 @@ describe('Directory Detection Utility', () => {
   let testTmpDir: string;
   let originalCwd: string;
 
-  beforeEach(async () => {
+  beforeAll(() => {
     originalCwd = process.cwd();
+  });
+
+  beforeEach(async () => {
     testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-dir-detection-'));
     process.chdir(testTmpDir);
   });
@@ -19,6 +22,10 @@ describe('Directory Detection Utility', () => {
     if (testTmpDir && testTmpDir.includes('eliza-test-dir-detection-')) {
       await rm(testTmpDir, { recursive: true, force: true });
     }
+  });
+
+  afterAll(() => {
+    process.chdir(originalCwd);
   });
 
   describe('detectDirectoryType', () => {
