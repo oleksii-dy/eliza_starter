@@ -83,7 +83,12 @@ export async function startDevMode(options: DevOptions): Promise<void> {
   };
 
   // Perform initial build if required
-  if (directoryType.isProject || directoryType.isPlugin || directoryType.isMonorepo) {
+  if (
+    directoryType.isProject ||
+    directoryType.isPlugin ||
+    directoryType.isMonorepo ||
+    directoryType.isSubdir
+  ) {
     const modeDescription = getModeDescription(directoryType);
     logger.info(`Running in ${modeDescription} mode`);
 
@@ -94,7 +99,12 @@ export async function startDevMode(options: DevOptions): Promise<void> {
   await serverManager.start(cliArgs);
 
   // Set up file watching if we're in a project, plugin, or monorepo directory
-  if (directoryType.isProject || directoryType.isPlugin || directoryType.isMonorepo) {
+  if (
+    directoryType.isProject ||
+    directoryType.isPlugin ||
+    directoryType.isMonorepo ||
+    directoryType.isSubdir
+  ) {
     // Pass the rebuildAndRestart function as the onChange callback
     await watchDirectory(context.watchDirectory, rebuildAndRestart);
 
