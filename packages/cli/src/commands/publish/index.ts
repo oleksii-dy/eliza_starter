@@ -115,29 +115,28 @@ export const publish = new Command()
       }
 
       // Use standardized directory detection for type determination
-      let detectedType: string;
+      const detectedType = directoryInfo.isPlugin
+        ? 'plugin'
+        : directoryInfo.isProject
+          ? 'project'
+          : 'plugin'; // fallback
 
-      if (directoryInfo.isPlugin) {
-        detectedType = 'plugin';
+      if (detectedType === 'plugin') {
         console.info('Detected ElizaOS plugin using standardized directory detection');
-      } else if (directoryInfo.isProject) {
-        detectedType = 'project';
-        console.info('Detected ElizaOS project using standardized directory detection');
       } else {
-        // Fallback for backwards compatibility - check package.json fields
-        detectedType = 'plugin'; // Default to plugin
+        console.info('Detected ElizaOS project using standardized directory detection');
+      }
 
+      // Fallback for backwards compatibility - check package.json fields
+      if (!directoryInfo.isPlugin && !directoryInfo.isProject) {
         if (packageJson.agentConfig?.pluginType) {
           const pluginType = packageJson.agentConfig.pluginType.toLowerCase();
           if (pluginType.includes('project')) {
-            detectedType = 'project';
             console.info('Detected project from package.json agentConfig.pluginType');
           }
         } else if (packageJson.eliza?.type === 'project') {
-          detectedType = 'project';
           console.info('Detected project from package.json eliza.type (legacy format)');
         } else if (packageJson.packageType === 'project') {
-          detectedType = 'project';
           console.info('Detected project from package.json packageType field');
         } else {
           console.info(`Defaulting to plugin type. Directory detected as: ${directoryInfo.type}`);

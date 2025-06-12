@@ -88,12 +88,13 @@ export const update = new Command()
           skipBuild: options.skipBuild,
         };
 
-        await updateDependencies(cwd, directoryInfo.isPlugin, updateOptions);
+        const isPlugin = directoryInfo.isPlugin;
+        await updateDependencies(cwd, isPlugin, updateOptions);
 
         if (options.check) {
           console.log(`Version: ${await getVersion()}`);
         } else {
-          const projectType = directoryInfo.isPlugin ? 'Plugin' : 'Project';
+          const projectType = isPlugin ? 'Plugin' : 'Project';
           console.log(`${projectType} successfully updated to the latest ElizaOS packages`);
         }
       }
