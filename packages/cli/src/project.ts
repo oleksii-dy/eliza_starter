@@ -11,6 +11,7 @@ import * as fs from 'node:fs';
 import path from 'node:path';
 import { v4 as uuidv4 } from 'uuid';
 import { character as elizaCharacter } from '@/src/characters/eliza';
+import { detectDirectoryType } from '@/src/utils/directory-detection';
 
 /**
  * Interface for a project module that can be loaded.
@@ -181,12 +182,28 @@ export async function loadProject(dir: string): Promise<Project> {
       throw new Error('Could not find project entry point');
     }
 
-    // Check if it's a plugin using our improved detection
-    const moduleIsPlugin = isPlugin(projectModule);
-    logger.debug(`Is this a plugin? ${moduleIsPlugin}`);
+    // First, use centralized directory detection to check if we're in a plugin directory
+    const directoryInfo = detectDirectoryType(dir);
+    logger.debug(`Directory detection: ${directoryInfo.type}, isPlugin: ${directoryInfo.isPlugin}`);
 
-    if (moduleIsPlugin) {
-      logger.info('Detected plugin module instead of project');
+    // Then check if the loaded module structure matches plugin expectations
+    const moduleIsPlugin = isPlugin(projectModule);
+    logger.debug(`Module structure check: ${moduleIsPlugin}`);
+
+    // Use directory detection as primary source of truth
+    const isPluginDirectory = directoryInfo.isPlugin;
+
+    // Warn if directory and module detection disagree
+    if (isPluginDirectory !== moduleIsPlugin) {
+      logger.warn(
+        `Mismatch detected: Directory analysis says ${isPluginDirectory ? 'plugin' : 'project'}, ` +
+          `but module structure suggests ${moduleIsPlugin ? 'plugin' : 'project'}. ` +
+          `Using directory detection result.`
+      );
+    }
+
+    if (isPluginDirectory) {
+      logger.info('Detected plugin directory - loading as plugin');
 
       try {
         // Extract the plugin object
