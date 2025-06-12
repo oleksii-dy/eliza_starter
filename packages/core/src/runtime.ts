@@ -120,7 +120,13 @@ export class AgentRuntime implements IAgentRuntime {
     events?: { [key: string]: ((params: any) => void)[] };
     allAvailablePlugins?: Plugin[];
   }) {
-    // Create the logger with appropriate level
+    this.agentId =
+      opts.character?.id ??
+      opts?.agentId ??
+      stringToUuid(opts.character?.name ?? uuidv4() + opts.character?.username);
+    this.character = opts.character;
+
+    // Create the logger with appropriate level after character is assigned
     this.logger = createLogger({
       agentName: this.character?.name,
     });
@@ -134,11 +140,6 @@ export class AgentRuntime implements IAgentRuntime {
       this.adapter = opts.adapter;
     }
 
-    this.agentId =
-      opts.character?.id ??
-      opts?.agentId ??
-      stringToUuid(opts.character?.name ?? uuidv4() + opts.character?.username);
-    this.character = opts.character;
     const logLevel = process.env.LOG_LEVEL || 'info';
 
     this.logger.debug(`[AgentRuntime] Process working directory: ${process.cwd()}`);
@@ -366,8 +367,16 @@ export class AgentRuntime implements IAgentRuntime {
       // Initialize database first
       await this.adapter.init();
 
-      // Wait a short time to ensure DatabaseMigrationService is ready
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for database adapter to be ready
+      let retries = 0;
+      const maxRetries = 10;
+      while (!(await this.adapter.isReady()) && retries < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        retries++;
+      }
+      if (retries >= maxRetries) {
+        throw new Error('Database adapter failed to become ready in time');
+      }
 
       // Run plugin migrations
       await this.runPluginMigrations();
