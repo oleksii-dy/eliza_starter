@@ -9,7 +9,7 @@ export function handleInvalidDirectory(directoryInfo: DirectoryInfo) {
   if (directoryInfo.isNonElizaOS) {
     messages = [
       "This directory doesn't appear to be an ElizaOS project.",
-      directoryInfo.packageName && `Found package: ${directoryInfo.packageName}`,
+      directoryInfo.packageName ? `Found package: ${directoryInfo.packageName}` : undefined,
       'ElizaOS update only works in ElizaOS projects, plugins, the ElizaOS monorepo, and ElizaOS infrastructure packages (e.g. client, cli).',
       'To create a new ElizaOS project, use: elizaos create <project-name>',
     ].filter(Boolean);
@@ -30,7 +30,7 @@ export function handleInvalidDirectory(directoryInfo: DirectoryInfo) {
   }
 
   if (messages.length > 0) {
-    messages.forEach((msg) => console.info(msg));
+    messages.forEach((msg) => console.warn(msg));
   } else {
     console.error(`Unexpected directory type: ${directoryInfo.type}`);
   }
