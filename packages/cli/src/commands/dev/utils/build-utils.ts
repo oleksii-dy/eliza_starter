@@ -70,7 +70,7 @@ export async function performRebuild(context: DevContext): Promise<void> {
 
   const { directory, directoryType } = context;
 
-  if (directoryType.isMonorepo || directoryType.monorepoRoot) {
+  if (directoryType.isMonorepo || directoryType.isSubdir) {
     const { monorepoRoot } = await UserEnvironment.getInstance().getPathInfo();
     if (monorepoRoot) {
       await buildCorePackages(monorepoRoot);
@@ -95,7 +95,6 @@ export async function performRebuild(context: DevContext): Promise<void> {
  */
 export async function performInitialBuild(context: DevContext): Promise<void> {
   const { directoryType, directory } = context;
-
 
   if (process.env.ELIZA_TEST_MODE) {
     console.info('Skipping initial build in test mode');
