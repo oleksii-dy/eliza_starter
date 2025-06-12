@@ -283,10 +283,9 @@ export async function runE2eTests(
 
           const results = await testRunner.runTests({
             filter: processedFilter,
-            // Only run plugin tests if we're actually in a plugin directory
-            skipPlugins: !currentDirInfo.isPlugin,
-            // Only run project tests if we're actually in a project directory
-            skipProjectTests: !currentDirInfo.isProject,
+            // Use positive flags that match the directory type
+            runPluginTests: currentDirInfo.isPlugin,
+            runProjectTests: currentDirInfo.isProject,
             skipE2eTests: false, // Always allow E2E tests
           });
           totalFailed += results.failed;

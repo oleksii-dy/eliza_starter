@@ -19,8 +19,8 @@ interface TestStats {
 
 interface TestOptions {
   filter?: string;
-  skipPlugins?: boolean;
-  skipProjectTests?: boolean;
+  runPluginTests?: boolean;
+  runProjectTests?: boolean;
   skipE2eTests?: boolean;
 }
 
@@ -115,7 +115,7 @@ export class TestRunner {
    * Runs project agent tests
    */
   private async runProjectTests(options: TestOptions) {
-    if (!this.projectAgent?.tests || options.skipProjectTests || this.isDirectPluginTest) {
+    if (!this.projectAgent?.tests || !options.runProjectTests || this.isDirectPluginTest) {
       if (this.isDirectPluginTest) {
         logger.info('Skipping project tests when directly testing a plugin');
       }
@@ -151,7 +151,7 @@ export class TestRunner {
    */
   private async runPluginTests(options: TestOptions) {
     // Skip plugin tests if we're not in a plugin directory
-    if (options.skipPlugins) {
+    if (!options.runPluginTests) {
       return;
     }
 
