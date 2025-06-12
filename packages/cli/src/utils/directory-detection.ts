@@ -16,6 +16,7 @@ export interface DirectoryInfo {
   hasPackageJson: boolean;
   hasElizaOSDependencies: boolean;
   packageName?: string;
+  packageInfo?: PackageJson;
   elizaPackageCount: number;
   monorepoRoot?: string;
 
@@ -27,7 +28,7 @@ export interface DirectoryInfo {
   isNonElizaOS: boolean;
 }
 
-interface PackageJson {
+export interface PackageJson {
   name?: string;
   keywords?: string[];
   main?: string;
@@ -66,12 +67,13 @@ export function detectDirectoryType(dir: string): DirectoryInfo {
 
     let elizaPackageCount = 0;
     let packageName: string | undefined;
+    let packageInfo: PackageJson | undefined;
 
     if (hasPackageJson) {
-      const packageJson = parsePackageJson(packageJsonPath);
-      if (packageJson) {
-        elizaPackageCount = countElizaOSPackages(packageJson);
-        packageName = packageJson.name;
+      packageInfo = parsePackageJson(packageJsonPath);
+      if (packageInfo) {
+        elizaPackageCount = countElizaOSPackages(packageInfo);
+        packageName = packageInfo.name;
       }
     }
 
@@ -81,7 +83,8 @@ export function detectDirectoryType(dir: string): DirectoryInfo {
       elizaPackageCount,
       elizaPackageCount > 0,
       monorepoRoot,
-      packageName
+      packageName,
+      packageInfo
     );
   }
 
@@ -96,18 +99,18 @@ export function detectDirectoryType(dir: string): DirectoryInfo {
   }
 
   // Parse package.json
-  const packageJson = parsePackageJson(packageJsonPath);
-  if (!packageJson) {
+  const packageInfo = parsePackageJson(packageJsonPath);
+  if (!packageInfo) {
     return createDirectoryInfo('non-elizaos-dir', true, 0, false, monorepoRoot);
   }
 
   // Analyze ElizaOS dependencies
-  const elizaPackageCount = countElizaOSPackages(packageJson);
+  const elizaPackageCount = countElizaOSPackages(packageInfo);
   const hasElizaOSDependencies = elizaPackageCount > 0;
 
   // Determine directory type flags directly from detection functions
-  const isPlugin = isElizaOSPlugin(packageJson);
-  const isProject = isElizaOSProject(packageJson, dir, monorepoRoot);
+  const isPlugin = isElizaOSPlugin(packageInfo);
+  const isProject = isElizaOSProject(packageInfo, dir, monorepoRoot);
 
   // Derive the type string from the boolean flags
   let directoryType: DirectoryInfo['type'];
@@ -125,7 +128,8 @@ export function detectDirectoryType(dir: string): DirectoryInfo {
     elizaPackageCount,
     hasElizaOSDependencies,
     monorepoRoot,
-    packageJson.name
+    packageInfo.name,
+    packageInfo
   );
 }
 
@@ -171,7 +175,8 @@ function createDirectoryInfo(
   elizaPackageCount: number,
   hasElizaOSDependencies: boolean,
   monorepoRoot?: string,
-  packageName?: string
+  packageName?: string,
+  packageInfo?: PackageJson
 ): DirectoryInfo {
   return {
     type,
@@ -180,6 +185,7 @@ function createDirectoryInfo(
     elizaPackageCount,
     monorepoRoot,
     packageName,
+    packageInfo,
 
     // Convenience boolean flags
     isProject: type === 'elizaos-project',
