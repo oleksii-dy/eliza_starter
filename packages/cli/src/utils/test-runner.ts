@@ -352,14 +352,18 @@ export const myPlugin = {
    * @param options Test options
    */
   async runTests(options: TestOptions = {}): Promise<TestStats> {
+    // Set default values for test flags
+    const { runPluginTests = true, runProjectTests = true, ...restOptions } = options;
+    const optionsWithDefaults = { runPluginTests, runProjectTests, ...restOptions };
+
     // Run project tests first (unless this is a direct plugin test)
-    await this.runProjectTests(options);
+    await this.runProjectTests(optionsWithDefaults);
 
     // Then run plugin tests
-    await this.runPluginTests(options);
+    await this.runPluginTests(optionsWithDefaults);
 
     // Then run e2e tests
-    await this.runE2eTests(options);
+    await this.runE2eTests(optionsWithDefaults);
 
     // Log summary
     if (!this.stats.hasTests) {
