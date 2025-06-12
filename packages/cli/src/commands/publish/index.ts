@@ -11,7 +11,7 @@ import {
   saveRegistrySettings,
   validateDataDir,
 } from '@/src/utils/registry/index';
-import { detectDirectoryType } from '@/src/utils/directory-detection';
+import { detectDirectoryType, type DirectoryInfo } from '@/src/utils/directory-detection';
 import { Command } from 'commander';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -33,13 +33,7 @@ import { getNpmUsername } from './utils/authentication';
 import { checkCliVersion } from './utils/version-check';
 
 // Import types
-import {
-  PublishOptions,
-  PackageJson,
-  Credentials,
-  DirectoryInfo,
-  PlaceholderReplacement,
-} from './types';
+import { PublishOptions, PackageJson, Credentials, PlaceholderReplacement } from './types';
 
 // Constants
 const LOCAL_REGISTRY_PATH = 'packages/registry';
@@ -123,10 +117,10 @@ export const publish = new Command()
       // Use standardized directory detection for type determination
       let detectedType: string;
 
-      if (directoryInfo.type === 'elizaos-plugin') {
+      if (directoryInfo.isPlugin) {
         detectedType = 'plugin';
         console.info('Detected ElizaOS plugin using standardized directory detection');
-      } else if (directoryInfo.type === 'elizaos-project') {
+      } else if (directoryInfo.isProject) {
         detectedType = 'project';
         console.info('Detected ElizaOS project using standardized directory detection');
       } else {

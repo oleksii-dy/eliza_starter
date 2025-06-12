@@ -16,16 +16,13 @@ export async function startDevMode(options: DevOptions): Promise<void> {
   const serverManager = getServerManager();
 
   const { directoryType } = context;
-  const isProject = directoryType.type === 'elizaos-project';
-  const isPlugin = directoryType.type === 'elizaos-plugin';
-  const isMonorepo = directoryType.type === 'elizaos-monorepo';
 
-  // Log project type
-  if (isProject) {
+  // Log project type using the new boolean flags
+  if (directoryType.isProject) {
     console.info('Identified as an ElizaOS project package');
-  } else if (isPlugin) {
+  } else if (directoryType.isPlugin) {
     console.info('Identified as an ElizaOS plugin package');
-  } else if (isMonorepo) {
+  } else if (directoryType.isMonorepo) {
     console.info('Identified as an ElizaOS monorepo');
   } else {
     console.warn(
@@ -79,8 +76,12 @@ export async function startDevMode(options: DevOptions): Promise<void> {
   };
 
   // Perform initial build if required
-  if (isProject || isPlugin || isMonorepo) {
-    const modeDescription = isMonorepo ? 'monorepo' : isProject ? 'project' : 'plugin';
+  if (directoryType.isProject || directoryType.isPlugin || directoryType.isMonorepo) {
+    const modeDescription = directoryType.isMonorepo
+      ? 'monorepo'
+      : directoryType.isProject
+        ? 'project'
+        : 'plugin';
     console.info(`Running in ${modeDescription} mode`);
 
     await performInitialBuild(context);
@@ -90,7 +91,7 @@ export async function startDevMode(options: DevOptions): Promise<void> {
   await serverManager.start(cliArgs);
 
   // Set up file watching if we're in a project, plugin, or monorepo directory
-  if (isProject || isPlugin || isMonorepo) {
+  if (directoryType.isProject || directoryType.isPlugin || directoryType.isMonorepo) {
     // Pass the rebuildAndRestart function as the onChange callback
     await watchDirectory(context.watchDirectory, rebuildAndRestart);
 

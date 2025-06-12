@@ -70,8 +70,6 @@ export const update = new Command()
           return;
         }
 
-        const isPlugin = directoryInfo.type === 'elizaos-plugin';
-
         if (directoryInfo.elizaPackageCount === 0) {
           console.info('No ElizaOS packages found in this project.');
           console.info(
@@ -90,12 +88,12 @@ export const update = new Command()
           skipBuild: options.skipBuild,
         };
 
-        await updateDependencies(cwd, isPlugin, updateOptions);
+        await updateDependencies(cwd, directoryInfo.isPlugin, updateOptions);
 
         if (options.check) {
           console.log(`Version: ${await getVersion()}`);
         } else {
-          const projectType = isPlugin ? 'Plugin' : 'Project';
+          const projectType = directoryInfo.isPlugin ? 'Plugin' : 'Project';
           console.log(`${projectType} successfully updated to the latest ElizaOS packages`);
         }
       }
