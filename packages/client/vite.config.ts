@@ -181,7 +181,7 @@ export default defineConfig(({ mode }): CustomUserConfig => {
       cssMinify: true,
       sourcemap: true,
       rollupOptions: {
-        external: ['cloudflare:sockets'],
+        external: ['cloudflare:sockets', 'langchain/text_splitter'],
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
