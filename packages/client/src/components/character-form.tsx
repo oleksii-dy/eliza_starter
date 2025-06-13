@@ -444,7 +444,7 @@ export default function CharacterForm({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Label htmlFor={field.name} className="flex items-center gap-1 text-base font-medium text-sidebar-foreground">
+              <Label htmlFor={field.name} className="flex items-center gap-1 text-base font-medium">
                 {field.title}
                 {field.name in FIELD_REQUIREMENTS &&
                   (FIELD_REQUIREMENTS as Record<string, FIELD_REQUIREMENT_TYPE>)[field.name] ===
@@ -468,7 +468,7 @@ export default function CharacterForm({
           name={field.name}
           value={field.getValue(characterValue)}
           onChange={handleChange}
-          className="min-h-[120px] resize-y bg-sidebar-background border-sidebar-border rounded-none text-sidebar-foreground placeholder:text-muted-foreground focus:border-[#3B82F6]"
+          className="min-h-[120px] resize-y"
         />
       ) : field.fieldType === 'checkbox' ? (
         <Input
@@ -477,7 +477,7 @@ export default function CharacterForm({
           type="checkbox"
           checked={(characterValue as Record<string, any>)[field.name] === 'true'}
           onChange={handleChange}
-          className="bg-sidebar-background border-sidebar-border rounded-none"
+          className=""
         />
       ) : field.fieldType === 'select' ? (
         <Select
@@ -485,7 +485,7 @@ export default function CharacterForm({
           value={field.getValue(characterValue)}
           onValueChange={(value) => handleVoiceModelChange(value, field.name)}
         >
-          <SelectTrigger className="bg-sidebar-background border-sidebar-border rounded-none text-sidebar-foreground">
+          <SelectTrigger>
             <SelectValue
               placeholder={
                 field.name.includes('voice.model') && isLoadingVoices
@@ -494,9 +494,9 @@ export default function CharacterForm({
               }
             />
           </SelectTrigger>
-          <SelectContent className="bg-sidebar-background border-sidebar-border rounded-none">
+          <SelectContent>
             {field.options?.map((option) => (
-              <SelectItem key={option.value} value={option.value} className="text-sidebar-foreground">
+              <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
             ))}
@@ -509,7 +509,7 @@ export default function CharacterForm({
           type={field.fieldType}
           value={field.getValue(characterValue)}
           onChange={handleChange}
-          className="bg-sidebar-background border-sidebar-border rounded-none text-sidebar-foreground placeholder:text-muted-foreground focus:border-[#3B82F6]"
+          className=""
         />
       )}
     </div>
@@ -521,7 +521,7 @@ export default function CharacterForm({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Label htmlFor={field.path} className="flex items-center gap-1 text-base font-medium text-sidebar-foreground">
+              <Label htmlFor={field.path} className="flex items-center gap-1 text-base font-medium">
                 {field.title}
                 {field.path in FIELD_REQUIREMENTS &&
                   (FIELD_REQUIREMENTS as Record<string, FIELD_REQUIREMENT_TYPE>)[field.path] ===
@@ -674,10 +674,10 @@ export default function CharacterForm({
   ];
 
   return (
-    <div ref={containerRef} className="w-full max-w-full mx-auto p-4 sm:p-6 bg-sidebar-background min-h-screen">
+    <div ref={containerRef} className="w-full max-w-full mx-auto p-4 sm:p-6 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-sidebar-foreground">{title || 'Agent Settings'}</h1>
+          <h1 className="text-3xl">{title || 'Agent Settings'}</h1>
           <p className="text-muted-foreground mt-1">
             {description || 'Configure your agent settings'}
           </p>
@@ -730,17 +730,17 @@ export default function CharacterForm({
 
             {/* Tabs container */}
             <div ref={tabsContainerRef} className="overflow-x-auto scrollbar-hide">
-              <TabsList className="inline-flex items-center justify-start bg-sidebar-background border-b border-sidebar-border p-0 text-muted-foreground w-full rounded-none h-auto">
+              <TabsList className="inline-flex items-center justify-start border-b p-0 text-muted-foreground w-full h-auto">
                 {allTabs.map((tab) => (
                   <TabsTrigger
                     key={tab.value}
                     value={tab.value}
                     className={cn(
-                      'whitespace-nowrap px-6 py-4 text-base font-semibold tracking-tight leading-none',
-                      'bg-transparent border-0 rounded-none text-muted-foreground',
+                      'whitespace-nowrap px-6 py-4 text-base leading-none',
+                      'bg-transparent border-0 text-muted-foreground',
                       'data-[state=active]:text-foreground data-[state=active]:bg-transparent',
-                      'data-[state=active]:border-b-2 data-[state=active]:border-b-[#3B82F6]',
-                      'hover:text-foreground/80',
+                      'data-[state=active]:border-b-2 data-[state=active]:border-b-accent',
+                      'hover:text-foreground',
                       'transition-colors duration-200 relative',
                       !showLabels && 'px-4 text-sm' // Smaller padding on mobile
                     )}
@@ -765,7 +765,7 @@ export default function CharacterForm({
             )}
           </div>
 
-          <Card className="bg-sidebar-background border-sidebar-border rounded-none">
+          <Card>
             <CardContent className="p-6">
               {AGENT_FORM_SCHEMA.map((section) => (
                 <TabsContent
@@ -774,7 +774,7 @@ export default function CharacterForm({
                   className="space-y-6"
                 >
                   <div className="space-y-4">
-                    <h2 className="text-xl font-semibold tracking-tight text-sidebar-foreground border-b border-sidebar-border pb-2">
+                    <h2 className="text-xl border-b pb-2">
                       {section.sectionTitle}
                     </h2>
                     <div className="space-y-4">
@@ -788,7 +788,7 @@ export default function CharacterForm({
               {customComponents.map((component) => (
                 <TabsContent key={`custom-${component.name}`} value={`custom-${component.name}`} className="space-y-6">
                   <div className="space-y-4">
-                    <h2 className="text-xl font-semibold tracking-tight text-sidebar-foreground border-b border-sidebar-border pb-2">
+                    <h2 className="text-xl border-b pb-2">
                       {component.name}
                     </h2>
                     <div className="space-y-4">
