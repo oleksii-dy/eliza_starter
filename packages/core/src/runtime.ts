@@ -125,12 +125,22 @@ export class AgentRuntime implements IAgentRuntime {
       opts?.agentId ??
       stringToUuid(opts.character?.name ?? uuidv4() + opts.character?.username);
     this.character = opts.character;
-    const logLevel = process.env.LOG_LEVEL || 'info';
 
-    // Create the logger with appropriate level - only show debug logs when explicitly configured
+    // Create the logger with appropriate level after character is assigned
     this.logger = createLogger({
       agentName: this.character?.name,
     });
+
+    this.logger.debug(`[constructor] Initializing runtime with agentId: ${opts.agentId}`);
+
+    if (opts.adapter) {
+      this.logger.debug(
+        `[constructor] Adapter provided in constructor: ${opts.adapter.constructor.name}`
+      );
+      this.adapter = opts.adapter;
+    }
+
+    const logLevel = process.env.LOG_LEVEL || 'info';
 
     this.logger.debug(`[AgentRuntime] Process working directory: ${process.cwd()}`);
 
@@ -156,54 +166,40 @@ export class AgentRuntime implements IAgentRuntime {
   }
 
   async registerPlugin(plugin: Plugin): Promise<void> {
-    if (!plugin?.name) {
-      // Ensure plugin and plugin.name are defined
-      const errorMsg = 'Plugin or plugin name is undefined';
-      this.logger.error(`*** registerPlugin: ${errorMsg}`);
-      throw new Error(`*** registerPlugin: ${errorMsg}`);
-    }
-
     // Check if a plugin with the same name is already registered.
     const existingPlugin = this.plugins.find((p) => p.name === plugin.name);
     if (existingPlugin) {
-      this.logger.warn(
-        `${this.character.name}(${this.agentId}) - Plugin ${plugin.name} is already registered. Skipping re-registration.`
-      );
-      return; // Do not proceed further with other registration steps
+      this.logger.warn(`Plugin ${plugin.name} is already registered. Skipping re-registration.`);
+      return;
     }
 
     // Add the plugin to the runtime's list of active plugins
     (this.plugins as Plugin[]).push(plugin);
-    this.logger.debug(
-      `Success: Plugin ${plugin.name} added to active plugins for ${this.character.name}(${this.agentId}).`
-    );
 
     if (plugin.init) {
       try {
         await plugin.init(plugin.config || {}, this);
-        this.logger.debug(`Success: Plugin ${plugin.name} initialized successfully`);
-      } catch (error) {
-        // Check if the error is related to missing API keys
+      } catch (error: any) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         if (
           errorMessage.includes('API key') ||
           errorMessage.includes('environment variables') ||
           errorMessage.includes('Invalid plugin configuration')
         ) {
-          console.warn(`Plugin ${plugin.name} requires configuration. ${errorMessage}`);
-          console.warn(
-            'Please check your environment variables and ensure all required API keys are set.'
-          );
-          console.warn('You can set these in your .env file.');
+          this.logger.warn(`Plugin ${plugin.name} requires configuration. ${errorMessage}`);
         } else {
           throw error;
         }
       }
     }
+
     if (plugin.adapter) {
-      this.logger.debug(`Registering database adapter for plugin ${plugin.name}`);
+      if (this.adapter && this.adapter.constructor.name === plugin.adapter.constructor.name) {
+        return;
+      }
       this.registerDatabaseAdapter(plugin.adapter);
     }
+
     if (plugin.actions) {
       for (const action of plugin.actions) {
         this.registerAction(action);
@@ -267,9 +263,6 @@ export class AgentRuntime implements IAgentRuntime {
 
     const resolve = async (pluginName: string) => {
       if (recursionStack.has(pluginName)) {
-        this.logger.error(
-          `Circular dependency detected: ${Array.from(recursionStack).join(' -> ')} -> ${pluginName}`
-        );
         throw new Error(`Circular dependency detected involving plugin: ${pluginName}`);
       }
       if (visited.has(pluginName)) {
@@ -285,11 +278,9 @@ export class AgentRuntime implements IAgentRuntime {
       }
 
       if (!plugin) {
-        this.logger.warn(
-          `Dependency plugin "${pluginName}" not found in allAvailablePlugins. Skipping.`
-        );
+        this.logger.warn(`Dependency plugin "${pluginName}" not found. Skipping.`);
         recursionStack.delete(pluginName);
-        return; // Or throw an error if strict dependency checking is required
+        return;
       }
 
       if (plugin.dependencies) {
@@ -351,12 +342,10 @@ export class AgentRuntime implements IAgentRuntime {
       this.logger.warn('Agent already initialized');
       return;
     }
+
+    // Register all character plugins in parallel
     const pluginRegistrationPromises = [];
-
-    // The resolution is now expected to happen in the CLI layer (e.g., startAgent)
-    // The runtime now accepts a pre-resolved, ordered list of plugins.
     const pluginsToLoad = this.characterPlugins;
-
     for (const plugin of pluginsToLoad) {
       if (plugin) {
         pluginRegistrationPromises.push(this.registerPlugin(plugin));
@@ -364,58 +353,55 @@ export class AgentRuntime implements IAgentRuntime {
     }
     await Promise.all(pluginRegistrationPromises);
 
-    if (!this.adapter) {
-      this.logger.error(
-        'Database adapter not initialized. Make sure @elizaos/plugin-sql is included in your plugins.'
-      );
-      throw new Error(
-        'Database adapter not initialized. The SQL plugin (@elizaos/plugin-sql) is required for agent initialization. Please ensure it is included in your character configuration.'
-      );
+    // Ensure SQL plugin is loaded and database adapter is available
+    const sqlPlugin = this.plugins.find((p) => p.name === '@elizaos/plugin-sql');
+    if (!sqlPlugin) {
+      throw new Error('SQL plugin (@elizaos/plugin-sql) is required for agent initialization.');
     }
+
+    if (!this.adapter) {
+      throw new Error('Database adapter not initialized. The SQL plugin is required.');
+    }
+
     try {
+      // Initialize database first
       await this.adapter.init();
 
-      // Run migrations for all loaded plugins
-      this.logger.info('Running plugin migrations...');
+      // Wait for database adapter to be ready
+      let retries = 0;
+      const maxRetries = 10;
+      while (!(await this.adapter.isReady()) && retries < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        retries++;
+      }
+      if (retries >= maxRetries) {
+        throw new Error('Database adapter failed to become ready in time');
+      }
+
+      // Run plugin migrations
       await this.runPluginMigrations();
-      this.logger.info('Plugin migrations completed.');
 
-      const existingAgent = await this.ensureAgentExists(this.character as Partial<Agent>);
-      if (!existingAgent) {
-        const errorMsg = `Agent ${this.character.name} does not exist in database after ensureAgentExists call`;
-        throw new Error(errorMsg);
+      // Prepare agent data and ensure it exists in database
+      const agentData: Partial<Agent> = {
+        id: this.agentId,
+        name: this.character?.name || 'Unknown',
+        bio: '',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      // Create or update agent in database
+      const agent = await this.ensureAgentExists(agentData);
+
+      // If database agent ID differs from runtime, update runtime to match
+      if (agent.id !== this.agentId) {
+        (this as any).agentId = agent.id;
       }
 
-      // No need to transform agent's own ID
-      let agentEntity = await this.getEntityById(this.agentId);
-
-      if (!agentEntity) {
-        const created = await this.createEntity({
-          id: this.agentId,
-          names: [this.character.name],
-          metadata: {},
-          agentId: existingAgent.id,
-        });
-        if (!created) {
-          const errorMsg = `Failed to create entity for agent ${this.agentId}`;
-          throw new Error(errorMsg);
-        }
-
-        agentEntity = await this.getEntityById(this.agentId);
-        if (!agentEntity) throw new Error(`Agent entity not found for ${this.agentId}`);
-
-        this.logger.debug(`Success: Agent entity created successfully for ${this.character.name}`);
-      }
-    } catch (error: any) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to create agent entity: ${errorMsg}`);
-      throw error;
-    }
-    try {
-      // Room creation and participant setup
+      // Create or retrieve agent's personal room
       const room = await this.getRoom(this.agentId);
       if (!room) {
-        const room = await this.createRoom({
+        await this.createRoom({
           id: this.agentId,
           name: this.character.name,
           source: 'elizaos',
@@ -425,31 +411,45 @@ export class AgentRuntime implements IAgentRuntime {
           worldId: this.agentId,
         });
       }
+
+      // Create or verify agent's entity record
+      const entity = await this.getEntityById(this.agentId);
+      if (!entity) {
+        const created = await this.createEntity({
+          id: this.agentId,
+          names: [this.character.name],
+          agentId: this.agentId,
+        });
+        if (!created) {
+          throw new Error(`Failed to create entity for agent ${this.agentId}`);
+        }
+      }
+
+      // Add agent as participant to its own room if not already present
       const participants = await this.adapter.getParticipantsForRoom(this.agentId);
       if (!participants.includes(this.agentId)) {
         const added = await this.addParticipant(this.agentId, this.agentId);
         if (!added) {
-          const errorMsg = `Failed to add agent ${this.agentId} as participant to its own room`;
-          throw new Error(errorMsg);
+          throw new Error(`Failed to add agent ${this.agentId} as participant to its own room`);
         }
-        this.logger.debug(`Agent ${this.character.name} linked to its own room successfully`);
       }
     } catch (error: any) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to add agent as participant: ${errorMsg}`);
+      this.logger.error(`Failed to initialize agent: ${errorMsg}`);
       throw error;
     }
+
+    // Configure embedding model if available
     const embeddingModel = this.getModel(ModelType.TEXT_EMBEDDING);
-    if (!embeddingModel) {
-      this.logger.warn(
-        `[AgentRuntime][${this.character.name}] No TEXT_EMBEDDING model registered. Skipping embedding dimension setup.`
-      );
-    } else {
+    if (embeddingModel) {
       await this.ensureEmbeddingDimension();
     }
+
+    // Initialize all queued services
     for (const service of this.servicesInitQueue) {
       await this.registerService(service);
     }
+
     this.isInitialized = true;
   }
 
@@ -520,14 +520,29 @@ export class AgentRuntime implements IAgentRuntime {
   }
 
   registerDatabaseAdapter(adapter: IDatabaseAdapter) {
+    this.logger.debug(`[registerDatabaseAdapter] Called with adapter: ${adapter.constructor.name}`);
+    this.logger.debug(
+      `[registerDatabaseAdapter] Current adapter: ${this.adapter ? this.adapter.constructor.name : 'none'}`
+    );
+    this.logger.debug(`[registerDatabaseAdapter] Stack trace: ${new Error().stack}`);
+
     if (this.adapter) {
-      this.logger.warn(
-        'Database adapter already registered. Additional adapters will be ignored. This may lead to unexpected behavior.'
-      );
-    } else {
-      this.adapter = adapter;
-      this.logger.debug('Success: Database adapter registered successfully.');
+      if (this.adapter === adapter) {
+        this.logger.debug('[registerDatabaseAdapter] Same adapter instance, skipping registration');
+        return;
+      }
+      if (this.adapter.constructor.name === adapter.constructor.name) {
+        this.logger.warn(
+          `[registerDatabaseAdapter] Different adapter instance already registered. Current: ${this.adapter.constructor.name}, New: ${adapter.constructor.name}`
+        );
+        return;
+      }
     }
+
+    this.logger.debug(
+      `[registerDatabaseAdapter] Registering new adapter: ${adapter.constructor.name}`
+    );
+    this.adapter = adapter;
   }
 
   registerProvider(provider: Provider) {
@@ -1459,6 +1474,14 @@ export class AgentRuntime implements IAgentRuntime {
         throw new Error(`Failed to retrieve agent after update: ${existingAgentId}`);
       }
 
+      // Update runtime agentId to match database
+      if (existingAgent.id !== this.agentId) {
+        this.logger.debug(
+          `[AgentRuntime] Updating runtime agentId from ${this.agentId} to ${existingAgent.id} to match database`
+        );
+        (this as any).agentId = existingAgent.id;
+      }
+
       this.logger.debug(`Updated existing agent ${agent.name} on restart`);
       return existingAgent;
     }
@@ -1472,6 +1495,14 @@ export class AgentRuntime implements IAgentRuntime {
     const created = await this.adapter.createAgent(newAgent);
     if (!created) {
       throw new Error(`Failed to create agent: ${agent.name}`);
+    }
+
+    // Update runtime agentId to match newly created agent
+    if (newAgent.id !== this.agentId) {
+      this.logger.debug(
+        `[AgentRuntime] Updating runtime agentId from ${this.agentId} to ${newAgent.id} to match newly created agent`
+      );
+      (this as any).agentId = newAgent.id;
     }
 
     this.logger.debug(`Created new agent ${agent.name}`);
