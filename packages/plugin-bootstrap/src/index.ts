@@ -539,8 +539,6 @@ const messageReceivedHandler = async ({
           }
 
 
-          console.log('responseMessages are', responseMessages);
-
           for (const responseMessage of responseMessages) {
             await runtime.createMemory(responseMessage, 'messages');
           }
