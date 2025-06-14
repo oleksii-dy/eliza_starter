@@ -7,8 +7,7 @@ export const tokenTemplate = `
   {{message.content.text}}
 
   **Output JSON (do not include any other text, only the JSON object):**
-  \`\`\`json
-  {
-    "tokenSymbolOrAddress": "string" | null // The symbol (e.g., "USDC", "WMATIC") or full contract address of the token.
-  }\`\`\`
+{
+    "tokenSymbolOrAddress": "string" | null
+}
 `;

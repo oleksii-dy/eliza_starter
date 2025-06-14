@@ -7,12 +7,10 @@ export const swapTemplate = `
   {{message.content.text}}
 
   **Output JSON (do not include any other text, only the JSON object):**
-  \`\`\`json
-  {
-    \"inputTokenSymbolOrAddress\": \"string\" | null,
-    \"outputTokenSymbolOrAddress\": \"string\" | null,
-    \"amount\": \"string\" | null,
-    \"minOutputAmount\": \"string\" | null
-  }
-  \`\`\`
+{
+    "inputTokenSymbolOrAddress": "string" | null,
+    "outputTokenSymbolOrAddress": "string" | null,
+    "amount": "string" | null,
+    "minOutputAmount": "string" | null
+}
 `;

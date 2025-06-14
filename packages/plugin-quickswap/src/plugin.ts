@@ -14,13 +14,16 @@ import {
   logger,
 } from '@elizaos/core';
 import { z } from 'zod';
-import { initializeQuickswapPluginAction } from './actions/initializeQuickswapPlugin';
-import { fetchTokenDataAction } from './actions/fetchTokenData';
-import { fetchPairDataAction } from './actions/fetchPairData';
-import { swapTokensAction } from './actions/swapTokens';
-import { addLiquidityAction } from './actions/addLiquidity';
-import { removeLiquidityAction } from './actions/removeLiquidity';
-import { getTransactionStatusAction } from './actions/getTransactionStatus';
+import { initializeQuickswapPluginAction } from './actions/initializeQuickswapPlugin.js';
+import { fetchTokenDataAction } from './actions/fetchTokenData.js';
+import { fetchPairDataAction } from './actions/fetchPairData.js';
+import { swapTokensAction } from './actions/swapTokens.js';
+import { addLiquidityAction } from './actions/addLiquidity.js';
+import { removeLiquidityAction } from './actions/removeLiquidity.js';
+import { getTransactionStatusAction } from './actions/getTransactionStatus.js';
+import { calculateLiquidityValueAction } from './actions/calculateLiquidityValue.js';
+import { calculateMidPriceAction } from './actions/calculateMidPrice.js';
+import { calculateTokenPriceAction } from './actions/calculateTokenPrice.js';
 
 /**
  * Define the configuration schema for the Quickswap plugin
@@ -158,6 +161,9 @@ const plugin: Plugin = {
     addLiquidityAction,
     removeLiquidityAction,
     getTransactionStatusAction,
+    calculateLiquidityValueAction,
+    calculateMidPriceAction,
+    calculateTokenPriceAction,
   ],
   providers: [quickswapProvider],
 };

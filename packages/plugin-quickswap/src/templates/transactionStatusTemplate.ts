@@ -7,9 +7,7 @@ export const transactionStatusTemplate = `
   {{message.content.text}}
 
   **Output JSON (do not include any other text, only the JSON object):**
-  \`\`\`json
-  {
-    "transactionHash": "string" | null
-  }
-  \`\`\`
+{
+    "transactionHash": string | null
+}
 `;

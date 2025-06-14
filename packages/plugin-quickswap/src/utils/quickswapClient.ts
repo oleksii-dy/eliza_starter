@@ -48,6 +48,34 @@ export interface QuickswapClient {
     value?: string;
     error?: string;
   }>;
+  simulateCalculateLiquidityValue(
+    token0: string,
+    token1: string,
+    lpTokensAmount: number
+  ): Promise<{
+    success: boolean;
+    token0Value?: number;
+    token1Value?: number;
+    totalUsdValue?: number;
+    error?: string;
+  }>;
+  simulateCalculateMidPrice(
+    token0: string,
+    token1: string
+  ): Promise<{
+    success: boolean;
+    midPriceAB?: number;
+    midPriceBA?: number;
+    error?: string;
+  }>;
+  simulateCalculateTokenPrice(
+    token: string,
+    vsToken: string
+  ): Promise<{
+    success: boolean;
+    price?: number;
+    error?: string;
+  }>;
   // Add more methods as needed for swap, liquidity, etc.
 }
 
@@ -201,6 +229,78 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
           status: randomStatus,
           error: 'Transaction failed or reverted',
         };
+      }
+    },
+    simulateCalculateLiquidityValue: async (
+      token0: string,
+      token1: string,
+      lpTokensAmount: number
+    ) => {
+      logger.info(
+        `Mock QuickswapClient: Simulating calculating liquidity value for ${lpTokensAmount} LP tokens of ${token0}/${token1}`
+      );
+      const lowerCaseToken0 = token0.toLowerCase();
+      const lowerCaseToken1 = token1.toLowerCase();
+
+      if (
+        (lowerCaseToken0 === 'usdc' && lowerCaseToken1 === 'wmatic') ||
+        (lowerCaseToken0 === 'wmatic' && lowerCaseToken1 === 'usdc')
+      ) {
+        const simulatedToken0Value = lpTokensAmount * 500; // Mock value
+        const simulatedToken1Value = lpTokensAmount * 0.5; // Mock value
+        const totalUsdValue = simulatedToken0Value + simulatedToken1Value * 1000; // Assuming WMATIC is ~1000 USDC
+        return {
+          success: true,
+          token0Value: simulatedToken0Value,
+          token1Value: simulatedToken1Value,
+          totalUsdValue: totalUsdValue,
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Unsupported token pair for simulated liquidity value calculation',
+        };
+      }
+    },
+    simulateCalculateMidPrice: async (token0: string, token1: string) => {
+      logger.info(`Mock QuickswapClient: Simulating mid-price for ${token0}/${token1}`);
+      const lowerCaseToken0 = token0.toLowerCase();
+      const lowerCaseToken1 = token1.toLowerCase();
+
+      if (
+        (lowerCaseToken0 === 'wmatic' && lowerCaseToken1 === 'usdc') ||
+        (lowerCaseToken0 === 'usdc' && lowerCaseToken1 === 'wmatic')
+      ) {
+        // Simulate WMATIC/USDC mid-price (e.g., 0.5 USDC per WMATIC)
+        const midPriceAB = 0.5; // WMATIC/USDC
+        const midPriceBA = 1 / midPriceAB; // USDC/WMATIC
+        return { success: true, midPriceAB, midPriceBA };
+      } else {
+        return {
+          success: false,
+          error: 'Unsupported token pair for simulated mid-price calculation',
+        };
+      }
+    },
+    simulateCalculateTokenPrice: async (token: string, vsToken: string) => {
+      logger.info(`Mock QuickswapClient: Simulating price for ${token} in ${vsToken}`);
+      const lowerCaseToken = token.toLowerCase();
+      const lowerCaseVsToken = vsToken.toLowerCase();
+
+      if (
+        (lowerCaseToken === 'matic' && lowerCaseVsToken === 'usdc') ||
+        (lowerCaseToken === 'wmatic' && lowerCaseVsToken === 'usdc')
+      ) {
+        const price = 0.5; // Simulate 1 MATIC = 0.5 USDC
+        return { success: true, price };
+      } else if (
+        (lowerCaseToken === 'eth' && lowerCaseVsToken === 'dai') ||
+        (lowerCaseToken === 'weth' && lowerCaseVsToken === 'dai')
+      ) {
+        const price = 2000; // Simulate 1 ETH = 2000 DAI
+        return { success: true, price };
+      } else {
+        return { success: false, error: 'Unsupported token pair for simulated price calculation' };
       }
     },
   };

@@ -7,12 +7,10 @@ export const addLiquidityTemplate = `
   {{message.content.text}}
 
   **Output JSON (do not include any other text, only the JSON object):**
-  \`\`\`json
-  {
-    \"token0SymbolOrAddress\": \"string\" | null,
-    \"token1SymbolOrAddress\": \"string\" | null,
-    \"amount0\": \"string\" | null,
-    \"amount1\": \"string\" | null
-  }
-  \`\`\`
+{
+    "token0SymbolOrAddress": "string" | null,
+    "token1SymbolOrAddress": "string" | null,
+    "amount0": "string" | null,
+    "amount1": "string" | null
+}
 `;
