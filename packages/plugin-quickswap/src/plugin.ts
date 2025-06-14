@@ -24,6 +24,9 @@ import { getTransactionStatusAction } from './actions/getTransactionStatus.js';
 import { calculateLiquidityValueAction } from './actions/calculateLiquidityValue.js';
 import { calculateMidPriceAction } from './actions/calculateMidPrice.js';
 import { calculateTokenPriceAction } from './actions/calculateTokenPrice.js';
+import { executeLimitOrderStopLossTakeProfitAction } from './actions/executeLimitOrderStopLossTakeProfit.js';
+import { supportFeeOnTransferTokensAction } from './actions/supportFeeOnTransferTokens.js';
+import { calculatePriceImpactAction } from './actions/calculatePriceImpact.js';
 
 /**
  * Define the configuration schema for the Quickswap plugin
@@ -164,6 +167,9 @@ const plugin: Plugin = {
     calculateLiquidityValueAction,
     calculateMidPriceAction,
     calculateTokenPriceAction,
+    executeLimitOrderStopLossTakeProfitAction,
+    supportFeeOnTransferTokensAction,
+    calculatePriceImpactAction,
   ],
   providers: [quickswapProvider],
 };

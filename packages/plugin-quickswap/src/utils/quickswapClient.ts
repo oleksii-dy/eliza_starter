@@ -76,6 +76,35 @@ export interface QuickswapClient {
     price?: number;
     error?: string;
   }>;
+  simulateExecuteOrder(params: {
+    tradeType: 'limit' | 'stop-loss' | 'take-profit';
+    inputTokenSymbolOrAddress: string;
+    outputTokenSymbolOrAddress: string;
+    amount: string;
+    price: string;
+    stopPrice?: string;
+    takeProfitPrice?: string;
+  }): Promise<{
+    success: boolean;
+    transactionHash?: string;
+    error?: string;
+  }>;
+  simulateFeeOnTransferTokenSupport(tokenSymbolOrAddress: string): Promise<{
+    success: boolean;
+    isFeeOnTransfer?: boolean;
+    isSupported?: boolean;
+    error?: string;
+  }>;
+  simulateCalculatePriceImpact(
+    inputToken: string,
+    outputToken: string,
+    inputAmount: number
+  ): Promise<{
+    success: boolean;
+    priceImpactPercentage?: number;
+    newPrice?: number;
+    error?: string;
+  }>;
   // Add more methods as needed for swap, liquidity, etc.
 }
 
@@ -205,7 +234,7 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
     },
     simulateGetTransactionStatus: async (transactionHash: string) => {
       logger.info(`Mock QuickswapClient: Simulating transaction status for ${transactionHash}`);
-      const mockStatuses = ['pending', 'success', 'failed'];
+      const mockStatuses: ('pending' | 'success' | 'failed')[] = ['pending', 'success', 'failed'];
       const randomStatus = mockStatuses[Math.floor(Math.random() * mockStatuses.length)];
 
       if (randomStatus === 'success') {
@@ -258,7 +287,7 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
       } else {
         return {
           success: false,
-          error: 'Unsupported token pair for simulated liquidity value calculation',
+          error: 'Unsupported token pair for simulated token price calculation',
         };
       }
     },
@@ -301,6 +330,56 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
         return { success: true, price };
       } else {
         return { success: false, error: 'Unsupported token pair for simulated price calculation' };
+      }
+    },
+    simulateExecuteOrder: async (params: any) => {
+      logger.info(
+        `Mock QuickswapClient: Simulating ${params.tradeType} order execution for ${params.amount} ${params.inputTokenSymbolOrAddress} to ${params.outputTokenSymbolOrAddress} at price ${params.price}`
+      );
+      // Simulate success for now
+      const transactionHash = `0x${Math.random().toString(16).substring(2, 66)}`;
+      return { success: true, transactionHash };
+    },
+    simulateFeeOnTransferTokenSupport: async (tokenSymbolOrAddress: string) => {
+      logger.info(
+        `Mock QuickswapClient: Simulating fee-on-transfer token support for ${tokenSymbolOrAddress}`
+      );
+      const lowerCaseInput = tokenSymbolOrAddress.toLowerCase();
+      if (lowerCaseInput === 'taxcoin') {
+        return {
+          success: true,
+          isFeeOnTransfer: true,
+          isSupported: false,
+          error:
+            'Quickswap does not support trading with TaxCoin due to its complex fee mechanism.',
+        };
+      } else if (lowerCaseInput === 'safetoken') {
+        return { success: true, isFeeOnTransfer: true, isSupported: true };
+      } else {
+        return { success: true, isFeeOnTransfer: false, isSupported: true };
+      }
+    },
+    simulateCalculatePriceImpact: async (
+      inputToken: string,
+      outputToken: string,
+      inputAmount: number
+    ) => {
+      logger.info(
+        `Mock QuickswapClient: Simulating price impact for ${inputAmount} ${inputToken} to ${outputToken}`
+      );
+      // Simulate price impact
+      if (inputToken.toLowerCase() === 'wmatic' && outputToken.toLowerCase() === 'usdc') {
+        const priceImpact = inputAmount * 0.005; // 0.5% price impact for demonstration
+        const currentPrice = 0.5; // Assume current WMATIC/USDC price
+        const newPrice = currentPrice * (1 - priceImpact / inputAmount); // Simplified new price calculation
+        return { success: true, priceImpactPercentage: priceImpact, newPrice: newPrice };
+      } else if (inputToken.toLowerCase() === 'eth' && outputToken.toLowerCase() === 'dai') {
+        const priceImpact = inputAmount * 0.01; // 1% price impact
+        const currentPrice = 3000; // Assume current ETH/DAI price
+        const newPrice = currentPrice * (1 - priceImpact / inputAmount); // Simplified new price calculation
+        return { success: true, priceImpactPercentage: priceImpact, newPrice: newPrice };
+      } else {
+        return { success: false, error: 'Unsupported token pair for price impact simulation.' };
       }
     },
   };
