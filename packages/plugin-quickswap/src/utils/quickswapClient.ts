@@ -143,6 +143,35 @@ export interface QuickswapClient {
     }[];
     error?: string;
   }>;
+  simulateGetFarmingPoolDetails(params: {
+    poolId?: string;
+    token0SymbolOrAddress?: string;
+    token1SymbolOrAddress?: string;
+  }): Promise<{
+    success: boolean;
+    poolId?: string;
+    token0Symbol?: string;
+    token1Symbol?: string;
+    apr?: number;
+    totalStakedAmount?: number;
+    rewardsTokenSymbol?: string;
+    error?: string;
+  }>;
+  simulateEstimateGasFees(params: {
+    transactionType: 'swap' | 'addLiquidity' | 'removeLiquidity' | 'approve';
+    inputTokenSymbolOrAddress?: string;
+    outputTokenSymbolOrAddress?: string;
+    amount?: string;
+  }): Promise<{
+    success: boolean;
+    fastGasGwei?: number;
+    standardGasGwei?: number;
+    slowGasGwei?: number;
+    fastGasUSD?: number;
+    standardGasUSD?: number;
+    slowGasUSD?: number;
+    error?: string;
+  }>;
   // Add more methods as needed for swap, liquidity, etc.
 }
 
@@ -515,6 +544,69 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
       });
 
       return { success: true, transactions: filteredTransactions };
+    },
+    simulateGetFarmingPoolDetails: async (params: any) => {
+      logger.info(
+        `Mock QuickswapClient: Simulating farming pool details for ${params.poolId || `${params.token0SymbolOrAddress}-${params.token1SymbolOrAddress}`}`
+      );
+      if (
+        params.poolId === '1' ||
+        (params.token0SymbolOrAddress?.toLowerCase() === 'wmatic' &&
+          params.token1SymbolOrAddress?.toLowerCase() === 'usdc')
+      ) {
+        return {
+          success: true,
+          poolId: '1',
+          token0Symbol: 'WMATIC',
+          token1Symbol: 'USDC',
+          apr: 25.5 + Math.random() * 5, // Simulate 25.5%-30.5% APR
+          totalStakedAmount: 1000000 + Math.random() * 200000, // Simulate 1M-1.2M LP tokens
+          rewardsTokenSymbol: 'QUICK',
+        };
+      } else if (
+        params.poolId === '2' ||
+        (params.token0SymbolOrAddress?.toLowerCase() === 'eth' &&
+          params.token1SymbolOrAddress?.toLowerCase() === 'dai')
+      ) {
+        return {
+          success: true,
+          poolId: '2',
+          token0Symbol: 'ETH',
+          token1Symbol: 'DAI',
+          apr: 15.0 + Math.random() * 3, // Simulate 15%-18% APR
+          totalStakedAmount: 500000 + Math.random() * 100000, // Simulate 500k-600k LP tokens
+          rewardsTokenSymbol: 'QUICK',
+        };
+      } else {
+        return { success: false, error: 'Farming pool not found or unsupported.' };
+      }
+    },
+    simulateEstimateGasFees: async (params: any) => {
+      logger.info(
+        `Mock QuickswapClient: Simulating gas fees for ${params.transactionType} transaction.`
+      );
+      const baseGasGwei = 30 + Math.random() * 10; // Simulate 30-40 Gwei
+      const maticPriceUsd = 0.5 + Math.random() * 0.1; // Simulate MATIC price
+
+      let gasLimit = 100000; // Default gas limit
+      if (params.transactionType === 'swap') gasLimit = 200000;
+      else if (params.transactionType === 'addLiquidity') gasLimit = 250000;
+      else if (params.transactionType === 'removeLiquidity') gasLimit = 180000;
+      else if (params.transactionType === 'approve') gasLimit = 50000;
+
+      const fastGasGwei = baseGasGwei * 1.2;
+      const standardGasGwei = baseGasGwei;
+      const slowGasGwei = baseGasGwei * 0.8;
+
+      return {
+        success: true,
+        fastGasGwei: fastGasGwei,
+        standardGasGwei: standardGasGwei,
+        slowGasGwei: slowGasGwei,
+        fastGasUSD: (fastGasGwei * gasLimit * maticPriceUsd) / 1e9,
+        standardGasUSD: (standardGasGwei * gasLimit * maticPriceUsd) / 1e9,
+        slowGasUSD: (slowGasGwei * gasLimit * maticPriceUsd) / 1e9,
+      };
     },
   };
 

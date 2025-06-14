@@ -27,6 +27,9 @@ import { calculateTokenPriceAction } from './actions/calculateTokenPrice.js';
 import { executeLimitOrderStopLossTakeProfitAction } from './actions/executeLimitOrderStopLossTakeProfit.js';
 import { supportFeeOnTransferTokensAction } from './actions/supportFeeOnTransferTokens.js';
 import { calculatePriceImpactAction } from './actions/calculatePriceImpact.js';
+import { getFarmingPoolDetailsAction } from './actions/getFarmingPoolDetails.js';
+import { estimateGasFeesAction } from './actions/estimateGasFees.js';
+import { claimFarmingRewardsAction } from './actions/claimFarmingRewards.js';
 
 /**
  * Define the configuration schema for the Quickswap plugin
@@ -170,6 +173,9 @@ const plugin: Plugin = {
     executeLimitOrderStopLossTakeProfitAction,
     supportFeeOnTransferTokensAction,
     calculatePriceImpactAction,
+    getFarmingPoolDetailsAction,
+    estimateGasFeesAction,
+    claimFarmingRewardsAction,
   ],
   providers: [quickswapProvider],
 };
