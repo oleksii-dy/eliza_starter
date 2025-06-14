@@ -105,6 +105,44 @@ export interface QuickswapClient {
     newPrice?: number;
     error?: string;
   }>;
+  simulateMonitorLiquidityPoolHealth(
+    token0: string,
+    token1: string
+  ): Promise<{
+    success: boolean;
+    totalLiquidityUSD?: number;
+    dailyVolumeUSD?: number;
+    feesGeneratedUSD?: number;
+    impermanentLossRisk?: 'Low' | 'Medium' | 'High';
+    tvlRank?: number;
+    error?: string;
+  }>;
+  simulateFetchHistoricalTokenPrice(
+    tokenSymbolOrAddress: string,
+    vsCurrencySymbolOrAddress: string,
+    days: number
+  ): Promise<{
+    success: boolean;
+    prices?: { timestamp: number; price: number }[];
+    error?: string;
+  }>;
+  simulateFetchTransactionHistory(
+    walletAddress: string,
+    tokenSymbolOrAddress?: string,
+    transactionType?: 'swap' | 'addLiquidity' | 'removeLiquidity',
+    limit?: number
+  ): Promise<{
+    success: boolean;
+    transactions?: {
+      hash: string;
+      type: 'swap' | 'addLiquidity' | 'removeLiquidity';
+      token: string;
+      amount: number;
+      timestamp: number;
+      status: 'success' | 'pending' | 'failed';
+    }[];
+    error?: string;
+  }>;
   // Add more methods as needed for swap, liquidity, etc.
 }
 
@@ -381,6 +419,102 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
       } else {
         return { success: false, error: 'Unsupported token pair for price impact simulation.' };
       }
+    },
+    simulateMonitorLiquidityPoolHealth: async (token0: string, token1: string) => {
+      logger.info(`Mock QuickswapClient: Simulating liquidity pool health for ${token0}-${token1}`);
+      const lowerCaseToken0 = token0.toLowerCase();
+      const lowerCaseToken1 = token1.toLowerCase();
+
+      if (
+        (lowerCaseToken0 === 'wmatic' && lowerCaseToken1 === 'usdc') ||
+        (lowerCaseToken0 === 'usdc' && lowerCaseToken1 === 'wmatic')
+      ) {
+        return {
+          success: true,
+          totalLiquidityUSD: 10000000 + Math.random() * 5000000, // Simulate 10M-15M USD
+          dailyVolumeUSD: 500000 + Math.random() * 200000, // Simulate 500k-700k USD
+          feesGeneratedUSD: 5000 + Math.random() * 2000, // Simulate 5k-7k USD
+          impermanentLossRisk: 'Low',
+          tvlRank: 1,
+        };
+      } else if (
+        (lowerCaseToken0 === 'eth' && lowerCaseToken1 === 'dai') ||
+        (lowerCaseToken0 === 'dai' && lowerCaseToken1 === 'eth')
+      ) {
+        return {
+          success: true,
+          totalLiquidityUSD: 5000000 + Math.random() * 1000000, // Simulate 5M-6M USD
+          dailyVolumeUSD: 200000 + Math.random() * 50000, // Simulate 200k-250k USD
+          feesGeneratedUSD: 2000 + Math.random() * 500, // Simulate 2k-2.5k USD
+          impermanentLossRisk: 'Medium',
+          tvlRank: 5,
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Unsupported liquidity pool for health monitoring simulation.',
+        };
+      }
+    },
+    simulateFetchHistoricalTokenPrice: async (
+      tokenSymbolOrAddress: string,
+      vsCurrencySymbolOrAddress: string,
+      days: number
+    ) => {
+      logger.info(
+        `Mock QuickswapClient: Simulating historical price for ${tokenSymbolOrAddress} vs ${vsCurrencySymbolOrAddress} for ${days} days`
+      );
+      const prices = [];
+      const basePrice = 0.5 + Math.random() * 0.2; // Simulate a fluctuating price
+      for (let i = 0; i < days; i++) {
+        const price = basePrice * (1 + (Math.random() - 0.5) * 0.1); // Add some randomness
+        prices.push({
+          timestamp: Date.now() - (days - 1 - i) * 24 * 60 * 60 * 1000,
+          price: price,
+        });
+      }
+      return { success: true, prices: prices };
+    },
+    simulateFetchTransactionHistory: async (
+      walletAddress: string,
+      tokenSymbolOrAddress?: string,
+      transactionType?: 'swap' | 'addLiquidity' | 'removeLiquidity',
+      limit?: number
+    ) => {
+      logger.info(
+        `Mock QuickswapClient: Simulating transaction history for ${walletAddress} (token: ${tokenSymbolOrAddress}, type: ${transactionType}, limit: ${limit})`
+      );
+      const transactions = [];
+      const types: (typeof transactionType)[] = ['swap', 'addLiquidity', 'removeLiquidity'];
+      for (let i = 0; i < (limit || 5); i++) {
+        // Generate up to 'limit' or 5 transactions
+        const type = types[Math.floor(Math.random() * types.length)];
+        const token = Math.random() > 0.5 ? 'WMATIC' : 'USDC';
+        const amount = parseFloat((Math.random() * 100).toFixed(2));
+        const status: 'success' | 'pending' | 'failed' = Math.random() > 0.8 ? 'failed' : 'success';
+        transactions.push({
+          hash: `0x${Math.random().toString(16).substring(2, 66)}`,
+          type: type || 'swap',
+          token: token,
+          amount: amount,
+          timestamp: Date.now() - i * 3600000, // Simulate transactions hourly
+          status: status,
+        });
+      }
+
+      // Apply filters if provided
+      const filteredTransactions = transactions.filter((tx) => {
+        let match = true;
+        if (tokenSymbolOrAddress && tx.token.toLowerCase() !== tokenSymbolOrAddress.toLowerCase()) {
+          match = false;
+        }
+        if (transactionType && tx.type !== transactionType) {
+          match = false;
+        }
+        return match;
+      });
+
+      return { success: true, transactions: filteredTransactions };
     },
   };
 
