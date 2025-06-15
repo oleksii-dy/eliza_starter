@@ -9,15 +9,19 @@ export const getTransactionStatusAction: Action = {
   name: 'getTransactionStatus',
   description: 'Fetches the current status of a transaction on Quickswap using its hash.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    try {
-      z.object({
-        transactionHash: z.string(),
-      }).parse(message.content);
-      return true;
-    } catch (error) {
-      logger.warn(`[getTransactionStatusAction] Validation failed: ${error.message}`);
+    logger.info(
+      `[getTransactionStatusAction] Validate called for message: "${message.content?.text}"`
+    );
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[getTransactionStatusAction] QUICKSWAP_API_URL is required but not provided');
       return false;
     }
+
+    logger.info('[getTransactionStatusAction] Validation passed');
+    return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
     try {

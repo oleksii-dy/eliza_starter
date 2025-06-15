@@ -23,6 +23,15 @@ export const fetchTokenDataAction: Action = {
   description:
     'Fetches comprehensive token data (name, symbol, decimals, address) from Quickswap for a given token symbol or address.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
+    logger.info(`[fetchTokenDataAction] Validate called for message: "${message.content?.text}"`);
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[fetchTokenDataAction] QUICKSWAP_API_URL is required but not provided');
+      return false;
+    }
+
     // We'll rely more on LLM extraction for validation and graceful fallback in handler
     return true; // Always return true for initial validation and let handler extract parameters
   },

@@ -9,17 +9,17 @@ export const swapTokensAction: Action = {
   name: 'swapTokens',
   description: 'Swaps a specified amount of an input token for an output token on Quickswap.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    try {
-      z.object({
-        inputTokenSymbolOrAddress: z.string(),
-        outputTokenSymbolOrAddress: z.string(),
-        amount: z.string(),
-      }).parse(message.content);
-      return true;
-    } catch (error) {
-      logger.warn(`[swapTokensAction] Validation failed: ${error.message}`);
+    logger.info(`[swapTokensAction] Validate called for message: "${message.content?.text}"`);
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[swapTokensAction] QUICKSWAP_API_URL is required but not provided');
       return false;
     }
+
+    logger.info('[swapTokensAction] Validation passed');
+    return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
     try {

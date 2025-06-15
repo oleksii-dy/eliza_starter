@@ -24,6 +24,15 @@ export const fetchPairDataAction: Action = {
   description:
     'Fetches comprehensive token pair data (e.g., liquidity, reserves, price) from Quickswap for a given pair of token symbols or addresses.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
+    logger.info(`[fetchPairDataAction] Validate called for message: "${message.content?.text}"`);
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[fetchPairDataAction] QUICKSWAP_API_URL is required but not provided');
+      return false;
+    }
+
     // We'll rely more on LLM extraction for validation and graceful fallback in handler
     return true;
   },

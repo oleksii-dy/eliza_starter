@@ -9,18 +9,16 @@ export const addLiquidityAction: Action = {
   name: 'addLiquidity',
   description: 'Adds liquidity for a specified token pair to a Quickswap pool.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    try {
-      z.object({
-        token0SymbolOrAddress: z.string(),
-        token1SymbolOrAddress: z.string(),
-        amount0: z.string(),
-        amount1: z.string(),
-      }).parse(message.content);
-      return true;
-    } catch (error) {
-      logger.warn(`[addLiquidityAction] Validation failed: ${error.message}`);
+    logger.info(`[addLiquidityAction] Validate called for message: "${message.content?.text}"`);
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[addLiquidityAction] QUICKSWAP_API_URL is required but not provided');
       return false;
     }
+    logger.info('[addLiquidityAction] Validation passed');
+    return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
     try {

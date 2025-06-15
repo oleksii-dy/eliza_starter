@@ -10,23 +10,21 @@ export const executeLimitOrderStopLossTakeProfitAction: Action = {
   description:
     'Executes a limit, stop-loss, or take-profit order for a specified token pair on Quickswap.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    try {
-      z.object({
-        tradeType: z.enum(['limit', 'stop-loss', 'take-profit']),
-        inputTokenSymbolOrAddress: z.string(),
-        outputTokenSymbolOrAddress: z.string(),
-        amount: z.string(),
-        price: z.string(),
-        stopPrice: z.string().optional(),
-        takeProfitPrice: z.string().optional(),
-      }).parse(message.content);
-      return true;
-    } catch (error) {
+    logger.info(
+      `[executeLimitOrderStopLossTakeProfitAction] Validate called for message: "${message.content?.text}"`
+    );
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
       logger.warn(
-        `[executeLimitOrderStopLossTakeProfitAction] Validation failed: ${error.message}`
+        '[executeLimitOrderStopLossTakeProfitAction] QUICKSWAP_API_URL is required but not provided'
       );
       return false;
     }
+
+    logger.info('[executeLimitOrderStopLossTakeProfitAction] Validation passed');
+    return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
     try {

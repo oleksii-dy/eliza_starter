@@ -9,16 +9,19 @@ export const calculateTokenPriceAction: Action = {
   name: 'calculateTokenPrice',
   description: 'Calculates the price of a given token against another token on Quickswap.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    try {
-      z.object({
-        tokenSymbolOrAddress: z.string(),
-        vsTokenSymbolOrAddress: z.string(),
-      }).parse(message.content);
-      return true;
-    } catch (error) {
-      logger.warn(`[calculateTokenPriceAction] Validation failed: ${error.message}`);
+    logger.info(
+      `[calculateTokenPriceAction] Validate called for message: "${message.content?.text}"`
+    );
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[calculateTokenPriceAction] QUICKSWAP_API_URL is required but not provided');
       return false;
     }
+
+    logger.info('[calculateTokenPriceAction] Validation passed');
+    return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
     try {

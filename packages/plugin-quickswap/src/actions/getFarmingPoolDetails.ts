@@ -10,25 +10,19 @@ export const getFarmingPoolDetailsAction: Action = {
   description:
     'Retrieves details of a specific Quickswap farming pool by its ID or by the token pair it holds.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    try {
-      z.object({
-        poolId: z.string().optional(),
-        token0SymbolOrAddress: z.string().optional(),
-        token1SymbolOrAddress: z.string().optional(),
-      })
-        .refine(
-          (data) => data.poolId || (data.token0SymbolOrAddress && data.token1SymbolOrAddress),
-          {
-            message:
-              'Either poolId or both token0SymbolOrAddress and token1SymbolOrAddress must be provided.',
-          }
-        )
-        .parse(message.content);
-      return true;
-    } catch (error) {
-      logger.warn(`[getFarmingPoolDetailsAction] Validation failed: ${error.message}`);
+    logger.info(
+      `[getFarmingPoolDetailsAction] Validate called for message: "${message.content?.text}"`
+    );
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[getFarmingPoolDetailsAction] QUICKSWAP_API_URL is required but not provided');
       return false;
     }
+
+    logger.info('[getFarmingPoolDetailsAction] Validation passed');
+    return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
     try {

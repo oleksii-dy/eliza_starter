@@ -19,6 +19,15 @@ export const estimateGasFeesAction: Action = {
   similes: ['CHECK_TRANSACTION_COST', 'GAS_PRICE_PREDICTION', 'FEE_ESTIMATION', 'TRANSACTION_FEES'],
   description: 'Estimates the current gas fees for a specified type of transaction on Quickswap.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
+    logger.info(`[estimateGasFeesAction] Validate called for message: "${message.content?.text}"`);
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[estimateGasFeesAction] QUICKSWAP_API_URL is required but not provided');
+      return false;
+    }
+
     return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {

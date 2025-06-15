@@ -9,16 +9,19 @@ export const calculateMidPriceAction: Action = {
   name: 'calculateMidPrice',
   description: 'Calculates the mid price of a token pair on Quickswap.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    try {
-      z.object({
-        token0SymbolOrAddress: z.string(),
-        token1SymbolOrAddress: z.string(),
-      }).parse(message.content);
-      return true;
-    } catch (error) {
-      logger.warn(`[calculateMidPriceAction] Validation failed: ${error.message}`);
+    logger.info(
+      `[calculateMidPriceAction] Validate called for message: "${message.content?.text}"`
+    );
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[calculateMidPriceAction] QUICKSWAP_API_URL is required but not provided');
       return false;
     }
+
+    logger.info('[calculateMidPriceAction] Validation passed');
+    return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
     try {

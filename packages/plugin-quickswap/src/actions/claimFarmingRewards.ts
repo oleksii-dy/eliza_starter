@@ -9,16 +9,19 @@ export const claimFarmingRewardsAction: Action = {
   name: 'claimFarmingRewards',
   description: 'Claims farming rewards for a given wallet from a specified Quickswap farming pool.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    try {
-      z.object({
-        poolId: z.string(),
-        walletAddress: z.string(),
-      }).parse(message.content);
-      return true;
-    } catch (error) {
-      logger.warn(`[claimFarmingRewardsAction] Validation failed: ${error.message}`);
+    logger.info(
+      `[claimFarmingRewardsAction] Validate called for message: "${message.content?.text}"`
+    );
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[claimFarmingRewardsAction] QUICKSWAP_API_URL is required but not provided');
       return false;
     }
+
+    logger.info('[claimFarmingRewardsAction] Validation passed');
+    return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
     try {

@@ -10,17 +10,17 @@ export const removeLiquidityAction: Action = {
   description:
     'Removes a specified amount of liquidity (LP tokens) from a Quickswap pool and receives back the underlying tokens.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    try {
-      z.object({
-        token0SymbolOrAddress: z.string(),
-        token1SymbolOrAddress: z.string(),
-        lpTokensAmount: z.string(),
-      }).parse(message.content);
-      return true;
-    } catch (error) {
-      logger.warn(`[removeLiquidityAction] Validation failed: ${error.message}`);
+    logger.info(`[removeLiquidityAction] Validate called for message: "${message.content?.text}"`);
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[removeLiquidityAction] QUICKSWAP_API_URL is required but not provided');
       return false;
     }
+
+    logger.info('[removeLiquidityAction] Validation passed');
+    return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
     try {

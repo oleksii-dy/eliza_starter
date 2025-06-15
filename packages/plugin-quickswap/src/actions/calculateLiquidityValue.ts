@@ -10,17 +10,19 @@ export const calculateLiquidityValueAction: Action = {
   description:
     'Calculates the current value of provided liquidity (LP tokens) for a given token pair in a Quickswap pool.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    try {
-      z.object({
-        token0SymbolOrAddress: z.string(),
-        token1SymbolOrAddress: z.string(),
-        lpTokensAmount: z.string(),
-      }).parse(message.content);
-      return true;
-    } catch (error) {
-      logger.warn(`[calculateLiquidityValueAction] Validation failed: ${error.message}`);
+    logger.info(
+      `[calculateLiquidityValueAction] Validate called for message: "${message.content?.text}"`
+    );
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[calculateLiquidityValueAction] QUICKSWAP_API_URL is required but not provided');
       return false;
     }
+
+    logger.info('[calculateLiquidityValueAction] Validation passed');
+    return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
     try {

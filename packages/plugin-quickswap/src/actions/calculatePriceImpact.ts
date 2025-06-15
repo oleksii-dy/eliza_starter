@@ -18,6 +18,17 @@ export const calculatePriceImpactAction: Action = {
   similes: ['ESTIMATE_SLIPPAGE', 'PRICE_IMPACT_CHECK', 'TRADE_COST_ANALYSIS', 'SWAP_IMPACT'],
   description: 'Calculates the potential price impact for a swap between two tokens on Quickswap.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
+    logger.info(
+      `[calculatePriceImpactAction] Validate called for message: "${message.content?.text}"`
+    );
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn('[calculatePriceImpactAction] QUICKSWAP_API_URL is required but not provided');
+      return false;
+    }
+
     return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {

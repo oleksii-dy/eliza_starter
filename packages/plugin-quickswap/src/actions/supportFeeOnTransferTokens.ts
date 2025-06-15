@@ -17,6 +17,19 @@ export const supportFeeOnTransferTokensAction: Action = {
   description:
     'Checks if a token is a fee-on-transfer token and if Quickswap can handle it for trades.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
+    logger.info(
+      `[supportFeeOnTransferTokensAction] Validate called for message: "${message.content?.text}"`
+    );
+
+    const quickswapApiUrl = runtime.getSetting('QUICKSWAP_API_URL');
+
+    if (!quickswapApiUrl) {
+      logger.warn(
+        '[supportFeeOnTransferTokensAction] QUICKSWAP_API_URL is required but not provided'
+      );
+      return false;
+    }
+
     return true;
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
