@@ -75,11 +75,7 @@ export const getFarmingPoolDetailsAction: Action = {
           'Please specify the farming pool ID or both token symbols/addresses (e.g., "get farming pool details for pool ID 1" or "details for WMATIC-USDC farm").';
         logger.error(`[getFarmingPoolDetailsAction] Parameter extraction failed`);
         return {
-          text: `❌ **Error**: ${errorMessage}\n\nExamples:\n• "Get farming pool details for pool ID 1"
-• "Show me the details of the WMATIC-USDC farm"
-
-**Required parameters:**
-- Pool ID (or) Token 0 Symbol/Address AND Token 1 Symbol/Address`,
+          text: `❌ **Error**: ${errorMessage}\n\nExamples:\n• "Get farming pool details for pool ID 1"\n• "Show me the details of the WMATIC-USDC farm"\n\n**Required parameters:**\n- Pool ID (or) Token 0 Symbol/Address AND Token 1 Symbol/Address`,
           actions: ['getFarmingPoolDetails'],
           data: { error: errorMessage },
         };
@@ -88,7 +84,7 @@ export const getFarmingPoolDetailsAction: Action = {
 
     try {
       const quickswapClient = await initializeQuickswapClient(runtime);
-      const poolDetailsResult = await quickswapClient.simulateGetFarmingPoolDetails(params);
+      const poolDetailsResult = await quickswapClient.getFarmingPoolDetails(params);
 
       if (poolDetailsResult && poolDetailsResult.success) {
         const responseText = `🌾 **Farming Pool Details for ${params.poolId || `${params.token0SymbolOrAddress}-${params.token1SymbolOrAddress}`}**\n\n• **Pool ID**: ${poolDetailsResult.poolId || 'N/A'}\n• **Tokens**: ${poolDetailsResult.token0Symbol?.toUpperCase() || 'N/A'}-${poolDetailsResult.token1Symbol?.toUpperCase() || 'N/A'}\n• **APR**: ${poolDetailsResult.apr?.toFixed(2) || 'N/A'}%\n• **Total Staked**: ${poolDetailsResult.totalStakedAmount?.toFixed(2) || 'N/A'} LP\n• **Rewards Token**: ${poolDetailsResult.rewardsTokenSymbol?.toUpperCase() || 'N/A'}\n• **Platform**: Quickswap`;

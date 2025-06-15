@@ -66,12 +66,7 @@ export const estimateGasFeesAction: Action = {
           'Please specify the transaction type for gas estimation (e.g., "estimate gas for a swap").';
         logger.error(`[estimateGasFeesAction] Parameter extraction failed`);
         return {
-          text: `❌ **Error**: ${errorMessage}\n\nExamples:\n• "Estimate gas fees for a swap"
-• "How much gas will it cost to add liquidity?"
-• "What are the fees for approving USDC?"
-
-**Required parameters:**
-- Transaction Type (swap, addLiquidity, removeLiquidity, approve)\n- Optional: Input Token, Output Token, Amount (for more precise estimation)`,
+          text: `❌ **Error**: ${errorMessage}\n\nExamples:\n• "Estimate gas fees for a swap"\n• "How much gas will it cost to add liquidity?"\n• "What are the fees for approving USDC?"\n\n**Required parameters:**\n- Transaction Type (swap, addLiquidity, removeLiquidity, approve)\n- Optional: Input Token, Output Token, Amount (for more precise estimation)`,
           actions: ['estimateGasFees'],
           data: { error: errorMessage },
         };
@@ -80,10 +75,10 @@ export const estimateGasFeesAction: Action = {
 
     try {
       const quickswapClient = await initializeQuickswapClient(runtime);
-      const gasEstimateResult = await quickswapClient.simulateEstimateGasFees(params);
+      const gasEstimateResult = await quickswapClient.estimateGasFees(params);
 
       if (gasEstimateResult && gasEstimateResult.success) {
-        const responseText = `⛽ **Estimated Gas Fees for ${params.transactionType.toUpperCase()}**\n\n• **Fast**: ${gasEstimateResult.fastGasGwei?.toFixed(2) || 'N/A'} Gwei (~${gasEstimateResult.fastGasUSD?.toFixed(2) || 'N/A'} USD)\n• **Standard**: ${gasEstimateResult.standardGasGwei?.toFixed(2) || 'N/A'} Gwei (~${gasEstimateResult.standardGasUSD?.toFixed(2) || 'N/A'} USD)\n• **Slow**: ${gasEstimateResult.slowGasGwei?.toFixed(2) || 'N/A'} Gwei (~${gasEstimateResult.slowGasUSD?.toFixed(2) || 'N/A'} USD)\n• **Platform**: Polygon via Quickswap`;
+        const responseText = `⛽ **Estimated Gas Fees for ${params.transactionType.toUpperCase()}**\n\n• **Fast**: ${gasEstimateResult.gasPriceGwei?.toFixed(2) || 'N/A'} Gwei (~${gasEstimateResult.feeInEth?.toFixed(6) || 'N/A'} ETH)\n• **Estimated Gas Use**: ${gasEstimateResult.estimatedGasUse || 'N/A'}\n• **Platform**: Polygon via Quickswap`;
 
         return {
           text: responseText,

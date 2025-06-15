@@ -75,11 +75,7 @@ export const claimFarmingRewardsAction: Action = {
             'Please specify the farming pool ID or both token symbols/addresses (e.g., "claim rewards for wallet 0x... from pool ID 1" or "claim rewards for wallet 0x... from WMATIC-USDC farm").';
           logger.error(`[claimFarmingRewardsAction] Parameter extraction failed`);
           return {
-            text: `❌ **Error**: ${errorMessage}\n\nExamples:\n• "Claim farming rewards for wallet 0xAbc123...xyz from pool ID 1"
-• "Collect rewards for 0xDef456...uvw from the ETH-DAI farm"
-
-**Required parameters:**
-- Wallet Address\n- Pool ID (or) Token 0 Symbol/Address AND Token 1 Symbol/Address`,
+            text: `❌ **Error**: ${errorMessage}\n\nExamples:\n• "Claim farming rewards for wallet 0xAbc123...xyz from pool ID 1"\n• "Collect rewards for 0xDef456...uvw from the ETH-DAI farm"\n\n**Required parameters:**\n- Wallet Address\n- Pool ID (or) Token 0 Symbol/Address AND Token 1 Symbol/Address`,
             actions: ['claimFarmingRewards'],
             data: { error: errorMessage },
           };
@@ -89,11 +85,7 @@ export const claimFarmingRewardsAction: Action = {
           'Please specify the wallet address (e.g., "claim rewards for wallet 0x123...abc").';
         logger.error(`[claimFarmingRewardsAction] Parameter extraction failed`);
         return {
-          text: `❌ **Error**: ${errorMessage}\n\nExamples:\n• "Claim farming rewards for wallet 0xAbc123...xyz from pool ID 1"
-• "Collect rewards for 0xDef456...uvw from the ETH-DAI farm"
-
-**Required parameters:**
-- Wallet Address\n- Pool ID (or) Token 0 Symbol/Address AND Token 1 Symbol/Address`,
+          text: `❌ **Error**: ${errorMessage}\n\nExamples:\n• "Claim farming rewards for wallet 0xAbc123...xyz from pool ID 1"\n• "Collect rewards for 0xDef456...uvw from the ETH-DAI farm"\n\n**Required parameters:**\n- Wallet Address\n- Pool ID (or) Token 0 Symbol/Address AND Token 1 Symbol/Address`,
           actions: ['claimFarmingRewards'],
           data: { error: errorMessage },
         };
@@ -102,10 +94,10 @@ export const claimFarmingRewardsAction: Action = {
 
     try {
       const quickswapClient = await initializeQuickswapClient(runtime);
-      const claimResult = await quickswapClient.simulateClaimFarmingRewards(params);
+      const claimResult = await quickswapClient.claimFarmingRewards(params);
 
       if (claimResult && claimResult.success) {
-        const responseText = `💰 **Rewards Claimed Successfully!**\n\n• **Wallet**: ${params.walletAddress.substring(0, 10)}...\n• **Pool ID**: ${params.poolId || 'N/A'}\n• **Tokens**: ${params.token0SymbolOrAddress?.toUpperCase() || 'N/A'}-${params.token1SymbolOrAddress?.toUpperCase() || 'N/A'}\n• **Amount Claimed**: ${claimResult.amountClaimed?.toFixed(4) || 'N/A'} ${claimResult.rewardsTokenSymbol?.toUpperCase() || 'N/A'}\n• **Transaction Hash**: ${claimResult.transactionHash || 'N/A'}\n• **Platform**: Quickswap`;
+        const responseText = `💰 **Rewards Claimed Successfully!**\n\n• **Wallet**: ${params.walletAddress.substring(0, 10)}...\n• **Pool ID**: ${params.poolId || 'N/A'}\n• **Tokens**: ${params.token0SymbolOrAddress?.toUpperCase() || 'N/A'}-${params.token1SymbolOrAddress?.toUpperCase() || 'N/A'}\n• **Amount Claimed**: ${claimResult.rewardsClaimed?.toFixed(4) || 'N/A'} ${claimResult.rewardsTokenSymbol?.toUpperCase() || 'N/A'}\n• **Transaction Hash**: ${claimResult.transactionHash || 'N/A'}\n• **Platform**: Quickswap`;
 
         return {
           text: responseText,
@@ -116,7 +108,7 @@ export const claimFarmingRewardsAction: Action = {
             poolId: params.poolId,
             token0: params.token0SymbolOrAddress,
             token1: params.token1SymbolOrAddress,
-            amountClaimed: claimResult.amountClaimed,
+            amountClaimed: claimResult.rewardsClaimed,
             rewardsToken: claimResult.rewardsTokenSymbol,
             transactionHash: claimResult.transactionHash,
             timestamp: new Date().toISOString(),

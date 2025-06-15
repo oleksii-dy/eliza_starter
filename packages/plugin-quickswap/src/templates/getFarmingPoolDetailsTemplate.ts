@@ -1,15 +1,28 @@
-export const getFarmingPoolDetailsTemplate = `
-  You are an advanced AI assistant specializing in blockchain and decentralized finance (DeFi), specifically with Quickswap on Polygon. Your task is to extract relevant parameters from user queries to fetch details for a specific farming pool.
-
-  When extracting, prioritize explicit values given by the user. If a piece of information is not explicitly provided, leave its corresponding field as null or undefined.
-
-  **Input:**
-  {{message.content.text}}
-
-  **Output JSON (do not include any other text, only the JSON object):**
-{
-    "poolId": "string" | null, // The ID of the farming pool.
-    "token0SymbolOrAddress": "string" | null, // The symbol (e.g., "WMATIC") or full contract address of the first token in the pool.
-    "token1SymbolOrAddress": "string" | null // The symbol (e.g., "USDC") or full contract address of the second token in the pool.
-}
-`;
+export default `{
+  "action": "getFarmingPoolDetails",
+  "examples": [
+    {
+      "user": "Get farming pool details for pool ID 1",
+      "thought": "The user wants to get farming pool details. I should use the \`getFarmingPoolDetails\` action.",
+      "parameters": {
+        "poolId": "1"
+      }
+    },
+    {
+      "user": "Show me the details of the WMATIC-USDC farm",
+      "thought": "The user is asking for farming pool details by token pair. I should use the \`getFarmingPoolDetails\` action with the token pair.",
+      "parameters": {
+        "token0SymbolOrAddress": "WMATIC",
+        "token1SymbolOrAddress": "USDC"
+      }
+    },
+    {
+      "user": "What are the current metrics for the Quickswap farm between ETH and DAI?",
+      "thought": "The user is asking for farming pool details by token pair. I should use the \`getFarmingPoolDetails\` action with the token pair.",
+      "parameters": {
+        "token0SymbolOrAddress": "ETH",
+        "token1SymbolOrAddress": "DAI"
+      }
+    }
+  ]
+}`;

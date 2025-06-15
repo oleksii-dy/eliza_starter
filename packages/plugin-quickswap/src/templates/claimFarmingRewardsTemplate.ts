@@ -1,16 +1,30 @@
-export const claimFarmingRewardsTemplate = `
-  You are an advanced AI assistant specializing in blockchain and decentralized finance (DeFi), specifically with Quickswap on Polygon. Your task is to extract relevant parameters from user queries to claim farming rewards from a specified pool for a given wallet.
-
-  When extracting, prioritize explicit values given by the user. If a piece of information is not explicitly provided, leave its corresponding field as null or undefined.
-
-  **Input:**
-  {{message.content.text}}
-
-  **Output JSON (do not include any other text, only the JSON object):**
-{
-    "poolId": "string" | null, // The ID of the farming pool.
-    "token0SymbolOrAddress": "string" | null, // The symbol (e.g., "WMATIC") or full contract address of the first token in the pool.
-    "token1SymbolOrAddress": "string" | null, // The symbol (e.g., "USDC") or full contract address of the second token in the pool.
-    "walletAddress": "string" | null // The blockchain wallet address for which to claim rewards.
-}
-`;
+export default `{
+  "action": "claimFarmingRewards",
+  "examples": [
+    {
+      "user": "Claim farming rewards for wallet 0xAbc1234567890123456789012345678901234567 from pool ID 1",
+      "thought": "The user wants to claim farming rewards for a specific wallet and pool ID. I should use the \`claimFarmingRewards\` action.",
+      "parameters": {
+        "walletAddress": "0xAbc1234567890123456789012345678901234567",
+        "poolId": "1"
+      }
+    },
+    {
+      "user": "Collect rewards for 0xDef4567890123456789012345678901234567890 from the ETH-DAI farm",
+      "thought": "The user wants to claim farming rewards for a specific wallet and token pair. I should use the \`claimFarmingRewards\` action.",
+      "parameters": {
+        "walletAddress": "0xDef4567890123456789012345678901234567890",
+        "token0SymbolOrAddress": "ETH",
+        "token1SymbolOrAddress": "DAI"
+      }
+    },
+    {
+      "user": "Harvest my rewards from pool 5 for wallet 0x1234567890123456789012345678901234567890",
+      "thought": "The user wants to harvest rewards from a specific pool ID and wallet. I should use the \`claimFarmingRewards\` action.",
+      "parameters": {
+        "walletAddress": "0x1234567890123456789012345678901234567890",
+        "poolId": "5"
+      }
+    }
+  ]
+}`;
