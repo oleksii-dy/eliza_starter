@@ -1,0 +1,1 @@
+export { sparcComplianceEvaluator } from './sparc-compliance.js';
