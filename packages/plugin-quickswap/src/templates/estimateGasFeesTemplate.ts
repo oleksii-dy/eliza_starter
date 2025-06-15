@@ -1,4 +1,4 @@
-export default `{
+export const estimateGasFeesTemplate = `{
   "action": "estimateGasFees",
   "examples": [
     {
