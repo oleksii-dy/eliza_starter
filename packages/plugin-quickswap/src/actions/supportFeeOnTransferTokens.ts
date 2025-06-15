@@ -73,7 +73,7 @@ export const supportFeeOnTransferTokensAction: Action = {
 
     try {
       const quickswapClient = await initializeQuickswapClient(runtime);
-      const supportResult = await quickswapClient.simulateFeeOnTransferTokenSupport(
+      const supportResult = await quickswapClient.checkFeeOnTransferTokenSupport(
         params.tokenSymbolOrAddress
       );
 

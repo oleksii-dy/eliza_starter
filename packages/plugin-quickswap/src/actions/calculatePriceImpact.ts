@@ -81,7 +81,7 @@ export const calculatePriceImpactAction: Action = {
 
     try {
       const quickswapClient = await initializeQuickswapClient(runtime);
-      const priceImpactResult = await quickswapClient.simulateCalculatePriceImpact(
+      const priceImpactResult = await quickswapClient.calculatePriceImpact(
         params.inputTokenSymbolOrAddress,
         params.outputTokenSymbolOrAddress,
         parseFloat(params.inputAmount)
