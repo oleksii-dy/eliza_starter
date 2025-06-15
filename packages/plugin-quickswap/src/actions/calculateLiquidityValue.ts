@@ -1,107 +1,66 @@
-import { Action, IAgentRuntime, logger, Memory, composePromptFromState } from '@elizaos/core';
-import { z } from 'zod';
-import { callLLMWithTimeout } from '../utils/llmHelpers.js';
-import { calculateLiquidityValueTemplate } from '../templates/calculateLiquidityValueTemplate.js';
+import { Action, IAgentRuntime, logger, Memory } from '@elizaos/core';
 import { initializeQuickswapClient } from '../utils/quickswapClient.js';
-
-interface CalculateLiquidityValueParams {
-  token0SymbolOrAddress: string;
-  token1SymbolOrAddress: string;
-  lpTokensAmount: string;
-}
+import { z } from 'zod';
 
 /**
  * M5-07: Calculates the value of liquidity provided to a Quickswap pool.
  */
 export const calculateLiquidityValueAction: Action = {
   name: 'calculateLiquidityValue',
-  similes: ['GET_LIQUIDITY_VALUE', 'CHECK_LP_VALUE', 'ESTIMATE_LIQUIDITY'],
   description:
-    'Calculates the current value of liquidity pool tokens in terms of the underlying assets for a specified token pair on Quickswap.',
+    'Calculates the current value of provided liquidity (LP tokens) for a given token pair in a Quickswap pool.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    return true;
+    try {
+      z.object({
+        token0SymbolOrAddress: z.string(),
+        token1SymbolOrAddress: z.string(),
+        lpTokensAmount: z.string(),
+      }).parse(message.content);
+      return true;
+    } catch (error) {
+      logger.warn(`[calculateLiquidityValueAction] Validation failed: ${error.message}`);
+      return false;
+    }
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
-    logger.info(
-      `[calculateLiquidityValueAction] Handler called for message: "${message.content?.text}"`
-    );
-
-    let token0SymbolOrAddress: string;
-    let token1SymbolOrAddress: string;
-    let lpTokensAmount: string;
-
     try {
-      const llmResult = await callLLMWithTimeout<
-        CalculateLiquidityValueParams & { error?: string }
-      >(
-        runtime,
-        null,
-        calculateLiquidityValueTemplate,
-        'calculateLiquidityValueAction',
-        message.content?.text || ''
-      );
+      const parsedParams = z
+        .object({
+          token0SymbolOrAddress: z
+            .string()
+            .describe('The symbol or address of the first token in the pool.'),
+          token1SymbolOrAddress: z
+            .string()
+            .describe('The symbol or address of the second token in the pool.'),
+          lpTokensAmount: z
+            .string()
+            .describe('The amount of LP tokens to calculate the value for.'),
+        })
+        .parse(message.content);
 
-      logger.info('[calculateLiquidityValueAction] LLM result:', JSON.stringify(llmResult));
+      const { token0SymbolOrAddress, token1SymbolOrAddress, lpTokensAmount } = parsedParams;
 
-      if (
-        llmResult?.error ||
-        !llmResult?.token0SymbolOrAddress ||
-        !llmResult?.token1SymbolOrAddress ||
-        !llmResult?.lpTokensAmount
-      ) {
-        throw new Error('Required liquidity value parameters not found by LLM');
-      }
-      token0SymbolOrAddress = llmResult.token0SymbolOrAddress;
-      token1SymbolOrAddress = llmResult.token1SymbolOrAddress;
-      lpTokensAmount = llmResult.lpTokensAmount;
-    } catch (error) {
-      logger.warn('[calculateLiquidityValueAction] LLM extraction failed, trying regex fallback');
-
-      const text = message.content?.text || '';
-      const matches = text.match(
-        /calculate\s+liquidity\s+value\s+for\s+(\d+\.?\d*)\s+LP\s+tokens\s+of\s+([a-zA-Z0-9]+)\/([a-zA-Z0-9]+)/i
-      );
-
-      if (matches && matches.length >= 4) {
-        lpTokensAmount = matches[1];
-        token0SymbolOrAddress = matches[2];
-        token1SymbolOrAddress = matches[3];
-      } else {
-        const errorMessage =
-          'Please provide the amount of LP tokens and the token pair (e.g., "calculate liquidity value for 10 LP tokens of USDC/WMATIC").';
-        logger.error(`[calculateLiquidityValueAction] Parameter extraction failed`);
-
+      // Parse LP token amount to number
+      const parsedLpTokensAmount = parseFloat(lpTokensAmount);
+      if (isNaN(parsedLpTokensAmount) || parsedLpTokensAmount <= 0) {
         return {
-          text: `❌ **Error**: ${errorMessage}\n\nExamples:\n• "Calculate liquidity value for 10 LP tokens of USDC/WMATIC"\n• "What is the value of 5 LP tokens for DAI/ETH?"\n\n**Required parameters:**\n- LP Tokens Amount\n- Token Pair (Token0 and Token1 Symbols/Addresses)`,
+          text: '❌ **Error**: Invalid LP token amount. Please provide a positive number.',
           actions: ['calculateLiquidityValue'],
-          data: { error: errorMessage },
         };
       }
-    }
 
-    const parsedLPTokensAmount = parseFloat(lpTokensAmount);
-    if (parsedLPTokensAmount <= 0) {
-      return {
-        text: 'LP token amount must be greater than zero.',
-        data: {
-          status: 'error',
-          error: 'Invalid LP token amount',
-        },
-      };
-    }
-
-    try {
+      // Initialize Quickswap client
       const quickswapClient = await initializeQuickswapClient(runtime);
-      // Simulate calculate liquidity value logic
-      const liquidityValueResult = await quickswapClient.simulateCalculateLiquidityValue(
+
+      // Execute calculate liquidity value logic
+      const liquidityValueResult = await quickswapClient.CalculateLiquidityValue(
         token0SymbolOrAddress,
         token1SymbolOrAddress,
-        parsedLPTokensAmount
+        parsedLpTokensAmount
       );
 
-      if (liquidityValueResult && liquidityValueResult.success) {
-        const responseText = `✅ **Liquidity Value Calculated Successfully**\n\n**Details:**\n• **LP Tokens**: ${lpTokensAmount}\n• **Token0 Value**: ${liquidityValueResult.token0Value?.toFixed(4) || 'N/A'} ${token0SymbolOrAddress.toUpperCase()}\n• **Token1 Value**: ${liquidityValueResult.token1Value?.toFixed(4) || 'N/A'} ${token1SymbolOrAddress.toUpperCase()}\n• **Total USD Value**: ${liquidityValueResult.totalUsdValue?.toFixed(4) || 'N/A'} USD\n• **Platform**: Quickswap`;
-
+      if (liquidityValueResult.success) {
+        const responseText = `✅ **Liquidity Value Calculated**\n\n**Details:**\n• **Token 0**: ${token0SymbolOrAddress.toUpperCase()}\n• **Token 1**: ${token1SymbolOrAddress.toUpperCase()}\n• **LP Tokens**: ${lpTokensAmount}\n• **Value in Token 0**: ${liquidityValueResult.token0Value}\n• **Value in Token 1**: ${liquidityValueResult.token1Value}`;
         return {
           text: responseText,
           actions: ['calculateLiquidityValue'],
@@ -112,15 +71,12 @@ export const calculateLiquidityValueAction: Action = {
           },
         };
       } else {
-        const errorMessage =
-          liquidityValueResult?.error ||
-          `Calculating liquidity value for '${lpTokensAmount}' LP tokens of '${token0SymbolOrAddress}/${token1SymbolOrAddress}' failed or is not supported.`;
         return {
-          text: `❌ **Error**: ${errorMessage}\n\nPlease verify the LP token amount, token symbols/addresses, and try again.`,
+          text: `❌ **Error**: ${liquidityValueResult.error || 'Failed to calculate liquidity value.'}`,
           actions: ['calculateLiquidityValue'],
           data: {
             success: false,
-            error: errorMessage,
+            error: liquidityValueResult.error,
             token0SymbolOrAddress,
             token1SymbolOrAddress,
             lpTokensAmount,
@@ -130,19 +86,17 @@ export const calculateLiquidityValueAction: Action = {
       }
     } catch (error) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Unknown error occurred while calculating liquidity value';
+        error instanceof z.ZodError
+          ? `Invalid parameters: ${error.errors.map((e) => e.message).join(', ')}`
+          : error instanceof Error
+            ? error.message
+            : 'Unknown error occurred while calculating liquidity value';
       logger.error(`[calculateLiquidityValueAction] Error calculating liquidity value:`, error);
-
       return {
-        text: `❌ **Error**: ${errorMessage}\n\nPlease check your configuration and try again.`,
+        text: `❌ **Error**: ${errorMessage}`,
         actions: ['calculateLiquidityValue'],
         data: {
           error: errorMessage,
-          token0SymbolOrAddress,
-          token1SymbolOrAddress,
-          lpTokensAmount,
           timestamp: new Date().toISOString(),
         },
       };

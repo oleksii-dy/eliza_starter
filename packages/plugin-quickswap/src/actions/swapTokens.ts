@@ -1,115 +1,63 @@
-import { Action, IAgentRuntime, logger, Memory, composePromptFromState } from '@elizaos/core';
-import { z } from 'zod';
-import { callLLMWithTimeout } from '../utils/llmHelpers.js';
-import { swapTemplate } from '../templates/swapTemplate.js';
+import { Action, IAgentRuntime, logger, Memory } from '@elizaos/core';
 import { initializeQuickswapClient } from '../utils/quickswapClient.js';
-
-interface SwapTokensParams {
-  inputTokenSymbolOrAddress: string;
-  outputTokenSymbolOrAddress: string;
-  amount: string;
-  minOutputAmount?: string;
-}
+import { z } from 'zod';
 
 /**
- * M5-03: Simulates swapping tokens on Quickswap.
+ * M5-03: Swaps tokens on Quickswap.
  */
 export const swapTokensAction: Action = {
   name: 'swapTokens',
-  similes: ['EXCHANGE_TOKENS', 'TRADE_TOKENS', 'PERFORM_SWAP', 'QUICKSWAP_TRADE', 'SWAP'],
-  description:
-    'Simulates swapping a specified amount of an input token for an output token on Quickswap.',
+  description: 'Swaps a specified amount of an input token for an output token on Quickswap.',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    return true; // Defer detailed validation to handler after LLM extraction
+    try {
+      z.object({
+        inputTokenSymbolOrAddress: z.string(),
+        outputTokenSymbolOrAddress: z.string(),
+        amount: z.string(),
+      }).parse(message.content);
+      return true;
+    } catch (error) {
+      logger.warn(`[swapTokensAction] Validation failed: ${error.message}`);
+      return false;
+    }
   },
   handler: async (runtime: IAgentRuntime, message: Memory) => {
-    logger.info(`[swapTokensAction] Handler called for message: "${message.content?.text}"`);
-
-    let inputTokenSymbolOrAddress: string;
-    let outputTokenSymbolOrAddress: string;
-    let amount: string;
-    let minOutputAmount: string | undefined;
-
     try {
-      // Use LLM to extract parameters
-      const llmResult = await callLLMWithTimeout<SwapTokensParams & { error?: string }>(
-        runtime,
-        null,
-        swapTemplate,
-        'swapTokensAction',
-        message.content?.text || ''
-      );
+      const parsedParams = z
+        .object({
+          inputTokenSymbolOrAddress: z
+            .string()
+            .describe('The symbol or address of the input token (e.g., WMATIC, USDC, 0x...).'),
+          outputTokenSymbolOrAddress: z
+            .string()
+            .describe('The symbol or address of the output token (e.g., WMATIC, USDC, 0x...).'),
+          amount: z.string().describe('The amount of input token to swap.'),
+        })
+        .parse(message.content);
 
-      logger.info('[swapTokensAction] LLM result:', JSON.stringify(llmResult));
+      const { inputTokenSymbolOrAddress, outputTokenSymbolOrAddress, amount } = parsedParams;
 
-      if (
-        llmResult?.error ||
-        !llmResult?.inputTokenSymbolOrAddress ||
-        !llmResult?.outputTokenSymbolOrAddress ||
-        !llmResult?.amount
-      ) {
-        throw new Error('Required swap parameters not found by LLM');
-      }
-      inputTokenSymbolOrAddress = llmResult.inputTokenSymbolOrAddress;
-      outputTokenSymbolOrAddress = llmResult.outputTokenSymbolOrAddress;
-      amount = llmResult.amount;
-      minOutputAmount = llmResult.minOutputAmount;
-    } catch (error) {
-      logger.warn('[swapTokensAction] LLM extraction failed, trying regex fallback');
-
-      // Fallback to regex extraction (simple, might need refinement)
-      const text = message.content?.text || '';
-
-      const inputTokenMatch = text.match(/(?:swap|exchange)\s+(\d+\.?\d*)\s+([a-zA-Z0-9]+)/i);
-      const outputTokenMatch = text.match(/(?:for|to)\s+([a-zA-Z0-9]+)/i);
-
-      if (
-        inputTokenMatch &&
-        inputTokenMatch[1] &&
-        inputTokenMatch[2] &&
-        outputTokenMatch &&
-        outputTokenMatch[1]
-      ) {
-        amount = inputTokenMatch[1];
-        inputTokenSymbolOrAddress = inputTokenMatch[2];
-        outputTokenSymbolOrAddress = outputTokenMatch[1];
-      } else {
-        const errorMessage =
-          'Please provide input token, output token, and amount to swap (e.g., "swap 10 USDC for WMATIC").';
-        logger.error(`[swapTokensAction] Parameter extraction failed`);
-
+      // Parse amount to number
+      const parsedAmount = parseFloat(amount);
+      if (isNaN(parsedAmount) || parsedAmount <= 0) {
         return {
-          text: `❌ **Error**: ${errorMessage}\n\nExamples:\n• "Swap 100 USDC for WMATIC"\n• "Exchange 5 WMATIC for DAI"\n\n**Required parameters:**\n- Input token symbol/address\n- Output token symbol/address\n- Amount to swap`,
+          text: '❌ **Error**: Invalid amount. Please provide a positive number.',
           actions: ['swapTokens'],
-          data: { error: errorMessage },
         };
       }
-    }
 
-    const parsedAmount = parseFloat(amount);
-    if (parsedAmount <= 0) {
-      return {
-        message: 'Swap amount must be greater than zero.',
-        details: {
-          status: 'error',
-          error: 'Invalid swap amount',
-        },
-      };
-    }
-
-    try {
+      // Initialize Quickswap client
       const quickswapClient = await initializeQuickswapClient(runtime);
 
-      // Simulate swap logic using the client
-      const swapResult = await quickswapClient.simulateSwap(
+      // Execute swap logic using the client
+      const swapResult = await quickswapClient.Swap(
         inputTokenSymbolOrAddress,
         outputTokenSymbolOrAddress,
         parsedAmount
       );
 
-      if (swapResult && swapResult.success) {
-        const responseText = `✅ **Swap Simulated Successfully**\n\n**Swap Details:**\n• **Input Token**: ${inputTokenSymbolOrAddress.toUpperCase()}\n• **Output Token**: ${outputTokenSymbolOrAddress.toUpperCase()}\n• **Amount Swapped**: ${amount}\n• **Amount Received (Approx)**: ${swapResult.amountReceived.toFixed(4)}\n• **Transaction Hash**: ${swapResult.transactionHash}\n• **Platform**: Quickswap\n• **Chain ID**: 137`;
-
+      if (swapResult.success) {
+        const responseText = `✅ **Swap Executed Successfully**\n\n**Swap Details:**\n• **Input Token**: ${inputTokenSymbolOrAddress.toUpperCase()}\n• **Output Token**: ${outputTokenSymbolOrAddress.toUpperCase()}\n• **Amount Swapped**: ${amount}\n• **Amount Received**: ${swapResult.amountReceived}\n• **Transaction Hash**: ${swapResult.transactionHash}`;
         return {
           text: responseText,
           actions: ['swapTokens'],
@@ -120,15 +68,12 @@ export const swapTokensAction: Action = {
           },
         };
       } else {
-        const errorMessage =
-          swapResult?.error ||
-          `Swap for '${inputTokenSymbolOrAddress}/${outputTokenSymbolOrAddress}' failed or is not supported.`;
         return {
-          text: `❌ **Error**: ${errorMessage}\n\nPlease verify the token symbols/addresses, amounts, and try again.`,
+          text: `❌ **Error**: ${swapResult.error || 'Failed to execute swap.'}`,
           actions: ['swapTokens'],
           data: {
             success: false,
-            error: errorMessage,
+            error: swapResult.error,
             inputTokenSymbolOrAddress,
             outputTokenSymbolOrAddress,
             amount,
@@ -138,17 +83,17 @@ export const swapTokensAction: Action = {
       }
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error occurred while simulating swap';
-      logger.error(`[swapTokensAction] Error simulating swap:`, error);
-
+        error instanceof z.ZodError
+          ? `Invalid parameters: ${error.errors.map((e) => e.message).join(', ')}`
+          : error instanceof Error
+            ? error.message
+            : 'Unknown error occurred while executing swap';
+      logger.error(`[swapTokensAction] Error executing swap:`, error);
       return {
-        text: `❌ **Error**: ${errorMessage}\n\nPlease check your configuration and try again. Make sure:\n• Quickswap API URL is properly configured\n• Network connection is stable`,
+        text: `❌ **Error**: ${errorMessage}`,
         actions: ['swapTokens'],
         data: {
           error: errorMessage,
-          inputTokenSymbolOrAddress,
-          outputTokenSymbolOrAddress,
-          amount,
           timestamp: new Date().toISOString(),
         },
       };

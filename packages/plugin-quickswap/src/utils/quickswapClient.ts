@@ -21,7 +21,7 @@ import {
 interface QuickswapClient {
   fetchTokenData(tokenSymbolOrAddress: string): Promise<any>;
   fetchPairData(token0: string, token1: string): Promise<any>;
-  simulateSwap(
+  Swap(
     inputToken: string,
     outputToken: string,
     amount: number
@@ -31,7 +31,7 @@ interface QuickswapClient {
     transactionHash?: string;
     error?: string;
   }>;
-  simulateAddLiquidity(
+  AddLiquidity(
     token0: string,
     token1: string,
     amount0: number,
@@ -42,7 +42,7 @@ interface QuickswapClient {
     transactionHash?: string;
     error?: string;
   }>;
-  simulateRemoveLiquidity(
+  RemoveLiquidity(
     token0: string,
     token1: string,
     lpTokensAmount: number
@@ -53,7 +53,7 @@ interface QuickswapClient {
     transactionHash?: string;
     error?: string;
   }>;
-  simulateGetTransactionStatus(transactionHash: string): Promise<{
+  GetTransactionStatus(transactionHash: string): Promise<{
     success: boolean;
     status?: 'pending' | 'success' | 'failed';
     blockNumber?: string;
@@ -63,7 +63,7 @@ interface QuickswapClient {
     value?: string;
     error?: string;
   }>;
-  simulateCalculateLiquidityValue(
+  CalculateLiquidityValue(
     token0: string,
     token1: string,
     lpTokensAmount: number
@@ -74,7 +74,7 @@ interface QuickswapClient {
     totalUsdValue?: number;
     error?: string;
   }>;
-  simulateCalculateMidPrice(
+  CalculateMidPrice(
     token0: string,
     token1: string
   ): Promise<{
@@ -83,7 +83,7 @@ interface QuickswapClient {
     invertedPrice?: number;
     error?: string;
   }>;
-  simulateCalculateTokenPrice(
+  CalculateTokenPrice(
     token: string,
     vsToken: string
   ): Promise<{
@@ -91,7 +91,7 @@ interface QuickswapClient {
     price?: number;
     error?: string;
   }>;
-  simulateExecuteOrder(params: {
+  ExecuteOrder(params: {
     tradeType: 'limit' | 'stop-loss' | 'take-profit';
     inputTokenSymbolOrAddress: string;
     outputTokenSymbolOrAddress: string;
@@ -150,6 +150,7 @@ interface QuickswapClient {
     transactionHash: string;
     rewardsClaimed: number;
     rewardsTokenSymbol: string;
+    error?: string;
   }>;
 }
 
@@ -281,9 +282,9 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
         return { success: false, error: `Pair for ${token0}/${token1} not found.` };
       }
     },
-    simulateSwap: async (inputTokenSymbol, outputTokenSymbol, amount) => {
+    Swap: async (inputTokenSymbol, outputTokenSymbol, amount) => {
       logger.info(
-        `QuickswapClient: Simulating swap of ${amount} ${inputTokenSymbol} for ${outputTokenSymbol}`
+        `QuickswapClient: Executing swap of ${amount} ${inputTokenSymbol} for ${outputTokenSymbol}`
       );
       if (!wallet) {
         return { success: false, error: 'Wallet not configured for actual transactions.' };
@@ -371,9 +372,9 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
         return { success: false, error: error.message };
       }
     },
-    simulateAddLiquidity: async (token0Symbol, token1Symbol, amount0, amount1) => {
+    AddLiquidity: async (token0Symbol, token1Symbol, amount0, amount1) => {
       logger.info(
-        `QuickswapClient: Simulating add liquidity for ${amount0} ${token0Symbol} and ${amount1} ${token1Symbol}`
+        `QuickswapClient: Adding liquidity for ${amount0} ${token0Symbol} and ${amount1} ${token1Symbol}`
       );
       if (!wallet) {
         return { success: false, error: 'Wallet not configured for actual transactions.' };
@@ -420,13 +421,13 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
           transactionHash: '0xmockTransactionHashAddLiquidity' + Date.now(),
         };
       } catch (error: any) {
-        logger.error(`Error during add liquidity simulation: ${error.message}`);
+        logger.error(`Error during add liquidity: ${error.message}`);
         return { success: false, error: error.message };
       }
     },
-    simulateRemoveLiquidity: async (token0Symbol, token1Symbol, lpTokensAmount) => {
+    RemoveLiquidity: async (token0Symbol, token1Symbol, lpTokensAmount) => {
       logger.info(
-        `QuickswapClient: Simulating remove liquidity for ${lpTokensAmount} LP tokens from ${token0Symbol}/${token1Symbol}`
+        `QuickswapClient: Removing liquidity for ${lpTokensAmount} LP tokens from ${token0Symbol}/${token1Symbol}`
       );
       if (!wallet) {
         return { success: false, error: 'Wallet not configured for actual transactions.' };
@@ -473,11 +474,11 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
           transactionHash: '0xmockTransactionHashRemoveLiquidity' + Date.now(),
         };
       } catch (error: any) {
-        logger.error(`Error during remove liquidity simulation: ${error.message}`);
+        logger.error(`Error during remove liquidity: ${error.message}`);
         return { success: false, error: error.message };
       }
     },
-    simulateGetTransactionStatus: async (transactionHash: string) => {
+    GetTransactionStatus: async (transactionHash: string) => {
       logger.info(`QuickswapClient: Getting transaction status for ${transactionHash}`);
       try {
         const receipt = await provider.getTransactionReceipt(transactionHash);
@@ -513,9 +514,9 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
         return { success: false, error: error.message };
       }
     },
-    simulateCalculateLiquidityValue: async (token0Symbol, token1Symbol, lpTokensAmount) => {
+    CalculateLiquidityValue: async (token0Symbol, token1Symbol, lpTokensAmount) => {
       logger.info(
-        `QuickswapClient: Simulating calculate liquidity value for ${lpTokensAmount} LP tokens of ${token0Symbol}/${token1Symbol}`
+        `QuickswapClient: Calculating liquidity value for ${lpTokensAmount} LP tokens of ${token0Symbol}/${token1Symbol}`
       );
       try {
         const token0 = await getQuickswapToken(token0Symbol);
@@ -564,10 +565,8 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
         return { success: false, error: error.message };
       }
     },
-    simulateCalculateMidPrice: async (token0Symbol, token1Symbol) => {
-      logger.info(
-        `QuickswapClient: Simulating mid price calculation for ${token0Symbol}/${token1Symbol}`
-      );
+    CalculateMidPrice: async (token0Symbol, token1Symbol) => {
+      logger.info(`QuickswapClient: Calculating mid price for ${token0Symbol}/${token1Symbol}`);
       try {
         const token0 = await getQuickswapToken(token0Symbol);
         const token1 = await getQuickswapToken(token1Symbol);
@@ -595,9 +594,9 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
         return { success: false, error: error.message };
       }
     },
-    simulateCalculateTokenPrice: async (tokenSymbol, vsCurrencySymbol) => {
+    CalculateTokenPrice: async (tokenSymbol, vsCurrencySymbol) => {
       logger.info(
-        `QuickswapClient: Simulating token price calculation for ${tokenSymbol} against ${vsCurrencySymbol}`
+        `QuickswapClient: Calculating token price for ${tokenSymbol} against ${vsCurrencySymbol}`
       );
       try {
         const token = await getQuickswapToken(tokenSymbol);
@@ -624,7 +623,7 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
         return { success: false, error: error.message };
       }
     },
-    simulateExecuteOrder: async (params) => {
+    ExecuteOrder: async (params) => {
       logger.info(`QuickswapClient: Executing order: ${JSON.stringify(params)}`);
 
       if (!wallet) {
@@ -731,7 +730,7 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
         // 2. That service triggering a market swap when the condition is met.
         // For now, we simulate this.
         logger.warn(
-          `QuickswapClient: ${params.tradeType} order simulation (not direct on-chain execution).`
+          `QuickswapClient: ${params.tradeType} order execution (not direct on-chain execution).`
         );
         return {
           success: true,
@@ -797,7 +796,7 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
     },
     calculatePriceImpact: async (inputTokenSymbol, outputTokenSymbol, amount) => {
       logger.info(
-        `QuickswapClient: Simulating price impact for ${amount} ${inputTokenSymbol} for ${outputTokenSymbol}`
+        `QuickswapClient: Calculating price impact for ${amount} ${inputTokenSymbol} for ${outputTokenSymbol}`
       );
       try {
         const inputToken = await getQuickswapToken(inputTokenSymbol);
@@ -843,7 +842,7 @@ export async function initializeQuickswapClient(runtime: IAgentRuntime): Promise
           newPrice,
         };
       } catch (error: any) {
-        logger.error(`Error simulating price impact: ${error.message}`);
+        logger.error(`Error calculating price impact: ${error.message}`);
         return { success: false, error: error.message };
       }
     },

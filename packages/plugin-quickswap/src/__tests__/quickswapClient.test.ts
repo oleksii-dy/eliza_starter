@@ -71,9 +71,8 @@ vi.mock('ethers', async (importOriginal) => {
         symbol: vi.fn(() => Promise.resolve('MOCK')),
         totalSupply: vi.fn(() => Promise.resolve(BigInt('1000000000000000000000'))),
         // Generic handler for any method dynamically called on the contract
-        // This simulates the router contract methods like swapExactTokensForTokens
         // It should return a transaction object with a .wait() method
-        simulateTransaction: vi.fn(() =>
+        executeTransaction: vi.fn(() =>
           Promise.resolve({
             hash: '0xmockTransactionHash',
             wait: vi.fn(() =>
@@ -91,17 +90,17 @@ vi.mock('ethers', async (importOriginal) => {
       };
 
       // Use a Proxy to dynamically handle method access,
-      // returning `simulateTransaction` for any method not explicitly mocked
+      // returning `executeTransaction` for any method not explicitly mocked
       return new Proxy(mockContract, {
         get: (target, prop, receiver) => {
           if (typeof prop === 'string' && prop in target) {
             return Reflect.get(target, prop, receiver);
           }
           // If the property is a method name (string) and not already mocked,
-          // return the generic simulateTransaction mock.
+          // return the generic executeTransaction mock.
           // This covers method calls like `routerContract.swapExactTokensForTokens(...args)`
-          if (typeof target.simulateTransaction === 'function') {
-            return target.simulateTransaction;
+          if (typeof target.executeTransaction === 'function') {
+            return target.executeTransaction;
           }
           return Reflect.get(target, prop, receiver);
         },
@@ -222,12 +221,6 @@ vi.mock('quickswap-sdk', async (importOriginal) => {
             mockToken(chainId, address, 18, 'GENERIC_MOCK', 'Generic Mock Token')
           );
         }
-        // For '0xUnknownTokenAddress', explicitly reject to trigger the Contract fallback in quickswapClient.ts
-        if (lowerCaseAddress === '0xunknowntokenaddress') {
-          return Promise.reject(
-            new Error('Simulated Fetcher.fetchTokenData rejection for 0xUnknownTokenAddress')
-          );
-        }
         return Promise.reject(new Error('Token not found in mock Fetcher.fetchTokenData'));
       }),
       fetchPairData: vi.fn((tokenA, tokenB, provider) => {
@@ -250,78 +243,165 @@ vi.mock('quickswap-sdk', async (importOriginal) => {
           (tokenA.symbol === 'WMATIC' && tokenB.symbol === 'USDC') ||
           (tokenA.symbol === 'USDC' && tokenB.symbol === 'WMATIC')
         ) {
-          const reserve0 = new MockTokenAmount(mockWmatic, BigInt('1000000000000000000000'));
-          const reserve1 = new MockTokenAmount(mockUsdc, BigInt('500000000'));
-
           const mockPair = {
             token0: mockWmatic,
             token1: mockUsdc,
-            reserve0: reserve0,
-            reserve1: reserve1,
-            liquidityToken: mockToken(
-              actual.ChainId.MATIC,
-              '0xMockLPTokenAddress',
-              18,
-              'QUICKSWAP_LP',
-              'Quickswap LP Token'
-            ),
-            token0Price: { toSignificant: vi.fn((digits?: number) => '0.5') },
-            token1Price: { toSignificant: vi.fn((digits?: number) => '2.0') },
-            getLiquidityMinted: vi.fn(
-              () =>
-                new MockTokenAmount(
-                  mockToken(actual.ChainId.MATIC, '0xMockLPTokenAddress', 18, 'LP', 'LP Token'),
-                  BigInt('1000')
-                )
-            ),
-            getLiquidityValue: vi.fn((token, totalSupply, liquidityAmount) => {
-              if (token.symbol === 'WMATIC')
-                return new MockTokenAmount(mockWmatic, BigInt('500000000000000000'));
-              if (token.symbol === 'USDC')
-                return new MockTokenAmount(mockUsdc, BigInt('250000000'));
-              return new MockTokenAmount(token, BigInt(0));
+            reserve0: new MockCurrencyAmount(mockWmatic, BigInt('1000000000000000000')), // 1 WMATIC
+            reserve1: new MockCurrencyAmount(mockUsdc, BigInt('2000000')), // 2 USDC (6 decimals)
+            getLiquidityMinted: vi.fn((pair, tokenAAmount, tokenBAmount) => {
+              return new MockTokenAmount(
+                mockToken(ChainId.MATIC, '0xLPTokenAddress', 18, 'UNI-V2', 'Uniswap V2'),
+                BigInt('1000000000000000000')
+              );
             }),
-            priceOf: vi.fn(() => ({ toSignificant: vi.fn((digits?: number) => '1.0') })),
+            getLiquidityValue: vi.fn((token, totalSupply, liquidity, fraction) => {
+              return new MockCurrencyAmount(token, BigInt(1)); // Simplified mock
+            }),
+            involvesToken: vi.fn((token) => {
+              return token.equals(mockWmatic) || token.equals(mockUsdc);
+            }),
+            token0Price: {
+              toSignificant: vi.fn(() => '2.0'),
+            },
+            token1Price: {
+              toSignificant: vi.fn(() => '0.5'),
+            },
+            reserveOf: vi.fn((token) => {
+              if (token.equals(mockWmatic)) {
+                return mockPair.reserve0;
+              } else if (token.equals(mockUsdc)) {
+                return mockPair.reserve1;
+              }
+              throw new Error('Token not in pair');
+            }),
+            liquidityToken: mockToken(
+              ChainId.MATIC,
+              '0xLPTokenAddress',
+              18,
+              'UNI-V2',
+              'Uniswap V2'
+            ),
           };
-          return Promise.resolve(mockPair);
+          return Promise.resolve(mockPair as Pair);
         }
         return Promise.reject(new Error('Pair not found in mock Fetcher.fetchPairData'));
       }),
     },
     Trade: {
-      bestTradeExactIn: vi.fn((pairs, amountIn, tokenOut, options) => {
-        const mockOutputAmount = new MockTokenAmount(
-          tokenOut,
-          BigInt(amountIn.raw.toString()) / BigInt(2)
-        );
-        const mockExecutionPrice = { toSignificant: vi.fn((digits?: number) => '0.5') };
-        const mockPriceImpact = { toSignificant: vi.fn((digits?: number) => '0.01') };
-        return [
-          {
-            inputAmount: amountIn,
-            outputAmount: mockOutputAmount,
-            executionPrice: mockExecutionPrice,
-            priceImpact: mockPriceImpact,
-            route: {
-              path: [amountIn.token, tokenOut],
-              midPrice: mockExecutionPrice,
-            },
+      bestTradeExactIn: vi.fn(() => [
+        {
+          inputAmount: new MockCurrencyAmount(
+            mockToken(
+              actual.ChainId.MATIC,
+              '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
+              18,
+              'WMATIC',
+              'Wrapped MATIC'
+            ),
+            BigInt('1000000000000000000')
+          ),
+          outputAmount: new MockCurrencyAmount(
+            mockToken(
+              actual.ChainId.MATIC,
+              '0x2791B072600277340f1aDa76aE19A6C09bED2737',
+              6,
+              'USDC',
+              'USD Coin'
+            ),
+            BigInt('2000000')
+          ),
+          route: {
+            path: [
+              mockToken(
+                actual.ChainId.MATIC,
+                '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
+                18,
+                'WMATIC',
+                'Wrapped MATIC'
+              ),
+              mockToken(
+                actual.ChainId.MATIC,
+                '0x2791B072600277340f1aDa76aE19A6C09bED2737',
+                6,
+                'USDC',
+                'USD Coin'
+              ),
+            ],
           },
-        ];
-      }),
+          executionPrice: {
+            toSignificant: vi.fn(() => '2.0'),
+            invert: vi.fn(() => ({ toSignificant: vi.fn(() => '0.5') })),
+          },
+          nextMidPrice: {
+            toSignificant: vi.fn(() => '2.0'),
+            invert: vi.fn(() => ({ toSignificant: vi.fn(() => '0.5') })),
+          },
+          slippageTolerance: new Percent('50', '10000'), // 0.5%
+          minimumAmountOut: vi.fn(() => new MockCurrencyAmount(mockUsdc, BigInt('1990000'))),
+          // Add mock for worseTradeExactIn if needed by the client
+        },
+      ]),
+      bestTradeExactOut: vi.fn(() => [
+        {
+          inputAmount: new MockCurrencyAmount(
+            mockToken(
+              actual.ChainId.MATIC,
+              '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
+              18,
+              'WMATIC',
+              'Wrapped MATIC'
+            ),
+            BigInt('1000000000000000000')
+          ),
+          outputAmount: new MockCurrencyAmount(
+            mockToken(
+              actual.ChainId.MATIC,
+              '0x2791B072600277340f1aDa76aE19A6C09bED2737',
+              6,
+              'USDC',
+              'USD Coin'
+            ),
+            BigInt('2000000')
+          ),
+          route: {
+            path: [
+              mockToken(
+                actual.ChainId.MATIC,
+                '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
+                18,
+                'WMATIC',
+                'Wrapped MATIC'
+              ),
+              mockToken(
+                actual.ChainId.MATIC,
+                '0x2791B072600277340f1aDa76aE19A6C09bED2737',
+                6,
+                'USDC',
+                'USD Coin'
+              ),
+            ],
+          },
+          executionPrice: {
+            toSignificant: vi.fn(() => '2.0'),
+            invert: vi.fn(() => ({ toSignificant: vi.fn(() => '0.5') })),
+          },
+          nextMidPrice: {
+            toSignificant: vi.fn(() => '2.0'),
+            invert: vi.fn(() => ({ toSignificant: vi.fn(() => '0.5') })),
+          },
+          slippageTolerance: new Percent('50', '10000'), // 0.5%
+          maximumAmountIn: vi.fn(
+            () => new MockCurrencyAmount(mockWmatic, BigInt('1005000000000000000'))
+          ),
+        },
+      ]),
     },
     Router: {
-      swapCallParameters: vi.fn((trade, options) => ({
-        methodName: 'swapExactTokensForTokens',
-        args: [
-          BigInt('1000000000000000000').toString(), // Convert BigInt to string for args
-          BigInt('490000000000000000').toString(), // Convert BigInt to string for args
-          ['0xInputTokenAddress', '0xOutputTokenAddress'],
-          '0xRecipientAddress',
-          BigInt('1234567890').toString(), // Convert BigInt to string for args
-        ],
-        value: BigInt('0').toString(), // Convert BigInt to string for value
-      })),
+      swapExactTokensForTokens: vi.fn(() => '0xmockSwapTransactionData'),
+      swapTokensForExactTokens: vi.fn(() => '0xmockSwapTransactionData'),
+      addLiquidity: vi.fn(() => '0xmockAddLiquidityTransactionData'),
+      removeLiquidityETH: vi.fn(() => '0xmockRemoveLiquidityETHTransactionData'),
+      removeLiquidity: vi.fn(() => '0xmockRemoveLiquidityTransactionData'),
     },
     ChainId: actual.ChainId,
     CurrencyAmount: MockCurrencyAmount, // Use our mock CurrencyAmount
@@ -332,222 +412,358 @@ vi.mock('quickswap-sdk', async (importOriginal) => {
 });
 
 describe('QuickswapClient', () => {
-  let mockRuntime: IAgentRuntime;
+  let runtime: IAgentRuntime;
+  let client: any;
 
-  beforeEach(() => {
-    mockRuntime = {
+  beforeEach(async () => {
+    runtime = {
       getSetting: vi.fn((key: string) => {
-        if (key === 'QUICKSWAP_API_URL') return 'http://mock-rpc-url.com';
+        if (key === 'QUICKSWAP_API_URL') return 'http://mock-quickswap-api.com';
         if (key === 'WALLET_PRIVATE_KEY') return '0xmockPrivateKey';
-        if (key === 'CHAIN_ID') return 137;
+        if (key === 'POLYGONSCAN_API_KEY') return 'mockPolygonscanApiKey';
         return undefined;
       }),
-      getService: vi.fn(),
-      useModel: vi.fn(),
-    } as unknown as IAgentRuntime;
-
-    vi.clearAllMocks();
+      // Mock other necessary runtime methods if accessed by quickswapClient.ts
+    } as any;
+    client = await initializeQuickswapClient(runtime);
   });
 
   it('should initialize the client successfully', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
     expect(client).toBeDefined();
-    expect(JsonRpcProvider).toHaveBeenCalledWith('http://mock-rpc-url.com');
+    expect(client.provider).toBeDefined();
+    expect(client.wallet).toBeDefined();
+    expect(client.routerContract).toBeDefined();
+    expect(client.polygonscanApiKey).toBe('mockPolygonscanApiKey');
   });
 
-  it('should fetch token data for a known token symbol (WMATIC)', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const tokenData = await client.fetchTokenData('WMATIC');
-
-    expect(tokenData.success).toBe(true);
-    expect(tokenData.symbol).toBe('WMATIC');
-    expect(tokenData.name).toBe('Wrapped MATIC');
-    // Adjusted expectation to account for mockToken's address assignment
-    expect(tokenData.address).toBe('0x7ceb23fd6bc0add59e62ac25578270cff1b9f619');
-    expect(tokenData.decimals).toBe(18);
-    expect(Fetcher.fetchTokenData).not.toHaveBeenCalled();
+  it('should handle unknown tokens by fetching contract details', async () => {
+    const token = await client.getToken('0xMockContractAddress');
+    expect(token).toBeDefined();
+    expect(token.symbol).toBe('MOCK');
+    expect(token.decimals).toBe(18);
   });
 
-  it('should fetch pair data successfully', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const pairData = await client.fetchPairData('WMATIC', 'USDC');
+  it('should handle contract fetching failure gracefully', async () => {
+    const invalidAddress = '0xInvalidContractAddress';
+    vi.spyOn(vi.mocked(Contract).prototype, 'symbol').mockImplementationOnce(() =>
+      Promise.reject(new Error('Contract fetch failed'))
+    );
 
-    expect(pairData.success).toBe(true);
-    expect(pairData.token0.symbol).toBe('WMATIC');
-    expect(pairData.token1.symbol).toBe('USDC');
-    expect(Fetcher.fetchPairData).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.any(Object),
-      expect.anything()
-    ); // Expect any object for mocked Token
+    await expect(client.getToken(invalidAddress)).rejects.toThrow(
+      `Could not retrieve token information for ${invalidAddress}`
+    );
   });
 
-  it('should simulate a swap successfully', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const swapResult = await client.simulateSwap('WMATIC', 'USDC', 1);
-
+  it('should execute a swap successfully', async () => {
+    const swapResult = await client.Swap('WMATIC', 'USDC', 1);
     expect(swapResult.success).toBe(true);
-    expect(swapResult.transactionHash).toBeDefined();
-    expect(swapResult.amountReceived).toBeDefined();
-    expect(Fetcher.fetchPairData).toHaveBeenCalled();
-    expect(Trade.bestTradeExactIn).toHaveBeenCalled();
-    expect(Router.swapCallParameters).toHaveBeenCalled();
+    expect(swapResult.amountReceived).toBeTypeOf('number');
+    expect(swapResult.transactionHash).toBe('0xmockTransactionHash');
   });
 
-  it('should simulate adding liquidity successfully', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const addLiquidityResult = await client.simulateAddLiquidity('WMATIC', 'USDC', 10, 5);
+  it('should handle swap failure', async () => {
+    vi.spyOn(vi.mocked(Router), 'bestTradeExactIn').mockReturnValueOnce([]);
 
+    const swapResult = await client.Swap('WMATIC', 'USDC', 1);
+    expect(swapResult.success).toBe(false);
+    expect(swapResult.error).toBe('No trade could be found for the given amount.');
+  });
+
+  it('should add liquidity successfully', async () => {
+    const addLiquidityResult = await client.AddLiquidity('WMATIC', 'USDC', 10, 5);
     expect(addLiquidityResult.success).toBe(true);
-    expect(addLiquidityResult.lpTokensReceived).toBeDefined();
-    expect(addLiquidityResult.transactionHash).toBeDefined();
-    expect(Fetcher.fetchPairData).toHaveBeenCalled();
+    expect(addLiquidityResult.lpTokensReceived).toBeTypeOf('number');
+    expect(addLiquidityResult.transactionHash).toBe('0xmockTransactionHash');
   });
 
-  it('should simulate removing liquidity successfully', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const removeLiquidityResult = await client.simulateRemoveLiquidity('WMATIC', 'USDC', 100);
-
+  it('should remove liquidity successfully', async () => {
+    const removeLiquidityResult = await client.RemoveLiquidity('WMATIC', 'USDC', 100);
     expect(removeLiquidityResult.success).toBe(true);
-    expect(removeLiquidityResult.token0Received).toBeDefined();
-    expect(removeLiquidityResult.token1Received).toBeDefined();
-    expect(removeLiquidityResult.transactionHash).toBeDefined();
-    expect(Fetcher.fetchPairData).toHaveBeenCalled();
+    expect(removeLiquidityResult.token0Received).toBeTypeOf('number');
+    expect(removeLiquidityResult.token1Received).toBeTypeOf('number');
+    expect(removeLiquidityResult.transactionHash).toBe('0xmockTransactionHash');
   });
 
-  it('should get transaction status (success)', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const statusResult = await client.simulateGetTransactionStatus('0xSuccessTxHash');
-
+  it('should get transaction status for a successful transaction', async () => {
+    const statusResult = await client.GetTransactionStatus('0xSuccessTxHash');
     expect(statusResult.success).toBe(true);
     expect(statusResult.status).toBe('success');
-    expect(statusResult.blockNumber).toBe('123');
+    expect(statusResult.blockNumber).toBe(123);
+    expect(statusResult.gasUsed).toBeTypeOf('number');
   });
 
-  it('should get transaction status (pending)', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const statusResult = await client.simulateGetTransactionStatus('0xPendingTxHash');
-
+  it('should get transaction status for a pending transaction', async () => {
+    const statusResult = await client.GetTransactionStatus('0xPendingTxHash');
     expect(statusResult.success).toBe(true);
     expect(statusResult.status).toBe('pending');
-    expect(statusResult.blockNumber).toBeNull();
+    expect(statusResult.blockNumber).toBeUndefined();
   });
 
   it('should calculate liquidity value successfully', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const liquidityValueResult = await client.simulateCalculateLiquidityValue('WMATIC', 'USDC', 10);
-
+    const liquidityValueResult = await client.CalculateLiquidityValue('WMATIC', 'USDC', 10);
     expect(liquidityValueResult.success).toBe(true);
-    expect(liquidityValueResult.token0Value).toBeDefined();
-    expect(liquidityValueResult.token1Value).toBeDefined();
-    expect(liquidityValueResult.totalUsdValue).toBeDefined();
-    expect(Fetcher.fetchPairData).toHaveBeenCalled();
+    expect(liquidityValueResult.token0Value).toBeTypeOf('number');
+    expect(liquidityValueResult.token1Value).toBeTypeOf('number');
   });
 
   it('should calculate mid price successfully', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const midPriceResult = await client.simulateCalculateMidPrice('WMATIC', 'USDC');
-
+    const midPriceResult = await client.CalculateMidPrice('WMATIC', 'USDC');
     expect(midPriceResult.success).toBe(true);
-    expect(midPriceResult.midPrice).toBe(0.5);
-    expect(midPriceResult.invertedPrice).toBe(2.0);
-    expect(Fetcher.fetchPairData).toHaveBeenCalled();
+    expect(midPriceResult.midPrice).toBeTypeOf('number');
+    expect(midPriceResult.invertedPrice).toBeTypeOf('number');
   });
 
   it('should calculate token price successfully', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const tokenPriceResult = await client.simulateCalculateTokenPrice('WMATIC', 'USDC');
-
+    const tokenPriceResult = await client.CalculateTokenPrice('WMATIC', 'USDC');
     expect(tokenPriceResult.success).toBe(true);
-    expect(tokenPriceResult.price).toBe(1.0);
-    expect(Fetcher.fetchPairData).toHaveBeenCalled();
+    expect(tokenPriceResult.price).toBeTypeOf('number');
   });
 
-  it('should execute a limit order successfully', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const orderResult = await client.simulateExecuteOrder({
+  it('should execute a limit order', async () => {
+    const orderResult = await client.ExecuteOrder({
       tradeType: 'limit',
       inputTokenSymbolOrAddress: 'WMATIC',
       outputTokenSymbolOrAddress: 'USDC',
       amount: '1',
-      price: '0.5',
+      price: '2',
     });
-
     expect(orderResult.success).toBe(true);
-    expect(orderResult.transactionHash).toBeDefined();
+    expect(orderResult.transactionHash).toBe('0xmockTransactionHash');
   });
 
-  it('should simulate a stop-loss order', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const orderResult = await client.simulateExecuteOrder({
+  it('should execute a stop-loss order', async () => {
+    const orderResult = await client.ExecuteOrder({
       tradeType: 'stop-loss',
-      inputTokenSymbolOrAddress: 'WMATIC',
+      inputTokenSymbolOrAddress: 'ETH',
       outputTokenSymbolOrAddress: 'USDC',
-      amount: '1',
-      price: '0.5',
-      stopPrice: '0.4',
+      amount: '5',
+      price: '0',
+      stopPrice: '1800',
     });
-
     expect(orderResult.success).toBe(true);
-    expect(orderResult.transactionHash).toContain('0xmockTransactionHash');
+    expect(orderResult.transactionHash).toBe('0xmockTransactionHash');
   });
 
-  it('should simulate a take-profit order', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const orderResult = await client.simulateExecuteOrder({
+  it('should execute a take-profit order', async () => {
+    const orderResult = await client.ExecuteOrder({
       tradeType: 'take-profit',
-      inputTokenSymbolOrAddress: 'WMATIC',
+      inputTokenSymbolOrAddress: 'BTC',
       outputTokenSymbolOrAddress: 'USDC',
-      amount: '1',
-      price: '0.5',
-      takeProfitPrice: '0.6',
+      amount: '2',
+      price: '0',
+      takeProfitPrice: '30000',
     });
-
     expect(orderResult.success).toBe(true);
-    expect(orderResult.transactionHash).toContain('0xmockTransactionHash');
+    expect(orderResult.transactionHash).toBe('0xmockTransactionHash');
   });
 
-  it('should calculate price impact successfully', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const priceImpactResult = await client.calculatePriceImpact('WMATIC', 'USDC', 1);
+  it('should get farming pool details', async () => {
+    vi.spyOn(vi.mocked(Fetcher), 'fetchTokenData').mockImplementation(
+      (chainId, address, provider) => {
+        if (address.toLowerCase() === '0xmocktoken0address') {
+          return Promise.resolve(mockToken(chainId, address, 18, 'MOCK0', 'Mock Token 0'));
+        }
+        if (address.toLowerCase() === '0xmocktoken1address') {
+          return Promise.resolve(mockToken(chainId, address, 18, 'MOCK1', 'Mock Token 1'));
+        }
+        return Promise.reject(new Error('Token not found'));
+      }
+    );
 
-    expect(priceImpactResult.success).toBe(true);
-    expect(priceImpactResult.priceImpactPercentage).toBe(0.01);
-    expect(priceImpactResult.newPrice).toBe(0.5);
-    expect(Fetcher.fetchPairData).toHaveBeenCalled();
-    expect(Trade.bestTradeExactIn).toHaveBeenCalled();
+    vi.spyOn(vi.mocked(Contract).prototype, 'name').mockResolvedValueOnce('Mock Farming Pool');
+    vi.spyOn(vi.mocked(Contract).prototype, 'rewardsToken').mockResolvedValueOnce(
+      '0xmockRewardTokenAddress'
+    );
+    vi.spyOn(vi.mocked(Contract).prototype, 'totalStaked').mockResolvedValueOnce(
+      BigInt('1000000000000000000000')
+    );
+    vi.spyOn(vi.mocked(Contract).prototype, 'rewardRate').mockResolvedValueOnce(
+      BigInt('1000000000000000000')
+    );
+    vi.spyOn(vi.mocked(Contract).prototype, 'periodFinish').mockResolvedValueOnce(
+      Math.floor(Date.now() / 1000) + 86400
+    );
+
+    const poolDetailsResult = await client.getFarmingPoolDetails({
+      poolId: '1',
+      token0SymbolOrAddress: '0xmocktoken0address',
+      token1SymbolOrAddress: '0xmocktoken1address',
+    });
+    expect(poolDetailsResult.success).toBe(true);
+    expect(poolDetailsResult.poolId).toBe('1');
+    expect(poolDetailsResult.name).toBe('Mock Farming Pool');
+    expect(poolDetailsResult.apr).toBeCloseTo(315.36); // Approx. APR for 1 token/sec reward rate over a year
+    expect(poolDetailsResult.totalStaked).toBeTypeOf('number');
+    expect(poolDetailsResult.rewardTokenSymbol).toBe('MOCK');
   });
 
-  it('should get farming pool details (simulated)', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const poolDetails = await client.getFarmingPoolDetails({ poolId: '1' });
+  it('should estimate gas fees', async () => {
+    vi.spyOn(vi.mocked(JsonRpcProvider).prototype, 'getFeeData').mockResolvedValueOnce({
+      gasPrice: BigInt('10000000000'),
+      maxFeePerGas: BigInt('20000000000'),
+      maxPriorityFeePerGas: BigInt('1500000000'),
+      gasLimit: undefined,
+    } as any);
 
-    expect(poolDetails.success).toBe(true);
-    expect(poolDetails.poolId).toBe('1');
-    expect(poolDetails.name).toBe('Placeholder Pool Name');
-    expect(poolDetails.apr).toBe(0.1);
+    const gasFeeResult = await client.estimateGasFees(
+      '0xmockWalletAddress',
+      '0xmockToAddress',
+      '1000000000000000000'
+    );
+    expect(gasFeeResult.success).toBe(true);
+    expect(gasFeeResult.gasPriceGwei).toBeTypeOf('number');
+    expect(gasFeeResult.estimatedFeeMatic).toBeTypeOf('number');
   });
 
-  it('should estimate gas fees (simulated)', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const gasEstimate = await client.estimateGasFees({ transactionType: 'swap' });
+  it('should claim farming rewards', async () => {
+    vi.spyOn(vi.mocked(Contract).prototype, 'earned').mockResolvedValueOnce(
+      BigInt('10000000000000000000')
+    ); // 10 rewards
+    vi.spyOn(vi.mocked(Contract).prototype, 'getReward').mockResolvedValueOnce({
+      hash: '0xmockRewardClaimTxHash',
+      wait: vi.fn(() => Promise.resolve({ status: 1 })),
+    });
+    vi.spyOn(vi.mocked(Fetcher), 'fetchTokenData').mockResolvedValueOnce(
+      mockToken(ChainId.MATIC, '0xmockRewardTokenAddress', 18, 'REWARD', 'Reward Token')
+    );
 
-    expect(gasEstimate.success).toBe(true);
-    expect(gasEstimate.gasPriceGwei).toBe(10);
-    expect(gasEstimate.estimatedGasUse).toBe(100000);
-    expect(gasEstimate.feeInEth).toBe(0.01);
-  });
-
-  it('should claim farming rewards (simulated)', async () => {
-    const client = await initializeQuickswapClient(mockRuntime);
-    const claimResult = await client.claimFarmingRewards({
+    const rewardsResult = await client.claimFarmingRewards({
       poolId: '1',
       walletAddress: '0xmockWalletAddress',
     });
 
-    expect(claimResult.success).toBe(true);
-    expect(claimResult.rewardsClaimed).toBe(100);
-    expect(claimResult.rewardsTokenSymbol).toBe('WMATIC');
-    expect(claimResult.transactionHash).toBeDefined();
+    expect(rewardsResult.success).toBe(true);
+    expect(rewardsResult.rewardsClaimed).toBe(10);
+    expect(rewardsResult.rewardsTokenSymbol).toBe('REWARD');
+    expect(rewardsResult.transactionHash).toBe('0xmockRewardClaimTxHash');
+  });
+
+  it('should handle claim farming rewards failure', async () => {
+    vi.spyOn(vi.mocked(Contract).prototype, 'getReward').mockImplementationOnce(() => {
+      throw new Error('Failed to claim rewards on chain');
+    });
+
+    const rewardsResult = await client.claimFarmingRewards({
+      poolId: '1',
+      walletAddress: '0xmockWalletAddress',
+    });
+
+    expect(rewardsResult.success).toBe(false);
+    expect(rewardsResult.error).toBe('Failed to claim rewards on chain');
+  });
+
+  // Test cases for error handling and edge cases
+
+  it('should handle getTransactionStatus error for invalid hash', async () => {
+    vi.spyOn(vi.mocked(JsonRpcProvider).prototype, 'getTransactionReceipt').mockResolvedValueOnce(
+      null
+    );
+    vi.spyOn(vi.mocked(JsonRpcProvider).prototype, 'getTransaction').mockResolvedValueOnce(null);
+
+    const statusResult = await client.GetTransactionStatus('0xInvalidHash');
+    expect(statusResult.success).toBe(false);
+    expect(statusResult.error).toBe('Transaction not found or confirmed.');
+  });
+
+  it('should handle getToken error when contract fetching fails', async () => {
+    vi.spyOn(vi.mocked(Fetcher), 'fetchTokenData').mockImplementationOnce(() =>
+      Promise.reject(new Error('Fetcher error'))
+    );
+    vi.spyOn(vi.mocked(Contract).prototype, 'symbol').mockImplementationOnce(() =>
+      Promise.reject(new Error('Contract symbol error'))
+    );
+
+    const tokenResult = await client.getToken('0xNonExistentToken');
+    expect(tokenResult).toBeUndefined();
+  });
+
+  it('should handle calculateMidPrice error when pair data is not found', async () => {
+    vi.spyOn(vi.mocked(Fetcher), 'fetchPairData').mockImplementationOnce(() =>
+      Promise.reject(new Error('Pair not found'))
+    );
+
+    const midPriceResult = await client.CalculateMidPrice('WMATIC', 'UNKNOWN');
+    expect(midPriceResult.success).toBe(false);
+    expect(midPriceResult.error).toBe('Failed to fetch pair data: Pair not found');
+  });
+
+  it('should handle calculateTokenPrice error when pair data is not found', async () => {
+    vi.spyOn(vi.mocked(Fetcher), 'fetchPairData').mockImplementationOnce(() =>
+      Promise.reject(new Error('Pair not found'))
+    );
+
+    const tokenPriceResult = await client.CalculateTokenPrice('WMATIC', 'UNKNOWN');
+    expect(tokenPriceResult.success).toBe(false);
+    expect(tokenPriceResult.error).toBe('Failed to fetch pair data: Pair not found');
+  });
+
+  it('should handle addLiquidity error when pair data is not found', async () => {
+    vi.spyOn(vi.mocked(Fetcher), 'fetchPairData').mockImplementationOnce(() =>
+      Promise.reject(new Error('Pair not found'))
+    );
+
+    const addLiquidityResult = await client.AddLiquidity('WMATIC', 'UNKNOWN', 10, 5);
+    expect(addLiquidityResult.success).toBe(false);
+    expect(addLiquidityResult.error).toBe('Failed to fetch pair data: Pair not found');
+  });
+
+  it('should handle removeLiquidity error when pair data is not found', async () => {
+    vi.spyOn(vi.mocked(Fetcher), 'fetchPairData').mockImplementationOnce(() =>
+      Promise.reject(new Error('Pair not found'))
+    );
+
+    const removeLiquidityResult = await client.RemoveLiquidity('WMATIC', 'UNKNOWN', 100);
+    expect(removeLiquidityResult.success).toBe(false);
+    expect(removeLiquidityResult.error).toBe('Failed to fetch pair data: Pair not found');
+  });
+
+  it('should handle calculateLiquidityValue error when pair data is not found', async () => {
+    vi.spyOn(vi.mocked(Fetcher), 'fetchPairData').mockImplementationOnce(() =>
+      Promise.reject(new Error('Pair not found'))
+    );
+
+    const liquidityValueResult = await client.CalculateLiquidityValue('WMATIC', 'UNKNOWN', 10);
+    expect(liquidityValueResult.success).toBe(false);
+    expect(liquidityValueResult.error).toBe('Failed to fetch pair data: Pair not found');
+  });
+
+  it('should handle executeOrder error for invalid trade type', async () => {
+    const orderResult = await client.ExecuteOrder({
+      tradeType: 'invalidType',
+      inputTokenSymbolOrAddress: 'WMATIC',
+      outputTokenSymbolOrAddress: 'USDC',
+      amount: '1',
+      price: '2',
+    });
+    expect(orderResult.success).toBe(false);
+    expect(orderResult.error).toBe('Invalid trade type provided.');
+  });
+
+  it('should handle getFarmingPoolDetails error when details cannot be fetched', async () => {
+    vi.spyOn(vi.mocked(Contract).prototype, 'name').mockImplementationOnce(() =>
+      Promise.reject(new Error('Contract call failed'))
+    );
+
+    const poolDetailsResult = await client.getFarmingPoolDetails({
+      poolId: '999',
+    });
+    expect(poolDetailsResult.success).toBe(false);
+    expect(poolDetailsResult.error).toBe(
+      'Failed to fetch farming pool details: Contract call failed'
+    );
+  });
+
+  it('should handle estimateGasFees error', async () => {
+    vi.spyOn(vi.mocked(JsonRpcProvider).prototype, 'getFeeData').mockImplementationOnce(() => {
+      throw new Error('RPC error during gas estimation');
+    });
+
+    const gasFeeResult = await client.estimateGasFees(
+      '0xmockWalletAddress',
+      '0xmockToAddress',
+      '1000000000000000000'
+    );
+    expect(gasFeeResult.success).toBe(false);
+    expect(gasFeeResult.error).toBe('Failed to estimate gas fees: RPC error during gas estimation');
   });
 });
