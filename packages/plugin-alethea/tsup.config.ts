@@ -15,7 +15,6 @@ export default defineConfig({
     'https',
     'http',
     '@elizaos/core',
-    '@alethea-ai/sdk',
     'ethers',
     'zod',
   ],
