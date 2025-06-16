@@ -459,7 +459,7 @@ export type MockRuntime = Partial<IAgentRuntime & IDatabaseAdapter> & {
   getMemoriesByRoomIds: ReturnType<typeof vi.fn>;
 
   // Added for chat title evaluator
-  getParticipantsForRoom: ReturnType<typeof vi.fn>;
+  // Removed redundant declaration of getParticipantsForRoom
 
   // Additional database methods
   ensureAgentExists: ReturnType<typeof vi.fn>;
