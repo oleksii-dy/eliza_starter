@@ -814,8 +814,7 @@ export type AgentPanel = {
 };
 
 export function useAgentPanels(agentId: UUID | undefined | null, options = {}) {
-  console.log('useAgentPanels', agentId);
-  const network = useNetworkStatus();
+
 
   return useQuery<{
     success: boolean;
@@ -825,14 +824,9 @@ export function useAgentPanels(agentId: UUID | undefined | null, options = {}) {
     queryKey: ['agentPanels', agentId],
     queryFn: () => apiClient.getAgentPanels(agentId || ''),
     enabled: Boolean(agentId),
-    staleTime: STALE_TIMES.STANDARD, // Panels are unlikely to change very frequently
-    refetchInterval: !network.isOffline && Boolean(agentId) ? STALE_TIMES.RARE : false,
-    refetchIntervalInBackground: false,
-    ...(!network.isOffline &&
-      network.effectiveType === 'slow-2g' && {
-      refetchInterval: STALE_TIMES.NEVER, // Or even disable for slow connections
-    }),
-    ...options,
+    staleTime: STALE_TIMES.RARE, // Panels are unlikely to change very frequently
+    refetchInterval: STALE_TIMES.RARE,
+    refetchOnMount: true
   });
 }
 
