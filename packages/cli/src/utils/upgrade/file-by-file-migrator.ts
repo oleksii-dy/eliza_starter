@@ -3,8 +3,9 @@ import { execa } from 'execa';
 import * as fs from 'fs-extra';
 import * as path from 'node:path';
 import { globby } from 'globby';
-import type { MigrationContext, StepResult } from './types.js';
+import type { MigrationContext, StepResult, SDKMigrationOptions } from './types.js';
 import { IMPORT_MAPPINGS, MODEL_TYPE_MAPPINGS, ARCHITECTURE_ISSUES } from './mega-prompt-parser.js';
+import { EnhancedClaudeSDKAdapter } from './claude-sdk-adapter.js';
 
 /**
  * File-by-file migrator that processes each file completely before moving to the next
@@ -14,9 +15,13 @@ export class FileByFileMigrator {
   private processedFiles: Set<string> = new Set();
   private filesToDelete: Set<string> = new Set();
   private foldersToDelete: Set<string> = new Set();
+  private claudeSDKAdapter: EnhancedClaudeSDKAdapter;
 
   constructor(context: MigrationContext) {
     this.context = context;
+    this.claudeSDKAdapter = new EnhancedClaudeSDKAdapter({
+      maxRetries: 3
+    });
   }
 
   /**
@@ -679,31 +684,48 @@ IMPORTANT: Fix ALL detected patterns comprehensively. Make the file fully V2 com
   }
 
   /**
-   * Run Claude on a specific file with a prompt
+   * Run Claude on a specific file with a prompt using SDK
    */
   private async runClaudeOnFile(prompt: string): Promise<void> {
     if (!this.context.repoPath) return;
 
     try {
-      await execa(
-        'claude',
-        [
-          '--print',
-          '--max-turns',
-          '10',
-          '--model',
-          'claude-sonnet-4-20250514',
-          '--dangerously-skip-permissions',
-          prompt,
-        ],
-        {
-          stdio: 'inherit',
-          cwd: this.context.repoPath,
-          timeout: 5 * 60 * 1000, // 5 minutes per file
+      logger.info('🤖 Using Claude SDK for file migration...');
+      
+      const options: SDKMigrationOptions = {
+        maxTurns: 15, // Increased for complex files like actions
+        model: 'claude-sonnet-4-20250514', // Same as original CLI calls
+        outputFormat: 'json',
+        permissionMode: 'bypassPermissions'
+      };
+
+      const result = await this.claudeSDKAdapter.executePrompt(prompt, options, this.context);
+      
+      // Handle recoverable conditions (like max turns) vs actual failures
+      if (!result.success) {
+        if (result.message?.includes('error_max_turns') || result.shouldContinue) {
+          logger.warn(`⚠️  File migration hit max turns but continuing: ${result.message}`);
+          logger.info('ℹ️  This file will be fixed in the post-migration validation phase');
+          // Don't throw - this is recoverable, continue with migration
+          return;
         }
-      );
+        throw new Error(result.message || 'Claude SDK execution failed');
+      }
+      
+      logger.info('✅ Claude SDK file migration completed successfully');
+      
+      if (result.cost) {
+        logger.info(`💰 File migration cost: $${result.cost.toFixed(4)}`);
+      }
+      
+      if (result.warnings && result.warnings.length > 0) {
+        for (const warning of result.warnings) {
+          logger.warn(`⚠️  ${warning}`);
+        }
+      }
+      
     } catch (error) {
-      logger.error('Claude failed to process file:', error);
+      logger.error('❌ Claude SDK file migration failed:', error);
       throw error;
     }
   }
