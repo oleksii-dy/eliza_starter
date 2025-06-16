@@ -23,8 +23,24 @@ export type {
   ModelTypeMapping,
   TestingPattern,
   SuccessMetrics,
-  PromptChunk
+  PromptChunk,
+  // Enhanced SDK types
+  SDKPhaseResult,
+  SDKMigrationOptions,
+  ClaudeSDKAdapter,
+  MigrationMetrics,
+  PhaseMetrics,
+  SessionManager,
+  MigrationMetricsCollector
 } from './types.js';
+
+// SDK utility types
+export type {
+  SDKMessage,
+  ClaudeQueryOptions,
+  ClaudeQueryParams,
+  ClaudeSDKModule
+} from './sdk-utils.js';
 
 // Mega prompt parser
 export {
@@ -42,6 +58,20 @@ export {
 
 // Context-aware test generation
 export { ContextAwareTestGenerator } from './context-aware-test-generator.js';
+
+// Enhanced Claude SDK adapter and utilities
+export { 
+  EnhancedClaudeSDKAdapter, 
+  createMigrationMetricsCollector, 
+  createSessionManager 
+} from './claude-sdk-adapter.js';
+
+export {
+  importClaudeSDK,
+  isClaudeSDKAvailable,
+  validateClaudeSDKEnvironment,
+  getSDKErrorContext
+} from './sdk-utils.js';
 
 // Utilities
 export { analyzeRepository } from './repository-analyzer.js';
