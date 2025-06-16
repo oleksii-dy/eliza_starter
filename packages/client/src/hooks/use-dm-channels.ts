@@ -121,8 +121,7 @@ export function useDmChannelsForAgent(
       });
     },
     enabled: !!agentId,
-    staleTime: STALE_TIMES.FREQUENT, // More frequent stale time to catch new chats quickly
-    refetchInterval: STALE_TIMES.STANDARD, // Poll less aggressively, rely on invalidation primarily
+    refetchInterval: STALE_TIMES.VERY_FREQUENT
   });
 }
 

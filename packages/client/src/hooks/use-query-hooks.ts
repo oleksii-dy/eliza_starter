@@ -65,6 +65,7 @@ type AgentLog = {
 
 // Constants for stale times
 export const STALE_TIMES = {
+  VERY_FREQUENT: 3000,
   FREQUENT: 30000, // 30 seconds - for data that changes often
   STANDARD: 120000, // 2 minutes - default
   RARE: 600000, // 10 minutes - for rarely changing data
@@ -134,8 +135,8 @@ export function useAgents(options = {}) {
     // Configure based on network conditions
     ...(!network.isOffline &&
       network.effectiveType === 'slow-2g' && {
-        refetchInterval: STALE_TIMES.STANDARD, // Poll less frequently on slow connections
-      }),
+      refetchInterval: STALE_TIMES.STANDARD, // Poll less frequently on slow connections
+    }),
     // Allow overriding any options
     ...options,
   });
@@ -163,8 +164,8 @@ export function useAgent(agentId: UUID | undefined | null, options = {}) {
     // Configure based on network conditions
     ...(!network.isOffline &&
       network.effectiveType === 'slow-2g' && {
-        refetchInterval: STALE_TIMES.STANDARD, // Poll less frequently on slow connections
-      }),
+      refetchInterval: STALE_TIMES.STANDARD, // Poll less frequently on slow connections
+    }),
     // Allow overriding any options
     ...options,
   });
@@ -370,9 +371,9 @@ export function useChannelMessages(
         text: sm.content,
         name: isAgent
           ? sm.metadata?.agentName ||
-            sm.metadata?.authorDisplayName ||
-            sm.authorDisplayName ||
-            'Agent'
+          sm.metadata?.authorDisplayName ||
+          sm.authorDisplayName ||
+          'Agent'
           : USER_NAME,
         senderId: sm.authorId,
         isAgent: isAgent,
@@ -829,8 +830,8 @@ export function useAgentPanels(agentId: UUID | undefined | null, options = {}) {
     refetchIntervalInBackground: false,
     ...(!network.isOffline &&
       network.effectiveType === 'slow-2g' && {
-        refetchInterval: STALE_TIMES.NEVER, // Or even disable for slow connections
-      }),
+      refetchInterval: STALE_TIMES.NEVER, // Or even disable for slow connections
+    }),
     ...options,
   });
 }
@@ -871,8 +872,8 @@ export function useAgentsWithDetails(): AgentsWithDetailsResult {
       refetchIntervalInBackground: false,
       ...(!network.isOffline &&
         network.effectiveType === 'slow-2g' && {
-          refetchInterval: STALE_TIMES.STANDARD,
-        }),
+        refetchInterval: STALE_TIMES.STANDARD,
+      }),
     })),
   });
 
