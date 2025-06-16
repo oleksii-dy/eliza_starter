@@ -15,6 +15,7 @@ import type {
   StepResult,
   FileAnalysis,
   VerificationResult,
+  SDKMigrationOptions,
 } from './types.js';
 import { MigrationStepExecutor } from './migration-step-executor.js';
 import { parseIntoChunks, ARCHITECTURE_ISSUES } from './mega-prompt-parser.js';
@@ -23,6 +24,11 @@ import { analyzeRepository } from './repository-analyzer.js';
 import { BRANCH_NAME, MIN_DISK_SPACE_GB, LOCK_FILE_NAME, DEFAULT_OPENAI_API_KEY } from './config.js';
 import { ContextAwareTestGenerator } from './context-aware-test-generator.js';
 import { EnvPrompter, type EnvVarPrompt } from './env-prompter.js';
+import { 
+  EnhancedClaudeSDKAdapter, 
+  createMigrationMetricsCollector, 
+  createSessionManager 
+} from './claude-sdk-adapter.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,6 +47,7 @@ export class StructuredMigrator {
   private lockFilePath: string | null = null;
   private context: MigrationContext | null = null;
   private stepExecutor: MigrationStepExecutor | null = null;
+  private claudeSDKAdapter: EnhancedClaudeSDKAdapter | null = null;
 
   constructor(options: MigratorOptions = {}) {
     this.git = simpleGit();
@@ -91,13 +98,21 @@ export class StructuredMigrator {
       spinner.text = 'Checking disk space...';
       await this.checkDiskSpace();
 
-      // Check for Claude Code
-      try {
-        await execa('claude', ['--version'], { stdio: 'pipe' });
-      } catch {
+      // Check for Claude Code SDK availability
+      const { isClaudeSDKAvailable, validateClaudeSDKEnvironment } = await import('./sdk-utils.js');
+      
+      if (!(await isClaudeSDKAvailable())) {
         throw new Error(
-          'Claude Code is required for migration. Install with: bun install -g @anthropic-ai/claude-code'
+          'Claude Code SDK is required for migration. Install with: bun add @anthropic-ai/claude-code'
         );
+      }
+      
+      try {
+        validateClaudeSDKEnvironment();
+        logger.info('✅ Claude Code SDK detected and configured');
+      } catch (envError) {
+        const errorMessage = envError instanceof Error ? envError.message : String(envError);
+        throw new Error(`Claude SDK environment error: ${errorMessage}`);
       }
 
       // Step 1: Handle input (clone if GitHub URL, validate if folder)
@@ -464,7 +479,7 @@ export class StructuredMigrator {
         logger.warn('Branch created locally but not pushed. You may need to push manually.');
       }
       
-      // Log migration summary
+      // Log migration summary with enhanced metrics
       logger.info('\n📝 Migration Summary:');
       logger.info(`- Repository: ${this.repoPath}`);
       logger.info(`- Branch: ${BRANCH_NAME}`);
@@ -474,6 +489,25 @@ export class StructuredMigrator {
       logger.info(`- Build status: ${buildSuccess ? '✅ Passing' : '❌ Failing'}`);
       logger.info(`- Test status: ${testSuccess ? '✅ Passing' : '❌ Failing'}`);
       logger.info(`- Overall status: ${migrationFullySuccessful ? '✅ Success' : '⚠️  Completed with issues'}`);
+      
+      // NEW: Display SDK metrics if available
+      if (migrationContext.metricsCollector) {
+        const metrics = migrationContext.metricsCollector.getFullReport();
+        logger.info('\n💰 Enhanced Migration Metrics:');
+        logger.info(`- Total cost: $${metrics.totalCost.toFixed(4)}`);
+        logger.info(`- Total duration: ${(metrics.totalDuration / 1000).toFixed(2)}s`);
+        logger.info(`- Total AI turns: ${metrics.totalTurns}`);
+        logger.info(`- Errors encountered: ${metrics.errorCount}`);
+        logger.info(`- Sessions used: ${metrics.sessionsUsed.length}`);
+        
+        if (metrics.phaseMetrics.size > 0) {
+          logger.info('\n📊 Phase Breakdown:');
+          for (const [phase, phaseMetric] of metrics.phaseMetrics.entries()) {
+            const status = phaseMetric.success ? '✅' : '❌';
+            logger.info(`  ${status} ${phase}: $${phaseMetric.cost.toFixed(4)}, ${phaseMetric.turns} turns, ${phaseMetric.attempts} attempts`);
+          }
+        }
+      }
       
       // Only show minimal next steps since we've already done the verification
       if (migrationFullySuccessful) {
@@ -577,6 +611,10 @@ export class StructuredMigrator {
       existingFiles,
       changedFiles: this.changedFiles,
       claudePrompts: new Map(),
+      // NEW: Enhanced SDK context
+      abortController: new AbortController(),
+      sessionManager: createSessionManager(),
+      metricsCollector: createMigrationMetricsCollector(),
     };
   }
 
@@ -699,77 +737,57 @@ Apply these patterns to complete the V2 migration.`;
     if (!this.repoPath) throw new Error('Repository path not set');
     process.chdir(this.repoPath);
 
-    const maxRetries = 3;
-    let retryCount = 0;
-    let lastError: unknown = null;
+    if (!this.context) throw new Error('Migration context not set');
 
-    while (retryCount < maxRetries) {
-      try {
-        logger.info('🤖 Running Claude Code...');
-
-        await execa(
-          'claude',
-          [
-            '--print',
-            '--max-turns',
-            '30',
-            '--verbose',
-            '--model',
-            'claude-opus-4-20250514',
-            '--dangerously-skip-permissions',
-            prompt,
-          ],
-          {
-            stdio: 'inherit',
-            cwd: this.repoPath,
-            timeout: 15 * 60 * 1000, // 15 minutes
-          }
-        );
-
-        logger.info('✅ Claude Code completed successfully');
-        return; // Success - exit the retry loop
-      } catch (error: unknown) {
-        lastError = error;
-        const err = error as { code?: string; message?: string; stderr?: string };
-
-        if (err.code === 'ENOENT') {
-          throw new Error(
-            'Claude Code not found! Install with: npm install -g @anthropic-ai/claude-code'
-          );
-        }
-
-        // Check for rate limiting errors
-        const errorMessage = err.message || err.stderr || '';
-        const isRateLimitError = 
-          errorMessage.includes('rate limit') ||
-          errorMessage.includes('429') ||
-          errorMessage.includes('too many requests') ||
-          errorMessage.includes('quota exceeded');
-
-        if (isRateLimitError && retryCount < maxRetries - 1) {
-          retryCount++;
-          const waitTime = Math.min(60 * retryCount, 300); // Wait 1-5 minutes
-          logger.warn(`⏸️  Rate limit detected. Waiting ${waitTime} seconds before retry ${retryCount}/${maxRetries - 1}...`);
-          
-          // Show countdown
-          for (let i = waitTime; i > 0; i--) {
-            process.stdout.write(`\r⏱️  Resuming in ${i} seconds...  `);
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-          process.stdout.write('\r\n');
-          
-          logger.info('🔄 Resuming Claude Code execution...');
-          continue; // Retry
-        }
-
-        logger.error('❌ Claude Code failed:', err.message);
-        throw error;
-      }
+    // Initialize SDK adapter if not already done
+    if (!this.claudeSDKAdapter) {
+      this.claudeSDKAdapter = new EnhancedClaudeSDKAdapter({
+        maxRetries: 3
+      });
     }
 
-    // If we exhausted all retries
-    throw new Error(`Claude Code failed after ${maxRetries} attempts. Last error: ${(lastError as Error)?.message}`);
+    try {
+      logger.info('🚀 Using Claude SDK for migration...');
+      
+      const result = await this.claudeSDKAdapter.executePrompt(
+        prompt,
+        {
+          maxTurns: 30,
+          model: 'claude-opus-4-20250514', // Use Opus for complex migration tasks
+          outputFormat: 'json',
+          permissionMode: 'bypassPermissions', // Equivalent to --dangerously-skip-permissions
+          systemPrompt: 'You are an expert ElizaOS plugin migration assistant. Follow the migration instructions precisely.'
+        },
+        this.context
+      );
+
+      if (result.success) {
+        logger.info('✅ SDK execution completed successfully');
+      } else if (result.message?.includes('error_max_turns') || result.shouldContinue) {
+        logger.warn(`⚠️  Migration hit max turns but continuing: ${result.message}`);
+        logger.info('ℹ️  Remaining issues will be fixed in the iterative validation phase');
+      } else {
+        throw new Error(`SDK execution failed: ${result.message}`);
+      }
+      
+      if (result.cost) {
+        logger.info(`💰 Cost: $${result.cost.toFixed(4)}`);
+      }
+      if (result.duration) {
+        logger.info(`⏱️  Duration: ${result.duration}ms`);
+      }
+      if (result.warnings && result.warnings.length > 0) {
+        for (const warning of result.warnings) {
+          logger.warn(`⚠️  ${warning}`);
+        }
+      }
+    } catch (error) {
+      logger.error('❌ Claude SDK execution failed:', error);
+      throw error;
+    }
   }
+
+
 
   private async runFinalValidation(): Promise<StepResult> {
     logger.info('🔍 Running final validation...');
@@ -1910,39 +1928,55 @@ Fix the src/index.ts file to properly include the test suite!`;
   }
 
   /**
-   * Run Claude with a specific prompt for the current repository
+   * Run Claude with a specific prompt for the current repository using SDK
    */
   private async runClaudeWithPrompt(prompt: string): Promise<void> {
     if (!this.repoPath) throw new Error('Repository path not set');
+    if (!this.context) throw new Error('Migration context not set');
+
+    // Initialize SDK adapter if not already done
+    if (!this.claudeSDKAdapter) {
+      this.claudeSDKAdapter = new EnhancedClaudeSDKAdapter({
+        maxRetries: 3
+      });
+    }
 
     try {
-      await execa(
-        'claude',
-        [
-          '--print',
-          '--max-turns',
-          '5',
-          '--model',
-          'claude-sonnet-4-20250514',
-          '--dangerously-skip-permissions',
-          prompt,
-        ],
-        {
-          stdio: 'inherit',
-          cwd: this.repoPath,
-          timeout: 2 * 60 * 1000, // 2 minutes
-        }
-      );
-    } catch (error) {
-      const err = error as { code?: string; message?: string };
+      logger.info('🤖 Using Claude SDK for prompt execution...');
       
-      if (err.code === 'ENOENT') {
-        throw new Error(
-          'Claude Code not found! Install with: npm install -g @anthropic-ai/claude-code'
-        );
-      }
+      const options: SDKMigrationOptions = {
+        maxTurns: 5,
+        model: 'claude-sonnet-4-20250514', // Use Sonnet for smaller prompts
+        outputFormat: 'json',
+        permissionMode: 'bypassPermissions'
+      };
 
-      logger.error('Claude prompt execution failed:', err.message);
+      const result = await this.claudeSDKAdapter.executePrompt(prompt, options, this.context);
+      
+      // Handle recoverable conditions (like max turns) vs actual failures
+      if (!result.success) {
+        if (result.message?.includes('error_max_turns') || result.shouldContinue) {
+          logger.warn(`⚠️  Prompt execution hit max turns but continuing: ${result.message}`);
+          logger.info('ℹ️  Remaining issues will be fixed in the iterative validation phase');
+        } else {
+          throw new Error(result.message || 'Claude SDK execution failed');
+        }
+      } else {
+        logger.info('✅ Claude SDK prompt execution completed successfully');
+      }
+      
+      if (result.cost) {
+        logger.info(`💰 Prompt execution cost: $${result.cost.toFixed(4)}`);
+      }
+      
+      if (result.warnings && result.warnings.length > 0) {
+        for (const warning of result.warnings) {
+          logger.warn(`⚠️  ${warning}`);
+        }
+      }
+      
+    } catch (error) {
+      logger.error('❌ Claude SDK prompt execution failed:', error);
       throw error;
     }
   }
