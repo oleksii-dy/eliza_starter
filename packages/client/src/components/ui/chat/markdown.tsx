@@ -121,10 +121,10 @@ const createComponents = (variant: 'user' | 'agent' = 'agent') => ({
   p: ({ className, ...props }: any) => <p className={cn('leading-7', className)} {...props} />,
 
   // Lists
-  ul: ({ className, ...props }: any) => (
+  ul: ({ className, ordered, ...props }: any) => (
     <ul className={cn('my-2 ml-6 list-disc [&>li]:mt-1', className)} {...props} />
   ),
-  ol: ({ className, ...props }: any) => (
+  ol: ({ className, ordered, ...props }: any) => (
     <ol className={cn('my-2 ml-6 list-decimal [&>li]:mt-1', className)} {...props} />
   ),
 

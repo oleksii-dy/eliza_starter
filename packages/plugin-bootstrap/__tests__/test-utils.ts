@@ -198,6 +198,10 @@ export function createMockRuntime(overrides: Partial<MockRuntime> = {}): MockRun
     setParticipantUserState: vi.fn().mockResolvedValue(undefined),
     updateParticipantUserState: vi.fn().mockResolvedValue(undefined),
     getUserServerRole: vi.fn().mockResolvedValue('USER'),
+    getParticipantsForRoom: vi.fn().mockResolvedValue([
+      { id: 'user-1' as UUID, name: 'User 1' },
+      { id: 'agent-1' as UUID, name: 'Agent 1' }
+    ]),
     findEntityByName: vi.fn().mockResolvedValue(null),
     getMemberRole: vi.fn().mockResolvedValue('USER'),
 
@@ -453,4 +457,10 @@ export type MockRuntime = Partial<IAgentRuntime & IDatabaseAdapter> & {
 
   // Added for recentMessages provider
   getMemoriesByRoomIds: ReturnType<typeof vi.fn>;
+
+  // Added for chat title evaluator
+  getParticipantsForRoom: ReturnType<typeof vi.fn>;
+
+  // Additional database methods
+  ensureAgentExists: ReturnType<typeof vi.fn>;
 };

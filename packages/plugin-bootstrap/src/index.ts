@@ -1031,14 +1031,14 @@ const syncSingleUser = async (
     const worldMetadata =
       type === ChannelType.DM
         ? {
-            ownership: {
-              ownerId: entityId,
-            },
-            roles: {
-              [entityId]: Role.OWNER,
-            },
-            settings: {}, // Initialize empty settings for onboarding
-          }
+          ownership: {
+            ownerId: entityId,
+          },
+          roles: {
+            [entityId]: Role.OWNER,
+          },
+          settings: {}, // Initialize empty settings for onboarding
+        }
         : undefined;
 
     logger.info(
@@ -1349,7 +1349,7 @@ export const bootstrapPlugin: Plugin = {
   ],
   // this is jank, these events are not valid
   events: events as any as PluginEvents,
-  evaluators: [evaluators.reflectionEvaluator],
+  evaluators: [evaluators.reflectionEvaluator, evaluators.chatTitleEvaluator],
   providers: [
     providers.evaluatorsProvider,
     providers.anxietyProvider,

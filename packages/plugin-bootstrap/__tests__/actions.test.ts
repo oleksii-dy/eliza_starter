@@ -1,40 +1,32 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import {
+  type HandlerCallback,
+  type IAgentRuntime,
+  type Memory,
+  ModelType,
+  type State,
+  logger
+} from '@elizaos/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   followRoomAction,
   ignoreAction,
   muteRoomAction,
-  unmuteRoomAction,
-  unfollowRoomAction,
-  replyAction,
-  choiceAction,
-  sendMessageAction,
-  updateEntityAction,
   noneAction,
+  replyAction,
+  unfollowRoomAction,
+  unmuteRoomAction
 } from '../src/actions';
-import {
-  createMockRuntime,
-  createMockMemory,
-  createMockState,
-  setupActionTest,
-} from './test-utils';
 import type { MockRuntime } from './test-utils';
 import {
-  type IAgentRuntime,
-  type Memory,
-  type State,
-  type HandlerCallback,
-  ModelType,
-  ChannelType,
-  Role,
-  getUserServerRole,
-  logger,
-} from '@elizaos/core';
+  createMockMemory,
+  setupActionTest
+} from './test-utils';
 
 // Spy on commonly used methods for logging
 beforeEach(() => {
-  vi.spyOn(logger, 'error').mockImplementation(() => {});
-  vi.spyOn(logger, 'warn').mockImplementation(() => {});
-  vi.spyOn(logger, 'debug').mockImplementation(() => {});
+  vi.spyOn(logger, 'error').mockImplementation(() => { });
+  vi.spyOn(logger, 'warn').mockImplementation(() => { });
+  vi.spyOn(logger, 'debug').mockImplementation(() => { });
 });
 
 describe('Reply Action', () => {
