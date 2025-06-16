@@ -113,7 +113,7 @@ export class MigrationStepExecutor {
         phase: 'actions-migration',
         name: 'Migrate all code files',
         description: 'Process each file completely using file-by-file migration',
-        required: true,
+        required: false, // Make non-critical so migration continues to post-validation even if some files hit max turns
         execute: async (ctx) => this.migrateFilesOneByOne(ctx),
       },
 
