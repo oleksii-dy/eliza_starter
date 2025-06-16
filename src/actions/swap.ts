@@ -5,7 +5,7 @@ import {
   ModelType,
   UUID,
 } from "@elizaos/core";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   encodeFunctionData,
   erc20Abi,
@@ -151,7 +151,12 @@ export const swapTokens: Action = {
           const tokenResult = await db
             .select()
             .from(erc20Table)
-            .where(eq(lower(erc20Table.symbol), symbol.toLowerCase()));
+            .where(
+              and(
+                eq(lower(erc20Table.symbol), symbol.toLowerCase()),
+                eq(erc20Table.chainId, chainId)
+              )
+            );
 
           tokenIn = extractTokenData(tokenResult[0]);
         }
@@ -192,7 +197,12 @@ export const swapTokens: Action = {
           const tokenResult = await db
             .select()
             .from(erc20Table)
-            .where(eq(lower(erc20Table.symbol), symbol.toLowerCase()));
+            .where(
+              and(
+                eq(lower(erc20Table.symbol), symbol.toLowerCase()),
+                eq(erc20Table.chainId, chainId)
+              )
+            );
 
           tokenOut = extractTokenData(tokenResult[0]);
         }
