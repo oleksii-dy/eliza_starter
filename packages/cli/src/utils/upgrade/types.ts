@@ -3,11 +3,14 @@ export interface MigrationResult {
   branchName: string;
   repoPath: string;
   error?: Error;
+  metrics?: MigrationMetrics;
 }
 
 export interface MigratorOptions {
   skipTests?: boolean;
   skipValidation?: boolean;
+  maxCostUSD?: number;
+  trackMetrics?: boolean;
 }
 
 // Migration phases from the mega prompt
@@ -61,6 +64,9 @@ export interface MigrationContext {
   changedFiles: Set<string>;
   claudePrompts: Map<string, string>;
   collectedEnvVars?: Record<string, string>;
+  abortController?: AbortController;
+  sessionManager?: SessionManager;
+  metricsCollector?: MigrationMetricsCollector;
 }
 
 // Critical architecture issues from mega prompt
@@ -242,4 +248,77 @@ export interface FileAnalysis {
 export interface VerificationResult {
   success: boolean;
   issues: string[];
+}
+
+// NEW: SDK Integration Types
+export interface MigrationMetrics {
+  totalCost: number;
+  totalDuration: number;
+  totalTurns: number;
+  phaseMetrics: Map<MigrationPhase, PhaseMetrics>;
+  errorCount: number;
+  sessionsUsed: string[];
+  startTime: Date;
+  endTime?: Date;
+}
+
+export interface PhaseMetrics {
+  cost: number;
+  duration: number;
+  turns: number;
+  attempts: number;
+  success: boolean;
+  sessionId?: string;
+  errors: string[];
+}
+
+export interface SessionManager {
+  activeSessions: Map<MigrationPhase, string>;
+  getSessionForPhase(phase: MigrationPhase): string | undefined;
+  setSessionForPhase(phase: MigrationPhase, sessionId: string): void;
+  clearSession(phase: MigrationPhase): void;
+  getAllSessions(): Record<string, string>;
+}
+
+export interface MigrationMetricsCollector {
+  metrics: MigrationMetrics;
+  startPhase(phase: MigrationPhase): void;
+  endPhase(phase: MigrationPhase, result: SDKPhaseResult): void;
+  addError(phase: MigrationPhase, error: string): void;
+  getTotalCost(): number;
+  getTotalDuration(): number;
+  getPhaseReport(phase: MigrationPhase): PhaseMetrics | undefined;
+  getFullReport(): MigrationMetrics;
+}
+
+// SDK-specific types
+export interface SDKPhaseResult {
+  success: boolean;
+  message: string;
+  sessionId?: string;
+  cost?: number;
+  duration?: number;
+  turns?: number;
+  shouldContinue?: boolean;
+  error?: Error;
+  warnings?: string[];
+  changes?: string[];
+}
+
+export interface SDKMigrationOptions {
+  maxTurns: number;
+  model?: string;
+  systemPrompt?: string;
+  outputFormat?: 'text' | 'json' | 'stream-json';
+  permissionMode?: 'default' | 'acceptEdits' | 'bypassPermissions';
+  allowedTools?: string[];
+  resumeSessionId?: string;
+  costLimit?: number;
+}
+
+export interface ClaudeSDKAdapter {
+  executePrompt(prompt: string, options: SDKMigrationOptions, context: MigrationContext): Promise<SDKPhaseResult>;
+  executePhase(phase: MigrationPhase, context: MigrationContext): Promise<SDKPhaseResult>;
+  continueSession(sessionId: string, prompt: string, context: MigrationContext): Promise<SDKPhaseResult>;
+  getSessionMetrics(sessionId: string): Promise<PhaseMetrics>;
 }
