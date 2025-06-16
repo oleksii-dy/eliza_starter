@@ -194,6 +194,22 @@ export const chatTitleEvaluator: Evaluator = {
         try {
             logger.info(`[ChatTitleEvaluator] Processing message in room ${message.roomId}`);
 
+            // Only run for messages from client or API sources
+            const source = message.content.source || message.metadata?.source;
+            const allowedSources = [
+                'client_chat',
+                'client_group_chat',
+                'socketio_client',
+                'websocket-api',
+                'api',
+                'client'
+            ];
+
+            if (!source || !allowedSources.includes(source)) {
+                logger.debug(`[ChatTitleEvaluator] Skipping message from source: ${source} (not a client/API source)`);
+                return false;
+            }
+
             // Only run for DM channels or GROUP channels with 2 participants (1-on-1 conversations)
             const isOneOnOne = await isOneOnOneConversation(runtime, message.roomId as UUID);
             if (!isOneOnOne) {
