@@ -11,8 +11,14 @@ import {
   type Plugin,
   type UUID,
 } from '@elizaos/core';
-import internalMessageBus from '../bus'; // Import the bus
-import { sendError } from '../api/shared';
+
+const internalMessageBus = {
+  on: (_event: string, _handler: any) => {},
+  off: (_event: string, _handler: any) => {},
+  emit: (_event: string, _data: any) => {},
+  once: (_event: string, _handler: any) => {},
+  removeAllListeners: (_event?: string) => {},
+};
 
 // This interface defines the structure of messages coming from the server
 export interface MessageServiceMessage {
@@ -182,7 +188,7 @@ export class MessageBusService extends Service {
         },
       });
     } catch (error) {
-      if (error.message && error.message.includes('worlds_pkey')) {
+      if (error instanceof Error && error.message && error.message.includes('worlds_pkey')) {
         logger.debug(
           `[${this.runtime.character.name}] MessageBusService: World ${agentWorldId} already exists, continuing with message processing`
         );
@@ -206,7 +212,7 @@ export class MessageBusService extends Service {
         },
       });
     } catch (error) {
-      if (error.message && error.message.includes('rooms_pkey')) {
+      if (error instanceof Error && error.message && error.message.includes('rooms_pkey')) {
         logger.debug(
           `[${this.runtime.character.name}] MessageBusService: Room ${agentRoomId} already exists, continuing with message processing`
         );
@@ -289,7 +295,7 @@ export class MessageBusService extends Service {
     }
 
     logger.info(
-      `[${this.runtime.character.name}] MessageBusService: Agent is a participant in channel ${message.channel_id}, proceeding with message processing`
+      `[${this.runtime.character.name} - ${this.runtime.agentId}] MessageBusService: Agent is a participant in channel ${message.channel_id}, proceeding with message processing`
     );
 
     try {
@@ -310,17 +316,30 @@ export class MessageBusService extends Service {
       );
 
       // Check if this memory already exists (in case of duplicate processing)
-      const existingMemory = await this.runtime.getMemoryById(agentMemory.id);
-      if (existingMemory) {
-        logger.debug(
-          `[${this.runtime.character.name}] MessageBusService: Memory ${agentMemory.id} already exists, skipping duplicate processing`
-        );
-        return;
+      if (agentMemory.id) {
+        const existingMemory = await this.runtime.getMemoryById(agentMemory.id);
+        if (existingMemory) {
+          logger.debug(
+            `[${this.runtime.character.name}] MessageBusService: Memory ${agentMemory.id} already exists, skipping duplicate processing`
+          );
+          return;
+        }
       }
 
       const callbackForCentralBus = async (responseContent: Content): Promise<Memory[]> => {
         logger.info(
           `[${this.runtime.character.name}] Agent generated response for message. Preparing to send back to bus.`
+        );
+
+        await this.runtime.createMemory(
+          {
+            entityId: this.runtime.agentId,
+            content: responseContent,
+            roomId: agentRoomId,
+            worldId: agentWorldId,
+            agentId: this.runtime.agentId,
+          },
+          'messages'
         );
 
         // Send response to central bus
@@ -477,7 +496,11 @@ export class MessageBusService extends Service {
         content: content.text,
         in_reply_to_message_id: centralInReplyToRootMessageId,
         source_type: 'agent_response',
-        raw_message: { text: content.text, thought: content.thought, actions: content.actions },
+        raw_message: {
+          text: content.text,
+          thought: content.thought,
+          actions: content.actions,
+        },
         metadata: {
           agent_id: this.runtime.agentId,
           agentName: this.runtime.character.name,

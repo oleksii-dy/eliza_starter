@@ -1,8 +1,10 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { spawn, execSync } from 'child_process';
 import { mkdtemp, rm, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
+import { TEST_TIMEOUTS } from '../test-timeouts';
+import { waitForServerReady, killProcessOnPort } from './test-utils';
 
 describe('ElizaOS Agent Commands', () => {
   let serverProcess: any;
@@ -19,15 +21,11 @@ describe('ElizaOS Agent Commands', () => {
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun run ${join(scriptDir, '../dist/index.js')}`;
+    elizaosCmd = `bun ${join(scriptDir, '../dist/index.js')}`;
 
     // Kill any existing processes on port 3000
-    try {
-      execSync(`lsof -t -i :3000 | xargs kill -9`, { stdio: 'ignore' });
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    } catch (e) {
-      // Ignore if no processes found
-    }
+    await killProcessOnPort(3000);
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
 
     // Create database directory
     await mkdir(join(testTmpDir, 'elizadb'), { recursive: true });
@@ -37,7 +35,7 @@ describe('ElizaOS Agent Commands', () => {
 
     serverProcess = spawn(
       'bun',
-      ['run', join(scriptDir, '../dist/index.js'), 'start', '--port', testServerPort],
+      [join(scriptDir, '../dist/index.js'), 'start', '--port', testServerPort],
       {
         env: {
           ...process.env,
@@ -49,27 +47,9 @@ describe('ElizaOS Agent Commands', () => {
     );
 
     // Wait for server to be ready
-    let attempts = 0;
-    const maxAttempts = 30;
-
-    while (attempts < maxAttempts) {
-      try {
-        const response = await fetch(`${testServerUrl}/api/agents`);
-        if (response.ok) {
-          console.log('[DEBUG] Server is ready!');
-          break;
-        }
-      } catch (e) {
-        // Server not ready yet
-      }
-
-      if (attempts === maxAttempts - 1) {
-        throw new Error('Server did not start within timeout');
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      attempts++;
-    }
+    console.log('[DEBUG] Waiting for server to be ready...');
+    await waitForServerReady(parseInt(testServerPort, 10));
+    console.log('[DEBUG] Server is ready!');
 
     // Pre-load test characters
     const charactersDir = join(scriptDir, 'test-characters');
@@ -92,13 +72,29 @@ describe('ElizaOS Agent Commands', () => {
     }
 
     // Give characters time to register
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-  }, 60000); // 60 second timeout for setup
+    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+  });
 
   afterAll(async () => {
     if (serverProcess) {
-      serverProcess.kill();
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      try {
+        // Use SIGTERM for graceful shutdown, fallback to SIGKILL
+        serverProcess.kill('SIGTERM');
+        
+        // Wait briefly, then force kill if still running
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        if (!serverProcess.killed && serverProcess.exitCode === null) {
+          serverProcess.kill('SIGKILL');
+        }
+        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+        
+        // Wait for process to actually exit
+        if (!serverProcess.killed && serverProcess.exitCode === null) {
+          await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.PROCESS_CLEANUP));
+        }
+      } catch (e) {
+        // Ignore cleanup errors
+      }
     }
 
     if (testTmpDir) {
@@ -110,19 +106,19 @@ describe('ElizaOS Agent Commands', () => {
     }
   });
 
-  test('agent help displays usage information', async () => {
+  it('agent help displays usage information', async () => {
     const result = execSync(`${elizaosCmd} agent --help`, { encoding: 'utf8' });
     expect(result).toContain('Usage: elizaos agent');
   });
 
-  test('agent list returns agents', async () => {
+  it('agent list returns agents', async () => {
     const result = execSync(`${elizaosCmd} agent list --remote-url ${testServerUrl}`, {
       encoding: 'utf8',
     });
     expect(result).toMatch(/(Ada|Max|Shaw)/);
   });
 
-  test('agent list works with JSON flag', async () => {
+  it('agent list works with JSON flag', async () => {
     const result = execSync(`${elizaosCmd} agent list --remote-url ${testServerUrl} --json`, {
       encoding: 'utf8',
     });
@@ -131,14 +127,14 @@ describe('ElizaOS Agent Commands', () => {
     expect(result).toMatch(/(name|Name)/);
   });
 
-  test('agent get shows details with name parameter', async () => {
+  it('agent get shows details with name parameter', async () => {
     const result = execSync(`${elizaosCmd} agent get --remote-url ${testServerUrl} -n Ada`, {
       encoding: 'utf8',
     });
     expect(result).toContain('Ada');
   });
 
-  test('agent get with JSON flag shows character definition', async () => {
+  it('agent get with JSON flag shows character definition', async () => {
     const result = execSync(`${elizaosCmd} agent get --remote-url ${testServerUrl} -n Ada --json`, {
       encoding: 'utf8',
     });
@@ -146,7 +142,7 @@ describe('ElizaOS Agent Commands', () => {
     expect(result).toContain('Ada');
   });
 
-  test('agent get with output flag saves to file', async () => {
+  it('agent get with output flag saves to file', async () => {
     const outputFile = join(testTmpDir, 'output_ada.json');
     execSync(
       `${elizaosCmd} agent get --remote-url ${testServerUrl} -n Ada --output ${outputFile}`,
@@ -158,7 +154,7 @@ describe('ElizaOS Agent Commands', () => {
     expect(fileContent).toContain('Ada');
   });
 
-  test('agent start loads character from file', async () => {
+  it('agent start loads character from file', async () => {
     const charactersDir = join(__dirname, '../test-characters');
     const adaPath = join(charactersDir, 'ada.json');
 
@@ -174,7 +170,7 @@ describe('ElizaOS Agent Commands', () => {
     }
   });
 
-  test('agent start works with name parameter', async () => {
+  it('agent start works with name parameter', async () => {
     try {
       execSync(`${elizaosCmd} agent start --remote-url ${testServerUrl} -n Ada`, {
         encoding: 'utf8',
@@ -185,7 +181,7 @@ describe('ElizaOS Agent Commands', () => {
     }
   });
 
-  test('agent start handles non-existent agent fails', async () => {
+  it('agent start handles non-existent agent fails', async () => {
     const nonExistentName = `NonExistent_${Date.now()}`;
 
     try {
@@ -201,7 +197,7 @@ describe('ElizaOS Agent Commands', () => {
     }
   });
 
-  test('agent stop works after start', async () => {
+  it('agent stop works after start', async () => {
     // Ensure Ada is started first
     try {
       execSync(`${elizaosCmd} agent start --remote-url ${testServerUrl} -n Ada`, { stdio: 'pipe' });
@@ -219,7 +215,7 @@ describe('ElizaOS Agent Commands', () => {
     }
   });
 
-  test('agent set updates configuration correctly', async () => {
+  it('agent set updates configuration correctly', async () => {
     const configFile = join(testTmpDir, 'update_config.json');
     const configContent = JSON.stringify({
       system: 'Updated system prompt for testing',
@@ -235,7 +231,7 @@ describe('ElizaOS Agent Commands', () => {
     expect(result).toMatch(/(updated|Updated)/);
   });
 
-  test('agent full lifecycle management', async () => {
+  it('agent full lifecycle management', async () => {
     // Start agent
     try {
       execSync(`${elizaosCmd} agent start --remote-url ${testServerUrl} -n Ada`, {

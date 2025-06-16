@@ -35,8 +35,9 @@ const require = createRequire(import.meta.url);
 `,
   },
   esbuildOptions(options) {
-    options.alias = {
-      '@/src': './src',
+    // Use a transform to replace @/src imports
+    options.define = {
+      ...options.define,
     };
   },
   esbuildPlugins: [
@@ -45,16 +46,16 @@ const require = createRequire(import.meta.url);
       resolveFrom: 'cwd',
       assets: [
         {
-          from: './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
+          from: '../../node_modules/@electric-sql/pglite/dist/pglite.data',
           to: './dist',
         },
         {
-          from: './node_modules/@electric-sql/pglite/dist/pglite.data',
+          from: '../../node_modules/@electric-sql/pglite/dist/pglite.wasm',
           to: './dist',
         },
         {
-          from: './node_modules/@electric-sql/pglite/dist/pglite.wasm',
-          to: './dist',
+          from: './templates',
+          to: './dist/templates',
         },
         {
           from: './src/utils/upgrade/CLAUDE.md',
@@ -67,6 +68,6 @@ const require = createRequire(import.meta.url);
       ],
       // Setting this to true will output a list of copied files
       verbose: true,
-    }),
+    }) as any,
   ],
 });

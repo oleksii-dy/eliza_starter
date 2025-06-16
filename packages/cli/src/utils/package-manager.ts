@@ -1,8 +1,7 @@
 import { logger } from '@elizaos/core';
-import { spawn } from 'node:child_process';
 import { UserEnvironment } from './user-environment';
 import { displayBunInstallationTipCompact } from './bun-installation-helper';
-import which from 'which';
+import { runBunCommand } from './run-bun';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execa } from 'execa';
@@ -108,28 +107,8 @@ export async function executeInstallation(
       : packageName;
 
   try {
-    const bunPath = await which('bun');
     const args = [...installCommand, finalSpecifier];
-
-    await new Promise<void>((resolve, reject) => {
-      const child = spawn(bunPath, args, {
-        cwd: directory,
-        stdio: 'inherit',
-        env: process.env,
-      });
-
-      child.on('close', (code) => {
-        if (code === 0) {
-          resolve();
-        } else {
-          reject(new Error(`Installation process exited with code ${code}`));
-        }
-      });
-
-      child.on('error', (err) => {
-        reject(err);
-      });
-    });
+    await runBunCommand(args, directory);
 
     const installedIdentifier = packageName.startsWith('github:')
       ? (() => {

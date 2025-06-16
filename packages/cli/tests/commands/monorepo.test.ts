@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach  } from 'vitest';
 import { writeFile, mkdir } from 'fs/promises';
 import {
   setupTestEnvironment,
@@ -8,6 +8,7 @@ import {
   expectHelpOutput,
   type TestContext,
 } from './test-utils';
+import { TEST_TIMEOUTS } from '../test-timeouts';
 
 describe('ElizaOS Monorepo Commands', () => {
   let context: TestContext;
@@ -20,12 +21,12 @@ describe('ElizaOS Monorepo Commands', () => {
     await cleanupTestEnvironment(context);
   });
 
-  test('monorepo --help shows usage', () => {
+  it('monorepo --help shows usage', () => {
     const result = runCliCommand(context.elizaosCmd, 'monorepo --help');
     expectHelpOutput(result, 'monorepo', ['-b', '--branch', '-d', '--dir']);
   });
 
-  test('monorepo uses default branch and directory', () => {
+  it('monorepo uses default branch and directory', () => {
     // This would try to clone, so we just test that it recognizes the command
     // without actually performing the network operation
     const result = runCliCommand(context.elizaosCmd, 'monorepo --help');
@@ -33,12 +34,12 @@ describe('ElizaOS Monorepo Commands', () => {
     expect(result).toContain('develop'); // default branch
   });
 
-  test('monorepo fails when directory is not empty', async () => {
+  it('monorepo fails when directory is not empty', async () => {
     await mkdir('not-empty-dir');
     await writeFile('not-empty-dir/placeholder', '');
 
     const result = expectCliCommandToFail(context.elizaosCmd, 'monorepo --dir not-empty-dir', {
-      timeout: 10000,
+      timeout: TEST_TIMEOUTS.QUICK_COMMAND,
     });
     expect(result.status).not.toBe(0);
     expect(result.output).toMatch(/not empty/);

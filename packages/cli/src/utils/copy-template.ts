@@ -1,7 +1,7 @@
-import { promises as fs, existsSync } from 'node:fs';
+import { existsSync } from 'node:fs';
+import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { logger } from '@elizaos/core';
-import { UserEnvironment } from './user-environment';
 
 /**
  * Copy a directory recursively
@@ -16,16 +16,21 @@ import { UserEnvironment } from './user-environment';
  * @returns {Promise<void>} A Promise that resolves when the copy operation is complete.
  */
 export async function copyDir(src: string, dest: string, exclude: string[] = []) {
+  // Ensure paths are properly resolved as absolute paths
+  const resolvedSrc = path.resolve(src);
+  const resolvedDest = path.resolve(dest);
+
   // Create destination directory if it doesn't exist
-  await fs.mkdir(dest, { recursive: true });
+  await fs.mkdir(resolvedDest, { recursive: true });
 
   // Read source directory
-  const entries = await fs.readdir(src, { withFileTypes: true });
+  const entries = await fs.readdir(resolvedSrc, { withFileTypes: true });
+
+  // Separate files and directories for different processing strategies
+  const files: typeof entries = [];
+  const directories: typeof entries = [];
 
   for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-
     // Skip excluded directories/files
     if (exclude.includes(entry.name)) {
       continue;
@@ -44,12 +49,35 @@ export async function copyDir(src: string, dest: string, exclude: string[] = [])
     }
 
     if (entry.isDirectory()) {
-      // Recursively copy directory
-      await copyDir(srcPath, destPath, exclude);
+      directories.push(entry);
     } else {
-      // Copy file
-      await fs.copyFile(srcPath, destPath);
+      files.push(entry);
     }
+  }
+
+  // Process files in parallel (up to 10 concurrent operations)
+  const MAX_CONCURRENT_FILES = 10;
+  const filePromises: Promise<void>[] = [];
+
+  for (let i = 0; i < files.length; i += MAX_CONCURRENT_FILES) {
+    const batch = files.slice(i, i + MAX_CONCURRENT_FILES);
+    const batchPromises = batch.map(async (entry) => {
+      const srcPath = path.join(resolvedSrc, entry.name);
+      const destPath = path.join(resolvedDest, entry.name);
+      await fs.copyFile(srcPath, destPath);
+    });
+    filePromises.push(...batchPromises);
+  }
+
+  // Wait for all file copies to complete
+  await Promise.all(filePromises);
+
+  // Process directories sequentially to avoid too much recursion depth
+  // but still get benefits from parallel file copying within each directory
+  for (const entry of directories) {
+    const srcPath = path.join(resolvedSrc, entry.name);
+    const destPath = path.join(resolvedDest, entry.name);
+    await copyDir(srcPath, destPath, exclude);
   }
 }
 
@@ -74,34 +102,18 @@ function getPackageName(templateType: string): string {
  */
 export async function copyTemplate(
   templateType: 'project' | 'project-starter' | 'project-tee-starter' | 'plugin',
-  targetDir: string,
-  name: string
+  targetDir: string
 ) {
   const packageName = getPackageName(templateType);
-  const userEnv = UserEnvironment.getInstance();
-  const pathsInfo = await userEnv.getPathInfo();
 
-  let templateDir: string;
-  if (process.env.NODE_ENV === 'development' && pathsInfo.monorepoRoot) {
-    // Use monorepoRoot if in development and monorepoRoot is found
-    logger.debug(
-      `Development mode: Using monorepo root at ${pathsInfo.monorepoRoot} to find templates.`
-    );
-    templateDir = path.resolve(pathsInfo.monorepoRoot, 'packages', packageName);
-  } else if (process.env.NODE_ENV === 'development') {
-    // Fallback for development if monorepoRoot is not found (e.g., running CLI from a strange location)
-    logger.warn(
-      'Development mode: monorepoRoot not found. Falling back to process.cwd() for template path. This might be unreliable.'
-    );
-    templateDir = path.resolve(process.cwd(), 'packages', packageName);
-  } else {
-    // In production, use the templates directory from the CLI package
-    templateDir = path.resolve(
-      path.dirname(require.resolve('@elizaos/cli/package.json')),
-      'templates',
-      packageName
-    );
-  }
+  // Always resolve templates from the CLI's own package location.
+  // This ensures that the bundled templates are used, providing consistent behavior
+  // across development and production environments.
+  const templateDir = path.resolve(
+    path.dirname(require.resolve('@elizaos/cli/package.json')),
+    'templates',
+    packageName
+  );
 
   logger.debug(`Copying ${templateType} template from ${templateDir} to ${targetDir}`);
 
@@ -176,7 +188,8 @@ async function replacePluginNameInFiles(targetDir: string, pluginName: string): 
     // Note: package.json excluded to maintain npm package structure
   ];
 
-  for (const filePath of filesToProcess) {
+  // Process files in parallel
+  const promises = filesToProcess.map(async (filePath) => {
     const fullPath = path.join(targetDir, filePath);
 
     try {
@@ -195,9 +208,13 @@ async function replacePluginNameInFiles(targetDir: string, pluginName: string): 
         logger.debug(`Updated plugin name in ${filePath}`);
       }
     } catch (error) {
-      logger.warn(`Could not update ${filePath}: ${error.message}`);
+      logger.warn(
+        `Could not update ${filePath}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
-  }
+  });
+
+  await Promise.all(promises);
 }
 
 /**

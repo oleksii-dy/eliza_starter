@@ -19,9 +19,9 @@ import {
 export const plugins = new Command()
   .name('plugins')
   .description('Manage ElizaOS plugins')
-  .action(function () {
+  .action(() => {
     // Show help automatically if no subcommand is specified
-    this.help({ showGlobals: false });
+    plugins.help();
   });
 
 export const pluginsCommand = plugins
@@ -44,6 +44,7 @@ plugins
   .description('Add a plugin to the project')
   .argument('<plugin>', 'plugins name (e.g., "abc", "plugin-abc", "elizaos/plugin-abc")')
   .option('-s, --skip-env-prompt', 'Skip prompting for environment variables')
+  .option('--skip-verification', 'Skip plugin import verification after installation')
   .option('-b, --branch <branchName>', 'Branch to install from when using monorepo source', 'main')
   .option('-T, --tag <tagname>', 'Specify a tag to install (e.g., beta)')
   .action(async (pluginArg: string, opts: AddPluginOptions) => {

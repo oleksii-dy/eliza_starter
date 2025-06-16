@@ -27,7 +27,7 @@ export async function installPluginFromGitHub(
   const githubSpecifier = `github:${owner}/${repo}${ref ? `#${ref}` : ''}`;
   const pluginNameForPostInstall = repo;
 
-  const success = await installPlugin(githubSpecifier, cwd);
+  const success = await installPlugin(githubSpecifier, cwd, undefined, opts.skipVerification);
 
   if (success) {
     logger.info(`Successfully installed ${pluginNameForPostInstall} from ${githubSpecifier}.`);
@@ -39,7 +39,9 @@ export async function installPluginFromGitHub(
       try {
         await promptForPluginEnvVars(packageName, cwd);
       } catch (error) {
-        logger.warn(`Warning: Could not prompt for environment variables: ${error.message}`);
+        logger.warn(
+          `Warning: Could not prompt for environment variables: ${error instanceof Error ? error.message : String(error)}`
+        );
         // Don't fail the installation if env prompting fails
       }
     } else {
@@ -72,7 +74,12 @@ export async function installPluginFromRegistry(
 
   const targetName = pluginKey || plugin;
 
-  const registryInstallResult = await installPlugin(targetName, cwd, opts.tag);
+  const registryInstallResult = await installPlugin(
+    targetName,
+    cwd,
+    opts.tag,
+    opts.skipVerification
+  );
 
   if (registryInstallResult) {
     console.log(`Successfully installed ${targetName}`);
@@ -88,7 +95,9 @@ export async function installPluginFromRegistry(
       try {
         await promptForPluginEnvVars(actualPackageName, cwd);
       } catch (error) {
-        logger.warn(`Warning: Could not prompt for environment variables: ${error.message}`);
+        logger.warn(
+          `Warning: Could not prompt for environment variables: ${error instanceof Error ? error.message : String(error)}`
+        );
         // Don't fail the installation if env prompting fails
       }
     } else {

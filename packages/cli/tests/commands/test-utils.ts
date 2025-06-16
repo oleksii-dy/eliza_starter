@@ -3,6 +3,7 @@ import { mkdtemp, rm, writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { existsSync } from 'fs';
+import { TEST_TIMEOUTS } from '../test-timeouts';
 
 export interface TestContext {
   testTmpDir: string;
@@ -19,7 +20,8 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   process.chdir(testTmpDir);
 
   const scriptDir = join(__dirname, '../..');
-  const elizaosCmd = `bun run ${join(scriptDir, 'dist/index.js')}`;
+  const scriptPath = join(scriptDir, 'dist/index.js');
+  const elizaosCmd = `bun run "${scriptPath}"`;
 
   return { testTmpDir, elizaosCmd, originalCwd };
 }
@@ -66,9 +68,18 @@ export function safeChangeDirectory(targetDir: string): void {
  * Helper to create a basic ElizaOS project for testing
  */
 export async function createTestProject(elizaosCmd: string, projectName: string): Promise<void> {
+  const timeout = TEST_TIMEOUTS.PROJECT_CREATION;
+  
+  const windowsOptions = process.platform === 'win32' ? {
+    timeout: timeout * 1.5,
+    killSignal: 'SIGKILL' as NodeJS.Signals,
+    windowsHide: true,
+  } : {};
+
   execSync(`${elizaosCmd} create ${projectName} --yes`, {
     stdio: 'pipe',
-    timeout: 60000,
+    timeout,
+    ...windowsOptions,
   });
   process.chdir(projectName);
 }
@@ -81,9 +92,20 @@ export function runCliCommand(
   args: string,
   options: { timeout?: number } = {}
 ): string {
+  const timeout = options.timeout || TEST_TIMEOUTS.STANDARD_COMMAND;
+  
+  // On Windows, use different timeout and signal handling
+  const windowsOptions = process.platform === 'win32' ? {
+    timeout: timeout * 1.5, // 50% longer timeout for Windows
+    killSignal: 'SIGKILL' as NodeJS.Signals,   // Use SIGKILL instead of SIGTERM
+    windowsHide: true,       // Hide console window
+  } : {};
+
   return execSync(`${elizaosCmd} ${args}`, {
     encoding: 'utf8',
-    timeout: options.timeout || 30000,
+    stdio: ['ignore', 'pipe', 'pipe'], // Explicit stdio handling
+    timeout,
+    ...windowsOptions,
   });
 }
 
@@ -95,10 +117,19 @@ export function runCliCommandSilently(
   args: string,
   options: { timeout?: number } = {}
 ): string {
+  const timeout = options.timeout || TEST_TIMEOUTS.STANDARD_COMMAND;
+  
+  const windowsOptions = process.platform === 'win32' ? {
+    timeout: timeout * 1.5,
+    killSignal: 'SIGKILL' as NodeJS.Signals,
+    windowsHide: true,
+  } : {};
+
   return execSync(`${elizaosCmd} ${args}`, {
     encoding: 'utf8',
     stdio: 'pipe',
-    timeout: options.timeout || 30000,
+    timeout,
+    ...windowsOptions,
   });
 }
 
@@ -110,11 +141,20 @@ export function expectCliCommandToFail(
   args: string,
   options: { timeout?: number } = {}
 ): { status: number; output: string } {
+  const timeout = options.timeout || TEST_TIMEOUTS.STANDARD_COMMAND;
+  
+  const windowsOptions = process.platform === 'win32' ? {
+    timeout: timeout * 1.5,
+    killSignal: 'SIGKILL' as NodeJS.Signals,
+    windowsHide: true,
+  } : {};
+
   try {
     const result = execSync(`${elizaosCmd} ${args}`, {
       encoding: 'utf8',
       stdio: 'pipe',
-      timeout: options.timeout || 30000,
+      timeout,
+      ...windowsOptions,
     });
     throw new Error(`Command should have failed but succeeded with output: ${result}`);
   } catch (e: any) {
@@ -219,3 +259,225 @@ export const assertions = {
     }
   },
 };
+
+/**
+ * Wait for server to be ready by polling health endpoint
+ * @param port - Port number to check
+ * @param maxWaitTime - Maximum time to wait in milliseconds
+ * @param endpoint - Endpoint to check (default: '/api/agents')
+ */
+export async function waitForServerReady(
+  port: number,
+  maxWaitTime: number = TEST_TIMEOUTS.SERVER_STARTUP,
+  endpoint: string = '/api/agents'
+): Promise<void> {
+  const startTime = Date.now();
+  const pollInterval = 1000; // Check every 1 second
+  
+  while (Date.now() - startTime < maxWaitTime) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      
+      const response = await fetch(`http://localhost:${port}${endpoint}`, {
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        // Server is ready, give it one more second to stabilize
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return;
+      }
+    } catch (error) {
+      // Server not ready yet, continue polling
+    }
+    
+    await new Promise((resolve) => setTimeout(resolve, pollInterval));
+  }
+  
+  throw new Error(`Server failed to become ready on port ${port} within ${maxWaitTime}ms`);
+}
+
+/**
+ * Kill process on a specific port with cross-platform support
+ */
+export async function killProcessOnPort(port: number): Promise<void> {
+  try {
+    if (process.platform === 'win32') {
+      // Windows: More reliable process killing
+      const netstatResult = execSync(
+        `netstat -ano | findstr :${port}`,
+        { encoding: 'utf8', stdio: 'pipe' }
+      );
+      
+      const lines = netstatResult.split('\n').filter(line => line.includes(`:${port}`));
+      const pids = lines.map(line => {
+        const parts = line.trim().split(/\s+/);
+        return parts[parts.length - 1];
+      }).filter(pid => pid && pid !== '0');
+      
+      for (const pid of pids) {
+        try {
+          execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
+        } catch (e) {
+          // Ignore if process is already dead
+        }
+      }
+    } else {
+      // Unix systems
+      execSync(`lsof -ti:${port} | xargs kill -9 2>/dev/null || true`, { stdio: 'ignore' });
+    }
+  } catch (e) {
+    // Ignore port cleanup errors
+  }
+}
+
+/**
+ * Cross-platform file operations utility
+ */
+export const crossPlatform = {
+  removeDir: (path: string) => {
+    try {
+      if (process.platform === 'win32') {
+        execSync(`if exist "${path}" rmdir /s /q "${path}"`, { stdio: 'ignore' });
+      } else {
+        execSync(`rm -rf "${path}"`, { stdio: 'ignore' });
+      }
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+  },
+  
+  removeFile: (path: string) => {
+    try {
+      if (process.platform === 'win32') {
+        execSync(`if exist "${path}" del /q "${path}"`, { stdio: 'ignore' });
+      } else {
+        execSync(`rm -f "${path}"`, { stdio: 'ignore' });
+      }
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+  },
+
+  killProcessOnPort: killProcessOnPort,
+};
+
+/**
+ * Cross-platform test process manager
+ * Handles proper process lifecycle management for CLI tests
+ */
+export class TestProcessManager {
+  private processes: Set<any> = new Set();
+
+  /**
+   * Spawn a process with proper error handling and cleanup
+   */
+  spawn(command: string, args: string[], options: any = {}): any {
+    const { spawn } = require('child_process');
+    
+    // Force stdio to 'ignore' to prevent hanging streams on Windows
+    const processOptions = {
+      ...options,
+      stdio: ['ignore', 'ignore', 'ignore'], // Ignore all stdio to prevent hanging
+    };
+
+    const childProcess = spawn(command, args, processOptions);
+    
+    // Track the process for cleanup
+    this.processes.add(childProcess);
+    
+    // Remove from tracking when process exits naturally
+    childProcess.on('exit', () => {
+      this.processes.delete(childProcess);
+    });
+    
+    return childProcess;
+  }
+
+  /**
+   * Gracefully terminate a single process with platform-specific handling
+   */
+  async terminateProcess(process: any): Promise<void> {
+    if (!process || process.exitCode !== null || process.killed) {
+      return;
+    }
+
+    try {
+      // Create exit promise
+      const exitPromise = new Promise<void>((resolve) => {
+        if (process.exitCode !== null) {
+          resolve();
+          return;
+        }
+        
+        const cleanup = () => {
+          process.removeAllListeners();
+          resolve();
+        };
+        
+        process.once('exit', cleanup);
+        process.once('error', cleanup);
+      });
+
+      if (process.platform === 'win32') {
+        // Windows: Try graceful termination first
+        process.kill('SIGTERM');
+        
+        // Wait briefly for graceful shutdown
+        const gracefulTimeout = new Promise<boolean>((resolve) => {
+          setTimeout(() => resolve(false), 1000);
+        });
+        
+        const wasGraceful = await Promise.race([
+          exitPromise.then(() => true),
+          gracefulTimeout
+        ]);
+        
+        // Force kill if still running
+        if (!wasGraceful && process.exitCode === null) {
+          try {
+            process.kill('SIGKILL');
+          } catch (e) {
+            // Process might already be dead
+          }
+        }
+      } else {
+        // Unix: SIGTERM should be sufficient
+        process.kill('SIGTERM');
+      }
+
+      // Wait for process to exit with timeout
+      const timeoutPromise = new Promise<void>((resolve) => {
+        setTimeout(resolve, TEST_TIMEOUTS.PROCESS_CLEANUP);
+      });
+      
+      await Promise.race([exitPromise, timeoutPromise]);
+      
+    } catch (error) {
+      // Ignore termination errors
+    } finally {
+      this.processes.delete(process);
+    }
+  }
+
+  /**
+   * Clean up all tracked processes
+   */
+  async cleanup(): Promise<void> {
+    const cleanupPromises = Array.from(this.processes).map(proc => 
+      this.terminateProcess(proc)
+    );
+    
+    await Promise.allSettled(cleanupPromises);
+    this.processes.clear();
+  }
+
+  /**
+   * Get count of active processes
+   */
+  getActiveCount(): number {
+    return this.processes.size;
+  }
+}

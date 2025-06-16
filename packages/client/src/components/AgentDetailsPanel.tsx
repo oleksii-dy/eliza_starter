@@ -13,7 +13,7 @@ export default function AgentDetailsPanel({ agent }: AgentDetailsPanelProps) {
   const isActive = agent.status === AgentStatus.ACTIVE;
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="h-full flex flex-col bg-background" data-testid="agent-details">
       <div className="p-6 space-y-4">
         {/* Agent Header */}
         <div className="flex items-center gap-4">
@@ -38,7 +38,16 @@ export default function AgentDetailsPanel({ agent }: AgentDetailsPanelProps) {
               <div>
                 <h4 className="font-medium text-sm mb-1">Bio</h4>
                 <p className="text-sm text-muted-foreground">
-                  {Array.isArray(agent.bio) ? agent.bio.join(' ') : agent.bio}
+                  <span className="sm:hidden">
+                    {/* Mobile: Show truncated bio */}
+                    {((text) => (text.length > 150 ? `${text.substring(0, 150)}...` : text))(
+                      Array.isArray(agent?.bio) ? agent?.bio.join(' ') : agent?.bio
+                    )}
+                  </span>
+                  <span className="hidden sm:block">
+                    {/* Desktop: Show full bio */}
+                    {Array.isArray(agent?.bio) ? agent?.bio.join(' ') : agent?.bio}
+                  </span>
                 </p>
               </div>
             )}
