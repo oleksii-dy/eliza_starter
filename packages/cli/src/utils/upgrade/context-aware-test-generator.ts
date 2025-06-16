@@ -3,7 +3,8 @@ import * as fs from 'fs-extra';
 import * as path from 'node:path';
 import { execa } from 'execa';
 import { fileURLToPath } from 'node:url';
-import type { MigrationContext, StepResult } from './types.js';
+import type { MigrationContext, StepResult, SDKMigrationOptions } from './types.js';
+import { EnhancedClaudeSDKAdapter } from './claude-sdk-adapter.js';
 
 // Setup __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -47,6 +48,7 @@ export interface TestTemplateVariables {
 export class ContextAwareTestGenerator {
   private context: MigrationContext;
   private repoPath: string;
+  private claudeSDKAdapter: EnhancedClaudeSDKAdapter | null = null;
 
   constructor(context: MigrationContext) {
     this.context = context;
@@ -54,83 +56,56 @@ export class ContextAwareTestGenerator {
   }
 
   /**
-   * Run Claude Code with a specific prompt
+   * Run Claude Code with a specific prompt using enhanced SDK
    */
   private async runClaudeCodeWithPrompt(prompt: string): Promise<void> {
     if (!this.repoPath) throw new Error('Repository path not set');
     process.chdir(this.repoPath);
 
-    const maxRetries = 3;
-    let retryCount = 0;
-    let lastError: unknown = null;
-
-    while (retryCount < maxRetries) {
-      try {
-        logger.info('🤖 Running Claude Code for test generation...');
-
-        await execa(
-          'claude',
-          [
-            '--print',
-            '--max-turns',
-            '30',
-            '--verbose',
-            '--model',
-            'claude-opus-4-20250514',
-            '--dangerously-skip-permissions',
-            prompt,
-          ],
-          {
-            stdio: 'inherit',
-            cwd: this.repoPath,
-            timeout: 15 * 60 * 1000, // 15 minutes
-          }
-        );
-
-        logger.info('✅ Claude Code test generation completed successfully');
-        return; // Success - exit the retry loop
-      } catch (error: unknown) {
-        lastError = error;
-        const err = error as { code?: string; message?: string; stderr?: string };
-
-        if (err.code === 'ENOENT') {
-          throw new Error(
-            'Claude Code not found! Install with: npm install -g @anthropic-ai/claude-code'
-          );
-        }
-
-        // Check for rate limiting errors
-        const errorMessage = err.message || err.stderr || '';
-        const isRateLimitError = 
-          errorMessage.includes('rate limit') ||
-          errorMessage.includes('429') ||
-          errorMessage.includes('too many requests') ||
-          errorMessage.includes('quota exceeded');
-
-        if (isRateLimitError && retryCount < maxRetries - 1) {
-          retryCount++;
-          const waitTime = Math.min(60 * retryCount, 300); // Wait 1-5 minutes
-          logger.warn(`⏸️  Rate limit detected. Waiting ${waitTime} seconds before retry ${retryCount}/${maxRetries - 1}...`);
-          
-          // Show countdown
-          for (let i = waitTime; i > 0; i--) {
-            process.stdout.write(`\r⏱️  Resuming in ${i} seconds...  `);
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-          process.stdout.write('\r\n');
-          
-          logger.info('🔄 Resuming Claude Code test generation...');
-          continue; // Retry
-        }
-
-        logger.error('❌ Claude Code test generation failed:', err.message);
-        throw error;
-      }
+    // Initialize SDK adapter if not already done
+    if (!this.claudeSDKAdapter) {
+      this.claudeSDKAdapter = new EnhancedClaudeSDKAdapter({
+        maxRetries: 3
+      });
     }
 
-    // If we exhausted all retries
-    throw new Error(`Claude Code test generation failed after ${maxRetries} attempts. Last error: ${(lastError as Error)?.message}`);
+    try {
+      logger.info('🚀 Using Claude SDK for test generation...');
+      
+      const options: SDKMigrationOptions = {
+        maxTurns: 30,
+        model: 'claude-opus-4-20250514', // Use Opus for comprehensive test generation
+        outputFormat: 'json',
+        permissionMode: 'bypassPermissions',
+        systemPrompt: 'You are an expert ElizaOS test generation assistant. Generate comprehensive, working tests that follow ElizaOS V2 patterns exactly.'
+      };
+
+      const result = await this.claudeSDKAdapter.executePrompt(prompt, options, this.context);
+
+      if (result.success) {
+        logger.info('✅ SDK test generation completed successfully');
+      } else if (result.message?.includes('error_max_turns') || result.shouldContinue) {
+        logger.warn(`⚠️  Test generation hit max turns but continuing: ${result.message}`);
+        logger.info('ℹ️  Tests will be refined in the iterative validation phase');
+      } else {
+        throw new Error(`SDK test generation failed: ${result.message}`);
+      }
+      
+      if (result.cost) {
+        logger.info(`💰 Test generation cost: $${result.cost.toFixed(4)}`);
+      }
+      if (result.warnings && result.warnings.length > 0) {
+        for (const warning of result.warnings) {
+          logger.warn(`⚠️  ${warning}`);
+        }
+      }
+    } catch (error) {
+      logger.error('❌ Claude SDK test generation failed:', error);
+      throw error;
+    }
   }
+
+
 
   /**
    * Analyze plugin structure to understand what tests are needed
