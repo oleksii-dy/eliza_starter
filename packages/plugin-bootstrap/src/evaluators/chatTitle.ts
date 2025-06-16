@@ -45,22 +45,12 @@ async function handler(runtime: IAgentRuntime, message: Memory, state?: State) {
 
         logger.info(`[ChatTitleEvaluator] Room details - ID: ${room.id}, channelId: ${room.channelId}, type: ${room.type}`);
 
-        // Only process DM channels or GROUP channels with 2 participants (1-on-1 conversations)
-        let isOneOnOneConversation = room.type === ChannelType.DM;
+        // Check if the conversation is 1-on-1
+        const isOneOnOneConversation = await isOneOnOneConversation(runtime, room, message.roomId);
 
-        if (room.type === ChannelType.GROUP) {
-            // For GROUP channels, check if it's actually a 1-on-1 conversation
-            try {
-                const participants = await runtime.getParticipantsForRoom(message.roomId);
-                isOneOnOneConversation = participants.length === 2;
-                logger.info(`[ChatTitleEvaluator] GROUP room has ${participants.length} participants: ${participants.join(', ')}`);
-            } catch (error) {
-                logger.warn(`[ChatTitleEvaluator] Could not get participants for room ${message.roomId}:`, error);
-                // Fallback: assume it's not 1-on-1 if we can't get participant count
-                isOneOnOneConversation = false;
-            }
-        } else if (room.type === ChannelType.DM) {
-            logger.info(`[ChatTitleEvaluator] DM room detected`);
+        if (!isOneOnOneConversation) {
+            logger.info(`[ChatTitleEvaluator] Skipping room type: ${room.type} (not a 1-on-1 conversation)`);
+            return;
         }
 
         if (!isOneOnOneConversation) {
