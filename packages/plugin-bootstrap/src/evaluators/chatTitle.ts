@@ -7,6 +7,7 @@ import {
     ModelType,
     logger,
     ChannelType,
+    UUID,
 } from '@elizaos/core';
 
 const chatTitleTemplate = `
@@ -32,6 +33,34 @@ Recent conversation:
 Respond with just the title, nothing else.
 `;
 
+async function isOneOnOneConversation(runtime: IAgentRuntime, roomId: UUID): Promise<boolean> {
+    const room = await runtime.getRoom(roomId);
+    if (!room) {
+        return false;
+    }
+
+    // Check if it's a DM channel (automatically 1-on-1)
+    if (room.type === ChannelType.DM) {
+        return true;
+    }
+
+    // For GROUP channels, check if it's actually a 1-on-1 conversation
+    if (room.type === ChannelType.GROUP) {
+        try {
+            const participants = await runtime.getParticipantsForRoom(roomId);
+            const isOneOnOne = participants.length === 2;
+            logger.debug(`[ChatTitleEvaluator] GROUP room has ${participants.length} participants`);
+            return isOneOnOne;
+        } catch (error) {
+            logger.warn(`[ChatTitleEvaluator] Could not get participants for room ${roomId}:`, error);
+            // Fallback: assume it's not 1-on-1 if we can't get participant count
+            return false;
+        }
+    }
+
+    return false;
+}
+
 async function handler(runtime: IAgentRuntime, message: Memory, state?: State) {
     try {
         logger.info(`[ChatTitleEvaluator] Processing message in room ${message.roomId}`);
@@ -46,22 +75,9 @@ async function handler(runtime: IAgentRuntime, message: Memory, state?: State) {
         logger.info(`[ChatTitleEvaluator] Room details - ID: ${room.id}, channelId: ${room.channelId}, type: ${room.type}`);
 
         // Check if the conversation is 1-on-1
-        let isOneOnOneConversation = room.type === ChannelType.DM;
+        const isOneOnOne = await isOneOnOneConversation(runtime, message.roomId as UUID);
 
-        if (room.type === ChannelType.GROUP) {
-            // For GROUP channels, check if it's actually a 1-on-1 conversation
-            try {
-                const participants = await runtime.getParticipantsForRoom(message.roomId);
-                isOneOnOneConversation = participants.length === 2;
-                logger.debug(`[ChatTitleEvaluator] GROUP room has ${participants.length} participants`);
-            } catch (error) {
-                logger.warn(`[ChatTitleEvaluator] Could not get participants for room ${message.roomId}:`, error);
-                // Fallback: assume it's not 1-on-1 if we can't get participant count
-                isOneOnOneConversation = false;
-            }
-        }
-
-        if (!isOneOnOneConversation) {
+        if (!isOneOnOne) {
             logger.info(`[ChatTitleEvaluator] Skipping room type: ${room.type} (not a 1-on-1 conversation)`);
             return;
         }
@@ -179,17 +195,9 @@ export const chatTitleEvaluator: Evaluator = {
             logger.info(`[ChatTitleEvaluator] Processing message in room ${message.roomId}`);
 
             // Only run for DM channels or GROUP channels with 2 participants (1-on-1 conversations)
-            const room = await runtime.getRoom(message.roomId);
-            if (!room) {
-                logger.debug(`[ChatTitleEvaluator] Room not found: ${message.roomId}`);
-                return false;
-            }
-
-            // Check if it's a DM or a 1-on-1 GROUP conversation
-            let isOneOnOneConversation = room.type === ChannelType.DM;
-
-            if (!isOneOnOneConversation) {
-                logger.debug(`[ChatTitleEvaluator] Skipping room type: ${room.type} (not a 1-on-1 conversation)`);
+            const isOneOnOne = await isOneOnOneConversation(runtime, message.roomId as UUID);
+            if (!isOneOnOne) {
+                logger.debug(`[ChatTitleEvaluator] Skipping room (not a 1-on-1 conversation)`);
                 return false;
             }
 
