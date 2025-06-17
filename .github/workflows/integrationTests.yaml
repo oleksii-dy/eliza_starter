@@ -44,16 +44,6 @@ jobs:
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.bun/install/cache
-            node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
       - name: Install dependencies
         env:
           SHARP_IGNORE_GLOBAL_LIBVIPS: '1'
@@ -64,15 +54,6 @@ jobs:
 
       - name: Build packages
         run: bun run build
-
-      - name: Cache build artifacts
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            node_modules
-            packages/*/dist
-            packages/*/build
-          key: integration-build-${{ runner.os }}-${{ github.sha }}-v2
 
   # Validation job - runs in parallel
   validate:
@@ -92,14 +73,13 @@ jobs:
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Restore build artifacts
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            node_modules
-            packages/*/dist
-            packages/*/build
-          key: integration-build-${{ runner.os }}-${{ github.sha }}-v2
+      - name: Install dependencies
+        env:
+          SHARP_IGNORE_GLOBAL_LIBVIPS: '1'
+        run: bun install
+
+      - name: Build packages
+        run: bun run build
 
       - name: Install global packages
         run: npm install -g @anthropic-ai/claude-code
@@ -139,14 +119,13 @@ jobs:
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Restore build artifacts
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            node_modules
-            packages/*/dist
-            packages/*/build
-          key: integration-build-${{ runner.os }}-${{ github.sha }}-v2
+      - name: Install dependencies
+        env:
+          SHARP_IGNORE_GLOBAL_LIBVIPS: '1'
+        run: bun install
+
+      - name: Build packages
+        run: bun run build
 
       - name: Install global packages
         run: npm install -g @anthropic-ai/claude-code
