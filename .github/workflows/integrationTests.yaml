@@ -29,8 +29,8 @@ env:
 jobs:
   # Setup job - builds once and caches artifacts
   setup:
-    # Skip duplicate runs: run on push to main/develop, or on pull_request events only
-    if: github.event_name == 'pull_request_target' || (github.event_name == 'push' && contains(fromJson('["main", "develop"]'), github.ref_name))
+    # Run on pull_request_target events or push events
+    if: github.event_name == 'pull_request_target' || github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -57,8 +57,8 @@ jobs:
 
   # Validation job - runs in parallel
   validate:
-    # Skip duplicate runs: run on push to main/develop, or on pull_request events only
-    if: github.event_name == 'pull_request_target' || (github.event_name == 'push' && contains(fromJson('["main", "develop"]'), github.ref_name))
+    # Run on pull_request_target events or push events
+    if: github.event_name == 'pull_request_target' || github.event_name == 'push'
     needs: setup
     runs-on: ubuntu-latest
     steps:
@@ -103,8 +103,8 @@ jobs:
 
   # Integration tests job - runs in parallel
   integration-tests:
-    # Skip duplicate runs: run on push to main/develop, or on pull_request events only
-    if: github.event_name == 'pull_request_target' || (github.event_name == 'push' && contains(fromJson('["main", "develop"]'), github.ref_name))
+    # Run on pull_request_target events or push events
+    if: github.event_name == 'pull_request_target' || github.event_name == 'push'
     needs: setup
     runs-on: ubuntu-latest
     steps:

@@ -16,8 +16,7 @@ env:
 on:
   push:
     branches:
-      - 'main'
-      - 'develop'
+      - '*'
     paths:
       - 'packages/client/**'
       - 'packages/core/**'

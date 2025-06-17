@@ -14,8 +14,7 @@ env:
 on:
   push:
     branches:
-      - 'main'
-      - 'develop'
+      - '*'
   pull_request:
     branches:
       - 'main'
@@ -23,8 +22,8 @@ on:
 
 jobs:
   test:
-    # Skip duplicate runs: run on push to main/develop, or on pull_request events only
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && contains(fromJson('["main", "develop"]'), github.ref_name))
+    # Run on pull_request events or push events
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
