@@ -39,6 +39,9 @@ import {
   type RuntimeSettings,
   type Component,
   IAgentRuntime,
+  type ActionResult,
+  type ActionContext,
+  type WorkingMemory as IWorkingMemory,
 } from './types';
 
 import { BM25 } from './search';
@@ -56,20 +59,66 @@ export class Semaphore {
   }
   async acquire(): Promise<void> {
     if (this.permits > 0) {
-      this.permits -= 1;
-      return Promise.resolve();
+      this.permits--;
+      return;
     }
-    return new Promise<void>((resolve) => {
-      this.waiting.push(resolve);
-    });
+    await new Promise<void>((resolve) => this.waiting.push(resolve));
   }
   release(): void {
-    this.permits += 1;
-    const nextResolve = this.waiting.shift();
-    if (nextResolve && this.permits > 0) {
-      this.permits -= 1;
-      nextResolve();
+    this.permits++;
+    if (this.waiting.length > 0) {
+      const next = this.waiting.shift();
+      if (next) next();
     }
+  }
+}
+
+// WorkingMemory implementation
+class WorkingMemory implements IWorkingMemory {
+  private memory: Map<string, any> = new Map();
+  private history: Array<{ timestamp: number; key: string; value: any }> = [];
+
+  set(key: string, value: any): void {
+    this.memory.set(key, value);
+    this.history.push({ timestamp: Date.now(), key, value });
+  }
+
+  get(key: string): any {
+    return this.memory.get(key);
+  }
+
+  has(key: string): boolean {
+    return this.memory.has(key);
+  }
+
+  delete(key: string): boolean {
+    return this.memory.delete(key);
+  }
+
+  clear(): void {
+    this.memory.clear();
+    this.history = [];
+  }
+
+  entries(): IterableIterator<[string, any]> {
+    return this.memory.entries();
+  }
+
+  getHistory(key?: string): Array<{ timestamp: number; key: string; value: any }> {
+    if (key) {
+      return this.history.filter((h) => h.key === key);
+    }
+    return [...this.history];
+  }
+
+  merge(other: WorkingMemory): void {
+    for (const [key, value] of other.memory) {
+      this.set(key, value);
+    }
+  }
+
+  serialize(): Record<string, any> {
+    return Object.fromEntries(this.memory);
   }
 }
 
@@ -120,6 +169,9 @@ export class AgentRuntime implements IAgentRuntime {
       timestamp: number;
     }>;
   };
+
+  // Add working memory support
+  private workingMemories = new Map<UUID, WorkingMemory>();
 
   constructor(opts: {
     conversationLength?: number;
@@ -611,13 +663,20 @@ export class AgentRuntime implements IAgentRuntime {
         continue;
       }
       const actions = response.content.actions;
+      let accumulatedState = state;
+      const actionResults: ActionResult[] = [];
+
       function normalizeAction(actionString: string) {
         return actionString.toLowerCase().replace('_', '');
       }
       this.logger.debug(`Found actions: ${this.actions.map((a) => normalizeAction(a.name))}`);
 
       for (const responseAction of actions) {
-        state = await this.composeState(message, ['RECENT_MESSAGES']);
+        // Compose state with previous action results
+        accumulatedState = await this.composeState(message, [
+          'RECENT_MESSAGES',
+          'ACTION_STATE', // New provider we'll implement
+        ]);
 
         this.logger.debug(`Success: Calling action: ${responseAction}`);
         const normalizedResponseAction = normalizeAction(responseAction);
@@ -675,11 +734,69 @@ export class AgentRuntime implements IAgentRuntime {
             prompts: [],
           };
 
-          const result = await action.handler(this, message, state, {}, callback, responses);
-          this.logger.debug(`Success: Action ${action.name} executed successfully.`);
+          // Create action context
+          const actionContext: ActionContext = {
+            previousResults: actionResults,
+            workingMemory: this.getWorkingMemory(message.roomId),
+            updateMemory: (key: string, value: any) => {
+              this.getWorkingMemory(message.roomId).set(key, value);
+            },
+            getMemory: (key: string) => {
+              return this.getWorkingMemory(message.roomId).get(key);
+            },
+            getPreviousResult: (stepId: UUID) => {
+              return actionResults.find((r) => r.data?.stepId === stepId);
+            },
+          };
+
+          // Execute action with context
+          const result = await action.handler(
+            this,
+            message,
+            accumulatedState,
+            { context: actionContext },
+            callback,
+            responses
+          );
+
+          // Ensure we have an ActionResult
+          const actionResult: ActionResult =
+            typeof result === 'object' &&
+            result !== null &&
+            ('values' in result || 'data' in result || 'text' in result)
+              ? (result as ActionResult)
+              : {
+                  data: {
+                    actionName: action.name,
+                    legacyResult: result,
+                  },
+                };
+
+          actionResults.push(actionResult);
+
+          // Merge returned values into state
+          if (actionResult.values) {
+            accumulatedState = {
+              ...accumulatedState,
+              values: { ...accumulatedState.values, ...actionResult.values },
+              data: {
+                ...accumulatedState.data,
+                actionResults: [...(accumulatedState.data?.actionResults || []), actionResult],
+              },
+            };
+          }
+
+          // Store in working memory
+          this.updateWorkingMemory(message.roomId, responseAction, actionResult);
+
+          this.logger.debug(`Action ${action.name} completed`, {
+            hasValues: !!actionResult.values,
+            hasData: !!actionResult.data,
+            hasText: !!actionResult.text,
+          });
 
           // log to database with collected prompts
-          this.adapter.log({
+          await this.adapter.log({
             entityId: message.entityId,
             roomId: message.roomId,
             type: 'action',
@@ -688,8 +805,9 @@ export class AgentRuntime implements IAgentRuntime {
               actionId: actionId,
               message: message.content.text,
               messageId: message.id,
-              state,
+              state: accumulatedState,
               responses,
+              result: actionResult,
               prompts: this.currentActionContext?.prompts || [],
               promptCount: this.currentActionContext?.prompts.length || 0,
             },
@@ -704,6 +822,16 @@ export class AgentRuntime implements IAgentRuntime {
           // Clear action context on error
           this.currentActionContext = undefined;
 
+          // Create error result
+          const errorResult: ActionResult = {
+            data: {
+              actionName: action.name,
+              error: errorMessage,
+              errorObject: error,
+            },
+          };
+          actionResults.push(errorResult);
+
           const actionMemory: Memory = {
             id: uuidv4() as UUID,
             content: {
@@ -715,10 +843,47 @@ export class AgentRuntime implements IAgentRuntime {
             worldId: message.worldId,
           };
           await this.createMemory(actionMemory, 'messages');
-          throw error;
+
+          // Decide whether to continue or abort
+          if (this.shouldAbortOnError(error)) {
+            throw error;
+          }
         }
       }
+
+      // Store accumulated results for evaluators and providers
+      this.stateCache.set(`${message.id}_action_results`, {
+        values: { actionResults },
+        data: { actionResults },
+        text: JSON.stringify(actionResults),
+      });
     }
+  }
+
+  // New helper methods for working memory
+  getWorkingMemory(roomId: UUID): WorkingMemory {
+    if (!this.workingMemories.has(roomId)) {
+      this.workingMemories.set(roomId, new WorkingMemory());
+    }
+    return this.workingMemories.get(roomId)!;
+  }
+
+  updateWorkingMemory(roomId: UUID, actionName: string, result: ActionResult): void {
+    const memory = this.getWorkingMemory(roomId);
+    memory.set(`action_${actionName}_${Date.now()}`, {
+      actionName,
+      result,
+      timestamp: Date.now(),
+    });
+  }
+
+  private shouldAbortOnError(error: any): boolean {
+    // TODO: Implement logic to determine if we should abort on this error
+    // For now, only abort on critical errors
+    if (error?.critical || error?.code === 'CRITICAL_ERROR') {
+      return true;
+    }
+    return false;
   }
 
   async evaluate(
@@ -1200,6 +1365,23 @@ export class AgentRuntime implements IAgentRuntime {
   }
 
   /**
+   * Get all services of a specific type
+   * @param serviceType - The service type to filter by
+   * @returns Array of services matching the specified type
+   */
+  getServicesByType(serviceType: ServiceTypeName): Service[] {
+    const services: Service[] = [];
+    for (const [serviceName, service] of this.services.entries()) {
+      // Check if the service's constructor has the matching serviceType
+      const ServiceClass = this.serviceTypes.get(serviceName);
+      if (ServiceClass && ServiceClass.serviceType === serviceType) {
+        services.push(service);
+      }
+    }
+    return services;
+  }
+
+  /**
    * Type-safe service getter that ensures the correct service type is returned
    * @template T - The expected service class type
    * @param serviceName - The service type name
@@ -1227,37 +1409,40 @@ export class AgentRuntime implements IAgentRuntime {
   }
 
   async registerService(serviceDef: typeof Service): Promise<void> {
-    const serviceType = serviceDef.serviceType as ServiceTypeName;
-    if (!serviceType) {
+    const serviceName = serviceDef.serviceName;
+    if (!serviceName) {
       this.logger.warn(
-        `Service ${serviceDef.name} is missing serviceType. Please define a static serviceType property.`
+        `Service ${serviceDef.name} is missing serviceName. Please define a static serviceName property.`
       );
       return;
     }
+    const serviceType = serviceDef.serviceType as ServiceTypeName;
     this.logger.debug(
       `${this.character.name}(${this.agentId}) - Registering service:`,
-      serviceType
+      serviceName
     );
-    if (this.services.has(serviceType)) {
+    if (this.services.has(serviceName as ServiceTypeName)) {
       this.logger.warn(
-        `${this.character.name}(${this.agentId}) - Service ${serviceType} is already registered. Skipping registration.`
+        `${this.character.name}(${this.agentId}) - Service ${serviceName} is already registered. Skipping registration.`
       );
       return;
     }
     try {
       const serviceInstance = await serviceDef.start(this);
-      this.services.set(serviceType, serviceInstance);
-      this.serviceTypes.set(serviceType, serviceDef);
+      this.services.set(serviceName as ServiceTypeName, serviceInstance);
+      if (serviceType) {
+        this.serviceTypes.set(serviceName as ServiceTypeName, serviceDef);
+      }
       if (typeof (serviceDef as any).registerSendHandlers === 'function') {
         (serviceDef as any).registerSendHandlers(this, serviceInstance);
       }
       this.logger.debug(
-        `${this.character.name}(${this.agentId}) - Service ${serviceType} registered successfully`
+        `${this.character.name}(${this.agentId}) - Service ${serviceName} registered successfully`
       );
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `${this.character.name}(${this.agentId}) - Failed to register service ${serviceType}: ${errorMessage}`
+        `${this.character.name}(${this.agentId}) - Failed to register service ${serviceName}: ${errorMessage}`
       );
       throw error;
     }

@@ -8,6 +8,7 @@ export * from './lp';
 export * from './memory';
 export * from './messaging';
 export * from './model';
+export * from './planning';
 export * from './plugin';
 export * from './primitives';
 export * from './runtime';
