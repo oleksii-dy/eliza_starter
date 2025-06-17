@@ -111,6 +111,7 @@ export const ModelType = {
  * ```
  */
 export interface ServiceTypeRegistry {
+  UNKNOWN: 'UNKNOWN';
   TRANSCRIPTION: 'transcription';
   VIDEO: 'video';
   BROWSER: 'browser';
@@ -120,6 +121,13 @@ export interface ServiceTypeRegistry {
   EMAIL: 'email';
   TEE: 'tee';
   TASK: 'task';
+  WALLET: 'wallet';
+  LP_POOL: 'lp_pool';
+  TOKEN_DATA: 'token_data';
+  DATABASE_MIGRATION: 'database_migration';
+  PLUGIN_MANAGER: 'PLUGIN_MANAGER';
+  PLUGIN_CONFIGURATION: 'PLUGIN_CONFIGURATION';
+  PLUGIN_USER_INTERACTION: 'PLUGIN_USER_INTERACTION';
 }
 
 /**
@@ -174,6 +182,7 @@ export type ServiceRegistry<T extends ServiceTypeName = ServiceTypeName> = Map<T
  * Each service typically implements the `Service` abstract class or a more specific interface like `IVideoService`.
  */
 export const ServiceType = {
+  UNKNOWN: 'UNKNOWN',
   TRANSCRIPTION: 'transcription',
   VIDEO: 'video',
   BROWSER: 'browser',
@@ -183,6 +192,13 @@ export const ServiceType = {
   EMAIL: 'email',
   TEE: 'tee',
   TASK: 'task',
+  WALLET: 'wallet',
+  LP_POOL: 'lp_pool',
+  TOKEN_DATA: 'token_data',
+  DATABASE_MIGRATION: 'database_migration',
+  PLUGIN_MANAGER: 'PLUGIN_MANAGER',
+  PLUGIN_CONFIGURATION: 'PLUGIN_CONFIGURATION',
+  PLUGIN_USER_INTERACTION: 'PLUGIN_USER_INTERACTION',
 } as const satisfies ServiceTypeRegistry;
 
 /**
@@ -2420,7 +2436,7 @@ export abstract class Service {
   abstract stop(): Promise<void>;
 
   /** Service type */
-  static serviceType: string;
+  static serviceType: ServiceTypeName | string;
 
   /** Service name */
   abstract capabilityDescription: string;

@@ -15,6 +15,7 @@ import type { IAgentRuntime } from './runtime';
  * ```
  */
 export interface ServiceTypeRegistry {
+  UNKNOWN: 'UNKNOWN';
   TRANSCRIPTION: 'transcription';
   VIDEO: 'video';
   BROWSER: 'browser';
@@ -85,6 +86,7 @@ export type ServiceRegistry<T extends ServiceTypeName = ServiceTypeName> = Map<T
  * Each service typically implements the `Service` abstract class or a more specific interface like `IVideoService`.
  */
 export const ServiceType = {
+  UNKNOWN: 'UNKNOWN',
   TRANSCRIPTION: 'transcription',
   VIDEO: 'video',
   BROWSER: 'browser',
@@ -114,14 +116,21 @@ export abstract class Service {
     if (runtime) {
       this.runtime = runtime;
     }
+    this.serviceName = (this.constructor as typeof Service).serviceName;
   }
 
   abstract stop(): Promise<void>;
 
-  /** Service type */
-  static serviceType: string;
+  /** The unique name/key for this service, used for registration and direct retrieval. */
+  static serviceName: string;
 
-  /** Service name */
+  /** Optional. The generic type or category of the service (e.g., 'WALLET', 'TASK'). */
+  static serviceType?: ServiceTypeName | string;
+
+  /** The unique name of this service instance. Defaults to the static serviceName. */
+  serviceName: string;
+
+  /** A human-readable description of the service's capabilities. */
   abstract capabilityDescription: string;
 
   /** Service configuration */

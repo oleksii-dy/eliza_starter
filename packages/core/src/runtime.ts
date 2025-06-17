@@ -124,7 +124,7 @@ export class AgentRuntime implements IAgentRuntime {
   constructor(opts: {
     conversationLength?: number;
     agentId?: UUID;
-    character?: Character;
+    character: Character;
     plugins?: Plugin[];
     fetch?: typeof fetch;
     adapter?: IDatabaseAdapter;
@@ -395,7 +395,7 @@ export class AgentRuntime implements IAgentRuntime {
       this.logger.warn('Agent already initialized');
       return;
     }
-    const pluginRegistrationPromises = [];
+    const pluginRegistrationPromises: Promise<void>[] = [];
 
     // The resolution is now expected to happen in the CLI layer (e.g., startAgent)
     // The runtime now accepts a pre-resolved, ordered list of plugins.
@@ -797,7 +797,7 @@ export class AgentRuntime implements IAgentRuntime {
     // Step 1: Create all rooms FIRST (before adding any participants)
     const roomIds = rooms.map((r) => r.id);
     const roomExistsCheck = await this.getRoomsByIds(roomIds);
-    const roomsIdExists = roomExistsCheck.map((r) => r.id);
+    const roomsIdExists = (roomExistsCheck || []).map((r) => r.id);
     const roomsToCreate = roomIds.filter((id) => !roomsIdExists.includes(id));
 
     const rf = {
@@ -822,7 +822,7 @@ export class AgentRuntime implements IAgentRuntime {
     // Step 2: Create all entities
     const entityIds = entities.map((e) => e.id);
     const entityExistsCheck = await this.adapter.getEntityByIds(entityIds);
-    const entitiesToUpdate = entityExistsCheck.map((e) => e.id);
+    const entitiesToUpdate = (entityExistsCheck || []).map((e) => e.id);
     const entitiesToCreate = entities.filter((e) => !entitiesToUpdate.includes(e.id));
 
     const r = {
@@ -1192,75 +1192,38 @@ export class AgentRuntime implements IAgentRuntime {
   getService<T extends Service = Service>(serviceName: ServiceTypeName | string): T | null {
     const serviceInstance = this.services.get(serviceName as ServiceTypeName);
     if (!serviceInstance) {
-      // it's not a warn, a plugin might just not be installed
       this.logger.debug(`Service ${serviceName} not found`);
       return null;
     }
     return serviceInstance as T;
   }
 
-  /**
-   * Type-safe service getter that ensures the correct service type is returned
-   * @template T - The expected service class type
-   * @param serviceName - The service type name
-   * @returns The service instance with proper typing, or null if not found
-   */
-  getTypedService<T extends Service = Service>(serviceName: ServiceTypeName | string): T | null {
-    return this.getService<T>(serviceName);
-  }
-
-  /**
-   * Get all registered service types
-   * @returns Array of registered service type names
-   */
-  getRegisteredServiceTypes(): ServiceTypeName[] {
-    return Array.from(this.services.keys());
-  }
-
-  /**
-   * Check if a service type is registered
-   * @param serviceType - The service type to check
-   * @returns true if the service is registered
-   */
-  hasService(serviceType: ServiceTypeName | string): boolean {
-    return this.services.has(serviceType as ServiceTypeName);
+  getServicesByType(serviceType: ServiceTypeName): Service[] {
+    const services = Array.from(this.services.values());
+    return services.filter(
+      (service: Service) => (service.constructor as typeof Service).serviceType === serviceType
+    );
   }
 
   async registerService(serviceDef: typeof Service): Promise<void> {
-    const serviceType = serviceDef.serviceType as ServiceTypeName;
-    if (!serviceType) {
+    // Use serviceName as the unique key for registration
+    const serviceName = serviceDef.serviceName;
+    if (!serviceName) {
       this.logger.warn(
-        `Service ${serviceDef.name} is missing serviceType. Please define a static serviceType property.`
+        `Service ${serviceDef.name} is missing a static serviceName and cannot be registered.`
       );
       return;
     }
-    this.logger.debug(
-      `${this.character.name}(${this.agentId}) - Registering service:`,
-      serviceType
-    );
-    if (this.services.has(serviceType)) {
+
+    if (this.services.has(serviceName as ServiceTypeName)) {
       this.logger.warn(
-        `${this.character.name}(${this.agentId}) - Service ${serviceType} is already registered. Skipping registration.`
+        `${this.character.name}(${this.agentId}) - Service name "${serviceName}" is already registered. Skipping.`
       );
       return;
     }
-    try {
-      const serviceInstance = await serviceDef.start(this);
-      this.services.set(serviceType, serviceInstance);
-      this.serviceTypes.set(serviceType, serviceDef);
-      if (typeof (serviceDef as any).registerSendHandlers === 'function') {
-        (serviceDef as any).registerSendHandlers(this, serviceInstance);
-      }
-      this.logger.debug(
-        `${this.character.name}(${this.agentId}) - Service ${serviceType} registered successfully`
-      );
-    } catch (error: any) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        `${this.character.name}(${this.agentId}) - Failed to register service ${serviceType}: ${errorMessage}`
-      );
-      throw error;
-    }
+
+    const serviceInstance = await serviceDef.start(this);
+    this.services.set(serviceName as ServiceTypeName, serviceInstance);
   }
 
   registerModel(

@@ -22,13 +22,15 @@ export function createVitestConfig(targetPath: string, pluginName?: string): any
   if (pluginName) {
     // For plugin testing, only include tests from the specific plugin
     config.test.include = [`${targetPath}/**/*.test.{js,ts}`, `${targetPath}/**/*.spec.{js,ts}`];
+
+    const parentDir = path.dirname(targetPath);
     config.test.exclude = [
       '**/node_modules/**',
       '**/dist/**',
       '**/.turbo/**',
       '**/coverage/**',
-      // Exclude other plugins
-      `${path.dirname(targetPath)}/*/`,
+      // A more robust way to exclude other packages
+      `${parentDir}/*/**`,
       `!${targetPath}/**`,
     ];
   } else {

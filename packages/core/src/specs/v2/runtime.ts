@@ -33,6 +33,7 @@ import type {
   TaskWorker,
   UUID,
   World,
+  ServiceType,
 } from './types';
 
 import { AgentRuntime as coreAgentRuntime, Semaphore as coreSemaphore } from '../../runtime';
@@ -376,6 +377,10 @@ export class AgentRuntime implements IAgentRuntime {
 
   getService<T extends Service>(service: ServiceTypeName): T | null {
     return this._runtime.getService(service) as any;
+  }
+
+  getServicesByType(serviceType: ServiceTypeName): Service[] {
+    return this._runtime.getServicesByType(serviceType) as Service[];
   }
 
   async registerService(service: typeof Service): Promise<void> {

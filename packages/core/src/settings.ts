@@ -28,12 +28,12 @@ export function createSettingFromConfig(configSetting: Omit<Setting, 'value'>): 
     usageDescription: configSetting.usageDescription || '',
     value: null,
     required: configSetting.required,
-    validation: configSetting.validation || null,
+    validation: configSetting.validation || undefined,
     public: configSetting.public || false,
     secret: configSetting.secret || false,
     dependsOn: configSetting.dependsOn || [],
-    onSetAction: configSetting.onSetAction || null,
-    visibleIf: configSetting.visibleIf || null,
+    onSetAction: configSetting.onSetAction || undefined,
+    visibleIf: configSetting.visibleIf || undefined,
   };
 }
 

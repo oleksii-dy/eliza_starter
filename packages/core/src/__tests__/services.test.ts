@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createService, defineService } from '../services';
-import { Service } from '../types';
+import { Service, ServiceType } from '../types';
 import type { IAgentRuntime } from '../types';
+import { AgentRuntime } from '../runtime';
 
 describe('service builder', () => {
   // Mock runtime
@@ -40,10 +41,8 @@ describe('service builder', () => {
 
   it('should throw error when start function is not defined', async () => {
     // This test covers lines 59-60 - error when startFn is not defined
-    const Builder = createService('NO_START')
-      .withDescription('Service without start')
-      .build();
-    
+    const Builder = createService('NO_START').withDescription('Service without start').build();
+
     await expect((Builder as any).start(mockRuntime)).rejects.toThrow(
       'Start function not defined for service NO_START'
     );
@@ -52,7 +51,7 @@ describe('service builder', () => {
   it('should call custom stop function when provided', async () => {
     // This test covers lines 65-68 - custom stopFn execution
     const stopFn = vi.fn().mockResolvedValue(undefined);
-    
+
     const Builder = createService('WITH_STOP')
       .withDescription('Service with custom stop')
       .withStart(
@@ -64,11 +63,11 @@ describe('service builder', () => {
       )
       .withStop(stopFn)
       .build();
-    
+
     const instance = await (Builder as any).start(mockRuntime);
     const builtInstance = new Builder();
     await builtInstance.stop();
-    
+
     expect(stopFn).toHaveBeenCalled();
   });
 
@@ -84,7 +83,7 @@ describe('service builder', () => {
           })()
       )
       .build();
-    
+
     const builtInstance = new Builder();
     // Should not throw when no stopFn is provided
     await expect(builtInstance.stop()).resolves.toBeUndefined();
@@ -102,7 +101,7 @@ describe('service builder', () => {
         })(),
       // Note: no stop function provided
     });
-    
+
     const instance = await (Def as any).start(mockRuntime);
     const defInstance = new Def();
     // Should not throw when using default stop
@@ -113,25 +112,112 @@ describe('service builder', () => {
     // Test the full builder chain
     const description = 'Test service description';
     const serviceType = 'CHAINED_SERVICE';
-    
+
     const builder = createService(serviceType);
     const withDesc = builder.withDescription(description);
-    
+
     // Verify chaining returns the same instance
     expect(withDesc).toBe(builder);
-    
-    const startFn = async () => new (class extends Service { 
-      capabilityDescription = 'Chained service';
-      async stop() {} 
-    })();
+
+    const startFn = async () =>
+      new (class extends Service {
+        capabilityDescription = 'Chained service';
+        async stop() {}
+      })();
     const withStart = withDesc.withStart(startFn);
     expect(withStart).toBe(builder);
-    
+
     const stopFn = async () => {};
     const withStop = withStart.withStop(stopFn);
     expect(withStop).toBe(builder);
-    
+
     const BuiltClass = withStop.build();
     expect((BuiltClass as any).serviceType).toBe(serviceType);
+  });
+});
+
+describe('AgentRuntime v2 service methods', () => {
+  let runtime: AgentRuntime;
+
+  beforeEach(() => {
+    const mockAdapter = {
+      init: vi.fn().mockResolvedValue(undefined),
+      runMigrations: vi.fn().mockResolvedValue(undefined),
+      ensureAgentExists: vi.fn().mockResolvedValue({ id: 'agent-123' }),
+      getEntityById: vi.fn().mockResolvedValue(null),
+      createEntity: vi.fn().mockResolvedValue(true),
+      getRoom: vi.fn().mockResolvedValue(null),
+      createRoom: vi.fn().mockResolvedValue('room-123'),
+      getParticipantsForRoom: vi.fn().mockResolvedValue([]),
+      addParticipant: vi.fn().mockResolvedValue(true),
+      ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
+    } as any;
+
+    runtime = new AgentRuntime({
+      character: { name: 'TestBot', bio: '' } as any,
+      adapter: mockAdapter,
+    });
+  });
+
+  it('getServicesByType should return all services of a given type', async () => {
+    class WalletServiceA extends Service {
+      static serviceName = 'WALLET_A';
+      static serviceType = ServiceType.WALLET;
+      capabilityDescription = 'd';
+      static async start(runtime: IAgentRuntime) {
+        return new this(runtime);
+      }
+      async stop() {}
+    }
+    class WalletServiceB extends Service {
+      static serviceName = 'WALLET_B';
+      static serviceType = ServiceType.WALLET;
+      capabilityDescription = 'd';
+      static async start(runtime: IAgentRuntime) {
+        return new this(runtime);
+      }
+      async stop() {}
+    }
+    class TaskService extends Service {
+      static serviceName = 'TASK_A';
+      static serviceType = ServiceType.TASK;
+      capabilityDescription = 'd';
+      static async start(runtime: IAgentRuntime) {
+        return new this(runtime);
+      }
+      async stop() {}
+    }
+
+    await runtime.registerService(WalletServiceA);
+    await runtime.registerService(WalletServiceB);
+    await runtime.registerService(TaskService);
+
+    expect(runtime.getService('WALLET_A')).toBeInstanceOf(WalletServiceA);
+    expect(runtime.getService('WALLET_B')).toBeInstanceOf(WalletServiceB);
+
+    const walletServices = runtime.getServicesByType(ServiceType.WALLET);
+    expect(walletServices).toHaveLength(2);
+    expect(walletServices.some((s) => s instanceof WalletServiceA)).toBe(true);
+    expect(walletServices.some((s) => s instanceof WalletServiceB)).toBe(true);
+
+    const taskServices = runtime.getServicesByType(ServiceType.TASK);
+    expect(taskServices).toHaveLength(1);
+    expect(taskServices[0]).toBeInstanceOf(TaskService);
+  });
+
+  it('getServicesByType should return an empty array if no services match', async () => {
+    class TaskServiceDef extends Service {
+      static serviceName = 'TASK_A';
+      static serviceType = ServiceType.TASK;
+      capabilityDescription = 'd';
+      static async start(runtime: IAgentRuntime) {
+        return new this(runtime);
+      }
+      async stop() {}
+    }
+
+    await runtime.registerService(TaskServiceDef);
+    const browserServices = runtime.getServicesByType(ServiceType.BROWSER);
+    expect(browserServices).toHaveLength(0);
   });
 });

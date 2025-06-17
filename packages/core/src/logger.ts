@@ -206,9 +206,11 @@ const createPrettyConfig = () => ({
       return String(level).toUpperCase();
     },
     // Add a custom prettifier for error messages
-    msg: (msg: string) => {
+    msg: (msg: string | object) => {
+      // If msg is an object, convert to string first
+      const msgStr = typeof msg === 'string' ? msg : JSON.stringify(msg);
       // Replace "ERROR (TypeError):" pattern with just "ERROR:"
-      return msg.replace(/ERROR \([^)]+\):/g, 'ERROR:');
+      return msgStr.replace(/ERROR \([^)]+\):/g, 'ERROR:');
     },
   },
   messageFormat: '{msg}',

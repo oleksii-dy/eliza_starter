@@ -58,14 +58,6 @@ export async function runComponentTests(
     // Build command arguments
     const args = ['run', 'vitest', 'run', '--passWithNoTests', '--reporter=default'];
 
-    // Add config
-    if (vitestConfig.test?.include) {
-      args.push('--include', vitestConfig.test.include.join(','));
-    }
-    if (vitestConfig.test?.exclude) {
-      args.push('--exclude', vitestConfig.test.exclude.join(','));
-    }
-
     // Add filter if specified
     if (options.name) {
       const baseName = processFilterName(options.name);
@@ -73,6 +65,11 @@ export async function runComponentTests(
         logger.info(`Using test filter: ${baseName}`);
         args.push('-t', baseName);
       }
+    }
+
+    // Pass include patterns as positional arguments.
+    if (vitestConfig.test?.include) {
+      args.push(...vitestConfig.test.include);
     }
 
     const targetPath = testPath ? path.resolve(process.cwd(), '..', testPath) : process.cwd();

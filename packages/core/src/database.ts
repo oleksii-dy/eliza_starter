@@ -29,7 +29,7 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   /**
    * The database instance.
    */
-  db: DB;
+  abstract db: DB;
 
   /**
    * Initialize the database adapter.

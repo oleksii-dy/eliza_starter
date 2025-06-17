@@ -126,4 +126,16 @@ export interface Relationship {
 
   /** Optional creation timestamp */
   createdAt?: string;
+
+  /** Type of relationship (friend, colleague, acquaintance, family, etc.) */
+  relationshipType?: string;
+
+  /** Relationship strength score (0-100) */
+  strength?: number;
+
+  /** Timestamp of last interaction */
+  lastInteractionAt?: string;
+
+  /** Timestamp for next scheduled follow-up */
+  nextFollowUpAt?: string;
 }
