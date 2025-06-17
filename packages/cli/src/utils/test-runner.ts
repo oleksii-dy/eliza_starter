@@ -181,8 +181,8 @@ export class TestRunner {
 
       // When directly testing a plugin, we test only that plugin
       const plugin = this.pluginUnderTest;
-      if (!plugin || !plugin.tests) {
-        logger.info(`No tests found for this plugin (${plugin?.name || 'unknown plugin'})`);
+      if (!plugin || !plugin.tests || (Array.isArray(plugin.tests) && plugin.tests.length === 0)) {
+        logger.error(`No tests found for plugin: ${plugin?.name || 'unknown plugin'}`);
         logger.info(
           "To add tests to your plugin, include a 'tests' property with an array of test suites."
         );
@@ -209,6 +209,9 @@ export const myPlugin = {
   ]
 };
 `);
+        // Mark as having tests but failed so we exit with error
+        this.stats.hasTests = true;
+        this.stats.failed = 1;
         return;
       }
 
@@ -384,6 +387,9 @@ export const myPlugin = {
     // Log summary
     if (!this.stats.hasTests) {
       logger.info('\nNo test files found, exiting with code 0');
+    } else if (this.isDirectPluginTest && this.stats.failed === 1 && this.stats.total === 0) {
+      // Special case: plugin has no tests defined
+      logger.error('\nTest Summary: Plugin has no tests defined. Please add tests to your plugin.');
     } else {
       logger.info(
         `\nTest Summary: ${this.stats.passed} passed, ${this.stats.failed} failed, ${this.stats.skipped} skipped`

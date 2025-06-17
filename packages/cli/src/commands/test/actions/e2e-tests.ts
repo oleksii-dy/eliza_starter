@@ -266,6 +266,8 @@ export async function runE2eTests(
         // Run tests for each agent
         let totalFailed = 0;
         let anyTestsFound = false;
+        let isPluginWithoutTests = false;
+
         for (let i = 0; i < runtimes.length; i++) {
           const runtime = runtimes[i];
           const projectAgent = projectAgents[i];
@@ -292,15 +294,22 @@ export async function runE2eTests(
             skipProjectTests: currentDirInfo.type !== 'elizaos-project',
             skipE2eTests: false, // Always allow E2E tests
           });
+
           totalFailed += results.failed;
           if (results.hasTests) {
             anyTestsFound = true;
           }
+
+          // Check if this is a plugin without tests
+          if (project.isPlugin && results.failed === 1 && results.total === 0) {
+            isPluginWithoutTests = true;
+          }
         }
 
-        // Return success (false) if no tests were found, or if tests ran but none failed
-        // This aligns with standard testing tools like vitest/jest behavior
-        return { failed: anyTestsFound ? totalFailed > 0 : false };
+        // Return failure if:
+        // 1. We're testing a plugin but it has no tests
+        // 2. Tests were found and some failed
+        return { failed: isPluginWithoutTests || (anyTestsFound && totalFailed > 0) };
       } catch (error) {
         logger.error('Error in runE2eTests:', error);
         if (error instanceof Error) {
