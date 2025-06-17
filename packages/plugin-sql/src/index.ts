@@ -82,11 +82,13 @@ export function createDatabaseAdapter(
  * @param {any} _ - Input parameter
  * @param {IAgentRuntime} runtime - The runtime environment for the agent
  */
-export const plugin: Plugin = {
+// Attach the migration function to the plugin object for runtime access
+export const plugin: Plugin & { runPluginMigrations?: typeof runPluginMigrations } = {
   name: '@elizaos/plugin-sql',
   description: 'A plugin for SQL database access with dynamic schema migrations',
   priority: 0,
   schema,
+  runPluginMigrations, // Add the function to the plugin object
   init: async (_, runtime: IAgentRuntime) => {
     logger.info('plugin-sql init starting...');
 
@@ -129,4 +131,5 @@ export default plugin;
 
 // Export additional utilities that may be needed by consumers
 export { DatabaseMigrationService } from './migration-service';
+export { runPluginMigrations } from './custom-migrator';
 export { schema };

@@ -18,8 +18,10 @@ export async function runAllTests(
   if (!options.skipBuild) {
     const componentResult = await runComponentTests(testPath, options, projectInfo);
     if (componentResult.failed) {
-      logger.error('Component tests failed. Continuing to e2e tests...');
+      logger.error('Component tests failed. Stopping test execution.');
+      process.exit(1);
     }
+    logger.success('Component tests passed!');
   }
 
   // Run e2e tests

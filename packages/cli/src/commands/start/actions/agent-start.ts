@@ -80,17 +80,9 @@ export async function startAgent(
 
   // Discover and run plugin schema migrations
   try {
-    const migrationService = runtime.getService('database_migration');
-    if (migrationService) {
-      logger.info('Discovering plugin schemas for dynamic migration...');
-      (migrationService as any).discoverAndRegisterPluginSchemas(finalPlugins);
-
-      logger.info('Running all plugin migrations...');
-      await (migrationService as any).runAllPluginMigrations();
-      logger.info('All plugin migrations completed successfully');
-    } else {
-      logger.warn('DatabaseMigrationService not found - plugin schema migrations skipped');
-    }
+    logger.info('Running plugin migrations...');
+    await runtime.runPluginMigrations();
+    logger.info('Plugin migrations completed.');
   } catch (error) {
     logger.error('Failed to run plugin migrations:', error);
     throw error;

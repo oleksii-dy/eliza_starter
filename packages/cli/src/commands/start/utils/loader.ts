@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Character, logger } from '@elizaos/core';
 import { character as defaultCharacter } from '../../../characters/eliza';
+import { getEnvironmentConfig, resolveModulePath } from '@/src/utils/environment-normalization';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -174,6 +175,8 @@ export async function loadCharacterTryPath(characterPath: string): Promise<Chara
     }
   }
 
+  const envConfig = getEnvironmentConfig();
+
   // Create path variants with and without .json extension
   const hasJsonExtension = characterPath.toLowerCase().endsWith('.json');
   const basePath = hasJsonExtension ? characterPath : characterPath;
@@ -210,13 +213,34 @@ export async function loadCharacterTryPath(characterPath: string): Promise<Chara
   // Combine the paths to try both variants
   const pathsToTry = Array.from(new Set([...basePathsToTry, ...jsonPathsToTry]));
 
+  // Add environment-specific paths for monorepo context
+  if (envConfig.isMonorepo) {
+    // In monorepo, also check packages directory
+    pathsToTry.push(
+      path.resolve(
+        process.cwd(),
+        'packages',
+        'cli',
+        'characters',
+        path.basename(jsonPath || basePath)
+      )
+    );
+  }
+
   let lastError = null;
 
   for (const tryPath of pathsToTry) {
     try {
       const content = tryLoadFile(tryPath);
       if (content !== null) {
-        return safeLoadCharacter(tryPath);
+        const character = await safeLoadCharacter(tryPath);
+
+        // Log helpful info in development
+        if (envConfig.isTypeScript) {
+          logger.debug(`Loaded character from: ${tryPath} (TypeScript environment)`);
+        }
+
+        return character;
       }
     } catch (e) {
       lastError = e;
@@ -228,9 +252,15 @@ export async function loadCharacterTryPath(characterPath: string): Promise<Chara
   const errorMessage = lastError
     ? `${lastError}`
     : 'File not found in any of the expected locations';
+
+  // Provide environment-specific guidance
+  const envHint = envConfig.isMonorepo
+    ? '\nHint: In monorepo context, make sure the character file is in the correct package directory.'
+    : '\nHint: Make sure the character file path is relative to your current working directory.';
+
   return handleCharacterLoadError(
     characterPath,
-    `Character not found. Tried ${pathsToTry.length} locations. ${errorMessage}`
+    `Character not found. Tried ${pathsToTry.length} locations. ${errorMessage}${envHint}`
   );
 }
 
