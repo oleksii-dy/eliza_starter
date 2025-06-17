@@ -58,14 +58,6 @@ export async function runComponentTests(
     // Build command arguments
     const args = ['run', 'vitest', 'run', '--passWithNoTests', '--reporter=default'];
 
-    // Add config
-    if (vitestConfig.test?.include) {
-      args.push('--include', vitestConfig.test.include.join(','));
-    }
-    if (vitestConfig.test?.exclude) {
-      args.push('--exclude', vitestConfig.test.exclude.join(','));
-    }
-
     // Add filter if specified
     if (options.name) {
       const baseName = processFilterName(options.name);
@@ -73,6 +65,23 @@ export async function runComponentTests(
         logger.info(`Using test filter: ${baseName}`);
         args.push('-t', baseName);
       }
+    }
+
+    // Add test patterns as positional arguments (not --include)
+    if (vitestConfig.test?.include && vitestConfig.test.include.length > 0) {
+      // Add each include pattern as a positional argument
+      vitestConfig.test.include.forEach((pattern: string) => {
+        args.push(pattern);
+      });
+    }
+
+    // Add exclude patterns using --exclude option (one at a time)
+    if (vitestConfig.test?.exclude && vitestConfig.test.exclude.length > 0) {
+      // Filter out negation patterns (starting with !) as they're not valid for --exclude
+      const validExcludes = vitestConfig.test.exclude.filter((pattern: string) => !pattern.startsWith('!'));
+      validExcludes.forEach((pattern: string) => {
+        args.push('--exclude', pattern);
+      });
     }
 
     const targetPath = testPath ? path.resolve(process.cwd(), '..', testPath) : process.cwd();

@@ -27,9 +27,8 @@ export function createVitestConfig(targetPath: string, pluginName?: string): any
       '**/dist/**',
       '**/.turbo/**',
       '**/coverage/**',
-      // Exclude other plugins
+      // Exclude other plugins by excluding sibling directories
       `${path.dirname(targetPath)}/*/`,
-      `!${targetPath}/**`,
     ];
   } else {
     // For project testing
