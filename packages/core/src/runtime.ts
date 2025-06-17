@@ -438,7 +438,7 @@ export class AgentRuntime implements IAgentRuntime {
           id: this.agentId,
           names: [this.character.name],
           metadata: {},
-          agentId: existingAgent.id,
+          agentId: existingAgent.id as UUID,
         });
         if (!created) {
           const errorMsg = `Failed to create entity for agent ${this.agentId}`;
@@ -511,30 +511,16 @@ export class AgentRuntime implements IAgentRuntime {
       if (p.schema) {
         this.logger.info(`Running migrations for plugin: ${p.name}`);
         try {
-          // Check if the adapter has a runPluginMigrations method
-          if (this.adapter && 'runPluginMigrations' in this.adapter) {
-            await (this.adapter as any).runPluginMigrations(p.schema, p.name);
+          // Find the SQL plugin in our loaded plugins
+          const sqlPlugin = this.plugins.find((plugin) => plugin.name === '@elizaos/plugin-sql');
+          if (sqlPlugin && 'runPluginMigrations' in sqlPlugin) {
+            // Use the runPluginMigrations function from the SQL plugin
+            await (sqlPlugin as any).runPluginMigrations(drizzle, p.name, p.schema);
             this.logger.info(`Successfully migrated plugin: ${p.name}`);
           } else {
-            // Try to get runPluginMigrations from the SQL plugin
-            const sqlPlugin = this.plugins.find((plugin) => plugin.name === '@elizaos/plugin-sql');
-            if (sqlPlugin && 'runPluginMigrations' in sqlPlugin) {
-              const migrationFn = (sqlPlugin as any).runPluginMigrations;
-              if (typeof migrationFn === 'function') {
-                await migrationFn(drizzle, p.name, p.schema);
-                this.logger.info(
-                  `Successfully migrated plugin: ${p.name} (using sql plugin function)`
-                );
-              } else {
-                this.logger.error(
-                  `runPluginMigrations is not a function on sql plugin for ${p.name}`
-                );
-              }
-            } else {
-              this.logger.error(
-                `Cannot find runPluginMigrations function for ${p.name}, migrations skipped`
-              );
-            }
+            this.logger.warn(
+              `SQL plugin not found or missing runPluginMigrations method, skipping migration for plugin: ${p.name}`
+            );
           }
         } catch (error) {
           this.logger.error(`Failed to migrate plugin ${p.name}:`, error);
@@ -542,8 +528,6 @@ export class AgentRuntime implements IAgentRuntime {
         }
       }
     }
-
-    this.logger.info('Plugin migrations completed.');
   }
 
   async getConnection(): Promise<unknown> {
@@ -968,7 +952,9 @@ export class AgentRuntime implements IAgentRuntime {
       } else {
         await this.adapter.updateEntity({
           id: entityId,
-          names: [...new Set([...(entity.names || []), ...names])].filter(Boolean) as string[],
+          names: [...new Set([...(entity.names || []), ...names.filter(Boolean)])].filter(
+            Boolean
+          ) as string[],
           metadata: {
             ...entity.metadata,
             [source!]: {
@@ -990,12 +976,13 @@ export class AgentRuntime implements IAgentRuntime {
       });
       await this.ensureRoomExists({
         id: roomId,
-        name: name,
-        source,
-        type,
+        name: name || 'Unnamed Room',
+        source: source || 'unknown',
+        type: type || ChannelType.DM,
         channelId,
         serverId,
         worldId,
+        metadata,
       });
       try {
         await this.ensureParticipantInRoom(entityId, roomId);
@@ -1127,6 +1114,7 @@ export class AgentRuntime implements IAgentRuntime {
       text: '',
     } as State;
     const cachedState = skipCache ? emptyObj : (await this.stateCache.get(message.id)) || emptyObj;
+
     const existingProviderNames = cachedState.data.providers
       ? Object.keys(cachedState.data.providers)
       : [];
@@ -1265,11 +1253,18 @@ export class AgentRuntime implements IAgentRuntime {
       priority: priority || 0,
       registrationOrder,
     });
+    // Sort by priority (higher priority first)
+    // If priorities are equal, maintain insertion order
     this.models.get(modelKey)?.sort((a, b) => {
-      if ((b.priority || 0) !== (a.priority || 0)) {
-        return (b.priority || 0) - (a.priority || 0);
+      const aPriority = a.priority ?? 0;
+      const bPriority = b.priority ?? 0;
+      if (bPriority !== aPriority) {
+        return bPriority - aPriority;
       }
-      return a.registrationOrder - b.registrationOrder;
+      // If priorities are equal, sort by registration order
+      const aOrder = a.registrationOrder ?? Number.MAX_SAFE_INTEGER;
+      const bOrder = b.registrationOrder ?? Number.MAX_SAFE_INTEGER;
+      return aOrder - bOrder;
     });
   }
 
@@ -1751,20 +1746,30 @@ export class AgentRuntime implements IAgentRuntime {
     return await this.adapter.getRoomsByIds(roomIds);
   }
   async createRoom({ id, name, source, type, channelId, serverId, worldId }: Room): Promise<UUID> {
-    if (!worldId) throw new Error('worldId is required');
-    const res = await this.adapter.createRooms([
-      {
-        id,
-        name,
-        source,
-        type,
-        channelId,
-        serverId,
-        worldId,
-      },
-    ]);
-    if (!res.length) return null;
-    return res[0];
+    try {
+      const existingRoom = await this.getRoom(id);
+      if (existingRoom) {
+        return existingRoom.id;
+      }
+      const res = await this.adapter.createRooms([
+        {
+          id,
+          name,
+          source,
+          type,
+          channelId,
+          serverId,
+          worldId: worldId || this.agentId, // Use agent ID as fallback world ID
+          agentId: this.agentId,
+        },
+      ]);
+      if (!res.length) {
+        throw new Error('Failed to create room - empty result');
+      }
+      return res[0];
+    } catch (error: any) {
+      throw new Error(`Failed to create room: ${error.message}`);
+    }
   }
 
   async createRooms(rooms: Room[]): Promise<UUID[]> {
