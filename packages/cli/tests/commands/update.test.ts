@@ -37,24 +37,41 @@ describe('ElizaOS Update Commands', () => {
     elizaosCmd = `bun ${cliPath}`;
   });
 
+  beforeEach(async () => {
+    // Create a fresh temp directory for each test
+    testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-update-'));
+    // Change to the temp directory
+    process.chdir(testTmpDir);
+  });
+
   afterEach(async () => {
     // Restore original working directory (if it still exists)
     safeChangeDirectory(originalCwd);
 
     if (testTmpDir && testTmpDir.includes('eliza-test-update-')) {
       try {
-        await rm(testTmpDir, { recursive: true });
+        await rm(testTmpDir, { recursive: true, force: true });
       } catch (e) {
         // Ignore cleanup errors
       }
     }
   });
 
+  afterAll(async () => {
+    // Final cleanup - restore original working directory
+    safeChangeDirectory(originalCwd);
+  });
+
   // Helper function to create project
   const makeProj = async (name: string) => {
+    // Ensure we're in the test temp directory
+    process.chdir(testTmpDir);
+    
     runCliCommandSilently(elizaosCmd, `create ${name} --yes`, {
       timeout: TEST_TIMEOUTS.PROJECT_CREATION,
     });
+    
+    // Change into the newly created project directory
     process.chdir(join(testTmpDir, name));
   };
 
