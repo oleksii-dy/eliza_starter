@@ -26,9 +26,13 @@ export async function runAllTests(
   const e2eResult = await runE2eTests(testPath, options, projectInfo);
   if (e2eResult.failed) {
     logger.error('E2E tests failed.');
+    // Give async operations time to complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
     process.exit(1);
   }
 
   logger.success('All tests passed successfully!');
+  // Give async operations time to complete before exiting
+  await new Promise((resolve) => setTimeout(resolve, 100));
   process.exit(0);
 }

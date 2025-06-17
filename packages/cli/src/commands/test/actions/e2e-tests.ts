@@ -338,6 +338,17 @@ export async function runE2eTests(
           console.warn(`Failed to clean up test database directory: ${cleanupError}`);
           // Don't fail the test run due to cleanup issues
         }
+
+        // Stop the server to prevent hanging
+        if (server) {
+          try {
+            logger.info('Stopping test server...');
+            await server.stop();
+            logger.info('Test server stopped successfully');
+          } catch (stopError) {
+            logger.warn('Error stopping test server:', stopError);
+          }
+        }
       }
     } catch (error) {
       logger.error('Error in runE2eTests:', error);

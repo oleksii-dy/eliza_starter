@@ -876,11 +876,66 @@ export class AgentServer {
    * stops the database connection, and logs a success message.
    */
   public async stop(): Promise<void> {
+    logger.info('Stopping AgentServer...');
+
+    // Stop all agents first
+    if (this.agents.size > 0) {
+      logger.debug('Stopping all agents...');
+      const stopPromises: Promise<void>[] = [];
+      for (const [id, agent] of this.agents.entries()) {
+        try {
+          logger.debug(`Stopping agent ${id}`);
+          stopPromises.push(agent.stop());
+        } catch (error) {
+          logger.error(`Error stopping agent ${id}:`, error);
+        }
+      }
+      await Promise.allSettled(stopPromises);
+      this.agents.clear();
+      logger.debug('All agents stopped');
+    }
+
+    // Disconnect Socket.IO clients
+    if (this.socketIO) {
+      try {
+        logger.debug('Disconnecting Socket.IO clients...');
+        this.socketIO.disconnectSockets();
+        await new Promise<void>((resolve) => {
+          this.socketIO.close(() => {
+            logger.debug('Socket.IO closed');
+            resolve();
+          });
+        });
+      } catch (error) {
+        logger.error('Error closing Socket.IO:', error);
+      }
+    }
+
+    // Close database connection
+    if (this.database) {
+      try {
+        logger.debug('Closing database connection...');
+        await this.database.close();
+        logger.debug('Database closed');
+      } catch (error) {
+        logger.error('Error closing database:', error);
+      }
+    }
+
+    // Close HTTP server
     if (this.server) {
-      this.server.close(() => {
-        logger.success('Server stopped');
+      await new Promise<void>((resolve) => {
+        this.server.close(() => {
+          logger.debug('HTTP server closed');
+          resolve();
+        });
       });
     }
+
+    // Reset initialization flag
+    this.isInitialized = false;
+    
+    logger.success('AgentServer stopped successfully');
   }
 
   // Central DB Data Access Methods
