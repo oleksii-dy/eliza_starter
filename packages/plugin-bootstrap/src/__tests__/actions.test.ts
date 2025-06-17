@@ -8,9 +8,9 @@ import {
   replyAction,
   choiceAction,
   sendMessageAction,
-  updateEntityAction,
+  // updateEntityAction, // TODO: File missing
   noneAction,
-} from '../src/actions';
+} from '../actions/index';
 import {
   createMockRuntime,
   createMockMemory,

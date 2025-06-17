@@ -60,7 +60,7 @@ export const unmuteRoomAction: Action = {
     _options?: { [key: string]: unknown },
     _callback?: HandlerCallback,
     _responses?: Memory[]
-  ) => {
+  ): Promise<boolean> => {
     async function _shouldUnmute(state: State): Promise<boolean> {
       const shouldUnmutePrompt = composePromptFromState({
         state,
@@ -157,6 +157,7 @@ export const unmuteRoomAction: Action = {
       },
       'messages'
     );
+    return true;
   },
   examples: [
     [

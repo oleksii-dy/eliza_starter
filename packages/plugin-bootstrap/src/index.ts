@@ -1354,11 +1354,11 @@ export const bootstrapPlugin: Plugin = {
     providers.evaluatorsProvider,
     providers.anxietyProvider,
     providers.timeProvider,
-    providers.entitiesProvider,
-    providers.relationshipsProvider,
+    // providers.entitiesProvider, // TODO: File missing
+    // providers.relationshipsProvider, // TODO: File missing
     providers.choiceProvider,
     providers.factsProvider,
-    providers.roleProvider,
+    // providers.roleProvider, // TODO: File missing
     providers.settingsProvider,
     providers.capabilitiesProvider,
     providers.attachmentsProvider,

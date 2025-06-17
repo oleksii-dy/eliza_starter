@@ -1,26 +1,21 @@
-import { vi } from 'vitest';
 import {
   Action,
-  Character,
   ChannelType,
+  Character,
   Content,
   Evaluator,
-  IDatabaseAdapter,
   IAgentRuntime,
+  IDatabaseAdapter,
   Memory,
   ModelType,
   Plugin,
   Provider,
   Route,
   Service,
-  ServiceType,
   State,
   UUID,
-  Room,
-  World,
-  Entity,
-  Component,
 } from '@elizaos/core';
+import { vi } from 'vitest';
 
 /**
  * Creates a comprehensive mock of the IAgentRuntime interface with sensible defaults
@@ -83,7 +78,6 @@ export function createMockRuntime(overrides: Partial<MockRuntime> = {}): MockRun
     createAgent: vi.fn().mockResolvedValue(true),
     updateAgent: vi.fn().mockResolvedValue(true),
     deleteAgent: vi.fn().mockResolvedValue(true),
-    ensureAgentExists: vi.fn().mockResolvedValue(undefined),
     ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
     getEntityById: vi.fn().mockResolvedValue(null),
     getEntitiesForRoom: vi.fn().mockResolvedValue([]),

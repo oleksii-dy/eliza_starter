@@ -1,27 +1,21 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import {
-  Evaluator,
-  IAgentRuntime,
-  logger,
-  ModelType,
-  UUID,
-  Memory,
-  State,
-  Content,
-  ChannelType,
-} from '@elizaos/core';
 import * as entityUtils from '@elizaos/core';
 import {
-  createMockMemory,
-  createMockRuntime,
-  createMockState,
+  ChannelType,
+  IAgentRuntime,
+  logger,
+  Memory,
+  ModelType,
+  State
+} from '@elizaos/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
   MockRuntime,
-  setupActionTest,
+  setupActionTest
 } from './test-utils';
 
 // Mock the getEntityDetails function
 vi.mock('@elizaos/core', async (importOriginal) => {
-  const original = await importOriginal();
+  const original = await importOriginal() as typeof entityUtils;
   return {
     ...original,
     getEntityDetails: vi.fn().mockImplementation(() => {
@@ -33,7 +27,7 @@ vi.mock('@elizaos/core', async (importOriginal) => {
       ]);
     }),
     logger: {
-      ...original.logger,
+      ...(original.logger || {}),
       warn: vi.fn(),
       error: vi.fn(),
     },
@@ -62,7 +56,7 @@ describe('Reflection Evaluator', () => {
 
   it('should call the model with the correct prompt', async () => {
     // Import the evaluator dynamically to avoid polluting the test scope
-    const { reflectionEvaluator } = await import('../src/evaluators/reflection');
+    const { reflectionEvaluator } = await import('../evaluators/reflection');
 
     // Spy on the composePrompt function in the @elizaos/core module
     const composeSpy = vi.spyOn(entityUtils, 'composePrompt').mockReturnValue('Composed prompt');
@@ -72,7 +66,9 @@ describe('Reflection Evaluator', () => {
     mockMessage.content = { ...mockMessage.content, channelType: ChannelType.GROUP };
     // Mock getRelationships and getMemories as they are called before composePrompt
     mockRuntime.getRelationships.mockResolvedValue([]);
-    mockRuntime.getMemories.mockResolvedValue([]); // For knownFacts
+    if (mockRuntime.getMemories) {
+      (mockRuntime.getMemories as any).mockResolvedValue([]); // For knownFacts
+    }
 
     // Assume mockRuntime.character.templates.reflectionTemplate is set, causing the specific template string
     if (!mockRuntime.character) mockRuntime.character = {} as any;
@@ -133,7 +129,7 @@ describe('Reflection Evaluator', () => {
 
   it('should store new facts and relationships', async () => {
     // Import the evaluator dynamically to avoid polluting the test scope
-    const { reflectionEvaluator } = await import('../src/evaluators/reflection');
+    const { reflectionEvaluator } = await import('../evaluators/reflection');
 
     // Spy on the composePrompt function in the @elizaos/core module
     const composeSpy = vi.spyOn(entityUtils, 'composePrompt').mockReturnValue('Composed prompt');
@@ -148,7 +144,9 @@ describe('Reflection Evaluator', () => {
 
     // Arrange
     mockRuntime.getRelationships.mockResolvedValue([]); // Ensure getRelationships returns an array
-    mockRuntime.getMemories.mockResolvedValue([]); // Ensure getMemories for knownFacts returns an array
+    if (mockRuntime.getMemories) {
+      (mockRuntime.getMemories as any).mockResolvedValue([]); // Ensure getMemories for knownFacts returns an array
+    }
 
     mockRuntime.useModel.mockResolvedValueOnce({
       thought: 'I am doing well in this conversation.',
@@ -214,7 +212,7 @@ describe('Reflection Evaluator', () => {
 
   it('should handle model errors without crashing', async () => {
     // Import the evaluator dynamically to avoid polluting the test scope
-    const { reflectionEvaluator } = await import('../src/evaluators/reflection');
+    const { reflectionEvaluator } = await import('../evaluators/reflection');
 
     // Arrange - Mock a model error
     const loggerSpy = vi.spyOn(entityUtils.logger, 'error');
@@ -242,7 +240,7 @@ describe('Reflection Evaluator', () => {
 
   it('should filter out invalid facts', async () => {
     // Import the evaluator dynamically to avoid polluting the test scope
-    const { reflectionEvaluator } = await import('../src/evaluators/reflection');
+    const { reflectionEvaluator } = await import('../evaluators/reflection');
 
     // Arrange
     mockRuntime.useModel.mockResolvedValueOnce({
@@ -275,19 +273,21 @@ describe('Reflection Evaluator', () => {
 
   it('should validate against the reflection evaluator schema', async () => {
     // Import the evaluator dynamically to avoid polluting the test scope
-    const { reflectionEvaluator } = await import('../src/evaluators/reflection');
+    const { reflectionEvaluator } = await import('../evaluators/reflection');
 
     // Mock the getCache method to return a previous message ID
     mockRuntime.getCache.mockResolvedValueOnce('previous-message-id');
 
     // Mock the getMemories method to return a list of messages
-    mockRuntime.getMemories.mockResolvedValueOnce([
-      { id: 'previous-message-id' },
-      { id: 'message-1' },
-      { id: 'message-2' },
-      { id: 'message-3' },
-      { id: 'message-4' },
-    ]);
+    if (mockRuntime.getMemories) {
+      (mockRuntime.getMemories as any).mockResolvedValueOnce([
+        { id: 'previous-message-id' },
+        { id: 'message-1' },
+        { id: 'message-2' },
+        { id: 'message-3' },
+        { id: 'message-4' },
+      ]);
+    }
 
     // Basic validation checks
     expect(reflectionEvaluator).toHaveProperty('name');
@@ -357,7 +357,7 @@ describe('Multiple Prompt Evaluator Factory', () => {
 
           for (const prompt of config.prompts) {
             try {
-              const composedPrompt = runtime.composePrompt({
+              const composedPrompt = (runtime as any).composePrompt({
                 template: prompt.template,
                 state,
               });
@@ -423,17 +423,17 @@ describe('Multiple Prompt Evaluator Factory', () => {
     );
 
     // Check that the model was called for each prompt
-    expect(mockRuntime.composePrompt).toHaveBeenCalledTimes(2);
+    expect((mockRuntime as any).composePrompt).toHaveBeenCalledTimes(2);
     expect(mockRuntime.useModel).toHaveBeenCalledTimes(2);
 
     // First prompt should be called with the correct parameters
-    expect(mockRuntime.composePrompt).toHaveBeenNthCalledWith(1, {
+    expect((mockRuntime as any).composePrompt).toHaveBeenNthCalledWith(1, {
       template: 'First prompt template {{recentMessages}}',
       state: expect.any(Object),
     });
 
     // Second prompt should be called with the correct parameters
-    expect(mockRuntime.composePrompt).toHaveBeenNthCalledWith(2, {
+    expect((mockRuntime as any).composePrompt).toHaveBeenNthCalledWith(2, {
       template: 'Second prompt template {{agentName}}',
       state: expect.any(Object),
     });
@@ -485,7 +485,7 @@ describe('Multiple Prompt Evaluator Factory', () => {
 
           for (const prompt of config.prompts) {
             try {
-              const composedPrompt = runtime.composePrompt({
+              const composedPrompt = (runtime as any).composePrompt({
                 template: prompt.template,
                 state,
               });

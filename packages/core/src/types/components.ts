@@ -29,7 +29,7 @@ export type Handler = (
   options?: { [key: string]: unknown },
   callback?: HandlerCallback,
   responses?: Memory[]
-) => Promise<unknown>;
+) => Promise<ActionState | boolean | null | void>;
 
 /**
  * Validator function type for actions/evaluators
@@ -112,6 +112,8 @@ export interface ProviderResult {
   };
   text?: string;
 }
+
+export interface ActionState extends ProviderResult {}
 
 /**
  * Provider for external data/services

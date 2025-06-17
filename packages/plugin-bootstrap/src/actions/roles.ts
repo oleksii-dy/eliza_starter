@@ -129,7 +129,7 @@ export const updateRoleAction: Action = {
     state?: State,
     _options?: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
+  ): Promise<boolean> => {
     if (!state) {
       logger.error('State is required for role assignment');
       throw new Error('State is required for role assignment');
@@ -152,7 +152,7 @@ export const updateRoleAction: Action = {
       await callback?.({
         text: "I couldn't find the world. This action only works in a world.",
       });
-      return;
+      return true;
     }
 
     if (!world.metadata?.roles) {
@@ -234,7 +234,7 @@ export const updateRoleAction: Action = {
         actions: ['UPDATE_ROLE'],
         source: 'discord',
       });
-      return;
+      return true;
     }
 
     // Process each role assignment
@@ -275,6 +275,7 @@ export const updateRoleAction: Action = {
       await runtime.updateWorld(world);
       logger.info(`Updated roles in world metadata for server ${serverId}`);
     }
+    return true;
   },
 
   examples: [
