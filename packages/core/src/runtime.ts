@@ -188,7 +188,7 @@ export class AgentRuntime implements IAgentRuntime {
       opts.character?.id ??
       opts?.agentId ??
       stringToUuid(opts.character?.name ?? uuidv4() + opts.character?.username);
-    this.character = opts.character;
+    this.character = opts.character || ({} as Character);
     const logLevel = process.env.LOG_LEVEL || 'info';
 
     // Create the logger with appropriate level - only show debug logs when explicitly configured
@@ -447,18 +447,17 @@ export class AgentRuntime implements IAgentRuntime {
       this.logger.warn('Agent already initialized');
       return;
     }
-    const pluginRegistrationPromises = [];
 
     // The resolution is now expected to happen in the CLI layer (e.g., startAgent)
     // The runtime now accepts a pre-resolved, ordered list of plugins.
     const pluginsToLoad = this.characterPlugins;
 
+    // Register plugins sequentially to maintain order, especially important for services
     for (const plugin of pluginsToLoad) {
       if (plugin) {
-        pluginRegistrationPromises.push(this.registerPlugin(plugin));
+        await this.registerPlugin(plugin);
       }
     }
-    await Promise.all(pluginRegistrationPromises);
 
     if (!this.adapter) {
       this.logger.error(
@@ -764,40 +763,51 @@ export class AgentRuntime implements IAgentRuntime {
             responses
           );
 
-          // Ensure we have an ActionResult
-          const actionResult: ActionResult =
-            typeof result === 'object' &&
-            result !== null &&
-            ('values' in result || 'data' in result || 'text' in result)
-              ? (result as ActionResult)
-              : {
-                  data: {
-                    actionName: action.name,
-                    legacyResult: result,
-                  },
-                };
+          // Handle backward compatibility for void, null, true, false returns
+          const isLegacyReturn =
+            result === undefined || result === null || typeof result === 'boolean';
 
-          actionResults.push(actionResult);
+          // Only create ActionResult if we have a proper result
+          let actionResult: ActionResult | null = null;
 
-          // Merge returned values into state
-          if (actionResult.values) {
-            accumulatedState = {
-              ...accumulatedState,
-              values: { ...accumulatedState.values, ...actionResult.values },
-              data: {
-                ...accumulatedState.data,
-                actionResults: [...(accumulatedState.data?.actionResults || []), actionResult],
-              },
-            };
+          if (!isLegacyReturn) {
+            // Ensure we have an ActionResult
+            actionResult =
+              typeof result === 'object' &&
+              result !== null &&
+              ('values' in result || 'data' in result || 'text' in result)
+                ? (result as ActionResult)
+                : {
+                    data: {
+                      actionName: action.name,
+                      legacyResult: result,
+                    },
+                  };
+
+            actionResults.push(actionResult);
+
+            // Merge returned values into state
+            if (actionResult.values) {
+              accumulatedState = {
+                ...accumulatedState,
+                values: { ...accumulatedState.values, ...actionResult.values },
+                data: {
+                  ...accumulatedState.data,
+                  actionResults: [...(accumulatedState.data?.actionResults || []), actionResult],
+                },
+              };
+            }
+
+            // Store in working memory
+            this.updateWorkingMemory(message.roomId, responseAction, actionResult);
           }
 
-          // Store in working memory
-          this.updateWorkingMemory(message.roomId, responseAction, actionResult);
-
           this.logger.debug(`Action ${action.name} completed`, {
-            hasValues: !!actionResult.values,
-            hasData: !!actionResult.data,
-            hasText: !!actionResult.text,
+            isLegacyReturn,
+            result: isLegacyReturn ? result : undefined,
+            hasValues: actionResult ? !!actionResult.values : false,
+            hasData: actionResult ? !!actionResult.data : false,
+            hasText: actionResult ? !!actionResult.text : false,
           });
 
           // log to database with collected prompts
@@ -812,7 +822,8 @@ export class AgentRuntime implements IAgentRuntime {
               messageId: message.id,
               state: accumulatedState,
               responses,
-              result: actionResult,
+              result: isLegacyReturn ? { legacy: result } : actionResult,
+              isLegacyReturn,
               prompts: this.currentActionContext?.prompts || [],
               promptCount: this.currentActionContext?.prompts.length || 0,
             },
@@ -857,11 +868,13 @@ export class AgentRuntime implements IAgentRuntime {
       }
 
       // Store accumulated results for evaluators and providers
-      this.stateCache.set(`${message.id}_action_results`, {
-        values: { actionResults },
-        data: { actionResults },
-        text: JSON.stringify(actionResults),
-      });
+      if (message.id) {
+        this.stateCache.set(`${message.id}_action_results`, {
+          values: { actionResults },
+          data: { actionResults },
+          text: JSON.stringify(actionResults),
+        });
+      }
     }
   }
 
@@ -938,7 +951,12 @@ export class AgentRuntime implements IAgentRuntime {
   }
 
   // highly SQL optimized queries
-  async ensureConnections(entities, rooms, source, world): Promise<void> {
+  async ensureConnections(
+    entities: any[],
+    rooms: any[],
+    source: string,
+    world: any
+  ): Promise<void> {
     // guards
     if (!entities) {
       console.trace();
@@ -957,8 +975,8 @@ export class AgentRuntime implements IAgentRuntime {
     const firstRoom = rooms[0];
 
     // Helper function for chunking arrays
-    const chunkArray = (arr, size) =>
-      arr.reduce((chunks, item, i) => {
+    const chunkArray = (arr: any[], size: number) =>
+      arr.reduce((chunks: any[][], item: any, i: number) => {
         if (i % size === 0) chunks.push([]);
         chunks[chunks.length - 1].push(item);
         return chunks;
@@ -967,7 +985,7 @@ export class AgentRuntime implements IAgentRuntime {
     // Step 1: Create all rooms FIRST (before adding any participants)
     const roomIds = rooms.map((r) => r.id);
     const roomExistsCheck = await this.getRoomsByIds(roomIds);
-    const roomsIdExists = roomExistsCheck.map((r) => r.id);
+    const roomsIdExists = roomExistsCheck ? roomExistsCheck.map((r) => r.id) : [];
     const roomsToCreate = roomIds.filter((id) => !roomsIdExists.includes(id));
 
     const rf = {
@@ -992,7 +1010,7 @@ export class AgentRuntime implements IAgentRuntime {
     // Step 2: Create all entities
     const entityIds = entities.map((e) => e.id);
     const entityExistsCheck = await this.adapter.getEntityByIds(entityIds);
-    const entitiesToUpdate = entityExistsCheck.map((e) => e.id);
+    const entitiesToUpdate = entityExistsCheck ? entityExistsCheck.map((e) => e.id) : [];
     const entitiesToCreate = entities.filter((e) => !entitiesToUpdate.includes(e.id));
 
     const r = {
@@ -1045,7 +1063,7 @@ export class AgentRuntime implements IAgentRuntime {
       await this.addParticipantsRoom(missingIdsInRoom, firstRoom.id);
     }
 
-    this.logger.success(`Success: Successfully connected world`);
+    this.logger.info(`Success: Successfully connected world`);
   }
 
   async ensureConnection({
@@ -1076,9 +1094,9 @@ export class AgentRuntime implements IAgentRuntime {
     metadata?: Record<string, any>;
   }) {
     if (!worldId && serverId) {
-      worldId = createUniqueUuid(this.agentId + serverId, serverId);
+      worldId = createUniqueUuid(this, serverId);
     }
-    const names = [name, userName].filter(Boolean);
+    const names = [name, userName].filter((n): n is string => Boolean(n));
     const entityMetadata = {
       [source!]: {
         id: userId,
@@ -1117,9 +1135,9 @@ export class AgentRuntime implements IAgentRuntime {
       } else {
         await this.adapter.updateEntity({
           id: entityId,
-          names: [...new Set([...(entity.names || []), ...names.filter(Boolean)])].filter(
-            Boolean
-          ) as string[],
+          names: [
+            ...new Set([...(entity.names || []), ...names.filter((n): n is string => Boolean(n))]),
+          ],
           metadata: {
             ...entity.metadata,
             [source!]: {
@@ -1278,7 +1296,8 @@ export class AgentRuntime implements IAgentRuntime {
       data: {},
       text: '',
     } as State;
-    const cachedState = skipCache ? emptyObj : (await this.stateCache.get(message.id)) || emptyObj;
+    const cachedState =
+      skipCache || !message.id ? emptyObj : (await this.stateCache.get(message.id)) || emptyObj;
 
     const existingProviderNames = cachedState.data.providers
       ? Object.keys(cachedState.data.providers)
@@ -1356,7 +1375,9 @@ export class AgentRuntime implements IAgentRuntime {
       },
       text: providersText,
     } as State;
-    this.stateCache.set(message.id, newState);
+    if (message.id) {
+      this.stateCache.set(message.id, newState);
+    }
     const finalProviderCount = Object.keys(currentProviderResults).length;
     const finalProviderNames = Object.keys(currentProviderResults);
     const finalValueKeys = Object.keys(newState.values);

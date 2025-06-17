@@ -41,13 +41,8 @@ export async function getUserServerRole(
     return Role.NONE;
   }
 
-  if (world.metadata.roles[entityId]) {
-    return world.metadata.roles[entityId] as Role;
-  }
-
-  // Also check original ID format
-  if (world.metadata.roles[entityId]) {
-    return world.metadata.roles[entityId] as Role;
+  if (world.metadata.roles[entityId as any]) {
+    return world.metadata.roles[entityId as any] as Role;
   }
 
   return Role.NONE;

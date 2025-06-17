@@ -22,14 +22,14 @@ import { ModelType, UUID, ContentType } from './types';
  * @param  tpl  Handlebars template source
  * @return      Transformed template
  */
-function upgradeDoubleToTriple(tpl) {
+function upgradeDoubleToTriple(tpl: string) {
   return tpl.replace(
     // ────────╮ negative-LB: not already "{{{"
     //          │   {{     ─ opening braces
     //          │    ╰──── negative-LA: not {, #, /, !, >
     //          ▼
     /(?<!{){{(?![{#\/!>])([\s\S]*?)}}/g,
-    (_match, inner) => {
+    (_match: string, inner: string) => {
       // keep the block keyword {{else}} unchanged
       if (inner.trim() === 'else') return `{{${inner}}}`;
       return `{{{${inner}}}}`;
@@ -113,7 +113,7 @@ export const composePromptFromState = ({
   const filteredKeys = stateKeys.filter((key) => !['text', 'values', 'data'].includes(key));
 
   // this flattens out key/values in text/values/data
-  const filteredState = filteredKeys.reduce((acc, key) => {
+  const filteredState = filteredKeys.reduce((acc: Record<string, any>, key) => {
     acc[key] = state[key];
     return acc;
   }, {});

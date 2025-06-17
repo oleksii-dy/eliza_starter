@@ -1,3 +1,4 @@
+// @ts-ignore - crypto-browserify doesn't have types
 import crypto from 'crypto-browserify';
 import { createUniqueUuid } from './entities';
 import { logger } from './logger';

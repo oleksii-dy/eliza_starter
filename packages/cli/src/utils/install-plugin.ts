@@ -39,6 +39,31 @@ function getCliDirectory(): string | null {
 }
 
 /**
+ * Check if a plugin exists in the workspace
+ * @param {string} packageName - The plugin package name
+ * @returns {boolean} - Whether the plugin exists in the workspace
+ */
+function isWorkspacePlugin(packageName: string): boolean {
+  // Check if it's an @elizaos scoped package
+  if (packageName.startsWith('@elizaos/')) {
+    // Try to find the plugin in the workspace
+    const pluginName = packageName.replace('@elizaos/', '');
+    const workspacePaths = [
+      path.resolve(process.cwd(), '..', pluginName),
+      path.resolve(process.cwd(), '..', '..', 'packages', pluginName),
+    ];
+
+    for (const workspacePath of workspacePaths) {
+      if (fs.existsSync(path.join(workspacePath, 'package.json'))) {
+        logger.debug(`Found workspace plugin at: ${workspacePath}`);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
  * Verifies if a plugin can be imported
  * @param {string} repository - The plugin repository/package name to import
  * @param {string} context - Description of the installation context for logging
@@ -112,6 +137,13 @@ async function attemptInstallation(
 /**
  * Asynchronously installs a plugin to a specified directory.
  *
+ * Cascading order:
+ * 1. Check if already in local node_modules (workspace)
+ * 2. Check plugin registry
+ * 3. Check if available in global node_modules (handled by load flow)
+ * 4. Try NPM installation
+ * 5. Fallback to GitHub at /elizaos-plugins/plugin-<name>
+ *
  * @param {string} packageName - The repository URL of the plugin to install.
  * @param {string} cwd - The current working directory where the plugin will be installed.
  * @param {string} versionSpecifier - The specific version of the plugin to install.
@@ -126,6 +158,35 @@ export async function installPlugin(
 ): Promise<boolean> {
   logger.debug(`Installing plugin: ${packageName}`);
 
+  // 1. Check if it's already available in local node_modules or workspace
+  if (isWorkspacePlugin(packageName)) {
+    logger.info(`Plugin ${packageName} is available in the workspace`);
+
+    // Try to load it to verify it's accessible
+    const module = await loadPluginModule(packageName);
+    if (module) {
+      logger.success(`Workspace plugin ${packageName} is available and accessible`);
+      return true;
+    } else {
+      logger.warn(
+        `Workspace plugin ${packageName} exists but could not be loaded. It may need to be built.`
+      );
+      logger.info(`Try running 'bun run build' in the plugin directory.`);
+      return false;
+    }
+  }
+
+  // Check if already available in local node_modules
+  const localNodeModulesPath = path.join(cwd, 'node_modules', packageName);
+  if (fs.existsSync(localNodeModulesPath)) {
+    logger.info(`Plugin ${packageName} already exists in local node_modules`);
+    const module = await loadPluginModule(packageName);
+    if (module) {
+      logger.success(`Plugin ${packageName} is already installed and working`);
+      return true;
+    }
+  }
+
   // Check if we're trying to install a plugin into its own directory
   const context = detectPluginContext(packageName);
   if (context.isLocalDevelopment) {
@@ -138,7 +199,7 @@ export async function installPlugin(
 
   const cliDir = getCliDirectory();
 
-  // Direct GitHub installation
+  // Direct GitHub installation (if specified explicitly)
   if (packageName.startsWith('github:')) {
     return await attemptInstallation(packageName, '', cwd, '', skipVerification);
   }
@@ -153,6 +214,7 @@ export async function installPlugin(
     return await attemptInstallation(spec, '', cwd, '', skipVerification);
   }
 
+  // 2. Check plugin registry
   const cache = await fetchPluginRegistry();
   const possible = normalizePluginName(packageName);
 
@@ -184,67 +246,92 @@ export async function installPlugin(
     }
   }
 
-  if (!key) {
-    logger.warn(
-      `Plugin ${packageName} not found in registry cache, attempting direct installation`
-    );
-    return await attemptInstallation(
-      packageName,
-      versionSpecifier || '',
-      cwd,
-      '',
-      skipVerification
-    );
-  }
+  if (key && cache) {
+    const info = cache.registry[key];
 
-  const info = cache!.registry[key];
+    // Extract GitHub fallback information if available
+    const githubFallback = info.git?.repo;
+    const githubVersion = info.git?.v1?.branch || info.git?.v1?.version || '';
 
-  // Extract GitHub fallback information if available
-  const githubFallback = info.git?.repo;
-  const githubVersion = info.git?.v1?.branch || info.git?.v1?.version || '';
+    // Try registry installation with NPM
+    if (info.npm?.repo) {
+      const ver = versionSpecifier || info.npm.v1 || '';
+      const result = await executeInstallationWithFallback(info.npm.repo, ver, cwd, githubFallback);
 
-  // Prefer npm installation with GitHub fallback if repository is available
-  if (info.npm?.repo) {
-    const ver = versionSpecifier || info.npm.v1 || '';
-    const result = await executeInstallationWithFallback(info.npm.repo, ver, cwd, githubFallback);
-
-    if (result.success) {
-      // Verify import if not a GitHub install
-      if (
-        !info.npm.repo.startsWith('github:') &&
-        !skipVerification &&
-        !process.env.ELIZA_SKIP_PLUGIN_VERIFY
-      ) {
-        const importSuccess = await verifyPluginImport(
-          result.installedIdentifier || info.npm.repo,
-          'from npm with potential GitHub fallback'
-        );
-        return importSuccess;
+      if (result.success) {
+        // Verify import if not a GitHub install
+        if (
+          !info.npm.repo.startsWith('github:') &&
+          !skipVerification &&
+          !process.env.ELIZA_SKIP_PLUGIN_VERIFY
+        ) {
+          const importSuccess = await verifyPluginImport(
+            result.installedIdentifier || info.npm.repo,
+            'from registry'
+          );
+          return importSuccess;
+        }
+        return true;
       }
-      return true;
-    }
-  } else if (info.npm?.v1) {
-    const result = await executeInstallationWithFallback(key, info.npm.v1, cwd, githubFallback);
+    } else if (info.npm?.v1) {
+      const result = await executeInstallationWithFallback(key, info.npm.v1, cwd, githubFallback);
 
-    if (result.success) {
-      // Verify import if not a GitHub install
-      if (!skipVerification && !process.env.ELIZA_SKIP_PLUGIN_VERIFY) {
-        const importSuccess = await verifyPluginImport(
-          result.installedIdentifier || key,
-          'from npm registry with potential GitHub fallback'
-        );
-        return importSuccess;
+      if (result.success) {
+        // Verify import if not a GitHub install
+        if (!skipVerification && !process.env.ELIZA_SKIP_PLUGIN_VERIFY) {
+          const importSuccess = await verifyPluginImport(
+            result.installedIdentifier || key,
+            'from registry'
+          );
+          return importSuccess;
+        }
+        return true;
       }
-      return true;
+    }
+
+    // Registry install failed, try GitHub fallback from registry
+    if (info.git?.repo && cliDir) {
+      const spec = `github:${info.git.repo}${githubVersion ? `#${githubVersion}` : ''}`;
+      return await attemptInstallation(
+        spec,
+        '',
+        cliDir,
+        'from registry GitHub fallback',
+        skipVerification
+      );
     }
   }
 
-  // If both npm approaches failed, try direct GitHub installation as final fallback
-  if (info.git?.repo && cliDir) {
-    const spec = `github:${info.git.repo}${githubVersion ? `#${githubVersion}` : ''}`;
-    return await attemptInstallation(spec, '', cliDir, 'in CLI directory', skipVerification);
+  // 4. Try direct NPM installation (if not in registry)
+  logger.debug(`Plugin ${packageName} not found in registry, attempting NPM installation`);
+  const npmResult = await attemptInstallation(
+    packageName,
+    versionSpecifier || '',
+    cwd,
+    'from NPM',
+    skipVerification
+  );
+
+  if (npmResult) {
+    return true;
   }
 
-  logger.error(`Failed to install plugin ${packageName}`);
-  return false;
+  // 5. Final fallback: GitHub at /elizaos-plugins/plugin-<name>
+  let pluginBaseName = packageName;
+  if (pluginBaseName.startsWith('@elizaos/')) {
+    pluginBaseName = pluginBaseName.replace('@elizaos/', '');
+  } else if (!pluginBaseName.startsWith('plugin-')) {
+    pluginBaseName = `plugin-${pluginBaseName}`;
+  }
+
+  const githubFallbackSpec = `github:elizaos-plugins/${pluginBaseName}`;
+  logger.debug(`Attempting final GitHub fallback: ${githubFallbackSpec}`);
+
+  return await attemptInstallation(
+    githubFallbackSpec,
+    '',
+    cwd,
+    'from GitHub fallback',
+    skipVerification
+  );
 }

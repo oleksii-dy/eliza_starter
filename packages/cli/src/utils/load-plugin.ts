@@ -76,10 +76,64 @@ async function tryImporting(
 }
 
 /**
- * Collection of import strategies
+ * Collection of import strategies in cascading order:
+ * 1. Local node_modules of current workspace
+ * 2. Plugin registry (handled in install flow)
+ * 3. Global node_modules
+ * 4. NPM (handled in install flow)
+ * 5. GitHub fallback (handled in install flow)
  */
 const importStrategies: ImportStrategy[] = [
-  // Try local development first - this is the most important for plugin testing
+  // 1. Check local node_modules first (includes workspace)
+  {
+    name: 'local node_modules',
+    tryImport: async (repository: string) => {
+      // First try with package.json entry point
+      const packageJson = await readPackageJson(repository);
+      if (packageJson) {
+        const entryPoint = packageJson.module || packageJson.main || DEFAULT_ENTRY_POINT;
+        const result = await tryImporting(
+          resolveNodeModulesPath(repository, entryPoint),
+          `local node_modules (${entryPoint})`,
+          repository
+        );
+        if (result) return result;
+      }
+
+      // Try default location
+      return tryImporting(resolveNodeModulesPath(repository), 'local node_modules', repository);
+    },
+  },
+  // Special case: workspace dependencies for monorepo
+  {
+    name: 'workspace dependency',
+    tryImport: async (repository: string) => {
+      if (repository.startsWith('@elizaos/plugin-')) {
+        // Try to find the plugin in the workspace
+        const pluginName = repository.replace('@elizaos/', '');
+        const workspacePath = path.resolve(process.cwd(), '..', pluginName, 'dist', 'index.js');
+        if (fs.existsSync(workspacePath)) {
+          return tryImporting(workspacePath, 'workspace dependency', repository);
+        }
+      }
+      return null;
+    },
+  },
+  // 3. Check global node_modules
+  {
+    name: 'global node_modules',
+    tryImport: async (repository: string) => {
+      const globalPath = path.resolve(getGlobalNodeModulesPath(), repository);
+      if (!fs.existsSync(path.dirname(globalPath))) {
+        logger.debug(
+          `Global node_modules directory not found at ${path.dirname(globalPath)}, skipping for ${repository}`
+        );
+        return null;
+      }
+      return tryImporting(globalPath, 'global node_modules', repository);
+    },
+  },
+  // Special case: local development plugins (for testing)
   {
     name: 'local development plugin',
     tryImport: async (repository: string) => {
@@ -110,68 +164,15 @@ const importStrategies: ImportStrategy[] = [
       return null;
     },
   },
-  // Try workspace dependencies (for monorepo packages)
-  {
-    name: 'workspace dependency',
-    tryImport: async (repository: string) => {
-      if (repository.startsWith('@elizaos/plugin-')) {
-        // Try to find the plugin in the workspace
-        const pluginName = repository.replace('@elizaos/', '');
-        const workspacePath = path.resolve(process.cwd(), '..', pluginName, 'dist', 'index.js');
-        if (fs.existsSync(workspacePath)) {
-          return tryImporting(workspacePath, 'workspace dependency', repository);
-        }
-      }
-      return null;
-    },
-  },
+  // Fallback: direct path import
   {
     name: 'direct path',
-    tryImport: async (repository: string) => tryImporting(repository, 'direct path', repository),
-  },
-  {
-    name: 'local node_modules',
-    tryImport: async (repository: string) =>
-      tryImporting(resolveNodeModulesPath(repository), 'local node_modules', repository),
-  },
-  {
-    name: 'global node_modules',
     tryImport: async (repository: string) => {
-      const globalPath = path.resolve(getGlobalNodeModulesPath(), repository);
-      if (!fs.existsSync(path.dirname(globalPath))) {
-        logger.debug(
-          `Global node_modules directory not found at ${path.dirname(globalPath)}, skipping for ${repository}`
-        );
-        return null;
+      // Only try if it looks like a path
+      if (repository.includes('/') || repository.includes('\\')) {
+        return tryImporting(repository, 'direct path', repository);
       }
-      return tryImporting(globalPath, 'global node_modules', repository);
-    },
-  },
-  {
-    name: 'package.json entry',
-    tryImport: async (repository: string) => {
-      const packageJson = await readPackageJson(repository);
-      if (!packageJson) return null;
-
-      const entryPoint = packageJson.module || packageJson.main || DEFAULT_ENTRY_POINT;
-      return tryImporting(
-        resolveNodeModulesPath(repository, entryPoint),
-        `package.json entry (${entryPoint})`,
-        repository
-      );
-    },
-  },
-  {
-    name: 'common dist pattern',
-    tryImport: async (repository: string) => {
-      const packageJson = await readPackageJson(repository);
-      if (packageJson?.main === DEFAULT_ENTRY_POINT) return null;
-
-      return tryImporting(
-        resolveNodeModulesPath(repository, DEFAULT_ENTRY_POINT),
-        'common dist pattern',
-        repository
-      );
+      return null;
     },
   },
 ];
@@ -196,17 +197,21 @@ function getStrategiesForPlugin(repository: string): ImportStrategy[] {
     // Third-party plugins: only try relevant strategies
     return importStrategies.filter(
       (strategy) =>
+        strategy.name === 'local node_modules' ||
         strategy.name === 'local development plugin' ||
-        strategy.name === 'package.json entry' ||
-        strategy.name === 'common dist pattern'
+        strategy.name === 'direct path'
     );
   }
 }
 
 /**
  * Attempts to load a plugin module using relevant strategies based on plugin type.
- * ElizaOS ecosystem plugins (@elizaos/*) use all strategies,
- * while third-party plugins use only relevant strategies to avoid noise.
+ * Loading order:
+ * 1. Local node_modules of current workspace
+ * 2. Plugin registry (handled by install flow)
+ * 3. Global node_modules
+ * 4. NPM (handled by install flow)
+ * 5. GitHub at /elizaos-plugins/plugin-<name> (handled by install flow)
  *
  * @param repository - The plugin repository/package name to load.
  * @returns The loaded plugin module or null if loading fails after all attempts.

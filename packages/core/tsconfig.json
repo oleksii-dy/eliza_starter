@@ -6,7 +6,9 @@
     "typeRoots": ["./node_modules/@types"],
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "strict": true
   },
-  "include": ["src/**/*", "../plugin-local-ai/src/types", "src/__tests__"]
+  "include": ["src/**/*", "../plugin-local-ai/src/types", "src/__tests__"],
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/__tests__/**/*"]
 }

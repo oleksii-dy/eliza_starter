@@ -257,14 +257,14 @@ const options = {
             typeof arg === 'string' ? arg : JSON.stringify(arg)
           );
           const message = messageParts.join(' ') || 'Error occurred';
-          method.apply(this, [errorContext, message]);
+          method.apply(this, [message, errorContext as any]);
         } else {
           // When arg1 is a regular object, use it as context
           const messageParts = rest.map((arg) =>
             typeof arg === 'string' ? arg : JSON.stringify(arg)
           );
           const message = messageParts.join(' ');
-          method.apply(this, [arg1, message]);
+          method.apply(this, [message, arg1 as any]);
         }
       } else {
         // When arg1 is a string, build context from rest args
@@ -280,7 +280,7 @@ const options = {
 
         Object.assign(context, ...jsonParts);
 
-        method.apply(this, [context, message]);
+        method.apply(this, [message, context as any]);
       }
     },
   },
