@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { execSync } from 'child_process';
+import { existsSync } from 'fs';
 import { mkdtemp, rm, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -8,20 +9,32 @@ import { TEST_TIMEOUTS } from '../test-timeouts';
 
 describe('ElizaOS Update Commands', () => {
   let testTmpDir: string;
+  let projectDir: string;
   let elizaosCmd: string;
   let originalCwd: string;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Store original working directory
     originalCwd = process.cwd();
 
     // Create temporary directory
     testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-update-'));
-    process.chdir(testTmpDir);
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun ${join(scriptDir, '../dist/index.js')}`;
+    const cliPath = join(scriptDir, '../dist/index.js');
+    
+    // Check if CLI is built, if not build it
+    if (!existsSync(cliPath)) {
+      console.log('CLI not built, building now...');
+      const cliPackageDir = join(scriptDir, '..');
+      execSync('bun run build', { 
+        cwd: cliPackageDir,
+        stdio: 'inherit'
+      });
+    }
+    
+    elizaosCmd = `bun ${cliPath}`;
   });
 
   afterEach(async () => {

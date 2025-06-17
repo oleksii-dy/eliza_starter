@@ -5,6 +5,7 @@ import { join } from 'path';
 import { afterAll, beforeAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TEST_TIMEOUTS } from '../test-timeouts';
 import { createTestProject, killProcessOnPort, safeChangeDirectory } from './test-utils';
+import { existsSync } from 'fs';
 
 describe('ElizaOS Dev Commands', () => {
   let testTmpDir: string;
@@ -25,6 +26,17 @@ describe('ElizaOS Dev Commands', () => {
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
     cliPath = join(scriptDir, '../dist/index.js');
+    
+    // Check if CLI is built, if not build it
+    if (!existsSync(cliPath)) {
+      console.log('CLI not built, building now...');
+      const cliPackageDir = join(scriptDir, '..');
+      execSync('bun run build', { 
+        cwd: cliPackageDir,
+        stdio: 'inherit'
+      });
+    }
+    
     elizaosCmd = `bun "${cliPath}"`;
 
     // Create one test project for all dev tests to share

@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { execSync } from 'child_process';
 import { mkdtemp, rm, writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { safeChangeDirectory } from './test-utils';
+import { existsSync } from 'fs';
 
 describe('ElizaOS Publish Commands', () => {
   let testTmpDir: string;
@@ -11,18 +12,31 @@ describe('ElizaOS Publish Commands', () => {
   let originalCwd: string;
   let originalPath: string;
 
-  beforeEach(async () => {
-    // Store original working directory and PATH
+  beforeAll(async () => {
+    // Store original working directory
     originalCwd = process.cwd();
-    originalPath = process.env.PATH || '';
 
     // Create temporary directory
     testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-publish-'));
-    process.chdir(testTmpDir);
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun "${join(scriptDir, '../dist/index.js')}"`;
+    const cliPath = join(scriptDir, '../dist/index.js');
+    
+    // Check if CLI is built, if not build it
+    if (!existsSync(cliPath)) {
+      console.log('CLI not built, building now...');
+      const cliPackageDir = join(scriptDir, '..');
+      execSync('bun run build', { 
+        cwd: cliPackageDir,
+        stdio: 'inherit'
+      });
+    }
+    
+    elizaosCmd = `bun "${cliPath}"`;
+
+    // Store original working directory and PATH
+    originalPath = process.env.PATH || '';
 
     // === COMPREHENSIVE CREDENTIAL MOCKING ===
     // Set all possible environment variables to avoid any prompts
@@ -334,6 +348,10 @@ esac`;
     if (process.platform !== 'win32') {
       execSync(`chmod +x ${join(mockBinDir, 'gh')}`);
     }
+  });
+
+  beforeEach(async () => {
+    process.chdir(testTmpDir);
   });
 
   afterEach(async () => {

@@ -4,7 +4,8 @@ import { mkdtemp, rm, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { TEST_TIMEOUTS } from '../test-timeouts';
-import { waitForServerReady, killProcessOnPort } from './test-utils';
+import { waitForServerReady, killProcessOnPort, createTestProject, safeChangeDirectory } from './test-utils';
+import { existsSync } from 'fs';
 
 describe('ElizaOS Agent Commands', () => {
   let serverProcess: any;
@@ -12,16 +13,34 @@ describe('ElizaOS Agent Commands', () => {
   let testServerPort: string;
   let testServerUrl: string;
   let elizaosCmd: string;
+  let defaultCharacter: string;
+  let originalCwd: string;
 
   beforeAll(async () => {
+    // Store original working directory
+    originalCwd = process.cwd();
+
+    // Create temporary directory for tests
+    testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-agent-'));
+    const scriptDir = join(__dirname, '..');
+    const cliPath = join(scriptDir, '../dist/index.js');
+    
+    // Check if CLI is built, if not build it
+    if (!existsSync(cliPath)) {
+      console.log('CLI not built, building now...');
+      const cliPackageDir = join(scriptDir, '..');
+      execSync('bun run build', { 
+        cwd: cliPackageDir,
+        stdio: 'inherit'
+      });
+    }
+    
+    elizaosCmd = `bun ${cliPath}`;
+    defaultCharacter = join(scriptDir, '../test-characters/ada.json');
+
     // Setup test environment
     testServerPort = '3000';
     testServerUrl = `http://localhost:${testServerPort}`;
-    testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-agent-'));
-
-    // Setup CLI command
-    const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun ${join(scriptDir, '../dist/index.js')}`;
 
     // Kill any existing processes on port 3000
     await killProcessOnPort(3000);
@@ -32,7 +51,6 @@ describe('ElizaOS Agent Commands', () => {
 
     // Start the ElizaOS server with a default character
     console.log(`[DEBUG] Starting ElizaOS server on port ${testServerPort}`);
-    const defaultCharacter = join(scriptDir, 'test-characters', 'ada.json');
 
     serverProcess = spawn(
       'bun',
