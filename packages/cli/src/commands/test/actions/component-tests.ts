@@ -6,7 +6,6 @@ import path from 'node:path';
 import { ComponentTestOptions, TestResult } from '../types';
 import { processFilterName } from '../utils/project-utils';
 import { runTypeCheck } from '@/src/utils/testing/tsc-validator';
-import { createVitestConfig } from '../utils/vitest-config';
 
 /**
  * Run component tests using Vitest
@@ -48,12 +47,6 @@ export async function runComponentTests(
 
   logger.info('Running component tests...');
 
-  // Create vitest config for proper isolation
-  const vitestConfig = createVitestConfig(
-    testPath || cwd,
-    isPlugin ? path.basename(cwd) : undefined
-  );
-
   return new Promise((resolve) => {
     // Build command arguments
     const args = ['run', 'vitest', 'run', '--passWithNoTests', '--reporter=default'];
@@ -67,23 +60,7 @@ export async function runComponentTests(
       }
     }
 
-    // Add test patterns as positional arguments (not --include)
-    if (vitestConfig.test?.include && vitestConfig.test.include.length > 0) {
-      // Add each include pattern as a positional argument
-      vitestConfig.test.include.forEach((pattern: string) => {
-        args.push(pattern);
-      });
-    }
-
-    // Add exclude patterns using --exclude option (one at a time)
-    if (vitestConfig.test?.exclude && vitestConfig.test.exclude.length > 0) {
-      // Filter out negation patterns (starting with !) as they're not valid for --exclude
-      const validExcludes = vitestConfig.test.exclude.filter((pattern: string) => !pattern.startsWith('!'));
-      validExcludes.forEach((pattern: string) => {
-        args.push('--exclude', pattern);
-      });
-    }
-
+    // Don't pass include/exclude patterns from config - vitest will use its own config file
     const targetPath = testPath ? path.resolve(process.cwd(), '..', testPath) : process.cwd();
     logger.info(`Executing: bun ${args.join(' ')} in ${targetPath}`);
 
