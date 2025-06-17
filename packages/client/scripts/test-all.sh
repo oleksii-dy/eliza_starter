@@ -54,18 +54,7 @@ else
   echo -e "${GREEN}✅ Vitest tests passed${NC}"
 fi
 
-# 3. ElizaOS Core Tests
-echo -e "\n${YELLOW}🤖 Running ElizaOS Core Tests...${NC}"
-cd ../.. && bun run test
-if [ $? -ne 0 ]; then
-  echo -e "${RED}❌ ElizaOS core tests failed${NC}"
-  FAILED=1
-else
-  echo -e "${GREEN}✅ ElizaOS core tests passed${NC}"
-fi
-cd packages/client
-
-# 4. Cypress Component Tests
+# 3. Cypress Component Tests
 echo -e "\n${YELLOW}🧩 Running Cypress Component Tests...${NC}"
 npx cypress run --component
 if [ $? -ne 0 ]; then
@@ -75,7 +64,7 @@ else
   echo -e "${GREEN}✅ Cypress component tests passed${NC}"
 fi
 
-# 5. Start Backend Server for E2E Tests
+# 4. Start Backend Server for E2E Tests
 echo -e "\n${YELLOW}🚀 Starting Backend Server for E2E Tests...${NC}"
 cd ../..
 bun run start > /tmp/elizaos-server.log 2>&1 &
@@ -97,7 +86,7 @@ for i in {1..30}; do
     sleep 1
 done
 
-# 6. Start Client Dev Server
+# 5. Start Client Dev Server
 echo -e "\n${YELLOW}🌐 Starting Client Dev Server...${NC}"
 npx vite --port 5173 > /tmp/elizaos-client.log 2>&1 &
 CLIENT_PID=$!
@@ -113,7 +102,7 @@ else
   echo -e "${GREEN}✅ Client server is ready${NC}"
 fi
 
-# 7. Cypress E2E Tests
+# 6. Cypress E2E Tests
 if [ $FAILED -eq 0 ]; then
   echo -e "\n${YELLOW}🌐 Running Cypress E2E Tests...${NC}"
   npx cypress run --e2e
@@ -133,7 +122,6 @@ if [ $FAILED -eq 0 ]; then
   echo -e "${GREEN}✅ All tests passed!${NC}"
   echo -e "${GREEN}   ✓ TypeScript checks${NC}"
   echo -e "${GREEN}   ✓ Unit tests${NC}"
-  echo -e "${GREEN}   ✓ ElizaOS core tests${NC}"
   echo -e "${GREEN}   ✓ Component tests${NC}"
   echo -e "${GREEN}   ✓ E2E tests${NC}"
   exit 0
