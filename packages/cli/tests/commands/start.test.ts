@@ -14,6 +14,7 @@ import {
 describe('ElizaOS Start Commands', () => {
   let testTmpDir: string;
   let elizaosCmd: string;
+  let cliPath: string;
   let originalCwd: string;
   let testServerPort: number;
   let processManager: TestProcessManager;
@@ -36,7 +37,8 @@ describe('ElizaOS Start Commands', () => {
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun ${join(scriptDir, '../dist/index.js')}`;
+    cliPath = join(scriptDir, '../dist/index.js');
+    elizaosCmd = `bun "${cliPath}"`;
 
     // Make PORT + model envs explicit.
     process.env.LOCAL_SMALL_MODEL = 'DeepHermes-3-Llama-3-3B-Preview-q4.gguf';
@@ -74,7 +76,7 @@ describe('ElizaOS Start Commands', () => {
 
     const serverProcess = processManager.spawn(
       'bun',
-      [join(__dirname, '..', '../dist/index.js'), 'start', ...args.split(' ')],
+      [cliPath, 'start', ...args.split(' ')],
       {
         env: {
           ...process.env,
@@ -183,7 +185,7 @@ describe('ElizaOS Start Commands', () => {
       const serverProcess = processManager.spawn(
         'bun',
         [
-          join(__dirname, '..', '../dist/index.js'),
+          cliPath,
           'start',
           '-p',
           newPort.toString(),
@@ -260,7 +262,7 @@ describe('ElizaOS Start Commands', () => {
 
       const serverProcess = processManager.spawn(
         'bun',
-        [join(__dirname, '..', '../dist/index.js'), 'start', '--configure', '--character', adaPath],
+        [cliPath, 'start', '--configure', '--character', adaPath],
         {
           env: {
             ...process.env,

@@ -10,6 +10,7 @@ describe('ElizaOS Dev Commands', () => {
   let testTmpDir: string;
   let projectDir: string;
   let elizaosCmd: string;
+  let cliPath: string;
   let originalCwd: string;
   let testServerPort: number;
   let runningProcesses: any[] = [];
@@ -23,7 +24,8 @@ describe('ElizaOS Dev Commands', () => {
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun ${join(scriptDir, '../dist/index.js')}`;
+    cliPath = join(scriptDir, '../dist/index.js');
+    elizaosCmd = `bun "${cliPath}"`;
 
     // Create one test project for all dev tests to share
     projectDir = join(testTmpDir, 'shared-test-project');
@@ -91,7 +93,7 @@ describe('ElizaOS Dev Commands', () => {
 
     const devProcess = spawn(
       'bun',
-      [join(__dirname, '..', '../dist/index.js'), 'dev', ...args.split(' ')],
+      [cliPath, 'dev', ...args.split(' ')],
       {
         env: {
           ...process.env,
@@ -144,7 +146,7 @@ describe('ElizaOS Dev Commands', () => {
       // Start dev process and capture output
       const devProcess = spawn(
         'bun',
-        [join(__dirname, '..', '../dist/index.js'), 'dev', '--port', testServerPort.toString()],
+        [cliPath, 'dev', '--port', testServerPort.toString()],
         {
           env: {
             ...process.env,
@@ -188,7 +190,7 @@ describe('ElizaOS Dev Commands', () => {
       // Start dev process
       const devProcess = spawn(
         'bun',
-        [join(__dirname, '..', '../dist/index.js'), 'dev', '--port', testServerPort.toString()],
+        [cliPath, 'dev', '--port', testServerPort.toString()],
         {
           env: {
             ...process.env,
@@ -257,7 +259,7 @@ describe('ElizaOS Dev Commands', () => {
       let output = '';
       const devProcess = spawn(
         'bun',
-        [join(__dirname, '..', '../dist/index.js'), 'dev', '--port', testServerPort.toString()],
+        [cliPath, 'dev', '--port', testServerPort.toString()],
         {
           env: {
             ...process.env,
