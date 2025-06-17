@@ -89,6 +89,96 @@ export function resolvePgliteDir(dir?: string, fallbackDir?: string): string {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Resolves the client assets path with robust cross-platform support
+ * @returns The path to the client assets directory
+ */
+function resolveClientPath(): string {
+  const logger = {
+    debug: console.debug,
+    info: console.info,
+    warn: console.warn,
+    error: console.error
+  };
+
+  let clientPath: string;
+  
+  try {
+    // Primary method: Use require.resolve to find the CLI package location
+    const cliPackagePath = require.resolve('@elizaos/cli/package.json');
+    clientPath = path.resolve(path.dirname(cliPackagePath), 'dist');
+    logger.debug(`[CLIENT_PATH] Resolved via require.resolve: ${clientPath}`);
+  } catch (resolveError) {
+    logger.warn(`[CLIENT_PATH] require.resolve failed:`, resolveError);
+    
+    // Fallback 1: Try relative path from server package
+    const fallbackPath = path.resolve(__dirname, '../../cli/dist');
+    
+    if (fs.existsSync(fallbackPath)) {
+      clientPath = fallbackPath;
+      logger.info(`[CLIENT_PATH] Using fallback path: ${clientPath}`);
+    } else {
+      // Fallback 2: Try alternative relative paths for different deployment scenarios
+      const alternativePaths = [
+        path.resolve(__dirname, '../../../cli/dist'), // For different directory structures
+        path.resolve(process.cwd(), 'packages/cli/dist'), // From monorepo root
+        path.resolve(process.cwd(), 'dist'), // If running from CLI directly
+        path.resolve(process.cwd(), 'node_modules/@elizaos/cli/dist'), // From installed package
+      ];
+      
+      let foundPath: string | null = null;
+      for (const altPath of alternativePaths) {
+        if (fs.existsSync(path.join(altPath, 'index.html'))) {
+          foundPath = altPath;
+          break;
+        }
+      }
+      
+      if (foundPath) {
+        clientPath = foundPath;
+        logger.info(`[CLIENT_PATH] Using alternative path: ${clientPath}`);
+      } else {
+        // Last resort: use the original fallback even if it doesn't exist
+        clientPath = fallbackPath;
+        logger.error(`[CLIENT_PATH] No valid client path found, using fallback: ${clientPath}`);
+      }
+    }
+  }
+  
+  // Normalize path for cross-platform compatibility
+  clientPath = path.normalize(clientPath);
+  
+  // Verify the client path and log detailed information
+  const indexPath = path.join(clientPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    logger.info(`[CLIENT_PATH] ✓ Found index.html at: ${indexPath}`);
+    
+    // Read and verify it's the production version
+    try {
+      const indexContent = fs.readFileSync(indexPath, 'utf8');
+      if (indexContent.includes('/src/main.tsx')) {
+        logger.error(`[CLIENT_PATH] ⚠️  WARNING: Serving development index.html! This will cause 404 errors for Vite assets.`);
+        logger.error(`[CLIENT_PATH] Expected production assets like /assets/*.js, but found development reference to /src/main.tsx`);
+      } else if (indexContent.includes('/assets/')) {
+        logger.info(`[CLIENT_PATH] ✓ Confirmed production index.html with bundled assets`);
+      }
+    } catch (readError) {
+      logger.warn(`[CLIENT_PATH] Could not verify index.html content:`, readError);
+    }
+  } else {
+    logger.error(`[CLIENT_PATH] ✗ index.html not found at: ${indexPath}`);
+    logger.error(`[CLIENT_PATH] Client directory contents:`);
+    try {
+      const contents = fs.readdirSync(clientPath);
+      contents.forEach(item => logger.error(`[CLIENT_PATH]   - ${item}`));
+    } catch (dirError) {
+      logger.error(`[CLIENT_PATH] Could not read directory: ${dirError}`);
+    }
+  }
+  
+  return clientPath;
+}
+
 const DEFAULT_SERVER_ID = '00000000-0000-0000-0000-000000000000' as UUID; // Single default server
 
 /**
@@ -571,7 +661,8 @@ export class AgentServer {
 
       // Serve static assets from the client dist path
       // Client files are built into the CLI package's dist directory
-      const clientPath = path.resolve(__dirname, '../../cli/dist');
+      const clientPath = resolveClientPath();
+      
       this.app.use(express.static(clientPath, staticOptions));
 
       // *** NEW: Mount the plugin route handler BEFORE static serving ***
@@ -645,9 +736,36 @@ export class AgentServer {
           }
 
           // For all other routes, serve the SPA's index.html
-          // Client files are built into the CLI package's dist directory
-          const cliDistPath = path.resolve(__dirname, '../../cli/dist');
-          res.sendFile(path.join(cliDistPath, 'index.html'));
+          // Use the same client path resolution logic
+          const cliDistPath = resolveClientPath();
+          
+          const indexHtmlPath = path.join(cliDistPath, 'index.html');
+          if (fs.existsSync(indexHtmlPath)) {
+            // Set content-type explicitly to ensure proper HTML serving
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            res.sendFile(path.resolve(indexHtmlPath));
+          } else {
+            logger.error(`[SPA_FALLBACK] index.html not found at ${indexHtmlPath}`);
+            logger.error(`[SPA_FALLBACK] Available files in ${cliDistPath}:`);
+            try {
+              const files = fs.readdirSync(cliDistPath);
+              files.forEach(file => logger.error(`[SPA_FALLBACK]   - ${file}`));
+            } catch (dirError) {
+              logger.error(`[SPA_FALLBACK] Could not read directory: ${dirError}`);
+            }
+            res.status(500).send(`
+              <!DOCTYPE html>
+              <html>
+                <head><title>ElizaOS - Client Not Found</title></head>
+                <body>
+                  <h1>Client Application Not Found</h1>
+                  <p>The ElizaOS client application could not be found.</p>
+                  <p>Expected location: <code>${indexHtmlPath}</code></p>
+                  <p>This might be a Windows path resolution issue. Please check the server logs for more details.</p>
+                </body>
+              </html>
+            `);
+          }
         }
       );
 
