@@ -1,5 +1,5 @@
 {
-  "name": "@elizaos/plugin-dummy-services",
+  "name": "@elizaos/plugin-lowlevel-testing",
   "version": "1.0.7",
   "type": "module",
   "main": "dist/index.js",
@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/elizaos-plugins/plugin-dummy-services.git"
+    "url": "git+https://github.com/elizaos-plugins/plugin-lowlevel-testing.git"
   },
   "exports": {
     "./package.json": "./package.json",
@@ -24,6 +24,8 @@
   "dependencies": {
     "@elizaos/core": "workspace:*",
     "@elizaos/plugin-anthropic": "1.0.3",
+    "@elizaos/plugin-dummy-services": "workspace:*",
+    "@elizaos/plugin-sql": "workspace:*",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
@@ -36,6 +38,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "elizaos test",
+    "test:unit": "vitest run",
     "lint": "prettier --write ./src",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
     "format": "prettier --write ./src",
