@@ -7,6 +7,31 @@
 process.env.ELIZA_TEST_MODE = 'true';
 process.env.NODE_ENV = 'test';
 
+// ---------------------------------------------------------------------------
+// Ensure the CLI bundle is built *once* before any integration tests start.
+// Individual test files attempt to build on-demand, but running in parallel
+// threads means multiple tests can simultaneously see a missing `dist/` and
+// try to execute the CLI before another thread finishes building, causing a
+// "Module not found" failure.  By performing a single, blocking build here we
+// guarantee the artifact exists for the entire suite and eliminate the race.
+// ---------------------------------------------------------------------------
+
+import { existsSync } from 'node:fs';
+import { execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Path to CLI package root: tests/setup.ts -> tests -> .. => package root
+const cliPackageDir = path.resolve(__dirname, '..');
+const cliDistEntry = path.join(cliPackageDir, 'dist', 'index.js');
+
+if (!existsSync(cliDistEntry)) {
+  console.log('[TEST SETUP] CLI dist bundle not found. Building once for all tests...');
+  execSync('bun run build', { cwd: cliPackageDir, stdio: 'inherit' });
+  console.log('[TEST SETUP] CLI build complete.');
+}
+
 // Store original handlers
 const originalHandlers = {
   unhandledRejection: process.listeners('unhandledRejection'),
