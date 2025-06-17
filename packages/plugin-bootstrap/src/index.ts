@@ -34,13 +34,11 @@ import {
 import { v4 } from 'uuid';
 
 import * as actions from './actions/index.ts';
-import * as evaluators from './evaluators/index.ts';
 import * as providers from './providers/index.ts';
 
 import { TaskService } from './services/task.ts';
 
 export * from './actions/index.ts';
-export * from './evaluators/index.ts';
 export * from './providers/index.ts';
 
 /**
@@ -1341,24 +1339,17 @@ export const bootstrapPlugin: Plugin = {
     actions.noneAction,
     actions.muteRoomAction,
     actions.unmuteRoomAction,
-    actions.sendMessageAction,
-    actions.updateEntityAction,
     actions.choiceAction,
-    actions.updateRoleAction,
     actions.updateSettingsAction,
   ],
   // this is jank, these events are not valid
   events: events as any as PluginEvents,
-  evaluators: [evaluators.reflectionEvaluator],
   providers: [
     providers.evaluatorsProvider,
     providers.anxietyProvider,
     providers.timeProvider,
-    // providers.entitiesProvider, // TODO: File missing
-    // providers.relationshipsProvider, // TODO: File missing
     providers.choiceProvider,
     providers.factsProvider,
-    // providers.roleProvider, // TODO: File missing
     providers.settingsProvider,
     providers.capabilitiesProvider,
     providers.attachmentsProvider,
