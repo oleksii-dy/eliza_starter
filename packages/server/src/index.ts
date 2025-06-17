@@ -98,11 +98,11 @@ function resolveClientPath(): string {
     debug: console.debug,
     info: console.info,
     warn: console.warn,
-    error: console.error
+    error: console.error,
   };
 
   let clientPath: string;
-  
+
   try {
     // Primary method: Use require.resolve to find the CLI package location
     const cliPackagePath = require.resolve('@elizaos/cli/package.json');
@@ -110,10 +110,10 @@ function resolveClientPath(): string {
     logger.debug(`[CLIENT_PATH] Resolved via require.resolve: ${clientPath}`);
   } catch (resolveError) {
     logger.warn(`[CLIENT_PATH] require.resolve failed:`, resolveError);
-    
+
     // Fallback 1: Try relative path from server package
     const fallbackPath = path.resolve(__dirname, '../../cli/dist');
-    
+
     if (fs.existsSync(fallbackPath)) {
       clientPath = fallbackPath;
       logger.info(`[CLIENT_PATH] Using fallback path: ${clientPath}`);
@@ -125,7 +125,7 @@ function resolveClientPath(): string {
         path.resolve(process.cwd(), 'dist'), // If running from CLI directly
         path.resolve(process.cwd(), 'node_modules/@elizaos/cli/dist'), // From installed package
       ];
-      
+
       let foundPath: string | null = null;
       for (const altPath of alternativePaths) {
         if (fs.existsSync(path.join(altPath, 'index.html'))) {
@@ -133,7 +133,7 @@ function resolveClientPath(): string {
           break;
         }
       }
-      
+
       if (foundPath) {
         clientPath = foundPath;
         logger.info(`[CLIENT_PATH] Using alternative path: ${clientPath}`);
@@ -144,21 +144,25 @@ function resolveClientPath(): string {
       }
     }
   }
-  
+
   // Normalize path for cross-platform compatibility
   clientPath = path.normalize(clientPath);
-  
+
   // Verify the client path and log detailed information
   const indexPath = path.join(clientPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     logger.info(`[CLIENT_PATH] ✓ Found index.html at: ${indexPath}`);
-    
+
     // Read and verify it's the production version
     try {
       const indexContent = fs.readFileSync(indexPath, 'utf8');
       if (indexContent.includes('/src/main.tsx')) {
-        logger.error(`[CLIENT_PATH] ⚠️  WARNING: Serving development index.html! This will cause 404 errors for Vite assets.`);
-        logger.error(`[CLIENT_PATH] Expected production assets like /assets/*.js, but found development reference to /src/main.tsx`);
+        logger.error(
+          `[CLIENT_PATH] ⚠️  WARNING: Serving development index.html! This will cause 404 errors for Vite assets.`
+        );
+        logger.error(
+          `[CLIENT_PATH] Expected production assets like /assets/*.js, but found development reference to /src/main.tsx`
+        );
       } else if (indexContent.includes('/assets/')) {
         logger.info(`[CLIENT_PATH] ✓ Confirmed production index.html with bundled assets`);
       }
@@ -170,12 +174,12 @@ function resolveClientPath(): string {
     logger.error(`[CLIENT_PATH] Client directory contents:`);
     try {
       const contents = fs.readdirSync(clientPath);
-      contents.forEach(item => logger.error(`[CLIENT_PATH]   - ${item}`));
+      contents.forEach((item) => logger.error(`[CLIENT_PATH]   - ${item}`));
     } catch (dirError) {
       logger.error(`[CLIENT_PATH] Could not read directory: ${dirError}`);
     }
   }
-  
+
   return clientPath;
 }
 
@@ -662,7 +666,7 @@ export class AgentServer {
       // Serve static assets from the client dist path
       // Client files are built into the CLI package's dist directory
       const clientPath = resolveClientPath();
-      
+
       this.app.use(express.static(clientPath, staticOptions));
 
       // *** NEW: Mount the plugin route handler BEFORE static serving ***
@@ -738,7 +742,7 @@ export class AgentServer {
           // For all other routes, serve the SPA's index.html
           // Use the same client path resolution logic
           const cliDistPath = resolveClientPath();
-          
+
           const indexHtmlPath = path.join(cliDistPath, 'index.html');
           if (fs.existsSync(indexHtmlPath)) {
             // Set content-type explicitly to ensure proper HTML serving
@@ -749,7 +753,7 @@ export class AgentServer {
             logger.error(`[SPA_FALLBACK] Available files in ${cliDistPath}:`);
             try {
               const files = fs.readdirSync(cliDistPath);
-              files.forEach(file => logger.error(`[SPA_FALLBACK]   - ${file}`));
+              files.forEach((file) => logger.error(`[SPA_FALLBACK]   - ${file}`));
             } catch (dirError) {
               logger.error(`[SPA_FALLBACK] Could not read directory: ${dirError}`);
             }

@@ -1,6 +1,7 @@
 import { logger } from '@elizaos/core';
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import {
   detectPluginContext,
   ensurePluginBuilt,
@@ -66,7 +67,9 @@ async function tryImporting(
   repository: string
 ): Promise<any | null> {
   try {
-    const module = await import(importPath);
+    // Convert absolute paths to file URLs for cross-platform compatibility
+    const importUrl = path.isAbsolute(importPath) ? pathToFileURL(importPath).href : importPath;
+    const module = await import(importUrl);
     logger.success(`Successfully loaded plugin '${repository}' using ${strategy} (${importPath})`);
     return module;
   } catch (error) {
