@@ -11,7 +11,7 @@ import './commands';
 import '@testing-library/cypress/add-commands';
 
 // Import styles
-import '../../../frontend/index.css';
+import '../../src/frontend/index.css';
 
 // Add custom TypeScript types
 declare global {

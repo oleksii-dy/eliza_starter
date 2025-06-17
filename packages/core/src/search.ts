@@ -1286,7 +1286,7 @@ export class BM25 {
       } else {
         // Intersect: Keep only documents present in both sets
         candidateDocs = new Set(
-          Array.from(candidateDocs).filter((docIdx) => currentTermDocs.has(docIdx))
+          [...candidateDocs].filter((docIdx: number) => currentTermDocs.has(docIdx))
         );
       }
 

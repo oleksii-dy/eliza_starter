@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
-import '../../../frontend/index.css';
+import '../../src/frontend/index.css';
 
 // Define the interface for time response
 interface TimeResponse {

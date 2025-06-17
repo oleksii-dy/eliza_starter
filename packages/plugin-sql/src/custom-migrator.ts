@@ -1137,9 +1137,7 @@ export class ExtensionManager {
   async installRequiredExtensions(requiredExtensions: string[]): Promise<void> {
     for (const extension of requiredExtensions) {
       try {
-        await this.db.execute(
-          sql.raw(`CREATE EXTENSION IF NOT EXISTS "${extension}"`),
-        );
+        await this.db.execute(sql.raw(`CREATE EXTENSION IF NOT EXISTS "${extension}"`));
       } catch (error) {
         logger.warn(`Could not install extension ${extension}:`, {
           message: (error as Error).message,
@@ -1197,6 +1195,9 @@ export async function runPluginMigrations(
   schema: any
 ): Promise<void> {
   logger.debug(`[CUSTOM MIGRATOR] Starting migration for plugin: ${pluginName}`);
+  logger.debug(`[CUSTOM MIGRATOR] Schema object keys: ${Object.keys(schema || {}).join(', ')}`);
+  // Don't JSON.stringify Drizzle objects as they have circular references
+  // logger.debug(`[CUSTOM MIGRATOR] Schema object: ${JSON.stringify(schema, null, 2)}`);
 
   const namespaceManager = new PluginNamespaceManager(db);
   const introspector = new DrizzleSchemaIntrospector();

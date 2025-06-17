@@ -251,12 +251,15 @@ const options = {
 
       if (typeof arg1 === 'object') {
         if (arg1 instanceof Error) {
-          method.apply(this, [
-            {
-              error: formatError(arg1),
-            },
-          ]);
+          // When arg1 is an Error, pass the formatted error as the context object
+          const errorContext = { error: formatError(arg1) };
+          const messageParts = rest.map((arg) =>
+            typeof arg === 'string' ? arg : JSON.stringify(arg)
+          );
+          const message = messageParts.join(' ') || 'Error occurred';
+          method.apply(this, [errorContext, message]);
         } else {
+          // When arg1 is a regular object, use it as context
           const messageParts = rest.map((arg) =>
             typeof arg === 'string' ? arg : JSON.stringify(arg)
           );
@@ -264,7 +267,8 @@ const options = {
           method.apply(this, [arg1, message]);
         }
       } else {
-        const context = {};
+        // When arg1 is a string, build context from rest args
+        const context: Record<string, unknown> = {};
         const messageParts = [arg1, ...rest].map((arg) => {
           if (arg instanceof Error) {
             return formatError(arg);
@@ -312,7 +316,7 @@ interface LoggerWithClear extends pino.Logger {
 if (typeof process !== 'undefined') {
   // Create the destination with in-memory logging
   // Instead of async initialization, initialize synchronously to avoid race conditions
-  let stream = null;
+  let stream: DestinationStream | null = null;
 
   if (!raw) {
     // If we're in a Node.js environment where require is available, use require for pino-pretty
@@ -323,17 +327,19 @@ if (typeof process !== 'undefined') {
     } catch (e) {
       // Fall back to async loading if synchronous loading fails
       createStream().then((prettyStream) => {
-        const destination = new InMemoryDestination(prettyStream);
-        logger = pino(options, destination);
-        (logger as unknown)[Symbol.for('pino-destination')] = destination;
+        if (prettyStream) {
+          const destination = new InMemoryDestination(prettyStream);
+          logger = pino(options, destination);
+          (logger as any)[Symbol.for('pino-destination')] = destination;
 
-        // Add clear method to logger
-        (logger as unknown as LoggerWithClear).clear = () => {
-          const destination = (logger as unknown)[Symbol.for('pino-destination')];
-          if (destination instanceof InMemoryDestination) {
-            destination.clear();
-          }
-        };
+          // Add clear method to logger
+          (logger as any as LoggerWithClear).clear = () => {
+            const dest = (logger as any)[Symbol.for('pino-destination')];
+            if (dest instanceof InMemoryDestination) {
+              dest.clear();
+            }
+          };
+        }
       });
     }
   }
@@ -342,13 +348,13 @@ if (typeof process !== 'undefined') {
   if (stream !== null || raw) {
     const destination = new InMemoryDestination(stream);
     logger = pino(options, destination);
-    (logger as unknown)[Symbol.for('pino-destination')] = destination;
+    (logger as any)[Symbol.for('pino-destination')] = destination;
 
     // Add clear method to logger
-    (logger as unknown as LoggerWithClear).clear = () => {
-      const destination = (logger as unknown)[Symbol.for('pino-destination')];
-      if (destination instanceof InMemoryDestination) {
-        destination.clear();
+    (logger as any as LoggerWithClear).clear = () => {
+      const dest = (logger as any)[Symbol.for('pino-destination')];
+      if (dest instanceof InMemoryDestination) {
+        dest.clear();
       }
     };
   }

@@ -98,18 +98,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
 
   /**
    * Run migrations for a plugin's schema
-   * @param migrationsPaths Optional array of paths to migration folders (not used in this implementation)
-   */
-  public async runMigrations(migrationsPaths?: string[]): Promise<void> {
-    // This base implementation doesn't use migration paths
-    // Plugin-specific migrations are handled by the runtime calling runPluginMigrations
-    logger.warn('runMigrations called on base adapter - this should be handled by the runtime');
-    return Promise.resolve();
-  }
-
-  /**
-   * Run plugin-specific schema migrations
-   * @param schema The plugin's schema object
+   * @param schema The schema to migrate
    * @param pluginName The name of the plugin
    */
   public async runPluginMigrations(schema: any, pluginName: string): Promise<void> {
@@ -1532,14 +1521,11 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    * @param value - The value to sanitize
    * @returns The sanitized value
    */
-  private sanitizeJsonObject(
-    value: unknown,
-    seen: WeakSet<object> = new WeakSet()
-  ): unknown {
+  private sanitizeJsonObject(value: unknown, seen: WeakSet<object> = new WeakSet()): unknown {
     if (value === null || value === undefined) {
       return value;
     }
-  
+
     if (typeof value === 'string') {
       // Handle multiple cases that can cause PostgreSQL/PgLite JSON parsing errors:
       // 1. Remove null bytes (U+0000) which are not allowed in PostgreSQL text fields
@@ -1550,14 +1536,14 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         .replace(/\\(?!["\\/bfnrtu])/g, '\\\\') // Escape single backslashes not part of valid escape sequences
         .replace(/\\u(?![0-9a-fA-F]{4})/g, '\\\\u'); // Fix malformed Unicode escape sequences
     }
-  
+
     if (typeof value === 'object') {
       if (seen.has(value as object)) {
         return null;
       } else {
         seen.add(value as object);
       }
-  
+
       if (Array.isArray(value)) {
         return value.map((item) => this.sanitizeJsonObject(item, seen));
       } else {
@@ -1573,7 +1559,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         return result;
       }
     }
-  
+
     return value;
   }
 
