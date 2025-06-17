@@ -56,7 +56,7 @@ fi
 
 # 3. ElizaOS Core Tests
 echo -e "\n${YELLOW}🤖 Running ElizaOS Core Tests...${NC}"
-cd ../.. && bun test
+cd ../.. && bun run test
 if [ $? -ne 0 ]; then
   echo -e "${RED}❌ ElizaOS core tests failed${NC}"
   FAILED=1
