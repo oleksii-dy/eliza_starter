@@ -101,7 +101,11 @@ describe('Choice Provider', () => {
     ];
     mockRuntime.getTasks = vi.fn().mockResolvedValue(tasks);
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await choiceProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
@@ -128,7 +132,11 @@ describe('Choice Provider', () => {
   it('should handle no pending tasks gracefully', async () => {
     mockRuntime.getTasks = vi.fn().mockResolvedValue([]); // No tasks
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await choiceProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
@@ -148,7 +156,11 @@ describe('Choice Provider', () => {
     ];
     mockRuntime.getTasks = vi.fn().mockResolvedValue(tasks);
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await choiceProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
@@ -159,7 +171,11 @@ describe('Choice Provider', () => {
   it('should handle errors from getTasks gracefully', async () => {
     mockRuntime.getTasks = vi.fn().mockRejectedValue(new Error('Task service error'));
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await choiceProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
@@ -311,7 +327,11 @@ describe('Providers Provider', () => {
   });
 
   it('should list all dynamic providers', async () => {
-    const result = await providersProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await providersProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.text).toContain('TEST_PROVIDER_1');
@@ -331,7 +351,11 @@ describe('Providers Provider', () => {
     // Mock empty providers
     mockRuntime.providers = [];
 
-    const result = await providersProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await providersProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.text).toContain('No dynamic providers are currently available');
@@ -477,8 +501,21 @@ describe('Settings Provider', () => {
     // This is important because vi.mock is module-level
     const coreMocks = vi.mocked(await import('@elizaos/core'));
     coreMocks.getWorldSettings.mockClear().mockResolvedValue({
-      setting1: { name: 'setting1', value: 'value1', description: 'Description 1', usageDescription: 'Usage for setting1', required: false },
-      setting2: { name: 'setting2', value: 'value2', description: 'Description 2', usageDescription: 'Usage for setting2', required: false, secret: true },
+      setting1: {
+        name: 'setting1',
+        value: 'value1',
+        description: 'Description 1',
+        usageDescription: 'Usage for setting1',
+        required: false,
+      },
+      setting2: {
+        name: 'setting2',
+        value: 'value2',
+        description: 'Description 2',
+        usageDescription: 'Usage for setting2',
+        required: false,
+        secret: true,
+      },
     });
     coreMocks.findWorldsForOwner.mockClear().mockResolvedValue([
       {
@@ -519,7 +556,13 @@ describe('Settings Provider', () => {
     coreMocks.getWorldSettings.mockImplementation(async (rt, sId) => {
       if (sId === ('server-onboarding-test' as UUID)) {
         return {
-          setting1: { name: 'setting1', value: 'value1', description: 'Onboarding Desc 1', usageDescription: 'Usage for setting1', required: false },
+          setting1: {
+            name: 'setting1',
+            value: 'value1',
+            description: 'Onboarding Desc 1',
+            usageDescription: 'Usage for setting1',
+            required: false,
+          },
           setting2: {
             name: 'setting2',
             value: 'value2',
@@ -1018,7 +1061,11 @@ describe('Attachments Provider', () => {
 
     // The provider doesn't catch errors, so they propagate up
     await expect(
-      attachmentsProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State)
+      attachmentsProvider.get(
+        mockRuntime as IAgentRuntime,
+        mockMessage as Memory,
+        mockState as State
+      )
     ).rejects.toThrow('Database error');
   });
 });
