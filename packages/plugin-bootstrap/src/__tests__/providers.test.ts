@@ -58,11 +58,13 @@ vi.mock('@elizaos/core', async (importOriginal) => {
 describe('Choice Provider', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
+  let mockState: Partial<State>;
 
   beforeEach(() => {
     const setup = setupActionTest({}); // No specific state overrides needed for these tests
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
+    mockState = setup.mockState;
 
     // Default mock for getTasks
     mockRuntime.getTasks = vi.fn().mockResolvedValue([]);
@@ -99,12 +101,12 @@ describe('Choice Provider', () => {
     ];
     mockRuntime.getTasks = vi.fn().mockResolvedValue(tasks);
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory);
+    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
-    expect(result.data.tasks).toHaveLength(2);
-    expect(result.data.tasks[0].name).toBe('Approve Post');
+    expect(result.data!.tasks).toHaveLength(2);
+    expect(result.data!.tasks[0].name).toBe('Approve Post');
     expect(result.text).toContain('Pending Tasks');
     expect(result.text).toContain('1. **Approve Post**');
     expect(result.text).toContain('A blog post is awaiting approval.');
@@ -126,11 +128,11 @@ describe('Choice Provider', () => {
   it('should handle no pending tasks gracefully', async () => {
     mockRuntime.getTasks = vi.fn().mockResolvedValue([]); // No tasks
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory);
+    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
-    expect(result.data.tasks).toHaveLength(0);
+    expect(result.data!.tasks).toHaveLength(0);
     expect(result.text).toContain('No pending choices for the moment.');
   });
 
@@ -146,22 +148,22 @@ describe('Choice Provider', () => {
     ];
     mockRuntime.getTasks = vi.fn().mockResolvedValue(tasks);
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory);
+    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
-    expect(result.data.tasks).toHaveLength(0); // Tasks without options are filtered out
+    expect(result.data!.tasks).toHaveLength(0); // Tasks without options are filtered out
     expect(result.text).toContain('No pending choices for the moment.');
   });
 
   it('should handle errors from getTasks gracefully', async () => {
     mockRuntime.getTasks = vi.fn().mockRejectedValue(new Error('Task service error'));
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory);
+    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
-    expect(result.data.tasks).toHaveLength(0);
+    expect(result.data!.tasks).toHaveLength(0);
     expect(result.text).toContain('There was an error retrieving pending tasks with options.');
     expect(logger.error).toHaveBeenCalledWith('Error in options provider:', expect.any(Error));
   });
@@ -284,6 +286,7 @@ describe('Facts Provider', () => {
 describe('Providers Provider', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
+  let mockState: Partial<State>;
 
   beforeEach(() => {
     // Use standardized mock factories
@@ -300,6 +303,7 @@ describe('Providers Provider', () => {
       ],
     });
     mockMessage = createMockMemory();
+    mockState = createMockState();
   });
 
   afterEach(() => {
@@ -307,7 +311,7 @@ describe('Providers Provider', () => {
   });
 
   it('should list all dynamic providers', async () => {
-    const result = await providersProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory);
+    const result = await providersProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
 
     expect(result).toBeDefined();
     expect(result.text).toContain('TEST_PROVIDER_1');
@@ -318,16 +322,16 @@ describe('Providers Provider', () => {
 
     // Check data format
     expect(result.data).toBeDefined();
-    expect(result.data.dynamicProviders).toHaveLength(2);
-    expect(result.data.dynamicProviders[0].name).toBe('TEST_PROVIDER_1');
-    expect(result.data.dynamicProviders[1].name).toBe('TEST_PROVIDER_2');
+    expect(result.data!.dynamicProviders).toHaveLength(2);
+    expect(result.data!.dynamicProviders[0].name).toBe('TEST_PROVIDER_1');
+    expect(result.data!.dynamicProviders[1].name).toBe('TEST_PROVIDER_2');
   });
 
   it('should handle empty provider list gracefully', async () => {
     // Mock empty providers
     mockRuntime.providers = [];
 
-    const result = await providersProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory);
+    const result = await providersProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
 
     expect(result).toBeDefined();
     expect(result.text).toContain('No dynamic providers are currently available');

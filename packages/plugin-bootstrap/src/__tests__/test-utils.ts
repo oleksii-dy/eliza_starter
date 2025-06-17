@@ -83,7 +83,6 @@ export function createMockRuntime(overrides: Partial<MockRuntime> = {}): MockRun
     createAgent: vi.fn().mockResolvedValue(true),
     updateAgent: vi.fn().mockResolvedValue(true),
     deleteAgent: vi.fn().mockResolvedValue(true),
-    ensureAgentExists: vi.fn().mockResolvedValue(undefined),
     ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
     getEntityById: vi.fn().mockResolvedValue(null),
     getEntitiesForRoom: vi.fn().mockResolvedValue([]),

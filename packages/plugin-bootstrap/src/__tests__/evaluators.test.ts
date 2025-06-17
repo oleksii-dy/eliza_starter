@@ -21,7 +21,7 @@ import {
 
 // Mock the getEntityDetails function
 vi.mock('@elizaos/core', async (importOriginal) => {
-  const original = await importOriginal();
+  const original = await importOriginal() as typeof import('@elizaos/core');
   return {
     ...original,
     getEntityDetails: vi.fn().mockImplementation(() => {
@@ -72,7 +72,7 @@ describe('Reflection Evaluator', () => {
     mockMessage.content = { ...mockMessage.content, channelType: ChannelType.GROUP };
     // Mock getRelationships and getMemories as they are called before composePrompt
     mockRuntime.getRelationships.mockResolvedValue([]);
-    mockRuntime.getMemories.mockResolvedValue([]); // For knownFacts
+    (mockRuntime.getMemories as ReturnType<typeof vi.fn>).mockResolvedValue([]); // For knownFacts
 
     // Assume mockRuntime.character.templates.reflectionTemplate is set, causing the specific template string
     if (!mockRuntime.character) mockRuntime.character = {} as any;
@@ -148,7 +148,7 @@ describe('Reflection Evaluator', () => {
 
     // Arrange
     mockRuntime.getRelationships.mockResolvedValue([]); // Ensure getRelationships returns an array
-    mockRuntime.getMemories.mockResolvedValue([]); // Ensure getMemories for knownFacts returns an array
+    (mockRuntime.getMemories as ReturnType<typeof vi.fn>).mockResolvedValue([]); // Ensure getMemories for knownFacts returns an array
 
     mockRuntime.useModel.mockResolvedValueOnce({
       thought: 'I am doing well in this conversation.',
@@ -281,7 +281,7 @@ describe('Reflection Evaluator', () => {
     mockRuntime.getCache.mockResolvedValueOnce('previous-message-id');
 
     // Mock the getMemories method to return a list of messages
-    mockRuntime.getMemories.mockResolvedValueOnce([
+    (mockRuntime.getMemories as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
       { id: 'previous-message-id' },
       { id: 'message-1' },
       { id: 'message-2' },
@@ -357,7 +357,7 @@ describe('Multiple Prompt Evaluator Factory', () => {
 
           for (const prompt of config.prompts) {
             try {
-              const composedPrompt = runtime.composePrompt({
+              const composedPrompt = (runtime as any).composePrompt({
                 template: prompt.template,
                 state,
               });
@@ -485,7 +485,7 @@ describe('Multiple Prompt Evaluator Factory', () => {
 
           for (const prompt of config.prompts) {
             try {
-              const composedPrompt = runtime.composePrompt({
+              const composedPrompt = (runtime as any).composePrompt({
                 template: prompt.template,
                 state,
               });
