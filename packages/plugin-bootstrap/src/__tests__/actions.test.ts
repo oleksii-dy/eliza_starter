@@ -6,17 +6,9 @@ import {
   unmuteRoomAction,
   unfollowRoomAction,
   replyAction,
-  choiceAction,
-  sendMessageAction,
-  updateEntityAction,
   noneAction,
 } from '../actions';
-import {
-  createMockRuntime,
-  createMockMemory,
-  createMockState,
-  setupActionTest,
-} from './test-utils';
+import { createMockMemory, setupActionTest } from './test-utils';
 import type { MockRuntime } from './test-utils';
 import {
   type IAgentRuntime,
@@ -24,9 +16,6 @@ import {
   type State,
   type HandlerCallback,
   ModelType,
-  ChannelType,
-  Role,
-  getUserServerRole,
   logger,
 } from '@elizaos/core';
 

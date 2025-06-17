@@ -1,27 +1,11 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import {
-  Evaluator,
-  IAgentRuntime,
-  logger,
-  ModelType,
-  UUID,
-  Memory,
-  State,
-  Content,
-  ChannelType,
-} from '@elizaos/core';
+import { IAgentRuntime, logger, ModelType, Memory, State, ChannelType } from '@elizaos/core';
 import * as entityUtils from '@elizaos/core';
-import {
-  createMockMemory,
-  createMockRuntime,
-  createMockState,
-  MockRuntime,
-  setupActionTest,
-} from './test-utils';
+import { MockRuntime, setupActionTest } from './test-utils';
 
 // Mock the getEntityDetails function
 vi.mock('@elizaos/core', async (importOriginal) => {
-  const original = await importOriginal() as typeof import('@elizaos/core');
+  const original = (await importOriginal()) as typeof import('@elizaos/core');
   return {
     ...original,
     getEntityDetails: vi.fn().mockImplementation(() => {

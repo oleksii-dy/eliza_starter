@@ -34,8 +34,21 @@ vi.mock('@elizaos/core', async (importOriginal) => {
     ...actual,
     createUniqueUuid: vi.fn(),
     getWorldSettings: vi.fn().mockResolvedValue({
-      setting1: { name: 'setting1', value: 'value1', description: 'Description 1' },
-      setting2: { name: 'setting2', value: 'value2', description: 'Description 2', secret: true },
+      setting1: {
+        name: 'setting1',
+        value: 'value1',
+        description: 'Description 1',
+        usageDescription: '',
+        required: false,
+      },
+      setting2: {
+        name: 'setting2',
+        value: 'value2',
+        description: 'Description 2',
+        secret: true,
+        usageDescription: '',
+        required: false,
+      },
     }),
     findWorldsForOwner: vi.fn().mockResolvedValue([
       {
@@ -43,6 +56,7 @@ vi.mock('@elizaos/core', async (importOriginal) => {
         name: 'Test World',
         serverId: 'server-1',
         metadata: { settings: true },
+        agentId: 'agent-1' as UUID,
       },
     ]),
     logger: {
@@ -101,7 +115,11 @@ describe('Choice Provider', () => {
     ];
     mockRuntime.getTasks = vi.fn().mockResolvedValue(tasks);
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await choiceProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
@@ -128,7 +146,11 @@ describe('Choice Provider', () => {
   it('should handle no pending tasks gracefully', async () => {
     mockRuntime.getTasks = vi.fn().mockResolvedValue([]); // No tasks
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await choiceProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
@@ -148,7 +170,11 @@ describe('Choice Provider', () => {
     ];
     mockRuntime.getTasks = vi.fn().mockResolvedValue(tasks);
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await choiceProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
@@ -159,7 +185,11 @@ describe('Choice Provider', () => {
   it('should handle errors from getTasks gracefully', async () => {
     mockRuntime.getTasks = vi.fn().mockRejectedValue(new Error('Task service error'));
 
-    const result = await choiceProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await choiceProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
@@ -311,7 +341,11 @@ describe('Providers Provider', () => {
   });
 
   it('should list all dynamic providers', async () => {
-    const result = await providersProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await providersProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.text).toContain('TEST_PROVIDER_1');
@@ -331,7 +365,11 @@ describe('Providers Provider', () => {
     // Mock empty providers
     mockRuntime.providers = [];
 
-    const result = await providersProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory, mockState as State);
+    const result = await providersProvider.get(
+      mockRuntime as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
 
     expect(result).toBeDefined();
     expect(result.text).toContain('No dynamic providers are currently available');
@@ -466,13 +504,13 @@ describe('Role Provider', () => {
     (mockRuntime.getEntityById as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
     // Setup mockState.data.room for the provider to use preferentially
-    mockState.data = {
-      room: {
-        id: 'state-room-id' as UUID,
-        serverId: 'state-server-id' as UUID,
-        type: ChannelType.GROUP,
-        source: 'discord', // Added source
-      },
+    if (!mockState.data) mockState.data = {} as any;
+    mockState.data!.room = {
+      ...((mockState.data!.room as any) || {}),
+      id: 'state-room-id' as UUID,
+      serverId: 'state-server-id' as UUID,
+      type: ChannelType.GROUP,
+      source: 'discord', // Added source
     };
     mockMessage = createMockMemory({ roomId: 'state-room-id' as UUID });
   });
@@ -486,7 +524,7 @@ describe('Role Provider', () => {
     const worldIdForRoleTest = 'world-for-roles-simple' as UUID;
     const ownerId = 'owner-simple-test-id' as UUID;
 
-    mockState.data.room = {
+    mockState.data!.room = {
       id: 'room-for-roles-simple-test' as UUID,
       serverId: serverId,
       type: ChannelType.GROUP,
@@ -508,6 +546,7 @@ describe('Role Provider', () => {
           id: worldIdForRoleTest,
           serverId: serverId,
           name: 'Role Test World Simple',
+          agentId: 'agent-1' as UUID,
           metadata: {
             ownership: { ownerId: 'any-owner-simple' as UUID },
             roles: { [ownerId]: 'OWNER' }, // Simplified to one owner
@@ -599,6 +638,7 @@ describe('Role Provider', () => {
           id: expectedWorldIdForNoRoles,
           serverId: mockServerId,
           name: 'Test World No Roles',
+          agentId: 'agent-1' as UUID,
           metadata: {
             ownership: { ownerId: 'some-owner' as UUID },
             roles: {}, // Empty roles
@@ -675,6 +715,7 @@ describe('Settings Provider', () => {
       id: 'world-1' as UUID,
       serverId: 'server-1',
       name: 'Test World',
+      agentId: 'agent-1' as UUID,
     });
   });
 
@@ -683,19 +724,35 @@ describe('Settings Provider', () => {
     // Reset specific mocks for @elizaos/core to ensure clean state between tests
     // This is important because vi.mock is module-level
     const coreMocks = vi.mocked(await import('@elizaos/core'));
-    coreMocks.getWorldSettings.mockClear().mockResolvedValue({
-      setting1: { name: 'setting1', value: 'value1', description: 'Description 1' },
-      setting2: { name: 'setting2', value: 'value2', description: 'Description 2', secret: true },
+    (coreMocks.getWorldSettings as any).mockClear();
+    (coreMocks.getWorldSettings as any).mockResolvedValue({
+      setting1: {
+        name: 'setting1',
+        value: 'value1',
+        description: 'Description 1',
+        usageDescription: '',
+        required: false,
+      },
+      setting2: {
+        name: 'setting2',
+        value: 'value2',
+        description: 'Description 2',
+        secret: true,
+        usageDescription: '',
+        required: false,
+      },
     });
-    coreMocks.findWorldsForOwner.mockClear().mockResolvedValue([
+    (coreMocks.findWorldsForOwner as any).mockClear();
+    (coreMocks.findWorldsForOwner as any).mockResolvedValue([
       {
         id: 'world-1' as UUID,
         name: 'Test World',
         serverId: 'server-1',
         metadata: { settings: true },
+        agentId: 'agent-1' as UUID,
       },
     ]);
-    coreMocks.logger.error.mockClear();
+    (coreMocks.logger.error as any).mockClear();
   });
 
   it('should retrieve settings in onboarding mode', async () => {
@@ -704,8 +761,8 @@ describe('Settings Provider', () => {
       ...mockMessage.content,
       channelType: ChannelType.DM,
     };
-    mockState.data.room = {
-      ...mockState.data.room,
+    mockState.data!.room = {
+      ...((mockState.data!.room as any) || {}),
       id: 'onboarding-room-id' as UUID,
       type: ChannelType.DM,
     };
@@ -719,17 +776,26 @@ describe('Settings Provider', () => {
         name: 'Test World Onboarding',
         serverId: 'server-onboarding-test' as UUID,
         metadata: { settings: true },
+        agentId: 'agent-1' as UUID,
       },
     ]);
-    coreMocks.getWorldSettings.mockImplementation(async (rt, sId) => {
+    (coreMocks.getWorldSettings as any).mockImplementation(async (_rt: any, sId: string) => {
       if (sId === ('server-onboarding-test' as UUID)) {
         return {
-          setting1: { name: 'setting1', value: 'value1', description: 'Onboarding Desc 1' },
+          setting1: {
+            name: 'setting1',
+            value: 'value1',
+            description: 'Onboarding Desc 1',
+            usageDescription: '',
+            required: false,
+          },
           setting2: {
             name: 'setting2',
             value: 'value2',
             description: 'Onboarding Desc 2',
             secret: true,
+            usageDescription: '',
+            required: false,
           },
         };
       }
@@ -750,9 +816,9 @@ describe('Settings Provider', () => {
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
-    expect(result.data.settings).toBeTypeOf('object');
-    expect(Object.keys(result.data.settings)).toHaveLength(2);
-    expect(result.data.settings.setting1.value).toBe('value1');
+    expect(result.data!.settings).toBeTypeOf('object');
+    expect(Object.keys(result.data!.settings)).toHaveLength(2);
+    expect(result.data!.settings.setting1.value).toBe('value1');
     expect(result.text).toContain('setting1: value1 (Optional)'); // Onboarding shows actual value
     expect(result.text).toContain('setting2: value2 (Optional)'); // Secret is visible in onboarding
   });
@@ -777,9 +843,9 @@ describe('Settings Provider', () => {
 
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
-    expect(result.data.settings).toBeTypeOf('object');
-    expect(Object.keys(result.data.settings)).toHaveLength(2);
-    expect(result.data.settings.setting1.value).toBe('value1');
+    expect(result.data!.settings).toBeTypeOf('object');
+    expect(Object.keys(result.data!.settings)).toHaveLength(2);
+    expect(result.data!.settings.setting1.value).toBe('value1');
     expect(result.text).toContain('Value:** value1');
     expect(result.text).toContain('Value:** ****************'); // Secret is masked in normal mode
   });
@@ -788,8 +854,8 @@ describe('Settings Provider', () => {
     const coreMocks = vi.mocked(await import('@elizaos/core'));
     coreMocks.getWorldSettings.mockRejectedValueOnce(new Error('Failed to retrieve settings'));
     mockMessage.content = { channelType: ChannelType.DM };
-    mockState.data.room = {
-      ...mockState.data.room,
+    mockState.data!.room = {
+      ...((mockState.data!.room as any) || {}),
       type: ChannelType.DM,
       id: 'dm-room-err' as UUID,
     };
@@ -813,8 +879,8 @@ describe('Settings Provider', () => {
   it('should handle missing world gracefully', async () => {
     mockRuntime.getWorld = vi.fn().mockResolvedValue(null);
     mockMessage.content = { channelType: ChannelType.GROUP };
-    mockState.data.room = {
-      ...mockState.data.room,
+    mockState.data!.room = {
+      ...((mockState.data!.room as any) || {}),
       type: ChannelType.GROUP,
       id: 'group-room-err' as UUID,
     };
@@ -840,11 +906,13 @@ describe('Settings Provider', () => {
 describe('Attachments Provider', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
+  let mockState: Partial<State>;
 
   beforeEach(() => {
     const setup = setupActionTest();
     mockRuntime = setup.mockRuntime;
     mockMessage = setup.mockMessage;
+    mockState = setup.mockState;
 
     // Mock getConversationLength
     mockRuntime.getConversationLength = vi.fn().mockReturnValue(10);
@@ -866,13 +934,13 @@ describe('Attachments Provider', () => {
 
     const result = await attachmentsProvider.get(
       mockRuntime as IAgentRuntime,
-      mockMessage as Memory
+      mockMessage as Memory,
+      mockState as State
     );
 
     expect(result).toBeDefined();
-    expect(result.data.attachments).toHaveLength(0);
-    expect(result.text).toBe('');
-    expect(result.values.attachments).toBe('');
+    expect(result.data!.attachments).toHaveLength(0);
+    expect(result.values!.attachments).toBe('');
   });
 
   it('should return current message attachments', async () => {
@@ -904,13 +972,14 @@ describe('Attachments Provider', () => {
 
     const result = await attachmentsProvider.get(
       mockRuntime as IAgentRuntime,
-      mockMessage as Memory
+      mockMessage as Memory,
+      mockState as State
     );
 
     expect(result).toBeDefined();
-    expect(result.data.attachments).toHaveLength(2);
-    expect(result.data.attachments[0].id).toBe('attach-1');
-    expect(result.data.attachments[1].id).toBe('attach-2');
+    expect(result.data!.attachments).toHaveLength(2);
+    expect(result.data!.attachments[0].id).toBe('attach-1');
+    expect(result.data!.attachments[1].id).toBe('attach-2');
     expect(result.text).toContain('# Attachments');
     expect(result.text).toContain('Test Image 1');
     expect(result.text).toContain('Test Document');
@@ -976,15 +1045,16 @@ describe('Attachments Provider', () => {
 
     const result = await attachmentsProvider.get(
       mockRuntime as IAgentRuntime,
-      mockMessage as Memory
+      mockMessage as Memory,
+      mockState as State
     );
 
     expect(result).toBeDefined();
-    expect(result.data.attachments).toHaveLength(3);
-    expect(result.data.attachments[0].id).toBe('current-attach');
+    expect(result.data!.attachments).toHaveLength(3);
+    expect(result.data!.attachments[0].id).toBe('current-attach');
     // Messages are reversed, so prev-attach-2 comes before prev-attach-1
-    expect(result.data.attachments[1].id).toBe('prev-attach-2');
-    expect(result.data.attachments[2].id).toBe('prev-attach-1');
+    expect(result.data!.attachments[1].id).toBe('prev-attach-2');
+    expect(result.data!.attachments[2].id).toBe('prev-attach-1');
     expect(result.text).toContain('Current Image');
     expect(result.text).toContain('Previous Image 1');
     expect(result.text).toContain('Previous Image 2');
@@ -1049,21 +1119,22 @@ describe('Attachments Provider', () => {
 
     const result = await attachmentsProvider.get(
       mockRuntime as IAgentRuntime,
-      mockMessage as Memory
+      mockMessage as Memory,
+      mockState as State
     );
 
     expect(result).toBeDefined();
-    expect(result.data.attachments).toHaveLength(3);
+    expect(result.data!.attachments).toHaveLength(3);
 
     // Check that old attachment has hidden text
-    const oldAttachment = result.data.attachments.find((a) => a.id === 'old-attach');
+    const oldAttachment = result.data!.attachments.find((a) => a.id === 'old-attach');
     expect(oldAttachment?.text).toBe('[Hidden]');
 
     // Check that recent attachments have visible text
-    const recentAttachment = result.data.attachments.find((a) => a.id === 'recent-attach');
+    const recentAttachment = result.data!.attachments.find((a) => a.id === 'recent-attach');
     expect(recentAttachment?.text).toBe('This should be visible');
 
-    const currentAtt = result.data.attachments.find((a) => a.id === 'current-attach');
+    const currentAtt = result.data!.attachments.find((a) => a.id === 'current-attach');
     expect(currentAtt?.text).toBe('Current content');
   });
 
@@ -1108,15 +1179,16 @@ describe('Attachments Provider', () => {
 
     const result = await attachmentsProvider.get(
       mockRuntime as IAgentRuntime,
-      mockMessage as Memory
+      mockMessage as Memory,
+      mockState as State
     );
 
     expect(result).toBeDefined();
-    expect(result.data.attachments).toHaveLength(1);
-    expect(result.data.attachments[0].id).toBe('shared-attach');
+    expect(result.data!.attachments).toHaveLength(1);
+    expect(result.data!.attachments[0].id).toBe('shared-attach');
     // Should keep the current message's richer data
-    expect(result.data.attachments[0].text).toBe('Shared content with more details');
-    expect(result.data.attachments[0].description).toBe('Shared attachment');
+    expect(result.data!.attachments[0].text).toBe('Shared content with more details');
+    expect(result.data!.attachments[0].description).toBe('Shared attachment');
   });
 
   it('should format attachment data correctly', async () => {
@@ -1137,7 +1209,8 @@ describe('Attachments Provider', () => {
 
     const result = await attachmentsProvider.get(
       mockRuntime as IAgentRuntime,
-      mockMessage as Memory
+      mockMessage as Memory,
+      mockState as State
     );
 
     expect(result).toBeDefined();
@@ -1184,12 +1257,13 @@ describe('Attachments Provider', () => {
 
     const result = await attachmentsProvider.get(
       mockRuntime as IAgentRuntime,
-      mockMessage as Memory
+      mockMessage as Memory,
+      mockState as State
     );
 
     expect(result).toBeDefined();
-    expect(result.data.attachments).toHaveLength(1);
-    expect(result.data.attachments[0].id).toBe('only-attach');
+    expect(result.data!.attachments).toHaveLength(1);
+    expect(result.data!.attachments[0].id).toBe('only-attach');
     expect(result.text).toContain('Only Attachment');
   });
 
@@ -1212,7 +1286,11 @@ describe('Attachments Provider', () => {
 
     // The provider doesn't catch errors, so they propagate up
     await expect(
-      attachmentsProvider.get(mockRuntime as IAgentRuntime, mockMessage as Memory)
+      attachmentsProvider.get(
+        mockRuntime as IAgentRuntime,
+        mockMessage as Memory,
+        mockState as State
+      )
     ).rejects.toThrow('Database error');
   });
 });

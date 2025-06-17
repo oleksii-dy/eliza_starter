@@ -13,13 +13,8 @@ import {
   Provider,
   Route,
   Service,
-  ServiceType,
   State,
   UUID,
-  Room,
-  World,
-  Entity,
-  Component,
 } from '@elizaos/core';
 
 /**
