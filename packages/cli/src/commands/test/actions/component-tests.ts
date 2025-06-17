@@ -72,6 +72,7 @@ export async function runComponentTests(
       args.push(...vitestConfig.test.include);
     }
 
+    // We will rely on the vitest config for exclusion, which is more robust.
     const targetPath = testPath ? path.resolve(process.cwd(), '..', testPath) : process.cwd();
     logger.info(`Executing: bun ${args.join(' ')} in ${targetPath}`);
 
@@ -82,8 +83,8 @@ export async function runComponentTests(
       cwd: targetPath,
       env: {
         ...process.env,
-        FORCE_COLOR: '1', // Force color output
-        CI: 'false', // Ensure we're not in CI mode which might buffer
+        FORCE_COLOR: '1',
+        CI: 'false',
       },
     });
 

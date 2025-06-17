@@ -95,4 +95,4 @@ export class DummyTokenCreationService extends Service implements ITokenCreation
   async stop(): Promise<void> {
     logger.info(`[${this.serviceName}] Service stopped.`);
   }
-} 
+}

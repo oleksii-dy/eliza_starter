@@ -99,4 +99,4 @@ export class DummySwapService extends Service implements ISwapService {
   async stop(): Promise<void> {
     logger.info(`[${this.serviceName}] Service stopped.`);
   }
-} 
+}

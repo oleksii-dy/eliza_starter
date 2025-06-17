@@ -511,15 +511,16 @@ export class AgentRuntime implements IAgentRuntime {
       if (p.schema) {
         this.logger.info(`Running migrations for plugin: ${p.name}`);
         try {
-          // You might need a more generic way to run migrations if they are not all Drizzle-based
-          // For now, assuming a function on the adapter or a utility function
-          if (this.adapter && 'runMigrations' in this.adapter) {
-            await (this.adapter as any).runMigrations(p.schema, p.name);
+          // Check if the adapter has a runPluginMigrations method
+          if (this.adapter && 'runPluginMigrations' in this.adapter) {
+            await (this.adapter as any).runPluginMigrations(p.schema, p.name);
             this.logger.info(`Successfully migrated plugin: ${p.name}`);
+          } else {
+            this.logger.warn(`Adapter does not support plugin migrations for ${p.name}`);
           }
         } catch (error) {
           this.logger.error(`Failed to migrate plugin ${p.name}:`, error);
-          // Decide if you want to throw or continue
+          // Continue with other plugins even if one fails
         }
       }
     }

@@ -91,4 +91,4 @@ export class DummyMessageService extends Service implements IMessageService {
   async stop(): Promise<void> {
     logger.info(`[${this.serviceName}] Service stopped.`);
   }
-} 
+}

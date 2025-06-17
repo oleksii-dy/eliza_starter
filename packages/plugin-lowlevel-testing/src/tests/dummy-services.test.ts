@@ -167,7 +167,10 @@ export const dummyServiceTestSuite: TestSuite = {
         console.log('✓ Dummy Token Creation Service is registered.');
 
         // Test key methods
-        assert(typeof creationService.createToken === 'function', 'createToken method should exist.');
+        assert(
+          typeof creationService.createToken === 'function',
+          'createToken method should exist.'
+        );
         assert(
           typeof creationService.getDeployerAddress === 'function',
           'getDeployerAddress method should exist.'
@@ -212,4 +215,4 @@ export const dummyServiceTestSuite: TestSuite = {
   ],
 };
 
-export default dummyServiceTestSuite; 
+export default dummyServiceTestSuite;

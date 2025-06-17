@@ -97,6 +97,30 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   }
 
   /**
+   * Run migrations for a plugin's schema
+   * @param migrationsPaths Optional array of paths to migration folders (not used in this implementation)
+   */
+  public async runMigrations(migrationsPaths?: string[]): Promise<void> {
+    // This base implementation doesn't use migration paths
+    // Plugin-specific migrations are handled by the runtime calling runPluginMigrations
+    logger.warn('runMigrations called on base adapter - this should be handled by the runtime');
+    return Promise.resolve();
+  }
+
+  /**
+   * Run plugin-specific schema migrations
+   * @param schema The plugin's schema object
+   * @param pluginName The name of the plugin
+   */
+  public async runPluginMigrations(schema: any, pluginName: string): Promise<void> {
+    return this.withDatabase(async () => {
+      // Import dynamically to avoid circular dependencies
+      const { runPluginMigrations } = await import('./custom-migrator');
+      await runPluginMigrations(this.db, pluginName, schema);
+    });
+  }
+
+  /**
    * Get the underlying database instance for testing purposes
    */
   public getDatabase(): any {
@@ -355,11 +379,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    * @returns The merged settings object
    * @private
    */
-  private async mergeAgentSettings(
-    tx: any,
-    agentId: UUID,
-    updatedSettings: any
-  ): Promise<any> {
+  private async mergeAgentSettings(tx: any, agentId: UUID, updatedSettings: any): Promise<any> {
     // First get the current agent data
     const currentAgent = await tx
       .select({ settings: agentTable.settings })
@@ -912,13 +932,12 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     return this.withDatabase(async () => {
       await this.db.transaction(async (tx) => {
         // Delete related components first
-        await tx.delete(componentTable).where(
-          or(
-            eq(componentTable.entityId, entityId),
-            eq(componentTable.sourceEntityId, entityId)
-          )
-        );
-        
+        await tx
+          .delete(componentTable)
+          .where(
+            or(eq(componentTable.entityId, entityId), eq(componentTable.sourceEntityId, entityId))
+          );
+
         // Delete the entity
         await tx.delete(entityTable).where(eq(entityTable.id, entityId));
       });
@@ -932,31 +951,26 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
    * @param {UUID} params.agentId - The agent ID to filter by.
    * @returns {Promise<Entity[]>} A Promise that resolves to an array of entities.
    */
-  async getEntitiesByNames(params: {
-    names: string[];
-    agentId: UUID;
-  }): Promise<Entity[]> {
+  async getEntitiesByNames(params: { names: string[]; agentId: UUID }): Promise<Entity[]> {
     return this.withDatabase(async () => {
       const { names, agentId } = params;
-      
+
       // Build a condition to match any of the names
-      const nameConditions = names.map(name => 
-        sql`${name} = ANY(${entityTable.names})`
-      );
-      
+      const nameConditions = names.map((name) => sql`${name} = ANY(${entityTable.names})`);
+
       const query = sql`
         SELECT * FROM ${entityTable}
         WHERE ${entityTable.agentId} = ${agentId}
         AND (${sql.join(nameConditions, sql` OR `)})
       `;
-      
+
       const result = await this.db.execute(query);
-      
+
       return result.rows.map((row: any) => ({
         id: row.id as UUID,
         agentId: row.agentId as UUID,
         names: row.names || [],
-        metadata: row.metadata || {}
+        metadata: row.metadata || {},
       }));
     });
   }
@@ -976,7 +990,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   }): Promise<Entity[]> {
     return this.withDatabase(async () => {
       const { query, agentId, limit = 10 } = params;
-      
+
       // If query is empty, return all entities up to limit
       if (!query || query.trim() === '') {
         const result = await this.db
@@ -984,15 +998,15 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
           .from(entityTable)
           .where(eq(entityTable.agentId, agentId))
           .limit(limit);
-          
+
         return result.map((row: any) => ({
           id: row.id as UUID,
           agentId: row.agentId as UUID,
           names: row.names || [],
-          metadata: row.metadata || {}
+          metadata: row.metadata || {},
         }));
       }
-      
+
       // Otherwise, search for entities with names containing the query (case-insensitive)
       const searchQuery = sql`
         SELECT * FROM ${entityTable}
@@ -1003,14 +1017,14 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         )
         LIMIT ${limit}
       `;
-      
+
       const result = await this.db.execute(searchQuery);
-      
+
       return result.rows.map((row: any) => ({
         id: row.id as UUID,
         agentId: row.agentId as UUID,
         names: row.names || [],
-        metadata: row.metadata || {}
+        metadata: row.metadata || {},
       }));
     });
   }

@@ -53,8 +53,8 @@ describe('DummyMessageService', () => {
 
   it('should throw an error when sending to a non-existent channel', async () => {
     const nonExistentChannelId = asUUID(uuid());
-    await expect(
-      service.sendMessage(nonExistentChannelId, { text: 'test' })
-    ).rejects.toThrow(`Channel with id ${nonExistentChannelId} not found.`);
+    await expect(service.sendMessage(nonExistentChannelId, { text: 'test' })).rejects.toThrow(
+      `Channel with id ${nonExistentChannelId} not found.`
+    );
   });
-}); 
+});

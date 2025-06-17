@@ -663,7 +663,9 @@ export default function Chat({
       // Clear the local message list immediately for instant UI response
       clearMessages();
     },
-    onInputDisabledChange: (disabled: boolean) => {inputDisabledRef.current = disabled},
+    onInputDisabledChange: (disabled: boolean) => {
+      inputDisabledRef.current = disabled;
+    },
   });
 
   const {
@@ -846,8 +848,9 @@ export default function Chat({
     }
     inputDisabledRef.current = true;
     const retryMessageId = randomUUID() as UUID;
-    const finalTextContent = message.text?.trim() || `Shared ${message.attachments?.length} file(s).`;
-  
+    const finalTextContent =
+      message.text?.trim() || `Shared ${message.attachments?.length} file(s).`;
+
     const optimisticUiMessage: UiMessage = {
       id: retryMessageId,
       text: message.text,
@@ -861,7 +864,7 @@ export default function Chat({
       source: chatType === ChannelType.DM ? CHAT_SOURCE : GROUP_CHAT_SOURCE,
       attachments: message.attachments,
     };
-  
+
     addMessage(optimisticUiMessage);
     safeScrollToBottom();
 
@@ -888,7 +891,6 @@ export default function Chat({
       });
       inputDisabledRef.current = false;
     }
-    
   };
 
   const handleClearChat = () => {

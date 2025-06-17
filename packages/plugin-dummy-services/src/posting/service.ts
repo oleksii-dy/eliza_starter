@@ -117,4 +117,4 @@ export class DummyPostService extends Service implements IPostService {
   async stop(): Promise<void> {
     logger.info(`[${this.serviceName}] Service stopped.`);
   }
-} 
+}
