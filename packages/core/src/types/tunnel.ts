@@ -1,4 +1,4 @@
-import type { Service } from '@elizaos/core';
+import type { Service } from './service';
 
 export interface ITunnelService extends Service {
   startTunnel(port?: number): Promise<string | void>;
