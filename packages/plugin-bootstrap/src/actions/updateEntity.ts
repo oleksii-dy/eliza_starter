@@ -153,7 +153,7 @@ export const updateEntityAction: Action = {
     _options?: any,
     callback?: HandlerCallback,
     responses?: Memory[]
-  ): Promise<void> => {
+  ): Promise<boolean> => {
     try {
       if (!state) {
         logger.error('State is required for the updateEntity action');
@@ -195,7 +195,7 @@ export const updateEntityAction: Action = {
           actions: ['UPDATE_ENTITY_ERROR'],
           source: message.content.source,
         });
-        return;
+        return true;
       }
 
       // Get existing component if it exists - we'll get this after the LLM identifies the source
@@ -232,7 +232,7 @@ export const updateEntityAction: Action = {
           actions: ['UPDATE_ENTITY_ERROR'],
           source: message.content.source,
         });
-        return;
+        return true;
       }
 
       const componentType = parsedResult.source.toLowerCase();
@@ -292,6 +292,7 @@ export const updateEntityAction: Action = {
         source: message.content.source,
       });
     }
+    return true;
   },
 
   examples: [

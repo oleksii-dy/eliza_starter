@@ -66,7 +66,7 @@ export const muteRoomAction: Action = {
     _options?: { [key: string]: unknown },
     _callback?: HandlerCallback,
     _responses?: Memory[]
-  ) => {
+  ): Promise<boolean> => {
     if (!state) {
       logger.error('State is required for muting a room');
       throw new Error('State is required for muting a room');
@@ -162,6 +162,7 @@ export const muteRoomAction: Action = {
       },
       'messages'
     );
+    return true;
   },
   examples: [
     [

@@ -41,9 +41,9 @@ export const ignoreAction: Action = {
   handler: async (
     _runtime: IAgentRuntime,
     _message: Memory,
-    _state: State,
-    _options: any,
-    callback: HandlerCallback,
+    _state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
     responses?: Memory[]
   ) => {
     // If a callback and the agent's response content are available, call the callback
@@ -51,7 +51,7 @@ export const ignoreAction: Action = {
       // Pass the agent's original response content (thought, IGNORE action, etc.)
       await callback(responses[0].content);
     }
-    // Still return true to indicate the action handler succeeded
+    // Return true to indicate the action handler succeeded
     return true;
   },
   examples: [
@@ -85,7 +85,7 @@ export const ignoreAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'Uh, don’t let the volatility sway your long-term strategy',
+          text: "Uh, don't let the volatility sway your long-term strategy",
         },
       },
       {

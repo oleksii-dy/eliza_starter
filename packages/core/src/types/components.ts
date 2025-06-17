@@ -113,6 +113,8 @@ export interface ProviderResult {
   text?: string;
 }
 
+export interface ActionState extends ProviderResult {}
+
 /**
  * Provider for external data/services
  */

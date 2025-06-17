@@ -60,19 +60,22 @@ export const replyAction = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State,
-    _options: any,
-    callback: HandlerCallback,
+    state?: State,
+    _options?: any,
+    callback?: HandlerCallback,
     responses?: Memory[]
   ) => {
     // Check if any responses had providers associated with them
     const allProviders = responses?.flatMap((res) => res.content?.providers ?? []) ?? [];
 
     // Only generate response using LLM if no suitable response was found
-    state = await runtime.composeState(message, [...(allProviders ?? []), 'RECENT_MESSAGES']);
+    const composedState = await runtime.composeState(message, [
+      ...(allProviders ?? []),
+      'RECENT_MESSAGES',
+    ]);
 
     const prompt = composePromptFromState({
-      state,
+      state: composedState,
       template: replyTemplate,
     });
 
@@ -86,7 +89,9 @@ export const replyAction = {
       actions: ['REPLY'],
     };
 
-    await callback(responseContent);
+    if (callback) {
+      await callback(responseContent);
+    }
 
     return true;
   },

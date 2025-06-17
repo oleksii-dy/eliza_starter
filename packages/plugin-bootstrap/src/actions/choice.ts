@@ -176,7 +176,7 @@ export const choiceAction: Action = {
     _options?: any,
     callback?: HandlerCallback,
     responses?: Memory[]
-  ): Promise<void> => {
+  ): Promise<boolean> => {
     const pendingTasks = await runtime.getTasks({
       roomId: message.roomId,
       tags: ['AWAITING_CHOICE'],
@@ -242,7 +242,7 @@ export const choiceAction: Action = {
           actions: ['SELECT_OPTION_ERROR'],
           source: message.content.source,
         });
-        return;
+        return true;
       }
 
       // Find the actual task using the full UUID
@@ -254,7 +254,7 @@ export const choiceAction: Action = {
           actions: ['SELECT_OPTION_ERROR'],
           source: message.content.source,
         });
-        return;
+        return true;
       }
 
       if (selectedOption === 'ABORT') {
@@ -264,7 +264,7 @@ export const choiceAction: Action = {
             actions: ['SELECT_OPTION_ERROR'],
             source: message.content.source,
           });
-          return;
+          return true;
         }
 
         await runtime.deleteTask(selectedTask.id);
@@ -273,7 +273,7 @@ export const choiceAction: Action = {
           actions: ['CHOOSE_OPTION_CANCELLED'],
           source: message.content.source,
         });
-        return;
+        return true;
       }
 
       try {
@@ -284,7 +284,7 @@ export const choiceAction: Action = {
           actions: ['CHOOSE_OPTION'],
           source: message.content.source,
         });
-        return;
+        return true;
       } catch (error) {
         logger.error('Error executing task with option:', error);
         await callback?.({
@@ -292,7 +292,7 @@ export const choiceAction: Action = {
           actions: ['SELECT_OPTION_ERROR'],
           source: message.content.source,
         });
-        return;
+        return true;
       }
     }
 
@@ -317,6 +317,7 @@ export const choiceAction: Action = {
       actions: ['SELECT_OPTION_INVALID'],
       source: message.content.source,
     });
+    return true;
   },
 
   examples: [
