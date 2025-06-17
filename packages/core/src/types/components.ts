@@ -30,7 +30,7 @@ export type Handler = (
   options?: { [key: string]: unknown },
   callback?: HandlerCallback,
   responses?: Memory[]
-) => Promise<ActionResult>;
+) => Promise<ActionResult | void | boolean | null>;
 
 /**
  * Validator function type for actions/evaluators
