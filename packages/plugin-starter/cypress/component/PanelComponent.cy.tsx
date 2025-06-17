@@ -1,6 +1,6 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
-import { panels } from '../../../frontend/index';
+import { panels } from '../../src/frontend/index';
 
 // Time response interface
 interface TimeResponse {
