@@ -1,9 +1,8 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { TaskService } from '../src/services/task';
-import { EventType, IAgentRuntime, logger, Service } from '@elizaos/core';
-import { bootstrapPlugin } from '../src/index';
-import { UUID, ModelType, ServiceType } from '@elizaos/core';
-import { createMockRuntime, createMockService, MockRuntime, setupActionTest } from './test-utils';
+import { IAgentRuntime, logger, Service, ServiceType } from '@elizaos/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { bootstrapPlugin } from '../index';
+import { TaskService } from '../services/task';
+import { MockRuntime, setupActionTest } from './test-utils';
 
 // Define service interface for plugin services
 interface PluginService extends Service {

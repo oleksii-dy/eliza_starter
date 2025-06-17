@@ -23,7 +23,6 @@
   ],
   "dependencies": {
     "@elizaos/core": "workspace:*",
-    "@elizaos/plugin-anthropic": "1.0.3",
     "@elizaos/plugin-dummy-services": "workspace:*",
     "@elizaos/plugin-sql": "workspace:*",
     "uuid": "^9.0.0"
@@ -38,7 +37,6 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "elizaos test",
-    "test:unit": "vitest run",
     "lint": "prettier --write ./src",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
     "format": "prettier --write ./src",
