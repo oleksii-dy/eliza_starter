@@ -9,6 +9,7 @@ import {
   type Memory,
   ModelType,
   type State,
+  type ActionResult,
 } from '@elizaos/core';
 
 /**
@@ -66,7 +67,7 @@ export const muteRoomAction: Action = {
     _options?: { [key: string]: unknown },
     _callback?: HandlerCallback,
     _responses?: Memory[]
-  ) => {
+  ): Promise<ActionResult> => {
     if (!state) {
       logger.error('State is required for muting a room');
       throw new Error('State is required for muting a room');
@@ -144,7 +145,8 @@ export const muteRoomAction: Action = {
       return false;
     }
 
-    if (await _shouldMute(state)) {
+    const shouldMute = await _shouldMute(state);
+    if (shouldMute) {
       await runtime.setParticipantUserState(message.roomId, runtime.agentId, 'MUTED');
     }
 
@@ -162,6 +164,19 @@ export const muteRoomAction: Action = {
       },
       'messages'
     );
+
+    return {
+      data: {
+        actionName: 'MUTE_ROOM',
+        roomName: room.name,
+        muted: shouldMute,
+        roomId: message.roomId,
+      },
+      values: {
+        roomMuteState: shouldMute ? 'MUTED' : 'NOT_MUTED',
+        lastMuteTime: Date.now(),
+      },
+    };
   },
   examples: [
     [

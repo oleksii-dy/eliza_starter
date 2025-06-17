@@ -5,6 +5,7 @@ import type {
   Memory,
   HandlerCallback,
   State,
+  ActionResult,
 } from '@elizaos/core';
 
 /**
@@ -45,14 +46,36 @@ export const ignoreAction: Action = {
     _options: any,
     callback: HandlerCallback,
     responses?: Memory[]
-  ) => {
-    // If a callback and the agent's response content are available, call the callback
-    if (callback && responses?.[0]?.content) {
-      // Pass the agent's original response content (thought, IGNORE action, etc.)
-      await callback(responses[0].content);
+  ): Promise<ActionResult> => {
+    try {
+      // If a callback and the agent's response content are available, call the callback
+      if (callback && responses?.[0]?.content) {
+        // Pass the agent's original response content (thought, IGNORE action, etc.)
+        await callback(responses[0].content);
+      }
+
+      return {
+        data: {
+          actionName: 'IGNORE',
+          result: 'User ignored',
+        },
+        values: {
+          ignoredAt: Date.now(),
+        },
+      };
+    } catch (error) {
+      return {
+        data: {
+          actionName: 'IGNORE',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
-    // Still return true to indicate the action handler succeeded
-    return true;
+  },
+  effects: {
+    provides: ['conversation_end'],
+    requires: [],
+    modifies: ['conversation_state'],
   },
   examples: [
     [
@@ -85,7 +108,7 @@ export const ignoreAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'Uh, don’t let the volatility sway your long-term strategy',
+          text: "Uh, don't let the volatility sway your long-term strategy",
         },
       },
       {

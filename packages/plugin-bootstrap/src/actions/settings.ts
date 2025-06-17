@@ -16,6 +16,7 @@ import {
   type Setting,
   type State,
   type WorldSettings,
+  type ActionResult,
 } from '@elizaos/core';
 import dedent from 'dedent';
 
@@ -738,7 +739,7 @@ export const updateSettingsAction: Action = {
     state?: State,
     _options?: any,
     callback?: HandlerCallback
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     try {
       if (!state) {
         logger.error('State is required for settings handler');
@@ -762,7 +763,12 @@ export const updateSettingsAction: Action = {
       if (!serverOwnership) {
         logger.error(`No server found for user ${message.entityId} in handler`);
         await generateErrorResponse(runtime, state, callback);
-        return;
+        return {
+          data: {
+            actionName: 'UPDATE_SETTINGS',
+            error: 'No server found for user',
+          },
+        };
       }
 
       const serverId = serverOwnership?.serverId;
@@ -770,7 +776,12 @@ export const updateSettingsAction: Action = {
 
       if (!serverId) {
         logger.error(`No server ID found for user ${message.entityId} in handler`);
-        return;
+        return {
+          data: {
+            actionName: 'UPDATE_SETTINGS',
+            error: 'No server ID found',
+          },
+        };
       }
 
       // Get settings state from world metadata
@@ -779,7 +790,12 @@ export const updateSettingsAction: Action = {
       if (!worldSettings) {
         logger.error(`No settings state found for server ${serverId} in handler`);
         await generateErrorResponse(runtime, state, callback);
-        return;
+        return {
+          data: {
+            actionName: 'UPDATE_SETTINGS',
+            error: 'No settings state found',
+          },
+        };
       }
 
       // Extract setting values from message
@@ -804,7 +820,12 @@ export const updateSettingsAction: Action = {
         if (!updatedWorldSettings) {
           logger.error('Failed to retrieve updated settings state');
           await generateErrorResponse(runtime, state, callback);
-          return;
+          return {
+            data: {
+              actionName: 'UPDATE_SETTINGS',
+              error: 'Failed to retrieve updated settings',
+            },
+          };
         }
 
         await generateSuccessResponse(
@@ -814,15 +835,41 @@ export const updateSettingsAction: Action = {
           updateResults.messages,
           callback
         );
+
+        return {
+          data: {
+            actionName: 'UPDATE_SETTINGS',
+            updatedSettings: updateResults.messages,
+            result: 'success',
+          },
+          values: {
+            lastSettingsUpdate: Date.now(),
+            updatedCount: updateResults.messages.length,
+          },
+        };
       } else {
         logger.info('No settings were updated');
         await generateFailureResponse(runtime, worldSettings, state, callback);
+
+        return {
+          data: {
+            actionName: 'UPDATE_SETTINGS',
+            result: 'no_updates',
+          },
+        };
       }
     } catch (error) {
       logger.error(`Error in settings handler: ${error}`);
       if (state && callback) {
         await generateErrorResponse(runtime, state, callback);
       }
+
+      return {
+        data: {
+          actionName: 'UPDATE_SETTINGS',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
   examples: [

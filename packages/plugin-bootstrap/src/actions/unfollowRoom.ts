@@ -9,6 +9,7 @@ import {
   ModelType,
   parseBooleanFromText,
   type State,
+  type ActionResult,
 } from '@elizaos/core';
 
 /**
@@ -63,7 +64,7 @@ export const unfollowRoomAction: Action = {
     _options?: { [key: string]: unknown },
     _callback?: HandlerCallback,
     _responses?: Memory[]
-  ) => {
+  ): Promise<ActionResult> => {
     async function _shouldUnfollow(state: State): Promise<boolean> {
       const shouldUnfollowPrompt = composePromptFromState({
         state,
@@ -79,10 +80,12 @@ export const unfollowRoomAction: Action = {
       return parsedResponse as boolean;
     }
 
-    if (state && (await _shouldUnfollow(state))) {
+    const shouldUnfollow = state && (await _shouldUnfollow(state));
+
+    if (shouldUnfollow) {
       await runtime.setParticipantUserState(message.roomId, runtime.agentId, null);
 
-      const room = state.data.room ?? (await runtime.getRoom(message.roomId));
+      const room = state?.data.room ?? (await runtime.getRoom(message.roomId));
 
       await runtime.createMemory(
         {
@@ -96,6 +99,19 @@ export const unfollowRoomAction: Action = {
         },
         'messages'
       );
+
+      return {
+        data: {
+          actionName: 'UNFOLLOW_ROOM',
+          roomName: room.name,
+          unfollowed: true,
+          roomId: message.roomId,
+        },
+        values: {
+          roomFollowState: 'UNFOLLOWED',
+          lastUnfollowTime: Date.now(),
+        },
+      };
     } else {
       await runtime.createMemory(
         {
@@ -113,6 +129,14 @@ export const unfollowRoomAction: Action = {
         },
         'messages'
       );
+
+      return {
+        data: {
+          actionName: 'UNFOLLOW_ROOM',
+          unfollowed: false,
+          reason: 'Not following room or invalid state',
+        },
+      };
     }
   },
   examples: [

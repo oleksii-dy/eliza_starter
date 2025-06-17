@@ -10,6 +10,7 @@ import {
   ModelType,
   parseJSONObjectFromText,
   type State,
+  type ActionResult,
 } from '@elizaos/core';
 
 /**
@@ -176,147 +177,207 @@ export const choiceAction: Action = {
     _options?: any,
     callback?: HandlerCallback,
     responses?: Memory[]
-  ): Promise<void> => {
-    const pendingTasks = await runtime.getTasks({
-      roomId: message.roomId,
-      tags: ['AWAITING_CHOICE'],
-    });
+  ): Promise<ActionResult> => {
+    try {
+      const pendingTasks = await runtime.getTasks({
+        roomId: message.roomId,
+        tags: ['AWAITING_CHOICE'],
+      });
 
-    if (!pendingTasks?.length) {
-      throw new Error('No pending tasks with options found');
-    }
-
-    const tasksWithOptions = pendingTasks.filter((task) => task.metadata?.options);
-
-    if (!tasksWithOptions.length) {
-      throw new Error('No tasks currently have options to select from.');
-    }
-
-    // Format tasks with their options for the LLM, using shortened UUIDs
-    const formattedTasks = tasksWithOptions.map((task) => {
-      // Generate a short ID from the task UUID (first 8 characters should be unique enough)
-      const shortId = task.id?.substring(0, 8);
-
-      return {
-        taskId: shortId,
-        fullId: task.id,
-        name: task.name,
-        options: task.metadata?.options?.map((opt) => ({
-          name: typeof opt === 'string' ? opt : opt.name,
-          description: typeof opt === 'string' ? opt : opt.description || opt.name,
-        })),
-      };
-    });
-
-    // format tasks as a string
-    const tasksString = formattedTasks
-      .map((task) => {
-        return `Task ID: ${task.taskId} - ${task.name}\nAvailable options:\n${task.options?.map((opt) => `- ${opt.name}: ${opt.description}`).join('\n')}`;
-      })
-      .join('\n');
-
-    const prompt = composePrompt({
-      state: {
-        tasks: tasksString,
-        recentMessages: message.content.text || '',
-      },
-      template: optionExtractionTemplate,
-    });
-
-    const result = await runtime.useModel(ModelType.TEXT_SMALL, {
-      prompt,
-      stopSequences: [],
-    });
-
-    const parsed = parseJSONObjectFromText(result);
-    const { taskId, selectedOption } = parsed as any;
-
-    if (taskId && selectedOption) {
-      // Find the task by matching the shortened UUID
-      const taskMap = new Map(formattedTasks.map((task) => [task.taskId, task]));
-      const taskInfo = taskMap.get(taskId);
-
-      if (!taskInfo) {
-        await callback?.({
-          text: `Could not find a task matching ID: ${taskId}. Please try again.`,
-          actions: ['SELECT_OPTION_ERROR'],
-          source: message.content.source,
-        });
-        return;
+      if (!pendingTasks?.length) {
+        throw new Error('No pending tasks with options found');
       }
 
-      // Find the actual task using the full UUID
-      const selectedTask = tasksWithOptions.find((task) => task.id === taskInfo.fullId);
+      const tasksWithOptions = pendingTasks.filter((task) => task.metadata?.options);
 
-      if (!selectedTask) {
-        await callback?.({
-          text: 'Error locating the selected task. Please try again.',
-          actions: ['SELECT_OPTION_ERROR'],
-          source: message.content.source,
-        });
-        return;
+      if (!tasksWithOptions.length) {
+        throw new Error('No tasks currently have options to select from.');
       }
 
-      if (selectedOption === 'ABORT') {
-        if (!selectedTask?.id) {
+      // Format tasks with their options for the LLM, using shortened UUIDs
+      const formattedTasks = tasksWithOptions.map((task) => {
+        // Generate a short ID from the task UUID (first 8 characters should be unique enough)
+        const shortId = task.id?.substring(0, 8);
+
+        return {
+          taskId: shortId,
+          fullId: task.id,
+          name: task.name,
+          options: task.metadata?.options?.map((opt) => ({
+            name: typeof opt === 'string' ? opt : opt.name,
+            description: typeof opt === 'string' ? opt : opt.description || opt.name,
+          })),
+        };
+      });
+
+      // format tasks as a string
+      const tasksString = formattedTasks
+        .map((task) => {
+          return `Task ID: ${task.taskId} - ${task.name}\nAvailable options:\n${task.options?.map((opt) => `- ${opt.name}: ${opt.description}`).join('\n')}`;
+        })
+        .join('\n');
+
+      const prompt = composePrompt({
+        state: {
+          tasks: tasksString,
+          recentMessages: message.content.text || '',
+        },
+        template: optionExtractionTemplate,
+      });
+
+      const result = await runtime.useModel(ModelType.TEXT_SMALL, {
+        prompt,
+        stopSequences: [],
+      });
+
+      const parsed = parseJSONObjectFromText(result);
+      const { taskId, selectedOption } = parsed as any;
+
+      if (taskId && selectedOption) {
+        // Find the task by matching the shortened UUID
+        const taskMap = new Map(formattedTasks.map((task) => [task.taskId, task]));
+        const taskInfo = taskMap.get(taskId);
+
+        if (!taskInfo) {
+          await callback?.({
+            text: `Could not find a task matching ID: ${taskId}. Please try again.`,
+            actions: ['SELECT_OPTION_ERROR'],
+            source: message.content.source,
+          });
+          return {
+            data: {
+              actionName: 'CHOOSE_OPTION',
+              error: 'Task not found',
+            },
+          };
+        }
+
+        // Find the actual task using the full UUID
+        const selectedTask = tasksWithOptions.find((task) => task.id === taskInfo.fullId);
+
+        if (!selectedTask) {
           await callback?.({
             text: 'Error locating the selected task. Please try again.',
             actions: ['SELECT_OPTION_ERROR'],
             source: message.content.source,
           });
-          return;
+          return {
+            data: {
+              actionName: 'CHOOSE_OPTION',
+              error: 'Selected task not found',
+            },
+          };
         }
 
-        await runtime.deleteTask(selectedTask.id);
-        await callback?.({
-          text: `Task "${selectedTask.name}" has been cancelled.`,
-          actions: ['CHOOSE_OPTION_CANCELLED'],
-          source: message.content.source,
-        });
-        return;
+        if (selectedOption === 'ABORT') {
+          if (!selectedTask?.id) {
+            await callback?.({
+              text: 'Error locating the selected task. Please try again.',
+              actions: ['SELECT_OPTION_ERROR'],
+              source: message.content.source,
+            });
+            return {
+              data: {
+                actionName: 'CHOOSE_OPTION',
+                error: 'Selected task ID not found',
+              },
+            };
+          }
+
+          await runtime.deleteTask(selectedTask.id);
+          await callback?.({
+            text: `Task "${selectedTask.name}" has been cancelled.`,
+            actions: ['CHOOSE_OPTION_CANCELLED'],
+            source: message.content.source,
+          });
+          return {
+            data: {
+              actionName: 'CHOOSE_OPTION',
+              taskName: selectedTask.name,
+              option: 'ABORT',
+              result: 'cancelled',
+            },
+            values: {
+              lastChoice: 'ABORT',
+              lastChoiceTime: Date.now(),
+            },
+          };
+        }
+
+        try {
+          const taskWorker = runtime.getTaskWorker(selectedTask.name);
+          await taskWorker?.execute(runtime, { option: selectedOption }, selectedTask);
+          await callback?.({
+            text: `Selected option: ${selectedOption} for task: ${selectedTask.name}`,
+            actions: ['CHOOSE_OPTION'],
+            source: message.content.source,
+          });
+          return {
+            data: {
+              actionName: 'CHOOSE_OPTION',
+              taskName: selectedTask.name,
+              option: selectedOption,
+              result: 'executed',
+            },
+            values: {
+              lastChoice: selectedOption,
+              lastChoiceTime: Date.now(),
+            },
+          };
+        } catch (error) {
+          logger.error('Error executing task with option:', error);
+          await callback?.({
+            text: 'There was an error processing your selection.',
+            actions: ['SELECT_OPTION_ERROR'],
+            source: message.content.source,
+          });
+          return {
+            data: {
+              actionName: 'CHOOSE_OPTION',
+              taskName: selectedTask.name,
+              option: selectedOption,
+              error: error instanceof Error ? error.message : String(error),
+            },
+          };
+        }
       }
 
-      try {
-        const taskWorker = runtime.getTaskWorker(selectedTask.name);
-        await taskWorker?.execute(runtime, { option: selectedOption }, selectedTask);
-        await callback?.({
-          text: `Selected option: ${selectedOption} for task: ${selectedTask.name}`,
-          actions: ['CHOOSE_OPTION'],
-          source: message.content.source,
-        });
-        return;
-      } catch (error) {
-        logger.error('Error executing task with option:', error);
-        await callback?.({
-          text: 'There was an error processing your selection.',
-          actions: ['SELECT_OPTION_ERROR'],
-          source: message.content.source,
-        });
-        return;
-      }
+      // If no task/option was selected, list available options
+      let optionsText = 'Please select a valid option from one of these tasks:\n\n';
+
+      tasksWithOptions.forEach((task) => {
+        // Create a shortened UUID for display
+        const shortId = task.id?.substring(0, 8);
+
+        optionsText += `**${task.name}** (ID: ${shortId}):\n`;
+        const options = task.metadata?.options?.map((opt) =>
+          typeof opt === 'string' ? opt : opt.name
+        );
+        options?.push('ABORT');
+        optionsText += options?.map((opt) => `- ${opt}`).join('\n');
+        optionsText += '\n\n';
+      });
+
+      await callback?.({
+        text: optionsText,
+        actions: ['SELECT_OPTION_INVALID'],
+        source: message.content.source,
+      });
+
+      return {
+        data: {
+          actionName: 'CHOOSE_OPTION',
+          result: 'options_displayed',
+        },
+      };
+    } catch (error) {
+      return {
+        data: {
+          actionName: 'CHOOSE_OPTION',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
-
-    // If no task/option was selected, list available options
-    let optionsText = 'Please select a valid option from one of these tasks:\n\n';
-
-    tasksWithOptions.forEach((task) => {
-      // Create a shortened UUID for display
-      const shortId = task.id?.substring(0, 8);
-
-      optionsText += `**${task.name}** (ID: ${shortId}):\n`;
-      const options = task.metadata?.options?.map((opt) =>
-        typeof opt === 'string' ? opt : opt.name
-      );
-      options?.push('ABORT');
-      optionsText += options?.map((opt) => `- ${opt}`).join('\n');
-      optionsText += '\n\n';
-    });
-
-    await callback?.({
-      text: optionsText,
-      actions: ['SELECT_OPTION_INVALID'],
-      source: message.content.source,
-    });
   },
 
   examples: [

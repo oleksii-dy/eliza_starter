@@ -1,5 +1,5 @@
-import { Content } from '@elizaos/core';
 import {
+  Content,
   type Action,
   type ActionExample,
   composePromptFromState,
@@ -8,6 +8,7 @@ import {
   type Memory,
   ModelType,
   type State,
+  type ActionResult,
 } from '@elizaos/core';
 
 /**
@@ -64,31 +65,59 @@ export const replyAction = {
     _options: any,
     callback: HandlerCallback,
     responses?: Memory[]
-  ) => {
-    // Check if any responses had providers associated with them
-    const allProviders = responses?.flatMap((res) => res.content?.providers ?? []) ?? [];
+  ): Promise<ActionResult> => {
+    try {
+      // Check if any responses had providers associated with them
+      const allProviders = responses?.flatMap((res) => res.content?.providers ?? []) ?? [];
 
-    // Only generate response using LLM if no suitable response was found
-    state = await runtime.composeState(message, [...(allProviders ?? []), 'RECENT_MESSAGES']);
+      // Only generate response using LLM if no suitable response was found
+      state = await runtime.composeState(message, [
+        ...(allProviders ?? []),
+        'RECENT_MESSAGES',
+        'ACTION_STATE',
+      ]);
 
-    const prompt = composePromptFromState({
-      state,
-      template: replyTemplate,
-    });
+      const prompt = composePromptFromState({
+        state,
+        template: replyTemplate,
+      });
 
-    const response = await runtime.useModel(ModelType.OBJECT_LARGE, {
-      prompt,
-    });
+      const response = await runtime.useModel(ModelType.OBJECT_LARGE, {
+        prompt,
+      });
 
-    const responseContent = {
-      thought: response.thought,
-      text: (response.message as string) || '',
-      actions: ['REPLY'],
-    };
+      const responseContent = {
+        thought: response.thought,
+        text: (response.message as string) || '',
+        actions: ['REPLY'],
+      };
 
-    await callback(responseContent);
+      await callback(responseContent);
 
-    return true;
+      return {
+        data: {
+          actionName: 'REPLY',
+          response: responseContent,
+          thought: response.thought,
+        },
+        values: {
+          lastReply: responseContent.text,
+          lastReplyTime: Date.now(),
+        },
+      };
+    } catch (error) {
+      return {
+        data: {
+          actionName: 'REPLY',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
+  },
+  effects: {
+    provides: ['user_response', 'conversation_continuation'],
+    requires: ['message_context'],
+    modifies: ['conversation_state'],
   },
   examples: [
     [

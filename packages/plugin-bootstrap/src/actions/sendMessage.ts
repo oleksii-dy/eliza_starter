@@ -4,6 +4,7 @@
 import {
   type Action,
   type ActionExample,
+  type ActionResult,
   composePromptFromState,
   findEntityByName,
   type HandlerCallback,
@@ -188,7 +189,7 @@ export const sendMessageAction: Action = {
     _options?: any,
     callback?: HandlerCallback,
     responses?: Memory[]
-  ): Promise<void> => {
+  ): Promise<ActionResult> => {
     try {
       if (!state) {
         logger.error('State is required for sendMessage action');
@@ -230,7 +231,13 @@ export const sendMessageAction: Action = {
           actions: ['SEND_MESSAGE_ERROR'],
           source: message.content.source,
         });
-        return;
+        return {
+          text: "I couldn't determine where you want me to send the message. Could you please specify the target (user or room) and platform?",
+          data: {
+            actionName: 'SEND_MESSAGE',
+            error: 'Missing target information',
+          },
+        };
       }
 
       const source = targetData.source.toLowerCase();
@@ -245,7 +252,13 @@ export const sendMessageAction: Action = {
             actions: ['SEND_MESSAGE_ERROR'],
             source: message.content.source,
           });
-          return;
+          return {
+            text: "I couldn't find the user you want me to send a message to. Could you please provide more details about who they are?",
+            data: {
+              actionName: 'SEND_MESSAGE',
+              error: 'User not found',
+            },
+          };
         }
 
         // Get the component for the specified source
@@ -262,7 +275,13 @@ export const sendMessageAction: Action = {
             actions: ['SEND_MESSAGE_ERROR'],
             source: message.content.source,
           });
-          return;
+          return {
+            text: `I couldn't find ${source} information for that user. Could you please provide their ${source} details?`,
+            data: {
+              actionName: 'SEND_MESSAGE',
+              error: 'User component not found',
+            },
+          };
         }
 
         const sendDirectMessage = (runtime.getService(source) as any)?.sendDirectMessage;
@@ -273,7 +292,13 @@ export const sendMessageAction: Action = {
             actions: ['SEND_MESSAGE_ERROR'],
             source: message.content.source,
           });
-          return;
+          return {
+            text: "I couldn't find the user you want me to send a message to. Could you please provide more details about who they are?",
+            data: {
+              actionName: 'SEND_MESSAGE',
+              error: 'Service not available',
+            },
+          };
         }
         // Send the message using the appropriate client
         try {
@@ -284,6 +309,15 @@ export const sendMessageAction: Action = {
             actions: ['SEND_MESSAGE'],
             source: message.content.source,
           });
+          return {
+            text: `Message sent to ${targetEntity.names[0]} on ${source}.`,
+            data: {
+              actionName: 'SEND_MESSAGE',
+              success: true,
+              targetUser: targetEntity.names[0],
+              source,
+            },
+          };
         } catch (error: any) {
           logger.error(`Failed to send direct message: ${error.message}`);
           await callback({
@@ -291,6 +325,13 @@ export const sendMessageAction: Action = {
             actions: ['SEND_MESSAGE_ERROR'],
             source: message.content.source,
           });
+          return {
+            text: 'I encountered an error trying to send the message. Please try again.',
+            data: {
+              actionName: 'SEND_MESSAGE',
+              error: error.message,
+            },
+          };
         }
       } else if (targetData.targetType === 'room') {
         // Try to find the target room
@@ -306,7 +347,13 @@ export const sendMessageAction: Action = {
             actions: ['SEND_MESSAGE_ERROR'],
             source: message.content.source,
           });
-          return;
+          return {
+            text: "I couldn't find the room you want me to send a message to. Could you please specify the exact room name?",
+            data: {
+              actionName: 'SEND_MESSAGE',
+              error: 'Room not found',
+            },
+          };
         }
 
         const sendRoomMessage = (runtime.getService(source) as any)?.sendRoomMessage;
@@ -317,7 +364,13 @@ export const sendMessageAction: Action = {
             actions: ['SEND_MESSAGE_ERROR'],
             source: message.content.source,
           });
-          return;
+          return {
+            text: "I couldn't find the room you want me to send a message to. Could you please specify the exact room name?",
+            data: {
+              actionName: 'SEND_MESSAGE',
+              error: 'Room service not available',
+            },
+          };
         }
 
         // Send the message to the room
@@ -329,6 +382,15 @@ export const sendMessageAction: Action = {
             actions: ['SEND_MESSAGE'],
             source: message.content.source,
           });
+          return {
+            text: `Message sent to ${targetRoom.name} on ${source}.`,
+            data: {
+              actionName: 'SEND_MESSAGE',
+              success: true,
+              targetRoom: targetRoom.name,
+              source,
+            },
+          };
         } catch (error: any) {
           logger.error(`Failed to send room message: ${error.message}`);
           await callback({
@@ -336,8 +398,24 @@ export const sendMessageAction: Action = {
             actions: ['SEND_MESSAGE_ERROR'],
             source: message.content.source,
           });
+          return {
+            text: 'I encountered an error trying to send the message to the room. Please try again.',
+            data: {
+              actionName: 'SEND_MESSAGE',
+              error: error.message,
+            },
+          };
         }
       }
+
+      // Default return statement
+      return {
+        text: 'Message processing completed.',
+        data: {
+          actionName: 'SEND_MESSAGE',
+          targetType: targetData.targetType,
+        },
+      };
     } catch (error) {
       logger.error(`Error in sendMessage handler: ${error}`);
       await callback?.({
@@ -345,6 +423,13 @@ export const sendMessageAction: Action = {
         actions: ['SEND_MESSAGE_ERROR'],
         source: message.content.source,
       });
+      return {
+        text: 'There was an error processing your message request.',
+        data: {
+          actionName: 'SEND_MESSAGE',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
     }
   },
 

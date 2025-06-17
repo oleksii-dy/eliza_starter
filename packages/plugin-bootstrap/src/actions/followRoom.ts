@@ -9,6 +9,7 @@ import {
   type Memory,
   ModelType,
   type State,
+  type ActionResult,
 } from '@elizaos/core';
 
 /**
@@ -66,103 +67,133 @@ export const followRoomAction: Action = {
     _options?: { [key: string]: unknown },
     _callback?: HandlerCallback,
     _responses?: Memory[]
-  ) => {
-    if (!state) {
-      logger.error('State is required for followRoomAction');
-      throw new Error('State is required for followRoomAction');
-    }
-
-    async function _shouldFollow(state: State): Promise<boolean> {
-      const shouldFollowPrompt = composePromptFromState({
-        state,
-        template: shouldFollowTemplate, // Define this template separately
-      });
-
-      const response = await runtime.useModel(ModelType.TEXT_SMALL, {
-        runtime,
-        prompt: shouldFollowPrompt,
-        stopSequences: [],
-      });
-
-      const cleanedResponse = response.trim().toLowerCase();
-
-      // Handle various affirmative responses
-      if (
-        cleanedResponse === 'true' ||
-        cleanedResponse === 'yes' ||
-        cleanedResponse === 'y' ||
-        cleanedResponse.includes('true') ||
-        cleanedResponse.includes('yes')
-      ) {
-        await runtime.createMemory(
-          {
-            entityId: message.entityId,
-            agentId: message.agentId,
-            roomId: message.roomId,
-            content: {
-              source: message.content.source,
-              thought: 'I will now follow this room and chime in',
-              actions: ['FOLLOW_ROOM_STARTED'],
-            },
-            metadata: {
-              type: 'FOLLOW_ROOM',
-            },
-          },
-          'messages'
-        );
-        return true;
+  ): Promise<ActionResult> => {
+    try {
+      if (!state) {
+        logger.error('State is required for followRoomAction');
+        throw new Error('State is required for followRoomAction');
       }
 
-      // Handle various negative responses
-      if (
-        cleanedResponse === 'false' ||
-        cleanedResponse === 'no' ||
-        cleanedResponse === 'n' ||
-        cleanedResponse.includes('false') ||
-        cleanedResponse.includes('no')
-      ) {
-        await runtime.createMemory(
-          {
-            entityId: message.entityId,
-            agentId: message.agentId,
-            roomId: message.roomId,
-            content: {
-              source: message.content.source,
-              thought: 'I decided to not follow this room',
-              actions: ['FOLLOW_ROOM_FAILED'],
+      async function _shouldFollow(state: State): Promise<boolean> {
+        const shouldFollowPrompt = composePromptFromState({
+          state,
+          template: shouldFollowTemplate, // Define this template separately
+        });
+
+        const response = await runtime.useModel(ModelType.TEXT_SMALL, {
+          runtime,
+          prompt: shouldFollowPrompt,
+          stopSequences: [],
+        });
+
+        const cleanedResponse = response.trim().toLowerCase();
+
+        // Handle various affirmative responses
+        if (
+          cleanedResponse === 'true' ||
+          cleanedResponse === 'yes' ||
+          cleanedResponse === 'y' ||
+          cleanedResponse.includes('true') ||
+          cleanedResponse.includes('yes')
+        ) {
+          await runtime.createMemory(
+            {
+              entityId: message.entityId,
+              agentId: message.agentId,
+              roomId: message.roomId,
+              content: {
+                source: message.content.source,
+                thought: 'I will now follow this room and chime in',
+                actions: ['FOLLOW_ROOM_STARTED'],
+              },
+              metadata: {
+                type: 'FOLLOW_ROOM',
+              },
             },
-            metadata: {
-              type: 'FOLLOW_ROOM',
+            'messages'
+          );
+          return true;
+        }
+
+        // Handle various negative responses
+        if (
+          cleanedResponse === 'false' ||
+          cleanedResponse === 'no' ||
+          cleanedResponse === 'n' ||
+          cleanedResponse.includes('false') ||
+          cleanedResponse.includes('no')
+        ) {
+          await runtime.createMemory(
+            {
+              entityId: message.entityId,
+              agentId: message.agentId,
+              roomId: message.roomId,
+              content: {
+                source: message.content.source,
+                thought: 'I decided to not follow this room',
+                actions: ['FOLLOW_ROOM_FAILED'],
+              },
+              metadata: {
+                type: 'FOLLOW_ROOM',
+              },
             },
-          },
-          'messages'
-        );
+            'messages'
+          );
+          return false;
+        }
+
+        // Default to false if response is unclear
+        logger.warn(`Unclear boolean response: ${response}, defaulting to false`);
         return false;
       }
 
-      // Default to false if response is unclear
-      logger.warn(`Unclear boolean response: ${response}, defaulting to false`);
-      return false;
-    }
+      const shouldFollow = await _shouldFollow(state);
+      const room = state.data.room ?? (await runtime.getRoom(message.roomId));
 
-    if (await _shouldFollow(state)) {
-      await runtime.setParticipantUserState(message.roomId, runtime.agentId, 'FOLLOWED');
-    }
+      if (shouldFollow) {
+        await runtime.setParticipantUserState(message.roomId, runtime.agentId, 'FOLLOWED');
+      }
 
-    const room = state.data.room ?? (await runtime.getRoom(message.roomId));
-
-    await runtime.createMemory(
-      {
-        entityId: message.entityId,
-        agentId: message.agentId,
-        roomId: message.roomId,
-        content: {
-          thought: `I followed the room ${room.name}`,
-          actions: ['FOLLOW_ROOM_START'],
+      await runtime.createMemory(
+        {
+          entityId: message.entityId,
+          agentId: message.agentId,
+          roomId: message.roomId,
+          content: {
+            thought: shouldFollow
+              ? `I followed the room ${room.name}`
+              : `I decided not to follow the room ${room.name}`,
+            actions: shouldFollow ? ['FOLLOW_ROOM_START'] : ['FOLLOW_ROOM_DECLINED'],
+          },
         },
-      },
-      'messages'
-    );
+        'messages'
+      );
+
+      return {
+        data: {
+          actionName: 'FOLLOW_ROOM',
+          roomName: room.name,
+          followed: shouldFollow,
+          roomId: message.roomId,
+        },
+        values: {
+          roomFollowState: shouldFollow ? 'FOLLOWED' : 'NOT_FOLLOWED',
+          lastFollowTime: Date.now(),
+        },
+      };
+    } catch (error) {
+      return {
+        data: {
+          actionName: 'FOLLOW_ROOM',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
+  },
+  effects: {
+    provides: ['room_follow_status'],
+    requires: ['room_context', 'user_request'],
+    modifies: ['participant_state', 'agent_engagement'],
   },
   examples: [
     [

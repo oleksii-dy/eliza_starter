@@ -9,6 +9,7 @@ import {
   type Memory,
   ModelType,
   type State,
+  type ActionResult,
 } from '@elizaos/core';
 
 /**
@@ -60,7 +61,7 @@ export const unmuteRoomAction: Action = {
     _options?: { [key: string]: unknown },
     _callback?: HandlerCallback,
     _responses?: Memory[]
-  ) => {
+  ): Promise<ActionResult> => {
     async function _shouldUnmute(state: State): Promise<boolean> {
       const shouldUnmutePrompt = composePromptFromState({
         state,
@@ -134,7 +135,9 @@ export const unmuteRoomAction: Action = {
       return false;
     }
 
-    if (state && (await _shouldUnmute(state))) {
+    const shouldUnmute = state && (await _shouldUnmute(state));
+
+    if (shouldUnmute) {
       await runtime.setParticipantUserState(message.roomId, runtime.agentId, null);
     }
 
@@ -142,7 +145,12 @@ export const unmuteRoomAction: Action = {
 
     if (!room) {
       logger.warn(`Room not found: ${message.roomId}`);
-      return false;
+      return {
+        data: {
+          actionName: 'UNMUTE_ROOM',
+          error: 'Room not found',
+        },
+      };
     }
 
     await runtime.createMemory(
@@ -151,12 +159,27 @@ export const unmuteRoomAction: Action = {
         agentId: message.agentId,
         roomId: message.roomId,
         content: {
-          thought: `I unmuted the room ${room.name}`,
-          actions: ['UNMUTE_ROOM_START'],
+          thought: shouldUnmute
+            ? `I unmuted the room ${room.name}`
+            : `I decided not to unmute the room ${room.name}`,
+          actions: shouldUnmute ? ['UNMUTE_ROOM_START'] : ['UNMUTE_ROOM_DECLINED'],
         },
       },
       'messages'
     );
+
+    return {
+      data: {
+        actionName: 'UNMUTE_ROOM',
+        roomName: room.name,
+        unmuted: shouldUnmute,
+        roomId: message.roomId,
+      },
+      values: {
+        roomMuteState: shouldUnmute ? 'UNMUTED' : 'MUTED',
+        lastUnmuteTime: shouldUnmute ? Date.now() : undefined,
+      },
+    };
   },
   examples: [
     [
