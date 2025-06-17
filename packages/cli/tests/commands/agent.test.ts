@@ -36,7 +36,16 @@ describe('ElizaOS Agent Commands', () => {
     }
     
     elizaosCmd = `bun ${cliPath}`;
-    defaultCharacter = join(scriptDir, '../test-characters/ada.json');
+    defaultCharacter = join(scriptDir, 'test-characters/ada.json');
+    
+    // Convert to absolute path and verify it exists
+    const { resolve } = await import('path');
+    defaultCharacter = resolve(defaultCharacter);
+    console.log(`[DEBUG] Looking for character file at: ${defaultCharacter}`);
+    
+    if (!existsSync(defaultCharacter)) {
+      throw new Error(`Character file not found at: ${defaultCharacter}`);
+    }
 
     // Setup test environment
     testServerPort = '3000';
@@ -54,7 +63,7 @@ describe('ElizaOS Agent Commands', () => {
 
     serverProcess = spawn(
       'bun',
-      [join(scriptDir, '../dist/index.js'), 'start', '--port', testServerPort, '--character', defaultCharacter],
+      [cliPath, 'start', '--port', testServerPort, '--character', defaultCharacter],
       {
         env: {
           ...process.env,
