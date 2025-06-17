@@ -96,7 +96,7 @@ export async function startAgent(
     throw error;
   }
 
-  server.registerAgent(runtime);
+  await server.registerAgent(runtime);
   logger.log(`Started ${runtime.character.name} as ${runtime.agentId}`);
   return runtime;
 }

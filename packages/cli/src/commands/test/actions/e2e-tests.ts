@@ -208,7 +208,6 @@ export async function runE2eTests(
               { isTestMode: true }
             );
 
-            server.registerAgent(runtime); // Ensure server knows about the runtime
             runtimes.push(runtime);
 
             // Pass all loaded plugins to the projectAgent so TestRunner can identify
@@ -343,6 +342,8 @@ export async function runE2eTests(
         if (server) {
           try {
             logger.info('Stopping test server...');
+            // Give any remaining async operations time to complete
+            await new Promise((resolve) => setTimeout(resolve, 100));
             await server.stop();
             logger.info('Test server stopped successfully');
           } catch (stopError) {
