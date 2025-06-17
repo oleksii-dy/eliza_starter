@@ -119,7 +119,7 @@ describe('Real-world Environment Scenarios', () => {
     const imports = [
       './src/index',
       '@elizaos/core',
-      '@elizaos/plugin-bootstrap',
+      '@elizaos/plugin-message-handling',
       './characters/main.json',
     ];
 

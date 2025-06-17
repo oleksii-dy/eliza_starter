@@ -203,7 +203,7 @@ create_test_project_with_agents() {
     "@elizaos/cli": "latest"
   },
   "elizaos": {
-    "plugins": ["@elizaos/plugin-bootstrap"],
+    "plugins": ["@elizaos/plugin-message-handling"],
     "agents": [
       {
         "character": "./characters/agent1.json"
@@ -220,7 +220,7 @@ EOF
   "name": "ProjectAgent",
   "description": "An agent configured in project",
   "modelProvider": "openai",
-  "plugins": ["@elizaos/plugin-bootstrap"],
+  "plugins": ["@elizaos/plugin-message-handling"],
   "settings": {
     "secrets": {},
     "voice": {

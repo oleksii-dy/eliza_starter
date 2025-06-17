@@ -1,5 +1,5 @@
 {
-  "name": "@elizaos/plugin-bootstrap",
+  "name": "@elizaos/plugin-message-handling",
   "version": "1.0.6",
   "type": "module",
   "main": "dist/index.js",
@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/elizaos-plugins/plugin-bootstrap"
+    "url": "https://github.com/elizaos-plugins/plugin-message-handling"
   },
   "exports": {
     "./package.json": "./package.json",

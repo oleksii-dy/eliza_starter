@@ -28,7 +28,7 @@ export const character: Character = {
       ? ['@elizaos/plugin-twitter']
       : []),
     ...(process.env.TELEGRAM_BOT_TOKEN ? ['@elizaos/plugin-telegram'] : []),
-    ...(!process.env.IGNORE_BOOTSTRAP ? ['@elizaos/plugin-bootstrap'] : []),
+    ...(!process.env.IGNORE_BOOTSTRAP ? ['@elizaos/plugin-message-handling'] : []),
   ],
   settings: {
     secrets: {},

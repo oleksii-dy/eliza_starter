@@ -164,7 +164,7 @@ teardown() {
   "dependencies": {
     "@elizaos/core": "latest",
     "@elizaos/cli": "latest",
-    "@elizaos/plugin-bootstrap": "latest"
+    "@elizaos/plugin-message-handling": "latest"
   }
 }
 EOF

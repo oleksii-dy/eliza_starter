@@ -86,7 +86,7 @@ Character files should use environment-agnostic plugin references:
 {
   "name": "MyAgent",
   "plugins": [
-    "@elizaos/plugin-bootstrap", // Published plugins
+    "@elizaos/plugin-message-handling", // Published plugins
     "./local-plugin" // Local plugins (CLI handles resolution)
   ]
 }

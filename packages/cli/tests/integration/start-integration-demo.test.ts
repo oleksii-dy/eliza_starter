@@ -22,7 +22,7 @@ describe('Start Command Integration with Environment Normalization', () => {
       name: 'EnvTestAgent',
       description: 'Agent for testing environment normalization',
       modelProvider: 'openai',
-      plugins: ['@elizaos/plugin-bootstrap'],
+      plugins: ['@elizaos/plugin-message-handling'],
       settings: {
         voice: {
           model: 'en_US-male-medium',
@@ -57,7 +57,7 @@ describe('Start Command Integration with Environment Normalization', () => {
     });
 
     // 4. Test plugin loading (mocked to avoid actual plugin loading)
-    const pluginName = '@elizaos/plugin-bootstrap';
+    const pluginName = '@elizaos/plugin-message-handling';
     console.log(`Testing plugin loading for: ${pluginName}`);
 
     // In a real scenario, this would load the actual plugin

@@ -9,12 +9,11 @@ import {
 } from './test-utils';
 
 // Import providers from source modules
+import { attachmentsProvider } from '../providers/attachments';
 import choiceProvider from '../providers/choice';
 import { factsProvider } from '../providers/facts';
 import { providersProvider } from '../providers/providers';
 import { recentMessagesProvider } from '../providers/recentMessages';
-// import roleProvider from '../providers/roles'; // TODO: File missing
-import { attachmentsProvider } from '../providers/attachments';
 import { settingsProvider } from '../providers/settings';
 
 // Mock external dependencies

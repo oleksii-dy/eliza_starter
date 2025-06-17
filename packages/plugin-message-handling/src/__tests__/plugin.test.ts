@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { bootstrapPlugin } from '../index';
+import { messageHandlingPlugin } from '../index';
 import { IAgentRuntime, UUID, EventType, Memory, Content, Character } from '@elizaos/core';
 import { MockRuntime, createMockRuntime } from './test-utils';
 
-// Create a mock function for bootstrapPlugin.init since it might not actually exist on the plugin
+// Create a mock function for messageHandlingPlugin.init since it might not actually exist on the plugin
 // Define mockInit as a vi.fn() once. Its implementation will be set in beforeEach.
 const mockInit = vi.fn();
 
-describe('Bootstrap Plugin', () => {
+describe('Message Handling Plugin', () => {
   let mockRuntime: MockRuntime;
 
   beforeEach(() => {
@@ -21,8 +21,8 @@ describe('Bootstrap Plugin', () => {
 
     // Set or reset mockInit's implementation for each test
     mockInit.mockImplementation(async (config, runtime) => {
-      if (bootstrapPlugin.providers) {
-        bootstrapPlugin.providers.forEach((provider) => {
+      if (messageHandlingPlugin.providers) {
+        messageHandlingPlugin.providers.forEach((provider) => {
           try {
             runtime.registerProvider(provider);
           } catch (error) {
@@ -31,8 +31,8 @@ describe('Bootstrap Plugin', () => {
           }
         });
       }
-      if (bootstrapPlugin.actions) {
-        bootstrapPlugin.actions.forEach((action) => {
+      if (messageHandlingPlugin.actions) {
+        messageHandlingPlugin.actions.forEach((action) => {
           try {
             runtime.registerAction(action);
           } catch (error) {
@@ -40,8 +40,8 @@ describe('Bootstrap Plugin', () => {
           }
         });
       }
-      if (bootstrapPlugin.evaluators) {
-        bootstrapPlugin.evaluators.forEach((evaluator) => {
+      if (messageHandlingPlugin.evaluators) {
+        messageHandlingPlugin.evaluators.forEach((evaluator) => {
           try {
             runtime.registerEvaluator(evaluator);
           } catch (error) {
@@ -49,8 +49,8 @@ describe('Bootstrap Plugin', () => {
           }
         });
       }
-      if (bootstrapPlugin.services) {
-        bootstrapPlugin.services.forEach((service) => {
+      if (messageHandlingPlugin.services) {
+        messageHandlingPlugin.services.forEach((service) => {
           try {
             // Services are classes, so we need to get their static serviceType or name
             const serviceName =
@@ -63,8 +63,8 @@ describe('Bootstrap Plugin', () => {
           }
         });
       }
-      if (bootstrapPlugin.events) {
-        Object.entries(bootstrapPlugin.events).forEach(([eventType, handlers]) => {
+      if (messageHandlingPlugin.events) {
+        Object.entries(messageHandlingPlugin.events).forEach(([eventType, handlers]) => {
           handlers.forEach((handler) => {
             try {
               runtime.registerEvent(eventType, handler);
@@ -82,9 +82,9 @@ describe('Bootstrap Plugin', () => {
   });
 
   it('should have the correct name and description', () => {
-    expect(bootstrapPlugin.name).toBe('bootstrap');
-    expect(bootstrapPlugin.description).toBeDefined();
-    expect(typeof bootstrapPlugin.description).toBe('string');
+    expect(messageHandlingPlugin.name).toBe('message-handling');
+    expect(messageHandlingPlugin.description).toBeDefined();
+    expect(typeof messageHandlingPlugin.description).toBe('string');
   });
 
   it('should register all providers during initialization', async () => {
@@ -92,11 +92,13 @@ describe('Bootstrap Plugin', () => {
     await mockInit({}, mockRuntime as unknown as IAgentRuntime);
 
     // Check that all providers were registered
-    if (bootstrapPlugin.providers) {
-      expect(mockRuntime.registerProvider).toHaveBeenCalledTimes(bootstrapPlugin.providers.length);
+    if (messageHandlingPlugin.providers) {
+      expect(mockRuntime.registerProvider).toHaveBeenCalledTimes(
+        messageHandlingPlugin.providers.length
+      );
 
       // Verify each provider was registered
-      bootstrapPlugin.providers.forEach((provider) => {
+      messageHandlingPlugin.providers.forEach((provider) => {
         expect(mockRuntime.registerProvider).toHaveBeenCalledWith(provider);
       });
     }
@@ -107,11 +109,13 @@ describe('Bootstrap Plugin', () => {
     await mockInit({}, mockRuntime as unknown as IAgentRuntime);
 
     // Check that all actions were registered
-    if (bootstrapPlugin.actions) {
-      expect(mockRuntime.registerAction).toHaveBeenCalledTimes(bootstrapPlugin.actions.length);
+    if (messageHandlingPlugin.actions) {
+      expect(mockRuntime.registerAction).toHaveBeenCalledTimes(
+        messageHandlingPlugin.actions.length
+      );
 
       // Verify each action was registered
-      bootstrapPlugin.actions.forEach((action) => {
+      messageHandlingPlugin.actions.forEach((action) => {
         expect(mockRuntime.registerAction).toHaveBeenCalledWith(action);
       });
     }
@@ -122,13 +126,13 @@ describe('Bootstrap Plugin', () => {
     await mockInit({}, mockRuntime as unknown as IAgentRuntime);
 
     // Check that all evaluators were registered
-    if (bootstrapPlugin.evaluators) {
+    if (messageHandlingPlugin.evaluators) {
       expect(mockRuntime.registerEvaluator).toHaveBeenCalledTimes(
-        bootstrapPlugin.evaluators.length
+        messageHandlingPlugin.evaluators.length
       );
 
       // Verify each evaluator was registered
-      bootstrapPlugin.evaluators.forEach((evaluator) => {
+      messageHandlingPlugin.evaluators.forEach((evaluator) => {
         expect(mockRuntime.registerEvaluator).toHaveBeenCalledWith(evaluator);
       });
     }
@@ -140,8 +144,8 @@ describe('Bootstrap Plugin', () => {
 
     // Count the number of event registrations expected
     let expectedEventCount = 0;
-    if (bootstrapPlugin.events) {
-      Object.values(bootstrapPlugin.events).forEach((handlers) => {
+    if (messageHandlingPlugin.events) {
+      Object.values(messageHandlingPlugin.events).forEach((handlers) => {
         expectedEventCount += handlers.length;
       });
 
@@ -155,11 +159,13 @@ describe('Bootstrap Plugin', () => {
     await mockInit({}, mockRuntime as unknown as IAgentRuntime);
 
     // Check that all services were registered
-    if (bootstrapPlugin.services) {
-      expect(mockRuntime.registerService).toHaveBeenCalledTimes(bootstrapPlugin.services.length);
+    if (messageHandlingPlugin.services) {
+      expect(mockRuntime.registerService).toHaveBeenCalledTimes(
+        messageHandlingPlugin.services.length
+      );
 
       // Verify each service was registered
-      bootstrapPlugin.services.forEach((service) => {
+      messageHandlingPlugin.services.forEach((service) => {
         expect(mockRuntime.registerService).toHaveBeenCalledWith(service);
       });
     }
@@ -215,8 +221,8 @@ describe('Message Event Handlers', () => {
   });
 
   it('should have message received event handlers', () => {
-    expect(bootstrapPlugin.events).toBeDefined();
-    const events = bootstrapPlugin.events;
+    expect(messageHandlingPlugin.events).toBeDefined();
+    const events = messageHandlingPlugin.events;
     if (events && EventType.MESSAGE_RECEIVED in events) {
       const handlers = events[EventType.MESSAGE_RECEIVED];
       if (handlers) {
@@ -227,14 +233,14 @@ describe('Message Event Handlers', () => {
   });
 
   it('should have handlers for other event types', () => {
-    expect(bootstrapPlugin.events).toBeDefined();
+    expect(messageHandlingPlugin.events).toBeDefined();
 
-    const events = bootstrapPlugin.events;
+    const events = messageHandlingPlugin.events;
     if (events) {
       // Check for various event types presence
       const eventTypes = Object.keys(events);
 
-      // Check for event types that actually exist in the bootstrapPlugin.events
+      // Check for event types that actually exist in the messageHandlingPlugin.events
       expect(eventTypes).toContain(EventType.MESSAGE_RECEIVED);
       expect(eventTypes).toContain(EventType.WORLD_JOINED);
       expect(eventTypes).toContain(EventType.ENTITY_JOINED);
@@ -262,7 +268,7 @@ describe('Message Event Handlers', () => {
   });
 
   it('should skip message handling with mock runtime', async () => {
-    const events = bootstrapPlugin.events;
+    const events = messageHandlingPlugin.events;
     if (events && EventType.MESSAGE_RECEIVED in events) {
       const handlers = events[EventType.MESSAGE_RECEIVED];
       if (handlers && handlers.length > 0) {
@@ -291,20 +297,20 @@ describe('Message Event Handlers', () => {
 describe('Plugin Module Structure', () => {
   it('should export all required plugin components', () => {
     // Check that the plugin exports all required components
-    expect(bootstrapPlugin).toHaveProperty('name');
-    expect(bootstrapPlugin).toHaveProperty('description');
+    expect(messageHandlingPlugin).toHaveProperty('name');
+    expect(messageHandlingPlugin).toHaveProperty('description');
     // The init function is optional in this plugin
-    expect(bootstrapPlugin).toHaveProperty('providers');
-    expect(bootstrapPlugin).toHaveProperty('actions');
-    expect(bootstrapPlugin).toHaveProperty('events');
-    expect(bootstrapPlugin).toHaveProperty('services');
-    expect(bootstrapPlugin).toHaveProperty('evaluators');
+    expect(messageHandlingPlugin).toHaveProperty('providers');
+    expect(messageHandlingPlugin).toHaveProperty('actions');
+    expect(messageHandlingPlugin).toHaveProperty('events');
+    expect(messageHandlingPlugin).toHaveProperty('services');
+    expect(messageHandlingPlugin).toHaveProperty('evaluators');
   });
 
   it('should have properly structured providers', () => {
     // Check that providers have the required structure
-    if (bootstrapPlugin.providers) {
-      bootstrapPlugin.providers.forEach((provider) => {
+    if (messageHandlingPlugin.providers) {
+      messageHandlingPlugin.providers.forEach((provider) => {
         expect(provider).toHaveProperty('name');
         expect(provider).toHaveProperty('get');
         expect(typeof provider.get).toBe('function');
@@ -314,8 +320,8 @@ describe('Plugin Module Structure', () => {
 
   it('should have properly structured actions', () => {
     // Check that actions have the required structure
-    if (bootstrapPlugin.actions) {
-      bootstrapPlugin.actions.forEach((action) => {
+    if (messageHandlingPlugin.actions) {
+      messageHandlingPlugin.actions.forEach((action) => {
         expect(action).toHaveProperty('name');
         expect(action).toHaveProperty('description');
         expect(action).toHaveProperty('handler');
@@ -328,13 +334,13 @@ describe('Plugin Module Structure', () => {
 
   it('should have correct folder structure', () => {
     // Verify that the exported providers match expected naming conventions
-    const providerNames = (bootstrapPlugin.providers || []).map((p) => p.name);
+    const providerNames = (messageHandlingPlugin.providers || []).map((p) => p.name);
     expect(providerNames).toContain('FACTS');
     expect(providerNames).toContain('TIME');
     expect(providerNames).toContain('RECENT_MESSAGES');
 
     // Verify that the exported actions match expected naming conventions
-    const actionNames = (bootstrapPlugin.actions || []).map((a) => a.name);
+    const actionNames = (messageHandlingPlugin.actions || []).map((a) => a.name);
     expect(actionNames).toContain('REPLY');
     expect(actionNames).toContain('NONE');
   });

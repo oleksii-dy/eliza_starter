@@ -194,7 +194,7 @@ interface PluginMetadata {
 // Default registry data for offline use or when GitHub is unavailable
 const DEFAULT_REGISTRY: Record<string, string> = {
   '@elizaos/plugin-anthropic': 'github:elizaos-plugins/plugin-anthropic',
-  '@elizaos/plugin-bootstrap': 'github:elizaos-plugins/plugin-bootstrap',
+  '@elizaos/plugin-message-handling': 'github:elizaos-plugins/plugin-message-handling',
   '@elizaos/plugin-browser': 'github:elizaos-plugins/plugin-browser',
   '@elizaos/plugin-discord': 'github:elizaos-plugins/plugin-discord',
   '@elizaos/plugin-elevenlabs': 'github:elizaos-plugins/plugin-elevenlabs',
