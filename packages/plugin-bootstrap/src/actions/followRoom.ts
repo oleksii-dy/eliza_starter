@@ -66,7 +66,7 @@ export const followRoomAction: Action = {
     _options?: { [key: string]: unknown },
     _callback?: HandlerCallback,
     _responses?: Memory[]
-  ): Promise<boolean> => {
+  ) => {
     if (!state) {
       logger.error('State is required for followRoomAction');
       throw new Error('State is required for followRoomAction');
@@ -163,7 +163,6 @@ export const followRoomAction: Action = {
       },
       'messages'
     );
-    return true;
   },
   examples: [
     [

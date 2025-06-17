@@ -21,8 +21,6 @@ import {
   type MessageReceivedHandlerParams,
   ModelType,
   parseKeyValueXml,
-  type Plugin,
-  PluginEvents,
   postCreationTemplate,
   Role,
   type Room,
@@ -32,14 +30,6 @@ import {
   type WorldPayload,
 } from '@elizaos/core';
 import { v4 } from 'uuid';
-
-import * as actions from './actions/index.ts';
-import * as providers from './providers/index.ts';
-
-import { TaskService } from './services/task.ts';
-
-export * from './actions/index.ts';
-export * from './providers/index.ts';
 
 /**
  * Represents media data containing a buffer of data and the media type.
@@ -1163,7 +1153,7 @@ const controlMessageHandler = async ({
   }
 };
 
-const events = {
+export const events = {
   [EventType.MESSAGE_RECEIVED]: [
     async (payload: MessagePayload) => {
       if (!payload.callback) {
@@ -1327,42 +1317,3 @@ const events = {
 
   CONTROL_MESSAGE: [controlMessageHandler],
 };
-
-export const bootstrapPlugin: Plugin = {
-  name: 'bootstrap',
-  description: 'Agent bootstrap with basic actions and evaluators',
-  actions: [
-    actions.replyAction,
-    actions.followRoomAction,
-    actions.unfollowRoomAction,
-    actions.ignoreAction,
-    actions.noneAction,
-    actions.muteRoomAction,
-    actions.unmuteRoomAction,
-    actions.choiceAction,
-    actions.updateSettingsAction,
-  ],
-  // this is jank, these events are not valid
-  events: events as any as PluginEvents,
-  providers: [
-    providers.evaluatorsProvider,
-    providers.anxietyProvider,
-    providers.timeProvider,
-    providers.entitiesProvider,
-    providers.relationshipsProvider,
-    providers.choiceProvider,
-    providers.factsProvider,
-    providers.roleProvider,
-    providers.settingsProvider,
-    providers.capabilitiesProvider,
-    providers.attachmentsProvider,
-    providers.providersProvider,
-    providers.actionsProvider,
-    providers.characterProvider,
-    providers.recentMessagesProvider,
-    providers.worldProvider,
-  ],
-  services: [TaskService],
-};
-
-export default bootstrapPlugin;

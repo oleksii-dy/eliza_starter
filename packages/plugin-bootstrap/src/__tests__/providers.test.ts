@@ -1,22 +1,12 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { ChannelType, IAgentRuntime, logger, Media, Memory, State, UUID } from '@elizaos/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  createMockRuntime,
   createMockMemory,
+  createMockRuntime,
   createMockState,
   MockRuntime,
   setupActionTest,
 } from './test-utils';
-import {
-  IAgentRuntime,
-  Memory,
-  Provider,
-  State,
-  UUID,
-  logger,
-  ChannelType,
-  createUniqueUuid as actualCreateUniqueUuid,
-  Media,
-} from '@elizaos/core';
 
 // Import providers from source modules
 import choiceProvider from '../providers/choice';
@@ -24,8 +14,8 @@ import { factsProvider } from '../providers/facts';
 import { providersProvider } from '../providers/providers';
 import { recentMessagesProvider } from '../providers/recentMessages';
 // import roleProvider from '../providers/roles'; // TODO: File missing
-import { settingsProvider } from '../providers/settings';
 import { attachmentsProvider } from '../providers/attachments';
+import { settingsProvider } from '../providers/settings';
 
 // Mock external dependencies
 vi.mock('@elizaos/core', async (importOriginal) => {

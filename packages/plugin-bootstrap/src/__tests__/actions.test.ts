@@ -1,34 +1,23 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import {
+  type HandlerCallback,
+  type IAgentRuntime,
+  type Memory,
+  ModelType,
+  type State,
+  logger,
+} from '@elizaos/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   followRoomAction,
   ignoreAction,
   muteRoomAction,
-  unmuteRoomAction,
-  unfollowRoomAction,
-  replyAction,
-  choiceAction,
-  sendMessageAction,
-  // updateEntityAction, // TODO: File missing
   noneAction,
-} from '../actions/index';
-import {
-  createMockRuntime,
-  createMockMemory,
-  createMockState,
-  setupActionTest,
-} from './test-utils';
+  replyAction,
+  unfollowRoomAction,
+  unmuteRoomAction,
+} from '../actions';
 import type { MockRuntime } from './test-utils';
-import {
-  type IAgentRuntime,
-  type Memory,
-  type State,
-  type HandlerCallback,
-  ModelType,
-  ChannelType,
-  Role,
-  getUserServerRole,
-  logger,
-} from '@elizaos/core';
+import { createMockMemory, setupActionTest } from './test-utils';
 
 // Spy on commonly used methods for logging
 beforeEach(() => {

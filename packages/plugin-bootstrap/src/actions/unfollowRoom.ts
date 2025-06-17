@@ -63,7 +63,7 @@ export const unfollowRoomAction: Action = {
     _options?: { [key: string]: unknown },
     _callback?: HandlerCallback,
     _responses?: Memory[]
-  ): Promise<boolean> => {
+  ) => {
     async function _shouldUnfollow(state: State): Promise<boolean> {
       const shouldUnfollowPrompt = composePromptFromState({
         state,
@@ -114,7 +114,6 @@ export const unfollowRoomAction: Action = {
         'messages'
       );
     }
-    return true;
   },
   examples: [
     [

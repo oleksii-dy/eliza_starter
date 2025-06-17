@@ -738,7 +738,7 @@ export const updateSettingsAction: Action = {
     state?: State,
     _options?: any,
     callback?: HandlerCallback
-  ): Promise<boolean> => {
+  ): Promise<void> => {
     try {
       if (!state) {
         logger.error('State is required for settings handler');
@@ -762,7 +762,7 @@ export const updateSettingsAction: Action = {
       if (!serverOwnership) {
         logger.error(`No server found for user ${message.entityId} in handler`);
         await generateErrorResponse(runtime, state, callback);
-        return true;
+        return;
       }
 
       const serverId = serverOwnership?.serverId;
@@ -770,7 +770,7 @@ export const updateSettingsAction: Action = {
 
       if (!serverId) {
         logger.error(`No server ID found for user ${message.entityId} in handler`);
-        return true;
+        return;
       }
 
       // Get settings state from world metadata
@@ -779,7 +779,7 @@ export const updateSettingsAction: Action = {
       if (!worldSettings) {
         logger.error(`No settings state found for server ${serverId} in handler`);
         await generateErrorResponse(runtime, state, callback);
-        return true;
+        return;
       }
 
       // Extract setting values from message
@@ -804,7 +804,7 @@ export const updateSettingsAction: Action = {
         if (!updatedWorldSettings) {
           logger.error('Failed to retrieve updated settings state');
           await generateErrorResponse(runtime, state, callback);
-          return true;
+          return;
         }
 
         await generateSuccessResponse(
@@ -824,7 +824,6 @@ export const updateSettingsAction: Action = {
         await generateErrorResponse(runtime, state, callback);
       }
     }
-    return true;
   },
   examples: [
     [
