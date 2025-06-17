@@ -50,7 +50,7 @@ jobs:
         run: bun install
 
       - name: Clear Turbo cache for CLI
-        run: turbo run build --filter=@elizaos/cli --force
+        run: bunx turbo run build --filter=@elizaos/cli --force
 
       - name: Build packages
         run: bun run build
