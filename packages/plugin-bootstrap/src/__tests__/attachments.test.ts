@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { processAttachments } from '../src/index';
+import { processAttachments } from '../index';
 import { IAgentRuntime, Media, ModelType, ContentType, logger } from '@elizaos/core';
 import { createMockRuntime, MockRuntime } from './test-utils';
 

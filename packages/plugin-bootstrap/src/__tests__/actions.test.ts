@@ -10,7 +10,7 @@ import {
   sendMessageAction,
   updateEntityAction,
   noneAction,
-} from '../src/actions';
+} from '../actions';
 import {
   createMockRuntime,
   createMockMemory,

@@ -19,13 +19,13 @@ import {
 } from '@elizaos/core';
 
 // Import providers from source modules
-import choiceProvider from '../src/providers/choice';
-import { factsProvider } from '../src/providers/facts';
-import { providersProvider } from '../src/providers/providers';
-import { recentMessagesProvider } from '../src/providers/recentMessages';
-import roleProvider from '../src/providers/roles';
-import { settingsProvider } from '../src/providers/settings';
-import { attachmentsProvider } from '../src/providers/attachments';
+import choiceProvider from '../providers/choice';
+import { factsProvider } from '../providers/facts';
+import { providersProvider } from '../providers/providers';
+import { recentMessagesProvider } from '../providers/recentMessages';
+import roleProvider from '../providers/roles';
+import { settingsProvider } from '../providers/settings';
+import { attachmentsProvider } from '../providers/attachments';
 
 // Mock external dependencies
 vi.mock('@elizaos/core', async (importOriginal) => {

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { TaskService } from '../src/services/task';
+import { TaskService } from '../services/task';
 import { EventType, IAgentRuntime, logger, Service } from '@elizaos/core';
-import { bootstrapPlugin } from '../src/index';
+import { bootstrapPlugin } from '../index';
 import { UUID, ModelType, ServiceType } from '@elizaos/core';
 import { createMockRuntime, createMockService, MockRuntime, setupActionTest } from './test-utils';
 

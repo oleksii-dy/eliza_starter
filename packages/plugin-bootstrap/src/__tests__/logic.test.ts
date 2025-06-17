@@ -15,7 +15,7 @@ import {
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { bootstrapPlugin } from '../src/index';
+import { bootstrapPlugin } from '../index';
 import { MockRuntime, setupActionTest } from './test-utils';
 
 // Helper to create unique mock IDs

@@ -62,7 +62,7 @@ describe('Reflection Evaluator', () => {
 
   it('should call the model with the correct prompt', async () => {
     // Import the evaluator dynamically to avoid polluting the test scope
-    const { reflectionEvaluator } = await import('../src/evaluators/reflection');
+    const { reflectionEvaluator } = await import('../evaluators/reflection');
 
     // Spy on the composePrompt function in the @elizaos/core module
     const composeSpy = vi.spyOn(entityUtils, 'composePrompt').mockReturnValue('Composed prompt');
@@ -133,7 +133,7 @@ describe('Reflection Evaluator', () => {
 
   it('should store new facts and relationships', async () => {
     // Import the evaluator dynamically to avoid polluting the test scope
-    const { reflectionEvaluator } = await import('../src/evaluators/reflection');
+    const { reflectionEvaluator } = await import('../evaluators/reflection');
 
     // Spy on the composePrompt function in the @elizaos/core module
     const composeSpy = vi.spyOn(entityUtils, 'composePrompt').mockReturnValue('Composed prompt');
@@ -214,7 +214,7 @@ describe('Reflection Evaluator', () => {
 
   it('should handle model errors without crashing', async () => {
     // Import the evaluator dynamically to avoid polluting the test scope
-    const { reflectionEvaluator } = await import('../src/evaluators/reflection');
+    const { reflectionEvaluator } = await import('../evaluators/reflection');
 
     // Arrange - Mock a model error
     const loggerSpy = vi.spyOn(entityUtils.logger, 'error');
@@ -242,7 +242,7 @@ describe('Reflection Evaluator', () => {
 
   it('should filter out invalid facts', async () => {
     // Import the evaluator dynamically to avoid polluting the test scope
-    const { reflectionEvaluator } = await import('../src/evaluators/reflection');
+    const { reflectionEvaluator } = await import('../evaluators/reflection');
 
     // Arrange
     mockRuntime.useModel.mockResolvedValueOnce({
@@ -275,7 +275,7 @@ describe('Reflection Evaluator', () => {
 
   it('should validate against the reflection evaluator schema', async () => {
     // Import the evaluator dynamically to avoid polluting the test scope
-    const { reflectionEvaluator } = await import('../src/evaluators/reflection');
+    const { reflectionEvaluator } = await import('../evaluators/reflection');
 
     // Mock the getCache method to return a previous message ID
     mockRuntime.getCache.mockResolvedValueOnce('previous-message-id');
