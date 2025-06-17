@@ -516,14 +516,34 @@ export class AgentRuntime implements IAgentRuntime {
             await (this.adapter as any).runPluginMigrations(p.schema, p.name);
             this.logger.info(`Successfully migrated plugin: ${p.name}`);
           } else {
-            this.logger.warn(`Adapter does not support plugin migrations for ${p.name}`);
+            // Try to get runPluginMigrations from the SQL plugin
+            const sqlPlugin = this.plugins.find((plugin) => plugin.name === '@elizaos/plugin-sql');
+            if (sqlPlugin && 'runPluginMigrations' in sqlPlugin) {
+              const migrationFn = (sqlPlugin as any).runPluginMigrations;
+              if (typeof migrationFn === 'function') {
+                await migrationFn(drizzle, p.name, p.schema);
+                this.logger.info(
+                  `Successfully migrated plugin: ${p.name} (using sql plugin function)`
+                );
+              } else {
+                this.logger.error(
+                  `runPluginMigrations is not a function on sql plugin for ${p.name}`
+                );
+              }
+            } else {
+              this.logger.error(
+                `Cannot find runPluginMigrations function for ${p.name}, migrations skipped`
+              );
+            }
           }
         } catch (error) {
           this.logger.error(`Failed to migrate plugin ${p.name}:`, error);
-          // Continue with other plugins even if one fails
+          throw error;
         }
       }
     }
+
+    this.logger.info('Plugin migrations completed.');
   }
 
   async getConnection(): Promise<unknown> {
@@ -1208,7 +1228,7 @@ export class AgentRuntime implements IAgentRuntime {
 
   async registerService(serviceDef: typeof Service): Promise<void> {
     // Use serviceName as the unique key for registration
-    const serviceName = serviceDef.serviceName;
+    const serviceName = serviceDef.serviceName || serviceDef.name;
     if (!serviceName) {
       this.logger.warn(
         `Service ${serviceDef.name} is missing a static serviceName and cannot be registered.`
