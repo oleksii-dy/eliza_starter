@@ -23,6 +23,52 @@ TOTAL_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
 
+# Track PIDs for cleanup
+CHILD_PIDS=()
+CLEANUP_DONE=false
+
+# Cleanup function
+cleanup() {
+  if [ "$CLEANUP_DONE" = "true" ]; then
+    return
+  fi
+  CLEANUP_DONE=true
+  
+  echo -e "\n${YELLOW}Cleaning up test processes...${NC}"
+  
+  # Kill all child processes
+  for pid in "${CHILD_PIDS[@]}"; do
+    if kill -0 "$pid" 2>/dev/null; then
+      echo "Killing process $pid"
+      kill -TERM "$pid" 2>/dev/null || true
+    fi
+  done
+  
+  # Wait briefly for graceful shutdown
+  sleep 1
+  
+  # Force kill any remaining processes
+  for pid in "${CHILD_PIDS[@]}"; do
+    if kill -0 "$pid" 2>/dev/null; then
+      echo "Force killing process $pid"
+      kill -KILL "$pid" 2>/dev/null || true
+    fi
+  done
+  
+  # Kill any elizaos processes that might be orphaned
+  pkill -f "elizaos start" 2>/dev/null || true
+  pkill -f "node.*elizaos.*start" 2>/dev/null || true
+  
+  # Clean up test artifacts
+  rm -rf ~/.eliza/test-* 2>/dev/null || true
+}
+
+# Set up signal handlers
+trap cleanup EXIT
+trap cleanup SIGINT
+trap cleanup SIGTERM
+trap cleanup SIGHUP
+
 # Function to run test suite
 run_test_suite() {
   local suite_name="$1"
@@ -31,7 +77,13 @@ run_test_suite() {
   echo -e "\n${YELLOW}Running ${suite_name}...${NC}"
   echo -e "${BLUE}Command: ${test_command}${NC}"
   
-  if eval "$test_command"; then
+  # Run test in background to capture PID
+  eval "$test_command" &
+  local test_pid=$!
+  CHILD_PIDS+=($test_pid)
+  
+  # Wait for test to complete
+  if wait $test_pid; then
     echo -e "${GREEN}✓ ${suite_name} passed${NC}"
     ((PASSED_TESTS++))
   else
@@ -40,6 +92,9 @@ run_test_suite() {
     ((FAILED_TESTS++))
   fi
   ((TOTAL_TESTS++))
+  
+  # Remove PID from tracking
+  CHILD_PIDS=(${CHILD_PIDS[@]/$test_pid})
 }
 
 # Change to CLI directory
@@ -68,6 +123,11 @@ fi
 
 # Run BATS tests if available
 if command -v bats >/dev/null 2>&1; then
+  # Set shorter timeout for BATS tests in CI
+  if [ "$CI" = "true" ]; then
+    export TEST_TIMEOUT=10  # Reduce from default 30s to 10s in CI
+  fi
+  
   run_test_suite "BATS Command Tests" "bats tests/bats/commands"
   run_test_suite "BATS Integration Tests" "bats tests/bats/integration" 
   run_test_suite "BATS E2E Tests" "bats tests/bats/e2e"

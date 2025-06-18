@@ -25,6 +25,7 @@ jobs:
     # Run on pull_request events or push events
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20  # Job-level timeout
     strategy:
       fail-fast: false
       matrix:
@@ -46,6 +47,24 @@ jobs:
 
       - name: Mention Bun version
         run: bun --version
+
+      - name: Install BATS (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew install bats-core
+          else
+            sudo apt-get update
+            sudo apt-get install -y bats
+          fi
+          bats --version
+
+      - name: Install BATS (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          npm install -g bats
+          bats --version || echo "BATS installation on Windows may have issues"
 
       - name: Install dependencies
         run: bun install
@@ -100,4 +119,20 @@ jobs:
         env:
           ELIZA_TEST_MODE: true
           NODE_OPTIONS: --max-old-space-size=4096
-          timeout-minutes: 15
+          CI: true
+        timeout-minutes: 10  # Reduced from 15
+
+      - name: Cleanup test processes
+        if: always()
+        shell: bash
+        run: |
+          # Ensure cleanup script exists
+          if [ -f "packages/cli/scripts/cleanup-test-processes.sh" ]; then
+            bash packages/cli/scripts/cleanup-test-processes.sh
+          else
+            # Fallback cleanup
+            echo "Cleanup script not found, performing basic cleanup..."
+            pkill -f "elizaos" || true
+            pkill -f "node.*cli.*test" || true
+            pkill -f "bats" || true
+          fi
