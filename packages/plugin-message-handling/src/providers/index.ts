@@ -4,11 +4,10 @@ export { anxietyProvider } from './anxiety';
 export { attachmentsProvider } from './attachments';
 export { capabilitiesProvider } from './capabilities';
 export { characterProvider } from './character';
-export { choiceProvider } from './choice';
 export { evaluatorsProvider } from './evaluators';
-export { factsProvider } from './facts';
 export { providersProvider } from './providers';
 export { recentMessagesProvider } from './recentMessages';
 export { settingsProvider } from './settings';
 export { timeProvider } from './time';
 export { worldProvider } from './world';
+// Note: choiceProvider and factsProvider have been removed

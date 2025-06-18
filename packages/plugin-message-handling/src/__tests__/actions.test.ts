@@ -33,7 +33,7 @@ describe('Reply Action', () => {
   let callbackFn: HandlerCallback;
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should validate reply action correctly', async () => {
@@ -156,7 +156,7 @@ describe('Follow Room Action', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should validate follow room action correctly', async () => {
@@ -273,7 +273,7 @@ describe('Ignore Action', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should validate ignore action correctly', async () => {
@@ -300,7 +300,7 @@ describe('Ignore Action', () => {
   });
 
   it('should handle ignore action successfully', async () => {
-    // Directly call handler to verify it returns true
+    // Directly call handler to verify it returns an ActionResult
     const handlerResult = await ignoreAction.handler(
       mockRuntime as IAgentRuntime,
       mockMessage as Memory,
@@ -309,8 +309,16 @@ describe('Ignore Action', () => {
       callbackFn
     );
 
-    // Verify the handler returns true - that's its actual behavior
-    expect(handlerResult).toBe(true);
+    // Verify the handler returns an ActionResult object
+    expect(handlerResult).toEqual({
+      data: {
+        actionName: 'IGNORE',
+        result: 'User ignored',
+      },
+      values: {
+        ignoredAt: expect.any(Number),
+      },
+    });
 
     // Check that no runtime methods were called that shouldn't be
     expect(mockRuntime.createMemory).not.toHaveBeenCalled();
@@ -333,7 +341,7 @@ describe('Mute Room Action', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should validate mute room action correctly', async () => {
@@ -440,7 +448,7 @@ describe('Unmute Room Action', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should validate unmute room action correctly', async () => {
@@ -559,7 +567,7 @@ describe('Unfollow Room Action', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should validate unfollow room action correctly', async () => {
@@ -674,7 +682,7 @@ describe('None Action', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should validate none action correctly', async () => {
@@ -718,7 +726,7 @@ describe('Reply Action (Extended)', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should not validate if agent is muted', async () => {
@@ -836,7 +844,7 @@ describe('Choice Action (Extended)', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should validate choice action correctly based on pending tasks', async () => {
@@ -1037,7 +1045,7 @@ describe('Send Message Action (Extended)', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should handle sending to a room with different room ID', async () => {

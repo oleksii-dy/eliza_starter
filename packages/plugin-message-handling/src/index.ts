@@ -3,6 +3,7 @@ import { type Plugin, PluginEvents } from '@elizaos/core';
 import * as actions from './actions/index.ts';
 import * as providers from './providers/index.ts';
 import { events } from './events';
+import { testSuites } from './tests';
 
 export * from './actions/index.ts';
 export * from './providers/index.ts';
@@ -26,8 +27,6 @@ export const messageHandlingPlugin: Plugin = {
     providers.evaluatorsProvider,
     providers.anxietyProvider,
     providers.timeProvider,
-    providers.choiceProvider,
-    providers.factsProvider,
     providers.settingsProvider,
     providers.capabilitiesProvider,
     providers.attachmentsProvider,
@@ -38,6 +37,7 @@ export const messageHandlingPlugin: Plugin = {
     providers.recentMessagesProvider,
     providers.worldProvider,
   ],
+  tests: testSuites,
 };
 
 export default messageHandlingPlugin;
