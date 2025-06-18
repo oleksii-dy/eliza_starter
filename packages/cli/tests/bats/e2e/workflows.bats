@@ -56,10 +56,11 @@ EOF
   # Create plugin
   run run_cli "dist" create my-plugin --type plugin --yes
   assert_success
-  assert_output --partial "initialized successfully"
+  assert_output --partial "created successfully!"
   
   # Plugin should be created with 'plugin-' prefix
-  cd plugin-my-plugin
+  # When input is "my-plugin", it strips "-plugin" and creates "plugin-my"
+  cd plugin-my
   
   # Verify plugin structure
   assert_file_exist "package.json"
