@@ -11,13 +11,11 @@ describe('ElizaOS Publish Commands', () => {
   let elizaosCmd: string;
   let originalCwd: string;
   let originalPath: string;
+  let mockBinDir: string;
 
   beforeAll(async () => {
     // Store original working directory
     originalCwd = process.cwd();
-
-    // Create temporary directory
-    testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-publish-'));
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
@@ -35,8 +33,16 @@ describe('ElizaOS Publish Commands', () => {
     
     elizaosCmd = `bun "${cliPath}"`;
 
-    // Store original working directory and PATH
+    // Store original PATH
     originalPath = process.env.PATH || '';
+  });
+
+  beforeEach(async () => {
+    // Create temporary directory for each test
+    testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-publish-'));
+    
+    // Change to temp directory
+    process.chdir(testTmpDir);
 
     // === COMPREHENSIVE CREDENTIAL MOCKING ===
     // Set all possible environment variables to avoid any prompts
@@ -74,7 +80,7 @@ describe('ElizaOS Publish Commands', () => {
 
     // === COMPREHENSIVE COMMAND MOCKING ===
     // Mock npm and git commands to avoid actual operations
-    const mockBinDir = join(testTmpDir, 'mock-bin');
+    mockBinDir = join(testTmpDir, 'mock-bin');
     await mkdir(mockBinDir, { recursive: true });
     process.env.PATH = `${mockBinDir}:${originalPath}`;
 
@@ -350,13 +356,11 @@ esac`;
     }
   });
 
-  beforeEach(async () => {
-    process.chdir(testTmpDir);
-  });
-
   afterEach(async () => {
-    // Restore original working directory and PATH
+    // Restore original working directory
     safeChangeDirectory(originalCwd);
+    
+    // Restore original PATH
     process.env.PATH = originalPath;
 
     // Clean up environment variables
@@ -368,13 +372,19 @@ esac`;
     delete process.env.NODE_AUTH_TOKEN;
     delete process.env.ELIZAOS_DATA_DIR;
 
+    // Clean up temp directory
     if (testTmpDir && testTmpDir.includes('eliza-test-publish-')) {
       try {
-        await rm(testTmpDir, { recursive: true });
+        await rm(testTmpDir, { recursive: true, force: true });
       } catch (e) {
         // Ignore cleanup errors
       }
     }
+  });
+
+  afterAll(() => {
+    // Final cleanup - restore original working directory
+    safeChangeDirectory(originalCwd);
   });
 
   // publish --help (safe test that never prompts)
