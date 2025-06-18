@@ -3,6 +3,7 @@ import { TestCommandOptions } from '../types';
 import { getProjectType } from '../utils/project-utils';
 import { runComponentTests } from './component-tests';
 import { runE2eTests } from './e2e-tests';
+import { runCypressTests } from './cypress-tests';
 
 /**
  * Run both component and E2E tests
@@ -28,6 +29,14 @@ export async function runAllTests(
   const e2eResult = await runE2eTests(testPath, options, projectInfo);
   if (e2eResult.failed) {
     logger.error('E2E tests failed.');
+    process.exit(1);
+  }
+  logger.success('E2E tests passed!');
+
+  // Run Cypress tests if available
+  const cypressResult = await runCypressTests(testPath, options, projectInfo);
+  if (cypressResult.failed) {
+    logger.error('Cypress tests failed.');
     process.exit(1);
   }
 

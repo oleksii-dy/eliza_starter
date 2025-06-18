@@ -6,6 +6,7 @@ import { executeInstallation, executeInstallationWithFallback } from './package-
 import { fetchPluginRegistry } from './plugin-discovery';
 import { normalizePluginName } from './registry';
 import { detectPluginContext } from './plugin-context';
+import { runBunCommand } from './run-bun';
 
 /**
  * Get the CLI's installation directory when running globally
@@ -135,14 +136,168 @@ async function attemptInstallation(
 }
 
 /**
+ * Creates a temporary package.json with workspace overrides for local packages
+ */
+async function createTempPackageJsonWithOverrides(
+  cwd: string,
+  packageName: string
+): Promise<string | null> {
+  try {
+    const rootPackageJson = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')
+    );
+
+    // Get all workspace packages
+    const workspacePackages = new Map<string, string>();
+    const workspaces = rootPackageJson.workspaces || [];
+
+    for (const workspace of workspaces) {
+      const workspacePattern = workspace.replace('/*', '');
+      const packagesDir = path.join(process.cwd(), workspacePattern);
+
+      if (fs.existsSync(packagesDir)) {
+        const packages = fs.readdirSync(packagesDir).filter((dir) => {
+          const pkgPath = path.join(packagesDir, dir, 'package.json');
+          return fs.existsSync(pkgPath);
+        });
+
+        for (const pkg of packages) {
+          const pkgJsonPath = path.join(packagesDir, pkg, 'package.json');
+          const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
+          if (pkgJson.name) {
+            workspacePackages.set(pkgJson.name, `workspace:*`);
+          }
+        }
+      }
+    }
+
+    // Create a temporary package.json with overrides
+    const tempPkgJson = {
+      name: 'temp-install',
+      version: '1.0.0',
+      type: 'module',
+      dependencies: {
+        [packageName]: 'latest',
+      },
+      overrides: Object.fromEntries(workspacePackages),
+      resolutions: Object.fromEntries(workspacePackages),
+    };
+
+    const tempPath = path.join(cwd, '.temp-package.json');
+    fs.writeFileSync(tempPath, JSON.stringify(tempPkgJson, null, 2));
+    return tempPath;
+  } catch (error) {
+    logger.debug('Failed to create temp package.json:', error);
+    return null;
+  }
+}
+
+/**
+ * Check if we're in a monorepo workspace
+ */
+function isInMonorepo(): boolean {
+  try {
+    // Check for root package.json with workspaces
+    const rootPkgPath = path.join(process.cwd(), 'package.json');
+    if (fs.existsSync(rootPkgPath)) {
+      const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf8'));
+      return !!rootPkg.workspaces;
+    }
+
+    // Check if we're in a subdirectory of a monorepo
+    let currentDir = process.cwd();
+    while (currentDir !== path.dirname(currentDir)) {
+      const pkgPath = path.join(currentDir, 'package.json');
+      if (fs.existsSync(pkgPath)) {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+        if (pkg.workspaces) {
+          return true;
+        }
+      }
+      currentDir = path.dirname(currentDir);
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Find the monorepo root directory
+ */
+function findMonorepoRoot(): string | null {
+  try {
+    let currentDir = process.cwd();
+    while (currentDir !== path.dirname(currentDir)) {
+      const pkgPath = path.join(currentDir, 'package.json');
+      if (fs.existsSync(pkgPath)) {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+        if (pkg.workspaces) {
+          return currentDir;
+        }
+      }
+      currentDir = path.dirname(currentDir);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get all workspace packages in the monorepo
+ */
+async function getWorkspacePackages(): Promise<Map<string, string>> {
+  const workspacePackages = new Map<string, string>();
+  const monorepoRoot = findMonorepoRoot();
+
+  if (!monorepoRoot) {
+    return workspacePackages;
+  }
+
+  try {
+    const rootPkg = JSON.parse(fs.readFileSync(path.join(monorepoRoot, 'package.json'), 'utf8'));
+
+    const workspaces = rootPkg.workspaces || [];
+
+    for (const workspace of workspaces) {
+      const workspacePattern = workspace.replace('/*', '');
+      const packagesDir = path.join(monorepoRoot, workspacePattern);
+
+      if (fs.existsSync(packagesDir)) {
+        const packages = fs.readdirSync(packagesDir).filter((dir) => {
+          const pkgPath = path.join(packagesDir, dir, 'package.json');
+          return fs.existsSync(pkgPath);
+        });
+
+        for (const pkg of packages) {
+          const pkgJsonPath = path.join(packagesDir, pkg, 'package.json');
+          const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
+          if (pkgJson.name) {
+            // Store the absolute path to the package
+            workspacePackages.set(pkgJson.name, path.join(packagesDir, pkg));
+          }
+        }
+      }
+    }
+  } catch (error) {
+    logger.debug('Failed to get workspace packages:', error);
+  }
+
+  return workspacePackages;
+}
+
+/**
  * Asynchronously installs a plugin to a specified directory.
  *
  * Cascading order:
  * 1. Check if already in local node_modules (workspace)
- * 2. Check plugin registry
- * 3. Check if available in global node_modules (handled by load flow)
- * 4. Try NPM installation
- * 5. Fallback to GitHub at /elizaos-plugins/plugin-<name>
+ * 2. Check if it's a workspace package in the monorepo
+ * 3. Check plugin registry
+ * 4. Check if available in global node_modules (handled by load flow)
+ * 5. Try NPM installation (with workspace dependency handling)
+ * 6. Fallback to GitHub at /elizaos-plugins/plugin-<name>
  *
  * @param {string} packageName - The repository URL of the plugin to install.
  * @param {string} cwd - The current working directory where the plugin will be installed.
@@ -153,185 +308,146 @@ async function attemptInstallation(
 export async function installPlugin(
   packageName: string,
   cwd: string,
-  versionSpecifier?: string,
-  skipVerification = false
+  versionSpecifier: string = 'latest',
+  skipVerification: boolean = false
 ): Promise<boolean> {
-  logger.debug(`Installing plugin: ${packageName}`);
-
-  // 1. Check if it's already available in local node_modules or workspace
-  if (isWorkspacePlugin(packageName)) {
-    logger.info(`Plugin ${packageName} is available in the workspace`);
-
-    // Try to load it to verify it's accessible
-    const module = await loadPluginModule(packageName);
-    if (module) {
-      logger.success(`Workspace plugin ${packageName} is available and accessible`);
-      return true;
-    } else {
-      logger.warn(
-        `Workspace plugin ${packageName} exists but could not be loaded. It may need to be built.`
-      );
-      logger.info(`Try running 'bun run build' in the plugin directory.`);
-      return false;
-    }
-  }
-
-  // Check if already available in local node_modules
-  const localNodeModulesPath = path.join(cwd, 'node_modules', packageName);
-  if (fs.existsSync(localNodeModulesPath)) {
-    logger.info(`Plugin ${packageName} already exists in local node_modules`);
-    const module = await loadPluginModule(packageName);
-    if (module) {
-      logger.success(`Plugin ${packageName} is already installed and working`);
-      return true;
-    }
-  }
-
-  // Check if we're trying to install a plugin into its own directory
-  const context = detectPluginContext(packageName);
-  if (context.isLocalDevelopment) {
-    logger.warn(`Prevented self-installation of plugin ${packageName}`);
-    logger.info(
-      `You're developing this plugin locally. Use 'bun run build' to build it instead of installing.`
-    );
+  // Check if we're already installing this plugin
+  if (process.env.ELIZA_INSTALLING_PLUGIN === packageName) {
+    logger.warn(`Detected recursive installation attempt for ${packageName}, skipping`);
     return false;
   }
 
-  const cliDir = getCliDirectory();
+  // Set environment variable to prevent recursion
+  process.env.ELIZA_INSTALLING_PLUGIN = packageName;
 
-  // Direct GitHub installation (if specified explicitly)
-  if (packageName.startsWith('github:')) {
-    return await attemptInstallation(packageName, '', cwd, '', skipVerification);
-  }
+  try {
+    logger.info(`Plugin ${packageName} not available, installing...`);
 
-  // Handle full GitHub URLs as well
-  const httpsGitHubUrlRegex =
-    /^https?:\/\/github\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_.-]+?)(?:\.git)?(?:#([a-zA-Z0-9_.-]+))?\/?$/;
-  const httpsMatch = packageName.match(httpsGitHubUrlRegex);
-  if (httpsMatch) {
-    const [, owner, repo, ref] = httpsMatch;
-    const spec = `github:${owner}/${repo}${ref ? `#${ref}` : ''}`;
-    return await attemptInstallation(spec, '', cwd, '', skipVerification);
-  }
-
-  // 2. Check plugin registry
-  const cache = await fetchPluginRegistry();
-  const possible = normalizePluginName(packageName);
-
-  let key: string | null = null;
-  for (const name of possible) {
-    if (cache?.registry[name]) {
-      key = name;
-      break;
+    // 1. Check if it's already in local node_modules (workspace)
+    const localPath = path.join(cwd, 'node_modules', packageName);
+    if (fs.existsSync(localPath)) {
+      logger.info(`Plugin ${packageName} already installed locally`);
+      return true;
     }
-  }
 
-  if (!key && cache && cache.registry) {
-    // Fuzzy search by stripped base name
-    let base = packageName;
-    if (base.includes('/')) {
-      const parts = base.split('/');
-      base = parts[parts.length - 1];
-    }
-    base = base.replace(/^@/, '').replace(/^(plugin|client)-/, '');
-    const lower = base.toLowerCase();
+    // 2. Check if it's a workspace package in the monorepo
+    if (isInMonorepo()) {
+      const workspacePackages = await getWorkspacePackages();
+      if (workspacePackages.has(packageName)) {
+        logger.info(`Plugin ${packageName} is available as a workspace package`);
 
-    const matches = Object.keys(cache.registry).filter(
-      (cand) => cand.toLowerCase().includes(lower) && !cand.includes('client-')
-    );
+        // Create a symlink to the workspace package
+        const packagePath = workspacePackages.get(packageName)!;
+        const targetPath = path.join(cwd, 'node_modules', packageName);
 
-    if (matches.length > 0) {
-      const pluginMatch = matches.find((c) => c.includes('plugin-'));
-      key = pluginMatch || matches[0];
-    }
-  }
-
-  if (key && cache) {
-    const info = cache.registry[key];
-
-    // Extract GitHub fallback information if available
-    const githubFallback = info.git?.repo;
-    const githubVersion = info.git?.v1?.branch || info.git?.v1?.version || '';
-
-    // Try registry installation with NPM
-    if (info.npm?.repo) {
-      const ver = versionSpecifier || info.npm.v1 || '';
-      const result = await executeInstallationWithFallback(info.npm.repo, ver, cwd, githubFallback);
-
-      if (result.success) {
-        // Verify import if not a GitHub install
-        if (
-          !info.npm.repo.startsWith('github:') &&
-          !skipVerification &&
-          !process.env.ELIZA_SKIP_PLUGIN_VERIFY
-        ) {
-          const importSuccess = await verifyPluginImport(
-            result.installedIdentifier || info.npm.repo,
-            'from registry'
-          );
-          return importSuccess;
+        // Ensure node_modules directory exists
+        const nodeModulesPath = path.join(cwd, 'node_modules');
+        if (!fs.existsSync(nodeModulesPath)) {
+          fs.mkdirSync(nodeModulesPath, { recursive: true });
         }
-        return true;
-      }
-    } else if (info.npm?.v1) {
-      const result = await executeInstallationWithFallback(key, info.npm.v1, cwd, githubFallback);
 
-      if (result.success) {
-        // Verify import if not a GitHub install
-        if (!skipVerification && !process.env.ELIZA_SKIP_PLUGIN_VERIFY) {
-          const importSuccess = await verifyPluginImport(
-            result.installedIdentifier || key,
-            'from registry'
-          );
-          return importSuccess;
+        // Create parent directories if needed
+        const parentDir = path.dirname(targetPath);
+        if (!fs.existsSync(parentDir)) {
+          fs.mkdirSync(parentDir, { recursive: true });
         }
-        return true;
+
+        // Create symlink
+        try {
+          fs.symlinkSync(packagePath, targetPath, 'dir');
+          logger.success(`Created symlink to workspace package ${packageName}`);
+          return true;
+        } catch (error) {
+          logger.debug(`Failed to create symlink: ${error}`);
+          // Continue to other installation methods
+        }
       }
     }
 
-    // Registry install failed, try GitHub fallback from registry
-    if (info.git?.repo && cliDir) {
-      const spec = `github:${info.git.repo}${githubVersion ? `#${githubVersion}` : ''}`;
-      return await attemptInstallation(
-        spec,
-        '',
-        cliDir,
-        'from registry GitHub fallback',
-        skipVerification
-      );
+    // 3. Check plugin registry
+    try {
+      const registry = await fetchPluginRegistry();
+      if (registry && registry.registry[packageName]) {
+        logger.info(`Found ${packageName} in plugin registry`);
+        // Registry plugins are pre-verified
+        return true;
+      }
+    } catch (error) {
+      logger.debug(`Plugin ${packageName} not found in registry:`, error);
     }
+
+    // 4. NPM installation (with workspace handling)
+    const npmPackageName =
+      versionSpecifier !== 'latest' ? `${packageName}@${versionSpecifier}` : packageName;
+
+    try {
+      logger.info(`Attempting NPM install for ${npmPackageName}...`);
+
+      // If we're in a monorepo, bun should handle workspace dependencies automatically
+      // But we need to ensure we're using the right working directory
+      if (isInMonorepo() && packageName.startsWith('@elizaos/')) {
+        const monorepoRoot = findMonorepoRoot();
+        if (monorepoRoot) {
+          // Install from the monorepo root to ensure workspace resolution works
+          logger.debug(`Installing from monorepo root: ${monorepoRoot}`);
+
+          try {
+            // Run the install from the monorepo root
+            await runBunCommand(['add', npmPackageName, '--cwd', cwd], monorepoRoot);
+
+            if (!skipVerification) {
+              await verifyPluginImport(packageName, 'from NPM with workspace handling');
+            }
+
+            logger.success(`Successfully installed ${packageName} from NPM`);
+            return true;
+          } catch (error: any) {
+            logger.debug(`Monorepo install failed: ${error.message}`);
+            // Fall through to normal installation
+          }
+        }
+      }
+
+      // Normal installation
+      await runBunCommand(['add', npmPackageName], cwd);
+
+      if (!skipVerification) {
+        await verifyPluginImport(packageName, 'from NPM');
+      }
+
+      logger.success(`Successfully installed ${packageName} from NPM`);
+      return true;
+    } catch (npmError: any) {
+      logger.warn(`Installation failed for ${npmPackageName}: ${npmError.message}`);
+    }
+
+    // 5. GitHub fallback for elizaos plugins
+    if (packageName.startsWith('@elizaos/plugin-')) {
+      const pluginName = packageName.replace('@elizaos/plugin-', '');
+      const githubUrl =
+        versionSpecifier !== 'latest'
+          ? `github:elizaos-plugins/plugin-${pluginName}#${versionSpecifier}`
+          : `github:elizaos-plugins/plugin-${pluginName}`;
+
+      try {
+        logger.info(`Attempting GitHub install from ${githubUrl}...`);
+        await runBunCommand(['add', githubUrl], cwd);
+
+        if (!skipVerification) {
+          await verifyPluginImport(packageName, 'from GitHub');
+        }
+
+        logger.success(`Successfully installed ${packageName} from GitHub`);
+        return true;
+      } catch (githubError: any) {
+        logger.warn(`GitHub installation failed for ${packageName}: ${githubError.message}`);
+      }
+    }
+
+    logger.error(`Failed to install plugin ${packageName} from any source`);
+    return false;
+  } finally {
+    // Clean up environment variable
+    delete process.env.ELIZA_INSTALLING_PLUGIN;
   }
-
-  // 4. Try direct NPM installation (if not in registry)
-  logger.debug(`Plugin ${packageName} not found in registry, attempting NPM installation`);
-  const npmResult = await attemptInstallation(
-    packageName,
-    versionSpecifier || '',
-    cwd,
-    'from NPM',
-    skipVerification
-  );
-
-  if (npmResult) {
-    return true;
-  }
-
-  // 5. Final fallback: GitHub at /elizaos-plugins/plugin-<name>
-  let pluginBaseName = packageName;
-  if (pluginBaseName.startsWith('@elizaos/')) {
-    pluginBaseName = pluginBaseName.replace('@elizaos/', '');
-  } else if (!pluginBaseName.startsWith('plugin-')) {
-    pluginBaseName = `plugin-${pluginBaseName}`;
-  }
-
-  const githubFallbackSpec = `github:elizaos-plugins/${pluginBaseName}`;
-  logger.debug(`Attempting final GitHub fallback: ${githubFallbackSpec}`);
-
-  return await attemptInstallation(
-    githubFallbackSpec,
-    '',
-    cwd,
-    'from GitHub fallback',
-    skipVerification
-  );
 }

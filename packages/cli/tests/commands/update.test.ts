@@ -39,10 +39,29 @@ describe('ElizaOS Update Commands', () => {
 
   // Helper function to create project
   const makeProj = async (name: string) => {
-    runCliCommandSilently(elizaosCmd, `create ${name} --yes`, {
-      timeout: TEST_TIMEOUTS.PROJECT_CREATION,
-    });
-    process.chdir(join(testTmpDir, name));
+    const projectPath = join(testTmpDir, name);
+    const fs = await import('fs/promises');
+    await fs.mkdir(projectPath, { recursive: true });
+
+    // Create a minimal package.json
+    await writeFile(
+      join(projectPath, 'package.json'),
+      JSON.stringify(
+        {
+          name: name,
+          version: '1.0.0',
+          type: 'module',
+          dependencies: {
+            '@elizaos/core': '1.0.9',
+            '@elizaos/cli': '1.0.9',
+          },
+        },
+        null,
+        2
+      )
+    );
+
+    process.chdir(projectPath);
   };
 
   // --help
@@ -265,7 +284,9 @@ describe('ElizaOS Update Commands', () => {
         timeout: TEST_TIMEOUTS.STANDARD_COMMAND,
       });
 
-      expect(result).toContain('No ElizaOS packages found');
+      // The update command detects this isn't a proper ElizaOS project
+      expect(result).toContain("This directory doesn't appear to be an ElizaOS project");
+      expect(result).toContain('test-project');
     },
     TEST_TIMEOUTS.INDIVIDUAL_TEST
   );

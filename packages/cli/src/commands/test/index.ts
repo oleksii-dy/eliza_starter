@@ -5,6 +5,7 @@ import { Command, Option } from 'commander';
 import { runAllTests } from './actions/run-all-tests';
 import { runComponentTests } from './actions/component-tests';
 import { runE2eTests } from './actions/e2e-tests';
+import { runCypressTests } from './actions/cypress-tests';
 import { TestCommandOptions } from './types';
 import { getProjectType, installPluginDependencies } from './utils/project-utils';
 
@@ -15,7 +16,7 @@ export const test = new Command()
   .argument('[path]', 'Optional path to the project or plugin to test')
   .addOption(
     new Option('-t, --type <type>', 'the type of test to run')
-      .choices(['component', 'e2e', 'all'])
+      .choices(['component', 'e2e', 'cypress', 'all'])
       .default('all')
   )
   .option('-p, --port <port>', 'the port to run e2e tests on', validatePort)
@@ -55,6 +56,16 @@ export const test = new Command()
           logger.success('E2E tests passed successfully!');
           break;
 
+        case 'cypress':
+          logger.info('Running Cypress tests only...');
+          const cypressResult = await runCypressTests(testPath, options, projectInfo);
+          if (cypressResult.failed) {
+            logger.error('Cypress tests failed.');
+            process.exit(1);
+          }
+          logger.success('Cypress tests passed successfully!');
+          break;
+
         case 'all':
         default:
           logger.info('Running all tests...');
@@ -87,7 +98,9 @@ export default function registerCommand(cli: Command) {
 export * from './actions/component-tests';
 export * from './actions/e2e-tests';
 export * from './actions/run-all-tests';
+export * from './actions/cypress-tests';
 export * from './types';
 export * from './utils/project-utils';
 export * from './utils/port-utils';
 export * from './utils/plugin-utils';
+export * from './utils/server-utils';

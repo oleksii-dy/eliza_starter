@@ -88,7 +88,7 @@
     "@clack/prompts": "^0.11.0",
     "@electric-sql/pglite": "^0.3.2",
     "@elizaos/core": "workspace:*",
-    "@elizaos/plugin-message-handling": "1.0.5",
+    "@elizaos/plugin-message-handling": "workspace:*",
     "@elizaos/plugin-local-ai": "latest",
     "@elizaos/plugin-openai": "latest",
     "@elizaos/plugin-sql": "workspace:*",

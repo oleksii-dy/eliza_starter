@@ -36,7 +36,14 @@ describe('ElizaOS Agent Commands', () => {
 
     serverProcess = spawn(
       'bun',
-      [join(scriptDir, '../dist/index.js'), 'start', '--port', testServerPort, '--character', defaultCharacter],
+      [
+        join(scriptDir, '../dist/index.js'),
+        'start',
+        '--port',
+        testServerPort,
+        '--character',
+        defaultCharacter,
+      ],
       {
         env: {
           ...process.env,
@@ -52,7 +59,7 @@ describe('ElizaOS Agent Commands', () => {
     serverProcess.stdout?.on('data', (data: Buffer) => {
       console.log(`[SERVER STDOUT] ${data.toString()}`);
     });
-    
+
     serverProcess.stderr?.on('data', (data: Buffer) => {
       console.error(`[SERVER STDERR] ${data.toString()}`);
     });
@@ -85,7 +92,7 @@ describe('ElizaOS Agent Commands', () => {
           }
         );
         console.log(`[DEBUG] Successfully loaded character: ${character}`);
-        
+
         // Small wait between loading characters to avoid overwhelming the server
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (e) {
@@ -96,21 +103,21 @@ describe('ElizaOS Agent Commands', () => {
 
     // Give characters time to register
     await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
-  });
+  }, TEST_TIMEOUTS.SUITE_TIMEOUT);
 
   afterAll(async () => {
     if (serverProcess) {
       try {
         // Use SIGTERM for graceful shutdown, fallback to SIGKILL
         serverProcess.kill('SIGTERM');
-        
+
         // Wait briefly, then force kill if still running
         await new Promise((resolve) => setTimeout(resolve, 2000));
         if (!serverProcess.killed && serverProcess.exitCode === null) {
           serverProcess.kill('SIGKILL');
         }
         await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
-        
+
         // Wait for process to actually exit
         if (!serverProcess.killed && serverProcess.exitCode === null) {
           await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.PROCESS_CLEANUP));

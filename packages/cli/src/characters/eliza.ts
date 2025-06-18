@@ -202,7 +202,7 @@ export function getElizaCharacter(): Character {
     ...(!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY
       ? ['@elizaos/plugin-local-ai']
       : []),
-    ...(!process.env.IGNORE_BOOTSTRAP ? ['@elizaos/plugin-message-handling'] : []),
+    ...(!process.env.IGNORE_DEFAULT_MESSAGE_HANDLING ? ['@elizaos/plugin-message-handling'] : []),
   ];
 
   return {
