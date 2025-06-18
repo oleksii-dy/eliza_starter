@@ -3,7 +3,21 @@ export { PluginMigrator } from './migrator.js';
 
 // Structured migration components
 export { StructuredMigrator } from './structured-migrator.js';
-export { MigrationStepExecutor } from './migration-step-executor.js';
+
+// Core migration components
+export * from './core/index.js';
+
+// Migration patterns (replaces mega-prompt-parser)
+export * from './migration-patterns/index.js';
+
+// Migration steps components
+export * from './migration-steps/index.js';
+
+// File migration components
+export * from './file-migration/index.js';
+
+// Test generation components - NEW MODULAR APPROACH
+export * from './test-generation/index.js';
 
 // Environment variable prompting
 export { EnvPrompter } from './env-prompter.js';
@@ -34,44 +48,38 @@ export type {
   MigrationMetricsCollector
 } from './types.js';
 
-// SDK utility types
-export type {
-  SDKMessage,
-  ClaudeQueryOptions,
-  ClaudeQueryParams,
-  ClaudeSDKModule
-} from './sdk-utils.js';
-
-// Mega prompt parser
+// Test templates - NEW CENTRALIZED APPROACH
 export {
-  IMPORT_MAPPINGS,
-  MODEL_TYPE_MAPPINGS,
-  ARCHITECTURE_ISSUES,
-  parseIntoChunks
-} from './mega-prompt-parser.js';
+  buildTestGenerationPrompt,
+  generateRobustTemplateVariables,
+  getTestTemplateVariables,
+  type TestTemplateVariables
+} from './test-templates/test-template.js';
 
-// Test templates
+// Legacy test templates for backward compatibility
 export {
-  UTILS_TS_EXACT_CONTENT,
-  TEST_TS_TEMPLATE
-} from './test-templates.js';
+  UTILS_TS_EXACT_CONTENT
+} from './test-templates/index.js';
 
-// Context-aware test generation
-export { ContextAwareTestGenerator } from './context-aware-test-generator.js';
-
-// Enhanced Claude SDK adapter and utilities
-export { 
-  EnhancedClaudeSDKAdapter, 
-  createMigrationMetricsCollector, 
-  createSessionManager 
-} from './claude-sdk-adapter.js';
-
+// Claude SDK - Export all SDK functionality
 export {
+  EnhancedClaudeSDKAdapter,
+  createMigrationMetricsCollector,
+  createSessionManager,
   importClaudeSDK,
   isClaudeSDKAvailable,
   validateClaudeSDKEnvironment,
-  getSDKErrorContext
-} from './sdk-utils.js';
+  getSDKErrorContext,
+  type SDKMessage,
+  type ClaudeQueryOptions,
+  type ClaudeQueryParams,
+  type ClaudeSDKModule
+} from './claude-sdk/index.js';
+
+// Context-aware test generation functionality is now handled by modular components:
+// - PluginAnalyzer (./test-generation/plugin-analyzer.js)
+// - TestValidator (./test-generation/test-validator.js)  
+// - buildTestGenerationPrompt (./test-templates/test-template.js)
 
 // Utilities
 export { analyzeRepository } from './repository-analyzer.js';
