@@ -25,7 +25,7 @@ fi
 # 2. Vitest Unit Tests
 echo -e "\n${YELLOW}🧪 Running Vitest Unit Tests...${NC}"
 # Call vitest directly to avoid nested bun calls
-npx vitest run --coverage
+bunx vitest run --coverage
 if [ $? -ne 0 ]; then
   echo -e "${RED}❌ Vitest tests failed${NC}"
   FAILED=1

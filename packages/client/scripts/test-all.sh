@@ -35,7 +35,7 @@ trap cleanup EXIT INT TERM
 
 # 1. Type Checking
 echo -e "\n${YELLOW}📝 Running TypeScript Type Checking...${NC}"
-cd cypress && npx tsc --noEmit --project tsconfig.json
+cd cypress && bunx tsc --noEmit --project tsconfig.json
 if [ $? -ne 0 ]; then
   echo -e "${RED}❌ Type checking failed${NC}"
   FAILED=1
@@ -46,7 +46,7 @@ cd ..
 
 # 2. Vitest Unit Tests
 echo -e "\n${YELLOW}🧪 Running Vitest Unit Tests...${NC}"
-npx vitest run --coverage
+bunx vitest run --coverage
 if [ $? -ne 0 ]; then
   echo -e "${RED}❌ Vitest tests failed${NC}"
   FAILED=1
@@ -54,9 +54,25 @@ else
   echo -e "${GREEN}✅ Vitest tests passed${NC}"
 fi
 
+# Check if Cypress binary is installed
+echo -e "\n${YELLOW}🔍 Checking Cypress binary installation...${NC}"
+bunx cypress verify > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo -e "${YELLOW}📥 Cypress binary not found, installing...${NC}"
+  bunx cypress install
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ Failed to install Cypress binary${NC}"
+    FAILED=1
+  else
+    echo -e "${GREEN}✅ Cypress binary installed successfully${NC}"
+  fi
+else
+  echo -e "${GREEN}✅ Cypress binary is already installed${NC}"
+fi
+
 # 3. Cypress Component Tests
 echo -e "\n${YELLOW}🧩 Running Cypress Component Tests...${NC}"
-npx cypress run --component
+bunx cypress run --component
 if [ $? -ne 0 ]; then
   echo -e "${RED}❌ Cypress component tests failed${NC}"
   FAILED=1
@@ -88,12 +104,12 @@ done
 
 # 5. Start Client Dev Server
 echo -e "\n${YELLOW}🌐 Starting Client Dev Server...${NC}"
-npx vite --port 5173 > /tmp/elizaos-client.log 2>&1 &
+bunx vite --port 5173 > /tmp/elizaos-client.log 2>&1 &
 CLIENT_PID=$!
 
 # Wait for client server
 echo -e "${YELLOW}Waiting for client server...${NC}"
-npx wait-on http://localhost:5173 -t 30000
+bunx wait-on http://localhost:5173 -t 30000
 if [ $? -ne 0 ]; then
   echo -e "${RED}❌ Client server failed to start${NC}"
   cat /tmp/elizaos-client.log
@@ -105,7 +121,7 @@ fi
 # 6. Cypress E2E Tests
 if [ $FAILED -eq 0 ]; then
   echo -e "\n${YELLOW}🌐 Running Cypress E2E Tests...${NC}"
-  npx cypress run --e2e
+  bunx cypress run --e2e
   if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Cypress E2E tests failed${NC}"
     FAILED=1
