@@ -49,7 +49,7 @@ export async function runComponentTests(
 
   return new Promise((resolve) => {
     // Build command arguments
-    const args = ['run', 'vitest', 'run', '--passWithNoTests', '--reporter=default'];
+    const args = ['run', 'vitest', 'run', '--passWithNoTests', '--reporter=verbose'];
 
     // Add filter if specified
     if (options.name) {

@@ -11,6 +11,7 @@ import type { Content, UUID } from './primitives';
 import type { Service, ServiceTypeName } from './service';
 import type { State } from './state';
 import type { TaskWorker } from './task';
+import type { ActionPlan, PlanningContext, PlanExecutionResult } from './planning';
 
 /**
  * Represents the core runtime environment for an agent.
@@ -163,4 +164,23 @@ export interface IAgentRuntime extends IDatabaseAdapter {
   registerSendHandler(source: string, handler: SendHandlerFunction): void;
 
   sendMessageToTarget(target: TargetInfo, content: Content): Promise<void>;
+
+  /**
+   * Generate an action plan based on the given message and context
+   */
+  generatePlan(message: Memory, context: PlanningContext): Promise<ActionPlan>;
+
+  /**
+   * Execute an action plan
+   */
+  executePlan(
+    plan: ActionPlan,
+    message: Memory,
+    callback?: HandlerCallback
+  ): Promise<PlanExecutionResult>;
+
+  /**
+   * Validate a plan
+   */
+  validatePlan(plan: ActionPlan): Promise<{ valid: boolean; issues: string[] }>;
 }

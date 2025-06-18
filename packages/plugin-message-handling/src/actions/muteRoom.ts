@@ -145,61 +145,101 @@ export const muteRoomAction: Action = {
       return false;
     }
 
-    const shouldMute = await _shouldMute(state);
-    if (shouldMute) {
-      await runtime.setParticipantUserState(message.roomId, runtime.agentId, 'MUTED');
-    }
+    try {
+      const shouldMute = await _shouldMute(state);
+      const room = state.data.room ?? (await runtime.getRoom(message.roomId));
 
-    const room = state.data.room ?? (await runtime.getRoom(message.roomId));
+      let muteSuccess = false;
+      let errorMessage = '';
 
-    await runtime.createMemory(
-      {
-        entityId: message.entityId,
-        agentId: message.agentId,
-        roomId: message.roomId,
-        content: {
-          thought: `I muted the room ${room.name}`,
-          actions: ['MUTE_ROOM_START'],
+      if (shouldMute) {
+        try {
+          await runtime.setParticipantUserState(message.roomId, runtime.agentId, 'MUTED');
+          muteSuccess = true;
+        } catch (error) {
+          logger.error('Failed to mute room:', error);
+          errorMessage = error instanceof Error ? error.message : 'Failed to mute room';
+          muteSuccess = false;
+        }
+      }
+
+      // Create memory for action result
+      await runtime.createMemory(
+        {
+          entityId: message.entityId,
+          agentId: message.agentId,
+          roomId: message.roomId,
+          content: {
+            thought: muteSuccess
+              ? `I successfully muted the room ${room.name}`
+              : shouldMute
+                ? `I tried to mute the room ${room.name} but failed: ${errorMessage}`
+                : `I decided not to mute the room ${room.name}`,
+            actions: muteSuccess
+              ? ['MUTE_ROOM_SUCCESS']
+              : shouldMute
+                ? ['MUTE_ROOM_FAILED']
+                : ['MUTE_ROOM_DECLINED'],
+          },
         },
-      },
-      'messages'
-    );
+        'messages'
+      );
 
-    return {
-      data: {
-        actionName: 'MUTE_ROOM',
-        roomName: room.name,
-        muted: shouldMute,
-        roomId: message.roomId,
-      },
-      values: {
-        roomMuteState: shouldMute ? 'MUTED' : 'NOT_MUTED',
-        lastMuteTime: Date.now(),
-      },
-    };
+      // Return structured result for chaining
+      return {
+        data: {
+          actionName: 'MUTE_ROOM',
+          roomName: room.name,
+          roomId: message.roomId,
+          muted: muteSuccess,
+          attempted: shouldMute,
+          error: errorMessage || undefined,
+        },
+        values: {
+          roomMuteState: muteSuccess ? 'MUTED' : 'NOT_MUTED',
+          lastMuteTime: muteSuccess ? Date.now() : undefined,
+          muteAttempted: shouldMute,
+          muteSuccess: muteSuccess,
+        },
+        text: muteSuccess
+          ? `Room ${room.name} has been muted`
+          : shouldMute
+            ? `Failed to mute room ${room.name}: ${errorMessage}`
+            : `Room ${room.name} was not muted`,
+      };
+    } catch (error) {
+      logger.error('Error in mute room handler:', error);
+      return {
+        data: {
+          actionName: 'MUTE_ROOM',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        values: {
+          muteAttempted: false,
+          muteSuccess: false,
+        },
+        text: `Error while processing mute request: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      };
+    }
   },
   examples: [
+    // Example 1: Mute and confirm
     [
       {
         name: '{{name1}}',
         content: {
-          text: '{{name3}}, please mute this channel. No need to respond here for now.',
+          text: '{{name3}}, please mute this channel and let me know when done.',
         },
       },
       {
         name: '{{name3}}',
         content: {
-          text: 'Got it',
-          actions: ['MUTE_ROOM'],
-        },
-      },
-      {
-        name: '{{name2}}',
-        content: {
-          text: '@{{name1}} we could really use your input on this',
+          text: "I'll mute this channel and only respond when directly mentioned from now on.",
+          actions: ['MUTE_ROOM', 'REPLY'],
         },
       },
     ],
+    // Example 2: Mute with explanation
     [
       {
         name: '{{name1}}',
@@ -210,8 +250,8 @@ export const muteRoomAction: Action = {
       {
         name: '{{name3}}',
         content: {
-          text: 'Understood',
-          actions: ['MUTE_ROOM'],
+          text: "I'll mute this channel and stay quiet unless you need me.",
+          actions: ['MUTE_ROOM', 'REPLY'],
         },
       },
       {
@@ -228,34 +268,23 @@ export const muteRoomAction: Action = {
         },
       },
     ],
+    // Example 3: Failed mute attempt
     [
       {
         name: '{{name1}}',
         content: {
-          text: '{{name2}} plz mute this room',
+          text: '{{name2}} plz mute this private channel',
         },
       },
       {
         name: '{{name2}}',
         content: {
-          text: 'np going silent',
-          actions: ['MUTE_ROOM'],
-        },
-      },
-      {
-        name: '{{name1}}',
-        content: {
-          text: 'whos going to the webxr meetup in an hour btw',
-        },
-      },
-      {
-        name: '{{name2}}',
-        content: {
-          text: '',
-          actions: ['IGNORE'],
+          text: "I'll try to mute this private channel and stop responding here.",
+          actions: ['MUTE_ROOM', 'REPLY'],
         },
       },
     ],
+    // Example 4: Mute after being annoying
     [
       {
         name: '{{name1}}',
@@ -264,13 +293,14 @@ export const muteRoomAction: Action = {
         },
       },
       {
-        name: '{{name1}}',
+        name: '{{name2}}',
         content: {
-          text: 'my bad ill mute',
-          actions: ['MUTE_ROOM'],
+          text: "Sorry about that! I'll mute this channel now.",
+          actions: ['MUTE_ROOM', 'REPLY'],
         },
       },
     ],
+    // Example 5: Quick mute acknowledgment
     [
       {
         name: '{{name1}}',
@@ -281,8 +311,24 @@ export const muteRoomAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'sry',
-          actions: ['MUTE_ROOM'],
+          text: "Got it, I'll mute this channel.",
+          actions: ['MUTE_ROOM', 'REPLY'],
+        },
+      },
+    ],
+    // Example 6: Mute with follow-up action
+    [
+      {
+        name: '{{name1}}',
+        content: {
+          text: '{{name3}} mute this room and update the room settings',
+        },
+      },
+      {
+        name: '{{name3}}',
+        content: {
+          text: 'I will mute this room and update the room settings',
+          actions: ['MUTE_ROOM', 'REPLY'],
         },
       },
     ],

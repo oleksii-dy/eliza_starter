@@ -76,7 +76,7 @@
     "utf-8-validate"
   ],
   "dependencies": {
-    "@elizaos/plugin-message-handling": "1.0.9",
+    "@elizaos/plugin-message-handling": "workspace:*",
     "helmet": "^8.1.0"
   }
 }

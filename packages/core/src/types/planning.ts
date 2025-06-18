@@ -123,3 +123,32 @@ export interface WorkingMemory {
   entries(): IterableIterator<[string, any]>;
   serialize(): Record<string, any>;
 }
+
+/**
+ * Result of executing a plan
+ */
+export interface PlanExecutionResult {
+  planId: UUID;
+  success: boolean;
+  completedSteps: number;
+  totalSteps: number;
+  results: ActionResult[];
+  errors?: Error[];
+  duration: number;
+  adaptations?: string[];
+}
+
+/**
+ * Context for planning
+ */
+export interface PlanningContext {
+  goal: string;
+  constraints: Constraint[];
+  availableActions: string[];
+  availableProviders: string[];
+  preferences?: {
+    executionModel?: 'sequential' | 'parallel' | 'dag';
+    maxSteps?: number;
+    timeoutMs?: number;
+  };
+}

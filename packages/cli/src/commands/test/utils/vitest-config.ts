@@ -21,18 +21,9 @@ export function createVitestConfig(targetPath: string, pluginName?: string): any
 
   if (pluginName) {
     // For plugin testing, only include tests from the specific plugin
-    config.test.include = [`${targetPath}/**/*.test.{js,ts}`, `${targetPath}/**/*.spec.{js,ts}`];
+    config.test.include = [`src/__tests__/**/*.ts`, `src/**/*.test.ts`];
 
-    const parentDir = path.dirname(targetPath);
-    config.test.exclude = [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/.turbo/**',
-      '**/coverage/**',
-      // A more robust way to exclude other packages
-      `${parentDir}/*/**`,
-      `!${targetPath}/**`,
-    ];
+    config.test.exclude = ['**/node_modules/**', '**/dist/**', '**/.turbo/**', '**/coverage/**'];
   } else {
     // For project testing
     config.test.include = ['**/*.test.{js,ts}', '**/*.spec.{js,ts}'];

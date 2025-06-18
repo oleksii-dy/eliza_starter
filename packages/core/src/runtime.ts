@@ -48,6 +48,15 @@ import { BM25 } from './search';
 import { EventType, type MessagePayload } from './types';
 import { stringToUuid } from './utils';
 import { EventEmitter } from 'events';
+import {
+  PlanExecutionContext,
+  composePlanningPrompt,
+  parsePlan,
+  validatePlan as validatePlanUtil,
+  executeStep,
+  getExecutionOrder,
+} from './planning';
+import type { ActionPlan, PlanningContext, PlanExecutionResult } from './types/planning';
 
 const environmentSettings: RuntimeSettings = {};
 
@@ -2197,5 +2206,124 @@ export class AgentRuntime implements IAgentRuntime {
       throw new Error('Database adapter not registered');
     }
     return await this.adapter.isReady();
+  }
+
+  /**
+   * Generate an action plan based on the given message and context
+   */
+  async generatePlan(message: Memory, context: PlanningContext): Promise<ActionPlan> {
+    try {
+      // Compose state for planning
+      const state = await this.composeState(message);
+
+      // Create planning prompt
+      const prompt = composePlanningPrompt(context, state);
+
+      // Use reasoning model to generate plan
+      const response = await this.useModel(ModelType.TEXT_REASONING_LARGE, {
+        prompt,
+        temperature: 0.7,
+        maxTokens: 2000,
+      });
+
+      // Parse the plan from the response
+      const plan = parsePlan(response);
+
+      // Validate the plan
+      const validation = await this.validatePlan(plan);
+      if (!validation.valid) {
+        throw new Error(`Invalid plan: ${validation.issues.join(', ')}`);
+      }
+
+      return plan;
+    } catch (error) {
+      this.logger.error('Failed to generate plan:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute an action plan
+   */
+  async executePlan(
+    plan: ActionPlan,
+    message: Memory,
+    callback?: HandlerCallback
+  ): Promise<PlanExecutionResult> {
+    const context = new PlanExecutionContext(plan);
+
+    try {
+      // Update plan state
+      plan.state.status = 'running';
+      plan.state.startTime = Date.now();
+
+      // Get execution order based on dependencies
+      const executionOrder = getExecutionOrder(plan);
+
+      // Execute steps in order
+      for (const stepGroup of executionOrder) {
+        if (context.shouldAbort()) {
+          break;
+        }
+
+        // Execute steps in parallel if multiple in group
+        if (stepGroup.length > 1 && plan.executionModel !== 'sequential') {
+          const promises = stepGroup.map((stepId) => {
+            const step = plan.steps.find((s) => s.id === stepId);
+            if (!step) return Promise.resolve();
+
+            return executeStep(step, context, this, message, callback).catch((error) => {
+              context.addError(error);
+              if (step.onError === 'abort') {
+                context.abort();
+              }
+            });
+          });
+
+          await Promise.all(promises);
+        } else {
+          // Execute steps sequentially
+          for (const stepId of stepGroup) {
+            if (context.shouldAbort()) {
+              break;
+            }
+
+            const step = plan.steps.find((s) => s.id === stepId);
+            if (!step) continue;
+
+            try {
+              await executeStep(step, context, this, message, callback);
+            } catch (error) {
+              context.addError(error as Error);
+              if (step.onError === 'abort') {
+                context.abort();
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // Update plan state
+      plan.state.status = context.hasError() ? 'failed' : 'completed';
+      plan.state.endTime = Date.now();
+
+      return context.getResult();
+    } catch (error) {
+      this.logger.error('Failed to execute plan:', error);
+      plan.state.status = 'failed';
+      plan.state.endTime = Date.now();
+      plan.state.error = error as Error;
+
+      context.addError(error as Error);
+      return context.getResult();
+    }
+  }
+
+  /**
+   * Validate a plan
+   */
+  async validatePlan(plan: ActionPlan): Promise<{ valid: boolean; issues: string[] }> {
+    return validatePlanUtil(plan, this);
   }
 }

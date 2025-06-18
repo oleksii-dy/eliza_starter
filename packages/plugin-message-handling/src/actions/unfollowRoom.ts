@@ -151,7 +151,7 @@ export const unfollowRoomAction: Action = {
         name: '{{name2}}',
         content: {
           text: 'Alright, I will stop chiming in',
-          actions: ['UNFOLLOW_ROOM'],
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
     ],
@@ -177,8 +177,8 @@ export const unfollowRoomAction: Action = {
       {
         name: '{{name3}}',
         content: {
-          text: 'Understood',
-          actions: ['UNFOLLOW_ROOM'],
+          text: "Understood, I'll stop following this chat",
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
     ],
@@ -193,7 +193,7 @@ export const unfollowRoomAction: Action = {
         name: '{{name3}}',
         content: {
           text: "I'll only respond when mentioned",
-          actions: ['UNFOLLOW_ROOM'],
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
       {
@@ -225,8 +225,8 @@ export const unfollowRoomAction: Action = {
       {
         name: '{{name3}}',
         content: {
-          text: "I'll only engage when asked",
-          actions: ['UNFOLLOW_ROOM'],
+          text: "I'll unfollow this room and only engage when asked",
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
       {
@@ -253,7 +253,7 @@ export const unfollowRoomAction: Action = {
         name: '{{name2}}',
         content: {
           text: "my bad, I'll step back",
-          actions: ['UNFOLLOW_ROOM'],
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
     ],
@@ -267,8 +267,8 @@ export const unfollowRoomAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: "No problem, I've got other stuff to work on",
-          actions: ['UNFOLLOW_ROOM'],
+          text: "No problem, I'll stop messaging in this room",
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
     ],
@@ -282,8 +282,8 @@ export const unfollowRoomAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'sry, ill chill',
-          actions: ['UNFOLLOW_ROOM'],
+          text: 'sry, ill unfollow and chill',
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
     ],
@@ -297,8 +297,8 @@ export const unfollowRoomAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'No sweat',
-          actions: ['UNFOLLOW_ROOM'],
+          text: "No sweat, I'll cease engaging in this room",
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
     ],
@@ -318,8 +318,8 @@ export const unfollowRoomAction: Action = {
       {
         name: '{{name3}}',
         content: {
-          text: 'Noted',
-          actions: ['UNFOLLOW_ROOM'],
+          text: "Noted, I'll tone it down",
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
     ],
@@ -333,8 +333,8 @@ export const unfollowRoomAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: "Sorry, I'll go work on other things",
-          actions: ['UNFOLLOW_ROOM'],
+          text: "Sorry, I'll unfollow and go work on other things",
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
     ],
@@ -349,7 +349,7 @@ export const unfollowRoomAction: Action = {
         name: '{{name2}}',
         content: {
           text: 'My apologies, I shall withdraw post-haste',
-          actions: ['UNFOLLOW_ROOM'],
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
     ],
@@ -363,8 +363,8 @@ export const unfollowRoomAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'kk sry ill stahppp',
-          actions: ['UNFOLLOW_ROOM'],
+          text: 'kk sry ill stahp following dis room',
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
     ],
@@ -378,8 +378,8 @@ export const unfollowRoomAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'sry',
-          actions: ['UNFOLLOW_ROOM'],
+          text: "sry, I'll stop following",
+          actions: ['UNFOLLOW_ROOM', 'REPLY'],
         },
       },
     ],

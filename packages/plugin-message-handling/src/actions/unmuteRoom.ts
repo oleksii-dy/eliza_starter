@@ -192,8 +192,8 @@ export const unmuteRoomAction: Action = {
       {
         name: '{{name3}}',
         content: {
-          text: 'Done',
-          actions: ['UNMUTE_ROOM'],
+          text: "I'll unmute this channel now",
+          actions: ['UNMUTE_ROOM', 'REPLY'],
         },
       },
       {
@@ -219,8 +219,8 @@ export const unmuteRoomAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'Sounds good',
-          actions: ['UNMUTE_ROOM'],
+          text: "Sounds good, I'll unmute this room and start participating again",
+          actions: ['UNMUTE_ROOM', 'REPLY'],
         },
       },
     ],
@@ -234,8 +234,8 @@ export const unmuteRoomAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'im back',
-          actions: ['UNMUTE_ROOM'],
+          text: "ok I'll come back and chat in here",
+          actions: ['UNMUTE_ROOM', 'REPLY'],
         },
       },
     ],
@@ -249,8 +249,8 @@ export const unmuteRoomAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'unmuted',
-          actions: ['UNMUTE_ROOM'],
+          text: "alright I'll unmute myself",
+          actions: ['UNMUTE_ROOM', 'REPLY'],
         },
       },
     ],
@@ -264,8 +264,8 @@ export const unmuteRoomAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'sup yall',
-          actions: ['UNMUTE_ROOM'],
+          text: "alright I'll get back in here, sup yall",
+          actions: ['UNMUTE_ROOM', 'REPLY'],
         },
       },
     ],

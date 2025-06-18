@@ -884,8 +884,8 @@ export const updateSettingsAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: "Perfect! I've updated your welcome channel to #general. Next, we should configure the automated greeting message that new members will receive.",
-          actions: ['SETTING_UPDATED'],
+          text: "Perfect! I'll update your welcome channel to #general. Next, we should configure the automated greeting message that new members will receive.",
+          actions: ['UPDATE_SETTINGS', 'REPLY'],
           source: 'discord',
         },
       },
@@ -901,8 +901,8 @@ export const updateSettingsAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: "Great choice! I've set the command prefix to '!'. Now you can use commands like !help, !info, etc.",
-          actions: ['SETTING_UPDATED'],
+          text: "Great choice! I'll set the command prefix to '!'. Now you can use commands like !help, !info, etc.",
+          actions: ['UPDATE_SETTINGS', 'REPLY'],
           source: 'discord',
         },
       },
@@ -918,8 +918,8 @@ export const updateSettingsAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: "Auto-moderation for inappropriate language has been enabled. I'll now filter messages containing offensive content.",
-          actions: ['SETTING_UPDATED'],
+          text: "I'll enable auto-moderation for inappropriate language and filter messages containing offensive content.",
+          actions: ['UPDATE_SETTINGS', 'REPLY'],
           source: 'discord',
         },
       },
@@ -935,8 +935,8 @@ export const updateSettingsAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: "I've configured #server-logs as your logging channel. All server events like joins, leaves, and moderation actions will be recorded there.",
-          actions: ['SETTING_UPDATED'],
+          text: "I'll configure #server-logs as your logging channel. All server events like joins, leaves, and moderation actions will be recorded there.",
+          actions: ['UPDATE_SETTINGS', 'REPLY'],
           source: 'discord',
         },
       },
@@ -952,8 +952,8 @@ export const updateSettingsAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'Role self-assignment has been set up in the #roles channel. Members can now assign themselves roles by interacting with messages there.',
-          actions: ['SETTING_UPDATED'],
+          text: "I'll set up role self-assignment in the #roles channel. Members can assign themselves roles by interacting with messages there.",
+          actions: ['UPDATE_SETTINGS', 'REPLY'],
           source: 'discord',
         },
       },
@@ -969,8 +969,8 @@ export const updateSettingsAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: "I've updated your music command settings - they'll now only work in voice-text channels. This helps keep other channels clear of music spam.",
-          actions: ['SETTING_UPDATED'],
+          text: "I'll update your music command settings - they'll only work in voice-text channels. This helps keep other channels clear of music spam.",
+          actions: ['UPDATE_SETTINGS', 'REPLY'],
           source: 'discord',
         },
       },
@@ -986,8 +986,8 @@ export const updateSettingsAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: 'Server timezone has been set to Eastern Standard Time (EST). All scheduled events and timestamps will now display in this timezone.',
-          actions: ['SETTING_UPDATED'],
+          text: "I'll set the server timezone to Eastern Standard Time (EST). All scheduled events and timestamps will display in this timezone.",
+          actions: ['UPDATE_SETTINGS', 'REPLY'],
           source: 'discord',
         },
       },
@@ -1003,8 +1003,8 @@ export const updateSettingsAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: "I've updated the verification requirement to email verified accounts only. This adds an extra layer of security to your server.",
-          actions: ['SETTING_UPDATED'],
+          text: "I'll update the verification requirement to email verified accounts only. This adds an extra layer of security to your server.",
+          actions: ['UPDATE_SETTINGS', 'REPLY'],
           source: 'discord',
         },
       },
@@ -1020,8 +1020,8 @@ export const updateSettingsAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: "Level-up notifications have been disabled. Members will still earn experience and level up, but there won't be any automatic announcements. You can still view levels with the appropriate commands.",
-          actions: ['SETTING_UPDATED'],
+          text: "I'll disable level-up notifications. Members will still earn experience and level up, but there won't be any automatic announcements. You can still view levels with the appropriate commands.",
+          actions: ['UPDATE_SETTINGS', 'REPLY'],
           source: 'discord',
         },
       },
@@ -1037,8 +1037,8 @@ export const updateSettingsAction: Action = {
       {
         name: '{{name2}}',
         content: {
-          text: "Great! I've saved 'Gaming Lounge' as your server name. This helps me personalize responses and know how to refer to your community. We've completed all the required settings! Your server is now fully configured and ready to use. You can always adjust these settings later if needed.",
-          actions: ['ONBOARDING_COMPLETE'],
+          text: "Great! I'll save 'Gaming Lounge' as your server name. This helps me personalize responses and know how to refer to your community. After this, we'll have completed all the required settings!",
+          actions: ['UPDATE_SETTINGS', 'REPLY'],
           source: 'discord',
         },
       },
