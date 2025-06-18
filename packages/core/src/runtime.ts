@@ -167,6 +167,7 @@ export class AgentRuntime implements IAgentRuntime {
   public logger;
   private settings: RuntimeSettings;
   private servicesInitQueue = new Set<typeof Service>();
+  private pendingServices = new Map<string, typeof Service>();
   private currentRunId?: UUID; // Track the current run ID
   private currentActionContext?: {
     // Track current action execution context
@@ -553,6 +554,13 @@ export class AgentRuntime implements IAgentRuntime {
     }
     for (const service of this.servicesInitQueue) {
       await this.registerService(service);
+    }
+    // Check if any services are still pending due to unmet dependencies
+    if (this.pendingServices.size > 0) {
+      const pendingNames = Array.from(this.pendingServices.keys());
+      this.logger.warn(
+        `${this.character.name}(${this.agentId}) - ${this.pendingServices.size} services could not be initialized due to unmet dependencies: ${pendingNames.join(', ')}`
+      );
     }
     this.isInitialized = true;
   }
@@ -1447,6 +1455,25 @@ export class AgentRuntime implements IAgentRuntime {
     return this.services.has(serviceType as ServiceTypeName);
   }
 
+  /**
+   * Process any pending services that were waiting for dependencies
+   */
+  private async processPendingServices(): Promise<void> {
+    const pendingList = Array.from(this.pendingServices.entries());
+    for (const [serviceName, serviceDef] of pendingList) {
+      const dependencies = (serviceDef as any).dependencies || [];
+      const missingDeps = dependencies.filter(
+        (dep: string) => !this.services.has(dep as ServiceTypeName)
+      );
+
+      if (missingDeps.length === 0) {
+        // All dependencies are now satisfied, remove from pending and register
+        this.pendingServices.delete(serviceName);
+        await this.registerService(serviceDef);
+      }
+    }
+  }
+
   async registerService(serviceDef: typeof Service): Promise<void> {
     // Use serviceName as the unique key for registration
     const serviceName = serviceDef.serviceName || serviceDef.name;
@@ -1467,6 +1494,21 @@ export class AgentRuntime implements IAgentRuntime {
       );
       return;
     }
+
+    // Check if all dependencies are satisfied
+    const dependencies = (serviceDef as any).dependencies || [];
+    const missingDeps = dependencies.filter(
+      (dep: string) => !this.services.has(dep as ServiceTypeName)
+    );
+
+    if (missingDeps.length > 0) {
+      this.logger.debug(
+        `${this.character.name}(${this.agentId}) - Service ${serviceName} has unmet dependencies: ${missingDeps.join(', ')}. Deferring registration.`
+      );
+      this.pendingServices.set(serviceName, serviceDef);
+      return;
+    }
+
     try {
       const serviceInstance = await serviceDef.start(this);
       this.services.set(serviceName as ServiceTypeName, serviceInstance);
@@ -1479,6 +1521,9 @@ export class AgentRuntime implements IAgentRuntime {
       this.logger.debug(
         `${this.character.name}(${this.agentId}) - Service ${serviceName} registered successfully`
       );
+
+      // Check if any pending services can now be registered
+      await this.processPendingServices();
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(

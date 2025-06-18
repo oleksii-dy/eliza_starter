@@ -36,6 +36,77 @@ function getGlobalNodeModulesPath(): string {
 }
 
 /**
+ * Find the monorepo root directory by looking for a package.json with workspaces
+ */
+function findMonorepoRoot(): string | null {
+  try {
+    let currentDir = process.cwd();
+    const visited = new Set<string>();
+
+    while (!visited.has(currentDir)) {
+      visited.add(currentDir);
+      const pkgPath = path.join(currentDir, 'package.json');
+      if (fs.existsSync(pkgPath)) {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+        if (pkg.workspaces) {
+          return currentDir;
+        }
+      }
+      const parent = path.dirname(currentDir);
+      if (parent === currentDir) break; // Reached root
+      currentDir = parent;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get all workspace packages in the monorepo
+ */
+function getWorkspacePackages(): Map<string, string> {
+  const workspacePackages = new Map<string, string>();
+  const monorepoRoot = findMonorepoRoot();
+
+  if (!monorepoRoot) {
+    return workspacePackages;
+  }
+
+  try {
+    const rootPkg = JSON.parse(fs.readFileSync(path.join(monorepoRoot, 'package.json'), 'utf8'));
+    const workspaces = rootPkg.workspaces || [];
+
+    for (const workspace of workspaces) {
+      const workspacePattern = workspace.replace('/*', '');
+      const packagesDir = path.join(monorepoRoot, workspacePattern);
+
+      if (fs.existsSync(packagesDir) && fs.statSync(packagesDir).isDirectory()) {
+        const dirs = fs.readdirSync(packagesDir);
+
+        for (const dir of dirs) {
+          const pkgPath = path.join(packagesDir, dir, 'package.json');
+          if (fs.existsSync(pkgPath)) {
+            try {
+              const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+              if (pkg.name) {
+                workspacePackages.set(pkg.name, path.join(packagesDir, dir));
+              }
+            } catch (error) {
+              logger.debug(`Failed to parse package.json at ${pkgPath}:`, error);
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    logger.debug('Failed to get workspace packages:', error);
+  }
+
+  return workspacePackages;
+}
+
+/**
  * Helper function to resolve a path within node_modules
  */
 function resolveNodeModulesPath(repository: string, ...segments: string[]): string {
@@ -55,71 +126,6 @@ async function readPackageJson(repository: string): Promise<PackageJson | null> 
     logger.debug(`Failed to read package.json for '${repository}':`, error);
   }
   return null;
-}
-
-/**
- * Find the monorepo root directory
- */
-function findMonorepoRoot(): string | null {
-  try {
-    let currentDir = process.cwd();
-    while (currentDir !== path.dirname(currentDir)) {
-      const pkgPath = path.join(currentDir, 'package.json');
-      if (fs.existsSync(pkgPath)) {
-        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-        if (pkg.workspaces) {
-          return currentDir;
-        }
-      }
-      currentDir = path.dirname(currentDir);
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Get all workspace packages in the monorepo
- */
-async function getWorkspacePackages(): Promise<Map<string, string>> {
-  const workspacePackages = new Map<string, string>();
-  const monorepoRoot = findMonorepoRoot();
-
-  if (!monorepoRoot) {
-    return workspacePackages;
-  }
-
-  try {
-    const rootPkg = JSON.parse(fs.readFileSync(path.join(monorepoRoot, 'package.json'), 'utf8'));
-
-    const workspaces = rootPkg.workspaces || [];
-
-    for (const workspace of workspaces) {
-      const workspacePattern = workspace.replace('/*', '');
-      const packagesDir = path.join(monorepoRoot, workspacePattern);
-
-      if (fs.existsSync(packagesDir)) {
-        const packages = fs.readdirSync(packagesDir).filter((dir) => {
-          const pkgPath = path.join(packagesDir, dir, 'package.json');
-          return fs.existsSync(pkgPath);
-        });
-
-        for (const pkg of packages) {
-          const pkgJsonPath = path.join(packagesDir, pkg, 'package.json');
-          const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-          if (pkgJson.name) {
-            // Store the absolute path to the package
-            workspacePackages.set(pkgJson.name, path.join(packagesDir, pkg));
-          }
-        }
-      }
-    }
-  } catch (error) {
-    logger.debug('Failed to get workspace packages:', error);
-  }
-
-  return workspacePackages;
 }
 
 /**
@@ -154,7 +160,12 @@ const importStrategies: ImportStrategy[] = [
   {
     name: 'workspace package',
     tryImport: async (repository: string) => {
-      const workspacePackages = await getWorkspacePackages();
+      const workspacePackages = getWorkspacePackages();
+
+      logger.debug(
+        `[Workspace Loader] Looking for ${repository}. Found ${workspacePackages.size} workspace packages`
+      );
+
       if (workspacePackages.has(repository)) {
         const packagePath = workspacePackages.get(repository)!;
         const pkgJsonPath = path.join(packagePath, 'package.json');
@@ -170,6 +181,14 @@ const importStrategies: ImportStrategy[] = [
             logger.debug(
               `Workspace package ${repository} found but entry point not built: ${fullPath}`
             );
+
+            // Check if source exists but not built
+            const srcPath = path.join(packagePath, 'src', 'index.ts');
+            if (fs.existsSync(srcPath)) {
+              logger.warn(
+                `Workspace plugin ${repository} found but not built. Please run 'bun run build' in ${packagePath}`
+              );
+            }
           }
         }
       }
@@ -303,7 +322,11 @@ export async function loadPluginModule(repository: string): Promise<any | null> 
     `Loading ${isElizaOS ? 'ElizaOS' : 'third-party'} plugin: ${repository} (${strategies.length} strategies)`
   );
 
+  // Log strategy names
+  logger.debug(`Strategies for ${repository}: ${strategies.map((s) => s.name).join(', ')}`);
+
   for (const strategy of strategies) {
+    logger.debug(`Trying strategy: ${strategy.name} for ${repository}`);
     const result = await strategy.tryImport(repository);
     if (result) return result;
   }

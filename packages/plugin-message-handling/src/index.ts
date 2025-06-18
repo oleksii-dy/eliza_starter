@@ -38,6 +38,9 @@ export const messageHandlingPlugin: Plugin = {
     providers.worldProvider,
   ],
   tests: testSuites,
+  testDependencies: [
+    '@elizaos/plugin-sql'
+  ]
 };
 
 export default messageHandlingPlugin;

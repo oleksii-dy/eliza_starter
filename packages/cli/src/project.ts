@@ -163,11 +163,11 @@ export async function loadProject(dir: string): Promise<Project> {
 
     // Only try the main field entry point - no fallbacks to source files
     const entryPoint = path.join(dir, main);
-    
+
     // Check if this is a plugin that needs building
     const directoryInfo = detectDirectoryType(dir);
     const isPluginDirectory = directoryInfo.type === 'elizaos-plugin';
-    
+
     if (!fs.existsSync(entryPoint)) {
       // If it's a plugin in the current directory and has a build script, try building it
       if (isPluginDirectory && packageJson.scripts?.build) {
@@ -175,7 +175,7 @@ export async function loadProject(dir: string): Promise<Project> {
         try {
           await buildProject(dir, true);
           logger.info('Build completed successfully');
-          
+
           // Check again after building
           if (!fs.existsSync(entryPoint)) {
             throw new Error('Build completed but entry point still not found');
@@ -190,7 +190,9 @@ export async function loadProject(dir: string): Promise<Project> {
         }
       } else {
         logger.error(`Module entry point not found: ${entryPoint}`);
-        logger.error(`The main field in package.json points to "${main}" but this file doesn't exist.`);
+        logger.error(
+          `The main field in package.json points to "${main}" but this file doesn't exist.`
+        );
         logger.error('Please build your project first. Try running:');
         logger.error('  npm run build');
         logger.error('  or');
@@ -203,9 +205,10 @@ export async function loadProject(dir: string): Promise<Project> {
     try {
       const importPath = path.resolve(entryPoint);
       // Convert to file URL for ESM import
-      const importUrl = process.platform === 'win32'
-        ? 'file:///' + importPath.replace(/\\/g, '/')
-        : 'file://' + importPath;
+      const importUrl =
+        process.platform === 'win32'
+          ? 'file:///' + importPath.replace(/\\/g, '/')
+          : 'file://' + importPath;
       projectModule = (await import(importUrl)) as ProjectModule;
       logger.info(`Loaded project from ${entryPoint}`);
 

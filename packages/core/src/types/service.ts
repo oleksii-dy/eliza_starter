@@ -121,6 +121,9 @@ export abstract class Service {
   /** Optional. The generic type or category of the service (e.g., 'WALLET', 'TASK'). */
   static serviceType?: ServiceTypeName | string;
 
+  /** Optional. Array of service names that this service depends on. */
+  static dependencies?: string[];
+
   /** The unique name of this service instance. Defaults to the static serviceName. */
   serviceName: string;
 
