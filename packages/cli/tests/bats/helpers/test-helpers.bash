@@ -19,18 +19,6 @@ fi
 export CLI_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && pwd)"
 export CLI_DIST_PATH="${CLI_ROOT}/dist/index.js"
 export MONOREPO_ROOT="$(cd "${CLI_ROOT}/../../" && pwd)"
-# Default timeout - use environment variable if set, otherwise 30s
-export TEST_TIMEOUT=${TEST_TIMEOUT:-30}
-
-# Detect timeout command
-if command -v timeout >/dev/null 2>&1; then
-  TIMEOUT_CMD="timeout"
-elif command -v gtimeout >/dev/null 2>&1; then
-  TIMEOUT_CMD="gtimeout"
-else
-  # Fallback: no timeout
-  TIMEOUT_CMD=""
-fi
 
 # Setup and teardown functions
 setup_test_environment() {
@@ -56,24 +44,19 @@ run_cli() {
   local context="$1"
   shift
   
-  local cmd_prefix=""
-  if [[ -n "$TIMEOUT_CMD" ]]; then
-    cmd_prefix="$TIMEOUT_CMD $TEST_TIMEOUT"
-  fi
-  
   case "$context" in
     "dist")
-      $cmd_prefix node "$CLI_DIST_PATH" "$@"
+      node "$CLI_DIST_PATH" "$@"
       ;;
     "global")
-      $cmd_prefix elizaos "$@"
+      elizaos "$@"
       ;;
     "npx")
-      $cmd_prefix npx @elizaos/cli "$@"
+      npx @elizaos/cli "$@"
       ;;
     "monorepo")
       cd "$MONOREPO_ROOT"
-      $cmd_prefix node "packages/cli/dist/index.js" "$@"
+      node "packages/cli/dist/index.js" "$@"
       cd "$TEST_DIR"
       ;;
     *)
@@ -172,71 +155,17 @@ assert_process_running() {
   fi
 }
 
-# Start CLI in background with automatic timeout
+# Start CLI in background without timeout
 start_cli_background_with_timeout() {
   local context="$1"
-  local timeout="${2:-60}"  # Default 60 seconds
-  shift 2
+  shift
+  # Ignore the timeout parameter if provided for backward compatibility
+  if [[ "$1" =~ ^[0-9]+$ ]]; then
+    shift
+  fi
   
-  # Create a temporary file to store the server PID
-  local pidfile=$(mktemp)
-  
-  # Start the server in a subshell with proper signal handling
-  (
-    # Ignore SIGTERM in the subshell to prevent interference
-    trap '' SIGTERM
-    
-    # Start the actual server process
-    case "$context" in
-      "dist")
-        node "$CLI_DIST_PATH" "$@" &
-        ;;
-      "global")
-        elizaos "$@" &
-        ;;
-      "npx")
-        npx @elizaos/cli "$@" &
-        ;;
-      "monorepo")
-        cd "$MONOREPO_ROOT"
-        node "packages/cli/dist/index.js" "$@" &
-        ;;
-      *)
-        echo "Unknown context: $context" >&2
-        exit 1
-        ;;
-    esac
-    
-    local server_pid=$!
-    echo "$server_pid" > "$pidfile"
-    
-    # Wait for the process or timeout
-    local count=0
-    while kill -0 "$server_pid" 2>/dev/null && [[ $count -lt $timeout ]]; do
-      sleep 1
-      ((count++))
-    done
-    
-    # Kill if still running after timeout
-    if kill -0 "$server_pid" 2>/dev/null; then
-      echo "Test timeout: killing process $server_pid after ${timeout}s" >&2
-      kill -TERM "$server_pid" 2>/dev/null || true
-      sleep 2
-      kill -KILL "$server_pid" 2>/dev/null || true
-    fi
-  ) &
-  
-  local wrapper_pid=$!
-  
-  # Wait briefly for the server to start
-  sleep 0.5
-  
-  # Read the actual server PID
-  local server_pid=$(cat "$pidfile" 2>/dev/null || echo "")
-  rm -f "$pidfile"
-  
-  # Return both PIDs
-  echo "$server_pid:$wrapper_pid"
+  # Simply start the process in background
+  start_cli_background "$context" "$@"
 }
 
 # Start CLI in background (legacy - without timeout)
@@ -296,20 +225,18 @@ kill_process_gracefully() {
   fi
 }
 
-# Parse PIDs from timeout function (format: "server_pid:timer_pid")
+# Parse PIDs from timeout function (for backward compatibility)
 parse_timeout_pids() {
-  local combined="$1"
-  echo "${combined%%:*}"  # Return just the server PID
+  local pid="$1"
+  # Just return the PID as-is since we no longer use the server_pid:timer_pid format
+  echo "$pid"
 }
 
-# Kill both server and timer processes
+# Kill both server and timer processes (for backward compatibility)
 kill_timeout_processes() {
-  local combined="$1"
-  local server_pid="${combined%%:*}"
-  local timer_pid="${combined##*:}"
-  
-  kill_process_gracefully "$server_pid"
-  kill_process_gracefully "$timer_pid"
+  local pid="$1"
+  # Just kill the process normally since we no longer have timer processes
+  kill_process_gracefully "$pid"
 }
 
 # Port checking helper
