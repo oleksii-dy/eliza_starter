@@ -321,16 +321,16 @@ export async function installPlugin(
   process.env.ELIZA_INSTALLING_PLUGIN = packageName;
 
   try {
-    logger.info(`Plugin ${packageName} not available, installing...`);
+    logger.info(`Looking for plugin ${packageName}...`);
 
-    // 1. Check if it's already in local node_modules (workspace)
+    // 1. Check if it's already in local node_modules
     const localPath = path.join(cwd, 'node_modules', packageName);
     if (fs.existsSync(localPath)) {
       logger.info(`Plugin ${packageName} already installed locally`);
       return true;
     }
 
-    // 2. Check if it's a workspace package in the monorepo
+    // 2. FIRST check if it's a workspace package in the monorepo
     if (isInMonorepo()) {
       const workspacePackages = await getWorkspacePackages();
       if (workspacePackages.has(packageName)) {
@@ -346,7 +346,7 @@ export async function installPlugin(
           fs.mkdirSync(nodeModulesPath, { recursive: true });
         }
 
-        // Create parent directories if needed
+        // Create parent directories if needed (for scoped packages like @elizaos/...)
         const parentDir = path.dirname(targetPath);
         if (!fs.existsSync(parentDir)) {
           fs.mkdirSync(parentDir, { recursive: true });
@@ -354,6 +354,10 @@ export async function installPlugin(
 
         // Create symlink
         try {
+          // Remove existing symlink if it exists
+          if (fs.existsSync(targetPath)) {
+            fs.unlinkSync(targetPath);
+          }
           fs.symlinkSync(packagePath, targetPath, 'dir');
           logger.success(`Created symlink to workspace package ${packageName}`);
           return true;
@@ -364,51 +368,88 @@ export async function installPlugin(
       }
     }
 
+    // If not found in workspace, try external sources
+    logger.info(`Plugin ${packageName} not found in workspace, checking external sources...`);
+
     // 3. Check plugin registry
     try {
       const registry = await fetchPluginRegistry();
       if (registry && registry.registry[packageName]) {
         logger.info(`Found ${packageName} in plugin registry`);
-        // Registry plugins are pre-verified
-        return true;
+        // TODO: Implement registry installation
+        // For now, fall through to NPM installation
       }
     } catch (error) {
       logger.debug(`Plugin ${packageName} not found in registry:`, error);
     }
 
-    // 4. NPM installation (with workspace handling)
+    // 4. NPM installation (with workspace dependency handling)
     const npmPackageName =
       versionSpecifier !== 'latest' ? `${packageName}@${versionSpecifier}` : packageName;
 
     try {
       logger.info(`Attempting NPM install for ${npmPackageName}...`);
 
-      // If we're in a monorepo, bun should handle workspace dependencies automatically
-      // But we need to ensure we're using the right working directory
-      if (isInMonorepo() && packageName.startsWith('@elizaos/')) {
+      // If we're in a monorepo, we need to ensure workspace packages are resolved
+      if (isInMonorepo()) {
         const monorepoRoot = findMonorepoRoot();
         if (monorepoRoot) {
-          // Install from the monorepo root to ensure workspace resolution works
-          logger.debug(`Installing from monorepo root: ${monorepoRoot}`);
+          // Get all workspace packages for resolution
+          const workspacePackages = await getWorkspacePackages();
+
+          // Create a temporary package.json with resolutions
+          const tempPkgPath = path.join(cwd, 'temp-install-package.json');
+          const resolutions: Record<string, string> = {};
+
+          // Add all workspace packages as resolutions
+          for (const [pkgName, pkgPath] of workspacePackages) {
+            resolutions[pkgName] = `file:${pkgPath}`;
+          }
+
+          const tempPkg = {
+            name: 'temp-install',
+            version: '1.0.0',
+            type: 'module',
+            dependencies: {
+              [packageName]: versionSpecifier !== 'latest' ? versionSpecifier : '*',
+            },
+            resolutions,
+            overrides: resolutions,
+          };
+
+          fs.writeFileSync(tempPkgPath, JSON.stringify(tempPkg, null, 2));
 
           try {
-            // Run the install from the monorepo root
-            await runBunCommand(['add', npmPackageName, '--cwd', cwd], monorepoRoot);
+            // Install using the temporary package.json
+            logger.debug(`Installing with workspace resolutions...`);
+            await runBunCommand(['install'], cwd);
 
-            if (!skipVerification) {
-              await verifyPluginImport(packageName, 'from NPM with workspace handling');
+            // Clean up
+            fs.unlinkSync(tempPkgPath);
+
+            // Move the installed package from temp-install node_modules to the actual location
+            const tempNodeModules = path.join(cwd, 'node_modules');
+            if (fs.existsSync(path.join(tempNodeModules, packageName))) {
+              if (!skipVerification) {
+                await verifyPluginImport(packageName, 'from NPM with workspace resolution');
+              }
+              logger.success(
+                `Successfully installed ${packageName} from NPM with workspace dependencies`
+              );
+              return true;
             }
-
-            logger.success(`Successfully installed ${packageName} from NPM`);
-            return true;
-          } catch (error: any) {
-            logger.debug(`Monorepo install failed: ${error.message}`);
-            // Fall through to normal installation
+          } catch (error) {
+            // Clean up on error
+            if (fs.existsSync(tempPkgPath)) {
+              fs.unlinkSync(tempPkgPath);
+            }
+            logger.debug(`Workspace-aware installation failed: ${error}`);
+            // Fall through to standard installation
           }
         }
       }
 
-      // Normal installation
+      // Standard installation (without workspace resolution)
       await runBunCommand(['add', npmPackageName], cwd);
 
       if (!skipVerification) {
@@ -431,7 +472,21 @@ export async function installPlugin(
 
       try {
         logger.info(`Attempting GitHub install from ${githubUrl}...`);
-        await runBunCommand(['add', githubUrl], cwd);
+
+        // If in monorepo, use workspace resolutions for GitHub installs too
+        if (isInMonorepo()) {
+          const workspacePackages = await getWorkspacePackages();
+          const args = ['add', githubUrl];
+
+          // Add resolutions for workspace packages
+          for (const [pkgName, pkgPath] of workspacePackages) {
+            args.push('--resolution', `${pkgName}@file:${pkgPath}`);
+          }
+
+          await runBunCommand(args, cwd);
+        } else {
+          await runBunCommand(['add', githubUrl], cwd);
+        }
 
         if (!skipVerification) {
           await verifyPluginImport(packageName, 'from GitHub');

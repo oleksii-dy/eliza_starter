@@ -2,13 +2,14 @@
 sidebar_position: 6
 title: Actions System
 description: Learn about ElizaOS actions - the core components that define agent capabilities and responses
-keywords: [actions, responses, handlers, validation, examples, reply, implementation]
+keywords:
+  [actions, responses, handlers, validation, examples, reply, implementation, chaining, context]
 image: /img/actions.jpg
 ---
 
 # ⚡ Actions
 
-Actions define how agents respond to and interact with messages. They enable agents to perform tasks beyond simple message responses by integrating with external systems and modifying behavior.
+Actions define how agents respond to and interact with messages. They enable agents to perform tasks beyond simple message responses by integrating with external systems, modifying behavior, and chaining multiple operations together.
 
 ## Overview
 
@@ -25,6 +26,7 @@ An Action consists of:
 - `handler`: Core implementation logic
 - `examples`: Sample usage patterns
 - `suppressInitialMessage`: Optional flag to suppress initial response
+- `effects`: Optional metadata for planning (provides, requires, modifies)
 
 2. Agent Decision Flow:
 
@@ -36,7 +38,15 @@ When a message is received:
 - Each action's handler generates a response including a "thought" component (agent's internal reasoning)
 - The response is processed and sent back to the conversation
 
-3. Integration:
+3. Action Chaining:
+
+Actions can be chained together, with each action receiving:
+
+- Results from previous actions in the chain
+- Access to shared working memory
+- Accumulated state from earlier executions
+
+4. Integration:
 
 Actions work in concert with:
 
@@ -62,9 +72,14 @@ interface Action {
     state?: State,
     options?: any,
     callback?: HandlerCallback
-  ) => Promise<boolean>;
+  ) => Promise<ActionResult | void | boolean | null>;
   examples: ActionExample[][];
   suppressInitialMessage?: boolean; // Optional flag
+  effects?: {
+    provides: string[]; // What this action provides
+    requires: string[]; // What this action needs
+    modifies: string[]; // What state it changes
+  };
 }
 
 // Handler callback for generating responses
@@ -77,6 +92,26 @@ interface Content {
   actions?: string[]; // List of action names being performed
   action?: string; // Legacy single action name
   attachments?: Attachment[]; // Optional media attachments
+}
+
+// Action execution result for chaining
+interface ActionResult {
+  values?: {
+    [key: string]: any;
+  };
+  data?: {
+    [key: string]: any;
+  };
+  text?: string;
+}
+
+// Context provided to actions during execution
+interface ActionContext {
+  previousResults?: ActionResult[];
+  workingMemory?: WorkingMemory;
+  updateMemory?: (key: string, value: any) => void;
+  getMemory?: (key: string) => any;
+  getPreviousResult?: (stepId: UUID) => ActionResult | undefined;
 }
 ```
 
@@ -103,9 +138,17 @@ const customAction: Action = {
     options?: any,
     callback?: HandlerCallback
   ) => {
-    // Implementation logic - what the action actually does
+    // Access action context for chaining
+    const context = options?.context as ActionContext;
 
-    // Generate a response with thought and text components
+    // Access previous action results
+    const previousData = context?.previousResults?.[0]?.data;
+
+    // Use working memory
+    const savedValue = context?.getMemory?.('someKey');
+    context?.updateMemory?.('someKey', 'newValue');
+
+    // Implementation logic - what the action actually does
     const responseContent = {
       thought: 'Internal reasoning about what to do (not shown to users)',
       text: 'The actual message to send to the conversation',
@@ -117,7 +160,18 @@ const customAction: Action = {
       await callback(responseContent);
     }
 
-    return true; // Return true if action executed successfully
+    // Return ActionResult for next action in chain
+    return {
+      values: {
+        processedData: 'some value',
+      },
+      data: {
+        internalState: {
+          /* ... */
+        },
+      },
+      text: 'Summary of what was done',
+    };
   },
 
   examples: [
@@ -136,6 +190,103 @@ const customAction: Action = {
       },
     ],
   ],
+};
+```
+
+### Action Chaining
+
+Actions can be chained together, with each action receiving results from previous actions:
+
+```typescript
+const dataFetchAction: Action = {
+  name: 'FETCH_DATA',
+  // ... other properties ...
+
+  handler: async (runtime, message, state, options, callback) => {
+    // Fetch data from external source
+    const data = await fetchExternalData();
+
+    // Return data for next action
+    return {
+      values: { fetchedData: data },
+      data: { source: 'external_api' },
+    };
+  },
+};
+
+const processDataAction: Action = {
+  name: 'PROCESS_DATA',
+  // ... other properties ...
+
+  handler: async (runtime, message, state, options, callback) => {
+    const context = options?.context as ActionContext;
+
+    // Access data from previous action
+    const fetchedData = context?.previousResults?.[0]?.values?.fetchedData;
+
+    if (!fetchedData) {
+      throw new Error('No data to process');
+    }
+
+    // Process the data
+    const processed = await processData(fetchedData);
+
+    // Send response
+    await callback({
+      text: `Processed ${processed.length} items`,
+      thought: 'Successfully processed the fetched data',
+    });
+
+    // Return for potential next action
+    return {
+      values: { processedData: processed },
+    };
+  },
+};
+```
+
+### Working Memory
+
+Actions have access to a working memory that persists across the action chain:
+
+```typescript
+const multiStepAction: Action = {
+  name: 'MULTI_STEP_PROCESS',
+  // ... other properties ...
+
+  handler: async (runtime, message, state, options, callback) => {
+    const context = options?.context as ActionContext;
+
+    // Check if we're resuming from a previous step
+    const currentStep = context?.getMemory?.('currentStep') || 1;
+
+    switch (currentStep) {
+      case 1:
+        // First step logic
+        context?.updateMemory?.('currentStep', 2);
+        context?.updateMemory?.('intermediateData', {
+          /* ... */
+        });
+        break;
+
+      case 2:
+        // Second step logic
+        const intermediateData = context?.getMemory?.('intermediateData');
+        // Process with intermediate data
+        context?.updateMemory?.('currentStep', 3);
+        break;
+
+      case 3:
+        // Final step
+        // Clear working memory
+        context?.workingMemory?.clear();
+        break;
+    }
+
+    return {
+      data: { step: currentStep },
+    };
+  },
 };
 ```
 

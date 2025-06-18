@@ -58,6 +58,71 @@ async function readPackageJson(repository: string): Promise<PackageJson | null> 
 }
 
 /**
+ * Find the monorepo root directory
+ */
+function findMonorepoRoot(): string | null {
+  try {
+    let currentDir = process.cwd();
+    while (currentDir !== path.dirname(currentDir)) {
+      const pkgPath = path.join(currentDir, 'package.json');
+      if (fs.existsSync(pkgPath)) {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+        if (pkg.workspaces) {
+          return currentDir;
+        }
+      }
+      currentDir = path.dirname(currentDir);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get all workspace packages in the monorepo
+ */
+async function getWorkspacePackages(): Promise<Map<string, string>> {
+  const workspacePackages = new Map<string, string>();
+  const monorepoRoot = findMonorepoRoot();
+
+  if (!monorepoRoot) {
+    return workspacePackages;
+  }
+
+  try {
+    const rootPkg = JSON.parse(fs.readFileSync(path.join(monorepoRoot, 'package.json'), 'utf8'));
+
+    const workspaces = rootPkg.workspaces || [];
+
+    for (const workspace of workspaces) {
+      const workspacePattern = workspace.replace('/*', '');
+      const packagesDir = path.join(monorepoRoot, workspacePattern);
+
+      if (fs.existsSync(packagesDir)) {
+        const packages = fs.readdirSync(packagesDir).filter((dir) => {
+          const pkgPath = path.join(packagesDir, dir, 'package.json');
+          return fs.existsSync(pkgPath);
+        });
+
+        for (const pkg of packages) {
+          const pkgJsonPath = path.join(packagesDir, pkg, 'package.json');
+          const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
+          if (pkgJson.name) {
+            // Store the absolute path to the package
+            workspacePackages.set(pkgJson.name, path.join(packagesDir, pkg));
+          }
+        }
+      }
+    }
+  } catch (error) {
+    logger.debug('Failed to get workspace packages:', error);
+  }
+
+  return workspacePackages;
+}
+
+/**
  * Attempts to import a module from a given path and logs the outcome.
  */
 async function tryImporting(
@@ -77,14 +142,41 @@ async function tryImporting(
 
 /**
  * Collection of import strategies in cascading order:
- * 1. Local node_modules of current workspace
- * 2. Plugin registry (handled in install flow)
- * 3. Global node_modules
- * 4. NPM (handled in install flow)
- * 5. GitHub fallback (handled in install flow)
+ * 1. Workspace packages (if in monorepo)
+ * 2. Local node_modules of current workspace
+ * 3. Plugin registry (handled in install flow)
+ * 4. Global node_modules
+ * 5. NPM (handled in install flow)
+ * 6. GitHub fallback (handled in install flow)
  */
 const importStrategies: ImportStrategy[] = [
-  // 1. Check local node_modules first (includes workspace)
+  // 1. Check workspace packages FIRST (if in monorepo)
+  {
+    name: 'workspace package',
+    tryImport: async (repository: string) => {
+      const workspacePackages = await getWorkspacePackages();
+      if (workspacePackages.has(repository)) {
+        const packagePath = workspacePackages.get(repository)!;
+        const pkgJsonPath = path.join(packagePath, 'package.json');
+
+        if (fs.existsSync(pkgJsonPath)) {
+          const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
+          const entryPoint = pkgJson.module || pkgJson.main || DEFAULT_ENTRY_POINT;
+          const fullPath = path.join(packagePath, entryPoint);
+
+          if (fs.existsSync(fullPath)) {
+            return tryImporting(fullPath, 'workspace package', repository);
+          } else {
+            logger.debug(
+              `Workspace package ${repository} found but entry point not built: ${fullPath}`
+            );
+          }
+        }
+      }
+      return null;
+    },
+  },
+  // 2. Check local node_modules (includes locally installed packages)
   {
     name: 'local node_modules',
     tryImport: async (repository: string) => {
@@ -102,21 +194,6 @@ const importStrategies: ImportStrategy[] = [
 
       // Try default location
       return tryImporting(resolveNodeModulesPath(repository), 'local node_modules', repository);
-    },
-  },
-  // Special case: workspace dependencies for monorepo
-  {
-    name: 'workspace dependency',
-    tryImport: async (repository: string) => {
-      if (repository.startsWith('@elizaos/plugin-')) {
-        // Try to find the plugin in the workspace
-        const pluginName = repository.replace('@elizaos/', '');
-        const workspacePath = path.resolve(process.cwd(), '..', pluginName, 'dist', 'index.js');
-        if (fs.existsSync(workspacePath)) {
-          return tryImporting(workspacePath, 'workspace dependency', repository);
-        }
-      }
-      return null;
     },
   },
   // 3. Check global node_modules
@@ -197,6 +274,7 @@ function getStrategiesForPlugin(repository: string): ImportStrategy[] {
     // Third-party plugins: only try relevant strategies
     return importStrategies.filter(
       (strategy) =>
+        strategy.name === 'workspace package' ||
         strategy.name === 'local node_modules' ||
         strategy.name === 'local development plugin' ||
         strategy.name === 'direct path'
@@ -207,11 +285,12 @@ function getStrategiesForPlugin(repository: string): ImportStrategy[] {
 /**
  * Attempts to load a plugin module using relevant strategies based on plugin type.
  * Loading order:
- * 1. Local node_modules of current workspace
- * 2. Plugin registry (handled by install flow)
- * 3. Global node_modules
- * 4. NPM (handled by install flow)
- * 5. GitHub at /elizaos-plugins/plugin-<name> (handled by install flow)
+ * 1. Workspace packages (if in monorepo)
+ * 2. Local node_modules of current workspace
+ * 3. Plugin registry (handled by install flow)
+ * 4. Global node_modules
+ * 5. NPM (handled by install flow)
+ * 6. GitHub at /elizaos-plugins/plugin-<n> (handled by install flow)
  *
  * @param repository - The plugin repository/package name to load.
  * @returns The loaded plugin module or null if loading fails after all attempts.

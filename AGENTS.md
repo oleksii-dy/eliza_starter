@@ -4559,7 +4559,11 @@ export const character: Character = {
       ? ['@elizaos/plugin-twitter']
       : []),
     ...(process.env.TELEGRAM_BOT_TOKEN ? ['@elizaos/plugin-telegram'] : []),
+<<<<<<< Updated upstream
     ...(!process.env.IGNORE_BOOTSTRAP ? ['@elizaos/plugin-message-handling'] : []),
+=======
+    ...(!process.env.IGNORE_DEFAULT_MESSAGE_HANDLING ? ['@elizaos/plugin-message-handling'] : []),
+>>>>>>> Stashed changes
   ],
   settings: {
     secrets: {},

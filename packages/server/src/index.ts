@@ -809,6 +809,7 @@ export class AgentServer {
           console.log(
             `\x1b[32mStartup successful!\nGo to the dashboard at \x1b[1mhttp://localhost:${port}\x1b[22m\x1b[0m`
           );
+          console.log(`\x1b[36m📚 Learn more at \x1b[1mhttps://eliza.how\x1b[22m\x1b[0m`);
         }
 
         // Add log for test readiness
@@ -934,7 +935,7 @@ export class AgentServer {
 
     // Reset initialization flag
     this.isInitialized = false;
-    
+
     logger.success('AgentServer stopped successfully');
   }
 
