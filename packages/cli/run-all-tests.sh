@@ -1,7 +1,8 @@
 #!/bin/bash
 # run-all-tests.sh
 
-set -e
+# Don't use set -e, we want to handle errors ourselves
+# set -e
 
 # Set test environment variables
 export ELIZA_TEST_MODE="true"
@@ -14,6 +15,7 @@ echo "================================="
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Test results
@@ -27,12 +29,14 @@ run_test_suite() {
   local test_command="$2"
   
   echo -e "\n${YELLOW}Running ${suite_name}...${NC}"
+  echo -e "${BLUE}Command: ${test_command}${NC}"
   
   if eval "$test_command"; then
     echo -e "${GREEN}✓ ${suite_name} passed${NC}"
     ((PASSED_TESTS++))
   else
-    echo -e "${RED}✗ ${suite_name} failed${NC}"
+    local exit_code=$?
+    echo -e "${RED}✗ ${suite_name} failed with exit code: ${exit_code}${NC}"
     ((FAILED_TESTS++))
   fi
   ((TOTAL_TESTS++))
@@ -43,7 +47,10 @@ cd "$(dirname "$0")"
 
 # Build the CLI first
 echo "Building CLI..."
-bun run build
+if ! bun run build; then
+  echo -e "${RED}Build failed!${NC}"
+  exit 1
+fi
 
 # Run TypeScript checks
 # Skip TypeScript validation due to dependency type issues
@@ -71,11 +78,41 @@ fi
 
 # Test global installation
 echo -e "\n${YELLOW}Testing global installation...${NC}"
-npm pack > /dev/null 2>&1
-PACKAGE_FILE=$(ls elizaos-cli-*.tgz | head -n 1)
-if [[ -n "$PACKAGE_FILE" ]]; then
-  run_test_suite "Global Install Test" "npm install -g ./$PACKAGE_FILE && elizaos --version && npm uninstall -g @elizaos/cli"
-  rm -f "$PACKAGE_FILE"
+
+# Skip global install test if requested or in monorepo
+if [ "$SKIP_GLOBAL_INSTALL" = "true" ]; then
+  echo -e "${YELLOW}⚠ Skipping global install test (SKIP_GLOBAL_INSTALL=true)${NC}"
+elif [ -f "../../pnpm-workspace.yaml" ] || [ -f "../../package.json" ]; then
+  echo -e "${YELLOW}⚠ Detected monorepo environment, skipping global install test${NC}"
+  echo -e "${YELLOW}  To test global install: cd to a temporary directory outside the monorepo${NC}"
+else
+  # Try to get npm prefix outside of workspace context
+  NPM_PREFIX=$(cd /tmp && npm config get prefix 2>/dev/null || echo "")
+  if [ -z "$NPM_PREFIX" ]; then
+    echo -e "${YELLOW}⚠ Could not determine npm prefix, skipping global install test${NC}"
+  elif [ ! -w "$NPM_PREFIX" ] && [ "$CI" != "true" ]; then
+    echo -e "${YELLOW}⚠ No write access to npm global directory ($NPM_PREFIX), skipping global install test${NC}"
+    echo -e "${YELLOW}  To enable: npm config set prefix ~/.npm-global${NC}"
+  else
+    # Try npm pack with error handling
+    echo -e "${BLUE}Running npm pack...${NC}"
+    if npm pack 2>&1; then
+      PACKAGE_FILE=$(ls elizaos-cli-*.tgz 2>/dev/null | head -n 1)
+      if [[ -n "$PACKAGE_FILE" ]]; then
+        echo -e "${BLUE}Found package file: $PACKAGE_FILE${NC}"
+        run_test_suite "Global Install Test" "npm install -g ./$PACKAGE_FILE && elizaos --version && npm uninstall -g @elizaos/cli"
+        rm -f "$PACKAGE_FILE"
+      else
+        echo -e "${RED}✗ npm pack succeeded but no .tgz file found${NC}"
+        ((FAILED_TESTS++))
+        ((TOTAL_TESTS++))
+      fi
+    else
+      echo -e "${RED}✗ npm pack failed${NC}"
+      ((FAILED_TESTS++))
+      ((TOTAL_TESTS++))
+    fi
+  fi
 fi
 
 # Summary

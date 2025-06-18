@@ -1205,35 +1205,66 @@ export async function runPluginMigrations(
   await namespaceManager.ensureNamespace(schemaName);
   const existingTables = await namespaceManager.introspectExistingTables(schemaName);
 
-  // logger.debug(`[CUSTOM MIGRATOR] Schema name: ${schemaName}`);
-  // logger.debug(`[CUSTOM MIGRATOR] Existing tables:`, existingTables);
+  logger.debug(`[CUSTOM MIGRATOR] Schema name: ${schemaName}`);
+  logger.debug(`[CUSTOM MIGRATOR] Existing tables:`, existingTables);
+  logger.debug(`[CUSTOM MIGRATOR] Schema entries:`, Object.keys(schema));
 
   // Discover all tables
   const tableEntries = Object.entries(schema).filter(([key, v]) => {
-    const isDrizzleTable =
-      v &&
-      (((v as any)._ && typeof (v as any)._.name === 'string') ||
-        (typeof v === 'object' &&
-          v !== null &&
-          ('tableName' in v || 'dbName' in v || key.toLowerCase().includes('table'))));
+    // Enhanced table detection logic
+    if (!v || typeof v !== 'object') return false;
+    
+    // Check for Drizzle table structure
+    const hasTableConfig = !!(v as any)._;
+    const hasTableName = hasTableConfig && typeof (v as any)._.name === 'string';
+    
+    // Check for table-like properties
+    const hasTableProperties = 'tableName' in v || 'dbName' in v;
+    
+    // Check if key suggests it's a table
+    const keyIsTableLike = key.toLowerCase().includes('table');
+    
+    // Check for Drizzle symbols (additional check)
+    const symbols = Object.getOwnPropertySymbols(v);
+    const hasDrizzleSymbols = symbols.some(s => s.description?.includes('drizzle:'));
+    
+    const isDrizzleTable = hasTableConfig || hasTableProperties || keyIsTableLike || hasDrizzleSymbols;
+    
+    if (!isDrizzleTable) {
+      logger.debug(`[CUSTOM MIGRATOR] Skipping non-table entry: ${key}`);
+    }
+    
     return isDrizzleTable;
   });
 
-  // logger.debug(
-  //   `[CUSTOM MIGRATOR] Found ${tableEntries.length} tables to process:`,
-  //   tableEntries.map(([key]) => key)
-  // );
+  logger.debug(
+    `[CUSTOM MIGRATOR] Found ${tableEntries.length} tables to process:`,
+    tableEntries.map(([key]) => key)
+  );
 
   // Parse all table definitions
   const tableDefinitions = new Map<string, TableDefinition>();
   for (const [exportKey, table] of tableEntries) {
     const tableDef = introspector.parseTableDefinition(table, exportKey);
     tableDefinitions.set(tableDef.name, tableDef);
+    logger.debug(`[CUSTOM MIGRATOR] Parsed table: ${tableDef.name} from export key: ${exportKey}`);
+  }
+  
+  // Log all discovered table names
+  logger.debug(`[CUSTOM MIGRATOR] All discovered tables:`, Array.from(tableDefinitions.keys()));
+  
+  // Check for critical tables that must exist
+  const criticalTables = ['message_servers', 'channels', 'central_messages', 'channel_participants', 'server_agents'];
+  const missingCriticalTables = criticalTables.filter(t => !tableDefinitions.has(t));
+  
+  if (missingCriticalTables.length > 0) {
+    logger.warn(`[CUSTOM MIGRATOR] Missing critical tables: ${missingCriticalTables.join(', ')}`);
+    logger.warn(`[CUSTOM MIGRATOR] This may indicate an issue with table discovery`);
   }
 
   // Sort tables by dependencies (topological sort)
   const sortedTableNames = topologicalSort(tableDefinitions);
-  // logger.debug(`[CUSTOM MIGRATOR] Table creation order:`, sortedTableNames);
+  logger.debug(`[CUSTOM MIGRATOR] Table creation order:`, sortedTableNames);
 
   // logger.info(
   //   `Migrating ${tableDefinitions.size} tables for ${pluginName} to schema ${schemaName}`

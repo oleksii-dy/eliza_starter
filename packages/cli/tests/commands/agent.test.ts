@@ -78,38 +78,38 @@ describe('ElizaOS Agent Commands', () => {
       }
     );
 
-    // Capture server output for debugging
-    serverProcess.stdout?.on('data', (data: Buffer) => {
-      const output = data.toString();
-      console.log(`[SERVER STDOUT] ${output}`);
-      serverOutputBuffer += output;
+    // // Capture server output for debugging
+    // serverProcess.stdout?.on('data', (data: Buffer) => {
+    //   const output = data.toString();
+    //   console.log(`[SERVER STDOUT] ${output}`);
+    //   serverOutputBuffer += output;
       
-      // Check for port change message
-      const portChangeMatch = output.match(/Port \d+ is in use, using port (\d+) instead/);
-      if (portChangeMatch) {
-        actualServerPort = parseInt(portChangeMatch[1], 10);
-        console.log(`[DEBUG] Server switched to port ${actualServerPort}`);
-      }
+    //   // Check for port change message
+    //   const portChangeMatch = output.match(/Port \d+ is in use, using port (\d+) instead/);
+    //   if (portChangeMatch) {
+    //     actualServerPort = parseInt(portChangeMatch[1], 10);
+    //     console.log(`[DEBUG] Server switched to port ${actualServerPort}`);
+    //   }
       
-      // Check for successful startup message
-      const listeningMatch = output.match(/AgentServer is listening on port (\d+)/);
-      if (listeningMatch) {
-        actualServerPort = parseInt(listeningMatch[1], 10);
-        console.log(`[DEBUG] Server confirmed listening on port ${actualServerPort}`);
-      }
-    });
+    //   // Check for successful startup message
+    //   const listeningMatch = output.match(/AgentServer is listening on port (\d+)/);
+    //   if (listeningMatch) {
+    //     actualServerPort = parseInt(listeningMatch[1], 10);
+    //     console.log(`[DEBUG] Server confirmed listening on port ${actualServerPort}`);
+    //   }
+    // });
     
-    serverProcess.stderr?.on('data', (data: Buffer) => {
-      console.error(`[SERVER STDERR] ${data.toString()}`);
-    });
+    // serverProcess.stderr?.on('data', (data: Buffer) => {
+    //   console.error(`[SERVER STDERR] ${data.toString()}`);
+    // });
 
-    serverProcess.on('error', (error: Error) => {
-      console.error('[SERVER ERROR]', error);
-    });
+    // serverProcess.on('error', (error: Error) => {
+    //   console.error('[SERVER ERROR]', error);
+    // });
 
-    serverProcess.on('exit', (code: number | null, signal: string | null) => {
-      console.log(`[SERVER EXIT] code: ${code}, signal: ${signal}`);
-    });
+    // serverProcess.on('exit', (code: number | null, signal: string | null) => {
+    //   console.log(`[SERVER EXIT] code: ${code}, signal: ${signal}`);
+    // });
 
     // Wait a bit for port detection
     await new Promise((resolve) => setTimeout(resolve, 2000));

@@ -230,8 +230,19 @@ export class AgentServer {
     try {
       // Check if the default server exists
       logger.info('[AgentServer] Checking for default server...');
-      const servers = await (this.database as any).getMessageServers();
-      logger.debug(`[AgentServer] Found ${servers.length} existing servers`);
+      
+      // First check if the table exists
+      let servers = [];
+      try {
+        servers = await (this.database as any).getMessageServers();
+        logger.debug(`[AgentServer] Found ${servers.length} existing servers`);
+      } catch (tableError: any) {
+        if (tableError.message?.includes('does not exist') || tableError.message?.includes('no such table')) {
+          logger.error('[AgentServer] message_servers table does not exist yet. Migration may have failed.');
+          throw new Error('Database migration incomplete: message_servers table not found');
+        }
+        throw tableError;
+      }
 
       // Log all existing servers for debugging
       servers.forEach((s: any) => {
@@ -249,12 +260,16 @@ export class AgentServer {
 
         // Use raw SQL to ensure the server is created with the exact ID
         try {
+          // Use CURRENT_TIMESTAMP for better PGLite compatibility
           await (this.database as any).db.execute(`
             INSERT INTO message_servers (id, name, source_type, created_at, updated_at)
-            VALUES ('00000000-0000-0000-0000-000000000000', 'Default Server', 'eliza_default', NOW(), NOW())
+            VALUES ('00000000-0000-0000-0000-000000000000', 'Default Server', 'eliza_default', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             ON CONFLICT (id) DO NOTHING
           `);
           logger.success('[AgentServer] Default server created via raw SQL');
+
+          // Add small delay before checking to ensure transaction completes
+          await new Promise((resolve) => setTimeout(resolve, 100));
 
           // Immediately check if it was created
           const checkResult = await (this.database as any).db.execute(
