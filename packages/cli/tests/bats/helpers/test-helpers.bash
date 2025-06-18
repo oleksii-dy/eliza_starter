@@ -85,6 +85,11 @@ run_cli() {
 # Character file creation helper
 create_test_character() {
   local filename="${1:-test-character.json}"
+  # Create directory if it contains a path
+  local dir=$(dirname "$filename")
+  if [[ "$dir" != "." && ! -d "$dir" ]]; then
+    mkdir -p "$dir"
+  fi
   cat > "$filename" <<EOF
 {
   "name": "TestAgent",
@@ -321,6 +326,22 @@ assert_file_contain() {
   
   if ! grep -q "$content" "$file"; then
     fail "File $file does not contain: $content"
+  fi
+}
+
+assert_dir_exist() {
+  local dir="$1"
+  
+  if [[ ! -d "$dir" ]]; then
+    fail "Directory $dir does not exist"
+  fi
+}
+
+assert_file_exist() {
+  local file="$1"
+  
+  if [[ ! -f "$file" ]]; then
+    fail "File $file does not exist"
   fi
 }
 
