@@ -26,20 +26,28 @@ FAILED_TESTS=0
 # Track PIDs for cleanup
 CHILD_PIDS=()
 CLEANUP_DONE=false
+BATS_RUNNING=false
 
 # Cleanup function
 cleanup() {
   if [ "$CLEANUP_DONE" = "true" ]; then
     return
   fi
+  
+  # Don't cleanup if BATS is still running
+  if [ "$BATS_RUNNING" = "true" ]; then
+    echo -e "\n${YELLOW}BATS tests still running, skipping cleanup${NC}"
+    return
+  fi
+  
   CLEANUP_DONE=true
   
   echo -e "\n${YELLOW}Cleaning up test processes...${NC}"
   
-  # Kill all child processes
+  # Only kill tracked background processes (not BATS)
   for pid in "${CHILD_PIDS[@]}"; do
-    if kill -0 "$pid" 2>/dev/null; then
-      echo "Killing process $pid"
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+      echo "Killing background process $pid"
       kill -TERM "$pid" 2>/dev/null || true
     fi
   done
@@ -47,17 +55,17 @@ cleanup() {
   # Wait briefly for graceful shutdown
   sleep 1
   
-  # Force kill any remaining processes
+  # Force kill any remaining tracked processes
   for pid in "${CHILD_PIDS[@]}"; do
-    if kill -0 "$pid" 2>/dev/null; then
-      echo "Force killing process $pid"
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+      echo "Force killing background process $pid"
       kill -KILL "$pid" 2>/dev/null || true
     fi
   done
   
-  # Kill any elizaos processes that might be orphaned
+  # Kill any orphaned elizaos server processes (but not test runners)
   pkill -f "elizaos start" 2>/dev/null || true
-  pkill -f "node.*elizaos.*start" 2>/dev/null || true
+  pkill -f "node.*dist/index.js start" 2>/dev/null || true
   
   # Clean up test artifacts
   rm -rf ~/.eliza/test-* 2>/dev/null || true
@@ -77,24 +85,46 @@ run_test_suite() {
   echo -e "\n${YELLOW}Running ${suite_name}...${NC}"
   echo -e "${BLUE}Command: ${test_command}${NC}"
   
-  # Run test in background to capture PID
-  eval "$test_command" &
-  local test_pid=$!
-  CHILD_PIDS+=($test_pid)
-  
-  # Wait for test to complete
-  if wait $test_pid; then
-    echo -e "${GREEN}✓ ${suite_name} passed${NC}"
-    ((PASSED_TESTS++))
+  # Special handling for BATS tests - run them in foreground
+  if [[ "$test_command" == *"bats"* ]]; then
+    BATS_RUNNING=true
+    # Run BATS tests in foreground to ensure they complete properly
+    if eval "$test_command"; then
+      echo -e "${GREEN}✓ ${suite_name} passed${NC}"
+      ((PASSED_TESTS++))
+    else
+      local exit_code=$?
+      # Skip exit code 143 (SIGTERM) as it might be from cleanup
+      if [[ $exit_code -ne 143 ]]; then
+        echo -e "${RED}✗ ${suite_name} failed with exit code: ${exit_code}${NC}"
+        ((FAILED_TESTS++))
+      else
+        echo -e "${YELLOW}⚠ ${suite_name} was terminated${NC}"
+        ((FAILED_TESTS++))
+      fi
+    fi
+    ((TOTAL_TESTS++))
+    BATS_RUNNING=false
   else
-    local exit_code=$?
-    echo -e "${RED}✗ ${suite_name} failed with exit code: ${exit_code}${NC}"
-    ((FAILED_TESTS++))
+    # For non-BATS tests, run in background as before
+    eval "$test_command" &
+    local test_pid=$!
+    CHILD_PIDS+=($test_pid)
+    
+    # Wait for test to complete
+    if wait $test_pid; then
+      echo -e "${GREEN}✓ ${suite_name} passed${NC}"
+      ((PASSED_TESTS++))
+    else
+      local exit_code=$?
+      echo -e "${RED}✗ ${suite_name} failed with exit code: ${exit_code}${NC}"
+      ((FAILED_TESTS++))
+    fi
+    ((TOTAL_TESTS++))
+    
+    # Remove PID from tracking
+    CHILD_PIDS=(${CHILD_PIDS[@]/$test_pid})
   fi
-  ((TOTAL_TESTS++))
-  
-  # Remove PID from tracking
-  CHILD_PIDS=(${CHILD_PIDS[@]/$test_pid})
 }
 
 # Change to CLI directory
@@ -106,6 +136,14 @@ if ! bun run build; then
   echo -e "${RED}Build failed!${NC}"
   exit 1
 fi
+
+# Verify build completed successfully
+if [ ! -f "dist/index.js" ]; then
+  echo -e "${RED}Build appears incomplete - dist/index.js not found!${NC}"
+  exit 1
+fi
+
+echo -e "${GREEN}Build completed successfully${NC}"
 
 # Run TypeScript checks
 # Skip TypeScript validation due to dependency type issues
