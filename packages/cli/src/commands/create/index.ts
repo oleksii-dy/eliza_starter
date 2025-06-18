@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import * as clack from '@clack/prompts';
 import colors from 'yoctocolors';
 import { logger } from '@elizaos/core';
+import { checkMonorepoGuard } from '@/src/utils/monorepo-guard';
 
 import { validateCreateOptions, validateProjectName } from './utils';
 import { selectDatabase, selectAIModel } from './utils';
@@ -17,6 +18,9 @@ export const create = new Command('create')
   .option('--type <type>', 'type of project to create (project, plugin, agent, tee)', 'project')
   .action(async (name?: string, opts?: any) => {
     try {
+      // Check if running inside monorepo - block if so
+      checkMonorepoGuard();
+
       // Set non-interactive mode if environment variable is set or if -y/--yes flag is present in process.argv
       if (
         process.env.ELIZA_NONINTERACTIVE === '1' ||
@@ -86,7 +90,7 @@ export const create = new Command('create')
           const nameInput = await clack.text({
             message: `What is the name of your ${projectType}?`,
             placeholder: `my-${projectType}`,
-            validate: (value) => {
+            validate: (value: string) => {
               if (!value) return 'Name is required';
 
               // Validate project/plugin names differently than agent names

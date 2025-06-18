@@ -16,6 +16,7 @@ import { Command } from 'commander';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import * as clack from '@clack/prompts';
+import { checkMonorepoGuard } from '@/src/utils/monorepo-guard';
 
 // Import modular actions
 import { publishToNpm } from './actions/npm-publish';
@@ -46,6 +47,7 @@ export const publish = new Command()
   .option('-d, --dry-run', 'generate registry files locally without publishing', false)
   .option('-sr, --skip-registry', 'skip publishing to the registry', false)
   .hook('preAction', async () => {
+    checkMonorepoGuard();
     await displayBanner();
   })
   .action(async (opts: PublishOptions) => {

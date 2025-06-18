@@ -1,12 +1,18 @@
 import { Command } from 'commander';
 import { getAgent, removeAgent, setAgentConfig, startAgent, stopAgent } from './actions';
 import { listAgents, getAgents, resolveAgentId } from './utils';
+import { checkMonorepoGuard } from '@/src/utils/monorepo-guard';
 
 // Export utilities for backward compatibility
 export { getAgents, resolveAgentId };
 export { getAgentRuntimeUrl, getAgentsBaseUrl } from '../shared';
 
-export const agent = new Command().name('agent').description('Manage ElizaOS agents');
+export const agent = new Command()
+  .name('agent')
+  .description('Manage ElizaOS agents')
+  .hook('preAction', () => {
+    checkMonorepoGuard();
+  });
 
 agent
   .command('list')

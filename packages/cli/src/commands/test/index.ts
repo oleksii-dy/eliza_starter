@@ -2,6 +2,7 @@ import { handleError } from '@/src/utils';
 import { validatePort } from '@/src/utils/port-validation';
 import { logger } from '@elizaos/core';
 import { Command, Option } from 'commander';
+import { checkMonorepoGuard } from '@/src/utils/monorepo-guard';
 import { runAllTests } from './actions/run-all-tests';
 import { runComponentTests } from './actions/component-tests';
 import { runE2eTests } from './actions/e2e-tests';
@@ -23,6 +24,7 @@ export const test = new Command()
   .option('--skip-build', 'skip the build step before running tests')
   .option('--skip-type-check', 'skip TypeScript validation before running tests')
   .hook('preAction', async (thisCommand) => {
+    checkMonorepoGuard();
     // Install plugin dependencies before running tests
     const testPath = thisCommand.args[0];
     const projectInfo = getProjectType(testPath);

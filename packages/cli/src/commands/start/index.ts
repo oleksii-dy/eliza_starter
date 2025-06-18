@@ -4,6 +4,7 @@ import { loadCharacterTryPath } from '@elizaos/server';
 import { loadProject } from '@/src/project';
 import { logger, type Character, type ProjectAgent } from '@elizaos/core';
 import { Command } from 'commander';
+import { checkMonorepoGuard } from '@/src/utils/monorepo-guard';
 import { startAgents } from './actions/server-start';
 import { StartOptions } from './types';
 import * as fs from 'node:fs';
@@ -17,6 +18,7 @@ export const start = new Command()
   .option('-p, --port <port>', 'Port to listen on', validatePort)
   .option('--character <paths...>', 'Character file(s) to use')
   .hook('preAction', async () => {
+    checkMonorepoGuard();
     await displayBanner();
   })
   .action(async (options: StartOptions & { character?: string[] }) => {

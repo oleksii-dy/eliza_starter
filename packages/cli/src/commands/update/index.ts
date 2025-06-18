@@ -2,6 +2,7 @@ import { displayBanner, handleError, isRunningViaBunx, isRunningViaNpx } from '@
 import { detectDirectoryType, isValidForUpdates } from '@/src/utils/directory-detection';
 import { logger } from '@elizaos/core';
 import { Command } from 'commander';
+import { checkMonorepoGuard } from '@/src/utils/monorepo-guard';
 import { performCliUpdate } from './actions/cli-update';
 import { updateDependencies } from './actions/dependency-update';
 import { UpdateOptions } from './types';
@@ -17,6 +18,7 @@ export const update = new Command()
   .option('--cli', 'Update only the CLI')
   .option('--packages', 'Update only packages')
   .hook('preAction', async () => {
+    checkMonorepoGuard();
     try {
       await displayBanner();
     } catch {

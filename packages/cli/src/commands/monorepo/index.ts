@@ -1,5 +1,6 @@
 import { handleError } from '@/src/utils';
 import { Command } from 'commander';
+import { checkMonorepoGuard } from '@/src/utils/monorepo-guard';
 import { cloneMonorepo, prepareDestination } from './actions/clone';
 import { MonorepoOptions, CloneInfo } from './types';
 import { displayNextSteps } from './utils/setup-instructions';
@@ -12,6 +13,9 @@ export const monorepo = new Command()
   .description('Clone ElizaOS monorepo from a specific branch, defaults to develop')
   .option('-b, --branch <branch>', 'Branch to install', 'develop')
   .option('-d, --dir <directory>', 'Destination directory', './eliza')
+  .hook('preAction', () => {
+    checkMonorepoGuard();
+  })
   .action(async (options: MonorepoOptions) => {
     try {
       const repo = 'elizaOS/eliza';

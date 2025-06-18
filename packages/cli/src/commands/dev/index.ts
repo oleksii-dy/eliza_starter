@@ -1,6 +1,7 @@
 import { handleError } from '@/src/utils';
 import { validatePort } from '@/src/utils/port-validation';
 import { Command, Option } from 'commander';
+import { checkMonorepoGuard } from '@/src/utils/monorepo-guard';
 import { startDevMode } from './actions/dev-server';
 import { DevOptions } from './types';
 
@@ -18,6 +19,9 @@ export const dev = new Command()
   .addOption(
     new Option('-p, --port <port>', 'Port to listen on (default: 3000)').argParser(validatePort)
   )
+  .hook('preAction', () => {
+    checkMonorepoGuard();
+  })
   .action(async (options: DevOptions) => {
     try {
       await startDevMode(options);

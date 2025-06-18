@@ -1,5 +1,6 @@
 import { handleError } from '@/src/utils';
 import { Command } from 'commander';
+import { checkMonorepoGuard } from '@/src/utils/monorepo-guard';
 
 // Import actions
 import { addPlugin } from './actions/install';
@@ -19,6 +20,9 @@ import {
 export const plugins = new Command()
   .name('plugins')
   .description('Manage ElizaOS plugins')
+  .hook('preAction', () => {
+    checkMonorepoGuard();
+  })
   .action(() => {
     // Show help automatically if no subcommand is specified
     plugins.help();

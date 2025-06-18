@@ -1,6 +1,7 @@
 import { handleError } from '@/src/utils';
 import { Command } from 'commander';
 import colors from 'yoctocolors';
+import { checkMonorepoGuard } from '@/src/utils/monorepo-guard';
 import { editEnvVars } from './actions/edit';
 import { showMainMenu } from './actions/interactive';
 import { handleListCommand } from './actions/list';
@@ -10,7 +11,10 @@ import { EditEnvOptions, InteractiveEnvOptions, ListEnvOptions, ResetEnvOptions 
 // Create command for managing environment variables
 export const env = new Command()
   .name('env')
-  .description('Manage environment variables and secrets');
+  .description('Manage environment variables and secrets')
+  .hook('preAction', () => {
+    checkMonorepoGuard();
+  });
 
 // List subcommand
 env
