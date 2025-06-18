@@ -25,7 +25,16 @@ export class EnvPrompter {
    */
   private ensureInterface(): readline.Interface {
     if (!this.rl) {
-      this.rl = readline.createInterface({ input, output });
+      this.rl = readline.createInterface({ 
+        input, 
+        output,
+        terminal: true  // Ensure proper terminal handling
+      });
+      
+      // Add error handling for the interface
+      this.rl.on('error', (error) => {
+        console.error('Readline interface error:', error);
+      });
     }
     return this.rl;
   }
@@ -35,6 +44,7 @@ export class EnvPrompter {
    */
   private cleanup(): void {
     if (this.rl) {
+      this.rl.removeAllListeners(); // Remove any event listeners
       this.rl.close();
       this.rl = null;
     }
@@ -52,18 +62,26 @@ export class EnvPrompter {
     }
 
     try {
-      console.log('\n🔧 Environment Variable Configuration');
+      console.log('🔧 Environment Variable Configuration');
       console.log('═'.repeat(50));
-      console.log('This plugin requires environment variables to function properly.');
-      console.log('Please provide the following values:\n');
+      console.log('Please provide the following values (press Enter to skip optional fields):\n');
 
       for (const envVar of envVars) {
-        const value = await this.promptForSingleVar(envVar);
-        if (value) {
-          collected[envVar.name] = value;
+        try {
+          const value = await this.promptForSingleVar(envVar);
+          if (value) {
+            collected[envVar.name] = value;
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.log(`❌ Error collecting ${envVar.name}: ${errorMessage}`);
+          if (envVar.required) {
+            throw new Error(`Required environment variable ${envVar.name} could not be collected`);
+          }
         }
       }
 
+      console.log(`✅ Environment variable collection complete! Collected ${Object.keys(collected).length} variables.\n`);
       return collected;
     } catch (error) {
       logger.error('Error during environment variable collection:', error);
@@ -95,6 +113,9 @@ export class EnvPrompter {
 
     while (true) {
       let answer = await rl.question(promptMessage);
+      
+      // Trim whitespace from answer
+      answer = answer.trim();
 
       // Use default if no answer provided
       if (!answer && defaultValue) {
@@ -140,7 +161,7 @@ export class EnvPrompter {
   /**
    * Check if an environment variable contains sensitive information
    */
-  private static isSensitiveVar(varName: string): boolean {
+  static isSensitiveVar(varName: string): boolean {
     const sensitivePatterns = [
       /api_key/i,
       /token/i,
@@ -197,33 +218,62 @@ export class EnvPrompter {
   /**
    * Ask user if they want to configure environment variables now or later
    */
-  static async askConfigureNow(): Promise<boolean> {
-    const rl = readline.createInterface({ input, output });
+  static async askConfigureNow(envVars: string[] = []): Promise<boolean> {
+    let rl: readline.Interface | null = null;
     
     try {
-      console.log('\n🤔 Environment Variable Configuration');
+      // Clear any pending input and ensure clean terminal state
+      process.stdout.write('\n');
+      
+      rl = readline.createInterface({ 
+        input, 
+        output,
+        terminal: true
+      });
+      
+      // Add error handling
+      rl.on('error', (error) => {
+        console.error('Error in environment variable prompt:', error);
+      });
+      
+      console.log('🤔 Environment Variable Configuration');
       console.log('─'.repeat(40));
       console.log('This plugin requires environment variables to function.');
-      console.log('You can:');
+      
+      if (envVars.length > 0) {
+        console.log('\n🔧 Detected environment variables:');
+        for (const envVar of envVars) {
+          const isSensitive = EnvPrompter.isSensitiveVar(envVar);
+          const icon = isSensitive ? '🔐' : '⚙️';
+          console.log(`   ${icon} ${envVar}`);
+        }
+      }
+      
+      console.log('\nYou can:');
       console.log('  1. Configure them now (recommended)');
       console.log('  2. Skip and configure later manually\n');
 
       while (true) {
         const answer = await rl.question('Configure environment variables now? (y/n): ');
+        const normalizedAnswer = answer.trim().toLowerCase();
 
-        if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
+        if (normalizedAnswer === 'y' || normalizedAnswer === 'yes') {
+          console.log(''); // Add spacing
           return true;
         }
-        if (answer.toLowerCase() === 'n' || answer.toLowerCase() === 'no') {
+        if (normalizedAnswer === 'n' || normalizedAnswer === 'no') {
           console.log('\n📝 You can configure environment variables later by:');
           console.log('  1. Editing the .env file in the plugin directory');
-          console.log('  2. Running the plugin with elizaos test\n');
+          console.log('  2. Running elizaos test to test the plugin\n');
           return false;
         }
         console.log('Please answer y (yes) or n (no)');
       }
     } finally {
-      rl.close();
+      if (rl) {
+        rl.removeAllListeners();
+        rl.close();
+      }
     }
   }
 } 
