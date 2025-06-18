@@ -37,23 +37,24 @@ teardown() {
 @test "start: runs with valid character file" {
   create_test_character "test-char.json"
   
-  # Start server with 30 second timeout
-  local pids=$(start_cli_background_with_timeout "dist" 30 start --character test-char.json)
+  # Start server with shorter timeout for CI
+  local timeout_duration="${TEST_TIMEOUT:-30}"
+  local pids=$(start_cli_background_with_timeout "dist" "$timeout_duration" start --character test-char.json)
   local server_pid=$(parse_timeout_pids "$pids")
   BACKGROUND_PIDS+=($pids)  # Store for cleanup
   
-  # Give server time to start
-  sleep 5
+  # Give server time to start (but not too long in CI)
+  sleep 3
   
   # Check if process is still running
   assert_process_running $server_pid
   
   # Check if port is listening (default 3000)
-  if wait_for_port 3000 5; then
+  if wait_for_port 3000 2; then
     echo "Server started successfully on port 3000"
   else
     # It might use 3001 if 3000 is busy
-    wait_for_port 3001 5
+    wait_for_port 3001 2
   fi
   
   # Clean up - kill processes before timeout
@@ -71,11 +72,12 @@ teardown() {
   create_test_character "agent2.json"
   
   # Start server with multiple characters and timeout
-  local pids=$(start_cli_background_with_timeout "dist" 30 start --character agent1.json agent2.json)
+  local timeout_duration="${TEST_TIMEOUT:-30}"
+  local pids=$(start_cli_background_with_timeout "dist" "$timeout_duration" start --character agent1.json agent2.json)
   local server_pid=$(parse_timeout_pids "$pids")
   BACKGROUND_PIDS+=($pids)
   
-  sleep 5
+  sleep 3
   
   # Check if process is running
   assert_process_running $server_pid
@@ -88,17 +90,18 @@ teardown() {
   create_test_character "agent.json"
   
   # Start server on custom port with timeout
-  local pids=$(start_cli_background_with_timeout "dist" 30 start --character agent.json --port 4567)
+  local timeout_duration="${TEST_TIMEOUT:-30}"
+  local pids=$(start_cli_background_with_timeout "dist" "$timeout_duration" start --character agent.json --port 4567)
   local server_pid=$(parse_timeout_pids "$pids")
   BACKGROUND_PIDS+=($pids)
   
-  sleep 5
+  sleep 3
   
   # Check if process is running
   assert_process_running $server_pid
   
   # Check if custom port is listening
-  wait_for_port 4567 5
+  wait_for_port 4567 2
   
   # Clean up before timeout
   kill_timeout_processes "$pids"
@@ -130,11 +133,12 @@ teardown() {
 }
 EOF
   
-  local pids=$(start_cli_background_with_timeout "dist" 30 start)
+  local timeout_duration="${TEST_TIMEOUT:-30}"
+  local pids=$(start_cli_background_with_timeout "dist" "$timeout_duration" start)
   local server_pid=$(parse_timeout_pids "$pids")
   BACKGROUND_PIDS+=($pids)
   
-  sleep 5
+  sleep 3
   
   assert_process_running $server_pid
   
@@ -160,11 +164,12 @@ EOF
   create_test_character "test-char.json"
   local abs_path="$(pwd)/test-char.json"
   
-  local pids=$(start_cli_background_with_timeout "dist" 30 start --character "$abs_path")
+  local timeout_duration="${TEST_TIMEOUT:-30}"
+  local pids=$(start_cli_background_with_timeout "dist" "$timeout_duration" start --character "$abs_path")
   local server_pid=$(parse_timeout_pids "$pids")
   BACKGROUND_PIDS+=($pids)
   
-  sleep 5
+  sleep 3
   
   assert_process_running $server_pid
   
@@ -174,11 +179,12 @@ EOF
 @test "start: works from monorepo root context" {
   create_test_character "$TEST_DIR/mono-char.json"
   
-  local pids=$(start_cli_background_with_timeout "monorepo" 30 start --character "$TEST_DIR/mono-char.json")
+  local timeout_duration="${TEST_TIMEOUT:-30}"
+  local pids=$(start_cli_background_with_timeout "monorepo" "$timeout_duration" start --character "$TEST_DIR/mono-char.json")
   local server_pid=$(parse_timeout_pids "$pids")
   BACKGROUND_PIDS+=($pids)
   
-  sleep 5
+  sleep 3
   
   assert_process_running $server_pid
   
