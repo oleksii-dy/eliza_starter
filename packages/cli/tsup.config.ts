@@ -58,10 +58,6 @@ const require = createRequire(import.meta.url);
           to: './dist/templates',
         },
         {
-          from: './src/utils/upgrade/CLAUDE.md',
-          to: './dist/',
-        },
-        {
           from: './src/utils/upgrade/TEST_CASES.md',
           to: './dist/',
         },

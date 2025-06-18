@@ -94,7 +94,40 @@ export interface ArchitectureIssue {
     | 'memory-upsert-pattern'
     | 'memory-search-pattern'
     | 'memory-content-fields'
-    | 'database-adapter-memory';
+    | 'database-adapter-memory'
+    | 'model-usage-pattern'
+    | 'state-enhancement'
+    | 'test-file-location'
+    | 'test-directory-structure'
+    | 'test-vitest-config'
+    | 'test-mock-memory-creation'
+    | 'test-mock-use-model'
+    | 'test-registration-in-plugin'
+    | 'test-import-extension'
+    | 'test-suite-class-vs-object'
+    | 'test-memory-interface'
+    | 'test-callback-missing'
+    | 'test-async-without-await'
+    | 'test-handler-signature'
+    | 'test-mock-compose-state'
+    | 'test-model-type-usage'
+    | 'provider-external-dependency'
+    | 'provider-constructor-migration'
+    | 'provider-caching-system'
+    | 'provider-single-context'
+    | 'provider-response-format'
+    | 'provider-service-integration'
+    | 'provider-configuration-fallback'
+    | 'state-structure-access'
+    | 'state-persistence-pattern'
+    | 'action-example-user-field'
+    | 'action-example-content-structure'
+    | 'content-text-optional'
+    | 'content-action-to-actions'
+    | 'handler-responses-parameter'
+    | 'handler-state-undefined-removal'
+    | 'generate-object-replacement'
+    | 'runtime-compose-state';
   severity: 'critical' | 'high' | 'medium';
   pattern: string;
   solution: string;
@@ -317,8 +350,16 @@ export interface SDKMigrationOptions {
 }
 
 export interface ClaudeSDKAdapter {
-  executePrompt(prompt: string, options: SDKMigrationOptions, context: MigrationContext): Promise<SDKPhaseResult>;
+  executePrompt(
+    prompt: string,
+    options: SDKMigrationOptions,
+    context: MigrationContext
+  ): Promise<SDKPhaseResult>;
   executePhase(phase: MigrationPhase, context: MigrationContext): Promise<SDKPhaseResult>;
-  continueSession(sessionId: string, prompt: string, context: MigrationContext): Promise<SDKPhaseResult>;
+  continueSession(
+    sessionId: string,
+    prompt: string,
+    context: MigrationContext
+  ): Promise<SDKPhaseResult>;
   getSessionMetrics(sessionId: string): Promise<PhaseMetrics>;
 }
