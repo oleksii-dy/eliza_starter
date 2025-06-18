@@ -377,12 +377,15 @@ export class TestProcessManager {
   spawn(command: string, args: string[], options: any = {}): any {
     const { spawn } = require('child_process');
     
-    // Force stdio to 'ignore' to prevent hanging streams on Windows
+    // Default to 'inherit' to show output in console for debugging
+    // Can be overridden by passing explicit stdio in options
     const processOptions = {
+      stdio: 'inherit', // Show output in console by default
       ...options,
-      stdio: ['ignore', 'ignore', 'ignore'], // Ignore all stdio to prevent hanging
     };
 
+    // If Windows and having issues, can explicitly set stdio to 'ignore'
+    // by passing it in options
     const childProcess = spawn(command, args, processOptions);
     
     // Track the process for cleanup
