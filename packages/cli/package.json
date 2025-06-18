@@ -103,7 +103,6 @@
     "@electric-sql/pglite": "^0.3.2",
     "@elizaos/core": "workspace:*",
     "@elizaos/plugin-anthropic": "^1.0.0",
-    "@elizaos/plugin-autocoder": "github:elizaos-plugins/plugin-autocoder#",
     "@elizaos/plugin-local-ai": "latest",
     "@elizaos/plugin-message-handling": "workspace:*",
     "@elizaos/plugin-openai": "latest",

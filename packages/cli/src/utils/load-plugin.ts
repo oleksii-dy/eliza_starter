@@ -36,6 +36,80 @@ function getGlobalNodeModulesPath(): string {
 }
 
 /**
+ * Find the monorepo root directory by looking for a package.json with workspaces
+ */
+function findWorkspaceRoot(): string | null {
+  let currentDir = process.cwd();
+  const visited = new Set<string>();
+
+  while (!visited.has(currentDir)) {
+    visited.add(currentDir);
+    const pkgPath = path.join(currentDir, 'package.json');
+
+    if (fs.existsSync(pkgPath)) {
+      try {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+        if (pkg.workspaces && Array.isArray(pkg.workspaces)) {
+          return currentDir;
+        }
+      } catch (error) {
+        logger.debug(`Failed to parse package.json at ${pkgPath}:`, error);
+      }
+    }
+
+    const parent = path.dirname(currentDir);
+    if (parent === currentDir) break; // Reached root
+    currentDir = parent;
+  }
+
+  return null;
+}
+
+/**
+ * Get all workspace packages in the monorepo
+ */
+function getWorkspacePackages(): Map<string, string> {
+  const workspacePackages = new Map<string, string>();
+  const workspaceRoot = findWorkspaceRoot();
+
+  if (!workspaceRoot) {
+    return workspacePackages;
+  }
+
+  try {
+    const rootPkg = JSON.parse(fs.readFileSync(path.join(workspaceRoot, 'package.json'), 'utf8'));
+    const workspaces = rootPkg.workspaces || [];
+
+    for (const workspace of workspaces) {
+      const workspacePattern = workspace.replace('/*', '');
+      const packagesDir = path.join(workspaceRoot, workspacePattern);
+
+      if (fs.existsSync(packagesDir) && fs.statSync(packagesDir).isDirectory()) {
+        const dirs = fs.readdirSync(packagesDir);
+
+        for (const dir of dirs) {
+          const pkgPath = path.join(packagesDir, dir, 'package.json');
+          if (fs.existsSync(pkgPath)) {
+            try {
+              const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+              if (pkg.name) {
+                workspacePackages.set(pkg.name, path.join(packagesDir, dir));
+              }
+            } catch (error) {
+              logger.debug(`Failed to parse package.json at ${pkgPath}:`, error);
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    logger.debug('Failed to get workspace packages:', error);
+  }
+
+  return workspacePackages;
+}
+
+/**
  * Helper function to resolve a path within node_modules
  */
 function resolveNodeModulesPath(repository: string, ...segments: string[]): string {
@@ -108,13 +182,82 @@ const importStrategies: ImportStrategy[] = [
   {
     name: 'workspace dependency',
     tryImport: async (repository: string) => {
+      // First check if we have a workspace map
+      const workspacePackages = getWorkspacePackages();
+      logger.debug(
+        `[Workspace Loader] Looking for ${repository}. Found ${workspacePackages.size} workspace packages`
+      );
+
+      if (workspacePackages.has(repository)) {
+        const packagePath = workspacePackages.get(repository)!;
+        const distPath = path.join(packagePath, 'dist', 'index.js');
+
+        logger.debug(`[Workspace Loader] Found ${repository} in workspace at ${packagePath}`);
+
+        if (fs.existsSync(distPath)) {
+          logger.debug(`[Workspace Loader] Found built plugin at: ${distPath}`);
+          return tryImporting(distPath, 'workspace dependency', repository);
+        }
+
+        // Check if source exists but not built
+        const srcPath = path.join(packagePath, 'src', 'index.ts');
+        if (fs.existsSync(srcPath)) {
+          logger.warn(
+            `Workspace plugin ${repository} found but not built. Please run 'bun run build' in ${packagePath}`
+          );
+          return null;
+        }
+      }
+
+      // Fallback to legacy detection for @elizaos/ packages
       if (repository.startsWith('@elizaos/plugin-')) {
+        logger.debug(`[Workspace Loader] Trying legacy detection for ${repository}`);
+        logger.debug(`[Workspace Loader] Current working directory: ${process.cwd()}`);
+
         // Try to find the plugin in the workspace
         const pluginName = repository.replace('@elizaos/', '');
-        const workspacePath = path.resolve(process.cwd(), '..', pluginName, 'dist', 'index.js');
-        if (fs.existsSync(workspacePath)) {
-          return tryImporting(workspacePath, 'workspace dependency', repository);
+
+        // Check multiple possible workspace paths
+        const workspacePaths = [
+          // When running from packages/eliza or any package subdirectory
+          path.resolve(process.cwd(), '..', pluginName),
+          // When running from workspace root
+          path.resolve(process.cwd(), 'packages', pluginName),
+          // When running from deep inside a package
+          path.resolve(process.cwd(), '..', '..', 'packages', pluginName),
+          // When running from the cli package itself
+          path.resolve(__dirname, '..', '..', '..', pluginName),
+        ];
+
+        logger.debug(`[Workspace Loader] Checking paths for ${repository}:`, workspacePaths);
+
+        for (const workspacePath of workspacePaths) {
+          const distPath = path.join(workspacePath, 'dist', 'index.js');
+          logger.debug(
+            `[Workspace Loader] Checking: ${distPath} - exists: ${fs.existsSync(distPath)}`
+          );
+
+          if (fs.existsSync(distPath)) {
+            logger.debug(`[Workspace Loader] Found workspace plugin at: ${distPath}`);
+            return tryImporting(distPath, 'workspace dependency', repository);
+          }
+
+          // Also check for TypeScript source if in development
+          const srcPath = path.join(workspacePath, 'src', 'index.ts');
+          if (fs.existsSync(srcPath) && fs.existsSync(path.join(workspacePath, 'package.json'))) {
+            logger.debug(`[Workspace Loader] Found workspace plugin source at: ${srcPath}`);
+            // Check if it's built
+            if (!fs.existsSync(distPath)) {
+              logger.warn(
+                `Workspace plugin ${repository} found but not built. Please run 'bun run build' in ${workspacePath}`
+              );
+            }
+          }
         }
+
+        logger.debug(
+          `[Workspace Loader] Workspace plugin ${repository} not found in any expected location`
+        );
       }
       return null;
     },
@@ -224,7 +367,11 @@ export async function loadPluginModule(repository: string): Promise<any | null> 
     `Loading ${isElizaOS ? 'ElizaOS' : 'third-party'} plugin: ${repository} (${strategies.length} strategies)`
   );
 
+  // Log strategy names
+  logger.debug(`Strategies for ${repository}: ${strategies.map((s) => s.name).join(', ')}`);
+
   for (const strategy of strategies) {
+    logger.debug(`Trying strategy: ${strategy.name} for ${repository}`);
     const result = await strategy.tryImport(repository);
     if (result) return result;
   }
