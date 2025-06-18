@@ -161,9 +161,9 @@ fi
 
 # Run BATS tests if available
 if command -v bats >/dev/null 2>&1; then
-  # Set shorter timeout for BATS tests in CI
+  # Set reasonable timeout for BATS tests in CI
   if [ "$CI" = "true" ]; then
-    export TEST_TIMEOUT=10  # Reduce from default 30s to 10s in CI
+    export TEST_TIMEOUT=20  # Increase from 10s to 20s in CI
   fi
   
   run_test_suite "BATS Command Tests" "bats tests/bats/commands"

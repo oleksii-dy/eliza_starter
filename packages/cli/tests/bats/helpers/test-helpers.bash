@@ -19,7 +19,8 @@ fi
 export CLI_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && pwd)"
 export CLI_DIST_PATH="${CLI_ROOT}/dist/index.js"
 export MONOREPO_ROOT="$(cd "${CLI_ROOT}/../../" && pwd)"
-export TEST_TIMEOUT=30
+# Default timeout - use environment variable if set, otherwise 30s
+export TEST_TIMEOUT=${TEST_TIMEOUT:-30}
 
 # Detect timeout command
 if command -v timeout >/dev/null 2>&1; then
@@ -182,6 +183,9 @@ start_cli_background_with_timeout() {
   
   # Start the server in a subshell with proper signal handling
   (
+    # Ignore SIGTERM in the subshell to prevent interference
+    trap '' SIGTERM
+    
     # Start the actual server process
     case "$context" in
       "dist")
@@ -271,9 +275,19 @@ start_cli_background() {
 kill_process_gracefully() {
   local pid="$1"
   
+  if [[ -z "$pid" ]]; then
+    return 0
+  fi
+  
   if kill -0 "$pid" 2>/dev/null; then
     kill -TERM "$pid" 2>/dev/null || true
-    sleep 1
+    
+    # Give more time for graceful shutdown
+    local count=0
+    while kill -0 "$pid" 2>/dev/null && [[ $count -lt 5 ]]; do
+      sleep 1
+      ((count++))
+    done
     
     # Force kill if still running
     if kill -0 "$pid" 2>/dev/null; then
@@ -304,15 +318,34 @@ wait_for_port() {
   local timeout="${2:-30}"
   local count=0
   
-  while ! nc -z localhost "$port" 2>/dev/null; do
+  # Use different port checking methods based on availability
+  while true; do
+    if command -v nc >/dev/null 2>&1; then
+      # Use netcat if available
+      if nc -z localhost "$port" 2>/dev/null; then
+        return 0
+      fi
+    elif command -v ss >/dev/null 2>&1; then
+      # Use ss if available (common on Linux)
+      if ss -tnl | grep -q ":$port "; then
+        return 0
+      fi
+    elif command -v lsof >/dev/null 2>&1; then
+      # Use lsof as fallback
+      if lsof -ti:$port >/dev/null 2>&1; then
+        return 0
+      fi
+    else
+      # No port checking tool available, just wait
+      sleep 1
+    fi
+    
     if [[ $count -ge $timeout ]]; then
       return 1
     fi
     sleep 1
     ((count++))
   done
-  
-  return 0
 }
 
 # File assertion helpers
