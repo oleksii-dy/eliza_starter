@@ -1,5 +1,5 @@
 import type { Plugin } from '@elizaos/core';
-import { type Action, type IAgentRuntime, type Service, logger } from '@elizaos/core';
+import { type Action, type IAgentRuntime, Service, logger } from '@elizaos/core';
 import { z } from 'zod';
 
 /**
