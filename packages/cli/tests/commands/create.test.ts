@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { execSync } from 'child_process';
 import { mkdtemp, rm, readFile } from 'fs/promises';
 import { join } from 'path';
@@ -13,16 +13,30 @@ describe('ElizaOS Create Commands', () => {
   let createElizaCmd: string;
   let originalCwd: string;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Store original working directory
     originalCwd = process.cwd();
 
-    // Setup test environment for each test
-    testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-'));
+    // Create temporary directory
+    testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-create-'));
+
+    // Setup CLI command
+    const scriptDir = join(__dirname, '..');
+    const cliPath = join(scriptDir, '../dist/index.js');
+    
+    // Check if CLI is built, if not build it
+    if (!existsSync(cliPath)) {
+      console.log('CLI not built, building now...');
+      const cliPackageDir = join(scriptDir, '..');
+      execSync('bun run build', { 
+        cwd: cliPackageDir,
+        stdio: 'inherit'
+      });
+    }
+    
+    elizaosCmd = `bun "${cliPath}"`;
 
     // Setup CLI commands
-    const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun "${join(scriptDir, '../dist/index.js')}"`;
     createElizaCmd = `bun "${join(scriptDir, '../../create-eliza/index.mjs')}"`;
 
     // Change to test directory

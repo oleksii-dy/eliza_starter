@@ -184,7 +184,7 @@ describe('Recent Messages Provider', () => {
     expect(result).toBeDefined();
     expect(result.text).toContain('Error retrieving recent messages.');
     expect(loggerErrorSpy).toHaveBeenCalled();
-    
+
     loggerErrorSpy.mockRestore();
   });
 });
@@ -302,7 +302,7 @@ describe('Settings Provider', () => {
     expect(loggerErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Critical error in settings provider:')
     );
-    
+
     loggerErrorSpy.mockRestore();
   });
 });

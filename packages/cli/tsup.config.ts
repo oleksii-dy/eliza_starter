@@ -2,8 +2,18 @@ import { defineConfig } from 'tsup';
 import { copy } from 'esbuild-plugin-copy';
 import path from 'path';
 
+const isTestEnv = process.env.ELIZA_TEST_MODE === 'true' || process.env.VITEST === 'true';
+
 export default defineConfig({
-  clean: true,
+  // Avoid deleting the existing `dist` directory when running inside the test
+  // suite. When several CLI command tests execute concurrently they may each
+  // trigger a build. The default `clean: true` behaviour wipes the directory at
+  // the start of every build which causes a race-condition where another test
+  // (or a child Bun process) might attempt to invoke `dist/index.js` while it
+  // has been temporarily removed.  By disabling `clean` in test environments
+  // we guarantee the file always exists, eliminating the intermittent
+  // "Module not found '/path/to/dist/index.js'" errors seen in CI.
+  clean: !isTestEnv,
   entry: [
     'src/index.ts',
     'src/commands/*.ts',

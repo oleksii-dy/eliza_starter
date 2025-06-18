@@ -252,7 +252,9 @@ describe('Plugin Module Structure', () => {
   it('should have properly structured providers', () => {
     // Check that providers have the required structure
     if (messageHandlingPlugin.providers) {
-      const validProviders = messageHandlingPlugin.providers.filter(p => p && typeof p === 'object');
+      const validProviders = messageHandlingPlugin.providers.filter(
+        (p) => p && typeof p === 'object'
+      );
       validProviders.forEach((provider) => {
         expect(provider).toHaveProperty('name');
         expect(provider).toHaveProperty('get');
@@ -277,9 +279,11 @@ describe('Plugin Module Structure', () => {
 
   it('should have correct folder structure', () => {
     // Verify that the exported providers match expected naming conventions
-    const validProviders = (messageHandlingPlugin.providers || []).filter(p => p && typeof p === 'object');
+    const validProviders = (messageHandlingPlugin.providers || []).filter(
+      (p) => p && typeof p === 'object'
+    );
     const providerNames = validProviders.map((p) => p.name);
-    
+
     // Check for some core providers that should exist
     expect(providerNames).toContain('TIME');
     expect(providerNames).toContain('RECENT_MESSAGES');

@@ -5,6 +5,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { safeChangeDirectory } from './test-utils';
 import { TEST_TIMEOUTS } from '../test-timeouts';
+import { existsSync } from 'fs';
 
 describe('ElizaOS Plugin Commands', () => {
   let testTmpDir: string;
@@ -21,7 +22,19 @@ describe('ElizaOS Plugin Commands', () => {
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun "${join(scriptDir, '../dist/index.js')}"`;
+    const cliPath = join(scriptDir, '../dist/index.js');
+    
+    // Check if CLI is built, if not build it
+    if (!existsSync(cliPath)) {
+      console.log('CLI not built, building now...');
+      const cliPackageDir = join(scriptDir, '..');
+      execSync('bun run build', { 
+        cwd: cliPackageDir,
+        stdio: 'inherit'
+      });
+    }
+    
+    elizaosCmd = `bun "${cliPath}"`;
 
     // Create one test project for all plugin tests to share
     projectDir = join(testTmpDir, 'shared-test-project');

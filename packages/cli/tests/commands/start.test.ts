@@ -2,23 +2,26 @@ import { execSync } from 'child_process';
 import { mkdir, mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, beforeAll } from 'vitest';
 import { TEST_TIMEOUTS } from '../test-timeouts';
 import {
   killProcessOnPort,
   safeChangeDirectory,
   TestProcessManager,
   waitForServerReady,
+  createTestProject,
 } from './test-utils';
+import { existsSync } from 'fs';
 
 describe('ElizaOS Start Commands', () => {
   let testTmpDir: string;
   let elizaosCmd: string;
+  let cliPath: string;
   let originalCwd: string;
   let testServerPort: number;
   let processManager: TestProcessManager;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Store original working directory
     originalCwd = process.cwd();
 
@@ -36,7 +39,19 @@ describe('ElizaOS Start Commands', () => {
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun ${join(scriptDir, '../dist/index.js')}`;
+    cliPath = join(scriptDir, '../dist/index.js');
+    
+    // Check if CLI is built, if not build it
+    if (!existsSync(cliPath)) {
+      console.log('CLI not built, building now...');
+      const cliPackageDir = join(scriptDir, '..');
+      execSync('bun run build', { 
+        cwd: cliPackageDir,
+        stdio: 'inherit'
+      });
+    }
+    
+    elizaosCmd = `bun "${cliPath}"`;
 
     // Make PORT + model envs explicit.
     process.env.LOCAL_SMALL_MODEL = 'DeepHermes-3-Llama-3-3B-Preview-q4.gguf';
@@ -74,7 +89,7 @@ describe('ElizaOS Start Commands', () => {
 
     const serverProcess = processManager.spawn(
       'bun',
-      [join(__dirname, '..', '../dist/index.js'), 'start', ...args.split(' ')],
+      [cliPath, 'start', ...args.split(' ')],
       {
         env: {
           ...process.env,
@@ -183,7 +198,7 @@ describe('ElizaOS Start Commands', () => {
       const serverProcess = processManager.spawn(
         'bun',
         [
-          join(__dirname, '..', '../dist/index.js'),
+          cliPath,
           'start',
           '-p',
           newPort.toString(),
@@ -260,7 +275,7 @@ describe('ElizaOS Start Commands', () => {
 
       const serverProcess = processManager.spawn(
         'bun',
-        [join(__dirname, '..', '../dist/index.js'), 'start', '--configure', '--character', adaPath],
+        [cliPath, 'start', '--configure', '--character', adaPath],
         {
           env: {
             ...process.env,

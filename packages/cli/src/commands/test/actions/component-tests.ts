@@ -6,7 +6,6 @@ import path from 'node:path';
 import { ComponentTestOptions, TestResult } from '../types';
 import { processFilterName } from '../utils/project-utils';
 import { runTypeCheck } from '@/src/utils/testing/tsc-validator';
-import { createVitestConfig } from '../utils/vitest-config';
 
 /**
  * Run component tests using Vitest
@@ -48,12 +47,6 @@ export async function runComponentTests(
 
   logger.info('Running component tests...');
 
-  // Create vitest config for proper isolation
-  const vitestConfig = createVitestConfig(
-    testPath || cwd,
-    isPlugin ? path.basename(cwd) : undefined
-  );
-
   return new Promise((resolve) => {
     // Build command arguments
     const args = ['run', 'vitest', 'run', '--passWithNoTests', '--reporter=default'];
@@ -67,12 +60,7 @@ export async function runComponentTests(
       }
     }
 
-    // Pass include patterns as positional arguments.
-    if (vitestConfig.test?.include) {
-      args.push(...vitestConfig.test.include);
-    }
-
-    // We will rely on the vitest config for exclusion, which is more robust.
+    // Don't pass include/exclude patterns from config - vitest will use its own config file
     const targetPath = testPath ? path.resolve(process.cwd(), '..', testPath) : process.cwd();
     logger.info(`Executing: bun ${args.join(' ')} in ${targetPath}`);
 
