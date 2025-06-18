@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Character, logger, parseAndValidateCharacter, validateCharacter } from '@elizaos/core';
+import { config, ConfigManager, type ElizaConfig, type RuntimeConfig } from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -361,4 +362,146 @@ export async function loadCharacters(charactersArg: string): Promise<Character[]
   }
 
   return loadedCharacters;
+}
+
+/**
+ * Configuration-aware character loading with unified environment management
+ */
+
+/**
+ * Load characters with configuration-aware path resolution
+ * @param charactersArg - Character paths or configuration
+ * @param configOptions - Optional configuration overrides
+ * @returns Promise resolving to loaded characters
+ */
+export async function loadCharactersWithConfig(
+  charactersArg: string,
+  configOptions?: { envPath?: string; packageJsonPath?: string; configOverrides?: Partial<RuntimeConfig> }
+): Promise<Character[]> {
+  // Load configuration first
+  await config.loadConfig(configOptions);
+  const appConfig = config.getConfig();
+  
+  // Use configuration to enhance character loading
+  let characterPaths = commaSeparatedStringToArray(charactersArg);
+  const loadedCharacters: Character[] = [];
+  
+  // If configuration specifies default character paths, use them as fallback
+  if (characterPaths.length === 0 && appConfig.characters?.defaultPath) {
+    characterPaths = [appConfig.characters.defaultPath];
+    logger.info(`Using default character path from configuration: ${appConfig.characters.defaultPath}`);
+  }
+  
+  // Add search paths from configuration  
+  if (appConfig.characters?.searchPaths) {
+    for (const searchPath of appConfig.characters.searchPaths) {
+      if (fs.existsSync(searchPath)) {
+        logger.debug(`Adding character search path: ${searchPath}`);
+        characterPaths.push(searchPath);
+      }
+    }
+  }
+
+  if (process.env.USE_CHARACTER_STORAGE === 'true') {
+    characterPaths = await readCharactersFromStorage(characterPaths);
+  }
+
+  if (characterPaths?.length > 0) {
+    for (const characterPath of characterPaths) {
+      try {
+        const character = await loadCharacterTryPath(characterPath);
+        loadedCharacters.push(character);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        logger.error(`Failed to load character from '${characterPath}': ${errorMsg}`);
+      }
+    }
+  }
+
+  if (hasValidRemoteUrls()) {
+    logger.info('Loading characters from remote URLs');
+    const characterUrls = commaSeparatedStringToArray(process.env.REMOTE_CHARACTER_URLS);
+    for (const characterUrl of characterUrls) {
+      const characters = await loadCharactersFromUrl(characterUrl);
+      loadedCharacters.push(...characters);
+    }
+  }
+
+  return loadedCharacters;
+}
+
+/**
+ * Enhanced character loading with environment variable injection from configuration
+ * @param character - Character data to process
+ * @returns Promise resolving to character with injected environment variables
+ */
+export async function jsonToCharacterWithConfig(character: unknown): Promise<Character> {
+  // First, perform standard validation
+  const validatedCharacter = await jsonToCharacter(character);
+  
+  // Load configuration to access environment variables
+  await config.loadConfig();
+  
+  // Inject configuration-managed environment variables
+  const enhancedCharacter = {
+    ...validatedCharacter,
+    settings: {
+      ...validatedCharacter.settings,
+      // Add any configuration-specific settings here
+      logLevel: config.get('LOG_LEVEL', 'info'),
+    },
+  };
+  
+  // Validate plugins if character specifies them
+  if (validatedCharacter.plugins && Array.isArray(validatedCharacter.plugins)) {
+    for (const pluginName of validatedCharacter.plugins) {
+      if (typeof pluginName === 'string') {
+        const validation = config.validatePluginEnvironment(pluginName);
+        if (!validation.valid) {
+          logger.warn(`Plugin '${pluginName}' has missing environment variables: ${validation.missing.join(', ')}`);
+        } else {
+          logger.debug(`Plugin '${pluginName}' environment validated successfully`);
+        }
+      }
+    }
+  }
+  
+  return enhancedCharacter;
+}
+
+/**
+ * Load configuration and return resolved environment file path
+ * @param startDir - Optional starting directory for search
+ * @returns Resolved .env file path
+ */
+export function resolveEnvironmentFile(startDir?: string): string {
+  return ConfigManager.resolveEnvFile(startDir);
+}
+
+/**
+ * Validate environment variables for plugins used by characters
+ * @param characters - Array of characters to validate
+ * @returns Validation results grouped by plugin
+ */
+export function validateCharacterPluginEnvironments(characters: Character[]): Record<string, { valid: boolean; missing: string[] }> {
+  const validationResults: Record<string, { valid: boolean; missing: string[] }> = {};
+  
+  // Collect all unique plugins from characters
+  const pluginNames = new Set<string>();
+  for (const character of characters) {
+    if (character.plugins && Array.isArray(character.plugins)) {
+      for (const plugin of character.plugins) {
+        if (typeof plugin === 'string') {
+          pluginNames.add(plugin);
+        }
+      }
+    }
+  }
+  
+  // Validate environment for each plugin
+  for (const pluginName of pluginNames) {
+    validationResults[pluginName] = config.validatePluginEnvironment(pluginName);
+  }
+  
+  return validationResults;
 }

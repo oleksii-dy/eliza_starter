@@ -6,9 +6,13 @@ import {
   loadCharacter as serverLoadCharacter,
   loadCharacterTryPath as serverLoadCharacterTryPath,
   hasValidRemoteUrls as serverHasValidRemoteUrls,
-  loadCharacters as serverLoadCharacters
+  loadCharacters as serverLoadCharacters,
+  loadCharactersWithConfig,
+  jsonToCharacterWithConfig,
+  validateCharacterPluginEnvironments
 } from '@elizaos/server';
 import { character as defaultCharacter } from '../../../characters/eliza';
+import { initializeCLIConfig, validateCLIEnvironment } from '@/src/utils/unified-config';
 
 /**
  * Attempts to load a file from the given file path.

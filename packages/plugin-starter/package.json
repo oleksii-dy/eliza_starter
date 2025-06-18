@@ -71,6 +71,9 @@
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src"
   },
+  "eliza": {
+    "type": "plugin"
+  },
   "publishConfig": {
     "access": "public"
   },

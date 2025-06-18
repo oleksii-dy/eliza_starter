@@ -61,6 +61,16 @@
     "format": "prettier --write ./src ./__tests__",
     "format:check": "prettier --check ./src ./__tests__"
   },
+  "eliza": {
+    "type": "project",
+    "characters": {
+      "searchPaths": ["./characters", "./src/characters"]
+    },
+    "tee": {
+      "enabled": true,
+      "provider": "phala"
+    }
+  },
   "publishConfig": {
     "access": "public"
   },

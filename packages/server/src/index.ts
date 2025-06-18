@@ -17,7 +17,31 @@ import { Server as SocketIOServer } from 'socket.io';
 import { createApiRouter, createPluginRouteHandler, setupSocketIO } from './api/index.js';
 import { apiKeyAuthMiddleware } from './authMiddleware.js';
 import { messageBusConnectorPlugin } from './services/message.js';
-import { loadCharacterTryPath, jsonToCharacter } from './loader.js';
+import { 
+  loadCharacterTryPath, 
+  jsonToCharacter,
+  loadCharactersWithConfig,
+  jsonToCharacterWithConfig,
+  resolveEnvironmentFile,
+  validateCharacterPluginEnvironments
+} from './loader.js';
+
+// Export configuration management
+export {
+  ConfigManager,
+  config,
+  getEnvironmentVariable,
+  validatePluginEnvironment,
+  loadConfiguration,
+  type ElizaConfig,
+  type RuntimeConfig,
+  type DatabaseConfig,
+  type PluginConfig,
+  ENVIRONMENT_REGISTRY,
+  elizaConfigSchema,
+  runtimeConfigSchema,
+  packageJsonWithElizaSchema
+} from './config.js';
 
 import {
   createDatabaseAdapter,
@@ -1061,7 +1085,7 @@ export class AgentServer {
   }
 }
 
-// Export loader utilities
+// Export loader utilities (including new configuration-aware functions)
 export {
   tryLoadFile,
   loadCharactersFromUrl,
@@ -1070,6 +1094,10 @@ export {
   loadCharacterTryPath,
   hasValidRemoteUrls,
   loadCharacters,
+  loadCharactersWithConfig,
+  jsonToCharacterWithConfig,
+  resolveEnvironmentFile,
+  validateCharacterPluginEnvironments,
 } from './loader';
 
 // Export types

@@ -78,6 +78,12 @@
     "cypress:e2e": "cypress run --e2e",
     "cypress:open": "cypress open"
   },
+  "eliza": {
+    "type": "project",
+    "characters": {
+      "searchPaths": ["./characters", "./src/characters"]
+    }
+  },
   "publishConfig": {
     "access": "public"
   },
