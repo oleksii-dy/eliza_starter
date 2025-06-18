@@ -25,7 +25,8 @@ function getExitPath(currentDir: string, monorepoRoot: string): string {
 
   const depth = relativePath.split(path.sep).length;
   const upLevels = depth + 1; // +1 to get outside the monorepo root
-  return `cd ${'../'.repeat(upLevels).slice(0, -1)}`; // Remove trailing slash
+  const exitPath = path.join(...Array(upLevels).fill('..'));
+  return `cd ${exitPath}`;
 }
 
 /**
