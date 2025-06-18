@@ -58,18 +58,8 @@ EOF
   assert_success
   assert_output --partial "initialized successfully"
   
-  # Check if directory was created
-  if [[ -d "my-plugin" ]]; then
-    cd my-plugin
-  elif [[ -d "plugin-my-plugin" ]]; then
-    cd plugin-my-plugin
-  else
-    # Plugin might have been created in current directory
-    # Check for plugin files here
-    if [[ ! -f "package.json" ]]; then
-      fail "Plugin directory not found"
-    fi
-  fi
+  # Plugin should be created with 'plugin-' prefix
+  cd plugin-my-plugin
   
   # Verify plugin structure
   assert_file_exist "package.json"
@@ -158,17 +148,19 @@ EOF
   
   # Create a package
   cd packages
-  run_cli "dist" create agent-app --type project --yes
+  run run_cli "dist" create agent-app --type project --yes
+  assert_success
   
   # Verify it was created
-  assert_dir_exist "agent-app"
+  [[ -d "agent-app" ]] || fail "Directory agent-app does not exist"
   assert_file_exist "agent-app/package.json"
   
-  # Create another package
-  run_cli "dist" create shared-lib --type plugin --yes
+  # Create another package (plugin will have plugin- prefix)
+  run run_cli "dist" create shared-lib --type plugin --yes
+  assert_success
   
-  assert_dir_exist "shared-lib"
-  assert_file_exist "shared-lib/package.json"
+  [[ -d "plugin-shared-lib" ]] || fail "Directory plugin-shared-lib does not exist"
+  assert_file_exist "plugin-shared-lib/package.json"
 }
 
 @test "e2e: error recovery workflow" {
@@ -193,7 +185,7 @@ EOF
   echo "test" > existing-file.txt
   cd ..
   
-  run run_cli "dist" create existing-project --yes
+  run run_cli "dist" create existing-project --type project --yes
   assert_failure  # This should fail because directory exists and is not empty
   assert_output --partial "already exists"
   
@@ -248,7 +240,8 @@ EOF
   # Simulate typical development workflow
   
   # 1. Create project
-  run_cli "dist" create dev-project --type project --yes
+  run run_cli "dist" create dev-project --type project --yes
+  assert_success
   cd dev-project
   
   # 2. Add a character
