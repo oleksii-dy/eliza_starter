@@ -37,7 +37,7 @@ ElizaOS V2 is a multi-agent development framework with cross-platform presence, 
 ```
 packages/core          - @elizaos/core (runtime and types)
 packages/client         - Frontend GUI
-packages/app           - Desktop/mobile Tauri application
+packages/app           - Desktop/mobile Tauri app
 packages/cli           - CLI with agent runtime, REST API, GUI
 packages/plugin-bootstrap - Default handlers, actions, providers
 packages/plugin-sql     - Database adapters
@@ -102,7 +102,7 @@ ElizaOS-specific slash commands are available in the `.claude/commands/` directo
 
 **Main Commands:**
 - `/project:dev` - Full development workflow
-- `/project:test` - Comprehensive testing
+- `/project:test` - Comprehensive testing  
 - `/project:bugfix` - Bug fixing methodology
 - `/project:validate` - Architecture validation
 - `/project:review` - Code review standards
@@ -110,7 +110,7 @@ ElizaOS-specific slash commands are available in the `.claude/commands/` directo
 
 **Specialized Commands:**
 - `/project:elizaos:action` - Create Actions
-- `/project:elizaos:provider` - Create Providers
+- `/project:elizaos:provider` - Create Providers  
 - `/project:elizaos:evaluator` - Create Evaluators
 
 See `.claude/COMMANDS.md` for detailed usage examples.
