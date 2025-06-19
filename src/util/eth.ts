@@ -1,4 +1,3 @@
-import type { drizzle } from "drizzle-orm/node-postgres";
 import {
   type Chain,
   createPublicClient,
@@ -11,10 +10,7 @@ import {
   type Transport,
 } from "viem";
 import { mainnet, base, arbitrum } from "viem/chains";
-import { type IAgentRuntime, logger } from "@elizaos/core";
-import { TokenData } from "./types";
-
-type Logger = typeof logger;
+import type { TokenData } from "../types";
 
 const clients: Record<number, PublicClient<Transport, Chain, undefined>> = {};
 const endpoints: Record<number, string[] | undefined> = {
@@ -103,25 +99,7 @@ export const getTokenData = async (
   return { address: getAddress(address), name, symbol, decimals };
 };
 
-export const getDb = (runtime: IAgentRuntime) => {
-  const db = runtime.db;
 
-  if ("select" in db) {
-    return db as ReturnType<typeof drizzle>;
-  }
-
-  throw new Error("Failed to get database adapter");
-};
-
-export const getLogger = (runtime: IAgentRuntime) => {
-  const logger = runtime.logger;
-
-  if ("debug" in logger) {
-    return logger as Logger;
-  }
-
-  throw new Error("Failed to get logger");
-};
 
 export const extractTokenData = (
   obj?: Record<string, unknown>
