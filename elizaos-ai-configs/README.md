@@ -9,7 +9,7 @@ elizaos-ai-configs/
 ├── .windsurf/                          # Windsurf IDE Configuration
 │   ├── rules/
 │   │   ├── elizaos-v2-main.md          # Core development principles
-│   │   ├── elizaos-architecture.md      # Component specifications
+│   │   ├── elizaos-architecture.md       # Component specifications
 │   │   └── elizaos-testing.md          # Testing infrastructure
 │   └── workflows/
 │       ├── elizaos-development.yaml    # Main development workflow
