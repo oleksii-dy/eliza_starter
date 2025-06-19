@@ -28,7 +28,7 @@ describe('Message Handler Logic', () => {
   let mockCallback: HandlerCallback;
 
   beforeEach(() => {
-    // Note: bun:test doesn't have vi.useFakeTimers(), skipping timer mocking
+    // Timer mocking is not used in these tests
 
     // Use shared setupActionTest instead of manually creating mocks
     const setup = setupActionTest({
@@ -103,7 +103,6 @@ describe('Message Handler Logic', () => {
   });
 
   afterEach(() => {
-    // Note: bun:test doesn't need vi.useRealTimers(), skipping
     mock.restore();
   });
 

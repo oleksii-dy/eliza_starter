@@ -110,8 +110,7 @@ describe('Reflection Evaluator', () => {
     // Note: We can't easily spy on imported functions from external modules,
     // so we'll verify the behavior through other means
 
-    // Explicitly mock getEntityDetails using spyOn for this test case
-    // Note: bun:test doesn't have mock.spyOn, skipping spy functionality
+    // Explicitly mock getEntityDetails for this test case
     const getEntityDetailsSpy = mock().mockResolvedValue([
       { id: 'test-entity-id', names: ['Test Entity'], metadata: {} },
       { id: 'test-agent-id', names: ['Test Agent'], metadata: {} },
@@ -503,7 +502,7 @@ describe('Multiple Prompt Evaluator Factory', () => {
     });
 
     // Spy on logger
-    // Note: bun:test doesn't have mock.spyOn, skipping spy functionality
+    // Mock the logger warn function
     const loggerWarnSpy = mock();
 
     // Call the handler - should not throw even with one prompt failing

@@ -65,7 +65,7 @@ describe('TaskService', () => {
     ];
 
     // Mock setTimeout
-    // Note: bun:test doesn't have vi.useFakeTimers(), skipping timer mocking
+    // Timer control is handled through manual promise resolution in tests
 
     // Mock getTasks to return our test tasks
     mockRuntime.getTasks = mock().mockResolvedValue(mockTasks);
@@ -76,7 +76,6 @@ describe('TaskService', () => {
 
   afterEach(() => {
     mock.restore();
-    // Note: bun:test doesn't need vi.useRealTimers(), skipping
   });
 
   it('should be instantiated with a runtime', () => {
