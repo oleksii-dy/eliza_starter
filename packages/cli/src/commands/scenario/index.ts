@@ -3,10 +3,14 @@ import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { logger } from '@elizaos/core';
-import { loadProject } from '../../utils/load-project.js';
-import { ScenarioRunner, type Scenario, type ScenarioRunOptions } from '../../scenario-runner/index.js';
-import { AgentServer } from '../../server/agent-server.js';
-import { displayScenarioResults, saveResults } from './display.js';
+import { loadProject } from '../../project';
+import {
+  ScenarioRunner,
+  type Scenario,
+  type ScenarioRunOptions,
+} from '../../scenario-runner/index';
+import { AgentServer } from '@elizaos/server';
+import { displayScenarioResults, saveResults } from './display';
 
 interface ScenarioCommandOptions {
   scenario?: string;
@@ -17,7 +21,7 @@ interface ScenarioCommandOptions {
   output?: string;
   format?: 'json' | 'text' | 'html';
   parallel?: boolean;
-  maxConcurrency?: number;
+  maxConcurrency?: string;
 }
 
 export const scenarioCommand = new Command('scenario')
@@ -43,7 +47,7 @@ export const scenarioCommand = new Command('scenario')
 async function runScenarioCommand(options: ScenarioCommandOptions): Promise<void> {
   // Load scenarios
   const scenarios = await loadScenarios(options);
-  
+
   if (scenarios.length === 0) {
     logger.warn('No scenarios found to run');
     return;
@@ -53,43 +57,42 @@ async function runScenarioCommand(options: ScenarioCommandOptions): Promise<void
 
   // Initialize the server and runtime
   const { server, cleanup } = await initializeServer();
-  
+
   try {
     // Create scenario runner
-    const runner = new ScenarioRunner(server, server.runtime);
-    
+    const runner = new ScenarioRunner(server, null as any);
+
     // Configure run options
     const runOptions: ScenarioRunOptions = {
       benchmark: options.benchmark,
       verbose: options.verbose,
       outputFormat: options.format,
       parallel: options.parallel,
-      maxConcurrency: options.maxConcurrency ? parseInt(options.maxConcurrency) : 3,
+      maxConcurrency: options.maxConcurrency ? parseInt(options.maxConcurrency, 10) : 3,
     };
 
     // Run scenarios
     const results = await runner.runScenarios(scenarios, runOptions);
-    
+
     // Display results
     displayScenarioResults(results, runOptions);
-    
+
     // Save results if output file specified
     if (options.output) {
       await saveResults(results, options.output, options.format || 'json');
       logger.info(`Results saved to ${options.output}`);
     }
-    
+
     // Summary
-    const passed = results.filter(r => r.passed).length;
+    const passed = results.filter((r) => r.passed).length;
     const failed = results.length - passed;
-    
+
     logger.info(`\nSummary: ${passed} passed, ${failed} failed, ${results.length} total`);
-    
+
     // Exit with error code if any scenarios failed
     if (failed > 0) {
       process.exit(1);
     }
-    
   } finally {
     await cleanup();
   }
@@ -97,7 +100,7 @@ async function runScenarioCommand(options: ScenarioCommandOptions): Promise<void
 
 async function loadScenarios(options: ScenarioCommandOptions): Promise<Scenario[]> {
   const scenarios: Scenario[] = [];
-  
+
   if (options.scenario) {
     // Load single scenario file
     const scenario = await loadScenarioFile(options.scenario);
@@ -114,7 +117,7 @@ async function loadScenarios(options: ScenarioCommandOptions): Promise<Scenario[
       './tests/scenarios',
       './src/scenarios',
     ];
-    
+
     for (const location of defaultLocations) {
       if (existsSync(location)) {
         const dirScenarios = await loadScenariosFromDirectory(location);
@@ -123,30 +126,31 @@ async function loadScenarios(options: ScenarioCommandOptions): Promise<Scenario[
       }
     }
   }
-  
+
   // Apply filter if specified
   if (options.filter) {
     const filterRegex = new RegExp(options.filter, 'i');
-    return scenarios.filter(scenario => 
-      filterRegex.test(scenario.name) || 
-      filterRegex.test(scenario.id) ||
-      scenario.tags?.some(tag => filterRegex.test(tag))
+    return scenarios.filter(
+      (scenario) =>
+        filterRegex.test(scenario.name) ||
+        filterRegex.test(scenario.id) ||
+        scenario.tags?.some((tag) => filterRegex.test(tag))
     );
   }
-  
+
   return scenarios;
 }
 
 async function loadScenarioFile(filePath: string): Promise<Scenario> {
   try {
     const fullPath = path.resolve(filePath);
-    
+
     if (!existsSync(fullPath)) {
       throw new Error(`Scenario file not found: ${fullPath}`);
     }
-    
+
     const content = await fs.readFile(fullPath, 'utf-8');
-    
+
     if (filePath.endsWith('.json')) {
       return JSON.parse(content) as Scenario;
     } else if (filePath.endsWith('.ts') || filePath.endsWith('.js')) {
@@ -157,21 +161,26 @@ async function loadScenarioFile(filePath: string): Promise<Scenario> {
       throw new Error(`Unsupported scenario file format: ${filePath}`);
     }
   } catch (error) {
-    throw new Error(`Failed to load scenario from ${filePath}: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to load scenario from ${filePath}: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
 async function loadScenariosFromDirectory(dirPath: string): Promise<Scenario[]> {
   const scenarios: Scenario[] = [];
-  
+
   try {
     const files = await fs.readdir(dirPath);
-    
+
     for (const file of files) {
       const filePath = path.join(dirPath, file);
       const stats = await fs.stat(filePath);
-      
-      if (stats.isFile() && (file.endsWith('.json') || file.endsWith('.ts') || file.endsWith('.js'))) {
+
+      if (
+        stats.isFile() &&
+        (file.endsWith('.json') || file.endsWith('.ts') || file.endsWith('.js'))
+      ) {
         try {
           const scenario = await loadScenarioFile(filePath);
           scenarios.push(scenario);
@@ -187,27 +196,30 @@ async function loadScenariosFromDirectory(dirPath: string): Promise<Scenario[]> 
   } catch (error) {
     logger.warn(`Failed to read scenarios from directory ${dirPath}:`, error);
   }
-  
+
   return scenarios;
 }
 
 async function initializeServer(): Promise<{ server: AgentServer; cleanup: () => Promise<void> }> {
   // Load project configuration
-  const project = await loadProject();
-  
-  if (!project.character) {
-    throw new Error('No character configuration found in project');
+  const project = await loadProject(process.cwd());
+
+  if (!project.agents || project.agents.length === 0) {
+    throw new Error('No agents found in project');
   }
-  
+
+  // Use the first agent's character for testing
+  const agent = project.agents[0];
+  if (!agent.character) {
+    throw new Error('No character configuration found in first agent');
+  }
+
   // Initialize server with test configuration
-  const server = new AgentServer(project.character, {
-    port: 0, // Use random available port
-    host: 'localhost',
-    databasePath: ':memory:', // Use in-memory database for testing
-  });
-  
+  const server = new AgentServer();
+
+  // Initialize with the agent's character
   await server.start();
-  
+
   const cleanup = async () => {
     try {
       await server.stop();
@@ -215,7 +227,7 @@ async function initializeServer(): Promise<{ server: AgentServer; cleanup: () =>
       logger.warn('Error stopping server:', error);
     }
   };
-  
+
   return { server, cleanup };
 }
 

@@ -251,7 +251,7 @@ describe('Plugin Registration Order', () => {
           }
         } catch (error) {
           initError = error as Error;
-          throw error;
+          throw error as unknown as Error;
         }
       },
     };
@@ -272,7 +272,9 @@ describe('Plugin Registration Order', () => {
 
     // Verify the error was thrown
     expect(initError).toBeTruthy();
-    expect((initError as Error)?.message).toBe('ServiceA must be initialized before ServiceB');
+    expect((initError as unknown as Error)?.message).toBe(
+      'ServiceA must be initialized before ServiceB'
+    );
   });
 
   it('should register plugin components in sequence', async () => {

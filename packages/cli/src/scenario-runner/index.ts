@@ -11,7 +11,7 @@ import {
   Role,
   logger,
 } from '@elizaos/core';
-import { AgentServer } from '../server/agent-server.js';
+import { AgentServer } from '@elizaos/server';
 import type {
   Scenario,
   ScenarioResult,
@@ -82,10 +82,7 @@ export class ScenarioRunner {
         message: 'Verifying results',
       });
 
-      const verificationResults = await this.verifier.verify(
-        scenario.verification.rules,
-        context
-      );
+      const verificationResults = await this.verifier.verify(scenario.verification.rules, context);
 
       // Metrics collection
       const metrics = this.metricsCollector.collect(context);
@@ -130,7 +127,8 @@ export class ScenarioRunner {
         endTime,
         duration,
         passed: false,
-        metrics: context?.metrics || this.metricsCollector.collect(context || {} as ScenarioContext),
+        metrics:
+          context?.metrics || this.metricsCollector.collect(context || ({} as ScenarioContext)),
         verificationResults: [],
         transcript: context?.transcript || [],
         errors: [error instanceof Error ? error.message : String(error)],
@@ -153,14 +151,14 @@ export class ScenarioRunner {
     options: ScenarioRunOptions = {}
   ): Promise<ScenarioResult[]> {
     const results: ScenarioResult[] = [];
-    
+
     if (options.parallel && scenarios.length > 1) {
       const maxConcurrency = options.maxConcurrency || 3;
       const chunks = this.chunkArray(scenarios, maxConcurrency);
-      
+
       for (const chunk of chunks) {
         const chunkResults = await Promise.all(
-          chunk.map(scenario => this.runScenario(scenario, options))
+          chunk.map((scenario) => this.runScenario(scenario, options))
         );
         results.push(...chunkResults);
       }
@@ -240,10 +238,10 @@ export class ScenarioRunner {
     const { scenario, actors, roomId } = context;
     const maxDuration = scenario.execution.maxDuration || 300000; // 5 minutes default
     const maxSteps = scenario.execution.maxSteps || 100;
-    
+
     let stepCount = 0;
     const startTime = Date.now();
-    
+
     // Set up message handler to capture all messages in the room
     const messageHandler = (message: Memory) => {
       if (message.roomId === roomId) {
@@ -262,12 +260,10 @@ export class ScenarioRunner {
     try {
       // Execute actor scripts
       const scriptPromises: Promise<void>[] = [];
-      
+
       for (const actor of actors.values()) {
         if (actor.script && actor.runtime) {
-          scriptPromises.push(
-            this.executeActorScript(actor, context, progressCallback)
-          );
+          scriptPromises.push(this.executeActorScript(actor, context, progressCallback));
         }
       }
 
@@ -276,14 +272,10 @@ export class ScenarioRunner {
         setTimeout(() => reject(new Error('Scenario execution timeout')), maxDuration);
       });
 
-      await Promise.race([
-        Promise.all(scriptPromises),
-        timeoutPromise,
-      ]);
+      await Promise.race([Promise.all(scriptPromises), timeoutPromise]);
 
       // Wait a bit for final responses
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     } finally {
       // Clean up message handlers
       for (const actor of actors.values()) {
@@ -303,13 +295,12 @@ export class ScenarioRunner {
 
     for (let i = 0; i < actor.script.steps.length; i++) {
       const step = actor.script.steps[i];
-      
+
       try {
         await this.executeScriptStep(actor, step, context);
-        
+
         // Small delay between steps to allow for responses
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (error) {
         logger.error(`Error executing step ${i} for actor ${actor.id}:`, error);
         break; // Stop this actor's script on error
@@ -328,23 +319,23 @@ export class ScenarioRunner {
           await this.sendActorMessage(actor, step.content, context);
         }
         break;
-      
+
       case 'wait':
         if (step.waitTime) {
-          await new Promise(resolve => setTimeout(resolve, step.waitTime));
+          await new Promise((resolve) => setTimeout(resolve, step.waitTime));
         }
         break;
-      
+
       case 'react':
         // Reaction steps would be handled by message triggers
         break;
-      
+
       case 'action':
         if (step.actionName && actor.runtime) {
           await this.executeActorAction(actor, step.actionName, step.actionParams || {}, context);
         }
         break;
-      
+
       case 'assert':
         if (step.assertion) {
           this.validateAssertion(step.assertion, context);
@@ -374,7 +365,7 @@ export class ScenarioRunner {
 
     // Send through the message bus
     await actor.runtime.createMemory(message, 'messages');
-    
+
     // Emit the message received event to trigger agent processing
     await actor.runtime.emitEvent(EventType.MESSAGE_RECEIVED, {
       runtime: actor.runtime,
@@ -387,12 +378,12 @@ export class ScenarioRunner {
 
   private async executeActorAction(
     actor: ScenarioActor,
-    actionName: string, 
+    actionName: string,
     params: Record<string, any>,
     context: ScenarioContext
   ): Promise<void> {
     this.metricsCollector.recordAction(actionName);
-    
+
     // Action execution would depend on the specific action
     // This is a placeholder for action execution logic
     logger.debug(`Actor ${actor.id} executing action: ${actionName}`, params);
@@ -404,8 +395,10 @@ export class ScenarioRunner {
   }
 
   private recordMessage(context: ScenarioContext, message: Memory): void {
-    const actor = Array.from(context.actors.values()).find(a => a.runtime?.agentId === message.entityId);
-    
+    const actor = Array.from(context.actors.values()).find(
+      (a) => a.runtime?.agentId === message.entityId
+    );
+
     const scenarioMessage: ScenarioMessage = {
       id: message.id || v4(),
       timestamp: message.createdAt || Date.now(),
@@ -413,7 +406,11 @@ export class ScenarioRunner {
       actorName: actor?.name || 'Unknown',
       content: message.content,
       roomId: message.roomId,
-      messageType: message.entityId === context.scenario.actors.find(a => a.role === 'subject')?.runtime?.agentId ? 'outgoing' : 'incoming',
+      messageType:
+        message.entityId ===
+        context.scenario.actors.find((a) => a.role === 'subject')?.runtime?.agentId
+          ? 'outgoing'
+          : 'incoming',
     };
 
     context.transcript.push(scenarioMessage);
@@ -430,11 +427,7 @@ export class ScenarioRunner {
     throw new Error('Actor runtime creation not yet implemented');
   }
 
-  private async sendContextMessage(
-    roomId: UUID,
-    content: string,
-    sender: string
-  ): Promise<void> {
+  private async sendContextMessage(roomId: UUID, content: string, sender: string): Promise<void> {
     const message: Memory = {
       id: asUUID(v4()),
       entityId: asUUID(v4()), // System message
@@ -451,8 +444,10 @@ export class ScenarioRunner {
 
   private mapRoomType(roomType: string): ChannelType {
     switch (roomType) {
-      case 'dm': return ChannelType.DM;
-      case 'public': return ChannelType.GROUP;
+      case 'dm':
+        return ChannelType.DM;
+      case 'public':
+        return ChannelType.GROUP;
       case 'group':
       default:
         return ChannelType.GROUP;
@@ -467,40 +462,37 @@ export class ScenarioRunner {
         // await actor.runtime.stop();
       }
     }
-    
+
     // Could also clean up rooms/worlds if needed
     logger.debug(`Scenario ${context.scenario.id} teardown complete`);
   }
 
-  private determinePass(
-    verificationResults: any[],
-    scenario: Scenario
-  ): boolean {
+  private determinePass(verificationResults: any[], scenario: Scenario): boolean {
     if (verificationResults.length === 0) return false;
-    
+
     const totalWeight = verificationResults.reduce((sum, result) => {
-      const rule = scenario.verification.rules.find(r => r.id === result.ruleId);
+      const rule = scenario.verification.rules.find((r) => r.id === result.ruleId);
       return sum + (rule?.weight || 1);
     }, 0);
-    
+
     const passedWeight = verificationResults.reduce((sum, result) => {
       if (result.passed) {
-        const rule = scenario.verification.rules.find(r => r.id === result.ruleId);
+        const rule = scenario.verification.rules.find((r) => r.id === result.ruleId);
         return sum + (rule?.weight || 1);
       }
       return sum;
     }, 0);
-    
-    return (passedWeight / totalWeight) >= 0.7; // 70% threshold
+
+    return passedWeight / totalWeight >= 0.7; // 70% threshold
   }
 
   private calculateOverallScore(verificationResults: any[]): number {
     if (verificationResults.length === 0) return 0;
-    
+
     const totalScore = verificationResults.reduce((sum, result) => {
       return sum + (result.score || (result.passed ? 1 : 0));
     }, 0);
-    
+
     return totalScore / verificationResults.length;
   }
 

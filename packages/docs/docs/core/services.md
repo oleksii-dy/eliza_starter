@@ -64,7 +64,7 @@ export const ServiceType = {
 
 ### Task Service
 
-The Task Service (provided by `@elizaos/plugin-bootstrap`) manages scheduled and queued tasks:
+The Task Service (provided by `@elizaos/plugin-message-handling`) manages scheduled and queued tasks:
 
 ```typescript
 export class TaskService extends Service {

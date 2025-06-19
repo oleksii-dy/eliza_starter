@@ -1,4 +1,4 @@
-import type { IAgentRuntime, ModelType } from '@elizaos/core';
+import { IAgentRuntime, ModelType } from '@elizaos/core';
 import { parseKeyValueXml } from '@elizaos/core';
 import type {
   VerificationRule,
@@ -10,10 +10,7 @@ import type {
 export class ScenarioVerifier {
   constructor(private runtime: IAgentRuntime) {}
 
-  async verify(
-    rules: VerificationRule[],
-    context: ScenarioContext
-  ): Promise<VerificationResult[]> {
+  async verify(rules: VerificationRule[], context: ScenarioContext): Promise<VerificationResult[]> {
     const results: VerificationResult[] = [];
 
     for (const rule of rules) {
@@ -68,8 +65,10 @@ export class ScenarioVerifier {
   ): Promise<VerificationResult> {
     const transcript = this.formatTranscript(context.transcript);
     const criteria = rule.config.criteria || rule.description;
-    
-    const prompt = rule.config.llmPrompt || `Analyze this conversation transcript and determine if the following criteria is met: ${criteria}
+
+    const prompt =
+      rule.config.llmPrompt ||
+      `Analyze this conversation transcript and determine if the following criteria is met: ${criteria}
 
 Transcript:
 ${transcript}
@@ -91,36 +90,38 @@ Provide your analysis in the following format:
     return this.parseVerificationResponse(response, rule);
   }
 
-  private verifyWithRegex(
-    rule: VerificationRule,
-    context: ScenarioContext
-  ): VerificationResult {
-    const pattern = new RegExp(rule.config.pattern, 'i');
-    const transcriptText = context.transcript
-      .map(msg => msg.content.text || '')
-      .join(' ');
+  private verifyWithRegex(rule: VerificationRule, context: ScenarioContext): VerificationResult {
+    const pattern = rule.config.pattern;
+    if (!pattern) {
+      return {
+        ruleId: rule.id,
+        ruleName: rule.description,
+        passed: false,
+        reason: 'No regex pattern specified in rule configuration',
+      };
+    }
 
-    const matches = transcriptText.match(pattern);
+    const regexPattern = new RegExp(pattern, 'i');
+    const transcriptText = context.transcript.map((msg) => msg.content.text || '').join(' ');
+
+    const matches = transcriptText.match(regexPattern);
     const passed = Boolean(matches);
 
     return {
       ruleId: rule.id,
       ruleName: rule.description,
       passed,
-      reason: passed 
-        ? `Pattern "${rule.config.pattern}" found in transcript`
-        : `Pattern "${rule.config.pattern}" not found in transcript`,
+      reason: passed
+        ? `Pattern "${pattern}" found in transcript`
+        : `Pattern "${pattern}" not found in transcript`,
       evidence: matches ? matches[0] : null,
     };
   }
 
-  private verifyContains(
-    rule: VerificationRule,
-    context: ScenarioContext
-  ): VerificationResult {
+  private verifyContains(rule: VerificationRule, context: ScenarioContext): VerificationResult {
     const searchText = rule.config.expectedValue?.toLowerCase() || '';
     const transcriptText = context.transcript
-      .map(msg => msg.content.text || '')
+      .map((msg) => msg.content.text || '')
       .join(' ')
       .toLowerCase();
 
@@ -136,10 +137,7 @@ Provide your analysis in the following format:
     };
   }
 
-  private verifyCount(
-    rule: VerificationRule,
-    context: ScenarioContext
-  ): VerificationResult {
+  private verifyCount(rule: VerificationRule, context: ScenarioContext): VerificationResult {
     const { expectedValue, threshold } = rule.config;
     let actualCount = 0;
 
@@ -148,14 +146,15 @@ Provide your analysis in the following format:
       actualCount = context.transcript.length;
     } else if (rule.config.criteria === 'actor_messages') {
       const actorId = rule.config.actorId;
-      actualCount = context.transcript.filter(msg => msg.actorId === actorId).length;
+      actualCount = context.transcript.filter((msg) => msg.actorId === actorId).length;
     } else if (rule.config.criteria === 'actions') {
-      actualCount = Object.values(context.metrics.actionCounts || {}).reduce((sum, count) => sum + count, 0);
+      actualCount = Object.values(context.metrics.actionCounts || {}).reduce(
+        (sum, count) => sum + count,
+        0
+      );
     }
 
-    const passed = threshold 
-      ? actualCount >= threshold
-      : actualCount === expectedValue;
+    const passed = threshold ? actualCount >= threshold : actualCount === expectedValue;
 
     return {
       ruleId: rule.id,
@@ -166,10 +165,7 @@ Provide your analysis in the following format:
     };
   }
 
-  private verifyTiming(
-    rule: VerificationRule,
-    context: ScenarioContext
-  ): VerificationResult {
+  private verifyTiming(rule: VerificationRule, context: ScenarioContext): VerificationResult {
     const { threshold } = rule.config;
     const actualDuration = context.metrics.duration || 0;
     const passed = actualDuration <= threshold;
@@ -185,10 +181,7 @@ Provide your analysis in the following format:
     };
   }
 
-  private verifyActionTaken(
-    rule: VerificationRule,
-    context: ScenarioContext
-  ): VerificationResult {
+  private verifyActionTaken(rule: VerificationRule, context: ScenarioContext): VerificationResult {
     const expectedAction = rule.config.expectedValue;
     const actionCounts = context.metrics.actionCounts || {};
     const passed = Boolean(actionCounts[expectedAction]);
@@ -207,8 +200,8 @@ Provide your analysis in the following format:
   private async verifyResponseQuality(
     rule: VerificationRule,
     context: ScenarioContext
-  ): VerificationResult {
-    const subjectActorId = context.scenario.actors.find(a => a.role === 'subject')?.id;
+  ): Promise<VerificationResult> {
+    const subjectActorId = context.scenario.actors.find((a) => a.role === 'subject')?.id;
     if (!subjectActorId) {
       return {
         ruleId: rule.id,
@@ -218,8 +211,8 @@ Provide your analysis in the following format:
       };
     }
 
-    const subjectMessages = context.transcript.filter(msg => msg.actorId === subjectActorId);
-    const responses = subjectMessages.map(msg => msg.content.text || '').join('\n');
+    const subjectMessages = context.transcript.filter((msg) => msg.actorId === subjectActorId);
+    const responses = subjectMessages.map((msg) => msg.content.text || '').join('\n');
 
     const prompt = `Evaluate the quality of these responses based on the criteria: ${rule.config.criteria}
 
@@ -242,16 +235,13 @@ Rate the response quality on a scale of 1-10 and provide justification:
   private async verifyCustom(
     rule: VerificationRule,
     context: ScenarioContext
-  ): VerificationResult {
+  ): Promise<VerificationResult> {
     // Custom verification would be implemented by loading and executing
     // a custom function specified in rule.config.customFunction
     throw new Error('Custom verification not yet implemented');
   }
 
-  private parseVerificationResponse(
-    response: string,
-    rule: VerificationRule
-  ): VerificationResult {
+  private parseVerificationResponse(response: string, rule: VerificationRule): VerificationResult {
     try {
       const parsed = parseKeyValueXml(response);
       if (!parsed) {
@@ -276,10 +266,7 @@ Rate the response quality on a scale of 1-10 and provide justification:
     }
   }
 
-  private parseEvaluationResponse(
-    response: string,
-    rule: VerificationRule
-  ): VerificationResult {
+  private parseEvaluationResponse(response: string, rule: VerificationRule): VerificationResult {
     try {
       const parsed = parseKeyValueXml(response);
       if (!parsed) {
@@ -305,7 +292,7 @@ Rate the response quality on a scale of 1-10 and provide justification:
 
   private formatTranscript(transcript: ScenarioMessage[]): string {
     return transcript
-      .map(msg => {
+      .map((msg) => {
         const timestamp = new Date(msg.timestamp).toISOString();
         return `[${timestamp}] ${msg.actorName}: ${msg.content.text || ''}`;
       })

@@ -46,9 +46,7 @@ echo "Building CLI..."
 bun run build
 
 # Run TypeScript checks
-# Skip TypeScript validation due to dependency type issues
-echo -e "${YELLOW}⚠ Skipping TypeScript validation due to dependency type issues${NC}"
-# run_test_suite "TypeScript Validation" "tsc --noEmit"
+run_test_suite "TypeScript Validation" "tsc --noEmit"
 
 # Run unit tests - disable coverage in CI due to memory constraints
 if [ "$CI" = "true" ]; then
