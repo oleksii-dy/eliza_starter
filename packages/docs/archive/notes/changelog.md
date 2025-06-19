@@ -470,7 +470,7 @@ General Code Fixes & Minor Enhancements
 - Spell/grammar errors in characters #2447
 - Correct STT plugin userId type #2704
 - Remove duplicated handlePendingTweet #2715
-- Delete plugin-message-handling sex message #2748
+- Delete plugin-message-handilng sex message #2748
 - TON plugin build issue #2757
 - Make template message footer more explicit #2774
 - Akash splash #2816

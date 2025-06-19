@@ -399,9 +399,9 @@ export const apiClient = {
 
   // ENV vars
   getLocalEnvs: (): Promise<{ success: boolean; data: Record<string, string> }> =>
-    fetcher({ url: `/system/local` }),
+    fetcher({ url: `/system/env/local` }),
   updateLocalEnvs: (envs: Record<string, string>): Promise<{ success: boolean; message: string }> =>
-    fetcher({ url: `/system/local`, method: 'POST', body: { content: envs } }),
+    fetcher({ url: `/system/env/local`, method: 'POST', body: { content: envs } }),
 
   testEndpoint: (endpoint: string): Promise<any> => fetcher({ url: endpoint }),
 
@@ -494,6 +494,20 @@ export const apiClient = {
       url: `/messaging/channels/${channelId}/upload-media`,
       method: 'POST',
       body: formData,
+    });
+  },
+
+  getChannelTitle: async (
+    channelId: UUID,
+    agentId: UUID
+  ): Promise<{
+    success: boolean;
+    data: { title: string; channelId: string };
+  }> => {
+    return fetcher({
+      url: `/messaging/central-channels/${channelId}/generate-title`,
+      method: 'POST',
+      body: { agentId },
     });
   },
 

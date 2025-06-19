@@ -232,7 +232,7 @@ const generateImageAction: Action = {
 
 ### Basic Conversation Actions
 
-You can find these samples in the plugin-message-handling package: https://github.com/elizaOS/eliza/tree/main/packages/plugin-message-handling/src/actions
+You can find these samples in the plugin-message-handilng package: https://github.com/elizaOS/eliza/tree/main/packages/plugin-message-handilng/src/actions
 
 #### CONTINUE
 

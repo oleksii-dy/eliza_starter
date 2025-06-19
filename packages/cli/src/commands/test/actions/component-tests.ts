@@ -6,6 +6,8 @@ import path from 'node:path';
 import { ComponentTestOptions, TestResult } from '../types';
 import { processFilterName } from '../utils/project-utils';
 import { runTypeCheck } from '@/src/utils/testing/tsc-validator';
+import { createVitestConfig } from '../utils/vitest-config';
+import { existsSync } from 'node:fs';
 
 /**
  * Run component tests using Vitest
@@ -49,7 +51,7 @@ export async function runComponentTests(
 
   return new Promise((resolve) => {
     // Build command arguments
-    const args = ['run', 'vitest', 'run', '--passWithNoTests', '--reporter=verbose'];
+    const args = ['run', 'vitest', 'run', '--passWithNoTests', '--reporter=default'];
 
     // Add filter if specified
     if (options.name) {
@@ -62,6 +64,18 @@ export async function runComponentTests(
 
     // Don't pass include/exclude patterns from config - vitest will use its own config file
     const targetPath = testPath ? path.resolve(process.cwd(), '..', testPath) : process.cwd();
+
+    // Check if vitest config exists in the target directory
+    const hasVitestConfig =
+      existsSync(path.join(targetPath, 'vitest.config.ts')) ||
+      existsSync(path.join(targetPath, 'vitest.config.js')) ||
+      existsSync(path.join(targetPath, 'vitest.config.mjs'));
+
+    // Vitest will use its own config file if it exists
+    if (!hasVitestConfig) {
+      logger.info('No vitest config found, using default configuration');
+    }
+
     logger.info(`Executing: bun ${args.join(' ')} in ${targetPath}`);
 
     // Use spawn for real-time output streaming
