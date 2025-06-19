@@ -23,13 +23,15 @@ export async function checkPortAvailable(port: number): Promise<boolean> {
 export async function getAvailablePort(preferredPort: number): Promise<number> {
   let port = preferredPort;
   const maxAttempts = 10;
-  
+
   for (let i = 0; i < maxAttempts; i++) {
     if (await checkPortAvailable(port)) {
       return port;
     }
     port++;
   }
-  
-  throw new Error(`Could not find an available port after ${maxAttempts} attempts starting from ${preferredPort}`);
+
+  throw new Error(
+    `Could not find an available port after ${maxAttempts} attempts starting from ${preferredPort}`
+  );
 }

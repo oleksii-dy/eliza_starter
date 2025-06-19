@@ -45,6 +45,9 @@ export class ScenarioRunner {
     options: ScenarioRunOptions = {},
     progressCallback?: ScenarioProgressCallback
   ): Promise<ScenarioResult> {
+    // Validate scenario
+    this.validateScenario(scenario);
+
     const startTime = Date.now();
     let context: ScenarioContext | null = null;
 
@@ -58,7 +61,20 @@ export class ScenarioRunner {
         message: 'Setting up scenario environment',
       });
 
-      context = await this.setupScenario(scenario);
+      try {
+        context = await this.setupScenario(scenario);
+      } catch (setupError) {
+        logger.error('Error in setupScenario:', setupError);
+        logger.error(
+          'Error details:',
+          setupError instanceof Error ? setupError.message : String(setupError)
+        );
+        logger.error(
+          'Error stack:',
+          setupError instanceof Error ? setupError.stack : 'No stack trace'
+        );
+        throw setupError;
+      }
       this.activeScenarios.set(scenario.id, context);
       this.metricsCollector.start();
 
@@ -173,20 +189,34 @@ export class ScenarioRunner {
   }
 
   private async setupScenario(scenario: Scenario): Promise<ScenarioContext> {
+    // Get the primary runtime from the server's agents
+    const primaryRuntime = Array.from(this.server.agents.values())[0];
+    if (!primaryRuntime) {
+      logger.error(`No agents in server. Server has ${this.server.agents.size} agents`);
+      throw new Error('No primary runtime available in server');
+    }
+
+    logger.info(`Setting up scenario with primary runtime: ${primaryRuntime.agentId}`);
+
     // Create isolated room and world for this scenario
-    const worldId = createUniqueUuid(this.server.runtime, `scenario-world-${scenario.id}`) as UUID;
-    const roomId = createUniqueUuid(this.server.runtime, `scenario-room-${scenario.id}`) as UUID;
+    const worldId = asUUID(createUniqueUuid(primaryRuntime, `scenario-world-${scenario.id}`));
+    const roomId = asUUID(createUniqueUuid(primaryRuntime, `scenario-room-${scenario.id}`));
 
     // Setup world
-    await this.server.runtime.ensureWorldExists({
-      id: worldId,
-      name: `Scenario: ${scenario.name}`,
-      agentId: this.server.runtime.agentId,
-      serverId: `scenario-${scenario.id}`,
-    });
+    try {
+      await primaryRuntime.ensureWorldExists({
+        id: worldId,
+        name: `Scenario: ${scenario.name}`,
+        agentId: primaryRuntime.agentId,
+        serverId: `scenario-${scenario.id}`,
+      });
+    } catch (worldError) {
+      logger.error('Error creating world:', worldError);
+      throw worldError;
+    }
 
     // Setup room
-    await this.server.runtime.ensureRoomExists({
+    await primaryRuntime.ensureRoomExists({
       id: roomId,
       name: scenario.setup.roomName || `${scenario.name} Room`,
       source: 'scenario-runner',
@@ -196,24 +226,20 @@ export class ScenarioRunner {
       worldId,
     });
 
-    // Initialize actors
+    // Initialize actors - for simplicity, all actors use the primary runtime
+    // In a full implementation, you'd create separate runtimes for different actors
     const actorMap = new Map<string, ScenarioActor>();
     for (const actor of scenario.actors) {
-      if (actor.role !== 'subject') {
-        // Create runtime for non-subject actors
-        const actorRuntime = await this.createActorRuntime(actor, worldId, roomId);
-        actor.runtime = actorRuntime;
-      } else {
-        // Subject actor uses the main runtime
-        actor.runtime = this.server.runtime;
-      }
+      // For now, all actors share the same runtime
+      // This is sufficient for most testing scenarios
+      actor.runtime = primaryRuntime as IAgentRuntime;
       actorMap.set(actor.id, actor);
     }
 
     // Add initial context messages if specified
     if (scenario.setup.initialMessages) {
       for (const msg of scenario.setup.initialMessages) {
-        await this.sendContextMessage(roomId, msg.content, msg.sender);
+        await this.sendContextMessage(roomId, msg.content, msg.sender, primaryRuntime, worldId);
       }
     }
 
@@ -235,61 +261,36 @@ export class ScenarioRunner {
     context: ScenarioContext,
     progressCallback?: ScenarioProgressCallback
   ): Promise<void> {
-    const { scenario, actors, roomId } = context;
-    const maxDuration = scenario.execution.maxDuration || 300000; // 5 minutes default
-    const maxSteps = scenario.execution.maxSteps || 100;
+    const { scenario, actors } = context;
+    // const maxDuration = scenario.execution.maxDuration || 300000; // 5 minutes default
+    // const maxSteps = scenario.execution.maxSteps || 100;
 
-    let stepCount = 0;
-    const startTime = Date.now();
-
-    // Set up message handler to capture all messages in the room
-    const messageHandler = (message: Memory) => {
-      if (message.roomId === roomId) {
-        this.recordMessage(context, message);
-        this.metricsCollector.recordResponseLatency(Date.now() - startTime);
-      }
-    };
-
-    // Register message handler for each actor
-    for (const actor of actors.values()) {
-      if (actor.runtime) {
-        actor.runtime.on(EventType.MESSAGE_RECEIVED, messageHandler);
-      }
-    }
+    // let stepCount = 0;
+    // const startTime = Date.now();
 
     try {
-      // Execute actor scripts
-      const scriptPromises: Promise<void>[] = [];
-
+      // Execute actor scripts sequentially
       for (const actor of actors.values()) {
         if (actor.script && actor.runtime) {
-          scriptPromises.push(this.executeActorScript(actor, context, progressCallback));
+          await this.executeActorScript(actor, context, progressCallback);
+
+          // Small delay between actors to allow for processing
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
-
-      // Wait for all scripts to complete or timeout
-      const timeoutPromise = new Promise<void>((_, reject) => {
-        setTimeout(() => reject(new Error('Scenario execution timeout')), maxDuration);
-      });
-
-      await Promise.race([Promise.all(scriptPromises), timeoutPromise]);
 
       // Wait a bit for final responses
       await new Promise((resolve) => setTimeout(resolve, 2000));
-    } finally {
-      // Clean up message handlers
-      for (const actor of actors.values()) {
-        if (actor.runtime) {
-          actor.runtime.off(EventType.MESSAGE_RECEIVED, messageHandler);
-        }
-      }
+    } catch (error) {
+      logger.error('Error during scenario execution:', error);
+      throw error;
     }
   }
 
   private async executeActorScript(
     actor: ScenarioActor,
     context: ScenarioContext,
-    progressCallback?: ScenarioProgressCallback
+    _progressCallback?: ScenarioProgressCallback
   ): Promise<void> {
     if (!actor.script || !actor.runtime) return;
 
@@ -356,6 +357,7 @@ export class ScenarioRunner {
       entityId: actor.runtime.agentId,
       agentId: actor.runtime.agentId,
       roomId: context.roomId,
+      worldId: context.worldId,
       content: {
         text: content,
         source: 'scenario-runner',
@@ -363,24 +365,51 @@ export class ScenarioRunner {
       createdAt: Date.now(),
     };
 
+    // Record the outgoing message
+    this.recordMessage(context, message);
+
     // Send through the message bus
     await actor.runtime.createMemory(message, 'messages');
 
-    // Emit the message received event to trigger agent processing
-    await actor.runtime.emitEvent(EventType.MESSAGE_RECEIVED, {
-      runtime: actor.runtime,
-      message,
-      callback: async (response: Content) => {
-        // Response will be captured by our message handler
-      },
-    });
+    // For subject actors (the agent being tested), trigger message processing
+    const subjectActor = context.scenario.actors.find((a) => a.role === 'subject');
+    if (actor.role !== 'subject' && subjectActor && subjectActor.runtime) {
+      try {
+        // Emit the message received event to trigger agent processing
+        const responses: Content[] = [];
+        await subjectActor.runtime.emitEvent(EventType.MESSAGE_RECEIVED, {
+          runtime: subjectActor.runtime,
+          message,
+          callback: async (response: Content) => {
+            responses.push(response);
+
+            // Create a memory for the response
+            const responseMessage: Memory = {
+              id: asUUID(v4()),
+              entityId: subjectActor.runtime!.agentId,
+              agentId: subjectActor.runtime!.agentId,
+              roomId: context.roomId,
+              worldId: context.worldId,
+              content: response,
+              createdAt: Date.now(),
+            };
+
+            // Record the response
+            this.recordMessage(context, responseMessage);
+            this.metricsCollector.recordResponseLatency(Date.now() - message.createdAt!);
+          },
+        });
+      } catch (error) {
+        logger.error(`Error processing message for subject actor:`, error);
+      }
+    }
   }
 
   private async executeActorAction(
     actor: ScenarioActor,
     actionName: string,
     params: Record<string, any>,
-    context: ScenarioContext
+    _context: ScenarioContext
   ): Promise<void> {
     this.metricsCollector.recordAction(actionName);
 
@@ -389,7 +418,7 @@ export class ScenarioRunner {
     logger.debug(`Actor ${actor.id} executing action: ${actionName}`, params);
   }
 
-  private validateAssertion(assertion: any, context: ScenarioContext): void {
+  private validateAssertion(assertion: any, _context: ScenarioContext): void {
     // Assertion validation logic would go here
     logger.debug('Validating assertion:', assertion);
   }
@@ -416,10 +445,11 @@ export class ScenarioRunner {
     context.transcript.push(scenarioMessage);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async createActorRuntime(
-    actor: ScenarioActor,
-    worldId: UUID,
-    roomId: UUID
+    _actor: ScenarioActor,
+    _worldId: UUID,
+    _roomId: UUID
   ): Promise<IAgentRuntime> {
     // This would create a new runtime for the actor
     // For now, we'll use a simplified approach
@@ -427,11 +457,19 @@ export class ScenarioRunner {
     throw new Error('Actor runtime creation not yet implemented');
   }
 
-  private async sendContextMessage(roomId: UUID, content: string, sender: string): Promise<void> {
+  private async sendContextMessage(
+    roomId: UUID,
+    content: string,
+    _sender: string,
+    runtime: IAgentRuntime,
+    worldId: UUID
+  ): Promise<void> {
     const message: Memory = {
       id: asUUID(v4()),
       entityId: asUUID(v4()), // System message
+      agentId: runtime.agentId,
       roomId,
+      worldId,
       content: {
         text: content,
         source: 'scenario-setup',
@@ -439,7 +477,7 @@ export class ScenarioRunner {
       createdAt: Date.now(),
     };
 
-    await this.server.runtime.createMemory(message, 'messages');
+    await runtime.createMemory(message, 'messages');
   }
 
   private mapRoomType(roomType: string): ChannelType {
@@ -455,15 +493,9 @@ export class ScenarioRunner {
   }
 
   private async teardownScenario(context: ScenarioContext): Promise<void> {
-    // Cleanup resources
-    for (const actor of context.actors.values()) {
-      if (actor.runtime && actor.runtime !== this.server.runtime) {
-        // Stop actor runtime if it's not the main runtime
-        // await actor.runtime.stop();
-      }
-    }
+    // Since we're using the primary runtime for all actors, no need to stop individual runtimes
+    // Just clean up any temporary resources if needed
 
-    // Could also clean up rooms/worlds if needed
     logger.debug(`Scenario ${context.scenario.id} teardown complete`);
   }
 
@@ -494,6 +526,41 @@ export class ScenarioRunner {
     }, 0);
 
     return totalScore / verificationResults.length;
+  }
+
+  private validateScenario(scenario: Scenario): void {
+    if (!scenario.id) {
+      throw new Error('Scenario must have an ID');
+    }
+    if (!scenario.name) {
+      throw new Error('Scenario must have a name');
+    }
+    if (!scenario.actors || scenario.actors.length === 0) {
+      throw new Error('Scenario must have at least one actor');
+    }
+
+    // Validate that there's exactly one subject actor
+    const subjectActors = scenario.actors.filter((a) => a.role === 'subject');
+    if (subjectActors.length === 0) {
+      throw new Error('Scenario must have exactly one subject actor');
+    }
+    if (subjectActors.length > 1) {
+      throw new Error('Scenario can only have one subject actor');
+    }
+
+    // Validate verification rules
+    if (!scenario.verification.rules || scenario.verification.rules.length === 0) {
+      throw new Error('Scenario must have at least one verification rule');
+    }
+
+    for (const rule of scenario.verification.rules) {
+      if (!rule.id) {
+        throw new Error('All verification rules must have an ID');
+      }
+      if (!rule.type) {
+        throw new Error('All verification rules must have a type');
+      }
+    }
   }
 
   private chunkArray<T>(array: T[], chunkSize: number): T[][] {

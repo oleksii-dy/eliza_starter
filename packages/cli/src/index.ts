@@ -9,7 +9,7 @@ import { env } from '@/src/commands/env';
 import { plugins } from '@/src/commands/plugins';
 import { publish } from '@/src/commands/publish';
 import { monorepo } from '@/src/commands/monorepo';
-// import { scenarioCommand } from '@/src/commands/scenario'; // Temporarily disabled - API incompatibility
+import { scenarioCommand } from '@/src/commands/scenario';
 import { start } from '@/src/commands/start';
 import { teeCommand as tee } from '@/src/commands/tee';
 import { test } from '@/src/commands/test';
@@ -88,7 +88,7 @@ async function main() {
     .addCommand(start)
     .addCommand(update)
     .addCommand(test)
-    // .addCommand(scenarioCommand)
+    .addCommand(scenarioCommand)
     .addCommand(env)
     .addCommand(dev)
     .addCommand(publish);

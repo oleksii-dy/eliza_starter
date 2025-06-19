@@ -57,9 +57,39 @@ export type World = {
     roles?: {
       [entityId: UUID]: Role;
     };
+    description?: string;
+    createdAt?: string;
+    lastActivityAt?: string;
+    roomCount?: number;
     [key: string]: unknown;
   };
 };
+
+/**
+ * Options for filtering and paginating worlds
+ */
+export interface GetWorldsOptions {
+  /** Filter worlds by server ID */
+  serverId?: string;
+
+  /** Filter worlds by name (supports partial matching) */
+  name?: string;
+
+  /** Include only worlds with active rooms */
+  activeOnly?: boolean;
+
+  /** Pagination: number of worlds to return */
+  limit?: number;
+
+  /** Pagination: offset for results */
+  offset?: number;
+
+  /** Sort order for results */
+  orderBy?: 'name' | 'createdAt' | 'lastActivityAt';
+
+  /** Sort direction */
+  orderDirection?: 'asc' | 'desc';
+}
 
 export enum ChannelType {
   SELF = 'SELF', // Messages to self

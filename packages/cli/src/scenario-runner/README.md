@@ -5,8 +5,9 @@ The Scenario Testing Framework provides comprehensive testing capabilities for E
 ## Overview
 
 This framework allows you to:
+
 - **Test Agent Capabilities**: Evaluate how agents perform in realistic scenarios
-- **Multi-Actor Testing**: Create scenarios with multiple participants (human-like actors) 
+- **Multi-Actor Testing**: Create scenarios with multiple participants (human-like actors)
 - **Benchmarking**: Measure performance, response times, and resource usage
 - **Verification**: Use both LLM-based and rule-based verification of outcomes
 - **Automation**: Run tests as part of CI/CD pipelines
@@ -23,6 +24,7 @@ This framework allows you to:
 ### Scenario Structure
 
 Each scenario consists of:
+
 - **Actors**: Participants in the scenario (subject agent + test actors)
 - **Setup**: Environment configuration and initial context
 - **Execution**: Script steps and interaction patterns
@@ -75,7 +77,7 @@ export const myScenario: Scenario = {
   description: 'Tests agent capability X',
   category: 'reasoning',
   tags: ['logic', 'problem-solving'],
-  
+
   actors: [
     {
       id: 'subject',
@@ -90,21 +92,21 @@ export const myScenario: Scenario = {
         steps: [
           {
             type: 'message',
-            content: 'Hello, can you help me solve this problem?'
-          }
-        ]
-      }
-    }
+            content: 'Hello, can you help me solve this problem?',
+          },
+        ],
+      },
+    },
   ],
 
   setup: {
     roomType: 'dm',
-    context: 'Testing problem-solving abilities'
+    context: 'Testing problem-solving abilities',
   },
 
   execution: {
     maxDuration: 300000, // 5 minutes
-    maxSteps: 20
+    maxSteps: 20,
   },
 
   verification: {
@@ -114,16 +116,16 @@ export const myScenario: Scenario = {
         type: 'llm',
         description: 'Agent provided a valid solution',
         config: {
-          criteria: 'The agent provided a correct and helpful solution to the problem'
-        }
-      }
-    ]
+          criteria: 'The agent provided a correct and helpful solution to the problem',
+        },
+      },
+    ],
   },
 
   benchmarks: {
     maxDuration: 300000,
-    targetAccuracy: 0.8
-  }
+    targetAccuracy: 0.8,
+  },
 };
 ```
 
@@ -154,6 +156,7 @@ export const myScenario: Scenario = {
 ### Verification Rules
 
 #### LLM-based Verification
+
 ```typescript
 {
   id: 'quality-check',
@@ -166,6 +169,7 @@ export const myScenario: Scenario = {
 ```
 
 #### Rule-based Verification
+
 ```typescript
 {
   id: 'contains-keyword',
@@ -190,34 +194,43 @@ export const myScenario: Scenario = {
 The framework includes several example scenarios:
 
 ### 1. Truth vs Lie Detection
+
 Tests agent's ability to detect deception and inconsistencies in witness testimony.
 
-### 2. Research Task Completion  
+### 2. Research Task Completion
+
 Evaluates research capabilities and information synthesis.
 
 ### 3. Coding Challenge
+
 Tests programming problem-solving and code explanation skills.
 
 ### 4. Workflow Planning
+
 Assesses ability to break down complex problems into actionable plans.
 
 ## Verification Methods
 
 ### LLM Verification
+
 Uses language models to evaluate:
+
 - Response quality and accuracy
 - Task completion
 - Behavioral appropriateness
 - Reasoning correctness
 
 ### Rule-based Verification
+
 Programmatic checks for:
+
 - Keyword presence
 - Response timing
 - Action execution
 - Message patterns
 
 ### Custom Verification
+
 - Regex pattern matching
 - Count-based validation
 - Custom functions
@@ -225,6 +238,7 @@ Programmatic checks for:
 ## Metrics and Benchmarking
 
 ### Collected Metrics
+
 - **Duration**: Total scenario execution time
 - **Message Count**: Number of messages exchanged
 - **Token Usage**: Input/output tokens consumed
@@ -233,6 +247,7 @@ Programmatic checks for:
 - **Response Latency**: Time to generate responses
 
 ### Performance Scoring
+
 - **Overall Score**: Weighted average of all verification rules
 - **Speed Score**: Based on response times vs benchmarks
 - **Accuracy Score**: Based on verification success rate
@@ -253,16 +268,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: oven-sh/setup-bun@v1
-      
+
       - name: Install dependencies
         run: bun install
-        
+
       - name: Run scenario tests
         run: |
           elizaos scenario --benchmark \
             --output scenario-results.json \
             --format json
-            
+
       - name: Upload results
         uses: actions/upload-artifact@v3
         with:
@@ -273,18 +288,21 @@ jobs:
 ## Best Practices
 
 ### Scenario Design
+
 1. **Clear Objectives**: Define what capabilities you're testing
 2. **Realistic Interactions**: Use natural conversation patterns
 3. **Appropriate Complexity**: Match scenario complexity to capabilities being tested
 4. **Deterministic Outcomes**: Ensure scenarios have clear success criteria
 
 ### Verification Strategy
+
 1. **Multiple Rules**: Use both LLM and rule-based verification
 2. **Weighted Importance**: Assign weights based on rule importance
 3. **Clear Criteria**: Write specific, testable verification criteria
 4. **Ground Truth**: Establish clear expected outcomes
 
 ### Performance Optimization
+
 1. **Parallel Execution**: Use `--parallel` for faster test runs
 2. **Resource Limits**: Set appropriate timeouts and resource constraints
 3. **Selective Testing**: Use filters to run subset of scenarios
@@ -300,11 +318,13 @@ jobs:
 4. **Memory Issues**: Use `--max-concurrency` to limit parallel scenarios
 
 ### Debug Mode
+
 ```bash
 elizaos scenario --verbose --scenario ./debug-scenario.ts
 ```
 
 ### Logs and Output
+
 - Detailed logs in CLI output
 - JSON/HTML reports for analysis
 - Performance metrics for optimization
@@ -312,6 +332,7 @@ elizaos scenario --verbose --scenario ./debug-scenario.ts
 ## Extension Points
 
 ### Custom Verification Rules
+
 Implement custom verification logic:
 
 ```typescript
@@ -325,22 +346,24 @@ Implement custom verification logic:
 ```
 
 ### Custom Metrics
+
 Add domain-specific metrics:
 
 ```typescript
 benchmarks: {
-  customMetrics: ['domain_expertise', 'ethical_reasoning']
+  customMetrics: ['domain_expertise', 'ethical_reasoning'];
 }
 ```
 
 ### Custom Actors
+
 Create specialized actor behaviors for your testing needs.
 
 ## Future Enhancements
 
 - Multi-modal scenario support (voice, images)
 - Distributed scenario execution
-- Real-time monitoring dashboard  
+- Real-time monitoring dashboard
 - Automated scenario generation
 - Integration with external testing frameworks
 - Performance regression detection

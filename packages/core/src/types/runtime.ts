@@ -2,7 +2,7 @@ import type { Character } from './agent';
 import type { Action, Evaluator, Provider } from './components';
 import { HandlerCallback } from './components';
 import type { IDatabaseAdapter } from './database';
-import type { Entity, Room, World } from './environment';
+import type { Entity, Room, World, GetWorldsOptions } from './environment';
 import { Memory } from './memory';
 import type { SendHandlerFunction, TargetInfo } from './messaging';
 import type { ModelParamsMap, ModelResultMap, ModelTypeName } from './model';
@@ -160,6 +160,13 @@ export interface IAgentRuntime extends IDatabaseAdapter {
   createRoom({ id, name, source, type, channelId, serverId, worldId }: Room): Promise<UUID>;
   addParticipant(entityId: UUID, roomId: UUID): Promise<boolean>;
   getRooms(worldId: UUID): Promise<Room[]>;
+
+  /**
+   * Get all worlds associated with this agent
+   * @param options Optional filtering and pagination options
+   * @returns Promise resolving to an array of World objects
+   */
+  getWorlds(options?: GetWorldsOptions): Promise<World[]>;
 
   registerSendHandler(source: string, handler: SendHandlerFunction): void;
 

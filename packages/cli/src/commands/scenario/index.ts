@@ -3,14 +3,14 @@ import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { logger } from '@elizaos/core';
-import { loadProject } from '../../project';
+import { loadProject } from '../../project.js';
 import {
   ScenarioRunner,
   type Scenario,
   type ScenarioRunOptions,
-} from '../../scenario-runner/index';
+} from '../../scenario-runner/index.js';
 import { AgentServer } from '@elizaos/server';
-import { displayScenarioResults, saveResults } from './display';
+import { displayScenarioResults, saveResults } from './display.js';
 
 interface ScenarioCommandOptions {
   scenario?: string;
@@ -56,11 +56,11 @@ async function runScenarioCommand(options: ScenarioCommandOptions): Promise<void
   logger.info(`Found ${scenarios.length} scenario(s) to run`);
 
   // Initialize the server and runtime
-  const { server, cleanup } = await initializeServer();
+  const { server, runtime, cleanup } = await initializeServer();
 
   try {
     // Create scenario runner
-    const runner = new ScenarioRunner(server, null as any);
+    const runner = new ScenarioRunner(server, runtime);
 
     // Configure run options
     const runOptions: ScenarioRunOptions = {
@@ -72,7 +72,13 @@ async function runScenarioCommand(options: ScenarioCommandOptions): Promise<void
     };
 
     // Run scenarios
-    const results = await runner.runScenarios(scenarios, runOptions);
+    let results;
+    try {
+      results = await runner.runScenarios(scenarios, runOptions);
+    } catch (runError) {
+      logger.error('Error running scenarios:', runError);
+      throw runError;
+    }
 
     // Display results
     displayScenarioResults(results, runOptions);
@@ -200,7 +206,11 @@ async function loadScenariosFromDirectory(dirPath: string): Promise<Scenario[]> 
   return scenarios;
 }
 
-async function initializeServer(): Promise<{ server: AgentServer; cleanup: () => Promise<void> }> {
+async function initializeServer(): Promise<{
+  server: AgentServer;
+  runtime: import('@elizaos/core').IAgentRuntime;
+  cleanup: () => Promise<void>;
+}> {
   // Load project configuration
   const project = await loadProject(process.cwd());
 
@@ -217,8 +227,45 @@ async function initializeServer(): Promise<{ server: AgentServer; cleanup: () =>
   // Initialize server with test configuration
   const server = new AgentServer();
 
-  // Initialize with the agent's character
-  await server.start();
+  // Initialize the server with the database
+  await server.initialize({
+    dataDir: ':memory:', // Use in-memory database for testing
+  });
+
+  // Create a runtime for the agent
+  const { AgentRuntime } = await import('@elizaos/core');
+  const sqlModule = await import('@elizaos/plugin-sql');
+  const sqlPlugin = sqlModule.plugin;
+
+  // Ensure database is available
+  if (!server.database) {
+    throw new Error('Server database not initialized');
+  }
+
+  // Include the SQL plugin with the agent's plugins
+  const agentWithSqlPlugin = {
+    ...agent,
+    plugins: [...(agent.plugins || []), sqlPlugin],
+  };
+
+  const runtime = new AgentRuntime({
+    character: agent.character,
+    plugins: agentWithSqlPlugin.plugins,
+    providers: [],
+    actions: [],
+    services: [],
+    managers: [],
+  });
+
+  // Initialize the runtime
+  await runtime.initialize();
+
+  // Register the agent with the server
+  await server.registerAgent(runtime);
+
+  // Verify the agent was registered
+  logger.info(`Registered agent: ${runtime.agentId}`);
+  logger.info(`Server has ${server.agents.size} agents`);
 
   const cleanup = async () => {
     try {
@@ -228,7 +275,7 @@ async function initializeServer(): Promise<{ server: AgentServer; cleanup: () =>
     }
   };
 
-  return { server, cleanup };
+  return { server, runtime, cleanup };
 }
 
 // Export individual functions for testing

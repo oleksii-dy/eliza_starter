@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { logger } from '@elizaos/core';
+// import { logger } from '@elizaos/core';
 import type { ScenarioResult, ScenarioRunOptions } from '../../scenario-runner/types.js';
 
 export function displayScenarioResults(
@@ -8,7 +8,7 @@ export function displayScenarioResults(
   options: ScenarioRunOptions
 ): void {
   console.log('\n📊 Scenario Test Results');
-  console.log('=' .repeat(50));
+  console.log('='.repeat(50));
 
   for (const result of results) {
     displaySingleResult(result, options);
@@ -17,21 +17,20 @@ export function displayScenarioResults(
   displaySummary(results, options);
 }
 
-function displaySingleResult(
-  result: ScenarioResult,
-  options: ScenarioRunOptions
-): void {
+function displaySingleResult(result: ScenarioResult, options: ScenarioRunOptions): void {
   const status = result.passed ? '✅ PASS' : '❌ FAIL';
   const duration = (result.duration / 1000).toFixed(2);
-  
+
   console.log(`\n${status} ${result.name} (${duration}s)`);
-  
+
   if (options.verbose) {
     console.log(`  ID: ${result.scenarioId}`);
     console.log(`  Messages: ${result.metrics.messageCount}`);
-    console.log(`  Actions: ${Object.values(result.metrics.actionCounts).reduce((sum, count) => sum + count, 0)}`);
+    console.log(
+      `  Actions: ${Object.values(result.metrics.actionCounts).reduce((sum, count) => sum + count, 0)}`
+    );
     console.log(`  Tokens: ${result.metrics.tokenUsage.total}`);
-    
+
     if (result.score !== undefined) {
       console.log(`  Score: ${(result.score * 100).toFixed(1)}%`);
     }
@@ -43,7 +42,7 @@ function displaySingleResult(
     for (const verification of result.verificationResults) {
       const verifyStatus = verification.passed ? '✓' : '✗';
       console.log(`    ${verifyStatus} ${verification.ruleName}`);
-      
+
       if (options.verbose && verification.reason) {
         console.log(`      ${verification.reason}`);
       }
@@ -67,14 +66,11 @@ function displaySingleResult(
   }
 }
 
-function displaySummary(
-  results: ScenarioResult[],
-  options: ScenarioRunOptions
-): void {
+function displaySummary(results: ScenarioResult[], options: ScenarioRunOptions): void {
   console.log('\n📈 Summary');
   console.log('-'.repeat(30));
 
-  const passed = results.filter(r => r.passed).length;
+  const passed = results.filter((r) => r.passed).length;
   const failed = results.length - passed;
   const totalDuration = results.reduce((sum, r) => sum + r.duration, 0);
   const avgDuration = totalDuration / results.length;
@@ -96,7 +92,8 @@ function displayBenchmarkSummary(results: ScenarioResult[]): void {
 
   const totalTokens = results.reduce((sum, r) => sum + r.metrics.tokenUsage.total, 0);
   const totalMessages = results.reduce((sum, r) => sum + r.metrics.messageCount, 0);
-  const avgLatency = results.reduce((sum, r) => sum + r.metrics.responseLatency.average, 0) / results.length;
+  const avgLatency =
+    results.reduce((sum, r) => sum + r.metrics.responseLatency.average, 0) / results.length;
 
   console.log(`Total Tokens Used: ${totalTokens.toLocaleString()}`);
   console.log(`Total Messages: ${totalMessages.toLocaleString()}`);
@@ -104,7 +101,7 @@ function displayBenchmarkSummary(results: ScenarioResult[]): void {
 
   // Display top performing scenarios
   const sortedByScore = results
-    .filter(r => r.score !== undefined)
+    .filter((r) => r.score !== undefined)
     .sort((a, b) => (b.score || 0) - (a.score || 0))
     .slice(0, 3);
 
@@ -139,16 +136,13 @@ export async function saveResults(
   }
 }
 
-async function saveJsonResults(
-  results: ScenarioResult[],
-  outputPath: string
-): Promise<void> {
+async function saveJsonResults(results: ScenarioResult[], outputPath: string): Promise<void> {
   const reportData = {
     timestamp: new Date().toISOString(),
     summary: {
       total: results.length,
-      passed: results.filter(r => r.passed).length,
-      failed: results.filter(r => !r.passed).length,
+      passed: results.filter((r) => r.passed).length,
+      failed: results.filter((r) => !r.passed).length,
       totalDuration: results.reduce((sum, r) => sum + r.duration, 0),
     },
     results,
@@ -157,12 +151,9 @@ async function saveJsonResults(
   await fs.writeFile(outputPath, JSON.stringify(reportData, null, 2));
 }
 
-async function saveTextResults(
-  results: ScenarioResult[],
-  outputPath: string
-): Promise<void> {
+async function saveTextResults(results: ScenarioResult[], outputPath: string): Promise<void> {
   const lines: string[] = [];
-  
+
   lines.push('Scenario Test Results');
   lines.push('='.repeat(50));
   lines.push(`Generated: ${new Date().toISOString()}`);
@@ -171,12 +162,12 @@ async function saveTextResults(
   for (const result of results) {
     const status = result.passed ? 'PASS' : 'FAIL';
     const duration = (result.duration / 1000).toFixed(2);
-    
+
     lines.push(`[${status}] ${result.name} (${duration}s)`);
     lines.push(`  ID: ${result.scenarioId}`);
     lines.push(`  Messages: ${result.metrics.messageCount}`);
     lines.push(`  Tokens: ${result.metrics.tokenUsage.total}`);
-    
+
     if (result.verificationResults.length > 0) {
       lines.push('  Verification Results:');
       for (const verification of result.verificationResults) {
@@ -184,17 +175,17 @@ async function saveTextResults(
         lines.push(`    ${verifyStatus} ${verification.ruleName}: ${verification.reason}`);
       }
     }
-    
+
     if (result.errors && result.errors.length > 0) {
       lines.push('  Errors:');
-      result.errors.forEach(error => lines.push(`    - ${error}`));
+      result.errors.forEach((error) => lines.push(`    - ${error}`));
     }
-    
+
     lines.push('');
   }
 
   // Summary
-  const passed = results.filter(r => r.passed).length;
+  const passed = results.filter((r) => r.passed).length;
   const failed = results.length - passed;
   const totalDuration = results.reduce((sum, r) => sum + r.duration, 0);
 
@@ -208,11 +199,8 @@ async function saveTextResults(
   await fs.writeFile(outputPath, lines.join('\n'));
 }
 
-async function saveHtmlResults(
-  results: ScenarioResult[],
-  outputPath: string
-): Promise<void> {
-  const passed = results.filter(r => r.passed).length;
+async function saveHtmlResults(results: ScenarioResult[], outputPath: string): Promise<void> {
+  const passed = results.filter((r) => r.passed).length;
   const failed = results.length - passed;
   const totalDuration = results.reduce((sum, r) => sum + r.duration, 0);
 
@@ -270,7 +258,9 @@ async function saveHtmlResults(
     </div>
 
     <div class="results">
-        ${results.map(result => `
+        ${results
+          .map(
+            (result) => `
             <div class="result">
                 <div class="result-header">
                     <h3>${result.name}</h3>
@@ -282,26 +272,40 @@ async function saveHtmlResults(
                 <p><strong>Messages:</strong> ${result.metrics.messageCount}</p>
                 <p><strong>Tokens:</strong> ${result.metrics.tokenUsage.total}</p>
                 
-                ${result.verificationResults.length > 0 ? `
+                ${
+                  result.verificationResults.length > 0
+                    ? `
                     <h4>Verification Results:</h4>
-                    ${result.verificationResults.map(verification => `
+                    ${result.verificationResults
+                      .map(
+                        (verification) => `
                         <div class="verification">
                             <span class="${verification.passed ? 'verification-pass' : 'verification-fail'}">
                                 ${verification.passed ? '✓' : '✗'} ${verification.ruleName}
                             </span>
                             <br><small>${verification.reason}</small>
                         </div>
-                    `).join('')}
-                ` : ''}
+                    `
+                      )
+                      .join('')}
+                `
+                    : ''
+                }
                 
-                ${result.errors && result.errors.length > 0 ? `
+                ${
+                  result.errors && result.errors.length > 0
+                    ? `
                     <h4>Errors:</h4>
                     <ul>
-                        ${result.errors.map(error => `<li class="verification-fail">${error}</li>`).join('')}
+                        ${result.errors.map((error) => `<li class="verification-fail">${error}</li>`).join('')}
                     </ul>
-                ` : ''}
+                `
+                    : ''
+                }
             </div>
-        `).join('')}
+        `
+          )
+          .join('')}
     </div>
 </body>
 </html>`;

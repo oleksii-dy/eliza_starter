@@ -168,7 +168,7 @@ Provide your analysis in the following format:
   private verifyTiming(rule: VerificationRule, context: ScenarioContext): VerificationResult {
     const { threshold } = rule.config;
     const actualDuration = context.metrics.duration || 0;
-    const passed = actualDuration <= threshold;
+    const passed = actualDuration <= (threshold || Infinity);
 
     return {
       ruleId: rule.id,
@@ -233,8 +233,8 @@ Rate the response quality on a scale of 1-10 and provide justification:
   }
 
   private async verifyCustom(
-    rule: VerificationRule,
-    context: ScenarioContext
+    _rule: VerificationRule,
+    _context: ScenarioContext
   ): Promise<VerificationResult> {
     // Custom verification would be implemented by loading and executing
     // a custom function specified in rule.config.customFunction

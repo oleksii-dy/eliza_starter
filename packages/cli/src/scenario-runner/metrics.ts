@@ -51,7 +51,7 @@ export class MetricsCollector {
 
   collect(context: ScenarioContext): ScenarioMetrics {
     const duration = Date.now() - this.startTime;
-    
+
     return {
       duration,
       messageCount: context.transcript.length,
@@ -73,9 +73,10 @@ export class MetricsCollector {
 
   private calculateMemoryUsage(): MemoryUsage {
     const peak = Math.max(...this.memoryPeaks, 0);
-    const average = this.memoryPeaks.length > 0 
-      ? this.memoryPeaks.reduce((sum, val) => sum + val, 0) / this.memoryPeaks.length
-      : 0;
+    const average =
+      this.memoryPeaks.length > 0
+        ? this.memoryPeaks.reduce((sum, val) => sum + val, 0) / this.memoryPeaks.length
+        : 0;
 
     return {
       peak,
@@ -107,9 +108,7 @@ export class MetricsCollector {
       for (const metricName of context.scenario.benchmarks.customMetrics) {
         switch (metricName) {
           case 'unique_actors_engaged':
-            metrics[metricName] = new Set(
-              context.transcript.map(msg => msg.actorId)
-            ).size;
+            metrics[metricName] = new Set(context.transcript.map((msg) => msg.actorId)).size;
             break;
           case 'conversation_turns':
             metrics[metricName] = this.calculateConversationTurns(context);
@@ -142,12 +141,12 @@ export class MetricsCollector {
   }
 
   private calculateSubjectResponseRate(context: ScenarioContext): number {
-    const subjectActor = context.scenario.actors.find(a => a.role === 'subject');
+    const subjectActor = context.scenario.actors.find((a) => a.role === 'subject');
     if (!subjectActor) return 0;
 
     const totalMessages = context.transcript.length;
     const subjectMessages = context.transcript.filter(
-      msg => msg.actorId === subjectActor.id
+      (msg) => msg.actorId === subjectActor.id
     ).length;
 
     return totalMessages > 0 ? subjectMessages / totalMessages : 0;
@@ -174,12 +173,12 @@ export class BenchmarkAnalyzer {
 
   private calculateSpeedScore(metrics: ScenarioMetrics, benchmarks: any): number {
     if (!benchmarks.maxDuration) return 1.0;
-    
+
     const ratio = metrics.duration / benchmarks.maxDuration;
     return Math.max(0, Math.min(1, 2 - ratio)); // Score decreases as duration increases
   }
 
-  private calculateAccuracyScore(metrics: ScenarioMetrics): number {
+  private calculateAccuracyScore(_metrics: ScenarioMetrics): number {
     // This would be calculated based on verification results
     // For now, return a placeholder
     return 0.8;
@@ -189,24 +188,24 @@ export class BenchmarkAnalyzer {
     // Based on token usage and memory efficiency
     const tokenEfficiency = Math.min(1, 1000 / metrics.tokenUsage.total); // Arbitrary baseline
     const memoryEfficiency = Math.min(1, 100 / metrics.memoryUsage.peak); // Arbitrary baseline
-    
+
     return (tokenEfficiency + memoryEfficiency) / 2;
   }
 
   private calculateReliabilityScore(metrics: ScenarioMetrics): number {
     // Based on consistency of response latencies
-    const latencyVariance = this.calculateVariance(
-      metrics.responseLatency.average,
-      [metrics.responseLatency.min, metrics.responseLatency.max]
-    );
-    
-    return Math.max(0, 1 - (latencyVariance / 1000)); // Lower variance = higher reliability
+    const latencyVariance = this.calculateVariance(metrics.responseLatency.average, [
+      metrics.responseLatency.min,
+      metrics.responseLatency.max,
+    ]);
+
+    return Math.max(0, 1 - latencyVariance / 1000); // Lower variance = higher reliability
   }
 
   private calculateVariance(mean: number, values: number[]): number {
     if (values.length === 0) return 0;
-    
-    const squaredDiffs = values.map(value => Math.pow(value - mean, 2));
+
+    const squaredDiffs = values.map((value) => Math.pow(value - mean, 2));
     return squaredDiffs.reduce((sum, diff) => sum + diff, 0) / values.length;
   }
 
@@ -230,16 +229,16 @@ export class BenchmarkAnalyzer {
 
   private generateArtifacts(metrics: ScenarioMetrics): string[] {
     const artifacts: string[] = [];
-    
+
     // Generate performance charts, logs, etc.
     if (metrics.responseLatency.average > 0) {
       artifacts.push('latency_chart.png');
     }
-    
+
     if (metrics.tokenUsage.total > 0) {
       artifacts.push('token_usage_report.json');
     }
-    
+
     return artifacts;
   }
 
@@ -248,26 +247,31 @@ export class BenchmarkAnalyzer {
     baselineMetrics: ScenarioMetrics,
     baselineVersion: string
   ): BaselineComparison {
-    const durationImprovement = (baselineMetrics.duration - currentMetrics.duration) / baselineMetrics.duration;
-    const tokenImprovement = (baselineMetrics.tokenUsage.total - currentMetrics.tokenUsage.total) / baselineMetrics.tokenUsage.total;
-    
+    const durationImprovement =
+      (baselineMetrics.duration - currentMetrics.duration) / baselineMetrics.duration;
+    const tokenImprovement =
+      (baselineMetrics.tokenUsage.total - currentMetrics.tokenUsage.total) /
+      baselineMetrics.tokenUsage.total;
+
     const overall = (durationImprovement + tokenImprovement) / 2;
-    
+
     const improvements: string[] = [];
     const regressions: string[] = [];
-    
+
     if (durationImprovement > 0.05) {
       improvements.push(`Response time improved by ${Math.round(durationImprovement * 100)}%`);
     } else if (durationImprovement < -0.05) {
-      regressions.push(`Response time regressed by ${Math.round(Math.abs(durationImprovement) * 100)}%`);
+      regressions.push(
+        `Response time regressed by ${Math.round(Math.abs(durationImprovement) * 100)}%`
+      );
     }
-    
+
     if (tokenImprovement > 0.05) {
       improvements.push(`Token usage reduced by ${Math.round(tokenImprovement * 100)}%`);
     } else if (tokenImprovement < -0.05) {
       regressions.push(`Token usage increased by ${Math.round(Math.abs(tokenImprovement) * 100)}%`);
     }
-    
+
     return {
       baselineVersion,
       improvement: overall,

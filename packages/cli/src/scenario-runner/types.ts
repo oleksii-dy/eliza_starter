@@ -1,19 +1,17 @@
-import type { 
-  IAgentRuntime, 
-  Memory, 
-  UUID, 
-  Character, 
-  Content 
-} from '@elizaos/core';
+import type { IAgentRuntime, UUID, Character, Content } from '@elizaos/core';
 
 export interface ScenarioActor {
-  id: string;
+  id: UUID;
   name: string;
   role: 'tester' | 'subject' | 'participant';
   character?: Character;
   systemPrompt?: string;
-  script?: ScenarioScript;
+  script: ScenarioScript;
   runtime?: IAgentRuntime;
+  bio?: string;
+  system?: string;
+  plugins?: string[];
+  settings?: Record<string, any>;
 }
 
 export interface ScenarioScript {
@@ -25,15 +23,19 @@ export interface ScenarioScript {
 
 export interface ScriptStep {
   id?: string;
-  type: 'message' | 'wait' | 'react' | 'assert' | 'action';
+  type: 'message' | 'wait' | 'react' | 'assert' | 'action' | 'condition';
   content?: string;
   waitTime?: number;
   reaction?: string;
   assertion?: Assertion;
+  action?: string;
   actionName?: string;
   actionParams?: Record<string, any>;
   trigger?: string;
   condition?: string;
+  description?: string;
+  timeout?: number;
+  critical?: boolean;
 }
 
 export interface ScriptTrigger {
@@ -77,7 +79,15 @@ export interface ScenarioVerification {
 
 export interface VerificationRule {
   id: string;
-  type: 'llm' | 'regex' | 'contains' | 'count' | 'timing' | 'custom' | 'action_taken' | 'response_quality';
+  type:
+    | 'llm'
+    | 'regex'
+    | 'contains'
+    | 'count'
+    | 'timing'
+    | 'custom'
+    | 'action_taken'
+    | 'response_quality';
   description: string;
   config: VerificationConfig;
   weight?: number;
@@ -110,7 +120,10 @@ export interface BenchmarkCriteria {
   maxTokens?: number;
   maxMemoryUsage?: number;
   targetAccuracy?: number;
-  customMetrics?: string[];
+  customMetrics?: Array<{
+    name: string;
+    threshold?: number;
+  }>;
 }
 
 export interface Scenario {
@@ -123,7 +136,18 @@ export interface Scenario {
   setup: ScenarioSetup;
   execution: ScenarioExecution;
   verification: ScenarioVerification;
-  benchmarks: BenchmarkCriteria;
+  benchmarks?: BenchmarkCriteria;
+  expectations?: {
+    messagePatterns?: Array<{
+      pattern: string;
+      flags?: string;
+    }>;
+    responseTime?: {
+      max: number;
+    };
+    actionCalls?: string[];
+  };
+  roomId?: UUID;
   metadata?: Record<string, any>;
 }
 
@@ -211,7 +235,7 @@ export interface ScenarioSuite {
   description?: string;
   scenarios: Scenario[];
   globalSetup?: ScenarioSetup;
-  globalTeardown?: (() => Promise<void>);
+  globalTeardown?: () => Promise<void>;
 }
 
 export interface ScenarioContext {
@@ -273,4 +297,51 @@ export interface Message {
   sender: string;
   timestamp: number;
   metadata?: Record<string, any>;
+}
+
+// Additional types for production scenario runner
+export interface ScenarioExecutionResult {
+  scenario: string;
+  status: 'passed' | 'failed' | 'partial';
+  duration: number;
+  transcript: TranscriptMessage[];
+  errors: string[];
+  metrics?: MetricsReport;
+}
+
+export interface TranscriptMessage {
+  id: UUID;
+  timestamp: number;
+  actorId: UUID;
+  actorName: string;
+  content: Content;
+  messageType: 'incoming' | 'outgoing';
+}
+
+export interface MetricsReport {
+  scenario: string;
+  timestamp: number;
+  duration: number;
+  messageCount: number;
+  avgResponseTime: number;
+  benchmarks: BenchmarkResult[];
+  failures?: BenchmarkFailure[];
+}
+
+export interface BenchmarkResult {
+  metric: string;
+  value: number;
+  threshold?: number;
+  passed: boolean;
+}
+
+export interface BenchmarkFailure {
+  metric: string;
+  reason: string;
+}
+
+export interface BenchmarkExpectation {
+  name: string;
+  threshold: number;
+  comparison: 'less_than' | 'greater_than' | 'equals';
 }

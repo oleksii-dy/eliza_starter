@@ -17,6 +17,7 @@ import {
   type Entity,
   type Room,
   type World,
+  type GetWorldsOptions,
   type SendHandlerFunction,
   type TargetInfo,
   type ModelParamsMap,
@@ -2033,6 +2034,13 @@ export class AgentRuntime implements IAgentRuntime {
   }
   async updateWorld(world: World): Promise<void> {
     await this.adapter.updateWorld(world);
+  }
+
+  async getWorlds(options?: GetWorldsOptions): Promise<World[]> {
+    return await this.adapter.getWorlds({
+      agentId: this.agentId,
+      ...options,
+    });
   }
   async getRoom(roomId: UUID): Promise<Room | null> {
     const rooms = await this.adapter.getRoomsByIds([roomId]);
