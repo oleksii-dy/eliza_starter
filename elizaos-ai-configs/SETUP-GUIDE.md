@@ -3,7 +3,7 @@
 ## Quick Start
 
 You now have comprehensive ElizaOS development configurations for all major AI coding tools on your desktop at:
-`C:\Users\blind\Desktop\elizaos-ai-configs\`
+`elizaos-ai-configs/` (or the directory where you downloaded these files)
 
 ## Setup Instructions by Tool
 
