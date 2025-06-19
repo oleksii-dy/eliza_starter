@@ -102,7 +102,7 @@ ElizaOS-specific slash commands are available in the `.claude/commands/` directo
 
 **Main Commands:**
 - `/project:dev` - Full development workflow
-- `/project:test` - Comprehensive testing  
+- `/project:test` - Comprehensive testing
 - `/project:bugfix` - Bug fixing methodology
 - `/project:validate` - Architecture validation
 - `/project:review` - Code review standards
