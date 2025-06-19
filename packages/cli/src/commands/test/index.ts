@@ -5,6 +5,7 @@ import { Command, Option } from 'commander';
 import { runAllTests } from './actions/run-all-tests';
 import { runComponentTests } from './actions/component-tests';
 import { runE2eTests } from './actions/e2e-tests';
+import { runLoggerTests } from './actions/logger-tests';
 import { TestCommandOptions } from './types';
 import { getProjectType, installPluginDependencies } from './utils/project-utils';
 
@@ -15,7 +16,7 @@ export const test = new Command()
   .argument('[path]', 'Optional path to the project or plugin to test')
   .addOption(
     new Option('-t, --type <type>', 'the type of test to run')
-      .choices(['component', 'e2e', 'all'])
+      .choices(['component', 'e2e', 'logger', 'all'])
       .default('all')
   )
   .option('--port <port>', 'The port to run e2e tests on', validatePort)
@@ -55,6 +56,19 @@ export const test = new Command()
           logger.success('E2E tests passed successfully!');
           break;
 
+        case 'logger':
+          logger.info('Running logger tests only...');
+          const loggerResult = await runLoggerTests(testPath, { 
+            skipBuild: options.skipBuild,
+            timeout: 15000 
+          });
+          if (loggerResult.failed) {
+            logger.error('Logger tests failed.');
+            process.exit(1);
+          }
+          logger.success('Logger tests passed successfully!');
+          break;
+
         case 'all':
         default:
           logger.info('Running all tests...');
@@ -76,6 +90,7 @@ export default function registerCommand(cli: Command) {
 // Re-export for backward compatibility
 export * from './actions/component-tests';
 export * from './actions/e2e-tests';
+export * from './actions/logger-tests';
 export * from './actions/run-all-tests';
 export * from './types';
 export * from './utils/project-utils';
