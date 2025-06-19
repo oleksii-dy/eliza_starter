@@ -1,4 +1,4 @@
-import { validateUuid, logger, type UUID } from '@elizaos/core';
+import { validateUuid, logger } from '@elizaos/core';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import type { AgentServer } from '../../index';

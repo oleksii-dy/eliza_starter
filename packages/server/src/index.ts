@@ -1054,7 +1054,7 @@ export class AgentServer {
     for (const server of servers) {
       const agents = await (this.database as any).getAgentsForServer(server.id);
       if (agents.includes(agentId)) {
-        serverIds.push(server.id);
+        serverIds.push(server.id as never);
       }
     }
     return serverIds;

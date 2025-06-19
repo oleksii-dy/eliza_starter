@@ -25,7 +25,7 @@ export async function parseEnvFile(filePath: string): Promise<EnvVars> {
     }
     return dotenv.parse(content);
   } catch (error) {
-    console.error(`Error parsing .env file: ${error.message}`);
+    console.error(`Error parsing .env file: ${(error as any).message}`);
     return {};
   }
 }

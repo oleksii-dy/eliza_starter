@@ -81,7 +81,7 @@ async function processAttachments(attachments: any[], agentId?: string): Promise
           ),
         ];
 
-        let filePath = null;
+        let filePath: string | null = null;
         for (const testPath of possiblePaths) {
           if (fs.existsSync(testPath)) {
             filePath = testPath;

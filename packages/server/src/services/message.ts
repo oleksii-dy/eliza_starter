@@ -12,7 +12,6 @@ import {
   type UUID,
 } from '@elizaos/core';
 import internalMessageBus from '../bus'; // Import the bus
-import { sendError } from '../api/shared';
 
 // This interface defines the structure of messages coming from the server
 export interface MessageServiceMessage {
@@ -307,7 +306,7 @@ export class MessageBusService extends Service {
         },
       });
     } catch (error) {
-      if (error.message && error.message.includes('worlds_pkey')) {
+      if ((error as any).message && (error as any).message.includes('worlds_pkey')) {
         logger.debug(
           `[${this.runtime.character.name}] MessageBusService: World ${agentWorldId} already exists, continuing with message processing`
         );
@@ -331,7 +330,7 @@ export class MessageBusService extends Service {
         },
       });
     } catch (error) {
-      if (error.message && error.message.includes('rooms_pkey')) {
+      if ((error as any).message && (error as any).message.includes('rooms_pkey')) {
         logger.debug(
           `[${this.runtime.character.name}] MessageBusService: Room ${agentRoomId} already exists, continuing with message processing`
         );
@@ -435,7 +434,7 @@ export class MessageBusService extends Service {
       );
 
       // Check if this memory already exists (in case of duplicate processing)
-      const existingMemory = await this.runtime.getMemoryById(agentMemory.id);
+      const existingMemory = await this.runtime.getMemoryById(agentMemory.id as UUID);
       if (existingMemory) {
         logger.debug(
           `[${this.runtime.character.name}] MessageBusService: Memory ${agentMemory.id} already exists, skipping duplicate processing`

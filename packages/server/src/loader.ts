@@ -1,7 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type Character, logger, parseAndValidateCharacter, validateCharacter } from '@elizaos/core';
+import {
+  type Character,
+  logger,
+  parseAndValidateCharacter,
+  validateCharacter,
+} from '@elizaos/core';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,12 +82,14 @@ export async function loadCharactersFromUrl(url: string): Promise<Character[]> {
 export async function jsonToCharacter(character: unknown): Promise<Character> {
   // First validate the base character data
   const validationResult = validateCharacter(character);
-  
+
   if (!validationResult.success) {
     const errorDetails = validationResult.error?.issues
-      ? validationResult.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join('; ')
+      ? validationResult.error.issues
+          .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+          .join('; ')
       : validationResult.error?.message || 'Unknown validation error';
-    
+
     throw new Error(`Character validation failed: ${errorDetails}`);
   }
 
@@ -111,7 +118,7 @@ export async function jsonToCharacter(character: unknown): Promise<Character> {
     };
 
     // Only add settings if it already exists or we need to add secrets from settings
-    if (validatedCharacter.settings || validatedCharacter.settings?.secrets) {
+    if (validatedCharacter.settings || (validatedCharacter.settings as any)?.secrets) {
       updatedCharacter.settings = validatedCharacter.settings || {};
     }
 
@@ -123,10 +130,12 @@ export async function jsonToCharacter(character: unknown): Promise<Character> {
     // Re-validate the updated character to ensure it's still valid
     const revalidationResult = validateCharacter(updatedCharacter);
     if (!revalidationResult.success) {
-      logger.warn('Character became invalid after adding environment settings, using original validated character');
+      logger.warn(
+        'Character became invalid after adding environment settings, using original validated character'
+      );
       return validatedCharacter;
     }
-    
+
     return revalidationResult.data!;
   }
 
@@ -148,7 +157,7 @@ export async function loadCharacter(filePath: string): Promise<Character> {
 
   // Use safe JSON parsing and validation
   const parseResult = parseAndValidateCharacter(content);
-  
+
   if (!parseResult.success) {
     throw new Error(`Failed to load character from ${filePath}: ${parseResult.error?.message}`);
   }
@@ -175,14 +184,10 @@ function handleCharacterLoadError(path: string, error: unknown): never {
     );
   } else if (errorMsg.includes('Character validation failed')) {
     logger.error(`Character validation failed for: ${path}`);
-    throw new Error(
-      `Character file '${path}' contains invalid character data. ${errorMsg}`
-    );
+    throw new Error(`Character file '${path}' contains invalid character data. ${errorMsg}`);
   } else if (errorMsg.includes('JSON')) {
     logger.error(`JSON parsing error in character file: ${path}`);
-    throw new Error(
-      `Character file '${path}' has malformed JSON. Please check the file content.`
-    );
+    throw new Error(`Character file '${path}' has malformed JSON. Please check the file content.`);
   } else if (errorMsg.includes('Invalid JSON')) {
     logger.error(`Invalid JSON in character file: ${path}`);
     throw new Error(
@@ -269,7 +274,7 @@ export async function loadCharacterTryPath(characterPath: string): Promise<Chara
   // Combine the paths to try both variants
   const pathsToTry = Array.from(new Set([...basePathsToTry, ...jsonPathsToTry]));
 
-  let lastError = null;
+  let lastError: unknown = null;
 
   for (const tryPath of pathsToTry) {
     try {
@@ -357,7 +362,7 @@ export async function loadCharacters(charactersArg: string): Promise<Character[]
 
   if (hasValidRemoteUrls()) {
     logger.info('Loading characters from remote URLs');
-    const characterUrls = commaSeparatedStringToArray(process.env.REMOTE_CHARACTER_URLS);
+    const characterUrls = commaSeparatedStringToArray(process.env.REMOTE_CHARACTER_URLS!);
     for (const characterUrl of characterUrls) {
       const characters = await loadCharactersFromUrl(characterUrl);
       loadedCharacters.push(...characters);
