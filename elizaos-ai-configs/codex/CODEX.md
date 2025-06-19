@@ -4,7 +4,7 @@
 
 ElizaOS V2: Multi-agent framework with cross-platform presence, blockchain management, autonomous workflows.
 
-**Repository:** [elizaos/eliza](https://github.com/elizaos/eliza)
+**Repository:** https://github.com/elizaos/eliza
 **Runtime:** Bun (required - not Node.js)
 **Language:** TypeScript (all code)
 **Testing:** Vitest framework with elizaos commands
