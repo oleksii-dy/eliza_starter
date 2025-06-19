@@ -26,6 +26,8 @@ import {
   getTokenData,
 } from "../util";
 import { getSwapRouteV1, postSwapRouteV1 } from "src/api/kyber";
+import { LEVVA_ACTIONS } from "src/constants";
+import { rephrase } from "src/util/gen";
 
 interface RawMessage {
   senderId: UUID;
@@ -48,8 +50,9 @@ interface CalldataWithDescription {
 }
 
 export const swapTokens: Action = {
-  name: "SWAP_TOKENS",
-  description: "Returns all necessary calls to swap two tokens",
+  name: LEVVA_ACTIONS.SWAP_TOKENS,
+  description:
+    "Replies with all necessary info to swap two tokens, in case on insufficient info from the user, ask the user for it. This action should ignore the REPLY rule in IMPORTANT ACTION ORDERING RULES section.",
   similes: ["SWAP_TOKENS", "EXCHANGE_TOKENS", "swap tokens", "exchange tokens"],
 
   validate: async (_runtime, message) => {
@@ -108,32 +111,41 @@ export const swapTokens: Action = {
         logger.info("Could not find from token, need to ask user");
 
         const responseContent: Content = {
+          thought: "User didn't provide source token, I should ask the user for it.",
           text: "Which token do you want to swap?",
           actions: ["SWAP_TOKENS"],
           source: message.content.source,
         };
 
-        return await callback(responseContent);
+        return await callback(
+          await rephrase({ runtime, content: responseContent, state })
+        );
       } else if (!toToken) {
         logger.info("Could not find to token, need to ask user");
 
         const responseContent: Content = {
+          thought: "User didn't provide destination token, I should ask the user for it.",
           text: "Which token do you want to swap to?",
           actions: ["SWAP_TOKENS"],
           source: message.content.source,
         };
 
-        return await callback(responseContent);
+        return await callback(
+          await rephrase({ runtime, content: responseContent, state })
+        );
       } else if (!amount) {
         logger.info("Could not find amount, need to ask user");
 
         const responseContent = {
+          thought: "User didn't provide amount, I should ask the user for it.",
           text: `How much ${fromToken} do you want to swap?`,
           actions: ["SWAP_TOKENS"],
           source: message.content.source,
         };
 
-        return await callback(responseContent);
+        return await callback(
+          await rephrase({ runtime, content: responseContent, state })
+        );
       }
 
       let tokenIn: TokenData | undefined;
@@ -167,12 +179,16 @@ export const swapTokens: Action = {
           );
 
           const responseContent: Content = {
+            thought:
+              "User didn't provide token in address, I should ask the user for it.",
             text: `I couldn't find the token ${fromToken} on ${chain.name}, maybe you know it's address?`,
             actions: ["SWAP_TOKENS"],
             source: message.content.source,
           };
 
-          return await callback(responseContent);
+          return await callback(
+            await rephrase({ runtime, content: responseContent, state })
+          );
         }
       } else {
         tokenIn = await getTokenData(chainId, fromToken);
@@ -213,12 +229,16 @@ export const swapTokens: Action = {
           );
 
           const responseContent: Content = {
+            thought:
+              "User didn't provide token out address, I should ask the user for it.",
             text: `I couldn't find the token ${toToken} on ${chain.name}, maybe you know it's address?`,
             actions: ["SWAP_TOKENS"],
             source: message.content.source,
           };
 
-          return await callback(responseContent);
+          return await callback(
+            await rephrase({ runtime, content: responseContent, state })
+          );
         }
       } else {
         tokenOut = await getTokenData(chainId, toToken);
@@ -247,12 +267,16 @@ export const swapTokens: Action = {
         logger.info(`Not enough ${tokenIn.symbol} to swap`);
 
         const responseContent: Content = {
+          thought:
+            "User doesn't have enough tokens to swap, I should tell the user about it.",
           text: `You don't have enough ${tokenIn.symbol} to swap`,
           actions: ["SWAP_TOKENS"],
           source: message.content.source,
         };
 
-        return await callback(responseContent);
+        return await callback(
+          await rephrase({ runtime, content: responseContent, state })
+        );
       }
 
       const calls: CalldataWithDescription[] = [];
@@ -327,6 +351,7 @@ export const swapTokens: Action = {
       };
 
       const responseContent: Content = {
+        thought: `Swapping ${amount} ${tokenIn.symbol} to ${tokenOut.symbol}...`,
         text: `Swapping ${amount} ${tokenIn.symbol} to ${tokenOut.symbol}...
 Please approve transactions in your wallet.`,
         actions: ["SWAP_TOKENS"],
@@ -334,30 +359,25 @@ Please approve transactions in your wallet.`,
         attachments: [json],
       };
 
-      await callback(responseContent);
-
-      await runtime.createMemory(
-        {
-          content: {
-            text: "Transactions' calldata:",
-            attachments: [json],
-          },
-          agentId: runtime.agentId,
-          entityId: message.entityId,
-          roomId: message.roomId,
-          worldId: message.worldId,
-        },
-        "messages"
+      await callback(
+        await rephrase({ runtime, content: responseContent, state })
       );
-
       return true;
     } catch (error) {
       logger.error("Error in SWAP_TOKENS action:", error);
-      const responseContent: Content = {
-        text: `Failed to swap, reason: ${error.message ?? "unknown"}. Please try again.`,
-        actions: ["SWAP_TOKENS"],
-        source: message.content.source,
-      };
+      const thought = `Action failed with error: ${error.message ?? "unknown"}. I should tell the user about the error.`;
+      const text = `Failed to swap, reason: ${error.message ?? "unknown"}. Please try again.`;
+
+      const responseContent = await rephrase({
+        runtime,
+        content: {
+          text,
+          thought,
+          actions: ["SWAP_TOKENS"],
+          source: message.content.source,
+        },
+        state,
+      });
 
       await callback(responseContent);
       return false;
@@ -432,7 +452,36 @@ Please approve transactions in your wallet.`,
       {
         name: "{{user1}}",
         content: {
-          text: "it is {{address}}",
+          text: "It is {{address}}",
+        },
+      },
+      {
+        name: "{{agentName}}",
+        content: {
+          text: "Swapping {{amount}} {{token1}} to {{token2}}...\nPlease approve transactions in your wallet.",
+          actions: ["SWAP_TOKENS"],
+          attachments: [
+            {
+              id: "calls.json",
+              url: "data:application/json;base64,{{calls}}",
+            },
+          ],
+        },
+      },
+    ],
+    [
+      // fixme maybe needs another action type for this
+      {
+        name: "{{user1}}",
+        content: {
+          text: "Cancel transaction",
+        },
+      },
+      {
+        name: "{{agentName}}",
+        content: {
+          text: "Your transaction request has been cancelled.",
+          actions: ["SWAP_TOKENS"],
         },
       },
     ],

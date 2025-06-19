@@ -30,6 +30,7 @@ const plugin: Plugin = {
   name: "levva",
   description: "Levva plugin for Eliza",
   priority: -1,
+  dependencies: ["bootstrap"], // ensure that bootstrap is loaded first
   config: {
     KYBER_CLIENT_ID: process.env.KYBER_CLIENT_ID,
   },
@@ -61,13 +62,13 @@ const plugin: Plugin = {
     [EventType.ROOM_JOINED]: [
       async (params) => {
         logger.info("ROOM_JOINED event received");
-        console.log({ params });
+        // console.log({ params });
       },
     ],
     [EventType.ENTITY_JOINED]: [
       async (params) => {
         logger.info("ENTITY_JOINED event received");
-        console.log({ params });
+        // console.log({ params });
       },
     ],
     VOICE_MESSAGE_RECEIVED: [
