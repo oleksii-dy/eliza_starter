@@ -3,11 +3,12 @@ import { TestCommandOptions } from '../types';
 import { getProjectType } from '../utils/project-utils';
 import { runComponentTests } from './component-tests';
 import { runE2eTests } from './e2e-tests';
+import { runLoggerTests } from './logger-tests';
 
 /**
- * Run both component and E2E tests
+ * Run all tests: component, logger, and E2E tests
  *
- * Executes a comprehensive test suite including both component tests (via bun test) and end-to-end tests (via TestRunner). Component tests run first, followed by e2e tests.
+ * Executes a comprehensive test suite including component tests (via bun test), logger tests (CLI functionality), and end-to-end tests (via TestRunner).
  */
 export async function runAllTests(
   testPath: string | undefined,
@@ -20,6 +21,16 @@ export async function runAllTests(
     if (componentResult.failed) {
       logger.error('Component tests failed. Continuing to e2e tests...');
     }
+  }
+
+  // Run logger tests
+  logger.info('Running logger tests...');
+  const loggerResult = await runLoggerTests(testPath, { 
+    skipBuild: options.skipBuild,
+    timeout: 15000 
+  });
+  if (loggerResult.failed) {
+    logger.error('Logger tests failed. Continuing to e2e tests...');
   }
 
   // Run e2e tests
