@@ -100,7 +100,7 @@ export const pluginManagerSystemScenario: Scenario = {
     rules: [
       {
         id: '66eb9be2-96d7-4f61-9a80-61289ae2ac69',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Plugin registry was queried',
         config: {
           expectedValue: 'QUERY_PLUGIN_REGISTRY',
@@ -109,7 +109,7 @@ export const pluginManagerSystemScenario: Scenario = {
       },
       {
         id: '050e9812-79ee-4263-b2e6-a2ed6426d539',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Plugin search was performed',
         config: {
           expectedValue: 'SEARCH_PLUGINS',
@@ -118,7 +118,7 @@ export const pluginManagerSystemScenario: Scenario = {
       },
       {
         id: 'f364f90b-aeab-45a3-a5db-3edb99d9a152',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Dependencies were checked',
         config: {
           expectedValue: 'CHECK_DEPENDENCIES',
@@ -127,7 +127,7 @@ export const pluginManagerSystemScenario: Scenario = {
       },
       {
         id: '0c281a5d-d60c-411d-a6c5-85625b8d6567',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Plugin was installed',
         config: {
           expectedValue: 'INSTALL_PLUGIN',
@@ -136,7 +136,7 @@ export const pluginManagerSystemScenario: Scenario = {
       },
       {
         id: '91c1bdf3-8b52-462b-a2dc-7e34d1d922fa',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Plugin updates were checked',
         config: {
           expectedValue: 'CHECK_PLUGIN_UPDATES',
@@ -145,7 +145,7 @@ export const pluginManagerSystemScenario: Scenario = {
       },
       {
         id: 'fd0f5365-382c-4a40-bbab-249d5dbcb69f',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Plugin was updated',
         config: {
           expectedValue: 'UPDATE_PLUGIN',
@@ -171,7 +171,7 @@ export const pluginManagerSystemScenario: Scenario = {
             'The agent successfully managed the plugin ecosystem including discovery, installation, updates, and dependency management',
         },
         weight: 4,
-      },
+      }
     ],
     expectedOutcomes: [
       {

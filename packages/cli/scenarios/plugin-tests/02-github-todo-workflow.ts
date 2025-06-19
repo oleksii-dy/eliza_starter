@@ -25,29 +25,29 @@ export const githubTodoWorkflowScenario: Scenario = {
             type: 'message',
             content:
               'Please check the open issues in elizaOS/eliza repository and create todo tasks for the high priority ones',
-      },
+          },
           {
             type: 'wait',
             waitTime: 8000,
-      },
+          },
           {
             type: 'message',
             content:
               'Can you update the status of the authentication bug todo and mark it as in progress?',
-      },
+          },
           {
             type: 'wait',
             waitTime: 5000,
-      },
+          },
           {
             type: 'message',
             content:
               'Great! Now create a pull request for issue #42 and update the corresponding todo as completed',
-      },
+          },
           {
             type: 'wait',
             waitTime: 10000,
-      },
+          },
           {
             type: 'message',
             content: 'Please list all the todos related to GitHub issues and their current status',
@@ -89,67 +89,150 @@ export const githubTodoWorkflowScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: '0e3312c9-8ada-4bf5-8042-a68303f7fe2b',
-        type: 'action_taken',
-        description: 'GitHub issues were fetched',
+        id: 'fetch-issues',
+        type: 'llm' as const,
+        description: 'Verify GitHub issues were fetched',
         config: {
-          expectedValue: 'LIST_GITHUB_ISSUES',
+          successCriteria: `
+Verify that the agent successfully executed the LIST_GITHUB_ISSUES action to fetch issues from the GitHub repository.
+
+Expected behavior:
+- User asks to check open issues in elizaOS/eliza repository
+- Agent acknowledges the request
+- Agent executes LIST_GITHUB_ISSUES action
+- Agent reports back with found issues
+          `.trim(),
+          priority: 'high',
+          category: 'action_execution',
+          context: {
+            expectedAction: 'LIST_GITHUB_ISSUES',
+          },
         },
         weight: 3,
       },
       {
-        id: '7887e390-ac45-4659-a2d2-255687062ebb',
-        type: 'action_taken',
-        description: 'Todos were created from issues',
+        id: 'create-todos',
+        type: 'llm' as const,
+        description: 'Verify todos were created from issues',
         config: {
-          expectedValue: 'CREATE_TODO',
+          successCriteria: `
+Verify that the agent executed the CREATE_TODO action to create todo items based on GitHub issues.
+
+Expected behavior:
+- After fetching GitHub issues, agent creates todos for high priority ones
+- Agent executes CREATE_TODO action one or more times
+- Each todo corresponds to a GitHub issue
+          `.trim(),
+          priority: 'high',
+          category: 'action_execution',
+          context: {
+            expectedAction: 'CREATE_TODO',
+          },
         },
         weight: 3,
       },
       {
-        id: '0d79e653-6010-4d1b-bfc1-3f2a2a334b42',
-        type: 'action_taken',
-        description: 'Todo status was updated',
+        id: 'update-todo-status',
+        type: 'llm' as const,
+        description: 'Verify todo status was updated',
         config: {
-          expectedValue: 'UPDATE_TODO',
+          successCriteria: `
+Verify that the agent executed the UPDATE_TODO action to update the status of a todo item.
+
+Expected behavior:
+- User asks to update authentication bug todo status to "in progress"
+- Agent acknowledges the request
+- Agent executes UPDATE_TODO action
+- Agent confirms the status update
+          `.trim(),
+          priority: 'medium',
+          category: 'action_execution',
+          context: {
+            expectedAction: 'UPDATE_TODO',
+          },
         },
         weight: 2,
       },
       {
-        id: '3df50e38-2a10-4198-97aa-8436fe263b6f',
-        type: 'action_taken',
-        description: 'Pull request was created',
+        id: 'create-pr',
+        type: 'llm' as const,
+        description: 'Verify pull request was created',
         config: {
-          expectedValue: 'CREATE_GITHUB_PR',
+          successCriteria: `
+Verify that the agent executed the CREATE_GITHUB_PR action to create a pull request.
+
+Expected behavior:
+- User asks to create a pull request for issue #42
+- Agent acknowledges the request
+- Agent executes CREATE_GITHUB_PR action
+- Agent confirms PR creation
+          `.trim(),
+          priority: 'medium',
+          category: 'action_execution',
+          context: {
+            expectedAction: 'CREATE_GITHUB_PR',
+          },
         },
         weight: 2,
       },
       {
-        id: '9ab09466-a083-4530-b72a-e8b3706343ea',
-        type: 'action_taken',
-        description: 'Todo was marked as completed',
+        id: 'complete-todo',
+        type: 'llm' as const,
+        description: 'Verify todo was marked as completed',
         config: {
-          expectedValue: 'COMPLETE_TODO',
+          successCriteria: `
+Verify that the agent executed the COMPLETE_TODO action to mark a todo item as completed.
+
+Expected behavior:
+- After creating PR, agent marks corresponding todo as completed
+- Agent executes COMPLETE_TODO action
+- Agent confirms todo completion
+          `.trim(),
+          priority: 'medium',
+          category: 'action_execution',
+          context: {
+            expectedAction: 'COMPLETE_TODO',
+          },
         },
         weight: 2,
       },
       {
-        id: '59724558-862b-47d7-96c8-5c51f4db4a8a',
-        type: 'llm',
-        description: 'Issues and todos are properly linked',
+        id: 'list-todos',
+        type: 'llm' as const,
+        description: 'Verify todos were listed with status',
         config: {
-          criteria:
-            'The agent created todos that correspond to GitHub issues and maintained proper tracking between them',
+          successCriteria: `
+Verify that the agent executed the LIST_TODOS action to show all todos and their status.
+
+Expected behavior:
+- User asks to list all todos related to GitHub issues
+- Agent executes LIST_TODOS action
+- Agent provides a summary of todos and their current status
+          `.trim(),
+          priority: 'medium',
+          category: 'action_execution',
+          context: {
+            expectedAction: 'LIST_TODOS',
+          },
         },
-        weight: 3,
+        weight: 2,
       },
       {
-        id: '8526e7f7-4fb8-4d4d-8ab0-c60e32e14316',
-        type: 'llm',
+        id: 'integration-flow',
+        type: 'llm' as const,
         description: 'GitHub and Todo plugins work together seamlessly',
         config: {
-          criteria:
-            'The agent successfully integrated GitHub issue management with todo tracking, updating both systems appropriately',
+          successCriteria: `
+Verify that the agent successfully integrated GitHub issue management with todo tracking throughout the workflow.
+
+Expected integration points:
+- Issues fetched from GitHub → Todos created
+- Todo status updates track issue progress  
+- PR creation linked to todo completion
+- Final listing shows synchronized state
+          `.trim(),
+          priority: 'high',
+          category: 'integration',
         },
         weight: 4,
       },
@@ -159,12 +242,12 @@ export const githubTodoWorkflowScenario: Scenario = {
         actorId: 'de52b6f0-d31b-48a4-bce9-712bf17b2ac2',
         outcome: 'Successfully managed GitHub issues through todo tasks',
         verification: {
-          id: '8dc5f6d1-df2f-4d63-b618-33ba61a25458',
-          type: 'llm',
+          id: 'workflow-complete',
+          type: 'llm' as const,
           description: 'Complete workflow was executed',
           config: {
-            criteria:
-              'Agent fetched issues, created todos, updated statuses, and maintained synchronization',
+            successCriteria:
+              'Agent fetched issues, created todos, updated statuses, created PR, and maintained synchronization between GitHub and todo systems',
           },
         },
       },
@@ -187,7 +270,11 @@ export const githubTodoWorkflowScenario: Scenario = {
     maxSteps: 20,
     maxTokens: 8000,
     targetAccuracy: 0.85,
-    customMetrics: [{ name: 'issue_tracking_accuracy' }, { name: 'workflow_completion_rate' }, { name: 'synchronization_quality' }],
+    customMetrics: [
+      { name: 'issue_tracking_accuracy' },
+      { name: 'workflow_completion_rate' },
+      { name: 'synchronization_quality' },
+    ],
   },
 };
 

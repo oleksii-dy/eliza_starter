@@ -1,301 +1,144 @@
-import { IAgentRuntime, ModelType } from '@elizaos/core';
-import { parseKeyValueXml } from '@elizaos/core';
+import { logger, type IAgentRuntime } from '@elizaos/core';
+import { LLMVerificationEngine } from './llm-verification.js';
 import type {
   VerificationRule,
   VerificationResult,
-  ScenarioMessage,
   ScenarioContext,
 } from './types.js';
 
 export class ScenarioVerifier {
-  constructor(private runtime: IAgentRuntime) {}
+  private llmEngine: LLMVerificationEngine;
+
+  constructor(runtime: IAgentRuntime) {
+    this.llmEngine = new LLMVerificationEngine(runtime);
+  }
 
   async verify(rules: VerificationRule[], context: ScenarioContext): Promise<VerificationResult[]> {
-    const results: VerificationResult[] = [];
-
-    for (const rule of rules) {
-      const startTime = Date.now();
-      try {
-        const result = await this.verifyRule(rule, context);
-        result.executionTime = Date.now() - startTime;
-        results.push(result);
-      } catch (error) {
-        results.push({
-          ruleId: rule.id,
-          ruleName: rule.description,
-          passed: false,
-          reason: `Verification failed: ${error instanceof Error ? error.message : String(error)}`,
-          executionTime: Date.now() - startTime,
-        });
-      }
+    logger.info(`Starting LLM-powered verification of ${rules.length} rules`);
+    
+    // All verification is now done through LLM
+    const results = await this.llmEngine.verify(rules, context);
+    
+    // Generate additional tests based on results
+    const additionalRules = await this.llmEngine.generateAdditionalTests(context, results);
+    
+    if (additionalRules.length > 0) {
+      logger.info(`Generated ${additionalRules.length} additional verification rules`);
+      const additionalResults = await this.llmEngine.verify(additionalRules, context);
+      results.push(...additionalResults);
     }
-
+    
     return results;
   }
 
-  private async verifyRule(
-    rule: VerificationRule,
-    context: ScenarioContext
-  ): Promise<VerificationResult> {
-    switch (rule.type) {
-      case 'llm':
-        return await this.verifyWithLLM(rule, context);
-      case 'regex':
-        return this.verifyWithRegex(rule, context);
-      case 'contains':
-        return this.verifyContains(rule, context);
-      case 'count':
-        return this.verifyCount(rule, context);
-      case 'timing':
-        return this.verifyTiming(rule, context);
-      case 'action_taken':
-        return this.verifyActionTaken(rule, context);
-      case 'response_quality':
-        return await this.verifyResponseQuality(rule, context);
-      case 'custom':
-        return await this.verifyCustom(rule, context);
-      default:
-        throw new Error(`Unsupported verification rule type: ${rule.type}`);
-    }
+  async generateDynamicVerificationRules(
+    scenario: ScenarioContext,
+    userIntent?: string
+  ): Promise<VerificationRule[]> {
+    const runtime = (this.llmEngine as any).runtime;
+    
+    const prompt = `You are an expert test designer for AI agent evaluation. Generate comprehensive verification rules for this scenario.
+
+SCENARIO: ${scenario.scenario.name}
+DESCRIPTION: ${scenario.scenario.description}
+USER INTENT: ${userIntent || 'General comprehensive testing'}
+
+ACTORS:
+${scenario.scenario.actors.map(a => `- ${a.name} (${a.role}): ${a.systemPrompt || 'No specific prompt'}`).join('\n')}
+
+Generate 5-8 verification rules that thoroughly test:
+1. Core functionality and expected behaviors
+2. Edge cases and error handling
+3. Inter-actor communication quality
+4. Goal achievement and task completion
+5. Unexpected or emergent behaviors
+6. Security and safety considerations
+7. Performance and efficiency aspects
+
+For each rule, provide:
+- ID: A unique identifier (use kebab-case)
+- DESCRIPTION: What the rule tests (be specific)
+- SUCCESS_CRITERIA: Clear, measurable criteria for passing
+- PRIORITY: HIGH/MEDIUM/LOW
+- CATEGORY: functional/behavioral/performance/security/edge-case
+
+Format your response as:
+RULE_1:
+ID: [unique-id]
+DESCRIPTION: [what this tests]
+SUCCESS_CRITERIA: [how to determine success]
+PRIORITY: [HIGH/MEDIUM/LOW]
+CATEGORY: [category]
+
+Continue with RULE_2, RULE_3, etc.`;
+
+    const { ModelType } = await import('@elizaos/core');
+    const response = await runtime.useModel(ModelType.TEXT_LARGE, {
+      prompt,
+      temperature: 0.4,
+      maxTokens: 2000,
+    }) as string;
+
+    return this.parseGeneratedRules(response);
   }
 
-  private async verifyWithLLM(
-    rule: VerificationRule,
-    context: ScenarioContext
-  ): Promise<VerificationResult> {
-    const transcript = this.formatTranscript(context.transcript);
-    const criteria = rule.config.criteria || rule.description;
-
-    const prompt =
-      rule.config.llmPrompt ||
-      `Analyze this conversation transcript and determine if the following criteria is met: ${criteria}
-
-Transcript:
-${transcript}
-
-Scenario Context:
-- Scenario: ${context.scenario.name}
-- Actors: ${Array.from(context.actors.keys()).join(', ')}
-- Expected Outcome: ${context.scenario.verification.groundTruth?.successCriteria?.join(', ') || 'Not specified'}
-
-Provide your analysis in the following format:
-<verification>
-  <passed>true/false</passed>
-  <confidence>0-100</confidence>
-  <reason>Detailed explanation of your decision</reason>
-  <evidence>Specific examples from the transcript that support your decision</evidence>
-</verification>`;
-
-    const response = await this.runtime.useModel(ModelType.TEXT_LARGE, { prompt });
-    return this.parseVerificationResponse(response, rule);
-  }
-
-  private verifyWithRegex(rule: VerificationRule, context: ScenarioContext): VerificationResult {
-    const pattern = rule.config.pattern;
-    if (!pattern) {
-      return {
-        ruleId: rule.id,
-        ruleName: rule.description,
-        passed: false,
-        reason: 'No regex pattern specified in rule configuration',
-      };
-    }
-
-    const regexPattern = new RegExp(pattern, 'i');
-    const transcriptText = context.transcript.map((msg) => msg.content.text || '').join(' ');
-
-    const matches = transcriptText.match(regexPattern);
-    const passed = Boolean(matches);
-
-    return {
-      ruleId: rule.id,
-      ruleName: rule.description,
-      passed,
-      reason: passed
-        ? `Pattern "${pattern}" found in transcript`
-        : `Pattern "${pattern}" not found in transcript`,
-      evidence: matches ? matches[0] : null,
-    };
-  }
-
-  private verifyContains(rule: VerificationRule, context: ScenarioContext): VerificationResult {
-    const searchText = rule.config.expectedValue?.toLowerCase() || '';
-    const transcriptText = context.transcript
-      .map((msg) => msg.content.text || '')
-      .join(' ')
-      .toLowerCase();
-
-    const passed = transcriptText.includes(searchText);
-
-    return {
-      ruleId: rule.id,
-      ruleName: rule.description,
-      passed,
-      reason: passed
-        ? `Text "${rule.config.expectedValue}" found in transcript`
-        : `Text "${rule.config.expectedValue}" not found in transcript`,
-    };
-  }
-
-  private verifyCount(rule: VerificationRule, context: ScenarioContext): VerificationResult {
-    const { expectedValue, threshold } = rule.config;
-    let actualCount = 0;
-
-    // Count based on what we're measuring
-    if (rule.config.criteria === 'messages') {
-      actualCount = context.transcript.length;
-    } else if (rule.config.criteria === 'actor_messages') {
-      const actorId = rule.config.actorId;
-      actualCount = context.transcript.filter((msg) => msg.actorId === actorId).length;
-    } else if (rule.config.criteria === 'actions') {
-      actualCount = Object.values(context.metrics.actionCounts || {}).reduce(
-        (sum, count) => sum + count,
-        0
-      );
-    }
-
-    const passed = threshold ? actualCount >= threshold : actualCount === expectedValue;
-
-    return {
-      ruleId: rule.id,
-      ruleName: rule.description,
-      passed,
-      reason: `Expected ${expectedValue || `>=${threshold}`}, got ${actualCount}`,
-      evidence: { actualCount, expectedValue, threshold },
-    };
-  }
-
-  private verifyTiming(rule: VerificationRule, context: ScenarioContext): VerificationResult {
-    const { threshold } = rule.config;
-    const actualDuration = context.metrics.duration || 0;
-    const passed = actualDuration <= (threshold || Infinity);
-
-    return {
-      ruleId: rule.id,
-      ruleName: rule.description,
-      passed,
-      reason: passed
-        ? `Completed within ${threshold}ms (actual: ${actualDuration}ms)`
-        : `Exceeded time limit of ${threshold}ms (actual: ${actualDuration}ms)`,
-      evidence: { actualDuration, threshold },
-    };
-  }
-
-  private verifyActionTaken(rule: VerificationRule, context: ScenarioContext): VerificationResult {
-    const expectedAction = rule.config.expectedValue;
-    const actionCounts = context.metrics.actionCounts || {};
-    const passed = Boolean(actionCounts[expectedAction]);
-
-    return {
-      ruleId: rule.id,
-      ruleName: rule.description,
-      passed,
-      reason: passed
-        ? `Action "${expectedAction}" was taken ${actionCounts[expectedAction]} times`
-        : `Action "${expectedAction}" was not taken`,
-      evidence: actionCounts,
-    };
-  }
-
-  private async verifyResponseQuality(
-    rule: VerificationRule,
-    context: ScenarioContext
-  ): Promise<VerificationResult> {
-    const subjectActorId = context.scenario.actors.find((a) => a.role === 'subject')?.id;
-    if (!subjectActorId) {
-      return {
-        ruleId: rule.id,
-        ruleName: rule.description,
-        passed: false,
-        reason: 'No subject actor found for response quality verification',
-      };
-    }
-
-    const subjectMessages = context.transcript.filter((msg) => msg.actorId === subjectActorId);
-    const responses = subjectMessages.map((msg) => msg.content.text || '').join('\n');
-
-    const prompt = `Evaluate the quality of these responses based on the criteria: ${rule.config.criteria}
-
-Responses:
-${responses}
-
-Context: ${context.scenario.description}
-
-Rate the response quality on a scale of 1-10 and provide justification:
-<evaluation>
-  <score>1-10</scale>
-  <passed>true/false</ge>
-  <reason>Detailed explanation</reason>
-</evaluation>`;
-
-    const response = await this.runtime.useModel(ModelType.TEXT_LARGE, { prompt });
-    return this.parseEvaluationResponse(response, rule);
-  }
-
-  private async verifyCustom(
-    _rule: VerificationRule,
-    _context: ScenarioContext
-  ): Promise<VerificationResult> {
-    // Custom verification would be implemented by loading and executing
-    // a custom function specified in rule.config.customFunction
-    throw new Error('Custom verification not yet implemented');
-  }
-
-  private parseVerificationResponse(response: string, rule: VerificationRule): VerificationResult {
-    try {
-      const parsed = parseKeyValueXml(response);
-      if (!parsed) {
-        throw new Error('Failed to parse LLM response');
+  private parseGeneratedRules(response: string): VerificationRule[] {
+    const rules: VerificationRule[] = [];
+    const sections = response.split(/RULE_\d+:/);
+    
+    for (let i = 1; i < sections.length; i++) {
+      const section = sections[i].trim();
+      const lines = section.split('\n');
+      
+      let id = '';
+      let description = '';
+      let successCriteria = '';
+      let priority = 'MEDIUM';
+      let category = 'functional';
+      
+      for (const line of lines) {
+        const colonIndex = line.indexOf(':');
+        if (colonIndex > 0) {
+          const key = line.substring(0, colonIndex).trim().toLowerCase();
+          const value = line.substring(colonIndex + 1).trim();
+          
+          switch (key) {
+            case 'id':
+              id = value;
+              break;
+            case 'description':
+              description = value;
+              break;
+            case 'success_criteria':
+              successCriteria = value;
+              break;
+            case 'priority':
+              priority = value;
+              break;
+            case 'category':
+              category = value;
+              break;
+          }
+        }
       }
-
-      return {
-        ruleId: rule.id,
-        ruleName: rule.description,
-        passed: parsed.passed === 'true',
-        confidence: parsed.confidence ? parseInt(parsed.confidence) : undefined,
-        reason: parsed.reason || 'No reason provided',
-        evidence: parsed.evidence,
-      };
-    } catch (error) {
-      return {
-        ruleId: rule.id,
-        ruleName: rule.description,
-        passed: false,
-        reason: `Failed to parse LLM verification response: ${error instanceof Error ? error.message : String(error)}`,
-      };
-    }
-  }
-
-  private parseEvaluationResponse(response: string, rule: VerificationRule): VerificationResult {
-    try {
-      const parsed = parseKeyValueXml(response);
-      if (!parsed) {
-        throw new Error('Failed to parse LLM response');
+      
+      if (id && description) {
+        rules.push({
+          id,
+          type: 'llm',
+          description,
+          weight: priority === 'HIGH' ? 3 : priority === 'LOW' ? 1 : 2,
+          config: {
+            successCriteria,
+            priority,
+            category,
+            dynamicallyGenerated: true,
+          },
+        });
       }
-
-      return {
-        ruleId: rule.id,
-        ruleName: rule.description,
-        passed: parsed.passed === 'true',
-        score: parsed.score ? parseInt(parsed.score) : undefined,
-        reason: parsed.reason || 'No reason provided',
-      };
-    } catch (error) {
-      return {
-        ruleId: rule.id,
-        ruleName: rule.description,
-        passed: false,
-        reason: `Failed to parse LLM evaluation response: ${error instanceof Error ? error.message : String(error)}`,
-      };
     }
-  }
-
-  private formatTranscript(transcript: ScenarioMessage[]): string {
-    return transcript
-      .map((msg) => {
-        const timestamp = new Date(msg.timestamp).toISOString();
-        return `[${timestamp}] ${msg.actorName}: ${msg.content.text || ''}`;
-      })
-      .join('\n');
+    
+    logger.info(`Parsed ${rules.length} verification rules from LLM response`);
+    return rules;
   }
 }

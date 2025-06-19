@@ -50,6 +50,7 @@ import scenario_47_security_audit_47 from './47-security-audit-47.js';
 import scenario_48_defi_strategy_48 from './48-defi-strategy-48.js';
 import scenario_49_entity_mapping_49 from './49-entity-mapping-49.js';
 import scenario_50_automation_workflow_50 from './50-automation-workflow-50.js';
+import scenario_51_rolodex_component_storage from './51-rolodex-component-storage.js';
 
 // Plugin test scenarios for testing specific plugin functionality
 export const pluginTestScenarios: Scenario[] = [
@@ -103,6 +104,7 @@ export const pluginTestScenarios: Scenario[] = [
   scenario_48_defi_strategy_48,
   scenario_49_entity_mapping_49,
   scenario_50_automation_workflow_50,
+  scenario_51_rolodex_component_storage,
 ];
 
 export default pluginTestScenarios;

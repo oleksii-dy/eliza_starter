@@ -98,7 +98,7 @@ export const complexInvestigationScenario: Scenario = {
     rules: [
       {
         id: '6b066e65-82f9-4d78-bfc6-6c3bdd378920',
-        type: 'action_taken',
+        type: 'llm',
         description: 'GitHub repository was analyzed',
         config: {
           expectedValue: 'ANALYZE_GITHUB_CONTRIBUTORS',
@@ -107,7 +107,7 @@ export const complexInvestigationScenario: Scenario = {
       },
       {
         id: 'c5d3f84c-3b8c-4966-be27-1c1123cdbc4b',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Web research was conducted',
         config: {
           expectedValue: 'LAUNCH_BROWSER',
@@ -116,7 +116,7 @@ export const complexInvestigationScenario: Scenario = {
       },
       {
         id: '6acbb2a9-1269-4ef0-afb2-97186c8e265a',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Entity profiles were created',
         config: {
           expectedValue: 'CREATE_ENTITY',
@@ -125,7 +125,7 @@ export const complexInvestigationScenario: Scenario = {
       },
       {
         id: '97082be0-754f-40be-9c58-56edd2f20ce1',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Relationships were mapped',
         config: {
           expectedValue: 'CREATE_RELATIONSHIP',
@@ -134,7 +134,7 @@ export const complexInvestigationScenario: Scenario = {
       },
       {
         id: '3f773c12-a35e-4f57-9519-7d3feb7ef424',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Findings stored in knowledge base',
         config: {
           expectedValue: 'PROCESS_KNOWLEDGE',
@@ -150,7 +150,7 @@ export const complexInvestigationScenario: Scenario = {
             'The agent conducted a thorough investigation using GitHub analysis, web research, entity tracking, and relationship mapping',
         },
         weight: 4,
-      },
+      }
     ],
     expectedOutcomes: [
       {

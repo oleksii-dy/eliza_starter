@@ -89,7 +89,7 @@ export const knowledgeGraphScenario: Scenario = {
     rules: [
       {
         id: '63f824c2-2f4e-43b9-8376-a5dddf1b59a0',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Research was conducted',
         config: {
           expectedValue: 'start_research',
@@ -98,7 +98,7 @@ export const knowledgeGraphScenario: Scenario = {
       },
       {
         id: '16ecaebc-3f21-4134-a76c-0a34ed634033',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Websites were visited',
         config: {
           expectedValue: 'LAUNCH_BROWSER',
@@ -107,7 +107,7 @@ export const knowledgeGraphScenario: Scenario = {
       },
       {
         id: '6acbb2a9-1269-4ef0-afb2-97186c8e265a',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Entities were created',
         config: {
           expectedValue: 'CREATE_ENTITY',
@@ -116,7 +116,7 @@ export const knowledgeGraphScenario: Scenario = {
       },
       {
         id: '97082be0-754f-40be-9c58-56edd2f20ce1',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Relationships were established',
         config: {
           expectedValue: 'CREATE_RELATIONSHIP',
@@ -125,7 +125,7 @@ export const knowledgeGraphScenario: Scenario = {
       },
       {
         id: '3f773c12-a35e-4f57-9519-7d3feb7ef424',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Knowledge was stored',
         config: {
           expectedValue: 'PROCESS_KNOWLEDGE',
@@ -141,7 +141,7 @@ export const knowledgeGraphScenario: Scenario = {
             'The agent built a comprehensive knowledge graph with entities, relationships, and stored knowledge from multiple sources',
         },
         weight: 4,
-      },
+      }
     ],
     expectedOutcomes: [
       {

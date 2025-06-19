@@ -11,6 +11,7 @@ import {
 } from '../../scenario-runner/index.js';
 import { AgentServer } from '@elizaos/server';
 import { displayScenarioResults, saveResults } from './display.js';
+import { generateScenarioCommand } from './generate.js';
 
 interface ScenarioCommandOptions {
   scenario?: string;
@@ -36,13 +37,16 @@ export const scenarioCommand = new Command('scenario')
   .option('-p, --parallel', 'Run scenarios in parallel')
   .option('--max-concurrency <num>', 'Maximum concurrent scenarios', '3')
   .action(async (options: ScenarioCommandOptions) => {
+    console.log('Scenario command action triggered with options:', options);
     try {
       await runScenarioCommand(options);
     } catch (error) {
       logger.error('Scenario command failed:', error);
+      console.error('Full error:', error);
       process.exit(1);
     }
-  });
+  })
+  .addCommand(generateScenarioCommand);
 
 async function runScenarioCommand(options: ScenarioCommandOptions): Promise<void> {
   // Load scenarios
@@ -229,7 +233,7 @@ async function initializeServer(): Promise<{
 
   // Initialize the server with the database
   await server.initialize({
-    dataDir: ':memory:', // Use in-memory database for testing
+    dataDir: path.join(process.cwd(), '.scenario-test-db'), // Use temporary SQLite file
   });
 
   // Create a runtime for the agent
@@ -237,24 +241,50 @@ async function initializeServer(): Promise<{
   const sqlModule = await import('@elizaos/plugin-sql');
   const sqlPlugin = sqlModule.plugin;
 
+  // Import the rolodex plugin for entity and relationship management
+  const rolodexModule = await import('@elizaos/plugin-rolodex');
+  const rolodexPlugin = (rolodexModule as any).default || rolodexModule;
+
   // Ensure database is available
-  if (!server.database) {
+  if (!(server as any).database) {
     throw new Error('Server database not initialized');
   }
 
-  // Include the SQL plugin with the agent's plugins
-  const agentWithSqlPlugin = {
+  // Create a mock model provider plugin for testing
+  const { ModelType } = await import('@elizaos/core');
+  
+  // Note: mockModelPlugin is defined for potential future use in testing scenarios
+  // It can be added to plugins if mock responses are needed
+  const _mockModelPlugin = {
+    name: 'mock-model-provider',
+    description: 'Mock model provider for testing',
+    models: {
+      [ModelType.TEXT_LARGE]: async (_params: any) => {
+        // Simple mock responses for common prompts
+        const prompt = _params.prompt || '';
+        if (prompt.includes('DM') && prompt.includes('GROUP')) {
+          return 'GROUP';
+        }
+        if (prompt.includes('PASSED') && prompt.includes('FAILED')) {
+          return 'PASSED: The test criteria were met successfully.';
+        }
+        return 'This is a mock response for testing purposes.';
+      },
+      [ModelType.TEXT_SMALL]: async (_params: any) => {
+        return 'Mock small model response.';
+      },
+    },
+  };
+
+  // Include the SQL plugin, rolodex plugin, and mock model plugin with the agent's plugins
+  const agentWithPlugins = {
     ...agent,
-    plugins: [...(agent.plugins || []), sqlPlugin],
+    plugins: [...(agent.plugins || []), sqlPlugin, rolodexPlugin],
   };
 
   const runtime = new AgentRuntime({
     character: agent.character,
-    plugins: agentWithSqlPlugin.plugins,
-    providers: [],
-    actions: [],
-    services: [],
-    managers: [],
+    plugins: agentWithPlugins.plugins,
   });
 
   // Initialize the runtime
@@ -265,7 +295,7 @@ async function initializeServer(): Promise<{
 
   // Verify the agent was registered
   logger.info(`Registered agent: ${runtime.agentId}`);
-  logger.info(`Server has ${server.agents.size} agents`);
+  logger.info(`Server has ${(server as any).agents?.size || 0} agents`);
 
   const cleanup = async () => {
     try {

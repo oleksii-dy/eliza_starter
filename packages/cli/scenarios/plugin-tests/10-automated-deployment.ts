@@ -90,7 +90,7 @@ export const automatedDeploymentScenario: Scenario = {
     rules: [
       {
         id: '1dc82d2a-2a7b-406a-a3a8-86f8a5b261a8',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Deployment plan was created',
         config: {
           expectedValue: 'CREATE_PLAN',
@@ -99,7 +99,7 @@ export const automatedDeploymentScenario: Scenario = {
       },
       {
         id: 'feed7a0e-a301-417a-a000-997d96a59125',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Latest commits were checked',
         config: {
           expectedValue: 'LIST_GITHUB_COMMITS',
@@ -108,7 +108,7 @@ export const automatedDeploymentScenario: Scenario = {
       },
       {
         id: 'b721f72e-2026-40bf-9dda-842c0163b140',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Test status was verified',
         config: {
           expectedValue: 'CHECK_GITHUB_ACTIONS',
@@ -117,7 +117,7 @@ export const automatedDeploymentScenario: Scenario = {
       },
       {
         id: '8651d007-153d-400c-9c86-f31089106dc0',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Deployment credentials retrieved',
         config: {
           expectedValue: 'RETRIEVE_SECRET',
@@ -126,7 +126,7 @@ export const automatedDeploymentScenario: Scenario = {
       },
       {
         id: 'ba6ba7cb-da68-48c9-8f9b-fe184222eb1b',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Monitoring tasks were created',
         config: {
           expectedValue: 'CREATE_TODO',
@@ -142,7 +142,7 @@ export const automatedDeploymentScenario: Scenario = {
             'The agent successfully created and executed a deployment pipeline including planning, testing, building, and deploying with proper security',
         },
         weight: 4,
-      },
+      }
     ],
     expectedOutcomes: [
       {

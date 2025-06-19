@@ -7,7 +7,6 @@ import {
   type State,
   type HandlerCallback,
 } from '@elizaos/core';
-import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface AgentResponse {
@@ -29,7 +28,7 @@ export interface TestMessage {
   };
 }
 
-export class ScenarioTestHarness extends EventEmitter {
+export class ScenarioTestHarness {
   private runtime: IAgentRuntime;
   private responseQueue: AgentResponse[] = [];
   private waitingPromises: Map<
@@ -39,9 +38,9 @@ export class ScenarioTestHarness extends EventEmitter {
   private responseCallback: HandlerCallback;
   private lastResponsePromise: Promise<AgentResponse> | null = null;
   private lastResponseResolve: ((response: AgentResponse) => void) | null = null;
+  private eventListeners: Map<string, Array<(data: any) => void>> = new Map();
 
   constructor(runtime: IAgentRuntime) {
-    super();
     this.runtime = runtime;
 
     // Create a callback that captures responses
@@ -76,6 +75,37 @@ export class ScenarioTestHarness extends EventEmitter {
     };
 
     this.setupEventListeners();
+  }
+
+  private emit(event: string, data: any): void {
+    const listeners = this.eventListeners.get(event) || [];
+    for (const listener of listeners) {
+      try {
+        listener(data);
+      } catch (error) {
+        logger.error(`Error in event listener for ${event}:`, error);
+      }
+    }
+  }
+
+  private on(event: string, listener: (data: any) => void): void {
+    const listeners = this.eventListeners.get(event) || [];
+    listeners.push(listener);
+    this.eventListeners.set(event, listeners);
+  }
+
+  private removeListener(event: string, listener: (data: any) => void): void {
+    const listeners = this.eventListeners.get(event) || [];
+    const filtered = listeners.filter((l) => l !== listener);
+    if (filtered.length > 0) {
+      this.eventListeners.set(event, filtered);
+    } else {
+      this.eventListeners.delete(event);
+    }
+  }
+
+  private removeAllListeners(): void {
+    this.eventListeners.clear();
   }
 
   private setupEventListeners(): void {

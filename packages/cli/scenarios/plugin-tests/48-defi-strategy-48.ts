@@ -108,7 +108,7 @@ export const defistrategy48Scenario: Scenario = {
           criteria: 'Multiple actions from different plugins were chained together effectively',
         },
         weight: 3,
-      },
+      }
     ],
     expectedOutcomes: [
       {

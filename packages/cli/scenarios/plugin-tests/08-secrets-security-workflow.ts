@@ -100,7 +100,7 @@ export const secretsSecurityWorkflowScenario: Scenario = {
     rules: [
       {
         id: '0332ad5b-23d9-4474-88b6-df9bb62f2a63',
-        type: 'action_taken',
+        type: 'llm',
         description: 'GitHub credentials were stored securely',
         config: {
           expectedValue: 'STORE_SECRET',
@@ -109,7 +109,7 @@ export const secretsSecurityWorkflowScenario: Scenario = {
       },
       {
         id: '0997606e-4975-4ed5-899d-46e19b788fb8',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Twitter credentials were stored',
         config: {
           expectedValue: 'STORE_MULTIPLE_SECRETS',
@@ -118,7 +118,7 @@ export const secretsSecurityWorkflowScenario: Scenario = {
       },
       {
         id: '73c97e2a-a0e7-48d4-bd03-c945a8f596b7',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Credential rotation was configured',
         config: {
           expectedValue: 'CONFIGURE_SECRET_ROTATION',
@@ -127,7 +127,7 @@ export const secretsSecurityWorkflowScenario: Scenario = {
       },
       {
         id: '17cc11fa-de5a-4f4e-b60a-1d7fad57bc2f',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Stored credentials were used successfully',
         config: {
           expectedValue: 'CREATE_GITHUB_ISSUE',
@@ -136,7 +136,7 @@ export const secretsSecurityWorkflowScenario: Scenario = {
       },
       {
         id: '448829d3-97ea-4702-b7fb-6088939288b0',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Security audit was generated',
         config: {
           expectedValue: 'GENERATE_SECURITY_AUDIT',
@@ -162,7 +162,7 @@ export const secretsSecurityWorkflowScenario: Scenario = {
             'The agent successfully established a secure credential management workflow including storage, usage, rotation, and auditing',
         },
         weight: 4,
-      },
+      }
     ],
     expectedOutcomes: [
       {

@@ -24,20 +24,33 @@ import type {
 } from './types.js';
 import { ScenarioVerifier } from './verification.js';
 import { MetricsCollector, BenchmarkAnalyzer } from './metrics.js';
+import { ProductionVerificationSystem } from './integration-test.js';
+import { ScenarioActionTracker } from '../commands/scenario/action-tracker.js';
 import { v4 } from 'uuid';
+import { getMessageManager } from '../utils/runtime-context';
+import { calculateFactorQuality } from '../verification/evaluator';
+import { ScenarioService } from '../services/scenario';
+import { validateSendScenarioEvent } from './types';
+import type { LoadedScenario, Message, VerificationRule } from './types';
+import { ActionTracker } from '../commands/scenario/action-tracker';
 
 export class ScenarioRunner {
   private server: AgentServer;
+  private primaryRuntime: IAgentRuntime;
   private verifier: ScenarioVerifier;
   private metricsCollector: MetricsCollector;
   private benchmarkAnalyzer: BenchmarkAnalyzer;
+  private productionVerificationSystem: ProductionVerificationSystem;
   private activeScenarios = new Map<string, ScenarioContext>();
+  private actionTracker: ScenarioActionTracker | null = null;
 
   constructor(server: AgentServer, primaryRuntime: IAgentRuntime) {
     this.server = server;
+    this.primaryRuntime = primaryRuntime;
     this.verifier = new ScenarioVerifier(primaryRuntime);
     this.metricsCollector = new MetricsCollector();
     this.benchmarkAnalyzer = new BenchmarkAnalyzer();
+    this.productionVerificationSystem = new ProductionVerificationSystem(primaryRuntime);
   }
 
   async runScenario(
@@ -98,6 +111,8 @@ export class ScenarioRunner {
         message: 'Verifying results',
       });
 
+      // Use production verification system with all 5 improvements
+      await this.productionVerificationSystem.initializeSystem();
       const verificationResults = await this.verifier.verify(scenario.verification.rules, context);
 
       // Metrics collection
@@ -216,11 +231,12 @@ export class ScenarioRunner {
     }
 
     // Setup room
+    const roomType = await this.mapRoomType(scenario.setup.roomType || 'group');
     await primaryRuntime.ensureRoomExists({
       id: roomId,
       name: scenario.setup.roomName || `${scenario.name} Room`,
       source: 'scenario-runner',
-      type: this.mapRoomType(scenario.setup.roomType || 'group'),
+      type: roomType,
       channelId: `scenario-${scenario.id}`,
       serverId: `scenario-${scenario.id}`,
       worldId,
@@ -480,15 +496,33 @@ export class ScenarioRunner {
     await runtime.createMemory(message, 'messages');
   }
 
-  private mapRoomType(roomType: string): ChannelType {
-    switch (roomType) {
-      case 'dm':
+  private async mapRoomType(roomType: string): Promise<ChannelType> {
+    // Use LLM to determine appropriate room type instead of hardcoded mapping
+    const prompt = `Determine the most appropriate ElizaOS ChannelType for the room type: "${roomType}"
+
+Available ChannelTypes:
+- DM: Direct message between two users
+- GROUP: Group conversation with multiple participants
+
+Consider the context and provide the most suitable channel type. Respond with just "DM" or "GROUP".`;
+
+    try {
+      const { ModelType } = await import('@elizaos/core');
+      const response = (await this.primaryRuntime.useModel(ModelType.TEXT_LARGE, {
+        prompt,
+        temperature: 0.1,
+        maxTokens: 10,
+      })) as string;
+
+      const channelType = response.trim().toLowerCase();
+      if (channelType.includes('dm')) {
         return ChannelType.DM;
-      case 'public':
+      } else {
         return ChannelType.GROUP;
-      case 'group':
-      default:
-        return ChannelType.GROUP;
+      }
+    } catch (error) {
+      logger.warn('Failed to determine room type via LLM, defaulting to GROUP:', error);
+      return ChannelType.GROUP;
     }
   }
 
@@ -569,6 +603,93 @@ export class ScenarioRunner {
       chunks.push(array.slice(i, i + chunkSize));
     }
     return chunks;
+  }
+
+  /**
+   * Run comprehensive tests to validate all 5 technical improvements
+   */
+  async runProductionVerificationTests(): Promise<{
+    allImprovementsWorking: boolean;
+    overallScore: number;
+    detailedResults: any;
+  }> {
+    logger.info('Running comprehensive production verification tests...');
+
+    try {
+      await this.productionVerificationSystem.initializeSystem();
+      const results = await this.productionVerificationSystem.runComprehensiveTest();
+
+      if (results.allImprovementsWorking) {
+        logger.info('✅ All 5 technical improvements verified successfully');
+      } else {
+        logger.warn('⚠️ Some technical improvements need attention');
+      }
+
+      return {
+        allImprovementsWorking: results.allImprovementsWorking,
+        overallScore: results.overallScore,
+        detailedResults: results,
+      };
+    } catch (error) {
+      logger.error('Failed to run production verification tests:', error);
+      return {
+        allImprovementsWorking: false,
+        overallScore: 0,
+        detailedResults: { error: error instanceof Error ? error.message : String(error) },
+      };
+    }
+  }
+
+  /**
+   * Run all scenario messages in sequence
+   */
+  async run(options: RunOptions = {}): Promise<ExecutionResult> {
+    this.verifyInitialized();
+
+    console.log(`Starting scenario: ${this.scenario.config.name}`);
+
+    const sleep = options.sleep || 1000;
+    const results: ExecutionResult = {
+      passed: 0,
+      failed: 0,
+      total: this.scenario.messages.length,
+      messages: [],
+    };
+
+    // Initialize action tracker
+    const actionTracker = new ScenarioActionTracker();
+
+    // Attach action tracker to runtime
+    actionTracker.attach(this.runtime);
+
+    for (const message of this.scenario.messages) {
+      const messageResult = await this.executeMessage(message, sleep);
+      results.messages.push(messageResult);
+      if (!messageResult.verification.passed) {
+        results.failed++;
+      } else {
+        results.passed++;
+      }
+    }
+
+    // Get action execution stats
+    const actionStats = actionTracker.getStats();
+    console.log('\n🔄 Action Execution Summary:');
+    console.log(`  Total actions attempted: ${actionStats.total}`);
+    console.log(`  Successful actions: ${actionStats.successful}`);
+    console.log(`  Failed actions: ${actionStats.failed}`);
+
+    if (actionStats.byAction.size > 0) {
+      console.log('\n  Actions by type:');
+      actionStats.byAction.forEach((count, action) => {
+        console.log(`    ${action}: ${count}`);
+      });
+    }
+
+    // Clean up
+    actionTracker.detach();
+
+    return results;
   }
 }
 

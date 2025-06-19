@@ -87,7 +87,7 @@ export const crisisResponseScenario: Scenario = {
     rules: [
       {
         id: 'c782dc44-3914-400a-96f5-790d808a6697',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Threat research was initiated',
         config: {
           expectedValue: 'start_research',
@@ -96,7 +96,7 @@ export const crisisResponseScenario: Scenario = {
       },
       {
         id: '1dc82d2a-2a7b-406a-a3a8-86f8a5b261a8',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Incident response plan created',
         config: {
           expectedValue: 'CREATE_PLAN',
@@ -105,7 +105,7 @@ export const crisisResponseScenario: Scenario = {
       },
       {
         id: '5c6b3c17-0f41-457b-92e1-c2c1f70c5402',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Procedures retrieved from knowledge base',
         config: {
           expectedValue: 'SEARCH_KNOWLEDGE',
@@ -114,7 +114,7 @@ export const crisisResponseScenario: Scenario = {
       },
       {
         id: '7887e390-ac45-4659-a2d2-255687062ebb',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Crisis todos were created',
         config: {
           expectedValue: 'CREATE_TODO',
@@ -130,7 +130,7 @@ export const crisisResponseScenario: Scenario = {
             'The agent responded quickly to the crisis, gathering information, creating plans, and coordinating tasks within minutes',
         },
         weight: 4,
-      },
+      }
     ],
     expectedOutcomes: [
       {

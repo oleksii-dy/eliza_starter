@@ -100,7 +100,7 @@ export const blockchainDefiWorkflowScenario: Scenario = {
     rules: [
       {
         id: '7f54193f-3435-44b3-988a-31bc22d7bdb1',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Wallet balances were checked on both chains',
         config: {
           expectedValue: 'CHECK_WALLET_BALANCE',
@@ -109,7 +109,7 @@ export const blockchainDefiWorkflowScenario: Scenario = {
       },
       {
         id: '6c4c4387-e3ca-45b5-96ed-bb26161cbaee',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Swap was executed on Solana',
         config: {
           expectedValue: 'EXECUTE_SOLANA_SWAP',
@@ -118,7 +118,7 @@ export const blockchainDefiWorkflowScenario: Scenario = {
       },
       {
         id: '5c8065b4-a30f-48d1-8dd9-022358ce977e',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Liquidity was provided on Ethereum',
         config: {
           expectedValue: 'PROVIDE_LIQUIDITY_EVM',
@@ -127,7 +127,7 @@ export const blockchainDefiWorkflowScenario: Scenario = {
       },
       {
         id: 'e7dfc118-288c-4f01-9b19-d53652f0dc56',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Position monitoring was set up',
         config: {
           expectedValue: 'MONITOR_DEFI_POSITION',
@@ -173,7 +173,7 @@ export const blockchainDefiWorkflowScenario: Scenario = {
             'The agent created a comprehensive summary of cross-chain DeFi positions including performance metrics',
         },
         weight: 2,
-      },
+      }
     ],
     expectedOutcomes: [
       {

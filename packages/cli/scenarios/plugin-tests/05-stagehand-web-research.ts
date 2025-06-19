@@ -95,7 +95,7 @@ export const stagehandWebResearchScenario: Scenario = {
     rules: [
       {
         id: '0b48f225-8a55-488a-b7cc-da8965397e4e',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Browser was launched for research',
         config: {
           expectedValue: 'LAUNCH_BROWSER',
@@ -104,7 +104,7 @@ export const stagehandWebResearchScenario: Scenario = {
       },
       {
         id: '5f011bb6-bc1d-4ade-a21a-1b70db923d1b',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Navigated to multiple websites',
         config: {
           expectedValue: 'NAVIGATE_TO_URL',
@@ -113,7 +113,7 @@ export const stagehandWebResearchScenario: Scenario = {
       },
       {
         id: 'b47c1125-098a-4f1f-8009-5295f91a590f',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Data was extracted from web pages',
         config: {
           expectedValue: 'EXTRACT_PAGE_DATA',
@@ -122,7 +122,7 @@ export const stagehandWebResearchScenario: Scenario = {
       },
       {
         id: 'c782dc44-3914-400a-96f5-790d808a6697',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Research project was created',
         config: {
           expectedValue: 'start_research',
@@ -131,7 +131,7 @@ export const stagehandWebResearchScenario: Scenario = {
       },
       {
         id: '3f773c12-a35e-4f57-9519-7d3feb7ef424',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Research findings stored in knowledge base',
         config: {
           expectedValue: 'PROCESS_KNOWLEDGE',
@@ -167,7 +167,7 @@ export const stagehandWebResearchScenario: Scenario = {
             'The agent created a meaningful comparison of the startups based on the collected data, showing analytical capabilities',
         },
         weight: 3,
-      },
+      }
     ],
     expectedOutcomes: [
       {

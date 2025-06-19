@@ -24,6 +24,7 @@
   ],
   "keywords": [],
   "type": "module",
+  "main": "./eliza.test.js",
   "exports": {
     ".": "./dist/index.js",
     "./package.json": "./package.json"
@@ -38,8 +39,7 @@
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "test": "bun run test:all",
-    "test:all": "./run-all-tests.sh",
+    "test": "./scripts/run-all-tests.sh",
     "test:github-todo": "tsx src/scenario-runner/test-github-todo-simple.ts",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest watch",

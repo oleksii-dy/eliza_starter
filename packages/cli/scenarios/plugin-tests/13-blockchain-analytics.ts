@@ -100,7 +100,7 @@ export const blockchainAnalyticsScenario: Scenario = {
     rules: [
       {
         id: '66fd0a77-4364-4328-bc1f-5e17f84e9b10',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Solana DeFi protocol data was fetched',
         config: {
           expectedValue: 'FETCH_SOLANA_DEFI_DATA',
@@ -109,7 +109,7 @@ export const blockchainAnalyticsScenario: Scenario = {
       },
       {
         id: '282ef655-9d3e-412b-9e2b-64fe80c923ba',
-        type: 'action_taken',
+        type: 'llm',
         description: 'EVM chain DeFi data was fetched',
         config: {
           expectedValue: 'FETCH_EVM_DEFI_DATA',
@@ -118,7 +118,7 @@ export const blockchainAnalyticsScenario: Scenario = {
       },
       {
         id: 'c782dc44-3914-400a-96f5-790d808a6697',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Research project for exploit history was started',
         config: {
           expectedValue: 'START_RESEARCH',
@@ -127,16 +127,17 @@ export const blockchainAnalyticsScenario: Scenario = {
       },
       {
         id: '3f1071d9-9f06-4c76-9681-1a79372252f6',
-        type: 'contains',
+        type: 'llm',
         description: 'Risk assessment matrix was created',
         config: {
-          expectedValue: 'risk matrix',
+          criteria:
+            'The agent should create and present a risk assessment matrix or risk matrix in their response',
         },
         weight: 3,
       },
       {
         id: '3f773c12-a35e-4f57-9519-7d3feb7ef424',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Analytics findings stored in knowledge base',
         config: {
           expectedValue: 'STORE_KNOWLEDGE',

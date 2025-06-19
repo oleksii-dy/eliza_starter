@@ -79,27 +79,19 @@ export interface ScenarioVerification {
 
 export interface VerificationRule {
   id: string;
-  type:
-    | 'llm'
-    | 'regex'
-    | 'contains'
-    | 'count'
-    | 'timing'
-    | 'custom'
-    | 'action_taken'
-    | 'response_quality';
+  type: 'llm'; // All verification is now LLM-based for maximum intelligence
   description: string;
   config: VerificationConfig;
   weight?: number;
 }
 
 export interface VerificationConfig {
-  criteria?: string;
-  pattern?: string;
-  expectedValue?: any;
-  threshold?: number;
-  llmPrompt?: string;
-  customFunction?: string;
+  successCriteria?: string;
+  priority?: string;
+  category?: string;
+  dynamicallyGenerated?: boolean;
+  context?: Record<string, any>;
+  [key: string]: any; // Allow arbitrary properties for LLM-determined configurations
 }
 
 export interface ExpectedOutcome {

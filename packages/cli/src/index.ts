@@ -10,6 +10,8 @@ import { plugins } from '@/src/commands/plugins';
 import { publish } from '@/src/commands/publish';
 import { monorepo } from '@/src/commands/monorepo';
 import { scenarioCommand } from '@/src/commands/scenario';
+import { testProductionVerificationCommand } from '@/src/commands/test-production-verification';
+import { stressTestVerificationCommand } from '@/src/commands/stress-test-verification';
 import { start } from '@/src/commands/start';
 import { teeCommand as tee } from '@/src/commands/tee';
 import { test } from '@/src/commands/test';
@@ -89,6 +91,8 @@ async function main() {
     .addCommand(update)
     .addCommand(test)
     .addCommand(scenarioCommand)
+    .addCommand(testProductionVerificationCommand)
+    .addCommand(stressTestVerificationCommand)
     .addCommand(env)
     .addCommand(dev)
     .addCommand(publish);

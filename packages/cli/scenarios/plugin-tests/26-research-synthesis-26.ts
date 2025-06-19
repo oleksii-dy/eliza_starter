@@ -108,7 +108,7 @@ export const researchsynthesis26Scenario: Scenario = {
           criteria: 'Multiple actions from different plugins were chained together effectively',
         },
         weight: 3,
-      },
+      }
     ],
     expectedOutcomes: [
       {

@@ -1,53 +1,35 @@
 import type { Scenario } from '../src/scenario-runner/types.js';
+import { asUUID } from '@elizaos/core';
+import { v4 } from 'uuid';
 
 export const truthVsLieScenario: Scenario = {
-  id: 'truth-vs-lie-detection',
+  id: 'truth-vs-lie',
   name: 'Truth vs Lie Detection',
-  description: 'Test the agent\'s ability to detect deception by analyzing inconsistencies in witness statements',
+  description: 'Test scenario to see if the agent can detect lies vs truthful statements',
   category: 'reasoning',
   tags: ['detection', 'reasoning', 'conversation'],
   
   actors: [
     {
-      id: 'detective',
-      name: 'Detective Agent',
+      id: asUUID(v4()),
+      name: 'Detective',
       role: 'subject',
-      // Uses the main agent being tested
-    },
-    {
-      id: 'truthful-witness',
-      name: 'Sarah (Truthful Witness)',
-      role: 'participant',
-      systemPrompt: 'You are Sarah, a truthful witness to a car accident. You saw a red sedan run a red light at 3:15 PM and hit a blue truck. You were walking your dog Max and stopped to help. Be consistent and honest in all your responses.',
+      bio: 'An expert detective trying to uncover the truth',
       script: {
-        steps: [
-          {
-            type: 'message',
-            content: 'I was walking my dog when I saw the accident happen. It was terrible!'
-          },
-          {
-            type: 'wait',
-            waitTime: 2000
-          },
-          {
-            type: 'message', 
-            content: 'The red car completely ran the red light. I checked my phone - it was 3:15 PM exactly.'
-          }
-        ],
-        personality: 'honest, consistent, helpful, slightly shaken by what they witnessed',
-        goals: ['provide accurate information', 'help with the investigation', 'be consistent in testimony']
+        steps: []
       }
     },
     {
-      id: 'deceptive-witness',
-      name: 'Mike (Deceptive Witness)',
+      id: asUUID(v4()),
+      name: 'Truthful Witness',
       role: 'participant',
-      systemPrompt: 'You are Mike, trying to cover for your friend who was driving the red car. You will lie and be inconsistent about key details like the time, car color, and what actually happened. Sometimes contradict yourself.',
+      bio: 'A witness who always tells the truth about the blue vase',
       script: {
         steps: [
           {
             type: 'message',
-            content: 'Yeah, I saw what happened. The blue car totally ran the light and hit the red one.'
+            content: 'I saw the blue vase on the table in the living room at 3:00 PM',
+            timeout: 5000
           },
           {
             type: 'wait',
@@ -55,11 +37,38 @@ export const truthVsLieScenario: Scenario = {
           },
           {
             type: 'message',
-            content: 'Wait, I mean... it was around 2:45 PM I think? Or maybe 3:30... I was distracted on my phone.'
+            content: 'It was definitely blue, not green. I remember clearly.',
+            timeout: 5000
           }
-        ],
-        personality: 'nervous, inconsistent, defensive, trying to protect someone',
-        goals: ['protect their friend', 'deflect blame', 'avoid giving clear details']
+        ]
+      }
+    },
+    {
+      id: asUUID(v4()),
+      name: 'Deceptive Witness',
+      role: 'participant',
+      bio: 'A witness who lies about the vase color',
+      script: {
+        steps: [
+          {
+            type: 'wait',
+            waitTime: 2000
+          },
+          {
+            type: 'message',
+            content: 'Actually, I think the vase was green, not blue',
+            timeout: 5000
+          },
+          {
+            type: 'wait',
+            waitTime: 3000
+          },
+          {
+            type: 'message',
+            content: 'Yes, I\'m certain it was green. The other witness must be mistaken.',
+            timeout: 5000
+          }
+        ]
       }
     }
   ],
@@ -130,12 +139,21 @@ export const truthVsLieScenario: Scenario = {
       },
       {
         id: 'response-time',
-        type: 'timing',
+        type: 'llm',
         description: 'Completed investigation within time limit',
         config: {
-          threshold: 300000 // 5 minutes
+          threshold: 300000, // 5 minutes
+          successCriteria: 'Investigation completed within the 5 minute time limit'
         },
         weight: 1
+      },
+      {
+        id: 'timing-check',
+        type: 'llm',
+        description: 'Verify the conversation timing',
+        config: {
+          successCriteria: 'Messages are delivered within expected timeframes'
+        }
       }
     ],
     groundTruth: {
@@ -155,7 +173,10 @@ export const truthVsLieScenario: Scenario = {
     maxSteps: 50,
     maxTokens: 5000,
     targetAccuracy: 0.8,
-    customMetrics: ['conversation_turns', 'unique_actors_engaged']
+    customMetrics: [
+      { name: 'conversation_turns' },
+      { name: 'unique_actors_engaged' }
+    ]
   }
 };
 

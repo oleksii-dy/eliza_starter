@@ -98,7 +98,7 @@ export const planningExecutionScenario: Scenario = {
     rules: [
       {
         id: '1dc82d2a-2a7b-406a-a3a8-86f8a5b261a8',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Comprehensive plan was created',
         config: {
           expectedValue: 'CREATE_PLAN',
@@ -107,7 +107,7 @@ export const planningExecutionScenario: Scenario = {
       },
       {
         id: '74b7ba1b-c14a-4704-8491-a542724599a3',
-        type: 'action_taken',
+        type: 'llm',
         description: 'GitHub repository was created',
         config: {
           expectedValue: 'CREATE_GITHUB_REPO',
@@ -116,7 +116,7 @@ export const planningExecutionScenario: Scenario = {
       },
       {
         id: '63f824c2-2f4e-43b9-8376-a5dddf1b59a0',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Research was conducted',
         config: {
           expectedValue: 'start_research',
@@ -125,7 +125,7 @@ export const planningExecutionScenario: Scenario = {
       },
       {
         id: '3f773c12-a35e-4f57-9519-7d3feb7ef424',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Knowledge was stored',
         config: {
           expectedValue: 'PROCESS_KNOWLEDGE',
@@ -134,7 +134,7 @@ export const planningExecutionScenario: Scenario = {
       },
       {
         id: '7887e390-ac45-4659-a2d2-255687062ebb',
-        type: 'action_taken',
+        type: 'llm',
         description: 'Todo tasks were created',
         config: {
           expectedValue: 'CREATE_TODO',
@@ -170,7 +170,7 @@ export const planningExecutionScenario: Scenario = {
             'The agent tracked the execution progress and provided meaningful status updates throughout the process',
         },
         weight: 2,
-      },
+      }
     ],
     expectedOutcomes: [
       {
