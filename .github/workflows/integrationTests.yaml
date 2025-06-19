@@ -177,9 +177,9 @@ jobs:
           # Set test timeout for CI (60 seconds per test)
           export BUN_TEST_TIMEOUT=60000
           
-          # Run integration tests excluding CLI and client (they have dedicated workflows)
-          echo "Starting integration tests (excluding CLI and client packages)..."
-          bun test --timeout 60000 --concurrency 3 --filter='!@elizaos/cli' --filter='!@elizaos/client' || {
+          # TEMPORARY: Skip hanging CLI tests, run only core and other stable packages
+          echo "Starting integration tests (excluding CLI tests that hang)..."
+          bun test --timeout 60000 --concurrency 3 --filter='!@elizaos/cli' || {
             echo "Tests failed with exit code $?"
             echo "Checking for any hanging processes..."
             ps aux | grep -E "(bun|node)" || true

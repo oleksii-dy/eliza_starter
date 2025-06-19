@@ -171,7 +171,7 @@ describe('Bootstrap Plugin', () => {
       throw new Error('Registration failed');
     });
 
-    // Console error tracking is handled by the logger in production code
+    // Note: mock.spyOn not available in bun:test, skipping console spy
 
     // Should not throw error during initialization
     await expect(mockInit({}, mockRuntime as unknown as IAgentRuntime)).resolves.not.toThrow();

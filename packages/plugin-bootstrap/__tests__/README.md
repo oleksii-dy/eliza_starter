@@ -45,19 +45,19 @@ The test suite includes a robust set of utilities in `test-utils.ts`:
 Run all tests:
 
 ```bash
-bun test
+npx vitest run packages/plugin-bootstrap/__tests__
 ```
 
 Run specific test file:
 
 ```bash
-bun test actions.test.ts
+npx vitest run packages/plugin-bootstrap/__tests__/actions.test.ts
 ```
 
 Run tests in watch mode:
 
 ```bash
-bun test --watch
+npx vitest watch packages/plugin-bootstrap/__tests__
 ```
 
 ## Common Test Patterns
@@ -65,13 +65,11 @@ bun test --watch
 ### Testing Actions
 
 ```typescript
-import { describe, it, beforeEach, expect, mock } from 'bun:test';
-
 describe('My Action', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
   let mockState: Partial<State>;
-  let callbackFn: ReturnType<typeof mock>;
+  let callbackFn: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     // Use the standard setup function
@@ -91,8 +89,6 @@ describe('My Action', () => {
 ### Testing Providers
 
 ```typescript
-import { describe, it, beforeEach, expect } from 'bun:test';
-
 describe('My Provider', () => {
   let mockRuntime: MockRuntime;
   let mockMessage: Partial<Memory>;
