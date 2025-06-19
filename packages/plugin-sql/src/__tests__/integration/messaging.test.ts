@@ -1,6 +1,16 @@
 import { AgentRuntime, ChannelType, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  mock,
+  spyOn,
+} from 'bun:test';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { createIsolatedTestDatabase } from '../test-helpers';
@@ -95,6 +105,21 @@ describe('Messaging Integration Tests', () => {
     it('should add and retrieve agents for a server', async () => {
       const agent1 = uuidv4() as UUID;
       const agent2 = uuidv4() as UUID;
+      
+      // Create the agents first before adding them to server
+      await adapter.createAgent({
+        id: agent1,
+        name: 'Test Agent 1',
+        bio: 'Test agent bio',
+        configurationId: uuidv4() as UUID,
+      });
+      await adapter.createAgent({
+        id: agent2,
+        name: 'Test Agent 2',
+        bio: 'Test agent bio',
+        configurationId: uuidv4() as UUID,
+      });
+      
       await adapter.addAgentToServer(serverId, agent1);
       await adapter.addAgentToServer(serverId, agent2);
 
