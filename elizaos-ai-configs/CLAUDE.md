@@ -110,7 +110,7 @@ ElizaOS-specific slash commands are available in the `.claude/commands/` directo
 
 **Specialized Commands:**
 - `/project:elizaos:action` - Create Actions
-- `/project:elizaos:provider` - Create Providers  
+- `/project:elizaos:provider` - Create Providers
 - `/project:elizaos:evaluator` - Create Evaluators
 
 See `.claude/COMMANDS.md` for detailed usage examples.
