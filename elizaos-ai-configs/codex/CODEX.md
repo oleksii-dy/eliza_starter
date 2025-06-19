@@ -34,7 +34,7 @@ ElizaOS V2: Multi-agent framework with cross-platform presence, blockchain manag
 ## Package Architecture
 
 ```
-packages/core          - @elizaos/core (runtime and types) 
+packages/core          - @elizaos/core (runtime and types)
 packages/client         - Frontend GUI displayed by CLI
 packages/app           - Desktop/mobile Tauri application
 packages/cli           - CLI with agent runtime, REST API, GUI
