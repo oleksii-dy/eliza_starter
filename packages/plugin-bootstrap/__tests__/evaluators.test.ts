@@ -19,12 +19,8 @@ import {
   setupActionTest,
 } from './test-utils';
 
-// Import the actual module first
-const coreModule = await import('@elizaos/core');
-
-// Mock the getEntityDetails function while preserving other exports
+// Mock the getEntityDetails function
 mock.module('@elizaos/core', () => ({
-  ...coreModule, // Spread all the actual exports
   getEntityDetails: mock().mockImplementation(() => {
     return Promise.resolve([
       { id: 'test-entity-id', names: ['Test Entity'], metadata: {} },
@@ -33,6 +29,10 @@ mock.module('@elizaos/core', () => ({
       { id: 'entity-2', names: ['Entity 2'], metadata: {} },
     ]);
   }),
+  logger: {
+    warn: mock(),
+    error: mock(),
+  },
   composePrompt: mock().mockReturnValue('Composed prompt'),
 }));
 
@@ -59,6 +59,10 @@ describe('Reflection Evaluator', () => {
     // Import the evaluator dynamically to avoid polluting the test scope
     const { reflectionEvaluator } = await import('../src/evaluators/reflection');
 
+    // Spy on the composePrompt function in the @elizaos/core module
+    // Note: bun:test doesn't have mock.spyOn, skipping spy functionality
+    const composeSpy = mock();
+
     // Arrange
     // Ensure mockMessage.content.channelType is defined for the roomType
     mockMessage.content = { ...mockMessage.content, channelType: ChannelType.GROUP };
@@ -66,7 +70,7 @@ describe('Reflection Evaluator', () => {
     mockRuntime.getRelationships.mockResolvedValue([]);
     mockRuntime.getMemories.mockResolvedValue([]); // For knownFacts
 
-    // Set up the reflection template
+    // Assume mockRuntime.character.templates.reflectionTemplate is set, causing the specific template string
     if (!mockRuntime.character) mockRuntime.character = {} as any;
     if (!mockRuntime.character.templates) mockRuntime.character.templates = {};
     mockRuntime.character.templates.reflectionTemplate =
@@ -87,19 +91,40 @@ describe('Reflection Evaluator', () => {
       mockState as State
     );
 
-    // Assert - Verify useModel was called with proper parameters
-    expect(mockRuntime.useModel).toHaveBeenCalledTimes(1);
-    expect(mockRuntime.useModel).toHaveBeenCalledWith(
-      ModelType.OBJECT_SMALL,
+    // Assert
+    expect(composeSpy).toHaveBeenCalledTimes(1);
+    expect(composeSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: expect.any(String), // The actual prompt will be composed by composePrompt
+        state: expect.objectContaining({
+          ...(mockState.data?.values || {}), // Include actual values from mockState
+          roomType: ChannelType.GROUP,
+          senderId: 'test-entity-id',
+          knownFacts: '', // Assuming formatFacts returns '' for empty knownFacts
+          entitiesInRoom: JSON.stringify([
+            // This comes from the global getEntityDetails mock
+            { id: 'test-entity-id', names: ['Test Entity'], metadata: {} },
+            { id: 'test-agent-id', names: ['Test Agent'], metadata: {} },
+            { id: 'entity-1', names: ['Entity 1'], metadata: {} },
+            { id: 'entity-2', names: ['Entity 2'], metadata: {} },
+          ]),
+          existingRelationships: JSON.stringify([]), // from mockRuntime.getRelationships
+        }),
+        template: 'Test reflection template {{recentMessages}}',
       })
     );
+
+    expect(mockRuntime.useModel).toHaveBeenCalledTimes(1);
+    expect(mockRuntime.useModel).toHaveBeenCalledWith(ModelType.OBJECT_SMALL, {
+      prompt: 'Composed prompt',
+    });
 
     expect(mockRuntime.setCache).toHaveBeenCalledWith(
       `${mockMessage.roomId}-reflection-last-processed`,
       mockMessage.id
     );
+
+    // Clean up
+    composeSpy.mockRestore();
   });
 
   it('should store new facts and relationships', async () => {
@@ -107,8 +132,8 @@ describe('Reflection Evaluator', () => {
     const { reflectionEvaluator } = await import('../src/evaluators/reflection');
 
     // Spy on the composePrompt function in the @elizaos/core module
-    // Note: We can't easily spy on imported functions from external modules,
-    // so we'll verify the behavior through other means
+    // Note: bun:test doesn't have mock.spyOn, skipping spy functionality
+    const composeSpy = mock();
 
     // Explicitly mock getEntityDetails for this test case
     const getEntityDetailsSpy = mock().mockResolvedValue([
@@ -178,6 +203,9 @@ describe('Reflection Evaluator', () => {
       `${mockMessage.roomId}-reflection-last-processed`,
       mockMessage.id
     );
+
+    // Clean up
+    composeSpy.mockRestore();
     getEntityDetailsSpy.mockRestore(); // Restore the spy
   });
 
@@ -186,27 +214,28 @@ describe('Reflection Evaluator', () => {
     const { reflectionEvaluator } = await import('../src/evaluators/reflection');
 
     // Arrange - Mock a model error
+    // Note: bun:test doesn't have mock.spyOn, skipping spy functionality
+    const loggerSpy = mock();
     mockRuntime.useModel.mockRejectedValueOnce(new Error('Model failed'));
 
-    // Act - Should not throw error
-    let error: Error | undefined;
-    try {
-      await reflectionEvaluator.handler(
+    // Act & Assert - Should not throw error
+    await expect(
+      reflectionEvaluator.handler(
         mockRuntime as IAgentRuntime,
         mockMessage as Memory,
         mockState as State
-      );
-    } catch (e) {
-      error = e as Error;
-    }
-    
-    // Assert - Should not have thrown
-    expect(error).toBeUndefined();
+      )
+    ).resolves.not.toThrow();
+
+    expect(loggerSpy).toHaveBeenCalled();
 
     // No facts or relationships should be stored
     expect(mockRuntime.addEmbeddingToMemory).not.toHaveBeenCalled();
     expect(mockRuntime.createMemory).not.toHaveBeenCalled();
     expect(mockRuntime.createRelationship).not.toHaveBeenCalled();
+
+    // Clean up
+    loggerSpy.mockRestore();
   });
 
   it('should filter out invalid facts', async () => {
