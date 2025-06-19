@@ -37,7 +37,7 @@ ElizaOS V2 is a multi-agent development framework with cross-platform presence, 
 ```
 packages/core          - @elizaos/core (runtime and types)
 packages/client         - Frontend GUI
-packages/app           - Desktop/mobile Tauri app
+packages/app           - Desktop/mobile Tauri application
 packages/cli           - CLI with agent runtime, REST API, GUI
 packages/plugin-bootstrap - Default handlers, actions, providers
 packages/plugin-sql     - Database adapters
