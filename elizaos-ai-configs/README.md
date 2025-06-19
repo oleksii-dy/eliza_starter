@@ -86,4 +86,4 @@ All tools enforce the same development principles:
 - **Quality Assurance** - Automated enforcement of ElizaOS principles
 - **Complete Coverage** - From planning to implementation to testing
 
-This configuration suite ensures consistent, high-quality code across all major AI coding tools while enforcing your exact ElizaOS development methodology and architectural constraints.
+This configuration suite ensures consistent, high-quality code across all major AI coding tools while enforcing the exact ElizaOS development methodology and architectural constraints.
