@@ -7,24 +7,9 @@ import { getElizaDirectories } from '@/src/utils/get-config';
 
 interface LoggerConfig {
   level: string;
-  transport: 'console' | 'file' | 'cloudwatch' | 'elasticsearch' | 'multi';
+  transport: 'console' | 'file';
   file?: string;
   jsonFormat?: boolean;
-  cloudwatch?: {
-    logGroupName: string;
-    logStreamName: string;
-    awsRegion: string;
-  };
-  elasticsearch?: {
-    host: string;
-    index: string;
-    username?: string;
-    password?: string;
-  };
-  multiTransports?: Array<{
-    type: 'console' | 'file' | 'cloudwatch' | 'elasticsearch';
-    options: any;
-  }>;
 }
 
 const DEFAULT_CONFIG: LoggerConfig = {
@@ -32,8 +17,6 @@ const DEFAULT_CONFIG: LoggerConfig = {
   transport: 'console',
   jsonFormat: false,
 };
-
-// CONFIG_DIR and CONFIG_FILE will be determined dynamically using getElizaDirectories
 
 async function ensureConfigDir(): Promise<string> {
   const dirs = await getElizaDirectories();
@@ -78,29 +61,6 @@ function displayConfig(config: LoggerConfig): void {
   
   if (config.file) {
     console.log(`File Path: ${config.file}`);
-  }
-  
-  if (config.cloudwatch) {
-    console.log('\nCloudWatch Settings:');
-    console.log(`  Log Group: ${config.cloudwatch.logGroupName}`);
-    console.log(`  Log Stream: ${config.cloudwatch.logStreamName}`);
-    console.log(`  AWS Region: ${config.cloudwatch.awsRegion}`);
-  }
-  
-  if (config.elasticsearch) {
-    console.log('\nElasticsearch Settings:');
-    console.log(`  Host: ${config.elasticsearch.host}`);
-    console.log(`  Index: ${config.elasticsearch.index}`);
-    if (config.elasticsearch.username) {
-      console.log(`  Username: ${config.elasticsearch.username}`);
-    }
-  }
-  
-  if (config.multiTransports && config.multiTransports.length > 0) {
-    console.log('\nMulti-Transport Configuration:');
-    config.multiTransports.forEach((transport, index) => {
-      console.log(`  ${index + 1}. ${transport.type}`);
-    });
   }
   console.log('================================\n');
 }
@@ -162,9 +122,6 @@ async function configureBasicSettings(currentConfig: LoggerConfig): Promise<void
       choices: [
         { title: 'Console only', value: 'console' },
         { title: 'Console + File (hybrid)', value: 'file' },
-        { title: 'CloudWatch', value: 'cloudwatch' },
-        { title: 'Elasticsearch', value: 'elasticsearch' },
-        { title: 'Multiple destinations', value: 'multi' },
       ],
     },
     {
