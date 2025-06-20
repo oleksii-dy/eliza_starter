@@ -10,6 +10,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { loadEnvConfig } from './utils/config-utils';
 import { getElizaDirectories } from '@/src/utils/get-config';
+import { LoggerConfig } from '@/src/types/logger';
 
 // Setup file logging by capturing logger output
 function setupFileLogging(logFile: string, jsonFormat?: boolean): void {
@@ -77,13 +78,6 @@ function setupFileLogging(logFile: string, jsonFormat?: boolean): void {
   } catch (error) {
     logger.error('Failed to configure file logging:', error);
   }
-}
-
-interface LoggerConfig {
-  level: string;
-  transport: 'console' | 'file';
-  file?: string;
-  jsonFormat?: boolean;
 }
 
 async function loadLoggerConfig(): Promise<LoggerConfig | null> {

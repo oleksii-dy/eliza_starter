@@ -4,13 +4,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { logger } from '@elizaos/core';
 import { getElizaDirectories } from '@/src/utils/get-config';
-
-interface LoggerConfig {
-  level: string;
-  transport: 'console' | 'file';
-  file?: string;
-  jsonFormat?: boolean;
-}
+import { LoggerConfig } from '@/src/types/logger';
 
 const DEFAULT_CONFIG: LoggerConfig = {
   level: 'info',
