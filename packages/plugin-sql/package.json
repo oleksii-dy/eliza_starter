@@ -57,7 +57,7 @@
     "test": "bun test src/__tests__/unit",
     "test:watch": "bun test --watch src/__tests__/unit",
     "test:coverage": "bun test --coverage src/__tests__/unit",
-    "test:integration": "bun run scripts/run-tests-sequential.ts",
+    "test:integration": "bun scripts/run-tests-sequential.ts",
     "test:all": "bun run test && bun run test:integration",
     "test:postgres": "POSTGRES_URL=postgresql://postgres:cT5nfCeebBS8R0q3@db.mwyntrazuakaieibjuvo.supabase.co:5432/postgres bun test",
     "build:clean": "rm -rf dist",
