@@ -81,7 +81,7 @@ function setupFileLogging(logFile: string, jsonFormat?: boolean): void {
 
 interface LoggerConfig {
   level: string;
-  transport: 'console' | 'file' | 'cloudwatch' | 'elasticsearch' | 'multi';
+  transport: 'console' | 'file';
   file?: string;
   jsonFormat?: boolean;
 }
@@ -146,9 +146,10 @@ async function applyLoggerOptions(options: StartOptions): Promise<void> {
   
   logger.info(`Logger configured: level=${finalConfig.level} (from ${sources[0]}), transport=${finalConfig.transport}${finalConfig.file ? `, file=${finalConfig.file}` : ''}`);
 
-  // Note: CloudWatch and Elasticsearch configuration would require additional setup
-  if (finalConfig.transport && ['cloudwatch', 'elasticsearch'].includes(finalConfig.transport)) {
-    logger.warn(`${finalConfig.transport} transport requires additional configuration. Using console transport.`);
+  // Validate transport type
+  if (finalConfig.transport && !['console', 'file'].includes(finalConfig.transport)) {
+    logger.warn(`Unsupported transport '${finalConfig.transport}'. Using console transport.`);
+    finalConfig.transport = 'console';
   }
 }
 
@@ -159,7 +160,7 @@ export const start = new Command()
   .option('-p, --port <port>', 'Port to listen on', validatePort)
   .option('--character <paths...>', 'Character file(s) to use')
   .option('--log-level <level>', 'Set log level (trace, debug, info, warn, error, fatal)')
-  .option('--log-transport <transport>', 'Set log transport (console, file, cloudwatch, elasticsearch)')
+  .option('--log-transport <transport>', 'Set log transport (console, file)')
   .option('--log-file <path>', 'Set log file path (for file transport)')
   .option('--log-json', 'Enable JSON format logging')
   .option('--no-log-pretty', 'Disable pretty printing')

@@ -247,7 +247,7 @@ Start the Eliza agent with configurable plugins and services.
   - `-b, --build`: Build the project before starting
   - `-p, --port <port>`: Port to listen on (default: 3000)
   - `--log-level <level>`: Set log level (trace, debug, info, warn, error, fatal)
-  - `--log-transport <transport>`: Set log transport (console, file, cloudwatch, elasticsearch)
+  - `--log-transport <transport>`: Set log transport (console, file)
   - `--log-file <path>`: Set log file path (for file transport)
   - `--log-json`: Enable JSON format for both console and file output (consistent)
 

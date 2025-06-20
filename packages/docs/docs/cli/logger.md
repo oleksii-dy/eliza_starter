@@ -66,14 +66,14 @@ elizaos start --log-transport file --log-file ./logs/eliza.log --log-json
 
 **Note**: File transport provides hybrid logging. Use `--log-json` for consistent raw JSON format across both console and file outputs.
 
-#### CloudWatch Transport
-Sends logs to AWS CloudWatch (requires AWS credentials configuration).
+### Available Transports
 
-#### Elasticsearch Transport
-Sends logs to Elasticsearch cluster.
+ElizaOS currently supports two logging transports:
 
-#### Multi-Transport
-Combine multiple transports for complex logging scenarios.
+1. **Console Transport** - Default console output with pretty formatting
+2. **File Transport** - Hybrid logging (console + file output)
+
+**Note**: Advanced transports like CloudWatch, Elasticsearch, or multi-transport configurations are not currently implemented. If you need these features, consider implementing custom logging in your agent or using external log forwarding tools.
 
 ## Integration with Start Command
 
@@ -92,12 +92,19 @@ elizaos start --log-transport file --log-file ./logs/agent.log --log-json
 
 ### Logging Behavior
 
-- **Console only**: Pretty formatting with colors by default
-- **File transport** (`--log-transport file`): Hybrid logging (console + file)
+- **Console transport** (`console`): Pretty formatting with colors by default
+- **File transport** (`file`): Hybrid logging (console + file)
   - **Without `--log-json`**: Console gets pretty formatting, file gets clean text format `[2025-01-19 21:59:25] INFO: message`
   - **With `--log-json`**: Both console and file get raw JSON format for consistency
 
 **Key principle**: Console and file formats are consistent when using `--log-json` to avoid confusion during debugging.
+
+### Supported Transport Options
+
+| Transport | Description | CLI Option |
+|-----------|-------------|------------|
+| `console` | Console output only with pretty formatting | `--log-transport console` |
+| `file` | Hybrid: console + file output | `--log-transport file` |
 
 ## Configuration File
 
@@ -155,7 +162,7 @@ elizaos logger
 elizaos logger  
 # Select: Configure basic settings
 # Choose: warn level, file transport, JSON format
-# Specify: .eliza/logs/production.log
+# File will be saved to: .eliza/logs/eliza.log (default)
 ```
 
 ### Debug Session
@@ -184,4 +191,17 @@ elizaos start --log-transport file --log-file .eliza/logs/app.log --log-json
 ### Performance Issues
 - Consider using higher log levels (warn, error) in production
 - Use JSON format for better performance when processing large log volumes
-- Ensure log file rotation is set up for long-running applications 
+- Ensure log file rotation is set up for long-running applications
+
+## Future Enhancements
+
+The following transport types are planned for future releases:
+
+- **CloudWatch Transport** - Direct AWS CloudWatch integration
+- **Elasticsearch Transport** - Direct Elasticsearch logging
+- **Multi-Transport** - Simultaneous logging to multiple destinations
+
+For now, if you need these features, consider:
+- Using external log forwarding tools (like Fluentd, Logstash)
+- Implementing custom logging in your agent
+- Using file transport with external log processors

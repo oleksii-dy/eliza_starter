@@ -33,7 +33,7 @@ elizaos start [options]
 | `-p, --port <port>`             | Port to listen on (default: 3000)                                              |
 | `--quiet`                       | Suppress all non-error output to the console                                   |
 | `--log-level <level>`           | Set log level (trace, debug, info, warn, error, fatal)                        |
-| `--log-transport <transport>`   | Set log transport (console, file, cloudwatch, elasticsearch)                  |
+| `--log-transport <transport>`   | Set log transport (console, file)                  |
 | `--log-file <path>`             | Set log file path (for file transport, defaults to .eliza/logs/eliza.log)     |
 | `--log-json`                    | Enable JSON format for both console and file output (consistent)              |
 
