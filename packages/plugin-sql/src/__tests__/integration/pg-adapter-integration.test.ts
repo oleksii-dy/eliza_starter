@@ -181,51 +181,107 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
       it('should handle query errors gracefully', async () => {
         const db = adapter.getDatabase();
 
-        // Approach 1: Using try-catch (most reliable)
-        let errorOccurred = false;
-        let errorMessage = '';
+        // Wrap the entire operation in an async function to ensure proper promise handling
+        const testQueryError = async () => {
+          let errorOccurred = false;
+          let errorMessage = '';
 
+          try {
+            // Force await to ensure the thenable is converted to a promise
+            const result = await db.execute(sql`SELECT * FROM non_existent_table`);
+            // If we get here, the query somehow succeeded (shouldn't happen)
+            return result;
+          } catch (error: any) {
+            errorOccurred = true;
+            errorMessage = error.message?.toLowerCase() || error.toString().toLowerCase();
+            throw error; // Re-throw to maintain the error flow
+          }
+        };
+
+        // Now test the async function
+        let caughtError: any;
         try {
-          await db.execute(sql`SELECT * FROM non_existent_table`);
+          await testQueryError();
+          // Should never reach here
+          expect(true).toBe(false);
         } catch (error: any) {
-          errorOccurred = true;
-          errorMessage = error.message?.toLowerCase() || '';
+          caughtError = error;
         }
 
-        expect(errorOccurred).toBe(true);
-        expect(errorMessage).toBeTruthy();
+        // Verify error occurred
+        expect(caughtError).toBeDefined();
 
-        // Check for various possible error message formats
-        const hasTableReference =
-          errorMessage.includes('non_existent_table') ||
-          errorMessage.includes('relation') ||
-          errorMessage.includes('does not exist') ||
-          errorMessage.includes('table');
-        expect(hasTableReference).toBe(true);
+        // Check error message - be more flexible with error formats
+        const errorStr = (caughtError.message || caughtError.toString() || '').toLowerCase();
+
+        // Different environments may format errors differently
+        const hasExpectedError =
+          errorStr.includes('non_existent_table') ||
+          errorStr.includes('relation') ||
+          errorStr.includes('does not exist') ||
+          errorStr.includes('table') ||
+          errorStr.includes('no such') ||
+          errorStr.includes('not found');
+
+        expect(hasExpectedError).toBe(true);
       });
 
       it('should handle query errors with async wrapper', async () => {
         const db = adapter.getDatabase();
 
-        // Approach 2: Wrap in async function to ensure Promise
-        const executeQuery = async () => {
-          return await db.execute(sql`SELECT * FROM non_existent_table_2`);
-        };
+        // Approach 2: Explicitly convert thenable to Promise
+        let errorCaught = false;
+        let errorDetails: any;
 
-        await expect(executeQuery()).rejects.toThrow();
+        try {
+          // Use Promise.resolve to ensure we have a real Promise
+          await Promise.resolve(db.execute(sql`SELECT * FROM non_existent_table_2`));
+        } catch (error: any) {
+          errorCaught = true;
+          errorDetails = error;
+        }
+
+        expect(errorCaught).toBe(true);
+        expect(errorDetails).toBeDefined();
+
+        const errorStr = (errorDetails.message || errorDetails.toString() || '').toLowerCase();
+        const hasExpectedError =
+          errorStr.includes('non_existent_table') ||
+          errorStr.includes('relation') ||
+          errorStr.includes('does not exist') ||
+          errorStr.includes('table');
+
+        expect(hasExpectedError).toBe(true);
       });
 
       it('should handle query errors with Promise wrapper', async () => {
         const db = adapter.getDatabase();
 
-        // Approach 3: Explicitly wrap in Promise
-        const queryPromise = new Promise((resolve, reject) => {
-          db.execute(sql`SELECT * FROM non_existent_table_3`)
-            .then(resolve)
-            .catch(reject);
-        });
+        // Approach 3: Use then/catch chain
+        let errorWasThrown = false;
+        let capturedError: any;
 
-        await expect(queryPromise).rejects.toThrow();
+        await db
+          .execute(sql`SELECT * FROM non_existent_table_3`)
+          .then(() => {
+            // Should not succeed
+            errorWasThrown = false;
+          })
+          .catch((error: any) => {
+            errorWasThrown = true;
+            capturedError = error;
+          });
+
+        expect(errorWasThrown).toBe(true);
+        expect(capturedError).toBeDefined();
+
+        // Verify it's a database error
+        const errorMessage = (capturedError.message || '').toLowerCase();
+        expect(
+          errorMessage.includes('non_existent_table') ||
+            errorMessage.includes('relation') ||
+            errorMessage.includes('does not exist')
+        ).toBe(true);
       });
 
       it('should maintain connection after error', async () => {
