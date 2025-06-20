@@ -1,3 +1,4 @@
+import { formatUnits } from "viem";
 import z from "zod";
 export const AggregatorDomain = `https://aggregator-api.kyberswap.com`;
 
@@ -6,12 +7,32 @@ const KyberGetSwapRouteV1ResponseSchema = z.object({
   message: z.string(),
   data: z
     .object({
-      routeSummary: z.any(),
+      routeSummary: z.object({
+        tokenIn: z.string(),
+        amountIn: z.string(),
+        amountInUsd: z.string(),
+        tokenOut: z.string(),
+        amountOut: z.string(),
+        amountOutUsd: z.string(),
+        gas: z.string(),
+        gasPrice: z.string(),
+        gasUsd: z.string(),
+        l1FeeUsd: z.string().optional(),
+        extraFee: z.any(),
+        route: z.any(),
+        routeID: z.string().optional(),
+        checksum: z.string(),
+        timestamp: z.number()
+      }),
       routerAddress: z.string(),
     })
     .optional(),
   requestId: z.string(),
 });
+
+export type RouteSummary = z.infer<
+  typeof KyberGetSwapRouteV1ResponseSchema
+>["data"]["routeSummary"];
 
 const KyberPostSwapRouteV1ResponseSchema = z.object({
   code: z.number(),
@@ -156,3 +177,29 @@ export async function postSwapRouteV1({
 
   return parsed.data;
 }
+
+export const estimationTemplate =
+  "Estimated to receive {{amountOut}} {{symbol}} (${{amountOutUsd}}), gas fee {{gas}} (${{gasUsd}})";
+
+export const formatEstimation = ({
+  summary,
+  decimals,
+  symbol,
+}: {
+  summary: RouteSummary;
+  decimals: number;
+  symbol: string;
+}) => {
+  const gas = formatUnits(
+    BigInt(summary.gas ?? "0") * BigInt(summary.gasPrice ?? "0"),
+    18
+  );
+  const amountOut = formatUnits(BigInt(summary.amountOut ?? "0"), decimals);
+
+  return estimationTemplate
+    .replace("{{amountOut}}", amountOut)
+    .replace("{{symbol}}", symbol)
+    .replace("{{amountOutUsd}}", summary.amountOutUsd)
+    .replace("{{gas}}", gas)
+    .replace("{{gasUsd}}", summary.gasUsd);
+};

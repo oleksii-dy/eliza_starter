@@ -25,5 +25,6 @@ default tokens
 INSERT INTO "erc20" ("address", "chain_id", "decimals", "id", "name", "symbol") VALUES ('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 1, 6, '2eb7b733-c440-42ad-ad95-4c3a56a0a069', 'USD Coin', 'USDC');
 INSERT INTO "erc20" ("address", "chain_id", "decimals", "id", "name", "symbol") VALUES ('0xdAC17F958D2ee523a2206206994597C13D831ec7', 1, 6, 'f2bab4cd-a556-447f-ad36-706acfa15592', 'Tether USD', 'USDT');
 INSERT INTO "erc20" ("address", "chain_id", "decimals", "id", "name", "symbol") values ('0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', 42161, 6, '89abb746-e0fd-41b0-bd40-3ff5fef25474', 'USD₮0', 'USDT');
-insert into "erc20" ("address", "chain_id", "decimals", "id", "name", "symbol") values ('0x0c880f6761F1af8d9Aa9C466984b80DAb9a8c9e8', 42161, 18, '570d6f26-ecd7-4179-858d-c33071e0eb59', 'Pendle', 'PENDLE')
+insert into "erc20" ("address", "chain_id", "decimals", "id", "name", "symbol") values ('0x0c880f6761F1af8d9Aa9C466984b80DAb9a8c9e8', 42161, 18, '570d6f26-ecd7-4179-858d-c33071e0eb59', 'Pendle', 'PENDLE');
+insert into "erc20" ("address", "chain_id", "decimals", "id", "name", "symbol") values ('0xaf88d065e77c8cC2239327C5EDb3A432268e5831', 42161, 6, '718632d2-2844-48a7-9141-5c42e856f067', 'USD Coin', 'USDC'), ('0x912CE59144191C1204E64559FE8253a0e49E6548', 42161, 18, '72960ffe-dbe7-4603-85ff-e71b3b547b0e', 'Arbitrum', 'ARB');
 */

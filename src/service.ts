@@ -44,7 +44,7 @@ export class LevvaService extends Service {
       runtime.actions.splice(replyActionIndex, 0, action);
     }
 
-    console.log("runtime.actions:", runtime.actions);
+    // console.log("runtime.actions:", runtime.actions);
   }
 
   static async start(runtime: IAgentRuntime) {

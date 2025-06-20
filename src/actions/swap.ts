@@ -13,6 +13,8 @@ import {
   isHex,
   parseUnits,
 } from "viem";
+import { estimationTemplate, formatEstimation, getSwapRouteV1, postSwapRouteV1 } from "../api/kyber";
+import { LEVVA_ACTIONS } from "../constants";
 import { erc20Table } from "../schema/erc20";
 import { levvaUserTable } from "../schema/levva-user";
 import { lower } from "../schema/util";
@@ -25,9 +27,7 @@ import {
   getDb,
   getTokenData,
 } from "../util";
-import { getSwapRouteV1, postSwapRouteV1 } from "src/api/kyber";
-import { LEVVA_ACTIONS } from "src/constants";
-import { rephrase } from "src/util/gen";
+import { rephrase } from "../util/gen";
 
 interface RawMessage {
   senderId: UUID;
@@ -353,6 +353,7 @@ export const swapTokens: Action = {
       const responseContent: Content = {
         thought: `Swapping ${amount} ${tokenIn.symbol} to ${tokenOut.symbol}...`,
         text: `Swapping ${amount} ${tokenIn.symbol} to ${tokenOut.symbol}...
+${formatEstimation({ summary: routeSummary, decimals: tokenOut.decimals, symbol: tokenOut.symbol })}
 Please approve transactions in your wallet.`,
         actions: ["SWAP_TOKENS"],
         source: message.content.source,
@@ -430,7 +431,7 @@ Please approve transactions in your wallet.`,
       {
         name: "{{agentName}}",
         content: {
-          text: "Swapping {{amount}} {{token1}} to {{token2}}...\nPlease approve transactions in your wallet.",
+          text: `Swapping {{amount}} {{token1}} to {{token2}}...\n${estimationTemplate}\nPlease approve transactions in your wallet.`,
           action: "SWAP_TOKENS",
           attachments: [
             {
