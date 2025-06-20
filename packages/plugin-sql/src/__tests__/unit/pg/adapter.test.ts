@@ -1,17 +1,13 @@
 import { logger } from '@elizaos/core';
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { PgDatabaseAdapter } from '../../../pg/adapter';
 import { PostgresConnectionManager } from '../../../pg/manager';
 
-// Mock the logger to avoid console output during tests
-const mockLogger = {
-  info: mock(() => {}),
-  error: mock(() => {}),
-  warn: mock(() => {}),
-  debug: mock(() => {}),
-};
-
-// Module mocking not needed for this test in bun:test
+// Mock the logger functions
+const mockLoggerDebug = spyOn(logger, 'debug');
+const mockLoggerInfo = spyOn(logger, 'info');
+const mockLoggerError = spyOn(logger, 'error');
+const mockLoggerWarn = spyOn(logger, 'warn');
 
 describe('PgDatabaseAdapter', () => {
   let adapter: PgDatabaseAdapter;
@@ -19,10 +15,10 @@ describe('PgDatabaseAdapter', () => {
   const agentId = '00000000-0000-0000-0000-000000000000';
 
   beforeEach(() => {
-    mockLogger.info.mockClear();
-    mockLogger.error.mockClear();
-    mockLogger.warn.mockClear();
-    mockLogger.debug.mockClear();
+    mockLoggerInfo.mockClear();
+    mockLoggerError.mockClear();
+    mockLoggerWarn.mockClear();
+    mockLoggerDebug.mockClear();
 
     // Create a mock manager
     mockManager = {
@@ -58,7 +54,7 @@ describe('PgDatabaseAdapter', () => {
     it('should be a no-op', async () => {
       await adapter.runMigrations();
       // Should not throw and not do anything
-      expect(logger.debug).toHaveBeenCalledWith(
+      expect(mockLoggerDebug).toHaveBeenCalledWith(
         'PgDatabaseAdapter: Migrations should be handled externally'
       );
     });

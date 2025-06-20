@@ -13,6 +13,12 @@ import { PgliteDatabaseAdapter } from '../../../pglite/adapter';
 import { PGliteClientManager } from '../../../pglite/manager';
 import { logger } from '@elizaos/core';
 
+// Mock the logger functions
+const mockLoggerDebug = spyOn(logger, 'debug');
+const mockLoggerInfo = spyOn(logger, 'info');
+const mockLoggerError = spyOn(logger, 'error');
+const mockLoggerWarn = spyOn(logger, 'warn');
+
 // Mock the logger to avoid console output during tests
 // In bun:test, we'll use a simpler approach
 
@@ -54,7 +60,7 @@ describe('PgliteDatabaseAdapter', () => {
     it('should be a no-op', async () => {
       await adapter.runMigrations();
       // Should not throw and not do anything
-      expect(logger.debug).toHaveBeenCalledWith(
+      expect(mockLoggerDebug).toHaveBeenCalledWith(
         'PgliteDatabaseAdapter: Migrations are handled by the migration service'
       );
     });
@@ -63,7 +69,7 @@ describe('PgliteDatabaseAdapter', () => {
   describe('init', () => {
     it('should complete initialization', async () => {
       await adapter.init();
-      expect(logger.debug).toHaveBeenCalledWith(
+      expect(mockLoggerDebug).toHaveBeenCalledWith(
         'PGliteDatabaseAdapter initialized, skipping automatic migrations.'
       );
     });

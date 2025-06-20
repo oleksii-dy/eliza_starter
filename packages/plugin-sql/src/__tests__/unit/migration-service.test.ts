@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, mock } from 'bun:test';
+import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test';
 import { DatabaseMigrationService } from '../../migration-service';
 import { logger, type Plugin } from '@elizaos/core';
 import * as customMigrator from '../../custom-migrator';
@@ -11,9 +11,8 @@ const mockLogger = {
   debug: mock(() => {}),
 };
 
-// In bun:test, we'll use simpler mocking approaches
-// Mock the custom migrator
-const mockRunPluginMigrations = mock(() => Promise.resolve());
+// Mock the runPluginMigrations function from custom-migrator
+const mockRunPluginMigrations = spyOn(customMigrator, 'runPluginMigrations').mockResolvedValue(undefined);
 
 // For this test, we'll spy on the actual logger rather than mock the entire module
 
@@ -127,9 +126,13 @@ describe('DatabaseMigrationService', () => {
 
       migrationService.discoverAndRegisterPluginSchemas(plugins);
 
-      // Run migrations - in bun:test we can't easily mock the function call
-      // but we can verify it doesn't throw
-      await expect(migrationService.runAllPluginMigrations()).resolves.not.toThrow();
+      // Run migrations
+      await migrationService.runAllPluginMigrations();
+      
+      // Verify the migrations were called for each plugin
+      expect(mockRunPluginMigrations).toHaveBeenCalledTimes(2);
+      expect(mockRunPluginMigrations).toHaveBeenCalledWith(mockDb, 'plugin1', { table1: {} });
+      expect(mockRunPluginMigrations).toHaveBeenCalledWith(mockDb, 'plugin2', { table2: {} });
     });
 
     it('should handle migration errors', async () => {
@@ -145,8 +148,11 @@ describe('DatabaseMigrationService', () => {
         },
       ]);
 
-      // In bun:test, we'll just verify it runs without throwing for now
-      await expect(migrationService.runAllPluginMigrations()).resolves.not.toThrow();
+      // Set up the mock to throw an error for this plugin
+      mockRunPluginMigrations.mockRejectedValueOnce(new Error('Migration failed'));
+
+      // Run migrations and expect it to throw
+      await expect(migrationService.runAllPluginMigrations()).rejects.toThrow('Migration failed');
     });
 
     it('should run migrations even with no plugins', async () => {

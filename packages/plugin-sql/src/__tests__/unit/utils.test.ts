@@ -3,8 +3,13 @@ import { expandTildePath, resolveEnvFile, resolvePgliteDir } from '../../utils';
 import * as path from 'node:path';
 import * as os from 'node:os';
 
-// Mock dotenv to prevent loading actual .env file
-// In bun:test, module mocking is handled differently, but this test doesn't need it
+// Mock the entire dotenv module
+mock.module('dotenv', () => ({
+  default: {
+    config: mock(() => ({ parsed: {} }))
+  },
+  config: mock(() => ({ parsed: {} }))
+}))
 
 describe('Utils', () => {
   describe('expandTildePath', () => {
