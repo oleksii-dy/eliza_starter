@@ -54,8 +54,6 @@ describe('Memory Integration Tests', () => {
 
       ({ adapter, runtime, cleanup } = await createTestDatabase(testAgentId));
 
-      console.log('ADAPTER IS', adapter);
-
       await adapter.createWorld({
         id: testWorldId,
         agentId: testAgentId,
