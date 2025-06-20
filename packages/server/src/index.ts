@@ -585,9 +585,37 @@ export class AgentServer {
       };
 
       // Serve static assets from the client dist path
-      // Client files are built into the CLI package's dist directory
-      const clientPath = path.resolve(__dirname, '../../cli/dist');
-      this.app.use(express.static(clientPath, staticOptions));
+      // Try multiple locations for client files
+      const possibleClientPaths = [
+        // 1. Monorepo structure
+        path.resolve(__dirname, '../../cli/dist'),
+        // 2. When installed as npm package - CLI is a sibling dependency
+        path.resolve(__dirname, '../../../@elizaos/cli/dist'),
+        // 3. Try to resolve from CLI package
+        (() => {
+          try {
+            const cliPackage = require.resolve('@elizaos/cli/package.json');
+            return path.resolve(path.dirname(cliPackage), 'dist');
+          } catch {
+            return null;
+          }
+        })(),
+      ].filter(Boolean) as string[];
+      
+      let clientPath: string | null = null;
+      for (const possiblePath of possibleClientPaths) {
+        if (existsSync(path.join(possiblePath, 'index.html'))) {
+          clientPath = possiblePath;
+          logger.debug(`Found client files at: ${clientPath}`);
+          break;
+        }
+      }
+      
+      if (clientPath) {
+        this.app.use(express.static(clientPath, staticOptions));
+      } else {
+        logger.warn('Client files not found in any expected location. Dashboard will not be available.');
+      }
 
       // *** NEW: Mount the plugin route handler BEFORE static serving ***
       const pluginRouteHandler = createPluginRouteHandler(this.agents);
@@ -659,9 +687,54 @@ export class AgentServer {
         }
 
         // For all other routes, serve the SPA's index.html
-        // Client files are built into the CLI package's dist directory
-        const cliDistPath = path.resolve(__dirname, '../../cli/dist');
-        res.sendFile(path.join(cliDistPath, 'index.html'));
+        // Try multiple locations for client files
+        const possibleIndexPaths = [
+          // 1. Monorepo structure
+          path.resolve(__dirname, '../../cli/dist/index.html'),
+          // 2. When installed as npm package - CLI is a sibling dependency
+          path.resolve(__dirname, '../../../@elizaos/cli/dist/index.html'),
+          // 3. Try to resolve from CLI package
+          (() => {
+            try {
+              const cliPackage = require.resolve('@elizaos/cli/package.json');
+              return path.resolve(path.dirname(cliPackage), 'dist/index.html');
+            } catch {
+              return null;
+            }
+          })(),
+        ].filter(Boolean) as string[];
+        
+        for (const indexPath of possibleIndexPaths) {
+          if (existsSync(indexPath)) {
+            return res.sendFile(indexPath);
+          }
+        }
+        
+        // If no index.html found, return a simple error page
+        res.status(404).send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>ElizaOS Dashboard Not Found</title>
+              <style>
+                body { font-family: system-ui; padding: 2rem; max-width: 600px; margin: 0 auto; }
+                h1 { color: #e74c3c; }
+                code { background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 3px; }
+              </style>
+            </head>
+            <body>
+              <h1>Dashboard Not Found</h1>
+              <p>The ElizaOS dashboard files could not be found. This typically happens when:</p>
+              <ul>
+                <li>The CLI was not built properly</li>
+                <li>The client files were not bundled with the CLI package</li>
+                <li>Running outside the monorepo without proper setup</li>
+              </ul>
+              <p>Try running <code>bun install</code> and <code>bun run build</code> in your project directory.</p>
+              <p>API endpoints are still available at <code>/api/*</code></p>
+            </body>
+          </html>
+        `);
       });
 
       // Create HTTP server for Socket.io
