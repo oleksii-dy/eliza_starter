@@ -181,20 +181,51 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
       it('should handle query errors gracefully', async () => {
         const db = adapter.getDatabase();
 
+        // Approach 1: Using try-catch (most reliable)
+        let errorOccurred = false;
+        let errorMessage = '';
+
         try {
           await db.execute(sql`SELECT * FROM non_existent_table`);
-          expect(false).toBe(true); // Should not reach here
         } catch (error: any) {
-          expect(error).toBeDefined();
-          // Check for various possible error message formats
-          const errorMessage = error.message?.toLowerCase() || '';
-          const hasTableReference =
-            errorMessage.includes('non_existent_table') ||
-            errorMessage.includes('relation') ||
-            errorMessage.includes('does not exist') ||
-            errorMessage.includes('table');
-          expect(hasTableReference).toBe(true);
+          errorOccurred = true;
+          errorMessage = error.message?.toLowerCase() || '';
         }
+
+        expect(errorOccurred).toBe(true);
+        expect(errorMessage).toBeTruthy();
+
+        // Check for various possible error message formats
+        const hasTableReference =
+          errorMessage.includes('non_existent_table') ||
+          errorMessage.includes('relation') ||
+          errorMessage.includes('does not exist') ||
+          errorMessage.includes('table');
+        expect(hasTableReference).toBe(true);
+      });
+
+      it('should handle query errors with async wrapper', async () => {
+        const db = adapter.getDatabase();
+
+        // Approach 2: Wrap in async function to ensure Promise
+        const executeQuery = async () => {
+          return await db.execute(sql`SELECT * FROM non_existent_table_2`);
+        };
+
+        await expect(executeQuery()).rejects.toThrow();
+      });
+
+      it('should handle query errors with Promise wrapper', async () => {
+        const db = adapter.getDatabase();
+
+        // Approach 3: Explicitly wrap in Promise
+        const queryPromise = new Promise((resolve, reject) => {
+          db.execute(sql`SELECT * FROM non_existent_table_3`)
+            .then(resolve)
+            .catch(reject);
+        });
+
+        await expect(queryPromise).rejects.toThrow();
       });
 
       it('should maintain connection after error', async () => {
@@ -210,6 +241,54 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
         // Connection should still work
         const result = await db.execute(sql`SELECT 1 as value`);
         expect(result.rows[0].value).toBe(1);
+      });
+
+      it('should handle syntax errors', async () => {
+        const db = adapter.getDatabase();
+        let errorOccurred = false;
+
+        try {
+          await db.execute(sql`INVALID SQL SYNTAX HERE`);
+        } catch (error: any) {
+          errorOccurred = true;
+          expect(error).toBeDefined();
+          expect(error.message).toBeTruthy();
+        }
+
+        expect(errorOccurred).toBe(true);
+      });
+
+      it('should handle constraint violations gracefully', async () => {
+        const db = adapter.getDatabase();
+
+        // Create a table with constraints
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS test_constraints (
+            id INTEGER PRIMARY KEY,
+            value TEXT NOT NULL
+          )
+        `);
+
+        try {
+          // Insert a record
+          await db.execute(sql`
+            INSERT INTO test_constraints (id, value) VALUES (1, 'test')
+          `);
+
+          // Try to insert duplicate primary key
+          let errorOccurred = false;
+          try {
+            await db.execute(sql`
+              INSERT INTO test_constraints (id, value) VALUES (1, 'duplicate')
+            `);
+          } catch (error: any) {
+            errorOccurred = true;
+            expect(error).toBeDefined();
+          }
+          expect(errorOccurred).toBe(true);
+        } finally {
+          await db.execute(sql`DROP TABLE IF EXISTS test_constraints`);
+        }
       });
     });
 
