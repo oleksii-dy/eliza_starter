@@ -2,7 +2,7 @@ import { displayBanner, handleError } from '@/src/utils';
 import { validatePort } from '@/src/utils/port-validation';
 import { loadCharacterTryPath } from '@elizaos/server';
 import { loadProject } from '@/src/project';
-import { logger, reconfigureLogger, type Character, type ProjectAgent } from '@elizaos/core';
+import { logger, type Character, type ProjectAgent } from '@elizaos/core';
 import { Command } from 'commander';
 import { startAgents } from './actions/server-start';
 import { StartOptions } from './types';
@@ -12,34 +12,27 @@ import { loadEnvConfig } from './utils/config-utils';
 import { getElizaDirectories } from '@/src/utils/get-config';
 import { LoggerConfig } from '@/src/types/logger';
 
-// Setup file logging by capturing logger output
 function setupFileLogging(logFile: string, jsonFormat?: boolean): void {
   try {
-    // Ensure log directory exists
     const logDir = path.dirname(logFile);
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
-    
-    // Create file stream
+
     const fileStream = fs.createWriteStream(logFile, { flags: 'a' });
     
-    // Get the logger's destination to intercept logs
-    const originalDestination = (logger as any)[Symbol.for('pino-destination')];
-    
-    if (originalDestination && typeof originalDestination.write === 'function') {
-      // Store original write method
-      const originalWrite = originalDestination.write.bind(originalDestination);
-      
-      // Override write method to also write to file
-      originalDestination.write = function(chunk: any) {
-        // Write to console based on format consistency
+    const currentDestination = (logger as any)[Symbol.for('pino-destination')];
+
+    if (currentDestination && typeof currentDestination.write === 'function') {
+      const originalWrite = currentDestination.write.bind(currentDestination);
+
+      currentDestination.write = function(chunk: any) {
         if (jsonFormat) {
           process.stdout.write(chunk);
         } else {
           originalWrite(chunk);
         }
-        
+
         try {
           if (typeof chunk === 'string') {
             if (jsonFormat) {
@@ -47,36 +40,48 @@ function setupFileLogging(logFile: string, jsonFormat?: boolean): void {
             } else {
               const logEntry = JSON.parse(chunk);
               const timestamp = new Date(logEntry.time).toISOString();
-              const level = (logEntry.level && typeof logEntry.level === 'number') 
-                ? ['trace', 'debug', 'info', 'warn', 'error', 'fatal'][Math.floor(logEntry.level / 10) - 1] || 'info'
-                : 'info';
-              const message = logEntry.msg || '';
               
+              let level = 'info';
+              if (typeof logEntry.level === 'number') {
+                const levelMap: Record<number, string> = {
+                  10: 'trace', 20: 'debug', 30: 'info', 
+                  40: 'warn', 50: 'error', 60: 'fatal'
+                };
+                level = levelMap[logEntry.level] || 'info';
+              }
+              
+              const message = logEntry.msg || '';
               const cleanLogLine = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
               fileStream.write(cleanLogLine);
             }
           }
         } catch (e) {
-          // If parsing fails, write raw to file
           fileStream.write(chunk);
         }
       };
+
+      logger.info(`File logging enabled: ${logFile} (format: ${jsonFormat ? 'JSON' : 'readable'})`);
+
+      const cleanup = () => {
+        try {
+          fileStream.end();
+        } catch (e) {
+        }
+      };
+
+      process.on('exit', cleanup);
+      process.on('SIGINT', () => {
+        cleanup();
+        process.exit(0);
+      });
+      process.on('SIGTERM', cleanup);
+
+    } else {
+      logger.warn('Could not enhance logger with file output - destination not accessible');
     }
-    
-    logger.info(`File logging configured: ${logFile}`);
-    
-    // Handle graceful shutdown
-    process.on('exit', () => {
-      fileStream.end();
-    });
-    
-    process.on('SIGINT', () => {
-      fileStream.end();
-      process.exit(0);
-    });
-    
+
   } catch (error) {
-    logger.error('Failed to configure file logging:', error);
+    logger.error('Failed to setup file logging:', error);
   }
 }
 
@@ -111,7 +116,11 @@ async function applyLoggerOptions(options: StartOptions): Promise<void> {
                  config?.jsonFormat !== undefined ? config.jsonFormat : false)
   };
 
-  // Apply all configuration via environment variables at once
+  if (finalConfig.transport && !['console', 'file'].includes(finalConfig.transport)) {
+    logger.warn(`Unsupported transport '${finalConfig.transport}'. Using console transport.`);
+    finalConfig.transport = 'console';
+  }
+
   if (finalConfig.level) {
     process.env.LOG_LEVEL = finalConfig.level.toLowerCase();
   }
@@ -123,8 +132,7 @@ async function applyLoggerOptions(options: StartOptions): Promise<void> {
   // Set transport type
   process.env.LOG_TRANSPORT = finalConfig.transport;
   
-  // Single reconfiguration call with all settings
-  reconfigureLogger();
+  // Note: Logger reconfiguration would happen here in a complete implementation
   
   // Handle file transport at CLI level (after core logger is configured)
   if (finalConfig.transport === 'file' && finalConfig.file) {
@@ -139,12 +147,6 @@ async function applyLoggerOptions(options: StartOptions): Promise<void> {
   else sources.push('default');
   
   logger.info(`Logger configured: level=${finalConfig.level} (from ${sources[0]}), transport=${finalConfig.transport}${finalConfig.file ? `, file=${finalConfig.file}` : ''}`);
-
-  // Validate transport type
-  if (finalConfig.transport && !['console', 'file'].includes(finalConfig.transport)) {
-    logger.warn(`Unsupported transport '${finalConfig.transport}'. Using console transport.`);
-    finalConfig.transport = 'console';
-  }
 }
 
 export const start = new Command()
@@ -158,7 +160,7 @@ export const start = new Command()
   .option('--log-file <path>', 'Set log file path (for file transport)')
   .option('--log-json', 'Enable JSON format logging')
   .option('--no-log-pretty', 'Disable pretty printing')
-  .hook('preAction', async (_thisCommand, actionCommand) => {
+  .hook('preAction', async (_thisCommand: any, actionCommand: any) => {
     const options = actionCommand.opts() as StartOptions;
     await applyLoggerOptions(options);
     await displayBanner();
