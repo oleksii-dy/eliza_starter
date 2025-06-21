@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import { describe, expect, it, vi, beforeAll, afterAll } from 'vitest';
 import { starterPlugin, StarterService } from '../index';
 import { ModelType, logger } from '@elizaos/core';
 import dotenv from 'dotenv';
@@ -42,13 +42,13 @@ function createRealRuntime() {
       plugins: [],
       settings: {},
     },
-    getSetting: (key: string) => null,
+    getSetting: (_key: string) => null,
     models: starterPlugin.models,
     db: {
-      get: async (key: string) => null,
-      set: async (key: string, value: any) => true,
-      delete: async (key: string) => true,
-      getKeys: async (pattern: string) => [],
+      get: async (_key: string) => null,
+      set: async (_key: string, _value: any) => true,
+      delete: async (_key: string) => true,
+      getKeys: async (_pattern: string) => [],
     },
     getService: (serviceType: string) => {
       // Log the service request for debugging

@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { Content, IAgentRuntime, Memory, State, logger } from '@elizaos/core';
+import { IAgentRuntime, Memory, State, logger } from '@elizaos/core';
 import {
   createMockRuntime as createCoreMockRuntime,
   createMockMessage as createCoreMockMessage,
@@ -7,7 +7,7 @@ import {
   documentTestResult,
   runCoreActionTests,
 } from './utils/core-test-utils';
-import { character } from '../index';
+import { character } from '../characters/default';
 import plugin from '../plugin';
 
 /**

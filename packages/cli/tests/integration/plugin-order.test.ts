@@ -135,7 +135,7 @@ describe('Plugin Registration Order', () => {
     // Create mock service classes
     class ServiceA {
       static serviceType = 'service_a';
-      constructor(runtime: any) {
+      constructor(_runtime: any) {
         serviceInitOrder.push('ServiceA');
       }
       async initialize() {}
@@ -171,7 +171,7 @@ describe('Plugin Registration Order', () => {
       name: 'services-plugin',
       description: 'Plugin with dependent services',
       services: [ServiceA as any, ServiceB as any],
-      init: async (config, runtime) => {
+      init: async (_config, runtime) => {
         // Manually start services to test order
         for (const Service of pluginWithServices.services || []) {
           const service = await Service.start(runtime);
@@ -206,7 +206,7 @@ describe('Plugin Registration Order', () => {
     // Same service classes as above
     class ServiceA {
       static serviceType = 'service_a';
-      constructor(runtime: any) {
+      constructor(_runtime: any) {
         serviceInitOrder.push('ServiceA');
       }
       async initialize() {}
@@ -241,7 +241,7 @@ describe('Plugin Registration Order', () => {
       name: 'services-plugin',
       description: 'Plugin with dependent services in wrong order',
       services: [ServiceB as any, ServiceA as any], // Wrong order!
-      init: async (config, runtime) => {
+      init: async (_config, runtime) => {
         // Manually start services to test order
         try {
           for (const Service of pluginWithServices.services || []) {

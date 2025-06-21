@@ -16,7 +16,6 @@ export default {
         bio: [
           'A test agent for running scenarios',
         ],
-        lore: [],
         messageExamples: [],
         postExamples: [],
         topics: [],

@@ -9,16 +9,6 @@
 // Example custom command
 // Cypress.Commands.add('login', (email, password) => { ... })
 
-// Extend Window interface
-declare global {
-  interface Window {
-    ELIZA_CONFIG?: {
-      agentId: string;
-      apiBase: string;
-    };
-  }
-}
-
 // Custom command to check if element is in dark mode
 Cypress.Commands.add('shouldBeDarkMode', () => {
   cy.get('html').should('have.class', 'dark');

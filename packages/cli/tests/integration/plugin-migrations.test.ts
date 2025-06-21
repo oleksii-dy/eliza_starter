@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
-import * as path from 'path';
+import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -11,14 +11,14 @@ describe('Plugin Migration Regression Tests', () => {
   let testDir: string;
   let originalCwd: string;
 
-  beforeEach(() => {
+  beforeAll(() => {
     originalCwd = process.cwd();
     // Create a temporary test directory
     testDir = path.join(__dirname, `test-migrations-${Date.now()}`);
     fs.mkdirSync(testDir, { recursive: true });
   });
 
-  afterEach(() => {
+  afterAll(() => {
     // Clean up
     process.chdir(originalCwd);
     if (fs.existsSync(testDir)) {

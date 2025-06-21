@@ -77,7 +77,7 @@ describe('buildProject', () => {
   });
 
   it('should skip build when no build script exists', async () => {
-    vi.mocked(fs.existsSync).mockImplementation((path) => {
+    (fs.existsSync as any).mockImplementation((path: any) => {
       const pathStr = path.toString();
       if (pathStr === '/test/project') return true; // Project directory exists
       if (pathStr.endsWith('package.json')) return true;

@@ -28,7 +28,7 @@ describe('MetricsCollector', () => {
           },
           {
             id: 'actor2',
-            role: 'tester',
+            role: 'subject',
             script: { steps: Array(3).fill({ type: 'message' }) },
           },
         ],

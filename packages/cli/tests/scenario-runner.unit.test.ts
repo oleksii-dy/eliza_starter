@@ -1,39 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, mock } from 'bun:test';
 import { ScenarioRunner } from '../src/scenario-runner/index.js';
 import { ScenarioVerifier } from '../src/scenario-runner/verification.js';
 import { MetricsCollector, BenchmarkAnalyzer } from '../src/scenario-runner/metrics.js';
 import type { Scenario } from '../src/scenario-runner/types.js';
+import type { UUID } from '@elizaos/core';
 
-// Mock the core dependencies
-vi.mock('@elizaos/core', () => ({
-  createUniqueUuid: vi.fn(() => 'test-uuid-123'),
-  asUUID: vi.fn((id) => id),
-  EventType: {
-    MESSAGE_RECEIVED: 'messageReceived',
-  },
-  ChannelType: {
-    DM: 'dm',
-    GROUP: 'group',
-  },
-  Role: {
-    USER: 'user',
-    ASSISTANT: 'assistant',
-  },
-  logger: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
-vi.mock('@elizaos/server', () => ({
-  AgentServer: vi.fn().mockImplementation(() => ({
-    initialize: vi.fn(),
-    stop: vi.fn(),
-    agents: new Map(),
-  })),
-}));
+// Note: Module mocking in bun:test is handled differently
+// We'll create mock objects directly in the test
 
 describe('ScenarioRunner Unit Tests', () => {
   const mockServer = {
@@ -43,10 +16,10 @@ describe('ScenarioRunner Unit Tests', () => {
         {
           agentId: 'test-agent',
           character: { name: 'Test Agent' },
-          ensureWorldExists: vi.fn(),
-          ensureRoomExists: vi.fn(),
-          createMemory: vi.fn(),
-          emitEvent: vi.fn(),
+          ensureWorldExists: mock(),
+          ensureRoomExists: mock(),
+          createMemory: mock(),
+          emitEvent: mock(),
         },
       ],
     ]),
@@ -55,11 +28,11 @@ describe('ScenarioRunner Unit Tests', () => {
   const mockRuntime = {
     agentId: 'test-agent',
     character: { name: 'Test Agent' },
-    ensureWorldExists: vi.fn(),
-    ensureRoomExists: vi.fn(),
-    createMemory: vi.fn(),
-    emitEvent: vi.fn(),
-    useModel: vi.fn().mockResolvedValue('YES - Test passed'),
+    ensureWorldExists: mock(),
+    ensureRoomExists: mock(),
+    createMemory: mock(),
+    emitEvent: mock(),
+    useModel: mock(() => Promise.resolve('YES - Test passed')),
   } as any;
 
   it('should create a ScenarioRunner instance', () => {
@@ -76,9 +49,10 @@ describe('ScenarioRunner Unit Tests', () => {
       description: 'A test scenario',
       actors: [
         {
-          id: 'subject',
+          id: 'subject' as UUID,
           name: 'Test Agent',
           role: 'subject',
+          script: { steps: [] }
         },
       ],
       setup: {},
@@ -127,9 +101,10 @@ describe('ScenarioRunner Unit Tests', () => {
       description: 'Test',
       actors: [
         {
-          id: 'tester',
+          id: 'tester' as UUID,
           name: 'Tester',
-          role: 'tester',
+          role: 'subject',
+          script: { steps: [] }
         },
       ],
       setup: {},
@@ -155,14 +130,16 @@ describe('ScenarioRunner Unit Tests', () => {
       ...noSubjectScenario,
       actors: [
         {
-          id: 'subject1',
+          id: 'subject1' as UUID,
           name: 'Subject 1',
           role: 'subject',
+          script: { steps: [] }
         },
         {
-          id: 'subject2',
+          id: 'subject2' as UUID,
           name: 'Subject 2',
           role: 'subject',
+          script: { steps: [] }
         },
       ],
     };
@@ -175,7 +152,7 @@ describe('ScenarioRunner Unit Tests', () => {
 
 describe('ScenarioVerifier Unit Tests', () => {
   const mockRuntime = {
-    useModel: vi.fn(),
+    useModel: mock(),
   } as any;
 
   it('should create a ScenarioVerifier instance', () => {
@@ -196,7 +173,7 @@ describe('MetricsCollector Unit Tests', () => {
     // Mock Date.now to simulate time passing
     const originalDateNow = Date.now;
     let currentTime = 1000000;
-    Date.now = vi.fn(() => currentTime);
+    Date.now = mock(() => currentTime);
 
     collector.start();
 
@@ -209,7 +186,7 @@ describe('MetricsCollector Unit Tests', () => {
           {
             id: 'actor1',
             name: 'Actor 1',
-            role: 'tester' as const,
+            role: 'subject' as const,
             script: {
               steps: [
                 { type: 'message' as const, content: 'Hello' },

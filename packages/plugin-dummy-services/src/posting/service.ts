@@ -27,7 +27,7 @@ export interface IPostService extends Service {
 }
 
 export class DummyPostService extends Service implements IPostService {
-  readonly serviceName = 'dummy-post';
+  static readonly serviceName = 'POST';
   static readonly serviceType = 'post';
   readonly capabilityDescription = 'Provides a dummy posting service for testing.';
 
@@ -111,10 +111,10 @@ export class DummyPostService extends Service implements IPostService {
   }
 
   async start(): Promise<void> {
-    logger.info(`[${this.serviceName}] Service started.`);
+    logger.info(`[${DummyPostService.serviceName}] Service started.`);
   }
 
   async stop(): Promise<void> {
-    logger.info(`[${this.serviceName}] Service stopped.`);
+    logger.info(`[${DummyPostService.serviceName}] Service stopped.`);
   }
 }

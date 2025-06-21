@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, mock, spyOn } from 'bun:test';
 import { Command } from 'commander';
 import * as childProcess from 'node:child_process';
 import { teeCommand } from '../../src/commands/tee';
@@ -22,27 +22,26 @@ describe('TEE Command', () => {
   let mockSpawn: any;
 
   beforeAll(() => {
-    mockSpawn = vi.spyOn(childProcess, 'spawn');
+    // Use spyOn to mock childProcess.spawn
+    mockSpawn = spyOn(childProcess, 'spawn').mockImplementation(() => ({ 
+      on: mock(), 
+      kill: mock(),
+      stdout: { on: mock() },
+      stderr: { on: mock() },
+    }) as any);
   });
 
   afterAll(() => {
+    // Restore the original implementation
     mockSpawn.mockRestore();
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockSpawn.mockImplementation(() => {
-      const mockProcess = {
-        on: vi.fn(),
-        stdout: { on: vi.fn() },
-        stderr: { on: vi.fn() },
-      };
-      return mockProcess as any;
-    });
+    mockSpawn.mockClear();
   });
 
   afterEach(() => {
-    // No longer need vi.restoreAllMocks() here
+    // No cleanup needed for bun:test
   });
 
   describe('teeCommand', () => {
@@ -84,19 +83,19 @@ describe('TEE Command', () => {
 
     it.skipIf(skipPhalaTests)('should delegate to npx phala CLI', async () => {
       const mockProcess = {
-        on: vi.fn((event, callback) => {
+        on: mock((event, callback) => {
           if (event === 'exit') {
             // Simulate successful exit
-            callback(0);
+            callback?.(0);
           }
         }),
-        stdout: { on: vi.fn() },
-        stderr: { on: vi.fn() },
+        stdout: { on: mock() },
+        stderr: { on: mock() },
       };
       mockSpawn.mockReturnValue(mockProcess as any);
 
       // Mock process.exit to capture the call
-      const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+      const mockExit = spyOn(process, 'exit').mockImplementation(() => undefined as never);
 
       // Simulate command execution
       phalaCliCommand.parse(['node', 'test', 'help'], { from: 'user' });
@@ -122,8 +121,8 @@ describe('TEE Command', () => {
         throw new Error('Spawn failed');
       });
 
-      const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
-      const mockError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const mockExit = spyOn(process, 'exit').mockImplementation(() => undefined as never);
+      const mockError = spyOn(console, 'error').mockImplementation(() => {});
 
       try {
         phalaCliCommand.parse(['node', 'test', 'help'], { from: 'user' });

@@ -1,28 +1,22 @@
 #!/usr/bin/env node
-import { AgentServer } from '@elizaos/server';
 import {
-  logger,
-  type Character,
-  type IAgentRuntime,
-  type Memory,
-  type Content,
-  asUUID,
-  stringToUuid,
-  encryptedCharacter,
   AgentRuntime,
+  encryptedCharacter,
+  logger,
+  stringToUuid,
+  type Character,
+  type Memory,
   type Plugin,
-  EventType,
 } from '@elizaos/core';
 import githubPlugin from '@elizaos/plugin-github';
-import TodoPlugin from '@elizaos/plugin-todo';
 import messageHandlingPlugin from '@elizaos/plugin-message-handling';
-import { plugin as sqlPlugin } from '@elizaos/plugin-sql';
-import { ScenarioRunner } from './index.js';
-import type { Scenario, ScenarioResult } from './types.js';
-import { v4 } from 'uuid';
+import TodoPlugin from '@elizaos/plugin-todo';
+import { AgentServer } from '@elizaos/server';
+import chalk from 'chalk';
 import * as fs from 'fs';
 import * as path from 'path';
-import chalk from 'chalk';
+import { ScenarioRunner } from './index.js';
+import type { Scenario } from './types.js';
 
 // Load the scenario
 async function loadGitHubTodoScenario(): Promise<Scenario> {
@@ -58,11 +52,6 @@ When asked to create a pull request, use the CREATE_GITHUB_PULL_REQUEST action.
 
 Always be clear about what actions you're taking and provide helpful summaries.`,
     bio: ['project management assistant', 'github integration expert', 'task tracking specialist'],
-    lore: [
-      'manages projects efficiently',
-      'keeps track of all tasks',
-      'ensures nothing falls through the cracks',
-    ],
     messageExamples: [],
     postExamples: [],
     topics: ['project management', 'github', 'todo tracking', 'software development'],
@@ -99,7 +88,7 @@ async function runGitHubTodoTest() {
   try {
     // Validate environment
     const requiredEnvVars = ['GITHUB_TOKEN', 'OPENAI_API_KEY'];
-    const missingVars = requiredEnvVars.filter((v) => !process.env[v]);
+    const missingVars = requiredEnvVars.filter((v: any) => !process.env[v]);
 
     if (missingVars.length > 0) {
       throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
@@ -124,6 +113,10 @@ async function runGitHubTodoTest() {
     // Create and register test agent
     console.log(chalk.blue('🤖 Creating test agent...'));
     const character = createTestCharacter();
+
+    // Dynamically import SQL plugin to avoid early schema loading
+    const sqlModule = await import('@elizaos/plugin-sql');
+    const sqlPlugin = sqlModule.plugin;
 
     // Create the runtime with plugins
     const runtime = new AgentRuntime({
@@ -152,21 +145,39 @@ async function runGitHubTodoTest() {
       // Log what actions are being processed
       logger.info('Processing actions for message:', message.content.text);
 
-      // Track action executions
-      const originalActions = runtime.actions;
-      runtime.actions.forEach((action) => {
+      // Track action executions by wrapping handlers
+      const wrappedActions = runtime.actions.map((action) => {
         const originalHandler = action.handler;
-        action.handler = async (...args) => {
-          actionTracker.recordAction(action.name, args[1]?.content);
-          logger.info(`Executing action: ${action.name}`);
-          return originalHandler(...args);
+        return {
+          ...action,
+          handler: async (
+            runtime: AgentRuntime,
+            message: Memory,
+            state?: any,
+            options?: { [key: string]: unknown },
+            callback?: any,
+            responses?: Memory[]
+          ) => {
+            actionTracker.recordAction(action.name, message?.content);
+            logger.info(`Executing action: ${action.name}`);
+            return originalHandler(runtime, message, state, options, callback, responses);
+          },
         };
+      });
+
+      // Temporarily override the actions getter
+      const originalActionsGetter = Object.getOwnPropertyDescriptor(runtime, 'actions');
+      Object.defineProperty(runtime, 'actions', {
+        get: () => wrappedActions,
+        configurable: true,
       });
 
       const result = await originalProcessAction(message, responses, state, callback);
 
-      // Restore original handlers
-      runtime.actions = originalActions;
+      // Restore original actions getter
+      if (originalActionsGetter) {
+        Object.defineProperty(runtime, 'actions', originalActionsGetter);
+      }
 
       return result;
     };

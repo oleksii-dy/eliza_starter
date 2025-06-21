@@ -242,7 +242,6 @@ describe('PanelComponent Tests', () => {
         },
       ];
 
-      let currentPanel = 0;
 
       const PanelSwitcher = () => {
         const [activePanel, setActivePanel] = React.useState(0);

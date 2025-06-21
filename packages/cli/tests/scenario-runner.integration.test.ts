@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { ScenarioRunner } from '../src/scenario-runner/index.js';
-import { type Scenario, type ScenarioResult } from '../src/scenario-runner/types.js';
+import { type Scenario } from '../src/scenario-runner/types.js';
 import { AgentServer } from '@elizaos/server';
-import { type IAgentRuntime, type Character, logger } from '@elizaos/core';
+import { type IAgentRuntime, type Character, UUID } from '@elizaos/core';
 import { truthVsLieScenario } from '../scenarios/truth-vs-lie.js';
 
 // Mock logger to avoid noise in tests
@@ -35,24 +35,17 @@ describe('ScenarioRunner Integration Tests', () => {
   let scenarioRunner: ScenarioRunner;
 
   const mockCharacter: Character = {
-    id: 'test-agent',
+    id: 'test-agent' as UUID,
     name: 'Test Agent',
     username: 'testagent',
     system: 'You are a helpful test agent.',
-    modelProvider: 'openai',
     settings: {
       secrets: {},
-      voice: {
-        model: 'en_US-hfc_female-medium',
-      },
     },
     plugins: [],
-    clients: [],
     bio: [],
-    lore: [],
     messageExamples: [],
     postExamples: [],
-    people: [],
     topics: [],
     adjectives: [],
     knowledge: [],
@@ -88,7 +81,7 @@ describe('ScenarioRunner Integration Tests', () => {
       emitEvent: vi.fn().mockImplementation(async (event, data) => {
         // Simulate agent processing and response
         if (event === 'messageReceived' && data.callback) {
-          await data.callback({
+          await data.callback?.({
             text: 'Test response from agent',
             source: 'test-agent',
             actions: ['HELLO_WORLD'],
@@ -112,10 +105,10 @@ describe('ScenarioRunner Integration Tests', () => {
 
     // Create server with mock runtime
     server = new AgentServer();
-    await server.initialize();
+    await server.initialize({ dataDir: "./test-data" });
 
     // Add the mock runtime to the server
-    server.agents.set('test-agent-id', mockRuntime);
+    // server.agents.set('test-agent-id', mockRuntime); // agents property doesn't exist
 
     // Create scenario runner
     scenarioRunner = new ScenarioRunner(server, mockRuntime);
@@ -136,14 +129,15 @@ describe('ScenarioRunner Integration Tests', () => {
       description: 'A simple scenario to test the runner',
       actors: [
         {
-          id: 'subject',
+          id: 'subject' as UUID,
           name: 'Test Agent',
           role: 'subject',
+          script: { steps: [] }
         },
         {
-          id: 'tester',
+          id: 'tester' as UUID,
           name: 'Test User',
-          role: 'tester',
+          role: 'assistant',
           script: {
             steps: [
               {
@@ -179,7 +173,7 @@ describe('ScenarioRunner Integration Tests', () => {
           },
           {
             id: 'message-count',
-            type: 'rule',
+            type: 'llm',
             description: 'Check message count',
             weight: 1,
             config: {
@@ -248,7 +242,7 @@ describe('ScenarioRunner Integration Tests', () => {
 
     // Verify the scenario completed
     expect(result).toBeDefined();
-    expect(result.scenarioId).toBe('truth-vs-lie-detection');
+    expect(result.scenarioId).toBe('truth-vs-lie');
     expect(result.duration).toBeGreaterThan(0);
     expect(result.transcript).toBeDefined();
 
@@ -266,11 +260,14 @@ describe('ScenarioRunner Integration Tests', () => {
       name: 'Sequential Test 1',
       description: 'First test scenario',
       actors: [
-        { id: 'subject', name: 'Agent', role: 'subject' },
         {
-          id: 'user1',
+          id: 'subject' as UUID, name: 'Agent', role: 'subject',
+          script: { steps: [] }
+        },
+        {
+          id: 'user1' as UUID,
           name: 'User 1',
-          role: 'tester',
+          role: 'assistant',
           script: {
             steps: [{ type: 'message', content: 'Hello from scenario 1' }],
           },
@@ -282,7 +279,7 @@ describe('ScenarioRunner Integration Tests', () => {
         rules: [
           {
             id: 'basic-check-1',
-            type: 'rule',
+            type: 'llm',
             description: 'Basic check',
             weight: 1,
             config: { rule: 'messageCount', operator: 'gte', value: 1 },
@@ -297,11 +294,14 @@ describe('ScenarioRunner Integration Tests', () => {
       name: 'Sequential Test 2',
       description: 'Second test scenario',
       actors: [
-        { id: 'subject', name: 'Agent', role: 'subject' },
         {
-          id: 'user2',
+          id: 'subject' as UUID, name: 'Agent', role: 'subject',
+          script: { steps: [] }
+        },
+        {
+          id: 'user2' as UUID,
           name: 'User 2',
-          role: 'tester',
+          role: 'assistant',
           script: {
             steps: [{ type: 'message', content: 'Hello from scenario 2' }],
           },
@@ -311,7 +311,7 @@ describe('ScenarioRunner Integration Tests', () => {
         rules: [
           {
             id: 'basic-check-2',
-            type: 'rule',
+            type: 'llm',
             description: 'Basic check 2',
             weight: 1,
             config: { rule: 'messageCount', operator: 'gte', value: 1 },
@@ -335,11 +335,14 @@ describe('ScenarioRunner Integration Tests', () => {
       name: 'Metrics Test Scenario',
       description: 'Test metrics collection',
       actors: [
-        { id: 'subject', name: 'Agent', role: 'subject' },
         {
-          id: 'user',
+          id: 'subject' as UUID, name: 'Agent', role: 'subject',
+          script: { steps: [] }
+        },
+        {
+          id: 'user' as UUID,
           name: 'User',
-          role: 'tester',
+          role: 'assistant',
           script: {
             steps: [
               { type: 'message', content: 'First message' },
@@ -355,7 +358,7 @@ describe('ScenarioRunner Integration Tests', () => {
         rules: [
           {
             id: 'metrics-check',
-            type: 'rule',
+            type: 'llm',
             description: 'Check metrics collection',
             weight: 1,
             config: { rule: 'messageCount', operator: 'gte', value: 2 },

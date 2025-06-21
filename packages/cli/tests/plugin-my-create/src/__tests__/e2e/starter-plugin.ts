@@ -109,18 +109,19 @@ export const StarterPluginTestSuite: TestSuite = {
             `Expected character name to be "Eliza" but got "${runtime.character.name}"`
           );
         }
-        
+
         // Debug: Check if getService exists
         if (!runtime.getService) {
           throw new Error('Runtime does not have getService method');
         }
-        
+
         // Verify the plugin is loaded properly
         // First try the expected service name patterns
-        let service = runtime.getService('starter') || 
-                      runtime.getService('_StarterService') || 
-                      runtime.getService('StarterService');
-        
+        let service =
+          runtime.getService('starter') ||
+          runtime.getService('_StarterService') ||
+          runtime.getService('StarterService');
+
         // If not found, try to get all services and find it
         if (!service && runtime.getAllServices) {
           const allServices = runtime.getAllServices();
@@ -132,10 +133,14 @@ export const StarterPluginTestSuite: TestSuite = {
             }
           }
         }
-        
+
         if (!service) {
-          const serviceList = runtime.getAllServices ? Object.keys(runtime.getAllServices() || {}) : [];
-          throw new Error(`Starter service not found. Available services: ${serviceList.join(', ') || 'none'}`);
+          const serviceList = runtime.getAllServices
+            ? Object.keys(runtime.getAllServices() || {})
+            : [];
+          throw new Error(
+            `Starter service not found. Available services: ${serviceList.join(', ') || 'none'}`
+          );
         }
       },
     },
@@ -150,7 +155,7 @@ export const StarterPluginTestSuite: TestSuite = {
       name: 'should_have_hello_world_action',
       fn: async (runtime) => {
         // Access actions through runtime.actions instead of getPlugin
-        const actionExists = runtime.actions?.some((a) => a.name === 'HELLO_WORLD');
+        const actionExists = runtime.actions?.some((a: any) => a.name === 'HELLO_WORLD');
         if (!actionExists) {
           throw new Error('Hello world action not found in runtime actions');
         }
@@ -193,7 +198,7 @@ export const StarterPluginTestSuite: TestSuite = {
         let responseReceived = false;
 
         // Find the hello world action in runtime.actions
-        const helloWorldAction = runtime.actions?.find((a) => a.name === 'HELLO_WORLD');
+        const helloWorldAction = runtime.actions?.find((a: any) => a.name === 'HELLO_WORLD');
         if (!helloWorldAction) {
           throw new Error('Hello world action not found in runtime actions');
         }
@@ -258,7 +263,7 @@ export const StarterPluginTestSuite: TestSuite = {
 
         // Find the hello world provider in runtime.providers
         const helloWorldProvider = runtime.providers?.find(
-          (p) => p.name === 'HELLO_WORLD_PROVIDER'
+          (p: any) => p.name === 'HELLO_WORLD_PROVIDER'
         );
         if (!helloWorldProvider) {
           throw new Error('Hello world provider not found in runtime providers');
@@ -286,12 +291,13 @@ export const StarterPluginTestSuite: TestSuite = {
         if (!runtime.getService) {
           throw new Error('Runtime does not have getService method');
         }
-        
+
         // Get the service from the runtime
-        let service = runtime.getService('starter') || 
-                      runtime.getService('_StarterService') || 
-                      runtime.getService('StarterService');
-        
+        let service =
+          runtime.getService('starter') ||
+          runtime.getService('_StarterService') ||
+          runtime.getService('StarterService');
+
         // If not found, try to get all services and find it
         if (!service && runtime.getAllServices) {
           const allServices = runtime.getAllServices();
@@ -303,10 +309,14 @@ export const StarterPluginTestSuite: TestSuite = {
             }
           }
         }
-        
+
         if (!service) {
-          const serviceList = runtime.getAllServices ? Object.keys(runtime.getAllServices() || {}) : [];
-          throw new Error(`Starter service not found. Available services: ${serviceList.join(', ') || 'none'}`);
+          const serviceList = runtime.getAllServices
+            ? Object.keys(runtime.getAllServices() || {})
+            : [];
+          throw new Error(
+            `Starter service not found. Available services: ${serviceList.join(', ') || 'none'}`
+          );
         }
 
         // Check service capability description

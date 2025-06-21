@@ -1,246 +1,276 @@
 #!/usr/bin/env bats
 
 load '../helpers/test-helpers'
+load '../helpers/environment-helpers'
 
-# Test basic scenario command
-@test "scenario command displays help when no arguments provided" {
-  run $ELIZA_BIN scenario --help
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "Run scenario tests against agents" ]]
-  [[ "$output" =~ "--scenario" ]]
-  [[ "$output" =~ "--directory" ]]
+setup() {
+  setup_test_environment
+  cd "$TEST_DIR"
 }
 
-# Test scenario file loading
-@test "scenario command loads single scenario file" {
-  # Create a test scenario
-  cat > "$BATS_TMPDIR/test-scenario.json" <<EOF
-{
-  "id": "test-scenario",
-  "name": "Test Scenario",
-  "description": "A test scenario",
-  "actors": [{
-    "id": "subject",
-    "name": "Test Agent",
-    "role": "subject"
-  }],
-  "setup": {},
-  "execution": {},
-  "verification": {
-    "rules": [{
-      "id": "test-rule",
-      "type": "llm",
-      "description": "Test verification"
-    }]
-  }
-}
-EOF
-
-  run $ELIZA_BIN scenario --scenario "$BATS_TMPDIR/test-scenario.json" --dry-run
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "Test Scenario" ]]
+teardown() {
+  teardown_test_environment
 }
 
-# Test directory scanning
-@test "scenario command scans directory for scenarios" {
-  mkdir -p "$BATS_TMPDIR/scenarios"
+@test "scenario command exists" {
+  run elizaos scenario --help
+  assert_success
+  assert_output --partial "Run and manage scenario tests"
+}
+
+@test "scenario generate command exists" {
+  run elizaos scenario generate --help
+  assert_success
+  assert_output --partial "Generate a new scenario"
+}
+
+@test "scenario run command exists" {
+  run elizaos scenario run --help
+  assert_success
+  assert_output --partial "Run scenario tests"
+}
+
+@test "scenario test command exists" {
+  run elizaos scenario test --help
+  assert_success
+  assert_output --partial "Run scenario tests"
+}
+
+@test "scenario generate creates new scenario" {
+  run elizaos scenario generate "Test scenario for BATS" --output test-scenario.ts
+  assert_success
+  assert_output --partial "Generated scenario"
   
-  # Create multiple test scenarios
-  for i in 1 2 3; do
-    cat > "$BATS_TMPDIR/scenarios/scenario-$i.json" <<EOF
-{
-  "id": "test-scenario-$i",
-  "name": "Test Scenario $i",
-  "description": "Test scenario number $i",
-  "actors": [{
-    "id": "subject",
-    "name": "Test Agent $i",
-    "role": "subject"
-  }],
-  "setup": {},
-  "execution": {},
-  "verification": {
-    "rules": [{
-      "id": "rule-$i",
-      "type": "llm",
-      "description": "Test rule $i"
-    }]
-  }
-}
-EOF
-  done
-
-  run $ELIZA_BIN scenario --directory "$BATS_TMPDIR/scenarios" --dry-run
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "Found 3 scenario(s)" ]]
+  # Verify the scenario file was created
+  assert_file_exists "test-scenario.ts"
 }
 
-# Test filter option
-@test "scenario command filters scenarios by pattern" {
-  mkdir -p "$BATS_TMPDIR/scenarios"
-  
-  # Create scenarios with different tags
-  cat > "$BATS_TMPDIR/scenarios/auth-scenario.json" <<EOF
-{
-  "id": "auth-test",
-  "name": "Authentication Test",
-  "tags": ["auth", "security"],
-  "description": "Test authentication",
-  "actors": [{
-    "id": "subject",
-    "name": "Auth Agent",
-    "role": "subject"
-  }],
-  "setup": {},
-  "execution": {},
-  "verification": {
-    "rules": [{
-      "id": "auth-rule",
-      "type": "llm",
-      "description": "Verify auth"
-    }]
-  }
-}
-EOF
-
-  cat > "$BATS_TMPDIR/scenarios/chat-scenario.json" <<EOF
-{
-  "id": "chat-test",
-  "name": "Chat Test",
-  "tags": ["chat", "conversation"],
-  "description": "Test chat",
-  "actors": [{
-    "id": "subject",
-    "name": "Chat Agent",
-    "role": "subject"
-  }],
-  "setup": {},
-  "execution": {},
-  "verification": {
-    "rules": [{
-      "id": "chat-rule",
-      "type": "llm",
-      "description": "Verify chat"
-    }]
-  }
-}
-EOF
-
-  run $ELIZA_BIN scenario --directory "$BATS_TMPDIR/scenarios" --filter "auth" --dry-run
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "Authentication Test" ]]
-  [[ ! "$output" =~ "Chat Test" ]]
+@test "scenario run requires options" {
+  run elizaos scenario run
+  assert_failure
+  assert_output --partial "required"
 }
 
-# Test output formats
-@test "scenario command supports JSON output format" {
-  skip "Requires full runtime setup"
-  run $ELIZA_BIN scenario --scenario "$BATS_TMPDIR/test-scenario.json" --format json --output "$BATS_TMPDIR/results.json"
-  [ "$status" -eq 0 ]
-  [ -f "$BATS_TMPDIR/results.json" ]
-  
-  # Verify JSON structure
-  run jq '.' "$BATS_TMPDIR/results.json"
-  [ "$status" -eq 0 ]
+@test "scenario run with non-existent file fails" {
+  run elizaos scenario run --file non-existent-scenario.ts
+  assert_failure
+  assert_output --partial "not found"
 }
 
-# Test parallel execution
-@test "scenario command supports parallel execution option" {
-  run $ELIZA_BIN scenario --parallel --max-concurrency 2 --help
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "--parallel" ]]
-  [[ "$output" =~ "--max-concurrency" ]]
+@test "scenario test is alias for run" {
+  run elizaos scenario test --help
+  assert_success
+  assert_output --partial "Run scenario tests"
 }
 
-# Test benchmark mode
-@test "scenario command supports benchmark mode" {
-  run $ELIZA_BIN scenario --benchmark --help
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "--benchmark" ]]
+@test "scenario list shows available scenarios" {
+  run elizaos scenario list
+  assert_success
+  assert_output --partial "Available scenarios:"
 }
 
-# Test generate subcommand
-@test "scenario generate subcommand creates new scenarios" {
-  run $ELIZA_BIN scenario generate --help
-  [ "$status" -eq 0 ]
-  [[ "$output" =~ "Generate a new scenario using AI" ]]
-  [[ "$output" =~ "--plugins" ]]
-  [[ "$output" =~ "--complexity" ]]
+@test "scenario run with invalid scenario fails" {
+  run elizaos scenario run non-existent-scenario
+  assert_failure
+  assert_output --partial "Scenario not found"
 }
 
-# Test error handling
-@test "scenario command handles missing scenario file gracefully" {
-  run $ELIZA_BIN scenario --scenario "/non/existent/scenario.json"
-  [ "$status" -ne 0 ]
-  [[ "$output" =~ "not found" ]] || [[ "$output" =~ "Failed to load" ]]
-}
-
-@test "scenario command handles invalid scenario format" {
-  echo "invalid json" > "$BATS_TMPDIR/invalid.json"
-  run $ELIZA_BIN scenario --scenario "$BATS_TMPDIR/invalid.json"
-  [ "$status" -ne 0 ]
-  [[ "$output" =~ "Failed to load scenario" ]] || [[ "$output" =~ "parse" ]]
-}
-
-# Test default scenario discovery
-@test "scenario command discovers scenarios in default locations" {
-  # Create scenarios in default location
-  mkdir -p "$BATS_TEST_DIRNAME/../../../scenarios"
-  cat > "$BATS_TEST_DIRNAME/../../../scenarios/default-test.json" <<EOF
-{
-  "id": "default-test",
-  "name": "Default Test",
-  "description": "Found in default location",
-  "actors": [{
-    "id": "subject",
-    "name": "Default Agent",
-    "role": "subject"
-  }],
-  "setup": {},
-  "execution": {},
-  "verification": {
-    "rules": [{
-      "id": "default-rule",
-      "type": "llm",
-      "description": "Default verification"
-    }]
-  }
-}
-EOF
-
-  # Run without specifying directory
-  run $ELIZA_BIN scenario --dry-run
-  # Clean up
-  rm -f "$BATS_TEST_DIRNAME/../../../scenarios/default-test.json"
-  
-  [ "$status" -eq 0 ] || [[ "$output" =~ "No scenarios found" ]]
-}
-
-# Test TypeScript scenario loading
-@test "scenario command loads TypeScript scenario files" {
-  cat > "$BATS_TMPDIR/test-scenario.ts" <<'EOF'
-export default {
-  id: "ts-test",
-  name: "TypeScript Test",
-  description: "A TypeScript scenario",
+@test "scenario validate checks scenario syntax" {
+  # Create a test scenario file
+  cat > test-scenario.ts << 'EOF'
+export const testScenario = {
+  id: 'test-scenario',
+  name: 'Test Scenario',
+  description: 'A test scenario',
   actors: [{
-    id: "subject",
-    name: "TS Agent",
-    role: "subject"
+    id: '123e4567-e89b-12d3-a456-426614174000',
+    name: 'TestBot',
+    role: 'subject'
   }],
-  setup: {},
-  execution: {},
+  execution: {
+    steps: [{
+      type: 'message',
+      actorId: '123e4567-e89b-12d3-a456-426614174000',
+      content: 'Hello world'
+    }]
+  },
   verification: {
     rules: [{
-      id: "ts-rule",
-      type: "llm",
-      description: "TS verification"
+      id: 'rule-1',
+      type: 'llm',
+      description: 'Check greeting'
     }]
   }
 };
 EOF
 
-  skip "Requires TypeScript compilation"
-  run $ELIZA_BIN scenario --scenario "$BATS_TMPDIR/test-scenario.ts"
-  [ "$status" -eq 0 ]
+  run elizaos scenario validate test-scenario.ts
+  assert_success
+  assert_output --partial "Scenario is valid"
+}
+
+@test "scenario run executes simple scenario" {
+  # Create a simple test scenario
+  mkdir -p scenarios
+  cat > scenarios/simple-test.ts << 'EOF'
+export const simpleTest = {
+  id: 'simple-test',
+  name: 'Simple Test',
+  description: 'A simple test scenario',
+  actors: [{
+    id: '123e4567-e89b-12d3-a456-426614174000',
+    name: 'TestBot',
+    role: 'subject',
+    script: {
+      steps: [{
+        type: 'message',
+        content: 'Hello from test'
+      }]
+    }
+  }],
+  setup: {},
+  execution: {
+    steps: [{
+      type: 'message',
+      actorId: '123e4567-e89b-12d3-a456-426614174000',
+      content: 'Start test'
+    }]
+  },
+  verification: {
+    rules: [{
+      id: 'check-response',
+      type: 'llm',
+      description: 'Agent should respond',
+      config: {
+        expectedBehavior: 'Agent responds to greeting'
+      }
+    }]
+  }
+};
+export default simpleTest;
+EOF
+
+  # Run the scenario with a timeout
+  run timeout 30s elizaos scenario run simple-test --verbose
+  assert_success
+  assert_output --partial "Running scenario: Simple Test"
+  assert_output --partial "Scenario completed"
+}
+
+@test "scenario run with multiple agents" {
+  # Create a multi-agent scenario
+  cat > scenarios/multi-agent.ts << 'EOF'
+export const multiAgent = {
+  id: 'multi-agent',
+  name: 'Multi Agent Test',
+  description: 'Test with multiple agents',
+  actors: [
+    {
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      name: 'Agent1',
+      role: 'subject'
+    },
+    {
+      id: '223e4567-e89b-12d3-a456-426614174001',
+      name: 'Agent2',
+      role: 'assistant'
+    }
+  ],
+  execution: {
+    steps: [
+      {
+        type: 'message',
+        actorId: '223e4567-e89b-12d3-a456-426614174001',
+        content: 'Hello Agent1'
+      },
+      {
+        type: 'wait',
+        duration: 1000
+      },
+      {
+        type: 'message',
+        actorId: '123e4567-e89b-12d3-a456-426614174000',
+        content: 'Hello Agent2'
+      }
+    ]
+  },
+  verification: {
+    rules: [{
+      id: 'check-interaction',
+      type: 'llm',
+      description: 'Agents should interact',
+      config: {
+        expectedBehavior: 'Both agents exchange greetings'
+      }
+    }]
+  }
+};
+export default multiAgent;
+EOF
+
+  run timeout 45s elizaos scenario run multi-agent
+  assert_success
+  assert_output --partial "Created isolated runtime for actor Agent1"
+  assert_output --partial "Created isolated runtime for actor Agent2"
+}
+
+@test "scenario metrics are collected" {
+  run timeout 30s elizaos scenario run simple-test --metrics
+  assert_success
+  assert_output --partial "Metrics:"
+  assert_output --partial "Duration:"
+  assert_output --partial "Messages:"
+}
+
+@test "scenario results can be exported" {
+  run timeout 30s elizaos scenario run simple-test --output results.json
+  assert_success
+  assert_file_exists "results.json"
+  
+  # Verify JSON structure
+  run jq '.scenarioId' results.json
+  assert_success
+  assert_output '"simple-test"'
+}
+
+@test "scenario can run with custom config" {
+  # Create a config file
+  cat > scenario-config.json << 'EOF'
+{
+  "timeout": 60000,
+  "verbose": true,
+  "parallel": false
+}
+EOF
+
+  run timeout 30s elizaos scenario run simple-test --config scenario-config.json
+  assert_success
+  assert_output --partial "Using config from scenario-config.json"
+}
+
+@test "scenario handles errors gracefully" {
+  # Create a scenario with an error
+  cat > scenarios/error-test.ts << 'EOF'
+export const errorTest = {
+  id: 'error-test',
+  name: 'Error Test',
+  actors: [], // No actors - should fail validation
+  execution: {},
+  verification: {}
+};
+export default errorTest;
+EOF
+
+  run elizaos scenario run error-test
+  assert_failure
+  assert_output --partial "Scenario must have at least one actor"
+}
+
+@test "scenario benchmark mode" {
+  run timeout 60s elizaos scenario run simple-test --benchmark --iterations 3
+  assert_success
+  assert_output --partial "Benchmark Results:"
+  assert_output --partial "Average duration:"
+  assert_output --partial "Min duration:"
+  assert_output --partial "Max duration:"
 } 

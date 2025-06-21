@@ -6,19 +6,6 @@ import type { UUID } from '@elizaos/core';
 
 const queryClient = new QueryClient();
 
-// Define the interface for the ELIZA_CONFIG
-interface ElizaConfig {
-  agentId: string;
-  apiBase: string;
-}
-
-// Declare global window extension for TypeScript
-declare global {
-  interface Window {
-    ELIZA_CONFIG?: ElizaConfig;
-  }
-}
-
 /**
  * Main Example route component
  */

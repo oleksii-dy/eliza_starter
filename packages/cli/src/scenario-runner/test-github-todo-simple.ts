@@ -11,7 +11,7 @@ async function runGitHubTodoScenarioTest() {
   try {
     // Validate environment
     const requiredEnvVars = ['GITHUB_TOKEN', 'OPENAI_API_KEY'];
-    const missingVars = requiredEnvVars.filter((v) => !process.env[v]);
+    const missingVars = requiredEnvVars.filter((v: any) => !process.env[v]);
 
     if (missingVars.length > 0) {
       console.error(
@@ -56,11 +56,6 @@ Be clear about what actions you're taking and provide helpful summaries.`,
         "I'm a project management assistant specializing in GitHub integration",
         'I help teams track issues and manage tasks efficiently',
         'I bridge the gap between GitHub issues and personal todo lists',
-      ],
-      lore: [
-        'once helped a team reduce their issue backlog by 80%',
-        'believes in the power of organized task management',
-        'knows that good project management is the key to successful software development',
       ],
       topics: [
         'project management',

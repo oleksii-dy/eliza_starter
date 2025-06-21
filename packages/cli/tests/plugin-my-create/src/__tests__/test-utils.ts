@@ -1,14 +1,6 @@
 import { vi } from 'vitest';
-import {
-  Content,
-  IAgentRuntime,
-  Memory,
-  ModelType,
-  Service,
-  State,
-  UUID,
-  logger,
-} from '@elizaos/core';
+import type { UUID } from '@elizaos/core';
+import { Content, Memory, ModelType, Service, State, logger,  } from '@elizaos/core';
 
 /**
  * Creates a mock runtime for testing
@@ -33,7 +25,7 @@ export function createMockRuntime(overrides: Partial<MockRuntime> = {}): MockRun
     getSetting: vi.fn().mockReturnValue(null),
 
     // Model methods
-    useModel: vi.fn().mockImplementation((modelType, params) => {
+    useModel: vi.fn().mockImplementation((modelType: any, _params) => {
       if (modelType === ModelType.TEXT_SMALL) {
         return Promise.resolve('Never gonna give you up, never gonna let you down');
       } else if (modelType === ModelType.TEXT_LARGE) {

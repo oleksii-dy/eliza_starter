@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import { describe, expect, it, vi, beforeAll, afterAll } from 'vitest';
 import plugin from '../plugin';
 import { ModelType, logger } from '@elizaos/core';
 import { StarterService } from '../plugin';
@@ -78,13 +78,13 @@ function createRealRuntime() {
       plugins: [],
       settings: {},
     },
-    getSetting: (key: string) => null,
+    getSetting: (_key: string) => null,
     models: plugin.models,
     db: {
-      get: async (key: string) => null,
-      set: async (key: string, value: any) => true,
-      delete: async (key: string) => true,
-      getKeys: async (pattern: string) => [],
+      get: async (_key: string) => null,
+      set: async (_key: string, _value: any) => true,
+      delete: async (_key: string) => true,
+      getKeys: async (_pattern: string) => [],
     },
     getService: (serviceType: string) => {
       // Get from cache or create new
@@ -336,7 +336,7 @@ describe('StarterService', () => {
 
     try {
       // We'll patch the getService function to ensure it returns null
-      const originalGetService = runtime.getService;
+
       runtime.getService = () => null;
 
       await StarterService.stop(runtime as any);

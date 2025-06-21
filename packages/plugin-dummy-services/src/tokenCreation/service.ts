@@ -22,7 +22,7 @@ export interface ITokenCreationService extends Service {
 }
 
 export class DummyTokenCreationService extends Service implements ITokenCreationService {
-  readonly serviceName = 'dummy-token-creation';
+  static readonly serviceName = 'TOKEN_CREATION';
   static readonly serviceType = 'token-creation';
   readonly capabilityDescription = 'Provides a dummy token creation service for testing.';
 
@@ -89,10 +89,10 @@ export class DummyTokenCreationService extends Service implements ITokenCreation
   }
 
   async start(): Promise<void> {
-    logger.info(`[${this.serviceName}] Service started.`);
+    logger.info(`[${DummyTokenCreationService.serviceName}] Service started.`);
   }
 
   async stop(): Promise<void> {
-    logger.info(`[${this.serviceName}] Service stopped.`);
+    logger.info(`[${DummyTokenCreationService.serviceName}] Service stopped.`);
   }
 }

@@ -24,7 +24,7 @@ export const basicMessageExchangeScenario: Scenario = {
     {
       id: 'user' as any,
       name: 'Test User',
-      role: 'tester',
+      role: 'subject',
       script: {
         steps: [
           { type: 'message', content: 'Hello agent, can you help me?' },
@@ -125,7 +125,9 @@ export const multiActorComplexScenario: Scenario = {
       id: 'moderator' as any,
       name: 'Moderator',
       role: 'subject',
-      systemPrompt: 'You are a helpful discussion moderator',
+      personality: {
+        systemPrompt: 'You are a helpful discussion moderator',
+      },
       script: {
         steps: [
           { type: 'message', content: 'Welcome everyone to the discussion' },
@@ -137,7 +139,7 @@ export const multiActorComplexScenario: Scenario = {
     {
       id: 'expert1' as any,
       name: 'AI Expert',
-      role: 'participant',
+      role: 'subject',
       script: {
         steps: [
           { type: 'wait', waitTime: 1000 },
@@ -150,7 +152,7 @@ export const multiActorComplexScenario: Scenario = {
     {
       id: 'expert2' as any,
       name: 'Ethics Expert',
-      role: 'participant',
+      role: 'subject',
       script: {
         steps: [
           { type: 'wait', waitTime: 1500 },
@@ -163,7 +165,7 @@ export const multiActorComplexScenario: Scenario = {
     {
       id: 'audience' as any,
       name: 'Audience Member',
-      role: 'tester',
+      role: 'subject',
       script: {
         steps: [
           { type: 'wait', waitTime: 5000 },
@@ -344,7 +346,7 @@ export const securityTestScenario: Scenario = {
     {
       id: 'security-tester' as any,
       name: 'Security Tester',
-      role: 'tester',
+      role: 'subject',
       script: {
         steps: [
           {
@@ -441,7 +443,7 @@ export const dynamicVerificationScenario: Scenario = {
     {
       id: 'dynamic-tester' as any,
       name: 'Dynamic Tester',
-      role: 'tester',
+      role: 'subject',
       script: {
         steps: [
           { type: 'message', content: 'Can you help me with something?' },

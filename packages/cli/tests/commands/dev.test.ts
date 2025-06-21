@@ -52,7 +52,7 @@ describe('ElizaOS Dev Commands', () => {
     // Setup test port (different from start tests)
     testServerPort = 3100;
     await killProcessOnPort(testServerPort);
-    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+    await new Promise((resolve) => setTimeout(resolve));
 
     // Change to project directory for each test
     process.chdir(projectDir);
@@ -140,7 +140,7 @@ describe('ElizaOS Dev Commands', () => {
       const devProcess = await startDevAndWait('--port ' + testServerPort);
 
       // Wait a moment for initialization
-      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+      await new Promise((resolve) => setTimeout(resolve));
 
       // Check that process is running
       expect(devProcess.pid).toBeDefined();
@@ -181,7 +181,7 @@ describe('ElizaOS Dev Commands', () => {
       });
 
       // Wait for process to start and detect project type
-      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.MEDIUM_WAIT));
+      await new Promise((resolve) => setTimeout(resolve));
 
       // Check that it detected project type (even if it fails later due to database)
       expect(output).toMatch(/(ElizaOS project|project mode|Identified as)/);
@@ -225,13 +225,13 @@ describe('ElizaOS Dev Commands', () => {
       });
 
       // Wait for initial startup
-      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.MEDIUM_WAIT));
+      await new Promise((resolve) => setTimeout(resolve));
 
       // Modify the file to trigger rebuild
       await writeFile(testFile, 'export const test = "modified";');
 
       // Wait for file change detection and rebuild
-      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.MEDIUM_WAIT));
+      await new Promise((resolve) => setTimeout(resolve));
 
       // Check that file change was detected (even if rebuild fails due to setup)
       // The important thing is that dev mode is watching for changes
@@ -293,7 +293,7 @@ describe('ElizaOS Dev Commands', () => {
       });
 
       // Wait for process to start and detect non-ElizaOS directory
-      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.MEDIUM_WAIT));
+      await new Promise((resolve) => setTimeout(resolve));
 
       // Should warn about not being in ElizaOS project but still work
       expect(output).toMatch(/(not.*recognized|standalone mode|not.*ElizaOS)/i);

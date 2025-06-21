@@ -9,7 +9,7 @@ const queryClient = new QueryClient();
 // Define the interface for the ELIZA_CONFIG
 interface ElizaConfig {
   agentId: string;
-  apiBase: string;
+  apiBase?: string;
 }
 
 // Declare global window extension for TypeScript

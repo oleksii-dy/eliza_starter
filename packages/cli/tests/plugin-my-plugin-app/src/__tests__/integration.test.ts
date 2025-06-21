@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterAll, beforeAll } from 'vitest';
-import { starterPlugin, StarterService } from '../index';
+import { starterPlugin } from '../index';
 import { createMockRuntime, setupLoggerSpies, MockRuntime } from './test-utils';
-import { HandlerCallback, IAgentRuntime, Memory, State, UUID, logger } from '@elizaos/core';
+import { HandlerCallback, IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 
 /**
  * Integration tests demonstrate how multiple components of the plugin work together.
@@ -9,10 +9,10 @@ import { HandlerCallback, IAgentRuntime, Memory, State, UUID, logger } from '@el
  * examine how components interact with each other.
  *
  * For example, this file shows how the HelloWorld action and HelloWorld provider
- * interact with the StarterService and the plugin's core functionality.
+ * interact with the _StarterService and the plugin's core functionality.
  */
 
-// Set up spies on logger
+// Set up spies on _logger
 beforeAll(() => {
   setupLoggerSpies();
 });
@@ -21,7 +21,7 @@ afterAll(() => {
   vi.restoreAllMocks();
 });
 
-describe('Integration: HelloWorld Action with StarterService', () => {
+describe('Integration: HelloWorld Action with _StarterService', () => {
   let mockRuntime: MockRuntime;
   let getServiceSpy: any;
 
@@ -46,9 +46,11 @@ describe('Integration: HelloWorld Action with StarterService', () => {
     });
   });
 
-  it('should handle HelloWorld action with StarterService available', async () => {
+  it('should handle HelloWorld action with _StarterService available', async () => {
     // Find the HelloWorld action
-    const helloWorldAction = starterPlugin.actions?.find((action) => action.name === 'HELLO_WORLD');
+    const helloWorldAction = starterPlugin.actions?.find(
+      (action: any) => action.name === 'HELLO_WORLD'
+    );
     expect(helloWorldAction).toBeDefined();
 
     // Create a mock message and state
@@ -118,10 +120,6 @@ describe('Integration: Plugin initialization and service registration', () => {
       // because unit tests don't run the full agent initialization flow
       if (starterPlugin.services) {
         const StarterServiceClass = starterPlugin.services[0];
-        const serviceInstance = await StarterServiceClass.start(
-          mockRuntime as unknown as IAgentRuntime
-        );
-
         // Register the Service class to match the core API
         mockRuntime.registerService(StarterServiceClass);
       }

@@ -108,6 +108,7 @@
     "@elizaos/plugin-message-handling": "workspace:*",
     "@elizaos/plugin-openai": "latest",
     "@elizaos/plugin-sql": "workspace:*",
+    "@elizaos/scenarios": "workspace:*",
     "@elizaos/server": "workspace:*",
     "@noble/curves": "^1.6.0",
     "@sindresorhus/merge-streams": "^4.0.0",

@@ -1,9 +1,8 @@
 import { vi } from 'vitest';
-import { composeActionExamples, formatActionNames, formatActions } from '@elizaos/core';
-import type { Action, Content, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { logger } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-
+import { composeActionExamples, formatActionNames, formatActions } from '@elizaos/core';
+import type { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
+import { logger } from '@elizaos/core';
 /**
  * Utility functions for reusing core package tests in project-starter tests
  */
@@ -91,7 +90,7 @@ export const createMockRuntime = (): IAgentRuntime => {
       name: 'Test Character',
       system: 'You are a helpful assistant for testing.',
     },
-    getSetting: (key: string) => null,
+    getSetting: (_key: string) => null,
     // Include real model functionality
     models: {},
     // Add real database functionality

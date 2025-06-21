@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-
 /**
  * Starter Plugin E2E Test Suite
  *
@@ -260,7 +259,7 @@ export class StarterTestSuite implements TestSuite {
               text: userMessage.content.text,
             };
 
-            const result = await runtime.evaluate(userMessage, state, responseCallback);
+
 
             // If evaluate doesn't work, try the action selection pipeline
             if (!agentResponse && runtime.evaluateActions) {

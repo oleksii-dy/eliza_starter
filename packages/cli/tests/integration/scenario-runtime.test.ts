@@ -38,9 +38,9 @@ describe('Scenario Runtime Integration', () => {
           name: 'TEST_ACTION',
           description: 'A test action',
           examples: [],
-          handler: async (runtime, message, state, options, callback) => {
+          handler: async (_runtime, _message, _state, _options, callback) => {
             if (callback) {
-              await callback({
+              await callback?.({
                 text: 'Test action executed',
                 source: 'test',
               });
@@ -59,7 +59,7 @@ describe('Scenario Runtime Integration', () => {
     });
 
     // Mock the model responses
-    vi.spyOn(runtime, 'useModel').mockImplementation(async (type, params) => {
+    vi.spyOn(runtime, 'useModel').mockImplementation(async (_type, params) => {
       if (params.prompt?.includes('DM') && params.prompt?.includes('GROUP')) {
         return 'GROUP';
       }
@@ -106,7 +106,7 @@ describe('Scenario Runtime Integration', () => {
           {
             id: 'tester-agent' as UUID,
             name: 'Tester Agent',
-            role: 'tester',
+            role: 'subject',
             script: {
               steps: [
                 { type: 'message', content: 'Hello subject, how are you?' },
@@ -247,7 +247,7 @@ describe('Scenario Runtime Integration', () => {
           {
             id: 'actor1' as UUID,
             name: 'Actor 1',
-            role: 'participant',
+            role: 'subject',
             script: {
               steps: [
                 { type: 'message', content: 'Hello everyone' },
@@ -259,7 +259,7 @@ describe('Scenario Runtime Integration', () => {
           {
             id: 'actor2' as UUID,
             name: 'Actor 2',
-            role: 'participant',
+            role: 'subject',
             script: {
               steps: [
                 { type: 'wait', waitTime: 1000 },

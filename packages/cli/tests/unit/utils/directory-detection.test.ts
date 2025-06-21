@@ -1,8 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { detectDirectoryType, isValidForUpdates } from '../../../src/utils/directory-detection';
-import { UserEnvironment } from '../../../src/utils/user-environment';
 
 // Mock fs
 vi.mock('node:fs');
@@ -84,7 +83,7 @@ describe('directory-detection', () => {
     });
 
     it('should detect elizaos subdirectory in monorepo', () => {
-      vi.mocked(fs.existsSync).mockImplementation((filepath) => {
+      (fs.existsSync as any).mockImplementation((filepath: any) => {
         // No package.json in subdirectory
         return String(filepath) !== path.join('/test/monorepo/subdir', 'package.json');
       });
@@ -109,7 +108,7 @@ describe('directory-detection', () => {
       };
 
       const dirPath = '/test/regular';
-      vi.mocked(fs.existsSync).mockImplementation((p) => {
+      (fs.existsSync as any).mockImplementation((p: any) => {
         const pStr = String(p);
         // Only the directory and its package.json should exist
         return pStr === dirPath || pStr === path.join(dirPath, 'package.json');
@@ -183,7 +182,7 @@ describe('directory-detection', () => {
 
     it('should handle unreadable directory', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockImplementation(() => {
+      (fs.readdirSync as any).mockImplementation(() => {
         throw new Error('Permission denied');
       });
 

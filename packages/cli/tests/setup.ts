@@ -97,6 +97,6 @@ afterAll(async () => {
   await new Promise((resolve) => setTimeout(resolve, 50));
   // Only override exit code if no failures were recorded
   if (process.exitCode === undefined || process.exitCode === 0) {
-    process.exit(0);
+    // process.exit(0); // Disabled in test environment
   }
 });

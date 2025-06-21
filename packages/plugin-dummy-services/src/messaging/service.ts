@@ -19,7 +19,7 @@ export interface IMessageService extends Service {
 }
 
 export class DummyMessageService extends Service implements IMessageService {
-  readonly serviceName = 'dummy-message';
+  static readonly serviceName = 'MESSAGE';
   static readonly serviceType = 'message';
   readonly capabilityDescription = 'Provides a dummy messaging service for testing.';
 

@@ -4,7 +4,11 @@ import { ExplainableVerificationEngine } from '../../../src/scenario-runner/expl
 import { SecureVerificationEngine } from '../../../src/scenario-runner/secure-verification.js';
 import { VersionedVerificationEngine } from '../../../src/scenario-runner/versioned-verification.js';
 import { PerformanceOptimizer } from '../../../src/scenario-runner/performance-optimizations.js';
-import type { ScenarioContext, VerificationRule, VerificationResult } from '../../../src/scenario-runner/types.js';
+import type {
+  ScenarioContext,
+  VerificationRule,
+  VerificationResult,
+} from '../../../src/scenario-runner/types.js';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 
 describe('HybridVerificationEngine', () => {
@@ -126,10 +130,10 @@ describe('HybridVerificationEngine', () => {
     it('should cache deterministic results', async () => {
       // First call
       await engine.verify([mockRule], mockContext);
-      
+
       // Second call with same context should use cache
       const results = await engine.verify([mockRule], mockContext);
-      
+
       expect(results[0].passed).toBe(true);
     });
   });
@@ -201,7 +205,9 @@ describe('ExplainableVerificationEngine', () => {
       const result = await engine.explainableVerify(mockRule, mockContext);
 
       expect(result.explanation.counterExamples).toHaveLength(1);
-      expect(result.explanation.counterExamples[0].whatWouldMakeItPass).toContain('between 5 and 10 messages');
+      expect(result.explanation.counterExamples[0].whatWouldMakeItPass).toContain(
+        'between 5 and 10 messages'
+      );
     });
 
     it('should provide fix suggestions', async () => {
@@ -280,25 +286,27 @@ describe('SecureVerificationEngine', () => {
     });
 
     it('should classify data sensitivity levels', async () => {
-      const levels = ['secret', 'confidential', 'internal', 'public'];
-      
       // Test secret level (API keys)
       expect(engine['classifyDataSensitivity'](mockContext)).toBe('secret');
-      
+
       // Test confidential level (email)
-      mockContext.transcript = [{
-        actorId: 'test',
-        content: { text: 'Contact me at user@example.com' },
-        timestamp: new Date().toISOString(),
-      } as any];
+      mockContext.transcript = [
+        {
+          actorId: 'test',
+          content: { text: 'Contact me at user@example.com' },
+          timestamp: new Date().toISOString(),
+        } as any,
+      ];
       expect(engine['classifyDataSensitivity'](mockContext)).toBe('confidential');
-      
+
       // Test public level
-      mockContext.transcript = [{
-        actorId: 'test',
-        content: { text: 'Hello world' },
-        timestamp: new Date().toISOString(),
-      } as any];
+      mockContext.transcript = [
+        {
+          actorId: 'test',
+          content: { text: 'Hello world' },
+          timestamp: new Date().toISOString(),
+        } as any,
+      ];
       expect(engine['classifyDataSensitivity'](mockContext)).toBe('public');
     });
 
@@ -414,7 +422,11 @@ describe('VersionedVerificationEngine', () => {
       await engine.createSnapshot(mockRule, mockContext, mockResult);
 
       const failingResult = { ...mockResult, passed: false, score: 0.3 };
-      const validation = await engine.validateAgainstSnapshots(mockRule, mockContext, failingResult);
+      const validation = await engine.validateAgainstSnapshots(
+        mockRule,
+        mockContext,
+        failingResult
+      );
 
       expect(validation.regressions.length).toBeGreaterThan(0);
       expect(validation.regressions[0]).toContain('was passing');
@@ -462,7 +474,7 @@ describe('PerformanceOptimizer', () => {
   describe('caching', () => {
     it('should cache computation results', async () => {
       const compute = vi.fn().mockResolvedValue('result');
-      
+
       // First call - compute
       const result1 = await optimizer.getFromCacheOrCompute('test-key', compute);
       expect(compute).toHaveBeenCalledTimes(1);
@@ -485,7 +497,7 @@ describe('PerformanceOptimizer', () => {
       await smallOptimizer.getFromCacheOrCompute('key1', () => 'result1');
       await smallOptimizer.getFromCacheOrCompute('key2', () => 'result2');
       await smallOptimizer.getFromCacheOrCompute('key3', () => 'result3');
-      
+
       // This should trigger eviction
       await smallOptimizer.getFromCacheOrCompute('key4', () => 'result4');
 
@@ -504,10 +516,7 @@ describe('PerformanceOptimizer', () => {
       const promises = [];
       for (let i = 0; i < 3; i++) {
         promises.push(
-          optimizer.batchLLMVerification(
-            { id: `rule${i}`, description: `Rule ${i}` },
-            mockContext
-          )
+          optimizer.batchLLMVerification({ id: `rule${i}`, description: `Rule ${i}` }, mockContext)
         );
       }
 
@@ -530,4 +539,4 @@ describe('PerformanceOptimizer', () => {
       expect(result.ruleId).toBe('single-rule');
     });
   });
-}); 
+});

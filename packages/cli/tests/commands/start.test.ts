@@ -2,15 +2,14 @@ import { execSync } from 'child_process';
 import { mkdir, mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { afterEach, beforeEach, describe, expect, it, beforeAll } from 'vitest';
+import { afterEach, describe, expect, it, beforeAll } from 'vitest';
 import { TEST_TIMEOUTS } from '../test-timeouts';
 import {
   killProcessOnPort,
   safeChangeDirectory,
   TestProcessManager,
   waitForServerReady,
-  createTestProject,
-} from './test-utils';
+  } from './test-utils';
 import { existsSync } from 'fs';
 
 describe('ElizaOS Start Commands', () => {
@@ -31,7 +30,7 @@ describe('ElizaOS Start Commands', () => {
     // ---- Ensure port is free.
     testServerPort = 3000;
     await killProcessOnPort(testServerPort);
-    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+    await new Promise((resolve) => setTimeout(resolve));
 
     // Create temporary directory
     testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-start-'));
@@ -131,7 +130,7 @@ describe('ElizaOS Start Commands', () => {
 
       try {
         // Wait longer for agent to fully register - CI environments may be slower
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.MEDIUM_WAIT));
+        await new Promise((resolve) => setTimeout(resolve));
 
         // Retry logic for CI environments where agent registration might be delayed
         // GitHub Actions and other CI runners may have slower process startup times
@@ -156,13 +155,13 @@ describe('ElizaOS Start Commands', () => {
             
             // If no Ada found but command succeeded, wait and retry
             if (i < maxRetries - 1) {
-              await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+              await new Promise((resolve) => setTimeout(resolve));
             }
           } catch (error: any) {
             lastError = error;
             // If command failed and we have retries left, wait and retry
             if (i < maxRetries - 1) {
-              await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+              await new Promise((resolve) => setTimeout(resolve));
             }
           }
         }
@@ -179,7 +178,7 @@ describe('ElizaOS Start Commands', () => {
       } finally {
         // Clean up server
         serverProcess.kill();
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+        await new Promise((resolve) => setTimeout(resolve));
       }
     },
     TEST_TIMEOUTS.INDIVIDUAL_TEST
@@ -224,7 +223,7 @@ describe('ElizaOS Start Commands', () => {
         expect(response.ok).toBe(true);
       } finally {
         serverProcess.kill();
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+        await new Promise((resolve) => setTimeout(resolve));
       }
     },
     TEST_TIMEOUTS.INDIVIDUAL_TEST
@@ -288,13 +287,13 @@ describe('ElizaOS Start Commands', () => {
 
       try {
         // Wait for configuration to start
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.MEDIUM_WAIT));
+        await new Promise((resolve) => setTimeout(resolve));
 
         // Check if process started (configure option was accepted)
         expect(serverProcess.pid).toBeDefined();
       } finally {
         serverProcess.kill();
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+        await new Promise((resolve) => setTimeout(resolve));
       }
     },
     TEST_TIMEOUTS.INDIVIDUAL_TEST
@@ -312,14 +311,14 @@ describe('ElizaOS Start Commands', () => {
 
       try {
         // Wait for server to be fully ready
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.MEDIUM_WAIT));
+        await new Promise((resolve) => setTimeout(resolve));
 
         // Health check
         const response = await fetch(`http://localhost:${testServerPort}/api/agents`);
         expect(response.ok).toBe(true);
       } finally {
         serverProcess.kill();
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+        await new Promise((resolve) => setTimeout(resolve));
       }
     },
     TEST_TIMEOUTS.INDIVIDUAL_TEST

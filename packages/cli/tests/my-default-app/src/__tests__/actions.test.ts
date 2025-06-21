@@ -1,8 +1,7 @@
 import { describe, expect, it, vi, beforeAll, afterAll } from 'vitest';
 import plugin from '../plugin';
 import { logger } from '@elizaos/core';
-import type { Action, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
-import { v4 as uuidv4 } from 'uuid';
+import type { HandlerCallback } from '@elizaos/core';
 import dotenv from 'dotenv';
 import {
   runCoreActionTests,

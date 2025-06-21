@@ -8,8 +8,7 @@ import { safeChangeDirectory, runCliCommandSilently } from './test-utils';
 import { TEST_TIMEOUTS } from '../test-timeouts';
 
 describe('ElizaOS Update Commands', () => {
-  let testTmpDir: string;
-  let projectDir: string;
+  let tempDir: string;
   let elizaosCmd: string;
   let originalCwd: string;
 
@@ -18,7 +17,7 @@ describe('ElizaOS Update Commands', () => {
     originalCwd = process.cwd();
 
     // Create temporary directory
-    testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-update-'));
+    tempDir = await mkdtemp(join(tmpdir(), 'eliza-test-update-'));
 
     // Setup CLI command
     const scriptDir = join(__dirname, '..');
@@ -39,18 +38,18 @@ describe('ElizaOS Update Commands', () => {
 
   beforeEach(async () => {
     // Create a fresh temp directory for each test
-    testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-update-'));
+    tempDir = await mkdtemp(join(tmpdir(), 'eliza-test-update-'));
     // Change to the temp directory
-    process.chdir(testTmpDir);
+    process.chdir(tempDir);
   });
 
   afterEach(async () => {
     // Restore original working directory (if it still exists)
     safeChangeDirectory(originalCwd);
 
-    if (testTmpDir && testTmpDir.includes('eliza-test-update-')) {
+    if (tempDir && tempDir.includes('eliza-test-update-')) {
       try {
-        await rm(testTmpDir, { recursive: true, force: true });
+        await rm(tempDir, { recursive: true, force: true });
       } catch (e) {
         // Ignore cleanup errors
       }
@@ -64,7 +63,7 @@ describe('ElizaOS Update Commands', () => {
 
   // Helper function to create project
   const makeProj = async (name: string) => {
-    const projectPath = join(testTmpDir, name);
+    const projectPath = join(tempDir, name);
     const fs = await import('fs/promises');
     await fs.mkdir(projectPath, { recursive: true });
 

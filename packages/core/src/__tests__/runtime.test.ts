@@ -19,33 +19,21 @@ const stringToUuid = (id: string): UUID => id as UUID;
 
 // --- Mocks ---
 
-// Use vi.hoisted for prompts mock
-const { mockSplitChunks } = vi.hoisted(() => {
-  return { mockSplitChunks: vi.fn() };
-});
-vi.mock('../src/utils', async (importOriginal) => {
+// Mock utils module
+vi.mock('../utils', async (importOriginal) => {
   const original = (await importOriginal()) as any;
   return {
     ...original,
-    splitChunks: mockSplitChunks,
+    splitChunks: vi.fn(),
   };
 });
 
-// Use vi.hoisted for ./index mock (safeReplacer)
-const { mockSafeReplacer } = vi.hoisted(() => {
-  return {
-    mockSafeReplacer: vi.fn((key, value) => value), // Simple replacer mock
-  };
-});
-vi.mock('./index', async (importOriginal) => {
-  // Mock only safeReplacer, keep others original (if needed)
-  // Note: This path might need adjustment based on the actual relative path from the test file to src/index
-  // Assuming the test is in __tests__ and index is in src, './index' might not resolve correctly.
-  // Let's try '../src/index' relative to the test file.
+// Mock index for safeReplacer
+vi.mock('../index', async (importOriginal) => {
   const original = (await importOriginal()) as any;
   return {
     ...original,
-    safeReplacer: () => mockSafeReplacer, // safeReplacer() is called in the source
+    safeReplacer: () => vi.fn((key, value) => value), // Simple replacer mock
   };
 });
 

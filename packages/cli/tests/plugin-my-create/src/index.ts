@@ -82,7 +82,7 @@ const helloWorldAction: Action = {
 
       // Call back with the hello world message if callback is provided
       if (callback) {
-        await callback(responseContent);
+        await callback?.(responseContent);
       }
 
       return responseContent;
@@ -192,20 +192,13 @@ export const starterPlugin: Plugin = {
   models: {
     [ModelType.TEXT_SMALL]: async (
       _runtime,
-      { prompt, stopSequences = [] }: GenerateTextParams
+      { /* unused params */ }: GenerateTextParams
     ) => {
       return 'Never gonna give you up, never gonna let you down, never gonna run around and desert you...';
     },
     [ModelType.TEXT_LARGE]: async (
       _runtime,
-      {
-        prompt,
-        stopSequences = [],
-        maxTokens = 8192,
-        temperature = 0.7,
-        frequencyPenalty = 0.7,
-        presencePenalty = 0.7,
-      }: GenerateTextParams
+      { /* unused params */ }: GenerateTextParams
     ) => {
       return 'Never gonna make you cry, never gonna say goodbye, never gonna tell a lie and hurt you...';
     },

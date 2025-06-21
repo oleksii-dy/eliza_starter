@@ -22,7 +22,7 @@ interface ElizaConfig {
 
 declare global {
   interface Window {
-    ELIZA_CONFIG: ElizaConfig | undefined;
+    ELIZA_CONFIG?: ElizaConfig;
   }
 }
 

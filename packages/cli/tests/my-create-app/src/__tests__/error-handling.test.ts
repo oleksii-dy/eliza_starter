@@ -1,10 +1,9 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { v4 as uuidv4 } from 'uuid';
 import plugin from '../plugin';
 import { StarterService } from '../plugin';
 import { logger } from '@elizaos/core';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
-import { v4 as uuidv4 } from 'uuid';
-
 // Mock logger
 vi.mock('@elizaos/core', async () => {
   const actual = await vi.importActual('@elizaos/core');
@@ -34,7 +33,7 @@ describe('Error Handling', () => {
 
       if (action && action.handler) {
         // Force the handler to throw an error
-        const mockError = new Error('Test error in action');
+
         vi.spyOn(console, 'error').mockImplementation(() => {});
 
         // Create a custom mock runtime

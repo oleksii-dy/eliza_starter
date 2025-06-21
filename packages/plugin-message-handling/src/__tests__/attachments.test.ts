@@ -9,7 +9,7 @@ describe('processAttachments', () => {
   beforeEach(() => {
     mockRuntime = createMockRuntime();
     vi.clearAllMocks();
-    
+
     // Spy on logger methods
     vi.spyOn(logger, 'debug').mockImplementation(() => {});
     vi.spyOn(logger, 'warn').mockImplementation(() => {});

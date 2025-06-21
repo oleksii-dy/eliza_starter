@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, beforeAll, afterAll } from 'vitest';
+import { v4 as uuidv4 } from 'uuid';
 import plugin from '../plugin';
 import type { IAgentRuntime, Memory, State, Provider } from '@elizaos/core';
 import { logger } from '@elizaos/core';
-import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 
 // Setup environment variables
@@ -64,43 +64,43 @@ function createRealRuntime(): IAgentRuntime {
       plugins: [],
       settings: {},
     },
-    getSetting: (key: string) => null,
+    getSetting: (_key: string) => null,
     models: plugin.models,
     db: {
-      get: async (key: string) => {
+      get: async (_key: string) => {
         return null;
       },
-      set: async (key: string, value: any) => {
+      set: async (_key: string, _value: any) => {
         return true;
       },
-      delete: async (key: string) => {
+      delete: async (_key: string) => {
         return true;
       },
-      getKeys: async (pattern: string) => {
+      getKeys: async (_pattern: string) => {
         return [];
       },
     },
     memory: {
-      add: async (memory: any) => {
+      add: async (_memory: any) => {
         // Memory operations for testing
       },
-      get: async (id: string) => {
+      get: async (_id: string) => {
         return null;
       },
-      getByEntityId: async (entityId: string) => {
+      getByEntityId: async (_entityId: string) => {
         return [];
       },
-      getLatest: async (entityId: string) => {
+      getLatest: async (_entityId: string) => {
         return null;
       },
-      getRecentMessages: async (options: any) => {
+      getRecentMessages: async (_options: any) => {
         return [];
       },
-      search: async (query: string) => {
+      search: async (_query: string) => {
         return [];
       },
     },
-    getService: (serviceType: string) => {
+    getService: (_serviceType: string) => {
       return null;
     },
   } as unknown as IAgentRuntime;

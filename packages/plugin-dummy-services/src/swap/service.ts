@@ -23,7 +23,7 @@ export interface ISwapService extends Service {
 }
 
 export class DummySwapService extends Service implements ISwapService {
-  readonly serviceName = 'dummy-swap';
+  static readonly serviceName = 'SWAP';
   static readonly serviceType = 'swap';
   readonly capabilityDescription = 'Provides a dummy swap service for testing.';
 
@@ -93,10 +93,10 @@ export class DummySwapService extends Service implements ISwapService {
   }
 
   async start(): Promise<void> {
-    logger.info(`[${this.serviceName}] Service started.`);
+    logger.info(`[${DummySwapService.serviceName}] Service started.`);
   }
 
   async stop(): Promise<void> {
-    logger.info(`[${this.serviceName}] Service stopped.`);
+    logger.info(`[${DummySwapService.serviceName}] Service stopped.`);
   }
 }

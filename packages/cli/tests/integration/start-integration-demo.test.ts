@@ -21,12 +21,8 @@ describe('Start Command Integration with Environment Normalization', () => {
     const testCharacter = {
       name: 'EnvTestAgent',
       description: 'Agent for testing environment normalization',
-      modelProvider: 'openai',
       plugins: ['@elizaos/plugin-message-handling'],
       settings: {
-        voice: {
-          model: 'en_US-male-medium',
-        },
       },
     };
 

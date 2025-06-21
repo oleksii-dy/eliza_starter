@@ -17,7 +17,7 @@ export const TEST_TIMEOUTS = {
   NETWORK_OPERATION: process.platform === 'win32' ? 2 * 60 * 1000 : 90 * 1000, // 2 minutes/90 seconds for GitHub/network operations
 
   // Server and process timeouts - Windows process management is slower
-  SERVER_STARTUP: process.platform === 'win32' ? 45 * 1000 : 30 * 1000, // 45/30 seconds for server startup
+  SERVER_STARTUP: process.platform === 'win32' ? 90 * 1000 : 60 * 1000, // 90/60 seconds for server startup (increased for PGLite)
   PROCESS_CLEANUP: process.platform === 'win32' ? 15 * 1000 : 10 * 1000, // 15/10 seconds for process cleanup
 
   // Wait times (for setTimeout) - Windows needs more stabilization time

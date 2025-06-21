@@ -95,7 +95,7 @@ vi.mock('@/src/utils/emoji-handler', () => ({
 
 // Mock child_process for stop command
 vi.mock('node:child_process', () => ({
-  exec: vi.fn((cmd, callback) => callback(null)),
+  exec: vi.fn((_cmd, callback) => callback?.(null)),
 }));
 
 describe('CLI main index', () => {

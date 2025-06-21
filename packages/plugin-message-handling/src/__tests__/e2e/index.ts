@@ -22,4 +22,4 @@ export {
   roomStateTestSuite,
 };
 
-export default testSuites; 
+export default testSuites;

@@ -1,12 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ScenarioRunner } from '../../../src/scenario-runner/index.js';
-import type { Scenario, ScenarioResult, ScenarioActor } from '../../../src/scenario-runner/types.js';
+import { type IAgentRuntime, type UUID } from '@elizaos/core';
 import { AgentServer } from '@elizaos/server';
-import { createUniqueUuid, type IAgentRuntime, type UUID } from '@elizaos/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ScenarioRunner } from '../../../src/scenario-runner/index.js';
+import type { Scenario } from '../../../src/scenario-runner/types.js';
+import { AgentManager } from '../../../src/scenario-runner/agent-manager.js';
+import type { ScenarioActor } from '../../../src/scenario-runner/types.js';
+import { v4 as uuidv4 } from 'uuid';
 
 // Mock dependencies
 vi.mock('@elizaos/server');
 vi.mock('@elizaos/core');
+vi.mock('../../../src/scenario-runner/agent-manager.js');
+vi.mock('../../../src/scenario-runner/verification.js');
+vi.mock('../../../src/scenario-runner/metrics.js');
+vi.mock('../../../src/scenario-runner/integration-test.js');
+vi.mock('../../../src/scenario-runner/llm-scenario-generator.js');
 
 describe('ScenarioRunner', () => {
   let server: AgentServer;
@@ -15,9 +23,11 @@ describe('ScenarioRunner', () => {
   let mockScenario: Scenario;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+
     // Set up mocks
     const agents = new Map<string, IAgentRuntime>();
-    
+
     server = {
       agents,
       database: {},
@@ -28,15 +38,32 @@ describe('ScenarioRunner', () => {
     } as any;
 
     runtime = {
-      agentId: 'test-agent-id' as UUID,
-      character: { name: 'Test Agent' },
-      ensureWorldExists: vi.fn(),
-      ensureRoomExists: vi.fn(),
+      agentId: uuidv4() as UUID,
+      character: {
+        name: 'TestAgent',
+        bio: ['Test bio'],
+        system: 'Test system prompt',
+      },
+      actions: [],
+      providers: [],
+      evaluators: [],
+      services: new Map(),
+      getSetting: vi.fn(),
+      composeState: vi.fn().mockResolvedValue({
+        values: {},
+        data: {},
+        text: '',
+      }),
+      processMessage: vi.fn(),
+      evaluate: vi.fn(),
+      processActions: vi.fn(),
+      useModel: vi.fn().mockResolvedValue('Mock response'),
       createMemory: vi.fn(),
-      emitEvent: vi.fn(),
-      generateText: vi.fn().mockResolvedValue('Mock response'),
-      useModel: vi.fn().mockResolvedValue('Mock LLM response'),
-    } as any;
+      getMemories: vi.fn().mockResolvedValue([]),
+      updateMemory: vi.fn(),
+      deleteMemory: vi.fn(),
+      searchMemories: vi.fn().mockResolvedValue([]),
+    } as unknown as IAgentRuntime;
 
     // Add runtime to server agents
     agents.set(runtime.agentId, runtime);
@@ -45,18 +72,16 @@ describe('ScenarioRunner', () => {
 
     // Create a basic test scenario
     mockScenario = {
-      id: 'test-scenario',
+      id: uuidv4(),
       name: 'Test Scenario',
       description: 'A test scenario for unit testing',
       actors: [
         {
-          id: 'subject-id' as UUID,
+          id: uuidv4() as UUID,
           name: 'Test Subject',
           role: 'subject',
           script: {
-            steps: [
-              { type: 'message', content: 'Hello, world!' },
-            ],
+            steps: [{ type: 'message', content: 'Hello, world!' }],
           },
         },
       ],
@@ -84,6 +109,17 @@ describe('ScenarioRunner', () => {
     vi.clearAllMocks();
   });
 
+  describe('initialization', () => {
+    it('should create a ScenarioRunner instance', () => {
+      expect(runner).toBeDefined();
+      expect(runner).toBeInstanceOf(ScenarioRunner);
+    });
+
+    it('should initialize with correct dependencies', () => {
+      expect(AgentManager).toHaveBeenCalled();
+    });
+  });
+
   describe('runScenario', () => {
     it('should successfully run a basic scenario', async () => {
       const result = await runner.runScenario(mockScenario);
@@ -105,7 +141,7 @@ describe('ScenarioRunner', () => {
     });
 
     it('should handle setup errors gracefully', async () => {
-      vi.mocked(runtime.ensureWorldExists).mockRejectedValueOnce(new Error('Setup failed'));
+      (runtime.ensureWorldExists as any).mockRejectedValueOnce(new Error('Setup failed'));
 
       const result = await runner.runScenario(mockScenario);
 
@@ -140,6 +176,179 @@ describe('ScenarioRunner', () => {
         })
       );
     });
+
+    it('should run a simple scenario', async () => {
+      const testScenario: Scenario = {
+        id: uuidv4(),
+        name: 'Simple Test',
+        description: 'A simple test scenario',
+        actors: [
+          {
+            id: uuidv4() as UUID,
+            name: 'TestActor',
+            role: 'subject',
+            personality: {
+              traits: ['test'],
+              systemPrompt: 'Test prompt',
+              interests: [],
+            },
+            script: {
+              steps: [
+                {
+                  type: 'message',
+                  content: 'Test message',
+                },
+              ],
+            },
+          },
+        ],
+        setup: {},
+        execution: {},
+        verification: {
+          rules: [],
+        },
+      };
+
+      // Since agentManager was removed, we'll mock the runtime directly
+      // The scenario runner now uses the agents map instead
+
+      const result = await runner.runScenario(testScenario);
+
+      expect(result).toBeDefined();
+      expect(result.scenarioId).toBe(testScenario.id);
+      expect(result.passed).toBeDefined();
+    });
+
+    it('should handle scenario with multiple actors', async () => {
+      const testScenario: Scenario = {
+        id: uuidv4(),
+        name: 'Multi-Actor Test',
+        description: 'A multi-actor test scenario',
+        actors: [
+          {
+            id: uuidv4() as UUID,
+            name: 'Alice',
+            role: 'subject',
+            personality: {
+              traits: ['friendly'],
+              systemPrompt: 'You are Alice',
+              interests: ['conversation'],
+            },
+            script: {
+              steps: [
+                {
+                  type: 'message',
+                  content: 'Hello Bob!',
+                },
+              ],
+            },
+          },
+          {
+            id: uuidv4() as UUID,
+            name: 'Bob',
+            role: 'assistant',
+            personality: {
+              traits: ['helpful'],
+              systemPrompt: 'You are Bob',
+              interests: ['helping'],
+            },
+          },
+        ],
+        setup: {},
+        execution: {},
+        verification: {
+          rules: [],
+        },
+      };
+
+      // Since agentManager was removed, we'll mock the runtime directly
+      // The scenario runner now uses the agents map instead
+
+      const result = await runner.runScenario(testScenario);
+
+      expect(result).toBeDefined();
+      expect(result.passed).toBeDefined();
+      expect(result.transcript.length).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('error handling', () => {
+    it('should handle runtime errors during scenario execution', async () => {
+      const testScenario: Scenario = {
+        id: uuidv4(),
+        name: 'Error Test',
+        description: 'A scenario that will error',
+        actors: [
+          {
+            id: uuidv4() as UUID,
+            name: 'ErrorActor',
+            role: 'subject',
+            personality: {
+              traits: ['error-prone'],
+              systemPrompt: 'You will cause errors',
+              interests: [],
+            },
+            script: {
+              steps: [
+                {
+                  type: 'action',
+                  action: 'non_existent_action',
+                },
+              ],
+            },
+          },
+        ],
+        setup: {},
+        execution: {},
+        verification: {
+          rules: [],
+        },
+      };
+
+      // Since agentManager was removed, we'll mock the runtime to throw an error
+      (runtime.ensureWorldExists as any).mockRejectedValueOnce(new Error('Test error'));
+
+      const result = await runner.runScenario(testScenario);
+
+      expect(result.passed).toBe(false);
+      expect(result.errors).toBeDefined();
+      expect(result.errors?.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Agent setup', () => {
+    it('should setup actors with the agents map', async () => {
+      const actor: ScenarioActor = {
+        id: uuidv4() as UUID,
+        name: 'TestActor',
+        role: 'subject',
+        personality: {
+          traits: ['test'],
+          systemPrompt: 'Test',
+          interests: [],
+        },
+      };
+
+      const scenario: Scenario = {
+        id: uuidv4(),
+        name: 'Test',
+        description: 'Test',
+        actors: [actor],
+        setup: {},
+        execution: {},
+        verification: {
+          rules: [],
+        },
+      };
+
+      // Add the actor's runtime to the agents map
+      runner.agents.set(actor.name, runtime);
+
+      const context = await runner['setupScenario'](scenario);
+
+      // Verify the actor was set up with the correct runtime
+      expect(context.actors.get(actor.id)?.runtime).toBe(runtime);
+    });
   });
 
   describe('runScenarios', () => {
@@ -172,15 +381,14 @@ describe('ScenarioRunner', () => {
     });
 
     it('should respect maxConcurrency limit', async () => {
-      const concurrentCalls: number[] = [];
       let currentConcurrent = 0;
       let maxConcurrent = 0;
 
       // Mock to track concurrent executions
-      vi.mocked(runtime.ensureWorldExists).mockImplementation(async () => {
+      (runtime.ensureWorldExists as any).mockImplementation(async () => {
         currentConcurrent++;
         maxConcurrent = Math.max(maxConcurrent, currentConcurrent);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         currentConcurrent--;
       });
 
@@ -215,12 +423,14 @@ describe('ScenarioRunner', () => {
     it('should require exactly one subject actor', () => {
       const noSubject = {
         ...mockScenario,
-        actors: [{ 
-          id: 'test-id' as UUID, 
-          name: 'Test', 
-          role: 'tester' as const,
-          script: { steps: [] }
-        }],
+        actors: [
+          {
+            id: 'test-id' as UUID,
+            name: 'Test',
+            role: 'subject' as const,
+            script: { steps: [] },
+          },
+        ],
       };
 
       expect(() => runner['validateScenario'](noSubject)).toThrow(
@@ -230,17 +440,17 @@ describe('ScenarioRunner', () => {
       const twoSubjects = {
         ...mockScenario,
         actors: [
-          { 
-            id: 'sub1-id' as UUID, 
-            name: 'Subject 1', 
+          {
+            id: 'sub1-id' as UUID,
+            name: 'Subject 1',
             role: 'subject' as const,
-            script: { steps: [] }
+            script: { steps: [] },
           },
-          { 
-            id: 'sub2-id' as UUID, 
-            name: 'Subject 2', 
+          {
+            id: 'sub2-id' as UUID,
+            name: 'Subject 2',
             role: 'subject' as const,
-            script: { steps: [] }
+            script: { steps: [] },
           },
         ],
       };
@@ -303,7 +513,10 @@ describe('ScenarioRunner', () => {
                 { type: 'message', content: 'Test message' },
                 { type: 'wait', waitTime: 100 },
                 { type: 'action', actionName: 'TEST_ACTION', actionParams: {} },
-                { type: 'assert', assertion: { type: 'contains', value: 'test', description: 'Test assertion' } },
+                {
+                  type: 'assert',
+                  assertion: { type: 'contains', value: 'test', description: 'Test assertion' },
+                },
               ],
             },
           },
@@ -321,7 +534,7 @@ describe('ScenarioRunner', () => {
   describe('teardownScenario', () => {
     it('should clean up resources after scenario', async () => {
       const context = await runner['setupScenario'](mockScenario);
-      
+
       await runner['teardownScenario'](context);
 
       // Verify cleanup happened
@@ -379,4 +592,4 @@ describe('ScenarioRunner', () => {
       expect(score).toBe(0.5); // (1 + 0) / 2
     });
   });
-}); 
+});

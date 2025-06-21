@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { character } from '../index';
+import { character } from '../characters/default';
 
 describe('Character Configuration', () => {
   it('should have all required fields', () => {

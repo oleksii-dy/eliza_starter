@@ -1,16 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { spawn, execSync } from 'child_process';
-import { mkdtemp, rm, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { TEST_TIMEOUTS } from '../test-timeouts';
-import {
-  waitForServerReady,
-  killProcessOnPort,
-  createTestProject,
-  safeChangeDirectory,
-} from './test-utils';
+import { waitForServerReady, killProcessOnPort } from './test-utils';
 import { existsSync } from 'fs';
+import { spawn, execSync } from 'child_process';
+import { mkdtemp, rm, mkdir } from 'fs/promises';
 
 describe('ElizaOS Agent Commands', () => {
   let serverProcess: any;
@@ -19,12 +13,8 @@ describe('ElizaOS Agent Commands', () => {
   let testServerUrl: string;
   let elizaosCmd: string;
   let defaultCharacter: string;
-  let originalCwd: string;
 
   beforeAll(async () => {
-    // Store original working directory
-    originalCwd = process.cwd();
-
     // Create temporary directory for tests
     testTmpDir = await mkdtemp(join(tmpdir(), 'eliza-test-agent-'));
     const scriptDir = join(__dirname, '..');
@@ -58,7 +48,7 @@ describe('ElizaOS Agent Commands', () => {
 
     // Kill any existing processes on port 3000
     await killProcessOnPort(3000);
-    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+    await new Promise((resolve) => setTimeout(resolve));
 
     // Create database directory
     await mkdir(join(testTmpDir, 'elizadb'), { recursive: true });
@@ -159,8 +149,8 @@ describe('ElizaOS Agent Commands', () => {
     }
 
     // Give characters time to register
-    await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
-  }, TEST_TIMEOUTS.SUITE_TIMEOUT);
+    await new Promise((resolve) => setTimeout(resolve));
+  });
 
   afterAll(async () => {
     if (serverProcess) {
@@ -173,11 +163,11 @@ describe('ElizaOS Agent Commands', () => {
         if (!serverProcess.killed && serverProcess.exitCode === null) {
           serverProcess.kill('SIGKILL');
         }
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+        await new Promise((resolve) => setTimeout(resolve));
 
         // Wait for process to actually exit
         if (!serverProcess.killed && serverProcess.exitCode === null) {
-          await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.PROCESS_CLEANUP));
+          await new Promise((resolve) => setTimeout(resolve));
         }
       } catch (e) {
         // Ignore cleanup errors
