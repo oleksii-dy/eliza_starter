@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, setSystemTime, mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, setSystemTime, spyOn, mock } from 'bun:test';
 import { Content, Entity, IAgentRuntime, Memory, ModelType, State } from '../types';
 import * as utils from '../utils';
 import {
@@ -85,16 +85,17 @@ describe('Utils Comprehensive Tests', () => {
 
     beforeEach(() => {
       // Mock the Date constructor to return our fixed time when called without arguments
-      vi.spyOn(global, 'Date').mockImplementation(((...args: any[]) => {
+      spyOn(global, 'Date').mockImplementation((...args: any[]) => {
         if (args.length === 0) {
           return fixedTime;
         }
         return new (Date as any)(...args);
-      }) as any);
+      });
     });
 
     afterEach(() => {
-      vi.restoreAllMocks();
+      // Restore all mocks
+      mock.restore();
     });
 
     it("should return 'just now' for recent timestamps", () => {
