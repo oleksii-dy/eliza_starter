@@ -67,6 +67,7 @@ export async function runScenarioWithAgents(
 
     // Always include bootstrap plugin for message handling
     try {
+      // @ts-ignore: plugin-bootstrap may not be available in all configurations
       const bootstrapModule = await import('@elizaos/plugin-bootstrap');
       const bootstrapPlugin =
         bootstrapModule.default || (bootstrapModule as any).plugin || bootstrapModule;
@@ -75,11 +76,12 @@ export async function runScenarioWithAgents(
         logger.info('Loaded bootstrap plugin for message handling');
       }
     } catch (error) {
-      logger.warn('Failed to load bootstrap plugin:', error);
+      logger.warn('Failed to load bootstrap plugin (may not be available):', error);
     }
 
     // Always include OpenAI plugin for embeddings and LLM
     try {
+      // @ts-ignore: plugin-openai may not be available in all configurations
       const openaiModule = await import('@elizaos/plugin-openai');
       const openaiPlugin = openaiModule.default || (openaiModule as any).plugin || openaiModule;
       if (openaiPlugin && openaiPlugin.name) {
@@ -87,7 +89,7 @@ export async function runScenarioWithAgents(
         logger.info('Loaded OpenAI plugin for LLM capabilities');
       }
     } catch (error) {
-      logger.warn('Failed to load OpenAI plugin:', error);
+      logger.warn('Failed to load OpenAI plugin (may not be available):', error);
     }
 
     // Map short plugin names to full package names

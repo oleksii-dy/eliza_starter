@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { logger } from '@elizaos/core';
 import { runScenarioTests } from '../test/actions/scenario-tests.js';
+// @ts-ignore: scenarios package doesn't have type definitions
 import { ConsolidatedScenarioTestRunner } from '@elizaos/scenarios';
 import { getProjectType } from '../test/utils/project-utils.js';
 import { loadPluginsFromProject } from '../test/utils/plugin-utils.js';

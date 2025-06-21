@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: ['src/index.ts', 'src/test-runner.ts'],
   format: ['esm'],
-  dts: false, // Disable for now to get build working
+  dts: false, // Temporarily disabled due to TypeScript project references issue
   sourcemap: true,
   clean: true,
   splitting: false,

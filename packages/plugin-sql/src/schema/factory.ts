@@ -169,32 +169,32 @@ export function createLazyTableProxy<T extends object>(createTableFn: () => T): 
   let cachedTable: T | null = null;
 
   return new Proxy({} as any, {
-    get(target, prop, receiver) {
+    get(_target, prop, receiver) {
       if (!cachedTable) {
         cachedTable = createTableFn();
       }
       return Reflect.get(cachedTable, prop, receiver);
     },
-    has(target, prop) {
+    has(_target, prop) {
       if (!cachedTable) {
         cachedTable = createTableFn();
       }
       return Reflect.has(cachedTable, prop);
     },
-    ownKeys(target) {
+    ownKeys(_target) {
       if (!cachedTable) {
         cachedTable = createTableFn();
       }
       return Reflect.ownKeys(cachedTable);
     },
-    getOwnPropertyDescriptor(target, prop) {
+    getOwnPropertyDescriptor(_target, prop) {
       if (!cachedTable) {
         cachedTable = createTableFn();
       }
       return Reflect.getOwnPropertyDescriptor(cachedTable, prop);
     },
 
-    getPrototypeOf(target) {
+    getPrototypeOf(_target) {
       if (!cachedTable) {
         cachedTable = createTableFn();
       }

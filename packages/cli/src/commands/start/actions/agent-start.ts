@@ -81,7 +81,7 @@ export async function startAgent(
 
   try {
     logger.info('Running plugin migrations...');
-    await runtime.runPluginMigrations();
+    await runtime.runMigrations();
     logger.info('Plugin migrations completed.');
   } catch (error) {
     logger.error('Failed to run plugin migrations:', error);

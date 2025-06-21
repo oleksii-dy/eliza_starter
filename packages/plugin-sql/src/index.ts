@@ -78,7 +78,7 @@ export function createDatabaseAdapter(
 /**
  * SQL plugin for database adapter using Drizzle ORM
  */
-export const plugin: Plugin & { runPluginMigrations?: Function } = {
+export const plugin: Plugin & { runPluginMigrations?: Function; initializePluginSchema?: Function } = {
   name: '@elizaos/plugin-sql',
   description: 'A plugin for SQL database access with Drizzle ORM',
   priority: 0,

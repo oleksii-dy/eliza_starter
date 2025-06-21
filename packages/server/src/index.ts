@@ -837,8 +837,8 @@ export class AgentServer {
             `REST API bound to ${host}:${port}. If running locally, access it at http://localhost:${port}.`
           );
           console.log(`\x1b[36m📚 Learn more at \x1b[1mhttps://eliza.how\x1b[22m\x1b[0m`);
-        }
-
+        })
+        .on('error', (error: any) => {
           // Provide helpful error messages for common issues
           if (error.code === 'EADDRINUSE') {
             logger.error(
