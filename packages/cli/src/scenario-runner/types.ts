@@ -1,17 +1,21 @@
-import type { IAgentRuntime, UUID, Character, Content } from '@elizaos/core';
+import type { IAgentRuntime, UUID, Content } from '@elizaos/core';
 
 export interface ScenarioActor {
   id: UUID;
   name: string;
-  role: 'tester' | 'subject' | 'participant';
-  character?: Character;
-  systemPrompt?: string;
-  script: ScenarioScript;
+  role: 'subject' | 'observer' | 'assistant' | 'adversary';
+  personality?: {
+    traits?: string[];
+    systemPrompt?: string;
+    interests?: string[];
+  };
+  knowledge?: string[];
+  settings?: Record<string, any>;
+  script?: ScenarioScript;
   runtime?: IAgentRuntime;
   bio?: string;
   system?: string;
   plugins?: string[];
-  settings?: Record<string, any>;
 }
 
 export interface ScenarioScript {
@@ -91,6 +95,14 @@ export interface VerificationConfig {
   category?: string;
   dynamicallyGenerated?: boolean;
   context?: Record<string, any>;
+  expectedValue?: string;
+  criteria?: string;
+  deterministicType?: string;
+  minMessages?: number;
+  maxMessages?: number;
+  requiredKeywords?: string[];
+  forbiddenKeywords?: string[];
+  llmEnhancement?: boolean;
   [key: string]: any; // Allow arbitrary properties for LLM-determined configurations
 }
 
@@ -195,9 +207,11 @@ export interface VerificationResult {
   passed: boolean;
   score?: number;
   confidence?: number;
-  reason: string;
-  evidence?: any;
+  reason?: string;
+  reasoning?: string;
+  evidence?: any[];
   executionTime?: number;
+  metadata?: Record<string, any>;
 }
 
 export interface ScenarioMessage {

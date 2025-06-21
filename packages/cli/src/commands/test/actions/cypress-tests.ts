@@ -25,7 +25,7 @@ export function hasCypressTests(projectPath: string): boolean {
 export async function runCypressTests(
   testPath: string | undefined,
   options: TestCommandOptions,
-  projectInfo: DirectoryInfo
+  _projectInfo: DirectoryInfo
 ): Promise<TestResult> {
   // Determine the project path
   const projectPath = testPath ? path.resolve(process.cwd(), testPath) : process.cwd();

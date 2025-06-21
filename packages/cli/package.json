@@ -24,7 +24,7 @@
   ],
   "keywords": [],
   "type": "module",
-  "main": "./eliza.test.js",
+  "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
     "./package.json": "./package.json"

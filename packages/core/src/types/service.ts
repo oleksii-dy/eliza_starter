@@ -29,6 +29,7 @@ export interface ServiceTypeRegistry {
   LP_POOL: 'lp_pool';
   TOKEN_DATA: 'token_data';
   TUNNEL: 'tunnel';
+  MIGRATION: 'migration';
 }
 
 /**
@@ -97,6 +98,7 @@ export const ServiceType = {
   LP_POOL: 'lp_pool',
   TOKEN_DATA: 'token_data',
   TUNNEL: 'tunnel',
+  MIGRATION: 'migration',
 } as const satisfies ServiceTypeRegistry;
 
 /**

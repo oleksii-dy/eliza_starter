@@ -6,7 +6,6 @@ import {
   logger,
   type IDatabaseAdapter,
 } from '@elizaos/core';
-import { plugin as sqlPlugin } from '@elizaos/plugin-sql';
 import { loadAndPreparePlugin } from '../../commands/start/utils/plugin-utils.js';
 import { Client } from 'pg';
 
@@ -41,7 +40,9 @@ export class TestAgentFactory {
       // Load real plugins
       const plugins: Plugin[] = [];
 
-      // Always include SQL plugin for database support
+      // Dynamically import SQL plugin to avoid early schema loading
+      const sqlModule = await import('@elizaos/plugin-sql');
+      const sqlPlugin = sqlModule.plugin;
       plugins.push(sqlPlugin);
 
       if (config.plugins && config.plugins.length > 0) {
@@ -66,10 +67,7 @@ export class TestAgentFactory {
       const character = {
         ...config.character,
         plugins: [...(config.plugins || []), 'sql'],
-        settings: {
-          ...config.character.settings,
-          modelProvider: config.modelProvider || 'openai',
-        },
+        settings: config.character.settings,
       };
 
       // Create real runtime

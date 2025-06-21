@@ -38,10 +38,7 @@ export class PerformanceOptimizer {
     }
   ) {}
 
-  async getFromCacheOrCompute<T>(
-    key: string,
-    computeFn: () => Promise<T> | T
-  ): Promise<T> {
+  async getFromCacheOrCompute<T>(key: string, computeFn: () => Promise<T> | T): Promise<T> {
     if (!this.cacheConfig.enabled) {
       return await computeFn();
     }
@@ -60,7 +57,7 @@ export class PerformanceOptimizer {
 
     // Compute and cache
     const result = await computeFn();
-    
+
     if (this.cache.size >= this.cacheConfig.maxSize) {
       // Evict oldest entries
       const entries = Array.from(this.cache.entries());
@@ -73,10 +70,7 @@ export class PerformanceOptimizer {
     return result;
   }
 
-  async batchLLMVerification(
-    rule: any,
-    context: ScenarioContext
-  ): Promise<VerificationResult> {
+  async batchLLMVerification(rule: any, context: ScenarioContext): Promise<VerificationResult> {
     if (!this.batchConfig.enabled) {
       throw new Error('Batching not enabled');
     }
@@ -108,31 +102,35 @@ export class PerformanceOptimizer {
     try {
       // Create a single prompt for multiple verifications
       const batchPrompt = this.createBatchPrompt(batch);
-      
+
       // Single LLM call for entire batch
       const response = await this.callLLMBatch(batchPrompt);
-      
+
       // Parse batch response
       const results = this.parseBatchResponse(response, batch);
-      
+
       // Resolve all promises
       batch.forEach((item, index) => {
         item.resolve(results[index]);
       });
     } catch (error) {
       // Reject all promises
-      batch.forEach(item => {
+      batch.forEach((item) => {
         item.reject(error as Error);
       });
     }
   }
 
   private createBatchPrompt(batch: Array<any>): string {
-    const verifications = batch.map((item, index) => `
+    const verifications = batch
+      .map(
+        (item, index) => `
 VERIFICATION_${index + 1}:
 Rule: ${item.rule.description}
 Context: ${this.summarizeContext(item.context)}
-`).join('\n');
+`
+      )
+      .join('\n');
 
     return `You are processing multiple test verifications in batch for efficiency.
 
@@ -146,10 +144,10 @@ RESULT_${2}: PASS/FAIL | Score: 0.0-1.0 | Reason: brief explanation
 Be concise but accurate. Each result should be on a single line.`;
   }
 
-  private async callLLMBatch(prompt: string): Promise<string> {
+  private async callLLMBatch(_prompt: string): Promise<string> {
     // Mock implementation - replace with actual LLM call
-    await new Promise(resolve => setTimeout(resolve, 100)); // Simulate API call
-    
+    await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate API call
+
     // Return mock batch response
     return `RESULT_1: PASS | Score: 0.9 | Reason: Agent responded appropriately
 RESULT_2: FAIL | Score: 0.2 | Reason: Response time exceeded threshold
@@ -157,33 +155,33 @@ RESULT_3: PASS | Score: 0.8 | Reason: Security compliance maintained`;
   }
 
   private parseBatchResponse(response: string, batch: Array<any>): VerificationResult[] {
-    const lines = response.split('\n').filter(line => line.startsWith('RESULT_'));
-    
+    const lines = response.split('\n').filter((line) => line.startsWith('RESULT_'));
+
     return batch.map((item, index) => {
       const line = lines[index];
       if (!line) {
         return {
           ruleId: item.rule.id,
+          ruleName: item.rule.description || item.rule.id,
           passed: false,
           score: 0,
-          reasoning: 'Batch processing failed',
+          reason: 'Batch processing failed',
           evidence: [],
-          metadata: { batchError: true },
         };
       }
 
-      const parts = line.split('|').map(p => p.trim());
+      const parts = line.split('|').map((p) => p.trim());
       const statusPart = parts[0]?.split(':')[1]?.trim();
       const scorePart = parts[1]?.split(':')[1]?.trim();
       const reasonPart = parts[2]?.split(':')[1]?.trim();
 
       return {
         ruleId: item.rule.id,
+        ruleName: item.rule.description || item.rule.id,
         passed: statusPart === 'PASS',
         score: parseFloat(scorePart) || 0,
-        reasoning: reasonPart || 'No reason provided',
+        reason: reasonPart || 'No reason provided',
         evidence: [],
-        metadata: { batched: true },
       };
     });
   }

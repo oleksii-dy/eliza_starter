@@ -1,18 +1,15 @@
-import { logger } from '@elizaos/core';
 import fs from 'node:fs';
 import path from 'node:path';
+import { logger } from '@elizaos/core';
 import { loadPluginModule } from './load-plugin';
-import { executeInstallation, executeInstallationWithFallback } from './package-manager';
 import { fetchPluginRegistry } from './plugin-discovery';
-import { normalizePluginName } from './registry';
-import { detectPluginContext } from './plugin-context';
 import { runBunCommand } from './run-bun';
 
 /**
  * Get the CLI's installation directory when running globally
  * @returns {string|null} - The path to the CLI's directory or null if not found
  */
-function getCliDirectory(): string | null {
+/* function getCliDirectory(): string | null {
   try {
     // Get the path to the running CLI script
     const cliPath = process.argv[1];
@@ -37,14 +34,14 @@ function getCliDirectory(): string | null {
     logger.error('Failed to determine CLI directory:', error);
     return null;
   }
-}
+} */
 
 /**
  * Check if a plugin exists in the workspace
  * @param {string} packageName - The plugin package name
  * @returns {boolean} - Whether the plugin exists in the workspace
  */
-function isWorkspacePlugin(packageName: string): boolean {
+/* function isWorkspacePlugin(packageName: string): boolean {
   // Check if it's an @elizaos scoped package
   if (packageName.startsWith('@elizaos/')) {
     // Try to find the plugin in the workspace
@@ -62,7 +59,7 @@ function isWorkspacePlugin(packageName: string): boolean {
     }
   }
   return false;
-}
+} */
 
 /**
  * Verifies if a plugin can be imported
@@ -93,7 +90,7 @@ async function verifyPluginImport(repository: string, context: string): Promise<
  * @param {boolean} skipVerification - Whether to skip import verification
  * @returns {boolean} - Whether the installation and import verification was successful
  */
-async function attemptInstallation(
+/* async function attemptInstallation(
   packageName: string,
   versionString: string,
   directory: string,
@@ -138,7 +135,7 @@ async function attemptInstallation(
 /**
  * Creates a temporary package.json with workspace overrides for local packages
  */
-async function createTempPackageJsonWithOverrides(
+/* async function createTempPackageJsonWithOverrides(
   cwd: string,
   packageName: string
 ): Promise<string | null> {

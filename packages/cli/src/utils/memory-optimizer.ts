@@ -16,8 +16,10 @@ export class MemoryOptimizer {
     }
     const memUsage = process.memoryUsage();
     this.memorySnapshots.set(label, memUsage.heapUsed);
-    
-    logger.debug(`Memory snapshot '${label}': ${Math.round(memUsage.heapUsed / 1024 / 1024)}MB heap`);
+
+    logger.debug(
+      `Memory snapshot '${label}': ${Math.round(memUsage.heapUsed / 1024 / 1024)}MB heap`
+    );
   }
 
   /**
@@ -27,16 +29,18 @@ export class MemoryOptimizer {
     if (global.gc && this.gcEnabled) {
       global.gc();
     }
-    
+
     const currentMem = process.memoryUsage().heapUsed;
     const snapshotMem = this.memorySnapshots.get(label) || 0;
     const delta = currentMem - snapshotMem;
-    
-    logger.debug(`Memory delta since '${label}': ${delta > 0 ? '+' : ''}${Math.round(delta / 1024 / 1024)}MB`);
-    
+
+    logger.debug(
+      `Memory delta since '${label}': ${delta > 0 ? '+' : ''}${Math.round(delta / 1024 / 1024)}MB`
+    );
+
     return {
       current: currentMem,
-      delta
+      delta,
     };
   }
 
@@ -49,7 +53,7 @@ export class MemoryOptimizer {
       global.gc();
       const after = process.memoryUsage().heapUsed;
       const freed = before - after;
-      
+
       if (freed > 0) {
         logger.debug(`Garbage collection freed ${Math.round(freed / 1024 / 1024)}MB`);
       }
@@ -75,7 +79,7 @@ export class MemoryOptimizer {
   static logMemoryUsage(context?: string): void {
     const stats = this.getMemoryStats();
     const prefix = context ? `[${context}] ` : '';
-    
+
     logger.info(`${prefix}Memory usage: ${stats.heapUsed}MB heap, ${stats.rss}MB RSS`);
   }
 
@@ -85,17 +89,16 @@ export class MemoryOptimizer {
   static setupMemoryMonitoring(intervalMs = 30000): () => void {
     const interval = setInterval(() => {
       const stats = this.getMemoryStats();
-      
+
       // Log warning if memory usage is high
       if (stats.heapUsed > 500) {
         logger.warn(`High memory usage detected: ${stats.heapUsed}MB heap`);
       }
-      
+
       // Force GC if heap is growing large
       if (stats.heapUsed > 300 && this.gcEnabled) {
         this.forceGC();
       }
-      
     }, intervalMs);
 
     return () => clearInterval(interval);
@@ -109,7 +112,9 @@ export class MemoryOptimizer {
     if (map.size === 0 && expectedSize > 16) {
       // Maps in V8 resize in powers of 2, so optimize for that
       const optimizedSize = Math.pow(2, Math.ceil(Math.log2(expectedSize * 1.5)));
-      logger.debug(`Optimizing map capacity for ${expectedSize} items (allocated: ${optimizedSize})`);
+      logger.debug(
+        `Optimizing map capacity for ${expectedSize} items (allocated: ${optimizedSize})`
+      );
     }
   }
 
@@ -119,7 +124,7 @@ export class MemoryOptimizer {
   static cleanupCollections(collections: { [key: string]: Map<any, any> | Set<any> }): void {
     for (const [name, collection] of Object.entries(collections)) {
       const size = collection.size;
-      
+
       if (collection instanceof Map) {
         // Remove any null/undefined values
         for (const [key, value] of collection.entries()) {
@@ -128,7 +133,7 @@ export class MemoryOptimizer {
           }
         }
       }
-      
+
       const cleaned = collection.size;
       if (cleaned < size) {
         logger.debug(`Cleaned up ${size - cleaned} items from ${name} collection`);
@@ -192,9 +197,9 @@ export class LazyPluginLoader {
   private static async loadPluginInternal(pluginName: string, importPath: string): Promise<any> {
     logger.debug(`Lazy loading plugin: ${pluginName}`);
     MemoryOptimizer.takeSnapshot(`before-load-${pluginName}`);
-    
+
     const plugin = await import(importPath);
-    
+
     MemoryOptimizer.compareSnapshot(`before-load-${pluginName}`);
     return plugin;
   }

@@ -21,7 +21,11 @@ export const generateScenarioCommand = new Command('generate')
   .argument('<description>', 'Natural language description of what to test')
   .option('-p, --plugins <plugins>', 'Comma-separated list of plugins to test')
   .option('-c, --complexity <level>', 'Complexity level: low, medium, high, very-high', 'medium')
-  .option('-t, --test-type <type>', 'Test type: functional, integration, security, performance', 'functional')
+  .option(
+    '-t, --test-type <type>',
+    'Test type: functional, integration, security, performance',
+    'functional'
+  )
   .option('-d, --duration <seconds>', 'Maximum duration in seconds', '120')
   .option('-a, --actors <count>', 'Number of actors to include', '3')
   .option('-o, --output <path>', 'Output file path for generated scenario')
@@ -35,9 +39,12 @@ export const generateScenarioCommand = new Command('generate')
     }
   });
 
-async function generateScenario(description: string, options: GenerateScenarioOptions): Promise<void> {
+async function generateScenario(
+  description: string,
+  options: GenerateScenarioOptions
+): Promise<void> {
   logger.info('🤖 Generating scenario using AI...');
-  
+
   // Load project to get runtime
   const project = await loadProject(process.cwd());
   if (!project.agents || project.agents.length === 0) {
@@ -51,12 +58,12 @@ async function generateScenario(description: string, options: GenerateScenarioOp
 
   const agentWithSqlPlugin = {
     ...project.agents[0],
-    plugins: [...(project.agents[0].plugins || []), sqlPlugin]
+    plugins: [...(project.agents[0].plugins || []), sqlPlugin],
   };
 
   const runtime = new AgentRuntime({
     character: project.agents[0].character,
-    plugins: agentWithSqlPlugin.plugins
+    plugins: agentWithSqlPlugin.plugins,
   });
 
   await runtime.initialize();
@@ -66,7 +73,7 @@ async function generateScenario(description: string, options: GenerateScenarioOp
 
   // Parse options
   const context = {
-    plugins: options.plugins?.split(',').map(p => p.trim()),
+    plugins: options.plugins?.split(',').map((p) => p.trim()),
     complexity: options.complexity,
     testType: options.testType,
     duration: parseInt(options.duration || '120'),
@@ -116,7 +123,10 @@ async function generateScenario(description: string, options: GenerateScenarioOp
       'Create conditional complexity scaling',
       'Add real-time scenario modification',
     ];
-    const enhancedScenario = await generator.enhanceScenarioWithDynamicElements(scenario, enhancements);
+    const enhancedScenario = await generator.enhanceScenarioWithDynamicElements(
+      scenario,
+      enhancements
+    );
     Object.assign(scenario, enhancedScenario);
   }
 
@@ -132,7 +142,7 @@ async function generateScenario(description: string, options: GenerateScenarioOp
     // Auto-generate filename
     const filename = `generated-${scenario.id}.ts`;
     const outputPath = path.join(process.cwd(), 'scenarios', filename);
-    
+
     // Ensure scenarios directory exists
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
     await fs.writeFile(outputPath, scenarioCode, 'utf8');
@@ -164,14 +174,14 @@ function displayScenarioSummary(scenario: any): void {
   logger.info(`Verification Rules: ${scenario.verification?.rules?.length || 0}`);
   logger.info(`Complexity: ${scenario.metadata?.complexity || 'medium'}`);
   logger.info(`Duration: ${scenario.execution?.maxDuration / 1000 || 120}s`);
-  
+
   if (scenario.actors?.length > 0) {
     logger.info('\n🎭 Actors:');
     scenario.actors.forEach((actor: any) => {
       logger.info(`  - ${actor.name} (${actor.role})`);
     });
   }
-  
+
   if (scenario.verification?.rules?.length > 0) {
     logger.info('\n✅ Verification Rules:');
     scenario.verification.rules.slice(0, 3).forEach((rule: any) => {

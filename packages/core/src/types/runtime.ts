@@ -45,6 +45,11 @@ export interface IAgentRuntime extends IDatabaseAdapter {
 
   registerService(service: typeof Service): Promise<void>;
 
+  /**
+   * Get the configuration manager for plugin component configuration
+   */
+  getConfigurationManager(): any; // Using 'any' to avoid circular import issues
+
   // Keep these methods for backward compatibility
   registerDatabaseAdapter(adapter: IDatabaseAdapter): void;
 
@@ -190,4 +195,29 @@ export interface IAgentRuntime extends IDatabaseAdapter {
    * Validate a plan
    */
   validatePlan(plan: ActionPlan): Promise<{ valid: boolean; issues: string[] }>;
+
+  /**
+   * Configure a plugin's components dynamically
+   * Supports hot-swap enable/disable of components
+   */
+  configurePlugin(pluginName: string, config: any): Promise<void>;
+
+  /**
+   * Enable a specific component dynamically
+   */
+  enableComponent(
+    pluginName: string, 
+    componentName: string, 
+    componentType: 'action' | 'provider' | 'evaluator' | 'service',
+    component: any
+  ): Promise<void>;
+
+  /**
+   * Disable a specific component dynamically
+   */
+  disableComponent(
+    pluginName: string,
+    componentName: string,
+    componentType: 'action' | 'provider' | 'evaluator' | 'service'
+  ): Promise<void>;
 }

@@ -88,15 +88,17 @@ export const stressTestVerificationCommand = new Command()
     let cleanup: () => Promise<void> = async () => {};
 
     try {
-      logger.info(`Starting stress test with ${concurrent} concurrent tests x ${iterations} iterations`);
-      
+      logger.info(
+        `Starting stress test with ${concurrent} concurrent tests x ${iterations} iterations`
+      );
+
       // Initialize the server and runtime
       const { server, runtime, cleanup: cleanupFn } = await initializeServer();
       cleanup = cleanupFn;
 
       // Create scenario runner with production verification system
       const scenarioRunner = new ScenarioRunner(server, runtime);
-      
+
       logger.info('Running stress test scenarios...');
       logger.info('Testing system under load:');
       logger.info(`- Concurrent verification processes: ${concurrent}`);
@@ -104,36 +106,45 @@ export const stressTestVerificationCommand = new Command()
       logger.info('- Memory usage monitoring');
       logger.info('- Performance degradation detection');
       logger.info('- Error rate analysis');
-      
+
       const stressTestResults = await runStressTest(scenarioRunner, concurrent, iterations);
-      
+
       // Report results
       console.log('\n=== STRESS TEST RESULTS ===');
       console.log(`Total Tests Executed: ${stressTestResults.totalTests}`);
-      console.log(`Successful Tests: ${stressTestResults.successfulTests} (${(stressTestResults.successRate * 100).toFixed(1)}%)`);
+      console.log(
+        `Successful Tests: ${stressTestResults.successfulTests} (${(stressTestResults.successRate * 100).toFixed(1)}%)`
+      );
       console.log(`Failed Tests: ${stressTestResults.failedTests}`);
       console.log(`Average Response Time: ${stressTestResults.avgResponseTime.toFixed(2)}ms`);
-      console.log(`95th Percentile Response Time: ${stressTestResults.p95ResponseTime.toFixed(2)}ms`);
+      console.log(
+        `95th Percentile Response Time: ${stressTestResults.p95ResponseTime.toFixed(2)}ms`
+      );
       console.log(`Peak Memory Usage: ${stressTestResults.peakMemoryMB.toFixed(1)}MB`);
-      console.log(`Memory Leak Detected: ${stressTestResults.memoryLeakDetected ? '⚠️ YES' : '✅ NO'}`);
-      
+      console.log(
+        `Memory Leak Detected: ${stressTestResults.memoryLeakDetected ? '⚠️ YES' : '✅ NO'}`
+      );
+
       if (stressTestResults.errors.length > 0) {
         console.log('\n=== ERROR ANALYSIS ===');
-        const errorCounts = stressTestResults.errors.reduce((acc, error) => {
-          acc[error] = (acc[error] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-        
+        const errorCounts = stressTestResults.errors.reduce(
+          (acc, error) => {
+            acc[error] = (acc[error] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
+
         Object.entries(errorCounts).forEach(([error, count]) => {
           console.log(`${error}: ${count} occurrences`);
         });
       }
-      
+
       console.log('\n=== PERFORMANCE ANALYSIS ===');
       console.log(`Cache Performance: ${stressTestResults.cacheEfficiency.toFixed(1)}% efficiency`);
       console.log(`Batch Processing: ${stressTestResults.batchEfficiency.toFixed(1)}% efficiency`);
       console.log(`System Stability: ${stressTestResults.systemStability.toFixed(1)}%`);
-      
+
       console.log('\n=== SUMMARY ===');
       if (stressTestResults.overallPassed) {
         console.log('🎉 STRESS TEST PASSED: System is production-ready under load!');
@@ -157,9 +168,8 @@ export const stressTestVerificationCommand = new Command()
         }
         console.log('The system is functional but may need tuning for production workloads.');
       }
-      
+
       process.exit(stressTestResults.overallPassed ? 0 : 1);
-      
     } catch (error) {
       logger.error('Error running stress tests:', error);
       if (error instanceof Error) {
@@ -171,7 +181,11 @@ export const stressTestVerificationCommand = new Command()
     }
   });
 
-async function runStressTest(scenarioRunner: ScenarioRunner, concurrent: number, iterations: number): Promise<{
+async function runStressTest(
+  scenarioRunner: ScenarioRunner,
+  concurrent: number,
+  iterations: number
+): Promise<{
   totalTests: number;
   successfulTests: number;
   failedTests: number;
@@ -195,27 +209,27 @@ async function runStressTest(scenarioRunner: ScenarioRunner, concurrent: number,
 
   const initialMemory = process.memoryUsage().heapUsed / 1024 / 1024;
   let peakMemory = initialMemory;
-  
+
   // Run tests in batches to avoid overwhelming the system
   const batchSize = Math.min(concurrent, 20);
   const totalBatches = Math.ceil(iterations / batchSize);
-  
+
   for (let batch = 0; batch < totalBatches; batch++) {
     const currentBatchSize = Math.min(batchSize, iterations - batch * batchSize);
-    
+
     logger.info(`Running batch ${batch + 1}/${totalBatches} (${currentBatchSize} tests)`);
-    
+
     const batchPromises = Array.from({ length: currentBatchSize }, async () => {
       const startTime = Date.now();
-      
+
       try {
         // Run the production verification tests
         const testResult = await scenarioRunner.runProductionVerificationTests();
         const responseTime = Date.now() - startTime;
         const memoryUsage = process.memoryUsage().heapUsed / 1024 / 1024;
-        
+
         peakMemory = Math.max(peakMemory, memoryUsage);
-        
+
         return {
           success: testResult.allImprovementsWorking,
           responseTime,
@@ -224,9 +238,9 @@ async function runStressTest(scenarioRunner: ScenarioRunner, concurrent: number,
       } catch (error) {
         const responseTime = Date.now() - startTime;
         const memoryUsage = process.memoryUsage().heapUsed / 1024 / 1024;
-        
+
         peakMemory = Math.max(peakMemory, memoryUsage);
-        
+
         return {
           success: false,
           responseTime,
@@ -235,44 +249,42 @@ async function runStressTest(scenarioRunner: ScenarioRunner, concurrent: number,
         };
       }
     });
-    
+
     const batchResults = await Promise.all(batchPromises);
     results.push(...batchResults);
-    
+
     // Small delay between batches to prevent overwhelming
     if (batch < totalBatches - 1) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
-  
+
   // Analyze results
-  const successfulTests = results.filter(r => r.success).length;
+  const successfulTests = results.filter((r) => r.success).length;
   const failedTests = results.length - successfulTests;
   const successRate = successfulTests / results.length;
-  
-  const responseTimes = results.map(r => r.responseTime).sort((a, b) => a - b);
+
+  const responseTimes = results.map((r) => r.responseTime).sort((a, b) => a - b);
   const avgResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
   const p95Index = Math.floor(responseTimes.length * 0.95);
   const p95ResponseTime = responseTimes[p95Index] || 0;
-  
-  const errors = results.filter(r => r.error).map(r => r.error!);
-  
+
+  const errors = results.filter((r) => r.error).map((r) => r.error!);
+
   // Memory leak detection
   const finalMemory = process.memoryUsage().heapUsed / 1024 / 1024;
   const memoryGrowth = finalMemory - initialMemory;
   const memoryLeakDetected = memoryGrowth > 50; // More than 50MB growth suggests a leak
-  
+
   // Calculate efficiency metrics
-  const cacheEfficiency = Math.max(0, 100 - (avgResponseTime / 100)); // Simulated based on response time
-  const batchEfficiency = Math.max(0, 100 - (failedTests / results.length * 100)); // Based on success rate
+  const cacheEfficiency = Math.max(0, 100 - avgResponseTime / 100); // Simulated based on response time
+  const batchEfficiency = Math.max(0, 100 - (failedTests / results.length) * 100); // Based on success rate
   const systemStability = successRate * 100;
-  
+
   // Overall pass criteria
-  const overallPassed = successRate >= 0.95 && 
-                       p95ResponseTime < 5000 && 
-                       !memoryLeakDetected &&
-                       systemStability >= 90;
-  
+  const overallPassed =
+    successRate >= 0.95 && p95ResponseTime < 5000 && !memoryLeakDetected && systemStability >= 90;
+
   return {
     totalTests: results.length,
     successfulTests,

@@ -1,4 +1,4 @@
-import { type IAgentRuntime, logger } from '@elizaos/core';
+import { type IAgentRuntime, logger, type UUID } from '@elizaos/core';
 import type { Scenario, ScenarioActor, VerificationRule } from './types.js';
 
 export class LLMScenarioGenerator {
@@ -19,14 +19,15 @@ export class LLMScenarioGenerator {
     }
   ): Promise<Scenario> {
     const prompt = this.buildScenarioGenerationPrompt(description, context);
-    
+
     logger.info('Generating scenario using LLM');
-    
-    const response = await this.runtime.generateText({
+
+    const { ModelType } = await import('@elizaos/core');
+    const response = (await this.runtime.useModel(ModelType.TEXT_LARGE, {
       prompt,
       temperature: 0.6, // Some creativity but still structured
       maxTokens: 3000,
-    });
+    })) as string;
 
     return this.parseGeneratedScenario(response, description);
   }
@@ -74,11 +75,12 @@ SCRIPT_PREVIEW: [3-4 example messages they might send]
 
 Create personalities that will thoroughly test the subject agent through realistic, challenging interactions.`;
 
-    const response = await this.runtime.generateText({
+    const { ModelType } = await import('@elizaos/core');
+    const response = (await this.runtime.useModel(ModelType.TEXT_LARGE, {
       prompt,
       temperature: 0.7,
       maxTokens: 2500,
-    });
+    })) as string;
 
     return this.parseGeneratedActors(response);
   }
@@ -93,7 +95,7 @@ Create personalities that will thoroughly test the subject agent through realist
 SCENARIO: ${scenario}
 
 ACTORS:
-${actors.map(a => `- ${a.name} (${a.role}): ${a.systemPrompt?.substring(0, 100)}...`).join('\n')}
+        ${actors.map((a) => `- ${a.name} (${a.role}): ${a.personality?.systemPrompt?.substring(0, 100) || a.system?.substring(0, 100) || 'No system prompt'}...`).join('\n')}
 
 TEST OBJECTIVES:
 ${testObjectives.map((obj, i) => `${i + 1}. ${obj}`).join('\n')}
@@ -126,11 +128,12 @@ CONTEXT: [additional context for LLM verification]
 
 Focus on creating rules that will truly validate the agent's capabilities in this specific scenario.`;
 
-    const response = await this.runtime.generateText({
+    const { ModelType } = await import('@elizaos/core');
+    const response = (await this.runtime.useModel(ModelType.TEXT_LARGE, {
       prompt,
       temperature: 0.5,
       maxTokens: 2000,
-    });
+    })) as string;
 
     return this.parseGeneratedVerificationRules(response);
   }
@@ -175,19 +178,17 @@ EMERGENT_OPPORTUNITIES:
 
 Make the scenario more intelligent and adaptive while maintaining its core purpose.`;
 
-    const response = await this.runtime.generateText({
+    const { ModelType } = await import('@elizaos/core');
+    const response = (await this.runtime.useModel(ModelType.TEXT_LARGE, {
       prompt,
       temperature: 0.6,
       maxTokens: 1500,
-    });
+    })) as string;
 
     return this.applyEnhancements(baseScenario, response);
   }
 
-  private buildScenarioGenerationPrompt(
-    description: string,
-    context?: any
-  ): string {
+  private buildScenarioGenerationPrompt(description: string, context?: any): string {
     return `You are an expert scenario designer for AI agent testing. Create a comprehensive test scenario based on the description.
 
 USER DESCRIPTION:
@@ -252,17 +253,17 @@ Make the scenario realistic, challenging, and thoroughly test the capabilities d
       }
 
       // Use LLM to help parse the complex object
-      const parsePrompt = `Parse this TypeScript scenario object into a valid JSON structure:
-
-${scenarioMatch[1]}
-
-Convert it to valid JSON, ensuring:
-- All strings are properly quoted
-- All arrays and objects are valid JSON
-- Function references are converted to string descriptions
-- TypeScript types are removed
-
-Return only the JSON object, no additional text.`;
+      // const parsePrompt = `Parse this JavaScript object into JSON:
+      //
+      // ${scenarioMatch[1]}
+      //
+      // Convert it to valid JSON, ensuring:
+      // - All strings are properly quoted
+      // - All arrays and objects are valid JSON
+      // - Function references are converted to string descriptions
+      // - TypeScript types are removed
+      //
+      // Return only the JSON object, no additional text.`;
 
       // For now, create a basic scenario structure
       // In a real implementation, you'd use eval() carefully or a proper parser
@@ -280,17 +281,13 @@ Return only the JSON object, no additional text.`;
         execution: {
           maxDuration: 120000,
           maxSteps: 30,
-          strategy: 'sequential',
         },
         verification: {
-          strategy: 'llm',
-          confidence: 0.8,
           rules: [],
         },
         benchmarks: {
-          responseTime: 5000,
-          completionTime: 120000,
-          successRate: 0.8,
+          maxDuration: 120000,
+          maxSteps: 30,
         },
       };
 
@@ -298,7 +295,9 @@ Return only the JSON object, no additional text.`;
       return basicScenario;
     } catch (error) {
       logger.error('Error parsing generated scenario:', error);
-      throw new Error(`Failed to parse generated scenario: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to parse generated scenario: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -310,7 +309,9 @@ Return only the JSON object, no additional text.`;
       const section = actorSections[i].trim();
       const lines = section.split('\n');
 
-      const actor: Partial<ScenarioActor> = {};
+      const actor: Partial<ScenarioActor> = {
+        script: { steps: [] }, // Initialize with empty script
+      };
 
       for (const line of lines) {
         const colonIndex = line.indexOf(':');
@@ -320,7 +321,8 @@ Return only the JSON object, no additional text.`;
 
           switch (key) {
             case 'id':
-              actor.id = value;
+              // Generate a proper UUID format
+              actor.id = `${value}-0000-0000-0000-000000000000` as UUID;
               break;
             case 'name':
               actor.name = value;
@@ -329,7 +331,10 @@ Return only the JSON object, no additional text.`;
               actor.role = value as any;
               break;
             case 'system_prompt':
-              actor.systemPrompt = value;
+              if (!actor.personality) {
+                actor.personality = {};
+              }
+              actor.personality.systemPrompt = value;
               break;
           }
         }
@@ -393,7 +398,7 @@ Return only the JSON object, no additional text.`;
     return rules;
   }
 
-  private applyEnhancements(baseScenario: Scenario, enhancementResponse: string): Scenario {
+  private applyEnhancements(baseScenario: Scenario, _enhancementResponse: string): Scenario {
     // In a real implementation, this would parse the enhancement response
     // and apply the suggested improvements to the scenario
     logger.info('Applied LLM-generated enhancements to scenario');

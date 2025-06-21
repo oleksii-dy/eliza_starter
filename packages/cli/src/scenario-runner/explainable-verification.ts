@@ -1,4 +1,4 @@
-import { logger } from '@elizaos/core';
+// import { logger } from '@elizaos/core'; // Available for logging if needed
 import type { VerificationResult, ScenarioContext } from './types.js';
 
 export interface ExplanationConfig {
@@ -58,36 +58,47 @@ export interface ConfidenceFactor {
 }
 
 export class ExplainableVerificationEngine {
-  constructor(private config: ExplanationConfig) {}
+  constructor(_config: ExplanationConfig) {}
 
-  async explainableVerify(
-    rule: any,
-    context: ScenarioContext
-  ): Promise<ExplainableResult> {
+  async explainableVerify(rule: any, context: ScenarioContext): Promise<ExplainableResult> {
     const decisionPath: DecisionStep[] = [];
     const dataFlow: DataFlowStep[] = [];
-    
+
     // Step 1: Data preprocessing
     this.recordDataFlow(dataFlow, 'preprocessing', context);
-    
+
     // Step 2: Rule analysis
     const ruleAnalysis = this.analyzeRule(rule);
-    this.recordDecisionStep(decisionPath, 1, 'Rule Analysis', rule, ruleAnalysis, 'Parsed rule requirements and constraints');
-    
+    this.recordDecisionStep(
+      decisionPath,
+      1,
+      'Rule Analysis',
+      rule,
+      ruleAnalysis,
+      'Parsed rule requirements and constraints'
+    );
+
     // Step 3: Context evaluation
     const contextEval = this.evaluateContext(context, rule);
-    this.recordDecisionStep(decisionPath, 2, 'Context Evaluation', context, contextEval, 'Analyzed conversation context against rule requirements');
-    
+    this.recordDecisionStep(
+      decisionPath,
+      2,
+      'Context Evaluation',
+      context,
+      contextEval,
+      'Analyzed conversation context against rule requirements'
+    );
+
     // Step 4: Core verification logic
     const coreResult = this.performCoreVerification(rule, context, decisionPath);
-    
+
     // Step 5: Confidence analysis
     const confidenceFactors = this.analyzeConfidence(rule, context, coreResult);
-    
+
     // Step 6: Generate explanations
     const counterExamples = this.generateCounterExamples(rule, context, coreResult);
     const fixSuggestions = this.generateFixSuggestions(rule, context, coreResult);
-    
+
     return {
       ...coreResult,
       explanation: {
@@ -100,23 +111,19 @@ export class ExplainableVerificationEngine {
     };
   }
 
-  private recordDataFlow(
-    dataFlow: DataFlowStep[],
-    stage: string,
-    context: ScenarioContext
-  ): void {
+  private recordDataFlow(dataFlow: DataFlowStep[], stage: string, context: ScenarioContext): void {
     const transformations: string[] = [];
-    
+
     // Track what transformations are applied to the data
     if (context.transcript.length > 0) {
       transformations.push(`Extracted ${context.transcript.length} messages`);
     }
-    
+
     const totalCharacters = context.transcript
-      .map(msg => msg.content?.text || '')
+      .map((msg) => msg.content?.text || '')
       .join('').length;
     transformations.push(`Total text: ${totalCharacters} characters`);
-    
+
     dataFlow.push({
       stage,
       input: `${context.transcript.length} messages`,
@@ -173,7 +180,7 @@ export class ExplainableVerificationEngine {
       const actualCount = context.transcript.length;
       const expectedMin = rule.config.minMessages || 0;
       const expectedMax = rule.config.maxMessages || Infinity;
-      
+
       this.recordDecisionStep(
         decisionPath,
         3,
@@ -183,32 +190,27 @@ export class ExplainableVerificationEngine {
         `Checking if ${actualCount} is between ${expectedMin} and ${expectedMax}`,
         1.0 // High confidence for deterministic check
       );
-      
+
       const passed = actualCount >= expectedMin && actualCount <= expectedMax;
-      
+
       return {
         ruleId: rule.id,
         passed,
         score: passed ? 1.0 : this.calculatePartialScore(actualCount, expectedMin, expectedMax),
-        reasoning: this.buildDetailedReasoning(actualCount, expectedMin, expectedMax, passed),
+        reason: this.buildDetailedReasoning(actualCount, expectedMin, expectedMax, passed),
+        ruleName: rule.description || rule.id,
         evidence: this.collectEvidence(context, rule),
-        metadata: {
-          verificationMethod: 'explainable_deterministic',
-          actualCount,
-          expectedMin,
-          expectedMax,
-        },
       };
     }
-    
+
     // Fallback for other rule types
     return {
       ruleId: rule.id,
       passed: false,
       score: 0,
-      reasoning: 'Rule type not supported by explainable verification',
+      reason: 'Rule type not supported by explainable verification',
+      ruleName: rule.description || rule.id,
       evidence: [],
-      metadata: { unsupported: true },
     };
   }
 
@@ -218,7 +220,7 @@ export class ExplainableVerificationEngine {
     result: VerificationResult
   ): ConfidenceFactor[] {
     const factors: ConfidenceFactor[] = [];
-    
+
     // Data quality factors
     if (context.transcript.length > 5) {
       factors.push({
@@ -235,7 +237,7 @@ export class ExplainableVerificationEngine {
         explanation: `Only ${context.transcript.length} messages may not be representative`,
       });
     }
-    
+
     // Rule clarity factors
     if (rule.config?.deterministicType) {
       factors.push({
@@ -245,16 +247,16 @@ export class ExplainableVerificationEngine {
         explanation: 'Deterministic rule provides objective verification',
       });
     }
-    
+
     // Result consistency factors
-    if (result.score > 0.8 || result.score < 0.2) {
+    if (result.score !== undefined && (result.score > 0.8 || result.score < 0.2)) {
       factors.push({
         factor: 'Clear outcome',
         impact: 'positive',
         weight: 0.2,
         explanation: `Score ${result.score} indicates unambiguous result`,
       });
-    } else {
+    } else if (result.score !== undefined) {
       factors.push({
         factor: 'Ambiguous outcome',
         impact: 'negative',
@@ -262,7 +264,7 @@ export class ExplainableVerificationEngine {
         explanation: `Score ${result.score} suggests borderline case`,
       });
     }
-    
+
     return factors;
   }
 
@@ -272,22 +274,23 @@ export class ExplainableVerificationEngine {
     result: VerificationResult
   ): CounterExample[] {
     const examples: CounterExample[] = [];
-    
+
     if (rule.config?.deterministicType === 'message_count') {
       const actualCount = context.transcript.length;
       const expectedMin = rule.config.minMessages || 0;
       const expectedMax = rule.config.maxMessages || Infinity;
-      
+
       examples.push({
         description: 'Message count verification example',
         whatWouldMakeItPass: `Having between ${expectedMin} and ${expectedMax} messages (currently ${actualCount})`,
-        whatWouldMakeItFail: expectedMin > 0 
-          ? `Having fewer than ${expectedMin} or more than ${expectedMax} messages`
-          : `Having more than ${expectedMax} messages`,
+        whatWouldMakeItFail:
+          expectedMin > 0
+            ? `Having fewer than ${expectedMin} or more than ${expectedMax} messages`
+            : `Having more than ${expectedMax} messages`,
         similarFailures: this.findSimilarFailures(rule, result),
       });
     }
-    
+
     return examples;
   }
 
@@ -297,12 +300,12 @@ export class ExplainableVerificationEngine {
     result: VerificationResult
   ): FixSuggestion[] {
     const suggestions: FixSuggestion[] = [];
-    
+
     if (!result.passed) {
       if (rule.config?.deterministicType === 'message_count') {
         const actualCount = context.transcript.length;
         const expectedMin = rule.config.minMessages || 0;
-        
+
         if (actualCount < expectedMin) {
           suggestions.push({
             type: 'scenario_design',
@@ -311,7 +314,7 @@ export class ExplainableVerificationEngine {
             implementation: `Add more conversation steps to reach minimum ${expectedMin} messages`,
             estimatedImpact: 0.8,
           });
-          
+
           suggestions.push({
             type: 'agent_behavior',
             priority: 'low',
@@ -321,7 +324,7 @@ export class ExplainableVerificationEngine {
           });
         }
       }
-      
+
       // Generic suggestions
       suggestions.push({
         type: 'verification_rule',
@@ -331,7 +334,7 @@ export class ExplainableVerificationEngine {
         estimatedImpact: 0.6,
       });
     }
-    
+
     return suggestions;
   }
 
@@ -351,14 +354,17 @@ export class ExplainableVerificationEngine {
     const requirements: string[] = [];
     if (rule.config?.minMessages) requirements.push(`At least ${rule.config.minMessages} messages`);
     if (rule.config?.maxMessages) requirements.push(`At most ${rule.config.maxMessages} messages`);
-    if (rule.config?.requiredKeywords) requirements.push(`Contains keywords: ${rule.config.requiredKeywords.join(', ')}`);
+    if (rule.config?.requiredKeywords)
+      requirements.push(`Contains keywords: ${rule.config.requiredKeywords.join(', ')}`);
     return requirements;
   }
 
   private extractConstraints(rule: any): string[] {
     const constraints: string[] = [];
-    if (rule.config?.maxResponseTimeMs) constraints.push(`Response time under ${rule.config.maxResponseTimeMs}ms`);
-    if (rule.config?.forbiddenKeywords) constraints.push(`Must not contain: ${rule.config.forbiddenKeywords.join(', ')}`);
+    if (rule.config?.maxResponseTimeMs)
+      constraints.push(`Response time under ${rule.config.maxResponseTimeMs}ms`);
+    if (rule.config?.forbiddenKeywords)
+      constraints.push(`Must not contain: ${rule.config.forbiddenKeywords.join(', ')}`);
     return constraints;
   }
 
@@ -372,7 +378,7 @@ export class ExplainableVerificationEngine {
 
   private calculateAverageMessageLength(context: ScenarioContext): number {
     const totalLength = context.transcript
-      .map(msg => msg.content?.text?.length || 0)
+      .map((msg) => msg.content?.text?.length || 0)
       .reduce((a, b) => a + b, 0);
     return context.transcript.length > 0 ? totalLength / context.transcript.length : 0;
   }
@@ -397,35 +403,40 @@ export class ExplainableVerificationEngine {
     // Simple relevance calculation based on rule keywords in transcript
     const ruleKeywords = [
       ...(rule.config?.requiredKeywords || []),
-      ...(rule.description?.split(' ') || [])
-    ].filter(k => k.length > 3);
-    
+      ...(rule.description?.split(' ') || []),
+    ].filter((k) => k.length > 3);
+
     const transcript = context.transcript
-      .map(msg => msg.content?.text || '')
+      .map((msg) => msg.content?.text || '')
       .join(' ')
       .toLowerCase();
-    
-    const foundKeywords = ruleKeywords.filter(keyword => 
+
+    const foundKeywords = ruleKeywords.filter((keyword) =>
       transcript.includes(keyword.toLowerCase())
     );
-    
+
     return ruleKeywords.length > 0 ? foundKeywords.length / ruleKeywords.length : 0.5;
   }
 
   private calculatePartialScore(actual: number, min: number, max: number): number {
     if (actual < min) {
-      return Math.max(0, actual / min * 0.5);
+      return Math.max(0, (actual / min) * 0.5);
     }
     if (actual > max) {
-      return Math.max(0, 1 - (actual - max) / max * 0.5);
+      return Math.max(0, 1 - ((actual - max) / max) * 0.5);
     }
     return 1.0;
   }
 
-  private buildDetailedReasoning(actual: number, min: number, max: number, passed: boolean): string {
+  private buildDetailedReasoning(
+    actual: number,
+    min: number,
+    max: number,
+    passed: boolean
+  ): string {
     let reasoning = `Message count verification: found ${actual} messages, `;
     reasoning += `expected between ${min} and ${max}. `;
-    
+
     if (passed) {
       reasoning += 'Requirement satisfied.';
     } else if (actual < min) {
@@ -433,24 +444,24 @@ export class ExplainableVerificationEngine {
     } else {
       reasoning += `Too many messages (${actual - max} over limit).`;
     }
-    
+
     return reasoning;
   }
 
-  private collectEvidence(context: ScenarioContext, rule: any): string[] {
+  private collectEvidence(context: ScenarioContext, _rule: any): string[] {
     const evidence: string[] = [];
     evidence.push(`Total messages: ${context.transcript.length}`);
-    
-    const actors = new Set(context.transcript.map(msg => msg.actorId));
+
+    const actors = new Set(context.transcript.map((msg) => msg.actorId));
     evidence.push(`Unique actors: ${actors.size}`);
-    
+
     const avgLength = this.calculateAverageMessageLength(context);
     evidence.push(`Average message length: ${avgLength.toFixed(1)} characters`);
-    
+
     return evidence;
   }
 
-  private findSimilarFailures(rule: any, result: VerificationResult): string[] {
+  private findSimilarFailures(_rule: any, _result: VerificationResult): string[] {
     // In a real implementation, this would query a database of past failures
     return [
       'Similar scenario failed due to insufficient conversation length',

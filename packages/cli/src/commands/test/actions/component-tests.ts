@@ -6,7 +6,7 @@ import path from 'node:path';
 import { ComponentTestOptions, TestResult } from '../types';
 import { processFilterName } from '../utils/project-utils';
 import { runTypeCheck } from '@/src/utils/testing/tsc-validator';
-import { createVitestConfig } from '../utils/vitest-config';
+// import { createVitestConfig } from '../utils/vitest-config'; // Available for custom vitest configurations
 import { existsSync } from 'node:fs';
 
 /**

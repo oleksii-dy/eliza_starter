@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createUniqueUuid } from './entities';
 import { decryptSecret, getSalt, safeReplacer } from './index';
 import { createLogger } from './logger';
+import type { PluginConfiguration } from './types/plugin-config.js';
 import {
   ChannelType,
   ModelType,
@@ -58,6 +59,13 @@ import {
   getExecutionOrder,
 } from './planning';
 import type { ActionPlan, PlanningContext, PlanExecutionResult } from './types/planning';
+import { ConfigurationManager } from './managers/ConfigurationManager.js';
+import { CharacterConfigurationSource } from './configuration/CharacterConfigurationSource.js';
+import type {
+  ConfigurablePlugin,
+  ConfigurableAction,
+  ConfigurableProvider,
+} from './types/plugin-config.js';
 
 const environmentSettings: RuntimeSettings = {};
 
@@ -184,6 +192,9 @@ export class AgentRuntime implements IAgentRuntime {
   // Add working memory support
   private workingMemories = new Map<UUID, WorkingMemory>();
 
+  // Configuration management
+  private configurationManager: ConfigurationManager;
+
   constructor(opts: {
     conversationLength?: number;
     agentId?: UUID;
@@ -228,6 +239,9 @@ export class AgentRuntime implements IAgentRuntime {
 
     this.logger.debug(`Success: Agent ID: ${this.agentId}`);
     this.currentRunId = undefined; // Initialize run ID tracker
+
+    // Initialize configuration manager
+    this.configurationManager = new ConfigurationManager();
   }
 
   /**
@@ -285,6 +299,22 @@ export class AgentRuntime implements IAgentRuntime {
       `Success: Plugin ${plugin.name} added to active plugins for ${this.character.name}(${this.agentId}).`
     );
 
+    // Initialize plugin configuration if it's a configurable plugin
+    const configurablePlugin = plugin as ConfigurablePlugin;
+    if (configurablePlugin.configurableActions || configurablePlugin.configurableProviders || configurablePlugin.configurableEvaluators) {
+      this.configurationManager.initializePluginConfiguration(configurablePlugin);
+    }
+
+    // Check for unified component system support
+    const hasUnifiedComponents = (plugin as any).components && Array.isArray((plugin as any).components);
+    if (hasUnifiedComponents) {
+      this.configurationManager.initializeUnifiedPluginConfiguration(
+        plugin.name,
+        (plugin as any).components,
+        configurablePlugin.config?.defaultEnabled ?? true
+      );
+    }
+
     if (plugin.init) {
       try {
         await plugin.init(plugin.config || {}, this);
@@ -311,21 +341,154 @@ export class AgentRuntime implements IAgentRuntime {
       this.logger.debug(`Registering database adapter for plugin ${plugin.name}`);
       this.registerDatabaseAdapter(plugin.adapter);
     }
+
+    // Register legacy actions (always enabled for backwards compatibility)
     if (plugin.actions) {
       for (const action of plugin.actions) {
         this.registerAction(action);
       }
     }
+
+    // Register configurable actions (check configuration)
+    if (configurablePlugin.configurableActions) {
+      for (const action of configurablePlugin.configurableActions) {
+        const isEnabled = this.configurationManager.isComponentEnabled(
+          plugin.name,
+          action.name,
+          'action'
+        );
+
+        if (isEnabled) {
+          this.registerAction(action);
+          this.logger.debug(`Configurable action ${action.name} is enabled and registered`);
+        } else {
+          this.logger.debug(`Configurable action ${action.name} is disabled by configuration`);
+        }
+      }
+    }
+
+    // Register legacy evaluators (always enabled for backwards compatibility)
     if (plugin.evaluators) {
       for (const evaluator of plugin.evaluators) {
         this.registerEvaluator(evaluator);
       }
     }
+
+    // Register configurable evaluators (check configuration)
+    if (configurablePlugin.configurableEvaluators) {
+      for (const evaluator of configurablePlugin.configurableEvaluators) {
+        const isEnabled = this.configurationManager.isComponentEnabled(
+          plugin.name,
+          evaluator.name,
+          'evaluator'
+        );
+
+        if (isEnabled) {
+          this.registerEvaluator(evaluator);
+          this.logger.debug(`Configurable evaluator ${evaluator.name} is enabled and registered`);
+        } else {
+          this.logger.debug(`Configurable evaluator ${evaluator.name} is disabled by configuration`);
+        }
+      }
+    }
+
+    // Register legacy providers (always enabled for backwards compatibility)
     if (plugin.providers) {
       for (const provider of plugin.providers) {
         this.registerProvider(provider);
       }
     }
+
+    // Register configurable providers (check configuration)
+    if (configurablePlugin.configurableProviders) {
+      for (const provider of configurablePlugin.configurableProviders) {
+        const isEnabled = this.configurationManager.isComponentEnabled(
+          plugin.name,
+          provider.name,
+          'provider'
+        );
+
+        if (isEnabled) {
+          this.registerProvider(provider);
+          this.logger.debug(`Configurable provider ${provider.name} is enabled and registered`);
+        } else {
+          this.logger.debug(`Configurable provider ${provider.name} is disabled by configuration`);
+        }
+      }
+    }
+
+    // Process unified component system (components array)
+    if (hasUnifiedComponents) {
+      const components = (plugin as any).components;
+      const enabledComponentsMap = this.configurationManager.getEnabledComponentsMap();
+
+      for (const componentDef of components) {
+        const componentName = componentDef.name || componentDef.component.name;
+        const componentType = componentDef.type;
+        
+        // Check if component is enabled
+        const isEnabled = this.configurationManager.isComponentEnabled(
+          plugin.name,
+          componentName,
+          componentType
+        );
+
+        if (isEnabled) {
+          // Validate dependencies if present
+          if (componentDef.dependencies && componentDef.dependencies.length > 0) {
+            const validationResult = this.configurationManager.validateComponentDependencies({
+              pluginName: plugin.name,
+              componentName,
+              componentType,
+              dependencies: componentDef.dependencies,
+              enabledComponents: enabledComponentsMap,
+            });
+
+            if (!validationResult.valid) {
+              this.logger.warn(
+                `Skipping ${componentType} "${componentName}" in plugin "${plugin.name}": ${validationResult.errors.join(', ')}`
+              );
+              continue;
+            }
+
+            if (validationResult.warnings.length > 0) {
+              this.logger.warn(
+                `${componentType} "${componentName}" in plugin "${plugin.name}" has warnings: ${validationResult.warnings.join(', ')}`
+              );
+            }
+          }
+
+          // Register the component based on its type
+          switch (componentType) {
+            case 'action':
+              this.registerAction(componentDef.component);
+              this.logger.debug(`Unified action ${componentName} is enabled and registered`);
+              break;
+            case 'provider':
+              this.registerProvider(componentDef.component);
+              this.logger.debug(`Unified provider ${componentName} is enabled and registered`);
+              break;
+            case 'evaluator':
+              this.registerEvaluator(componentDef.component);
+              this.logger.debug(`Unified evaluator ${componentName} is enabled and registered`);
+              break;
+            case 'service':
+              if (this.isInitialized) {
+                await this.registerService(componentDef.component);
+              } else {
+                this.servicesInitQueue.add(componentDef.component);
+              }
+              this.logger.debug(`Unified service ${componentName} is enabled and registered`);
+              break;
+            default:
+              this.logger.warn(`Unknown component type "${componentType}" for component "${componentName}"`);
+          }
+        } else {
+          this.logger.debug(`Unified ${componentType} ${componentName} is disabled by configuration`);
+        }
+      }
+    }
+
     if (plugin.models) {
       for (const [modelType, handler] of Object.entries(plugin.models)) {
         this.registerModel(
@@ -348,12 +511,36 @@ export class AgentRuntime implements IAgentRuntime {
         }
       }
     }
+    // Register legacy services (always enabled for backwards compatibility)
     if (plugin.services) {
       for (const service of plugin.services) {
         if (this.isInitialized) {
           await this.registerService(service);
         } else {
           this.servicesInitQueue.add(service);
+        }
+      }
+    }
+
+    // Register configurable services (check configuration)
+    if (configurablePlugin.configurableServices) {
+      for (const service of configurablePlugin.configurableServices) {
+        const serviceName = service.service.serviceName || service.service.name;
+        const isEnabled = this.configurationManager.isComponentEnabled(
+          plugin.name,
+          serviceName,
+          'service'
+        );
+
+        if (isEnabled) {
+          if (this.isInitialized) {
+            await this.registerService(service.service);
+          } else {
+            this.servicesInitQueue.add(service.service);
+          }
+          this.logger.debug(`Configurable service ${serviceName} is enabled and registered`);
+        } else {
+          this.logger.debug(`Configurable service ${serviceName} is disabled by configuration`);
         }
       }
     }
@@ -445,6 +632,13 @@ export class AgentRuntime implements IAgentRuntime {
     return this.services;
   }
 
+  /**
+   * Get the configuration manager for plugin component configuration
+   */
+  getConfigurationManager(): ConfigurationManager {
+    return this.configurationManager;
+  }
+
   async stop() {
     this.logger.debug(`runtime::stop - character ${this.character.name}`);
     for (const [serviceName, service] of this.services) {
@@ -458,6 +652,16 @@ export class AgentRuntime implements IAgentRuntime {
       this.logger.warn('Agent already initialized');
       return;
     }
+
+    // Register character-based configuration source if character has plugin config
+    if (this.character.pluginConfig) {
+      const characterConfigSource = new CharacterConfigurationSource(this.character);
+      this.configurationManager.registerSource(characterConfigSource);
+      this.logger.info('Registered character-based plugin configuration source');
+    }
+
+    // Load all configuration sources
+    await this.configurationManager.reload();
 
     // The resolution is now expected to happen in the CLI layer (e.g., startAgent)
     // The runtime now accepts a pre-resolved, ordered list of plugins.
@@ -481,10 +685,9 @@ export class AgentRuntime implements IAgentRuntime {
     try {
       await this.adapter.init();
 
-      // Run migrations for all loaded plugins
-      this.logger.info('Running plugin migrations...');
-      await this.runPluginMigrations();
-      this.logger.info('Plugin migrations completed.');
+      this.logger.info('Initializing plugin schemas...');
+      await this.initializePluginSchemas();
+      this.logger.info('Plugin schema initialization completed.');
 
       const existingAgent = await this.ensureAgentExists(this.character as Partial<Agent>);
       if (!existingAgent) {
@@ -566,33 +769,33 @@ export class AgentRuntime implements IAgentRuntime {
     this.isInitialized = true;
   }
 
-  async runPluginMigrations(): Promise<void> {
+  async initializePluginSchemas(): Promise<void> {
     const drizzle = (this.adapter as any)?.db;
     if (!drizzle) {
-      this.logger.warn('Drizzle instance not found on adapter, skipping plugin migrations.');
+      this.logger.warn('Drizzle instance not found on adapter, skipping plugin schema initialization.');
       return;
     }
 
     const pluginsWithSchemas = this.plugins.filter((p) => p.schema);
-    this.logger.info(`Found ${pluginsWithSchemas.length} plugins with schemas to migrate.`);
+    this.logger.info(`Found ${pluginsWithSchemas.length} plugins with schemas to initialize.`);
 
     for (const p of pluginsWithSchemas) {
       if (p.schema) {
-        this.logger.info(`Running migrations for plugin: ${p.name}`);
+        this.logger.info(`Initializing schema for plugin: ${p.name}`);
         try {
           // Find the SQL plugin in our loaded plugins
           const sqlPlugin = this.plugins.find((plugin) => plugin.name === '@elizaos/plugin-sql');
-          if (sqlPlugin && 'runPluginMigrations' in sqlPlugin) {
-            // Use the runPluginMigrations function from the SQL plugin
-            await (sqlPlugin as any).runPluginMigrations(drizzle, p.name, p.schema);
-            this.logger.info(`Successfully migrated plugin: ${p.name}`);
+          if (sqlPlugin && 'initializePluginSchema' in sqlPlugin) {
+            // Use the new initializePluginSchema function from the SQL plugin
+            await (sqlPlugin as any).initializePluginSchema(drizzle, p.name, p.schema);
+            this.logger.info(`Successfully initialized schema for plugin: ${p.name}`);
           } else {
             this.logger.warn(
-              `SQL plugin not found or missing runPluginMigrations method, skipping migration for plugin: ${p.name}`
+              `SQL plugin not found or missing initializePluginSchema method, skipping schema initialization for plugin: ${p.name}`
             );
           }
         } catch (error) {
-          this.logger.error(`Failed to migrate plugin ${p.name}:`, error);
+          this.logger.error(`Failed to initialize schema for plugin ${p.name}:`, error);
           throw error;
         }
       }
@@ -1734,6 +1937,7 @@ export class AgentRuntime implements IAgentRuntime {
     }
   }
 
+
   async ensureEmbeddingDimension() {
     this.logger.debug(`[AgentRuntime][${this.character.name}] Starting ensureEmbeddingDimension`);
 
@@ -2378,5 +2582,484 @@ export class AgentRuntime implements IAgentRuntime {
    */
   async validatePlan(plan: ActionPlan): Promise<{ valid: boolean; issues: string[] }> {
     return validatePlanUtil(plan, this);
+  }
+
+
+
+  /**
+   * Configure plugin components dynamically
+   */
+  async configurePlugin(
+    pluginName: string,
+    config: {
+      enabled?: boolean;
+      actions?: Record<string, { 
+        enabled: boolean;
+        overrideLevel?: 'default' | 'plugin' | 'database' | 'gui' | 'runtime';
+        overrideReason?: string;
+        settings?: Record<string, any>;
+        lastModified?: Date;
+      }>;
+      providers?: Record<string, { 
+        enabled: boolean;
+        overrideLevel?: 'default' | 'plugin' | 'database' | 'gui' | 'runtime';
+        overrideReason?: string;
+        settings?: Record<string, any>;
+        lastModified?: Date;
+      }>;
+      evaluators?: Record<string, { 
+        enabled: boolean;
+        overrideLevel?: 'default' | 'plugin' | 'database' | 'gui' | 'runtime';
+        overrideReason?: string;
+        settings?: Record<string, any>;
+        lastModified?: Date;
+      }>;
+      services?: Record<string, { 
+        enabled: boolean;
+        overrideLevel?: 'default' | 'plugin' | 'database' | 'gui' | 'runtime';
+        overrideReason?: string;
+        settings?: Record<string, any>;
+        lastModified?: Date;
+      }>;
+    }
+  ): Promise<void> {
+    
+    // Convert simple config to ComponentConfigState format
+    const pluginConfig: Partial<PluginConfiguration> = {
+      enabled: config.enabled,
+      actions: config.actions
+        ? Object.fromEntries(
+            Object.entries(config.actions).map(([name, conf]) => [
+              name,
+              { 
+                enabled: conf.enabled, 
+                overrideLevel: conf.overrideLevel || 'runtime' as const,
+                overrideReason: conf.overrideReason,
+                settings: conf.settings || {},
+                lastModified: conf.lastModified || new Date() 
+              },
+            ])
+          )
+        : undefined,
+      providers: config.providers
+        ? Object.fromEntries(
+            Object.entries(config.providers).map(([name, conf]) => [
+              name,
+              { 
+                enabled: conf.enabled, 
+                overrideLevel: conf.overrideLevel || 'runtime' as const,
+                overrideReason: conf.overrideReason,
+                settings: conf.settings || {},
+                lastModified: conf.lastModified || new Date() 
+              },
+            ])
+          )
+        : undefined,
+      evaluators: config.evaluators
+        ? Object.fromEntries(
+            Object.entries(config.evaluators).map(([name, conf]) => [
+              name,
+              { 
+                enabled: conf.enabled, 
+                overrideLevel: conf.overrideLevel || 'runtime' as const,
+                overrideReason: conf.overrideReason,
+                settings: conf.settings || {},
+                lastModified: conf.lastModified || new Date() 
+              },
+            ])
+          )
+        : undefined,
+      services: config.services
+        ? Object.fromEntries(
+            Object.entries(config.services).map(([name, conf]) => [
+              name,
+              { 
+                enabled: conf.enabled, 
+                overrideLevel: conf.overrideLevel || 'runtime' as const,
+                overrideReason: conf.overrideReason,
+                settings: conf.settings || {},
+                lastModified: conf.lastModified || new Date() 
+              },
+            ])
+          )
+        : undefined,
+    };
+
+    // Determine the override level from the first component config if specified
+    let overrideLevel: 'gui' | 'database' | 'plugin-manager' | 'runtime' = 'runtime';
+    if (config.actions && Object.keys(config.actions).length > 0) {
+      const firstAction = Object.values(config.actions)[0];
+      if (firstAction.overrideLevel && ['gui', 'database', 'plugin-manager', 'runtime'].includes(firstAction.overrideLevel)) {
+        overrideLevel = firstAction.overrideLevel as any;
+      }
+    } else if (config.providers && Object.keys(config.providers).length > 0) {
+      const firstProvider = Object.values(config.providers)[0];
+      if (firstProvider.overrideLevel && ['gui', 'database', 'plugin-manager', 'runtime'].includes(firstProvider.overrideLevel)) {
+        overrideLevel = firstProvider.overrideLevel as any;
+      }
+    } else if (config.evaluators && Object.keys(config.evaluators).length > 0) {
+      const firstEvaluator = Object.values(config.evaluators)[0];
+      if (firstEvaluator.overrideLevel && ['gui', 'database', 'plugin-manager', 'runtime'].includes(firstEvaluator.overrideLevel)) {
+        overrideLevel = firstEvaluator.overrideLevel as any;
+      }
+    } else if (config.services && Object.keys(config.services).length > 0) {
+      const firstService = Object.values(config.services)[0];
+      if (firstService.overrideLevel && ['gui', 'database', 'plugin-manager', 'runtime'].includes(firstService.overrideLevel)) {
+        overrideLevel = firstService.overrideLevel as any;
+      }
+    }
+
+    await this.configurationManager.setOverride(overrideLevel, pluginName, pluginConfig);
+
+    // Re-register affected components
+    const plugin = this.plugins.find((p) => p.name === pluginName);
+    if (plugin) {
+      const configurablePlugin = plugin as ConfigurablePlugin;
+
+      // Handle legacy actions (standard Plugin interface)
+      if (plugin.actions && config.actions) {
+        for (const [actionName, actionConfig] of Object.entries(config.actions)) {
+          const action = plugin.actions.find((a) => a.name === actionName);
+          if (action) {
+            const currentlyRegistered = this.actions.some((a) => a.name === actionName);
+
+            if (actionConfig.enabled && !currentlyRegistered) {
+              // Enable action
+              this.registerAction(action);
+              this.logger.info(`Legacy action ${actionName} enabled for plugin ${pluginName}`);
+            } else if (!actionConfig.enabled && currentlyRegistered) {
+              // Disable action
+              const index = this.actions.findIndex((a) => a.name === actionName);
+              if (index !== -1) {
+                this.actions.splice(index, 1);
+                this.logger.info(`Legacy action ${actionName} disabled for plugin ${pluginName}`);
+              }
+            }
+          }
+        }
+      }
+
+      // Handle configurable actions
+      if (configurablePlugin.configurableActions && config.actions) {
+        for (const [actionName, actionConfig] of Object.entries(config.actions)) {
+          const action = configurablePlugin.configurableActions.find((a) => a.name === actionName);
+          if (action) {
+            const currentlyRegistered = this.actions.some((a) => a.name === actionName);
+
+            if (actionConfig.enabled && !currentlyRegistered) {
+              // Enable action
+              this.registerAction(action);
+              this.logger.info(`Action ${actionName} enabled for plugin ${pluginName}`);
+            } else if (!actionConfig.enabled && currentlyRegistered) {
+              // Disable action
+              const index = this.actions.findIndex((a) => a.name === actionName);
+              if (index !== -1) {
+                this.actions.splice(index, 1);
+                this.logger.info(`Action ${actionName} disabled for plugin ${pluginName}`);
+              }
+            }
+          }
+        }
+      }
+
+      // Handle legacy providers (standard Plugin interface)
+      if (plugin.providers && config.providers) {
+        for (const [providerName, providerConfig] of Object.entries(config.providers)) {
+          const provider = plugin.providers.find((p) => p.name === providerName);
+          if (provider) {
+            const currentlyRegistered = this.providers.some((p) => p.name === providerName);
+
+            if (providerConfig.enabled && !currentlyRegistered) {
+              // Enable provider
+              this.registerProvider(provider);
+              this.logger.info(`Legacy provider ${providerName} enabled for plugin ${pluginName}`);
+            } else if (!providerConfig.enabled && currentlyRegistered) {
+              // Disable provider
+              const index = this.providers.findIndex((p) => p.name === providerName);
+              if (index !== -1) {
+                this.providers.splice(index, 1);
+                this.logger.info(`Legacy provider ${providerName} disabled for plugin ${pluginName}`);
+              }
+            }
+          }
+        }
+      }
+
+      // Handle configurable providers
+      if (configurablePlugin.configurableProviders && config.providers) {
+        for (const [providerName, providerConfig] of Object.entries(config.providers)) {
+          const provider = configurablePlugin.configurableProviders.find(
+            (p) => p.name === providerName
+          );
+          if (provider) {
+            const currentlyRegistered = this.providers.some((p) => p.name === providerName);
+
+            if (providerConfig.enabled && !currentlyRegistered) {
+              // Enable provider
+              this.registerProvider(provider);
+              this.logger.info(`Provider ${providerName} enabled for plugin ${pluginName}`);
+            } else if (!providerConfig.enabled && currentlyRegistered) {
+              // Disable provider
+              const index = this.providers.findIndex((p) => p.name === providerName);
+              if (index !== -1) {
+                this.providers.splice(index, 1);
+                this.logger.info(`Provider ${providerName} disabled for plugin ${pluginName}`);
+              }
+            }
+          }
+        }
+      }
+
+      // Handle legacy evaluators (standard Plugin interface)
+      if (plugin.evaluators && config.evaluators) {
+        for (const [evaluatorName, evaluatorConfig] of Object.entries(config.evaluators)) {
+          const evaluator = plugin.evaluators.find((e) => e.name === evaluatorName);
+          if (evaluator) {
+            const currentlyRegistered = this.evaluators.some((e) => e.name === evaluatorName);
+
+            if (evaluatorConfig.enabled && !currentlyRegistered) {
+              // Enable evaluator
+              this.registerEvaluator(evaluator);
+              this.logger.info(`Legacy evaluator ${evaluatorName} enabled for plugin ${pluginName}`);
+            } else if (!evaluatorConfig.enabled && currentlyRegistered) {
+              // Disable evaluator
+              const index = this.evaluators.findIndex((e) => e.name === evaluatorName);
+              if (index !== -1) {
+                this.evaluators.splice(index, 1);
+                this.logger.info(`Legacy evaluator ${evaluatorName} disabled for plugin ${pluginName}`);
+              }
+            }
+          }
+        }
+      }
+
+      // Handle configurable evaluators
+      if (configurablePlugin.configurableEvaluators && config.evaluators) {
+        for (const [evaluatorName, evaluatorConfig] of Object.entries(config.evaluators)) {
+          const evaluator = configurablePlugin.configurableEvaluators.find(
+            (e) => e.name === evaluatorName
+          );
+          if (evaluator) {
+            const currentlyRegistered = this.evaluators.some((e) => e.name === evaluatorName);
+
+            if (evaluatorConfig.enabled && !currentlyRegistered) {
+              // Enable evaluator
+              this.registerEvaluator(evaluator);
+              this.logger.info(`Evaluator ${evaluatorName} enabled for plugin ${pluginName}`);
+            } else if (!evaluatorConfig.enabled && currentlyRegistered) {
+              // Disable evaluator
+              const index = this.evaluators.findIndex((e) => e.name === evaluatorName);
+              if (index !== -1) {
+                this.evaluators.splice(index, 1);
+                this.logger.info(`Evaluator ${evaluatorName} disabled for plugin ${pluginName}`);
+              }
+            }
+          }
+        }
+      }
+
+      // Handle legacy services (standard Plugin interface)
+      if (plugin.services && config.services) {
+        for (const [serviceName, serviceConfig] of Object.entries(config.services)) {
+          const service = plugin.services.find((s) => (s.serviceName || s.name) === serviceName);
+          if (service) {
+            const currentlyRegistered = this.services.has(serviceName as ServiceTypeName);
+
+            if (serviceConfig.enabled && !currentlyRegistered) {
+              // Enable service
+              await this.registerService(service);
+              this.logger.info(`Legacy service ${serviceName} enabled for plugin ${pluginName}`);
+            } else if (!serviceConfig.enabled && currentlyRegistered) {
+              // Disable service
+              const serviceInstance = this.services.get(serviceName as ServiceTypeName);
+              if (serviceInstance) {
+                await serviceInstance.stop();
+                this.services.delete(serviceName as ServiceTypeName);
+                this.logger.info(`Legacy service ${serviceName} disabled for plugin ${pluginName}`);
+              }
+            }
+          }
+        }
+      }
+
+      // Handle configurable services
+      if (configurablePlugin.configurableServices && config.services) {
+        for (const [serviceName, serviceConfig] of Object.entries(config.services)) {
+          const service = configurablePlugin.configurableServices.find(
+            (s) => (s.service.serviceName || s.service.name) === serviceName
+          );
+          if (service) {
+            const currentlyRegistered = this.services.has(serviceName as ServiceTypeName);
+
+            if (serviceConfig.enabled && !currentlyRegistered) {
+              // Enable service
+              await this.registerService(service.service);
+              this.logger.info(`Service ${serviceName} enabled for plugin ${pluginName}`);
+            } else if (!serviceConfig.enabled && currentlyRegistered) {
+              // Disable service
+              const serviceInstance = this.services.get(serviceName as ServiceTypeName);
+              if (serviceInstance) {
+                await serviceInstance.stop();
+                this.services.delete(serviceName as ServiceTypeName);
+                this.logger.info(`Service ${serviceName} disabled for plugin ${pluginName}`);
+              }
+            }
+          }
+        }
+      }
+
+      // Handle unified components system (NEW)
+      if ((plugin as any).components) {
+        const components = (plugin as any).components as Array<{
+          type: 'action' | 'provider' | 'evaluator' | 'service';
+          component: any;
+          config: any;
+        }>;
+
+        for (const componentDef of components) {
+          const componentName = componentDef.component.name || 
+                               componentDef.component.serviceName || 
+                               componentDef.component.constructor?.name;
+          
+          if (!componentName) continue;
+
+          const componentType = componentDef.type;
+          const targetConfigKey = `${componentType}s` as keyof typeof config;
+          const targetConfig = config[targetConfigKey] as Record<string, { enabled: boolean }> | undefined;
+          
+          if (targetConfig && targetConfig[componentName]) {
+            const componentConfig = targetConfig[componentName];
+
+            switch (componentType) {
+              case 'action':
+                {
+                  const currentlyRegistered = this.actions.some((a) => a.name === componentName);
+                  
+                  if (componentConfig.enabled && !currentlyRegistered) {
+                    // Enable action
+                    this.registerAction(componentDef.component);
+                    this.logger.info(`Unified action ${componentName} enabled for plugin ${pluginName}`);
+                  } else if (!componentConfig.enabled && currentlyRegistered) {
+                    // Disable action
+                    const index = this.actions.findIndex((a) => a.name === componentName);
+                    if (index !== -1) {
+                      this.actions.splice(index, 1);
+                      this.logger.info(`Unified action ${componentName} disabled for plugin ${pluginName}`);
+                    }
+                  }
+                }
+                break;
+
+              case 'provider':
+                {
+                  const currentlyRegistered = this.providers.some((p) => p.name === componentName);
+                  
+                  if (componentConfig.enabled && !currentlyRegistered) {
+                    // Enable provider
+                    this.registerProvider(componentDef.component);
+                    this.logger.info(`Unified provider ${componentName} enabled for plugin ${pluginName}`);
+                  } else if (!componentConfig.enabled && currentlyRegistered) {
+                    // Disable provider
+                    const index = this.providers.findIndex((p) => p.name === componentName);
+                    if (index !== -1) {
+                      this.providers.splice(index, 1);
+                      this.logger.info(`Unified provider ${componentName} disabled for plugin ${pluginName}`);
+                    }
+                  }
+                }
+                break;
+
+              case 'evaluator':
+                {
+                  const currentlyRegistered = this.evaluators.some((e) => e.name === componentName);
+                  
+                  if (componentConfig.enabled && !currentlyRegistered) {
+                    // Enable evaluator
+                    this.registerEvaluator(componentDef.component);
+                    this.logger.info(`Unified evaluator ${componentName} enabled for plugin ${pluginName}`);
+                  } else if (!componentConfig.enabled && currentlyRegistered) {
+                    // Disable evaluator
+                    const index = this.evaluators.findIndex((e) => e.name === componentName);
+                    if (index !== -1) {
+                      this.evaluators.splice(index, 1);
+                      this.logger.info(`Unified evaluator ${componentName} disabled for plugin ${pluginName}`);
+                    }
+                  }
+                }
+                break;
+
+              case 'service':
+                {
+                  const currentlyRegistered = this.services.has(componentName as ServiceTypeName);
+                  
+                  if (componentConfig.enabled && !currentlyRegistered) {
+                    // Enable service
+                    await this.registerService(componentDef.component);
+                    this.logger.info(`Unified service ${componentName} enabled for plugin ${pluginName}`);
+                  } else if (!componentConfig.enabled && currentlyRegistered) {
+                    // Disable service
+                    const serviceInstance = this.services.get(componentName as ServiceTypeName);
+                    if (serviceInstance) {
+                      await serviceInstance.stop();
+                      this.services.delete(componentName as ServiceTypeName);
+                      this.logger.info(`Unified service ${componentName} disabled for plugin ${pluginName}`);
+                    }
+                  }
+                }
+                break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Get plugin configuration state
+   */
+  getPluginConfiguration(pluginName: string) {
+    return this.configurationManager.getPluginConfiguration(pluginName);
+  }
+
+  /**
+   * List all plugin configurations
+   */
+  listPluginConfigurations() {
+    return this.configurationManager.listConfigurations();
+  }
+
+  /**
+   * Enable a specific component dynamically
+   */
+  async enableComponent(
+    pluginName: string, 
+    componentName: string, 
+    componentType: 'action' | 'provider' | 'evaluator' | 'service',
+    component: any
+  ): Promise<void> {
+    // Enable the component in configuration
+    const config = {
+      [`${componentType}s`]: {
+        [componentName]: { enabled: true }
+      }
+    };
+    await this.configurePlugin(pluginName, config);
+  }
+
+  /**
+   * Disable a specific component dynamically
+   */
+  async disableComponent(
+    pluginName: string,
+    componentName: string,
+    componentType: 'action' | 'provider' | 'evaluator' | 'service'
+  ): Promise<void> {
+    // Disable the component in configuration
+    const config = {
+      [`${componentType}s`]: {
+        [componentName]: { enabled: false }
+      }
+    };
+    await this.configurePlugin(pluginName, config);
   }
 }

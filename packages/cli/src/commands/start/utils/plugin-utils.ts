@@ -25,7 +25,7 @@ export function isValidPluginShape(obj: any): obj is Plugin {
  * Load a plugin module with environment-aware import handling
  */
 async function loadPluginModuleWithEnvironment(pluginName: string): Promise<any> {
-  const envConfig = getEnvironmentConfig();
+  // const envConfig = getEnvironmentConfig(); // Available for future environment-based plugin filtering
 
   try {
     // First try the standard loadPluginModule

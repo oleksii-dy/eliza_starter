@@ -4,11 +4,10 @@ import {
   logger,
   type UUID,
   type Content,
-  type State,
+  // type // Available if needed
   type HandlerCallback,
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-
 export interface AgentResponse {
   id: UUID;
   timestamp: number;
@@ -44,7 +43,7 @@ export class ScenarioTestHarness {
     this.runtime = runtime;
 
     // Create a callback that captures responses
-    this.responseCallback = async (content: Content, files?: any) => {
+    this.responseCallback = async (content: Content, _files?: any) => {
       const response: AgentResponse = {
         id: uuidv4() as UUID,
         timestamp: Date.now(),
@@ -125,7 +124,7 @@ export class ScenarioTestHarness {
         this.emit('error', error);
 
         // Reject all waiting promises
-        for (const [key, promise] of this.waitingPromises) {
+        for (const [_key, promise] of this.waitingPromises) {
           promise.reject(error);
         }
         this.waitingPromises.clear();

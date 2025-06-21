@@ -14,7 +14,8 @@ export interface ServerOptions {
  * Start a test server for running e2e tests
  */
 export async function startTestServer(options: ServerOptions): Promise<ChildProcess> {
-  const { port, projectPath, character, plugins = [] } = options;
+  const { port, projectPath } = options;
+  // character and plugins are available in options for future use
 
   // Prepare environment variables
   const env = {
@@ -128,4 +129,46 @@ export async function startTestServer(options: ServerOptions): Promise<ChildProc
   });
 
   return serverProcess;
+}
+
+/**
+ * Stop a test server
+ */
+export async function stopTestServer(serverProcess: ChildProcess): Promise<void> {
+  if (!serverProcess || serverProcess.killed) {
+    return;
+  }
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      logger.warn('Server did not stop gracefully, force killing...');
+      serverProcess.kill('SIGKILL');
+      resolve();
+    }, 10000); // 10 second timeout
+
+    serverProcess.on('exit', () => {
+      clearTimeout(timeout);
+      resolve();
+    });
+
+    serverProcess.on('error', (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+
+    // Try graceful shutdown first
+    if (process.platform === 'win32') {
+      serverProcess.kill('SIGTERM');
+    } else {
+      // On Unix-like systems, kill the process group
+      if (serverProcess.pid) {
+        try {
+          process.kill(-serverProcess.pid, 'SIGTERM');
+        } catch (error) {
+          // If process group kill fails, fall back to killing just the process
+          serverProcess.kill('SIGTERM');
+        }
+      }
+    }
+  });
 }

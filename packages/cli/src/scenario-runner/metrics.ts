@@ -104,8 +104,9 @@ export class MetricsCollector {
     const metrics: Record<string, any> = {};
 
     // Add scenario-specific metrics
-    if (context.scenario.benchmarks.customMetrics) {
-      for (const metricName of context.scenario.benchmarks.customMetrics) {
+    if (context.scenario.benchmarks?.customMetrics) {
+      for (const metric of context.scenario.benchmarks.customMetrics) {
+        const metricName = metric.name;
         switch (metricName) {
           case 'unique_actors_engaged':
             metrics[metricName] = new Set(context.transcript.map((msg) => msg.actorId)).size;

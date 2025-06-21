@@ -7,13 +7,15 @@ import type { ScenarioContext } from '../../scenario-runner/types.js';
 export class ScenarioActionTracker {
   private actionExecutions: Map<string, number> = new Map();
   private originalExecute: any;
+  private runtime: IAgentRuntime | null = null;
 
-  constructor(private metricsCollector: any) {}
+  constructor(private metricsCollector?: any) {}
 
   /**
-   * Start tracking actions for a runtime
+   * Attach the tracker to a runtime
    */
-  async startTracking(runtime: IAgentRuntime, _context: ScenarioContext): Promise<void> {
+  attach(runtime: IAgentRuntime): void {
+    this.runtime = runtime;
     // Track through the runtime's action service if available
     if ((runtime as any).actions) {
       this.originalExecute = (runtime as any).actions.execute;
@@ -26,13 +28,28 @@ export class ScenarioActionTracker {
   }
 
   /**
+   * Detach the tracker from the runtime
+   */
+  detach(): void {
+    // Restore original execute method
+    if (this.originalExecute && this.runtime && (this.runtime as any).actions) {
+      (this.runtime as any).actions.execute = this.originalExecute;
+    }
+    this.runtime = null;
+  }
+
+  /**
+   * Start tracking actions for a runtime
+   */
+  async startTracking(runtime: IAgentRuntime, _context: ScenarioContext): Promise<void> {
+    this.attach(runtime);
+  }
+
+  /**
    * Stop tracking actions
    */
   async stopTracking(): Promise<void> {
-    // Restore original execute method
-    if (this.originalExecute && (global as any).runtime?.actions) {
-      (global as any).runtime.actions.execute = this.originalExecute;
-    }
+    this.detach();
     this.actionExecutions.clear();
   }
 
@@ -42,7 +59,9 @@ export class ScenarioActionTracker {
   private recordActionExecution(actionName: string): void {
     const count = this.actionExecutions.get(actionName) || 0;
     this.actionExecutions.set(actionName, count + 1);
-    this.metricsCollector.recordAction(actionName);
+    if (this.metricsCollector) {
+      this.metricsCollector.recordAction(actionName);
+    }
   }
 
   /**
@@ -65,5 +84,22 @@ export class ScenarioActionTracker {
       total += count;
     }
     return total;
+  }
+
+  /**
+   * Get stats about action executions
+   */
+  getStats(): {
+    total: number;
+    successful: number;
+    failed: number;
+    byAction: Map<string, number>;
+  } {
+    return {
+      total: this.getTotalActionCount(),
+      successful: this.getTotalActionCount(), // For now, assume all are successful
+      failed: 0,
+      byAction: new Map(this.actionExecutions),
+    };
   }
 }

@@ -1,7 +1,7 @@
 import { ProductionScenarioRunner } from './ProductionScenarioRunner.js';
+import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@elizaos/core';
 import type { Scenario } from '../types.js';
-import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -16,7 +16,7 @@ const createProductionScenario = (): Scenario => ({
     {
       id: uuidv4() as any,
       name: 'Alice',
-      role: 'tester',
+      role: 'subject',
       bio: 'I am Alice, a curious user who asks questions',
       system: 'You are a helpful assistant who answers questions accurately and concisely.',
       plugins: ['sql', 'browserService'],
@@ -88,7 +88,7 @@ const createProductionScenario = (): Scenario => ({
     rules: [
       {
         id: 'response-quality',
-        type: 'response_quality',
+        type: 'llm',
         description: 'Agents should provide helpful and accurate responses',
         config: {
           criteria: 'Responses should be relevant and informative',
@@ -183,7 +183,6 @@ export async function runProductionScenarios(
   // Create runner with configuration
   const runner = new ProductionScenarioRunner({
     databaseUrl: options.databaseUrl || process.env.DATABASE_URL,
-    modelProvider: options.modelProvider || 'openai',
     apiKeys,
     enableMetrics: true,
     enableVerification: true,
@@ -259,7 +258,6 @@ export async function runProductionScenarios(
 if (import.meta.url === `file://${process.argv[1]}`) {
   runProductionScenarios({
     scenarioDir: process.argv[2],
-    modelProvider: process.env.MODEL_PROVIDER || 'openai',
   }).catch((error) => {
     logger.error('Fatal error:', error);
     process.exit(1);

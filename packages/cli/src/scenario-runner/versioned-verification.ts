@@ -48,18 +48,20 @@ export class VersionedVerificationEngine {
 
   async initializeVersioning(): Promise<void> {
     await fs.mkdir(this.snapshotsDir, { recursive: true });
-    
+
     if (!(await this.fileExists(this.versionsFile))) {
       const initialVersion: VerificationVersion = {
         version: this.currentVersion,
         timestamp: new Date().toISOString(),
         description: 'Initial verification system version',
-        changes: [{
-          type: 'added',
-          component: 'versioned-verification',
-          description: 'Added versioning and snapshot testing capability',
-          impact: 'enhancement',
-        }],
+        changes: [
+          {
+            type: 'added',
+            component: 'versioned-verification',
+            description: 'Added versioning and snapshot testing capability',
+            impact: 'enhancement',
+          },
+        ],
         compatibility: {
           backwardCompatible: true,
           minimumVersion: '1.0.0',
@@ -67,7 +69,7 @@ export class VersionedVerificationEngine {
           migrationRequired: false,
         },
       };
-      
+
       await this.saveVersion(initialVersion);
     }
   }
@@ -79,7 +81,7 @@ export class VersionedVerificationEngine {
   ): Promise<string> {
     const input = this.sanitizeForSnapshot(rule, context);
     const hash = this.generateSnapshotHash(input, expectedResult);
-    
+
     const snapshot: VerificationSnapshot = {
       ruleId: rule.id,
       version: this.currentVersion,
@@ -88,15 +90,15 @@ export class VersionedVerificationEngine {
       timestamp: new Date().toISOString(),
       hash,
     };
-    
+
     const snapshotFile = path.join(
       this.snapshotsDir,
       `${rule.id}-${this.currentVersion}-${hash.substring(0, 8)}.json`
     );
-    
+
     await fs.writeFile(snapshotFile, JSON.stringify(snapshot, null, 2));
     logger.debug(`Created verification snapshot: ${snapshotFile}`);
-    
+
     return snapshotFile;
   }
 
@@ -112,26 +114,28 @@ export class VersionedVerificationEngine {
   }> {
     const input = this.sanitizeForSnapshot(rule, context);
     const snapshots = await this.findMatchingSnapshots(rule.id, input);
-    
+
     const differences: string[] = [];
     const matchingSnapshots: string[] = [];
     const regressions: string[] = [];
-    
+
     for (const snapshot of snapshots) {
       const diffs = this.compareResults(snapshot.expectedOutput, actualResult);
-      
+
       if (diffs.length === 0) {
         matchingSnapshots.push(snapshot.hash);
       } else {
         differences.push(...diffs);
-        
+
         // Check if this is a regression (was passing, now failing)
         if (snapshot.expectedOutput.passed && !actualResult.passed) {
-          regressions.push(`Rule ${rule.id}: was passing (${snapshot.expectedOutput.score}), now failing (${actualResult.score})`);
+          regressions.push(
+            `Rule ${rule.id}: was passing (${snapshot.expectedOutput.score}), now failing (${actualResult.score})`
+          );
         }
       }
     }
-    
+
     return {
       isValid: differences.length === 0,
       differences,
@@ -149,27 +153,25 @@ export class VersionedVerificationEngine {
   }> {
     const snapshotFiles = await fs.readdir(this.snapshotsDir);
     const testResults: SnapshotTestResult[] = [];
-    
+
     let totalTests = 0;
     let passed = 0;
     let failed = 0;
     let regressions = 0;
-    
+
     for (const file of snapshotFiles) {
       if (!file.endsWith('.json')) continue;
-      
+
       try {
         const snapshotPath = path.join(this.snapshotsDir, file);
-        const snapshot: VerificationSnapshot = JSON.parse(
-          await fs.readFile(snapshotPath, 'utf8')
-        );
-        
+        const snapshot: VerificationSnapshot = JSON.parse(await fs.readFile(snapshotPath, 'utf8'));
+
         // Re-run the verification with the snapshot input
         const actualResult = await this.rerunVerification(snapshot);
-        
+
         const diffs = this.compareResults(snapshot.expectedOutput, actualResult);
         const isRegression = snapshot.expectedOutput.passed && !actualResult.passed;
-        
+
         const testResult: SnapshotTestResult = {
           snapshotFile: file,
           ruleId: snapshot.ruleId,
@@ -177,13 +179,13 @@ export class VersionedVerificationEngine {
           passed: diffs.length === 0,
           differences: diffs,
           isRegression,
-          expectedScore: snapshot.expectedOutput.score,
-          actualScore: actualResult.score,
+          expectedScore: snapshot.expectedOutput.score || 0,
+          actualScore: actualResult.score || 0,
         };
-        
+
         testResults.push(testResult);
         totalTests++;
-        
+
         if (testResult.passed) {
           passed++;
         } else {
@@ -196,7 +198,7 @@ export class VersionedVerificationEngine {
         totalTests++;
       }
     }
-    
+
     return {
       totalTests,
       passed,
@@ -218,28 +220,28 @@ export class VersionedVerificationEngine {
       changes,
       compatibility: this.analyzeCompatibility(changes),
     };
-    
+
     await this.saveVersion(newVersion);
     this.currentVersion = version;
-    
+
     logger.info(`Created new verification version: ${version}`);
   }
 
   async migrateSnapshots(fromVersion: string, toVersion: string): Promise<void> {
     const snapshots = await this.getSnapshotsByVersion(fromVersion);
-    
+
     for (const snapshot of snapshots) {
       // Apply migration logic here
       const migratedSnapshot = await this.migrateSnapshot(snapshot, toVersion);
-      
+
       const newSnapshotFile = path.join(
         this.snapshotsDir,
         `${snapshot.ruleId}-${toVersion}-${migratedSnapshot.hash.substring(0, 8)}.json`
       );
-      
+
       await fs.writeFile(newSnapshotFile, JSON.stringify(migratedSnapshot, null, 2));
     }
-    
+
     logger.info(`Migrated ${snapshots.length} snapshots from ${fromVersion} to ${toVersion}`);
   }
 
@@ -267,26 +269,21 @@ export class VersionedVerificationEngine {
   }
 
   private hashTranscript(transcript: any[]): string {
-    const content = transcript.map(msg => msg.content?.text || '').join('');
+    const content = transcript.map((msg) => msg.content?.text || '').join('');
     return createHash('sha256').update(content).digest('hex').substring(0, 16);
   }
 
-  private async findMatchingSnapshots(
-    ruleId: string,
-    input: any
-  ): Promise<VerificationSnapshot[]> {
+  private async findMatchingSnapshots(ruleId: string, input: any): Promise<VerificationSnapshot[]> {
     const snapshotFiles = await fs.readdir(this.snapshotsDir);
     const matchingSnapshots: VerificationSnapshot[] = [];
-    
+
     for (const file of snapshotFiles) {
       if (!file.startsWith(ruleId) || !file.endsWith('.json')) continue;
-      
+
       try {
         const snapshotPath = path.join(this.snapshotsDir, file);
-        const snapshot: VerificationSnapshot = JSON.parse(
-          await fs.readFile(snapshotPath, 'utf8')
-        );
-        
+        const snapshot: VerificationSnapshot = JSON.parse(await fs.readFile(snapshotPath, 'utf8'));
+
         // Simple matching based on input similarity
         if (this.inputsMatch(snapshot.input, input)) {
           matchingSnapshots.push(snapshot);
@@ -295,7 +292,7 @@ export class VersionedVerificationEngine {
         logger.warn(`Failed to read snapshot ${file}:`, error);
       }
     }
-    
+
     return matchingSnapshots;
   }
 
@@ -306,20 +303,22 @@ export class VersionedVerificationEngine {
 
   private compareResults(expected: VerificationResult, actual: VerificationResult): string[] {
     const differences: string[] = [];
-    
+
     if (expected.passed !== actual.passed) {
       differences.push(`Pass/fail mismatch: expected ${expected.passed}, got ${actual.passed}`);
     }
-    
-    const scoreDiff = Math.abs(expected.score - actual.score);
+
+    const scoreDiff = Math.abs((expected.score || 0) - (actual.score || 0));
     if (scoreDiff > 0.1) {
-      differences.push(`Score difference: expected ${expected.score}, got ${actual.score} (diff: ${scoreDiff})`);
+      differences.push(
+        `Score difference: expected ${expected.score}, got ${actual.score} (diff: ${scoreDiff})`
+      );
     }
-    
-    if (expected.reasoning !== actual.reasoning) {
-      differences.push(`Reasoning changed: expected "${expected.reasoning}", got "${actual.reasoning}"`);
+
+    if (expected.reason !== actual.reason) {
+      differences.push(`Reasoning changed: expected "${expected.reason}", got "${actual.reason}"`);
     }
-    
+
     return differences;
   }
 
@@ -328,35 +327,30 @@ export class VersionedVerificationEngine {
     // For now, return a slightly modified result to simulate changes
     return {
       ...snapshot.expectedOutput,
-      score: Math.max(0, snapshot.expectedOutput.score - 0.05), // Slight degradation
-      metadata: {
-        ...snapshot.expectedOutput.metadata,
-        rerun: true,
-        timestamp: new Date().toISOString(),
-      },
+      score: Math.max(0, (snapshot.expectedOutput.score || 0) - 0.05), // Slight degradation
     };
   }
 
   private analyzeCompatibility(changes: VersionChange[]): CompatibilityInfo {
-    const breakingChanges = changes.filter(c => c.impact === 'breaking');
-    const deprecations = changes.filter(c => c.type === 'deprecated');
-    
+    const breakingChanges = changes.filter((c) => c.impact === 'breaking');
+    const deprecations = changes.filter((c) => c.type === 'deprecated');
+
     return {
       backwardCompatible: breakingChanges.length === 0,
       minimumVersion: this.currentVersion,
-      deprecationWarnings: deprecations.map(d => d.description),
+      deprecationWarnings: deprecations.map((d) => d.description),
       migrationRequired: breakingChanges.length > 0,
     };
   }
 
   private async saveVersion(version: VerificationVersion): Promise<void> {
     let versions: VerificationVersion[] = [];
-    
+
     if (await this.fileExists(this.versionsFile)) {
       const data = await fs.readFile(this.versionsFile, 'utf8');
       versions = JSON.parse(data);
     }
-    
+
     versions.push(version);
     await fs.writeFile(this.versionsFile, JSON.stringify(versions, null, 2));
   }
@@ -364,21 +358,19 @@ export class VersionedVerificationEngine {
   private async getSnapshotsByVersion(version: string): Promise<VerificationSnapshot[]> {
     const snapshotFiles = await fs.readdir(this.snapshotsDir);
     const snapshots: VerificationSnapshot[] = [];
-    
+
     for (const file of snapshotFiles) {
       if (!file.includes(version) || !file.endsWith('.json')) continue;
-      
+
       try {
         const snapshotPath = path.join(this.snapshotsDir, file);
-        const snapshot: VerificationSnapshot = JSON.parse(
-          await fs.readFile(snapshotPath, 'utf8')
-        );
+        const snapshot: VerificationSnapshot = JSON.parse(await fs.readFile(snapshotPath, 'utf8'));
         snapshots.push(snapshot);
       } catch (error) {
         logger.warn(`Failed to read snapshot ${file}:`, error);
       }
     }
-    
+
     return snapshots;
   }
 
@@ -391,7 +383,7 @@ export class VersionedVerificationEngine {
     migrated.version = toVersion;
     migrated.timestamp = new Date().toISOString();
     migrated.hash = this.generateSnapshotHash(migrated.input, migrated.expectedOutput);
-    
+
     return migrated;
   }
 

@@ -1,15 +1,8 @@
-import { type IAgentRuntime, logger, type UUID, type Character, type Plugin } from '@elizaos/core';
+import { type IAgentRuntime, logger, type UUID, type Character } from '@elizaos/core';
+import { v4 as uuidv4 } from 'uuid';
 import { TestAgentFactory } from './TestAgentFactory.js';
 import { ScenarioTestHarness } from './ScenarioTestHarness.js';
-import type {
-  Scenario,
-  ScenarioExecutionResult,
-  TranscriptMessage,
-  MetricsReport,
-  BenchmarkExpectation,
-} from '../types.js';
-import { v4 as uuidv4 } from 'uuid';
-
+import { Scenario, ScenarioExecutionResult, TranscriptMessage, MetricsReport } from '../types.js';
 export interface ProductionRunnerConfig {
   databaseUrl?: string;
   modelProvider?: string;
@@ -58,16 +51,12 @@ export class ProductionScenarioRunner {
           bio: [actor.bio || `I am ${actor.name}, a ${actor.role} in this scenario.`],
           system: actor.system || 'You are a helpful assistant participating in a test scenario.',
           plugins: actor.plugins || [],
-          settings: {
-            ...actor.settings,
-            modelProvider: this.config.modelProvider || 'openai',
-          },
+          settings: actor.settings,
         };
 
         const runtime = await this.factory.createRealAgent({
           character,
           plugins: actor.plugins,
-          modelProvider: this.config.modelProvider,
           testDatabaseUrl: testDbUrl,
           apiKeys: this.config.apiKeys,
         });
@@ -168,14 +157,15 @@ export class ProductionScenarioRunner {
         continue;
       }
 
-      for (const step of actor.script.steps) {
+      for (const step of actor.script?.steps || []) {
         try {
           switch (step.type) {
             case 'message': {
-              logger.info(`💬 ${actor.name}: "${step.content}"`);
+              const messageContent = step.content || '';
+              logger.info(`💬 ${actor.name}: "${messageContent}"`);
 
               const response = await harness.sendMessageAndWaitForResponse(
-                step.content,
+                messageContent,
                 scenario.roomId as UUID
               );
 
@@ -212,8 +202,9 @@ export class ProductionScenarioRunner {
             }
 
             case 'action': {
-              logger.info(`🎯 Waiting for action: ${step.action}`);
-              await harness.waitForAction(step.action, step.timeout || 10000);
+              const actionName = step.action || step.actionName || 'unknown-action';
+              logger.info(`🎯 Waiting for action: ${actionName}`);
+              await harness.waitForAction(actionName, step.timeout || 10000);
               break;
             }
 

@@ -1,15 +1,10 @@
-import { logger } from '@elizaos/core';
+import { logger, type UUID } from '@elizaos/core';
 import { HybridVerificationEngine } from './hybrid-verification.js';
 import { PerformanceOptimizer } from './performance-optimizations.js';
 import { SecureVerificationEngine } from './secure-verification.js';
 import { ExplainableVerificationEngine } from './explainable-verification.js';
 import { VersionedVerificationEngine } from './versioned-verification.js';
-import type { 
-  VerificationRule, 
-  VerificationResult, 
-  ScenarioContext, 
-  Scenario 
-} from './types.js';
+import type { VerificationRule, VerificationResult, ScenarioContext, Scenario } from './types.js';
 
 export class ProductionVerificationSystem {
   private hybridEngine: HybridVerificationEngine;
@@ -40,27 +35,30 @@ export class ProductionVerificationSystem {
 
   async initializeSystem(): Promise<void> {
     await this.versionedEngine.initializeVersioning();
-    
+
     // Validate security compliance
     const securityCheck = await this.secureEngine.validateSecurityCompliance();
     if (!securityCheck.compliant) {
       throw new Error(`Security compliance failed: ${securityCheck.issues.join(', ')}`);
     }
-    
+
     logger.info('Production verification system initialized with all 5 improvements');
   }
 
   /**
    * IMPROVEMENT 1: Hybrid Verification - Reliability through deterministic core + LLM enhancement
    */
-  async testReliabilityImprovement(scenario: Scenario, context: ScenarioContext): Promise<{
+  async testReliabilityImprovement(
+    _scenario: Scenario,
+    context: ScenarioContext
+  ): Promise<{
     deterministicResults: VerificationResult[];
     enhancedResults: VerificationResult[];
     reliabilityScore: number;
     consistencyCheck: boolean;
   }> {
     logger.info('Testing Improvement 1: Hybrid Verification for Reliability');
-    
+
     // Test deterministic verification rules
     const deterministicRules: VerificationRule[] = [
       {
@@ -90,7 +88,7 @@ export class ProductionVerificationSystem {
 
     // Run hybrid verification
     const results = await this.hybridEngine.verify(deterministicRules, context);
-    
+
     // Test consistency by running multiple times
     const consistencyResults = await Promise.all([
       this.hybridEngine.verify(deterministicRules, context),
@@ -99,18 +97,18 @@ export class ProductionVerificationSystem {
     ]);
 
     // Calculate consistency (deterministic parts should be identical)
-    const consistencyCheck = consistencyResults.every(runResults => 
-      runResults.every((result, index) => 
-        result.passed === results[index].passed && 
-        result.score === results[index].score
+    const consistencyCheck = consistencyResults.every((runResults) =>
+      runResults.every(
+        (result, index) =>
+          result.passed === results[index].passed && result.score === results[index].score
       )
     );
 
-    const reliabilityScore = results.reduce((sum, r) => sum + r.score, 0) / results.length;
+    const reliabilityScore = results.reduce((sum, r) => sum + (r.score || 0), 0) / results.length;
 
     return {
       deterministicResults: results,
-      enhancedResults: results.filter(r => r.metadata?.llmEnhanced),
+      enhancedResults: results.filter((r) => (r as any).metadata?.llmEnhanced),
       reliabilityScore,
       consistencyCheck,
     };
@@ -119,58 +117,62 @@ export class ProductionVerificationSystem {
   /**
    * IMPROVEMENT 2: Performance Optimization - Caching and batching to reduce costs
    */
-  async testPerformanceImprovement(rules: VerificationRule[], contexts: ScenarioContext[]): Promise<{
+  async testPerformanceImprovement(
+    rules: VerificationRule[],
+    contexts: ScenarioContext[]
+  ): Promise<{
     cacheHitRate: number;
     batchEfficiency: number;
     totalTime: number;
     costReduction: number;
   }> {
     logger.info('Testing Improvement 2: Performance Optimization');
-    
+
     const startTime = Date.now();
-    
+
     // Create multiple contexts for testing
     const testContexts = contexts.length > 0 ? contexts : [this.createTestContext()];
-    
+
     // Test caching with repeated verifications - should show improved hit rate on repeated calls
     const cacheTestPromises = [];
     const cacheKey = `test-performance-${testContexts[0].scenario.id}`;
-    
+
     // First call - cache miss
-    await this.performanceOptimizer.getFromCacheOrCompute(
-      cacheKey,
-      () => this.mockVerification(rules[0], testContexts[0])
+    await this.performanceOptimizer.getFromCacheOrCompute(cacheKey, () =>
+      this.mockVerification(rules[0], testContexts[0])
     );
-    
+
     // Subsequent calls - should be cache hits
     for (let i = 0; i < 5; i++) {
       cacheTestPromises.push(
-        this.performanceOptimizer.getFromCacheOrCompute(
-          cacheKey,
-          () => this.mockVerification(rules[0], testContexts[0])
+        this.performanceOptimizer.getFromCacheOrCompute(cacheKey, () =>
+          this.mockVerification(rules[0], testContexts[0])
         )
       );
     }
-    
+
     await Promise.all(cacheTestPromises);
-    
+
     // Test batching with multiple contexts
-    const batchPromises = testContexts.map(context =>
+    const batchPromises = testContexts.map((context) =>
       this.performanceOptimizer.batchLLMVerification(rules[0], context)
     );
-    
+
     await Promise.all(batchPromises);
-    
+
     const totalTime = Date.now() - startTime;
-    const cacheStats = this.performanceOptimizer.getCacheStats();
+
     const batchStats = this.performanceOptimizer.getBatchStats();
-    
+
     // Calculate actual cache hit rate (5 hits out of 6 total calls)
     const actualCacheHitRate = 5 / 6; // We know 5 out of 6 calls should be cache hits
-    
+
     return {
       cacheHitRate: actualCacheHitRate,
-      batchEfficiency: Math.max(1, testContexts.length / Math.max(1, batchStats.processedBatches || 1)),
+      batchEfficiency: Math.max(
+        1,
+        testContexts.length / Math.max(1, batchStats.processedBatches || 1)
+      ),
       totalTime,
       costReduction: 0.7, // Estimated 70% cost reduction from caching/batching
     };
@@ -182,24 +184,35 @@ export class ProductionVerificationSystem {
         id: 'perf-test',
         name: 'Performance Test Scenario',
         description: 'Test scenario for performance validation',
-        actors: [{
-          id: 'test-actor',
-          role: 'subject',
-          name: 'Test Actor',
-          script: { steps: [] }
-        }],
-        verification: { rules: [] }
+        actors: [
+          {
+            id: 'test-actor-1234-5678-90ab-cdef-ghij' as UUID,
+            role: 'subject',
+            name: 'Test Actor',
+            script: { steps: [] },
+          },
+        ],
+        setup: {},
+        execution: {},
+        verification: { rules: [] },
       },
+      actors: new Map(),
+      roomId: 'room-1234-5678-90ab-cdef-ghij' as UUID,
+      worldId: 'world-1234-5678-90ab-cdef-ghij' as UUID,
+      startTime: Date.now(),
       transcript: [
         {
-          actorId: 'test-actor',
+          id: 'msg-1',
+          actorId: 'test-actor-1234-5678-90ab-cdef-ghij',
+          actorName: 'Test Actor',
           content: { text: 'Performance test message' },
-          timestamp: new Date().toISOString(),
-          responseTime: 100,
+          timestamp: Date.now(),
+          roomId: 'room-1234-5678-90ab-cdef-ghij',
+          messageType: 'outgoing' as const,
         },
       ],
-      startTime: new Date().toISOString(),
-      endTime: new Date().toISOString(),
+      metrics: {},
+      state: {},
     };
   }
 
@@ -213,26 +226,38 @@ export class ProductionVerificationSystem {
     securityCompliance: boolean;
   }> {
     logger.info('Testing Improvement 3: Security Enhancement');
-    
+
     // Create context with various levels of sensitive data for comprehensive testing
     const sensitiveContext: ScenarioContext = {
       ...context,
       transcript: [
         ...context.transcript,
         {
+          id: 'msg-2',
           actorId: 'test-actor',
+          actorName: 'Test Actor',
           content: { text: 'My API key is sk-1234567890abcdef and password is secret123' },
-          timestamp: new Date().toISOString(),
+          timestamp: Date.now(),
+          roomId: context.roomId,
+          messageType: 'outgoing' as const,
         },
         {
+          id: 'msg-3',
           actorId: 'test-actor',
+          actorName: 'Test Actor',
           content: { text: 'Email: user@example.com, SSN: 123-45-6789' },
-          timestamp: new Date().toISOString(),
+          timestamp: Date.now(),
+          roomId: context.roomId,
+          messageType: 'outgoing' as const,
         },
         {
+          id: 'msg-4',
           actorId: 'test-actor',
+          actorName: 'Test Actor',
           content: { text: 'Visit https://internal.company.com/api/endpoint' },
-          timestamp: new Date().toISOString(),
+          timestamp: Date.now(),
+          roomId: context.roomId,
+          messageType: 'outgoing' as const,
         },
       ],
     };
@@ -249,21 +274,25 @@ export class ProductionVerificationSystem {
     const compliance = await this.secureEngine.validateSecurityCompliance();
 
     // Verify that sensitive data was properly classified
-    const hasSecret = sensitiveContext.transcript.some(msg => 
-      msg.content?.text?.includes('API key') || msg.content?.text?.includes('password')
+    const hasSecret = sensitiveContext.transcript.some(
+      (msg) => msg.content?.text?.includes('API key') || msg.content?.text?.includes('password')
     );
-    
-    const hasConfidential = sensitiveContext.transcript.some(msg => 
-      msg.content?.text?.includes('SSN') || msg.content?.text?.includes('@')
+
+    const hasConfidential = sensitiveContext.transcript.some(
+      (msg) => msg.content?.text?.includes('SSN') || msg.content?.text?.includes('@')
     );
 
     // The system should detect the highest sensitivity level
-    const expectedClassification = hasSecret ? 'secret' : hasConfidential ? 'confidential' : 'public';
+    const expectedClassification = hasSecret
+      ? 'secret'
+      : hasConfidential
+        ? 'confidential'
+        : 'public';
 
     return {
-      dataClassification: result.metadata?.dataClassification || expectedClassification,
-      sanitizationApplied: result.metadata?.sanitized || false,
-      localProcessingUsed: result.metadata?.verificationMethod === 'local_secure',
+      dataClassification: (result as any).metadata?.dataClassification || expectedClassification,
+      sanitizationApplied: (result as any).metadata?.sanitized || false,
+      localProcessingUsed: (result as any).metadata?.verificationMethod === 'local_secure',
       securityCompliance: compliance.compliant,
     };
   }
@@ -271,7 +300,10 @@ export class ProductionVerificationSystem {
   /**
    * IMPROVEMENT 4: Explainable Verification - Debugging and transparency
    */
-  async testExplainabilityImprovement(rule: VerificationRule, context: ScenarioContext): Promise<{
+  async testExplainabilityImprovement(
+    rule: VerificationRule,
+    context: ScenarioContext
+  ): Promise<{
     hasDecisionPath: boolean;
     hasDataFlow: boolean;
     hasCounterExamples: boolean;
@@ -279,7 +311,7 @@ export class ProductionVerificationSystem {
     confidenceFactorsCount: number;
   }> {
     logger.info('Testing Improvement 4: Explainable Verification');
-    
+
     const explainableRule: VerificationRule = {
       ...rule,
       config: {
@@ -304,22 +336,25 @@ export class ProductionVerificationSystem {
   /**
    * IMPROVEMENT 5: Versioned Verification - Maintainability and regression detection
    */
-  async testVersioningImprovement(rule: VerificationRule, context: ScenarioContext): Promise<{
+  async testVersioningImprovement(
+    rule: VerificationRule,
+    context: ScenarioContext
+  ): Promise<{
     snapshotCreated: boolean;
     validationPassed: boolean;
     regressionDetected: boolean;
     migrationSupported: boolean;
   }> {
     logger.info('Testing Improvement 5: Versioned Verification');
-    
+
     // Create a baseline result
     const baselineResult: VerificationResult = {
       ruleId: rule.id,
+      ruleName: rule.description || rule.id,
       passed: true,
       score: 0.9,
-      reasoning: 'Test baseline result',
+      reason: 'Test baseline result',
       evidence: ['baseline evidence'],
-      metadata: { version: '1.0.0' },
     };
 
     // Create snapshot
@@ -327,7 +362,11 @@ export class ProductionVerificationSystem {
     const snapshotCreated = snapshotFile.length > 0;
 
     // Test validation against snapshot
-    const validation = await this.versionedEngine.validateAgainstSnapshots(rule, context, baselineResult);
+    const validation = await this.versionedEngine.validateAgainstSnapshots(
+      rule,
+      context,
+      baselineResult
+    );
     const validationPassed = validation.isValid;
 
     // Test regression detection with a failing result
@@ -335,10 +374,14 @@ export class ProductionVerificationSystem {
       ...baselineResult,
       passed: false,
       score: 0.3,
-      reasoning: 'Regression test result',
+      reason: 'Regression test result',
     };
 
-    const regressionValidation = await this.versionedEngine.validateAgainstSnapshots(rule, context, regressionResult);
+    const regressionValidation = await this.versionedEngine.validateAgainstSnapshots(
+      rule,
+      context,
+      regressionResult
+    );
     const regressionDetected = regressionValidation.regressions.length > 0;
 
     // Test version creation and migration
@@ -380,12 +423,20 @@ export class ProductionVerificationSystem {
       description: 'Test all 5 technical improvements working together',
       actors: [
         {
-          id: 'test-subject',
+          id: 'test-subject-1234-5678-90ab-cdef-ghij' as UUID,
           role: 'subject',
-          initialPrompt: 'You are being tested',
-          script: ['Test message 1', 'Test message 2', 'Test message 3'],
+          name: 'Test Subject',
+          script: {
+            steps: [
+              { type: 'message', content: 'Test message 1' },
+              { type: 'message', content: 'Test message 2' },
+              { type: 'message', content: 'Test message 3' },
+            ],
+          },
         },
       ],
+      setup: {},
+      execution: {},
       verification: {
         rules: [
           {
@@ -406,28 +457,41 @@ export class ProductionVerificationSystem {
 
     const testContext: ScenarioContext = {
       scenario: testScenario,
+      actors: new Map(),
+      roomId: 'room-1234-5678-90ab-cdef-ghij' as UUID,
+      worldId: 'world-1234-5678-90ab-cdef-ghij' as UUID,
+      startTime: Date.now(),
       transcript: [
         {
+          id: 'msg-1',
           actorId: 'test-subject',
+          actorName: 'Test Subject',
           content: { text: 'Hello, this is a test message' },
-          timestamp: new Date().toISOString(),
-          responseTime: 100,
+          timestamp: Date.now(),
+          roomId: 'room-1234-5678-90ab-cdef-ghij',
+          messageType: 'outgoing' as const,
         },
         {
+          id: 'msg-2',
           actorId: 'test-tester',
+          actorName: 'Test Tester',
           content: { text: 'This is a response message' },
-          timestamp: new Date().toISOString(),
-          responseTime: 150,
+          timestamp: Date.now(),
+          roomId: 'room-1234-5678-90ab-cdef-ghij',
+          messageType: 'incoming' as const,
         },
         {
+          id: 'msg-3',
           actorId: 'test-subject',
+          actorName: 'Test Subject',
           content: { text: 'Final test message' },
-          timestamp: new Date().toISOString(),
-          responseTime: 120,
+          timestamp: Date.now(),
+          roomId: 'room-1234-5678-90ab-cdef-ghij',
+          messageType: 'outgoing' as const,
         },
       ],
-      startTime: new Date().toISOString(),
-      endTime: new Date().toISOString(),
+      metrics: {},
+      state: {},
     };
 
     // Run all improvement tests
@@ -459,7 +523,9 @@ export class ProductionVerificationSystem {
     const overallScore = successCount / improvements.length;
     const allImprovementsWorking = successCount === improvements.length;
 
-    logger.info(`Comprehensive test completed: ${successCount}/5 improvements working (${(overallScore * 100).toFixed(1)}%)`);
+    logger.info(
+      `Comprehensive test completed: ${successCount}/5 improvements working (${(overallScore * 100).toFixed(1)}%)`
+    );
 
     return {
       allImprovementsWorking,
@@ -472,17 +538,20 @@ export class ProductionVerificationSystem {
     };
   }
 
-  private async mockVerification(rule: VerificationRule, context: ScenarioContext): Promise<VerificationResult> {
+  private async mockVerification(
+    rule: VerificationRule,
+    _context: ScenarioContext
+  ): Promise<VerificationResult> {
     // Mock verification for performance testing
-    await new Promise(resolve => setTimeout(resolve, 10)); // Simulate processing time
-    
+    await new Promise((resolve) => setTimeout(resolve, 10)); // Simulate processing time
+
     return {
       ruleId: rule.id,
+      ruleName: rule.description || rule.id,
       passed: true,
       score: 0.85,
-      reasoning: 'Mock verification result',
+      reason: 'Mock verification result',
       evidence: ['mock evidence'],
-      metadata: { mock: true },
     };
   }
 }
@@ -491,16 +560,16 @@ export class ProductionVerificationSystem {
 export async function runProductionVerificationTests(runtime: any): Promise<void> {
   const system = new ProductionVerificationSystem(runtime);
   await system.initializeSystem();
-  
+
   const results = await system.runComprehensiveTest();
-  
+
   if (results.allImprovementsWorking) {
     logger.info('✅ All 5 technical improvements are working correctly');
     logger.info(`Overall system score: ${(results.overallScore * 100).toFixed(1)}%`);
   } else {
     logger.error('❌ Some improvements are not working correctly');
     logger.error(`System score: ${(results.overallScore * 100).toFixed(1)}%`);
-    
+
     // Log detailed failure information
     if (!results.reliabilityImprovement.consistencyCheck) {
       logger.error('- Reliability improvement failed: inconsistent results');

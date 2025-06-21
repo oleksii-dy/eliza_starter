@@ -21,7 +21,6 @@ import { loadCharacterTryPath, jsonToCharacter } from './loader.js';
 
 import {
   createDatabaseAdapter,
-  DatabaseMigrationService,
   plugin as sqlPlugin,
 } from '@elizaos/plugin-sql';
 import internalMessageBus from './bus.js';
@@ -185,20 +184,25 @@ export class AgentServer {
       await this.database.init();
       logger.success('Consolidated database initialized successfully');
 
-      // Run migrations for the SQL plugin schema
+      // First, we need to create a minimal runtime with just the SQL plugin for migrations
       logger.info('[INIT] Running database migrations for messaging tables...');
       try {
-        const migrationService = new DatabaseMigrationService();
+        // Create a temporary runtime for migration purposes
+        const coreModule = await import('@elizaos/core');
+        const migrationRuntime = new coreModule.AgentRuntime({
+          adapter: this.database,
+          agentId: '00000000-0000-0000-0000-000000000000' as UUID,
+          character: {
+            name: 'MigrationAgent',
+            bio: ['Migration agent for database setup'],
+            system: 'You are a helpful assistant.',
+            plugins: [sqlPlugin.name],
+          } as Character,
+          plugins: [sqlPlugin],
+        });
 
-        // Get the underlying database instance
-        const db = (this.database as any).getDatabase();
-        await migrationService.initializeWithDatabase(db);
-
-        // Register the SQL plugin schema
-        migrationService.discoverAndRegisterPluginSchemas([sqlPlugin]);
-
-        // Run the migrations
-        await migrationService.runAllPluginMigrations();
+        // Initialize the runtime - this should handle plugin migrations
+        await migrationRuntime.initialize();
 
         logger.success('[INIT] Database migrations completed successfully');
       } catch (migrationError) {
@@ -1114,6 +1118,35 @@ export class AgentServer {
       }
     }
     return serverIds;
+  }
+
+  /**
+   * Emit a WebSocket event to all connected clients
+   * @param event - The event name to emit
+   * @param data - The data to send with the event
+   */
+  emitToAll(event: string, data: any): void {
+    if (this.socketIO) {
+      this.socketIO.emit(event, data);
+      logger.debug(`[AgentServer] Emitted '${event}' event to all connected clients`);
+    } else {
+      logger.warn(`[AgentServer] Cannot emit '${event}' - SocketIO not initialized`);
+    }
+  }
+
+  /**
+   * Emit a WebSocket event to clients in a specific room/channel
+   * @param room - The room/channel to emit to
+   * @param event - The event name to emit
+   * @param data - The data to send with the event
+   */
+  emitToRoom(room: string, event: string, data: any): void {
+    if (this.socketIO) {
+      this.socketIO.to(room).emit(event, data);
+      logger.debug(`[AgentServer] Emitted '${event}' event to room '${room}'`);
+    } else {
+      logger.warn(`[AgentServer] Cannot emit '${event}' to room '${room}' - SocketIO not initialized`);
+    }
   }
 }
 

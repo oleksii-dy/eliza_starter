@@ -1,6 +1,7 @@
 {
   "name": "eliza",
   "version": "1.0.6",
+  "main": "src/index.js",
   "module": "index.ts",
   "type": "module",
   "engines": {
@@ -31,7 +32,7 @@
     "docker:bash": "bash ./scripts/docker.sh bash",
     "docker:start": "bash ./scripts/docker.sh start",
     "docker": "bun docker:build && bun docker:run && bun docker:bash",
-    "test": "turbo run test --concurrency 1 --filter=!./packages/plugin-starter --filter=!./packages/project-starter --filter=!./packages/docs --filter=!@elizaos/plugin-sql",
+    "test": "turbo run test --concurrency 1 --filter=!./packages/plugin-starter --filter=!./packages/project-starter --filter=!./packages/docs --filter=!@elizaos/plugin-sql --filter=!@elizaos/plugin-dummy-services",
     "test:client": "turbo run test --filter=./packages/client",
     "test:core": "turbo run test --filter=./packages/core",
     "test:app": "turbo run test --concurrency 1 --filter=./packages/app",

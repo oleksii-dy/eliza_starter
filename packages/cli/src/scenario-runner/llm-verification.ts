@@ -13,10 +13,7 @@ export class LLMVerificationEngine {
     this.runtime = runtime;
   }
 
-  async verify(
-    rules: VerificationRule[],
-    context: ScenarioContext
-  ): Promise<VerificationResult[]> {
+  async verify(rules: VerificationRule[], context: ScenarioContext): Promise<VerificationResult[]> {
     const results: VerificationResult[] = [];
 
     for (const rule of rules) {
@@ -27,11 +24,11 @@ export class LLMVerificationEngine {
         logger.error(`Error verifying rule ${rule.id}:`, error);
         results.push({
           ruleId: rule.id,
+          ruleName: rule.description || rule.id,
           passed: false,
           score: 0,
-          reasoning: `Verification failed due to error: ${error instanceof Error ? error.message : String(error)}`,
+          reason: `Verification failed due to error: ${error instanceof Error ? error.message : String(error)}`,
           evidence: [],
-          metadata: { error: true },
         });
       }
     }
@@ -44,32 +41,29 @@ export class LLMVerificationEngine {
     context: ScenarioContext
   ): Promise<VerificationResult> {
     const prompt = this.buildVerificationPrompt(rule, context);
-    
+
     logger.debug(`Verifying rule ${rule.id} with LLM`);
-    
+
     const { ModelType } = await import('@elizaos/core');
-    const response = await this.runtime.useModel(ModelType.TEXT_LARGE, {
+    const response = (await this.runtime.useModel(ModelType.TEXT_LARGE, {
       prompt,
       temperature: 0.1, // Low temperature for consistent verification
       maxTokens: 1000,
-    }) as string;
+    })) as string;
 
     return this.interpretVerificationResponse(rule.id, response, context);
   }
 
-  private buildVerificationPrompt(
-    rule: VerificationRule,
-    context: ScenarioContext
-  ): string {
+  private buildVerificationPrompt(rule: VerificationRule, context: ScenarioContext): string {
     const transcript = this.formatTranscript(context.transcript);
     const scenario = context.scenario;
-    
+
     return `You are an expert AI system evaluator. Your task is to analyze a conversation transcript and determine if a specific criterion has been met.
 
 SCENARIO CONTEXT:
 - Scenario: ${scenario.name}
 - Description: ${scenario.description}
-- Actors involved: ${scenario.actors.map(a => `${a.name} (${a.role})`).join(', ')}
+- Actors involved: ${scenario.actors.map((a) => `${a.name} (${a.role})`).join(', ')}
 
 VERIFICATION RULE:
 - Rule ID: ${rule.id}
@@ -117,10 +111,11 @@ Your evaluation should be thorough, objective, and based entirely on the evidenc
       .map((msg, index) => {
         const timestamp = new Date(msg.timestamp).toISOString();
         const sender = msg.actorId || 'System';
-        const content = typeof msg.content === 'string' 
-          ? msg.content 
-          : msg.content?.text || JSON.stringify(msg.content);
-        
+        const content =
+          typeof msg.content === 'string'
+            ? msg.content
+            : msg.content?.text || JSON.stringify(msg.content);
+
         return `[${index + 1}] ${timestamp} - ${sender}: ${content}`;
       })
       .join('\n');
@@ -129,7 +124,7 @@ Your evaluation should be thorough, objective, and based entirely on the evidenc
   private async interpretVerificationResponse(
     ruleId: string,
     response: string,
-    context: ScenarioContext
+    _context: ScenarioContext
   ): Promise<VerificationResult> {
     // Use another LLM call to extract structured data from the verification response
     const extractionPrompt = `Parse the following verification response and extract the key information:
@@ -147,11 +142,11 @@ SUGGESTIONS: [suggestions for improvement if any]
 If any field is missing, use "Not provided" for text fields and 0.5 for confidence.`;
 
     const { ModelType } = await import('@elizaos/core');
-    const extractedResponse = await this.runtime.useModel(ModelType.TEXT_LARGE, {
+    const extractedResponse = (await this.runtime.useModel(ModelType.TEXT_LARGE, {
       prompt: extractionPrompt,
       temperature: 0.0,
       maxTokens: 500,
-    }) as string;
+    })) as string;
 
     return this.parseExtractedResponse(ruleId, extractedResponse, response);
   }
@@ -159,12 +154,12 @@ If any field is missing, use "Not provided" for text fields and 0.5 for confiden
   private parseExtractedResponse(
     ruleId: string,
     extractedResponse: string,
-    originalResponse: string
+    _originalResponse: string
   ): VerificationResult {
     try {
       const lines = extractedResponse.split('\n');
       const data: Record<string, string> = {};
-      
+
       for (const line of lines) {
         const colonIndex = line.indexOf(':');
         if (colonIndex > 0) {
@@ -179,38 +174,29 @@ If any field is missing, use "Not provided" for text fields and 0.5 for confiden
       const confidence = parseFloat(data.confidence || '0.5');
       const reasoning = data.reasoning || 'No reasoning provided';
       const evidenceText = data.evidence || '';
-      const suggestions = data.suggestions || '';
 
       const evidence = evidenceText
         .split(',')
-        .map(item => item.trim())
-        .filter(item => item.length > 0 && item !== 'Not provided');
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0 && item !== 'Not provided');
 
       return {
         ruleId,
+        ruleName: ruleId,
         passed,
         score: confidence,
-        reasoning,
+        reason: reasoning,
         evidence,
-        metadata: {
-          originalResponse,
-          extractedResponse,
-          suggestions: suggestions !== 'Not provided' ? suggestions : undefined,
-        },
       };
     } catch (error) {
       logger.error('Error parsing verification response:', error);
       return {
         ruleId,
+        ruleName: ruleId,
         passed: false,
         score: 0,
-        reasoning: `Failed to parse verification response: ${error instanceof Error ? error.message : String(error)}`,
+        reason: `Failed to parse verification response: ${error instanceof Error ? error.message : String(error)}`,
         evidence: [],
-        metadata: {
-          originalResponse,
-          extractedResponse,
-          parseError: true,
-        },
       };
     }
   }
@@ -220,8 +206,8 @@ If any field is missing, use "Not provided" for text fields and 0.5 for confiden
     currentResults: VerificationResult[]
   ): Promise<VerificationRule[]> {
     const transcript = this.formatTranscript(scenario.transcript);
-    const failedRules = currentResults.filter(r => !r.passed);
-    
+    const failedRules = currentResults.filter((r) => !r.passed);
+
     const prompt = `You are an expert test designer for AI agent evaluation. Based on the scenario and current test results, suggest additional verification rules that would provide more comprehensive testing.
 
 SCENARIO: ${scenario.scenario.name}
@@ -231,10 +217,10 @@ CONVERSATION TRANSCRIPT:
 ${transcript}
 
 CURRENT TEST RESULTS:
-${currentResults.map(r => `- ${r.ruleId}: ${r.passed ? 'PASS' : 'FAIL'} (${r.reasoning})`).join('\n')}
+${currentResults.map((r) => `- ${r.ruleId}: ${r.passed ? 'PASS' : 'FAIL'} (${r.reason})`).join('\n')}
 
 FAILED TESTS:
-${failedRules.map(r => `- ${r.ruleId}: ${r.reasoning}`).join('\n')}
+${failedRules.map((r) => `- ${r.ruleId}: ${r.reason}`).join('\n')}
 
 Based on this information, suggest 3-5 additional verification rules that would:
 1. Test aspects not covered by current rules
@@ -259,11 +245,11 @@ RULE_2:
 ...`;
 
     const { ModelType } = await import('@elizaos/core');
-    const response = await this.runtime.useModel(ModelType.TEXT_LARGE, {
+    const response = (await this.runtime.useModel(ModelType.TEXT_LARGE, {
       prompt,
       temperature: 0.3,
       maxTokens: 1500,
-    }) as string;
+    })) as string;
 
     return this.parseGeneratedRules(response);
   }
@@ -271,22 +257,22 @@ RULE_2:
   private parseGeneratedRules(response: string): VerificationRule[] {
     const rules: VerificationRule[] = [];
     const sections = response.split(/RULE_\d+:/);
-    
+
     for (let i = 1; i < sections.length; i++) {
       const section = sections[i].trim();
       const lines = section.split('\n');
-      
+
       let id = '';
       let description = '';
       let successCriteria = '';
       let priority = 'MEDIUM';
-      
+
       for (const line of lines) {
         const colonIndex = line.indexOf(':');
         if (colonIndex > 0) {
           const key = line.substring(0, colonIndex).trim().toLowerCase();
           const value = line.substring(colonIndex + 1).trim();
-          
+
           switch (key) {
             case 'id':
               id = value;
@@ -303,7 +289,7 @@ RULE_2:
           }
         }
       }
-      
+
       if (id && description) {
         rules.push({
           id,
@@ -317,7 +303,7 @@ RULE_2:
         });
       }
     }
-    
+
     return rules;
   }
 }

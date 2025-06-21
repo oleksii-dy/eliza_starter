@@ -1,5 +1,5 @@
-import { Service } from './types';
 import type { IAgentRuntime, ServiceTypeName } from './types';
+import { Service } from './types';
 
 /**
  * Service builder class that provides type-safe service creation

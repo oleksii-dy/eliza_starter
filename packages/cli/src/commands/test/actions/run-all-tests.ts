@@ -4,6 +4,7 @@ import { getProjectType } from '../utils/project-utils';
 import { runComponentTests } from './component-tests';
 import { runE2eTests } from './e2e-tests';
 import { runCypressTests } from './cypress-tests';
+import { runScenarioTests } from './scenario-tests';
 
 /**
  * Run both component and E2E tests
@@ -41,6 +42,15 @@ export async function runAllTests(
     logger.error('Cypress tests failed.');
     process.exit(1);
   }
+  logger.success('Cypress tests passed!');
+
+  // Run scenario tests
+  const scenarioResult = await runScenarioTests(testPath, options);
+  if (scenarioResult.failed) {
+    logger.error('Scenario tests failed.');
+    process.exit(1);
+  }
+  logger.success('Scenario tests passed!');
 
   logger.success('All tests passed successfully!');
   // Give async operations time to complete before exiting

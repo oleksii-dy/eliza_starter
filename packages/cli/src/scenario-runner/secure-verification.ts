@@ -49,29 +49,26 @@ export class SecureVerificationEngine {
 
   constructor(private config: SecurityConfig) {}
 
-  async secureVerify(
-    rule: any,
-    context: ScenarioContext
-  ): Promise<VerificationResult> {
+  async secureVerify(rule: any, context: ScenarioContext): Promise<VerificationResult> {
     // Step 1: Classify and sanitize data
     const sanitizedContext = this.sanitizeContext(context);
-    
+
     // Step 2: Choose verification method based on security requirements
     const dataLevel = this.classifyDataSensitivity(context);
-    
+
     if (dataLevel === 'secret' || dataLevel === 'confidential') {
       // Use only local/deterministic verification for sensitive data
       return this.localVerification(rule, sanitizedContext);
     }
-    
+
     if (this.config.useLocalLLM) {
       return this.localLLMVerification(rule, sanitizedContext);
     }
-    
+
     if (this.config.allowExternalLLM && dataLevel === 'public') {
       return this.externalLLMVerification(rule, sanitizedContext);
     }
-    
+
     // Fallback to deterministic verification
     return this.localVerification(rule, sanitizedContext);
   }
@@ -81,7 +78,7 @@ export class SecureVerificationEngine {
       return context;
     }
 
-    const sanitizedTranscript = context.transcript.map(message => ({
+    const sanitizedTranscript = context.transcript.map((message) => ({
       ...message,
       content: {
         ...message.content,
@@ -105,7 +102,7 @@ export class SecureVerificationEngine {
           for (const match of matches) {
             const replacement = this.applyMaskingStrategy(match, classifier.maskingStrategy);
             sanitized = sanitized.replace(match, replacement);
-            
+
             if (this.config.auditLogging) {
               this.auditLog({
                 action: 'data_sanitization',
@@ -127,11 +124,11 @@ export class SecureVerificationEngine {
     switch (strategy) {
       case 'redact':
         return '[REDACTED]';
-      
+
       case 'hash':
         const hash = createHash('sha256').update(text).digest('hex').substring(0, 8);
         return `[HASH:${hash}]`;
-      
+
       case 'synthetic':
         // Generate realistic but fake replacement
         if (text.includes('@')) {
@@ -144,16 +141,14 @@ export class SecureVerificationEngine {
           return 'https://example.com';
         }
         return '[SYNTHETIC]';
-      
+
       default:
         return text;
     }
   }
 
   private classifyDataSensitivity(context: ScenarioContext): DataClassification['level'] {
-    const allText = context.transcript
-      .map(msg => msg.content?.text || '')
-      .join(' ');
+    const allText = context.transcript.map((msg) => msg.content?.text || '').join(' ');
 
     // Check against classifiers, return highest sensitivity level found
     for (const classifier of this.dataClassifiers) {
@@ -173,15 +168,15 @@ export class SecureVerificationEngine {
   ): Promise<VerificationResult> {
     // Implement fully local verification without any external calls
     logger.debug('Using local verification for security compliance');
-    
+
     // Example: Simple keyword-based verification
     const keywords = rule.config.requiredKeywords || [];
     const transcript = context.transcript
-      .map(msg => msg.content?.text || '')
+      .map((msg) => msg.content?.text || '')
       .join(' ')
       .toLowerCase();
 
-    const foundKeywords = keywords.filter((keyword: string) => 
+    const foundKeywords = keywords.filter((keyword: string) =>
       transcript.includes(keyword.toLowerCase())
     );
 
@@ -191,12 +186,9 @@ export class SecureVerificationEngine {
       ruleId: rule.id,
       passed,
       score: passed ? 1.0 : foundKeywords.length / keywords.length,
-      reasoning: `Found ${foundKeywords.length}/${keywords.length} required keywords`,
+      reason: `Found ${foundKeywords.length}/${keywords.length} required keywords`,
+      ruleName: rule.description || rule.id,
       evidence: foundKeywords,
-      metadata: {
-        verificationMethod: 'local_secure',
-        dataClassification: this.classifyDataSensitivity(context),
-      },
     };
   }
 
@@ -206,7 +198,7 @@ export class SecureVerificationEngine {
   ): Promise<VerificationResult> {
     // Use local LLM (e.g., Ollama, LocalAI) for verification
     logger.debug('Using local LLM verification');
-    
+
     try {
       // Example: Call to local LLM endpoint
       const response = await fetch('http://localhost:11434/api/generate', {
@@ -237,7 +229,7 @@ export class SecureVerificationEngine {
   ): Promise<VerificationResult> {
     // Only for public data with explicit consent
     logger.debug('Using external LLM verification (public data only)');
-    
+
     const dataLevel = this.classifyDataSensitivity(context);
     if (dataLevel !== 'public') {
       throw new Error('Cannot use external LLM for non-public data');
@@ -286,18 +278,15 @@ No additional text.`;
       ruleId,
       passed,
       score,
-      reasoning,
+      reason: reasoning,
+      ruleName: ruleId,
       evidence: [],
-      metadata: {
-        verificationMethod: 'local_llm',
-        sanitized: this.config.dataAnonymization,
-      },
     };
   }
 
   private auditLog(event: any): void {
     if (!this.config.auditLogging) return;
-    
+
     // In production, this would write to secure audit log
     logger.info('AUDIT:', JSON.stringify(event));
   }

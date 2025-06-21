@@ -1,9 +1,5 @@
 import { logger, type IAgentRuntime } from '@elizaos/core';
-import type {
-  VerificationRule,
-  VerificationResult,
-  ScenarioContext,
-} from './types.js';
+import type { VerificationRule, VerificationResult, ScenarioContext } from './types.js';
 
 export interface DeterministicRule {
   type: 'deterministic';
@@ -25,23 +21,23 @@ export class HybridVerificationEngine {
     this.runtime = runtime;
   }
 
-  async verify(
-    rules: VerificationRule[],
-    context: ScenarioContext
-  ): Promise<VerificationResult[]> {
+  async verify(rules: VerificationRule[], context: ScenarioContext): Promise<VerificationResult[]> {
     const results: VerificationResult[] = [];
 
     for (const rule of rules) {
       // Always run deterministic verification first
       const deterministicResult = this.runDeterministicVerification(rule, context);
-      
+
       // Only use LLM for enhancement, not primary decision
       let enhancedResult = deterministicResult;
       if (rule.config.llmEnhancement && deterministicResult.passed) {
         try {
           enhancedResult = await this.enhanceWithLLM(rule, context, deterministicResult);
         } catch (error) {
-          logger.warn(`LLM enhancement failed for rule ${rule.id}, using deterministic result:`, error);
+          logger.warn(
+            `LLM enhancement failed for rule ${rule.id}, using deterministic result:`,
+            error
+          );
           // Deterministic result is preserved
         }
       }
@@ -57,7 +53,7 @@ export class HybridVerificationEngine {
     context: ScenarioContext
   ): VerificationResult {
     const cacheKey = `${rule.id}-${this.hashContext(context)}`;
-    
+
     // Check cache for deterministic results
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
@@ -87,11 +83,11 @@ export class HybridVerificationEngine {
       default:
         result = {
           ruleId: rule.id,
+          ruleName: rule.description || rule.id,
           passed: false,
           score: 0,
-          reasoning: `Unknown deterministic verification type: ${rule.config.deterministicType}`,
+          reason: `Unknown deterministic verification type: ${rule.config.deterministicType}`,
           evidence: [],
-          metadata: { error: 'unknown_type' },
         };
     }
 
@@ -104,82 +100,94 @@ export class HybridVerificationEngine {
     const actualCount = context.transcript.length;
     const expectedMin = rule.config.minMessages || 0;
     const expectedMax = rule.config.maxMessages || Infinity;
-    
+
     const passed = actualCount >= expectedMin && actualCount <= expectedMax;
-    
+
     return {
       ruleId: rule.id,
+      ruleName: rule.description || rule.id,
       passed,
       score: passed ? 1.0 : 0.0,
-      reasoning: `Expected ${expectedMin}-${expectedMax} messages, got ${actualCount}`,
+      reason: `Expected ${expectedMin}-${expectedMax} messages, got ${actualCount}`,
       evidence: [`Message count: ${actualCount}`],
-      metadata: { actualCount, expectedMin, expectedMax },
     };
   }
 
   private verifyResponseTime(rule: VerificationRule, context: ScenarioContext): VerificationResult {
     const maxResponseTime = rule.config.maxResponseTimeMs || 5000;
-    const responseTimes = context.transcript
-      .filter(msg => msg.responseTime)
-      .map(msg => msg.responseTime!);
-    
-    const avgResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length 
-      : 0;
-    
+    // Note: ScenarioMessage doesn't have responseTime property in current type definition
+    // Using timestamp differences as a workaround
+    const responseTimes: number[] = [];
+
+    for (let i = 1; i < context.transcript.length; i++) {
+      const timeDiff = context.transcript[i].timestamp - context.transcript[i - 1].timestamp;
+      responseTimes.push(timeDiff);
+    }
+
+    const avgResponseTime =
+      responseTimes.length > 0
+        ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+        : 0;
+
     const passed = avgResponseTime <= maxResponseTime;
-    
+
     return {
       ruleId: rule.id,
+      ruleName: rule.description || rule.id,
       passed,
       score: passed ? 1.0 : Math.max(0, 1 - (avgResponseTime - maxResponseTime) / maxResponseTime),
-      reasoning: `Average response time ${avgResponseTime}ms, max allowed ${maxResponseTime}ms`,
+      reason: `Average response time ${avgResponseTime}ms, max allowed ${maxResponseTime}ms`,
       evidence: [`Average response time: ${avgResponseTime}ms`],
-      metadata: { avgResponseTime, maxResponseTime, responseTimes },
     };
   }
 
-  private verifyKeywordPresence(rule: VerificationRule, context: ScenarioContext): VerificationResult {
+  private verifyKeywordPresence(
+    rule: VerificationRule,
+    context: ScenarioContext
+  ): VerificationResult {
     const requiredKeywords = rule.config.requiredKeywords || [];
     const forbiddenKeywords = rule.config.forbiddenKeywords || [];
-    
+
     const transcript = context.transcript
-      .map(msg => msg.content?.text || '')
+      .map((msg) => msg.content?.text || '')
       .join(' ')
       .toLowerCase();
-    
-    const missingRequired = requiredKeywords.filter(keyword => 
-      !transcript.includes(keyword.toLowerCase())
+
+    const missingRequired = requiredKeywords.filter(
+      (keyword: string) => !transcript.includes(keyword.toLowerCase())
     );
-    
-    const foundForbidden = forbiddenKeywords.filter(keyword => 
+
+    const foundForbidden = forbiddenKeywords.filter((keyword: string) =>
       transcript.includes(keyword.toLowerCase())
     );
-    
+
     const passed = missingRequired.length === 0 && foundForbidden.length === 0;
-    
+
     return {
       ruleId: rule.id,
+      ruleName: rule.description || rule.id,
       passed,
       score: passed ? 1.0 : 0.0,
-      reasoning: `Missing required: [${missingRequired.join(', ')}], Found forbidden: [${foundForbidden.join(', ')}]`,
+      reason: `Missing required: [${missingRequired.join(', ')}], Found forbidden: [${foundForbidden.join(', ')}]`,
       evidence: [
-        ...missingRequired.map(k => `Missing: ${k}`),
-        ...foundForbidden.map(k => `Forbidden: ${k}`)
+        ...missingRequired.map((k: string) => `Missing: ${k}`),
+        ...foundForbidden.map((k: string) => `Forbidden: ${k}`),
       ],
-      metadata: { missingRequired, foundForbidden },
     };
   }
 
-  private verifyActionSequence(rule: VerificationRule, context: ScenarioContext): VerificationResult {
+  private verifyActionSequence(
+    rule: VerificationRule,
+    context: ScenarioContext
+  ): VerificationResult {
     const expectedSequence = rule.config.expectedActions || [];
     const actualActions = context.transcript
-      .filter(msg => msg.actionType)
-      .map(msg => msg.actionType!);
-    
+      .filter((msg) => msg.metadata?.actionType)
+      .map((msg) => msg.metadata!.actionType);
+
     let sequenceMatch = true;
     let lastFoundIndex = -1;
-    
+
     for (const expectedAction of expectedSequence) {
       const foundIndex = actualActions.indexOf(expectedAction, lastFoundIndex + 1);
       if (foundIndex === -1) {
@@ -188,40 +196,45 @@ export class HybridVerificationEngine {
       }
       lastFoundIndex = foundIndex;
     }
-    
+
     return {
       ruleId: rule.id,
+      ruleName: rule.description || rule.id,
       passed: sequenceMatch,
       score: sequenceMatch ? 1.0 : 0.0,
-      reasoning: `Expected sequence: [${expectedSequence.join(' → ')}], Got: [${actualActions.join(' → ')}]`,
+      reason: `Expected sequence: [${expectedSequence.join(' → ')}], Got: [${actualActions.join(' → ')}]`,
       evidence: [`Action sequence: ${actualActions.join(' → ')}`],
-      metadata: { expectedSequence, actualActions, sequenceMatch },
     };
   }
 
-  private verifyErrorHandling(rule: VerificationRule, context: ScenarioContext): VerificationResult {
-    const errorMessages = context.transcript.filter(msg => 
-      msg.content?.text?.toLowerCase().includes('error') ||
-      msg.metadata?.isError
+  private verifyErrorHandling(
+    rule: VerificationRule,
+    context: ScenarioContext
+  ): VerificationResult {
+    const errorMessages = context.transcript.filter(
+      (msg) => msg.content?.text?.toLowerCase().includes('error') || msg.metadata?.isError
     );
-    
+
     const expectedErrorCount = rule.config.expectedErrors || 0;
     const maxAllowedErrors = rule.config.maxAllowedErrors || 0;
-    
+
     const actualErrorCount = errorMessages.length;
     const passed = actualErrorCount >= expectedErrorCount && actualErrorCount <= maxAllowedErrors;
-    
+
     return {
       ruleId: rule.id,
+      ruleName: rule.description || rule.id,
       passed,
       score: passed ? 1.0 : 0.0,
-      reasoning: `Expected ${expectedErrorCount} errors (max ${maxAllowedErrors}), found ${actualErrorCount}`,
-      evidence: errorMessages.map(msg => `Error: ${msg.content?.text}`),
-      metadata: { expectedErrorCount, maxAllowedErrors, actualErrorCount },
+      reason: `Expected ${expectedErrorCount} errors (max ${maxAllowedErrors}), found ${actualErrorCount}`,
+      evidence: errorMessages.map((msg) => `Error: ${msg.content?.text}`),
     };
   }
 
-  private verifySecurityCompliance(rule: VerificationRule, context: ScenarioContext): VerificationResult {
+  private verifySecurityCompliance(
+    rule: VerificationRule,
+    context: ScenarioContext
+  ): VerificationResult {
     const sensitivePatterns = rule.config.sensitivePatterns || [
       /api[_-]?key/i,
       /password/i,
@@ -229,9 +242,9 @@ export class HybridVerificationEngine {
       /token/i,
       /\b[A-Za-z0-9]{20,}\b/, // Long alphanumeric strings (potential secrets)
     ];
-    
+
     const violations: string[] = [];
-    
+
     for (const msg of context.transcript) {
       const text = msg.content?.text || '';
       for (const pattern of sensitivePatterns) {
@@ -240,16 +253,18 @@ export class HybridVerificationEngine {
         }
       }
     }
-    
+
     const passed = violations.length === 0;
-    
+
     return {
       ruleId: rule.id,
+      ruleName: rule.description || rule.id,
       passed,
       score: passed ? 1.0 : Math.max(0, 1 - violations.length * 0.2),
-      reasoning: passed ? 'No security violations detected' : `Found ${violations.length} potential violations`,
+      reason: passed
+        ? 'No security violations detected'
+        : `Found ${violations.length} potential violations`,
       evidence: violations,
-      metadata: { violationCount: violations.length },
     };
   }
 
@@ -264,14 +279,14 @@ export class HybridVerificationEngine {
     }
 
     const transcript = this.formatTranscript(context.transcript);
-    
+
     const prompt = `You are enhancing a test result with additional insights. The test already PASSED deterministically.
 
 DETERMINISTIC RESULT:
 - Rule: ${rule.description}
 - Status: PASSED
 - Score: ${deterministicResult.score}
-- Reasoning: ${deterministicResult.reasoning}
+- Reasoning: ${deterministicResult.reason}
 
 TRANSCRIPT:
 ${transcript}
@@ -284,25 +299,23 @@ QUALITY_INDICATORS: [List of positive observations]
 IMPROVEMENT_SUGGESTIONS: [Optional suggestions for even better performance]`;
 
     try {
-      const response = await this.runtime.generateText({
+      const { ModelType } = await import('@elizaos/core');
+      const response = (await this.runtime.useModel(ModelType.TEXT_LARGE, {
         prompt,
         temperature: 0.2,
         maxTokens: 300,
-      });
+      })) as string;
 
-      const enhancedReasoning = this.extractSection(response, 'ENHANCED_REASONING') || deterministicResult.reasoning;
-      const qualityIndicators = this.extractSection(response, 'QUALITY_INDICATORS')?.split('\n') || [];
-      const improvements = this.extractSection(response, 'IMPROVEMENT_SUGGESTIONS');
+      const enhancedReasoning =
+        this.extractSection(response, 'ENHANCED_REASONING') || deterministicResult.reason;
+      const qualityIndicators =
+        this.extractSection(response, 'QUALITY_INDICATORS')?.split('\n') || [];
+      // const _improvements = this.extractSection(response, 'IMPROVEMENT_SUGGESTIONS');
 
       return {
         ...deterministicResult,
-        reasoning: enhancedReasoning,
-        evidence: [...deterministicResult.evidence, ...qualityIndicators],
-        metadata: {
-          ...deterministicResult.metadata,
-          llmEnhanced: true,
-          improvements,
-        },
+        reason: enhancedReasoning,
+        evidence: [...(deterministicResult.evidence || []), ...qualityIndicators],
       };
     } catch (error) {
       logger.warn(`LLM enhancement failed: ${error}`);
@@ -324,7 +337,7 @@ IMPROVEMENT_SUGGESTIONS: [Optional suggestions for even better performance]`;
 
   private hashContext(context: ScenarioContext): string {
     // Simple hash of context for caching
-    const content = context.transcript.map(m => m.content?.text).join('');
+    const content = context.transcript.map((m) => m.content?.text).join('');
     return Buffer.from(content).toString('base64').substring(0, 10);
   }
 }

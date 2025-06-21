@@ -6,6 +6,7 @@ import { runAllTests } from './actions/run-all-tests';
 import { runComponentTests } from './actions/component-tests';
 import { runE2eTests } from './actions/e2e-tests';
 import { runCypressTests } from './actions/cypress-tests';
+import { runScenarioTests } from './actions/scenario-tests';
 import { TestCommandOptions } from './types';
 import { getProjectType, installPluginDependencies } from './utils/project-utils';
 
@@ -16,7 +17,7 @@ export const test = new Command()
   .argument('[path]', 'Optional path to the project or plugin to test')
   .addOption(
     new Option('-t, --type <type>', 'the type of test to run')
-      .choices(['component', 'e2e', 'cypress', 'all'])
+      .choices(['component', 'e2e', 'cypress', 'scenario', 'all'])
       .default('all')
   )
   .option('-p, --port <port>', 'the port to run e2e tests on', validatePort)
@@ -66,6 +67,16 @@ export const test = new Command()
           logger.success('Cypress tests passed successfully!');
           break;
 
+        case 'scenario':
+          logger.info('Running scenario tests only...');
+          const scenarioResult = await runScenarioTests(testPath, options);
+          if (scenarioResult.failed) {
+            logger.error('Scenario tests failed.');
+            process.exit(1);
+          }
+          logger.success('Scenario tests passed successfully!');
+          break;
+
         case 'all':
         default:
           logger.info('Running all tests...');
@@ -89,18 +100,18 @@ test
   .option('-n, --name <n>', 'Filter tests by name (matches file names or test suite names)')
   .option('--skip-build', 'Skip building before running tests');
 
-// This is the function that registers the command with the CLI
-export default function registerCommand(cli: Command) {
-  return cli.addCommand(test);
-}
+// Export the command as default
+export default test;
 
 // Re-export for backward compatibility
 export * from './actions/component-tests';
 export * from './actions/e2e-tests';
 export * from './actions/run-all-tests';
 export * from './actions/cypress-tests';
+export * from './actions/scenario-tests';
 export * from './types';
 export * from './utils/project-utils';
 export * from './utils/port-utils';
 export * from './utils/plugin-utils';
 export * from './utils/server-utils';
+export * from './utils/agent-utils';

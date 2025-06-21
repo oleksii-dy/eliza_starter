@@ -1,6 +1,6 @@
-import path from 'node:path';
+// import path from 'node:path'; // Available for path operations if needed
 
-export function createVitestConfig(targetPath: string, pluginName?: string): any {
+export function createVitestConfig(_targetPath: string, pluginName?: string): any {
   const config: any = {
     test: {
       globals: true,
