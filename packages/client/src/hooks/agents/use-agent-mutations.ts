@@ -76,20 +76,36 @@ export function useDeleteAgent() {
  */
 export function useStartAgent() {
   const queryClient = useQueryClient();
-  const { showToast } = useToast();
+  const { toast } = useToast();
 
-  return useMutation({
-    mutationFn: async (agentId: UUID) => {
-      return elizaClient.agents.startAgent(agentId);
+  return useMutation<{ data: { id: string; name: string; pid?: number } }, Error, string>({
+    mutationFn: async (agentId: string) => {
+      const response = await elizaClient.agents.startAgent(agentId);
+      return { data: response };
     },
-    onSuccess: (data, agentId) => {
+    onMutate: async (_agentId) => {
+      toast({
+        title: 'Starting Agent',
+        description: 'Initializing agent...',
+      });
+      return {};
+    },
+    onSuccess: (response, agentId) => {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
       queryClient.invalidateQueries({ queryKey: ['agent', agentId] });
-      showToast('Agent started successfully', 'success');
+
+      toast({
+        title: 'Agent Started',
+        description: `${response?.data?.name || 'Agent'} is now running`,
+      });
     },
     onError: (error) => {
-      clientLogger.error('Failed to start agent:', error);
-      showToast('Failed to start agent', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start agent';
+      toast({
+        title: 'Error Starting Agent',
+        description: `${errorMessage}. Please try again.`,
+        variant: 'destructive',
+      });
     },
   });
 }
@@ -99,20 +115,40 @@ export function useStartAgent() {
  */
 export function useStopAgent() {
   const queryClient = useQueryClient();
-  const { showToast } = useToast();
+  const { toast } = useToast();
 
-  return useMutation({
-    mutationFn: async (agentId: UUID) => {
-      return elizaClient.agents.stopAgent(agentId);
+  return useMutation<{ data: { message: string } }, Error, string>({
+    mutationFn: async (agentId: string) => {
+      const response = await elizaClient.agents.stopAgent(agentId);
+      return { data: { message: response.message || 'Agent stopped' } };
     },
-    onSuccess: (data, agentId) => {
+    onMutate: async (agentId) => {
+      const agent = queryClient.getQueryData<Agent>(['agent', agentId]);
+      if (agent) {
+        toast({
+          title: 'Stopping Agent',
+          description: `Stopping ${agent.name}...`,
+        });
+      }
+    },
+    onSuccess: (response, agentId) => {
       queryClient.invalidateQueries({ queryKey: ['agents'] });
       queryClient.invalidateQueries({ queryKey: ['agent', agentId] });
-      showToast('Agent stopped successfully', 'success');
+
+      toast({
+        title: 'Agent Stopped',
+        description: response?.data?.message || 'The agent has been successfully stopped',
+      });
     },
-    onError: (error) => {
-      clientLogger.error('Failed to stop agent:', error);
-      showToast('Failed to stop agent', 'error');
+    onError: (error, agentId) => {
+      queryClient.invalidateQueries({ queryKey: ['agents'] });
+      queryClient.invalidateQueries({ queryKey: ['agent', agentId] });
+
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to stop agent',
+        variant: 'destructive',
+      });
     },
   });
 }

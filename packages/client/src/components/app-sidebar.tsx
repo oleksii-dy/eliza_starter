@@ -15,11 +15,8 @@ import {
 import ConfirmationDialog from '@/components/confirmation-dialog';
 import { useConfirmation } from '@/hooks/use-confirmation';
 
-import {
-  useAgentsWithDetails, // New hook
-  useChannels,
-  useServers, // New hook
-} from '@/hooks/use-query-hooks';
+import { useAgentsWithDetails } from '@/hooks/agents';
+import { useServers, useChannels, useDeleteChannel } from '@/hooks/messaging';
 import info from '@/lib/info.json';
 import { cn, generateGroupName, getAgentAvatar, getEntityId } from '@/lib/utils';
 import type {
@@ -32,8 +29,6 @@ import {
   type Agent,
   type UUID,
 } from '@elizaos/core';
-
-import { useDeleteChannel } from '@/hooks/use-query-hooks';
 import clientLogger from '@/lib/logger'; // Added import
 import { useQueryClient } from '@tanstack/react-query'; // Import useQueryClient
 import { Book, Cog, Hash, Plus, TerminalIcon, Trash2, Users } from 'lucide-react'; // Added Users icon for groups and Hash for channels

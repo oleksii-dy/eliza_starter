@@ -71,6 +71,13 @@ export function useDeleteMessage() {
 }
 
 /**
+ * Hook to delete a channel message
+ */
+export function useDeleteChannelMessage() {
+  return useDeleteMessage();
+}
+
+/**
  * Hook to update a message
  */
 export function useUpdateMessage() {
@@ -128,4 +135,18 @@ export function useClearChannelHistory() {
       showToast('Failed to clear channel history', 'error');
     },
   });
+}
+
+/**
+ * Alias for useClearChannelHistory
+ */
+export function useClearChannelMessages() {
+  return useClearChannelHistory();
+}
+
+/**
+ * Hook to clear group chat
+ */
+export function useClearGroupChat() {
+  return useClearChannelHistory();
 }

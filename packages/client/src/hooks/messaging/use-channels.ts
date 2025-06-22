@@ -14,15 +14,16 @@ import clientLogger from '@/lib/logger';
 /**
  * Hook to fetch channels for a server
  */
-export function useServerChannels(
+export function useChannels(
   serverId: UUID | undefined,
-  options?: Omit<UseQueryOptions<{ channels: MessageChannel[] }>, 'queryKey' | 'queryFn'>
+  options: Partial<UseQueryOptions<{ channels: MessageChannel[] }>> = {}
 ) {
   return useQuery({
     queryKey: ['server-channels', serverId],
     queryFn: async () => {
-      if (!serverId) throw new Error('Server ID is required');
-      return elizaClient.messaging.getServerChannels(serverId);
+      if (!serverId) return { channels: [] };
+      const response = await elizaClient.messaging.getServerChannels(serverId);
+      return response;
     },
     enabled: !!serverId,
     staleTime: STALE_TIMES.STANDARD,
@@ -31,17 +32,48 @@ export function useServerChannels(
 }
 
 /**
+ * Alias for useChannels for compatibility
+ */
+export const useServerChannels = useChannels;
+
+/**
  * Hook to get channel details
  */
-export function useChannel(
+export function useChannelDetails(
   channelId: UUID | undefined,
-  options?: Omit<UseQueryOptions<MessageChannel>, 'queryKey' | 'queryFn'>
+  options: Partial<UseQueryOptions<MessageChannel | null>> = {}
 ) {
   return useQuery({
     queryKey: ['channel', channelId],
     queryFn: async () => {
-      if (!channelId) throw new Error('Channel ID is required');
-      return elizaClient.messaging.getChannelDetails(channelId);
+      if (!channelId) return null;
+      const response = await elizaClient.messaging.getChannelDetails(channelId);
+      return response;
+    },
+    enabled: !!channelId,
+    staleTime: STALE_TIMES.STANDARD,
+    ...options,
+  });
+}
+
+/**
+ * Alias for useChannelDetails
+ */
+export const useChannel = useChannelDetails;
+
+/**
+ * Hook to get channel participants
+ */
+export function useChannelParticipants(
+  channelId: UUID | undefined,
+  options: Partial<UseQueryOptions<{ participants: any[] }>> = {}
+) {
+  return useQuery({
+    queryKey: ['channel-participants', channelId],
+    queryFn: async () => {
+      if (!channelId) return { participants: [] };
+      // TODO: Implement when API endpoint is available
+      return { participants: [] };
     },
     enabled: !!channelId,
     staleTime: STALE_TIMES.STANDARD,

@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useUpdateMemory, useDeleteMemory } from '@/hooks/use-query-hooks';
+import { useUpdateMemory, useDeleteMemory } from '@/hooks/memory';
 import type { Memory, UUID } from '@elizaos/core';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';

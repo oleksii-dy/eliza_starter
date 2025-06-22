@@ -14,6 +14,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ConnectionProvider, useConnection } from './context/ConnectionContext';
 import { STALE_TIMES } from './hooks/constants';
 import useVersion from './hooks/use-version';
+import { elizaClient } from './lib/eliza-client';
 import './index.css';
 import Chat from './routes/chat';
 import AgentCreatorRoute from './routes/createAgent';
@@ -57,7 +58,7 @@ const prefetchInitialData = async () => {
     // Prefetch agents (real-time data so shorter stale time)
     await queryClient.prefetchQuery({
       queryKey: ['agents'],
-      queryFn: () => apiClient.getAgents(),
+      queryFn: () => elizaClient.agents.listAgents(),
       staleTime: STALE_TIMES.FREQUENT,
     });
   } catch (error) {

@@ -1,7 +1,8 @@
 import { ChannelType } from '@elizaos/core';
 import { Separator } from '@/components/ui/separator';
 import { GROUP_CHAT_SOURCE } from '@/constants';
-import { useAgentsWithDetails, useChannels } from '@/hooks/use-query-hooks';
+import { useAgentsWithDetails } from '@/hooks/agents';
+import { useChannels } from '@/hooks/messaging';
 import { apiClient } from '@/lib/api';
 import { type Agent, AgentStatus, type UUID, validateUuid } from '@elizaos/core';
 import { useQueryClient, useQuery, useMutation, type UseQueryResult } from '@tanstack/react-query';

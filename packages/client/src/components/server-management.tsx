@@ -17,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useAgents, useServers } from '@/hooks/use-query-hooks';
+import { useAgents } from '@/hooks/agents';
+import { useServers } from '@/hooks/messaging';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/api';
 import type { UUID } from '@elizaos/core';

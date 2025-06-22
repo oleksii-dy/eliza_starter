@@ -19,16 +19,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { SplitButton, type SplitButtonAction } from '@/components/ui/split-button';
 import { CHAT_SOURCE, GROUP_CHAT_SOURCE, USER_NAME } from '@/constants';
 import { useFileUpload } from '@/hooks/use-file-upload';
-import {
-  useAgent,
-  useAgentsWithDetails,
-  useChannelDetails,
-  useChannelMessages,
-  useChannelParticipants,
-  useClearChannelMessages,
-  useDeleteChannelMessage,
-  type UiMessage,
-} from '@/hooks/use-query-hooks';
+import { useAgent, useAgentsWithDetails } from '@/hooks/agents';
+import { useChannelDetails, useChannelMessages, useChannelParticipants, useClearChannelMessages, useDeleteChannelMessage } from '@/hooks/messaging';
+import type { UiMessage } from '@/hooks/messaging/use-channel-messages';
 import { useSocketChat } from '@/hooks/use-socket-chat';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/api';

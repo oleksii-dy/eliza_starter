@@ -1,6 +1,7 @@
 import PageTitle from '@/components/page-title';
 import ProfileOverlay from '@/components/profile-overlay';
-import { useAgentsWithDetails, useChannels, useServers } from '@/hooks/use-query-hooks';
+import { useAgentsWithDetails } from '@/hooks/agents';
+import { useChannels, useServers } from '@/hooks/messaging';
 import { getEntityId } from '@/lib/utils';
 import { type Agent, type UUID, ChannelType as CoreChannelType } from '@elizaos/core';
 import { Plus } from 'lucide-react';

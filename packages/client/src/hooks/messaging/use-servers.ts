@@ -8,11 +8,12 @@ import clientLogger from '@/lib/logger';
 /**
  * Hook to fetch all message servers
  */
-export function useServers(options?: Omit<UseQueryOptions<{ servers: MessageServer[] }>, 'queryKey' | 'queryFn'>) {
+export function useServers(options: Partial<UseQueryOptions<{ servers: MessageServer[] }>> = {}) {
   return useQuery({
     queryKey: ['servers'],
     queryFn: async () => {
-      return elizaClient.messaging.listServers();
+      const response = await elizaClient.messaging.listServers();
+      return response;
     },
     staleTime: STALE_TIMES.STANDARD,
     ...options,

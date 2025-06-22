@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAgents } from '@/hooks/use-query-hooks';
+import { useAgents } from '@/hooks/agents';
 import type { Agent } from '@elizaos/core';
 
 const AgentList: React.FC = () => {

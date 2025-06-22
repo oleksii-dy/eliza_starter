@@ -1,7 +1,7 @@
 import ChatComponent from '@/components/chat';
 import { Button } from '@/components/ui/button';
 import { useAgentManagement } from '@/hooks/use-agent-management';
-import { useAgent } from '@/hooks/use-query-hooks';
+import { useAgent } from '@/hooks/agents';
 import clientLogger from '@/lib/logger';
 import {
   type Agent,

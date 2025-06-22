@@ -17,7 +17,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAgentActions, useDeleteLog } from '@/hooks/use-query-hooks';
+import { useAgentActions, useDeleteLog } from '@/hooks/agents';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {

@@ -1,7 +1,8 @@
 import type { Memory, UUID } from '@elizaos/core';
 import { Database, LoaderIcon, Pencil, Search, Brain, User, Bot, Clock, Copy } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAgentMemories, useAgents } from '@/hooks/use-query-hooks';
+import { useAgentMemories } from '@/hooks/memory';
+import { useAgents } from '@/hooks/agents';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
