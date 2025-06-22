@@ -1,12 +1,12 @@
-import { describe, expect, it, mock } from 'bun:test';
+import { describe, expect, it, vi } from 'vitest';
 import { ProviderResult } from '../../v2';
 import { fromV2Provider, Provider, toV2Provider } from '../provider';
 import { fromV2State } from '../state';
 
 // Mock runtime and memory for testing
 const mockRuntime = {
-  getSetting: mock().mockReturnValue('test-setting'),
-  logger: { info: mock(), error: mock() },
+  getSetting: vi.fn().mockReturnValue('test-setting'),
+  logger: { info: vi.fn(), error: vi.fn() },
 } as any;
 
 const mockMessage = {
@@ -27,7 +27,7 @@ describe('Provider adapter', () => {
     const providerV2 = {
       name: 'testProvider',
       description: 'Test provider description',
-      get: mock().mockResolvedValue(mockResult),
+      get: vi.fn().mockResolvedValue(mockResult),
     };
 
     // Act
@@ -52,7 +52,7 @@ describe('Provider adapter', () => {
     const providerV1: Provider = {
       name: 'v1Provider',
       description: 'V1 provider test',
-      get: mock().mockResolvedValue(mockResult),
+      get: vi.fn().mockResolvedValue(mockResult),
     };
 
     // Act
@@ -82,7 +82,7 @@ describe('Provider adapter', () => {
   it('should handle unnamed v1 providers properly', async () => {
     // Arrange
     const unnamedProvider: Provider = {
-      get: mock().mockResolvedValue({ text: 'result' }),
+      get: vi.fn().mockResolvedValue({ text: 'result' }),
     };
 
     // Act
@@ -108,7 +108,7 @@ describe('Provider adapter', () => {
 
     const mockV2Provider = {
       name: 'stateTestProvider',
-      get: mock().mockResolvedValue({ text: 'result' }),
+      get: vi.fn().mockResolvedValue({ text: 'result' }),
     };
 
     // Act
@@ -134,7 +134,7 @@ describe('Provider adapter', () => {
     // Example based on TON wallet provider from plugin-ton
     const mockTonWalletProviderV1: Provider = {
       name: 'tonWalletProvider',
-      get: mock().mockResolvedValue({
+      get: vi.fn().mockResolvedValue({
         text: 'You have 10.5 TON in your wallet.',
         walletAddress: '0x123abc',
         walletBalance: 10.5,
@@ -173,12 +173,12 @@ describe('Provider adapter', () => {
     // Arrange
     const stringProvider: Provider = {
       name: 'stringProvider',
-      get: mock().mockResolvedValue('Just a string result'),
+      get: vi.fn().mockResolvedValue('Just a string result'),
     };
 
     const numberProvider: Provider = {
       name: 'numberProvider',
-      get: mock().mockResolvedValue(42),
+      get: vi.fn().mockResolvedValue(42),
     };
 
     // Act
@@ -214,12 +214,12 @@ describe('Provider adapter', () => {
     // Arrange
     const nullProvider: Provider = {
       name: 'nullProvider',
-      get: mock().mockResolvedValue(null),
+      get: vi.fn().mockResolvedValue(null),
     };
 
     const undefinedProvider: Provider = {
       name: 'undefinedProvider',
-      get: mock().mockResolvedValue(undefined),
+      get: vi.fn().mockResolvedValue(undefined),
     };
 
     // Act

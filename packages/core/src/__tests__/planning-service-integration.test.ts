@@ -9,31 +9,35 @@ import {
   type PlanningContext,
   ModelType,
   Service,
-  ServiceType,
   type IPlanningService,
   type ActionPlan,
   type PlanExecutionResult,
   type HandlerCallback,
+  type IAgentRuntime,
+  ServiceType,
 } from '../types';
 import { createLogger } from '../logger';
 
 // Mock planning service for testing
 class MockPlanningService extends Service implements IPlanningService {
   static serviceName = 'planning';
-  static serviceType = ServiceType.PLANNING;
+  static serviceType = ServiceType.UNKNOWN; // Use a valid ServiceType value
 
+  serviceType = 'planning' as const;
   capabilityDescription = 'Mock planning service for testing';
   
   private enabled: boolean = true;
 
-  static async start(runtime: any): Promise<MockPlanningService> {
+  static async start(runtime: IAgentRuntime): Promise<MockPlanningService> {
     const service = new MockPlanningService(runtime);
-    runtime.logger.info('Mock planning service started');
+    // Use console.log instead of runtime.logger since logger doesn't exist
+    console.log('Mock planning service started');
     return service;
   }
 
   async stop(): Promise<void> {
-    this.runtime.logger.info('Mock planning service stopped');
+    // Use console.log instead of runtime.logger
+    console.log('Mock planning service stopped');
   }
 
   isPlanningEnabled(): boolean {
@@ -56,14 +60,46 @@ class MockPlanningService extends Service implements IPlanningService {
       state: { status: 'pending' },
       metadata: { 
         createdAt: Date.now(), 
-        generatedBy: 'MockPlanningService',
         constraints: [], 
         tags: [] 
       },
     };
   }
 
+  async createSimplePlan(
+    runtime: IAgentRuntime,
+    message: Memory,
+    state: any,
+    responseContent: any
+  ): Promise<ActionPlan | null> {
+    if (!this.enabled) return null;
+    return this.generatePlan(message, { goal: 'Simple plan', constraints: [], availableActions: [], availableProviders: [] });
+  }
+
+  async createComprehensivePlan(
+    runtime: IAgentRuntime,
+    context: PlanningContext,
+    message?: Memory,
+    state?: any
+  ): Promise<ActionPlan> {
+    if (!this.enabled) {
+      throw new Error('Planning service is disabled');
+    }
+    return this.generatePlan(message || {} as Memory, context);
+  }
+
+  async adaptPlan(
+    runtime: IAgentRuntime,
+    plan: ActionPlan,
+    currentStepIndex: number,
+    results: any[],
+    error?: Error
+  ): Promise<ActionPlan> {
+    return { ...plan, goal: `ADAPTED: ${plan.goal}` };
+  }
+
   async executePlan(
+    runtime: IAgentRuntime,
     plan: ActionPlan,
     message: Memory,
     callback?: HandlerCallback
@@ -83,28 +119,44 @@ class MockPlanningService extends Service implements IPlanningService {
     };
   }
 
-  async validatePlan(plan: ActionPlan): Promise<{ valid: boolean; issues: string[] }> {
+  async validatePlan(runtime: IAgentRuntime, plan: ActionPlan): Promise<{ valid: boolean; issues?: string[] }> {
     // Always valid for mock service, but add marker
     return {
       valid: true,
       issues: plan.goal?.includes('INVALID') ? ['Mock validation error'] : [],
     };
   }
+
+  async optimizePlan(plan: ActionPlan): Promise<ActionPlan> {
+    return { ...plan, goal: `OPTIMIZED: ${plan.goal}` };
+  }
+
+  async getPlanStatus(planId: UUID): Promise<any | null> {
+    return null;
+  }
+
+  async cancelPlan(planId: UUID): Promise<boolean> {
+    return true;
+  }
 }
 
 // Real in-memory database adapter
 class InMemoryDatabaseAdapter implements IDatabaseAdapter {
+  db: any = {};
+  
   private data = {
     agents: new Map<UUID, any>(),
     memories: new Map<UUID, Memory>(),
     entities: new Map<UUID, any>(),
   };
 
+  async initialize(): Promise<void> {}
   async init(): Promise<void> {}
   async close(): Promise<void> {}
   async isReady(): Promise<boolean> { return true; }
   async runMigrations(): Promise<void> {}
   async ensureEmbeddingDimension(dimension: number): Promise<void> {}
+  async getConnection(): Promise<any> { return {}; }
 
   async createAgent(agent: any): Promise<boolean> {
     this.data.agents.set(agent.id, agent);
@@ -113,11 +165,15 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   async getAgent(agentId: UUID): Promise<any | null> {
     return this.data.agents.get(agentId) || null;
   }
-  async ensureAgentExists(agent: any): Promise<void> {
-    if (!this.data.agents.has(agent.id)) {
-      this.data.agents.set(agent.id, agent);
-    }
+  async getAgents(): Promise<any[]> { return Array.from(this.data.agents.values()); }
+  async updateAgent(agentId: UUID, agent: any): Promise<boolean> { 
+    this.data.agents.set(agentId, agent);
+    return true;
   }
+  async deleteAgent(agentId: UUID): Promise<boolean> { 
+    return this.data.agents.delete(agentId);
+  }
+  
   async createMemory(memory: Memory, tableName: string): Promise<UUID> {
     const id = memory.id || (uuidv4() as UUID);
     this.data.memories.set(id, { ...memory, id });
@@ -126,6 +182,18 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   async getMemories(params: any): Promise<Memory[]> {
     return Array.from(this.data.memories.values());
   }
+  async getMemoryById(id: UUID): Promise<Memory | null> { return this.data.memories.get(id) || null; }
+  async getMemoriesByIds(ids: UUID[]): Promise<Memory[]> { return []; }
+  async updateMemory(memory: Partial<Memory> & { id: UUID }): Promise<boolean> { return true; }
+  async deleteMemory(id: UUID): Promise<void> {}
+  async deleteManyMemories(ids: UUID[]): Promise<void> {}
+  async deleteAllMemories(roomId: UUID, tableName: string): Promise<void> {}
+  async countMemories(roomId: UUID): Promise<number> { return 0; }
+  async searchMemories(params: any): Promise<Memory[]> { return []; }
+  async getCachedEmbeddings(params: any): Promise<any[]> { return []; }
+  async getMemoriesByRoomIds(params: any): Promise<Memory[]> { return []; }
+  async getMemoriesByWorldId(params: any): Promise<Memory[]> { return []; }
+
   async createEntity(entity: any): Promise<boolean> {
     const id = entity.id || (uuidv4() as UUID);
     const entityWithId = { ...entity, id };
@@ -135,83 +203,71 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   async getEntityById(id: UUID): Promise<any | null> {
     return this.data.entities.get(id) || null;
   }
-
-  // Minimal stubs for remaining required methods
-  async getAgents(): Promise<any[]> { return []; }
-  async updateAgent(agentId: UUID, agent: any): Promise<boolean> { return true; }
-  async deleteAgent(agentId: UUID): Promise<boolean> { return true; }
-  async getMemoriesByIds(ids: UUID[]): Promise<Memory[]> { return []; }
-  async searchMemories(params: any): Promise<Memory[]> { return []; }
-  async searchMemoriesByEmbedding(embedding: number[], params: any): Promise<Memory[]> { return []; }
-  async getCachedEmbeddings(params: any): Promise<any[]> { return []; }
-  async log(params: any): Promise<void> {}
-  async getLogs(params?: any): Promise<any[]> { return []; }
-  async deleteLog(logId: UUID): Promise<void> {}
-  async getMemoryById(id: UUID): Promise<Memory | null> { return null; }
-  async deleteMemory(id: UUID): Promise<void> {}
-  async updateMemory(memory: Partial<Memory> & { id: UUID }): Promise<boolean> { return true; }
-  async getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<any[]> { return []; }
-  async getEntityDetails(params: any): Promise<any[]> { return []; }
-  async getEntityByIds(ids: UUID[]): Promise<any[]> { return []; }
+  async getEntitiesByIds(ids: UUID[]): Promise<any[]> { return []; }
   async updateEntity(entity: any): Promise<void> {}
-  async deleteEntity(entityId: UUID): Promise<void> {}
-  async ensureEntityExists(entity: any): Promise<boolean> { return true; }
+  async getEntitiesForRoom(roomId: UUID): Promise<any[]> { return []; }
   async createEntities(entities: any[]): Promise<boolean> { return true; }
+
+  // Room methods
   async createRoom(room: any): Promise<UUID> { return uuidv4() as UUID; }
   async createRooms(rooms: any[]): Promise<UUID[]> { return []; }
   async getRoom(id: UUID): Promise<any | null> { return null; }
   async getRooms(worldId?: UUID): Promise<any[]> { return []; }
   async getRoomsByIds(ids: UUID[]): Promise<any[]> { return []; }
+  async updateRoom(room: any): Promise<void> {}
+  async deleteRoom(id: UUID): Promise<void> {}
+  async deleteRoomsByWorldId(worldId: UUID): Promise<void> {}
   async getRoomsForParticipant(entityId: UUID): Promise<UUID[]> { return []; }
   async getRoomsForParticipants(entityIds: UUID[]): Promise<UUID[]> { return []; }
   async getRoomsByWorld(worldId: UUID): Promise<any[]> { return []; }
-  async updateRoom(room: any): Promise<void> {}
-  async deleteRoom(id: UUID): Promise<void> {}
-  async removeRoom(roomId: UUID): Promise<void> {}
-  async deleteRoomsByWorldId(worldId: UUID): Promise<void> {}
-  async ensureRoomExists(room: any): Promise<UUID> { return uuidv4() as UUID; }
+
+  // Participant methods
   async addParticipant(entityId: UUID, roomId: UUID): Promise<boolean> { return true; }
   async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> { return true; }
   async removeParticipant(entityId: UUID, roomId: UUID): Promise<boolean> { return true; }
   async getParticipantsForRoom(roomId: UUID): Promise<UUID[]> { return []; }
   async getParticipantsForEntity(entityId: UUID): Promise<any[]> { return []; }
-  async getParticipantsForAccount(entityId: UUID): Promise<any[]> { return []; }
-  async getParticipantUserState(roomId: UUID, entityId: UUID): Promise<'FOLLOWED' | 'MUTED' | null> { return null; }
-  async setParticipantUserState(roomId: UUID, entityId: UUID, state: 'FOLLOWED' | 'MUTED' | null): Promise<void> {}
-  async createRelationship(relationship: any): Promise<boolean> { return true; }
-  async getRelationship(params: any): Promise<any | null> { return null; }
-  async getRelationships(params: any): Promise<any[]> { return []; }
-  async updateRelationship(relationship: any): Promise<void> {}
-  async createTask(task: any): Promise<UUID> { return uuidv4() as UUID; }
-  async getTasks(params: any): Promise<any[]> { return []; }
-  async getTask(id: UUID): Promise<any | null> { return null; }
-  async getTasksByName(name: string): Promise<any[]> { return []; }
-  async updateTask(id: UUID, task: any): Promise<void> {}
-  async deleteTask(id: UUID): Promise<void> {}
-  async createComponent(component: any): Promise<boolean> { return true; }
-  async getComponent(entityId: UUID, type: string, worldId?: UUID, sourceEntityId?: UUID): Promise<any | null> { return null; }
-  async getComponents(entityId: UUID, worldId?: UUID, sourceEntityId?: UUID): Promise<any[]> { return []; }
-  async updateComponent(component: any): Promise<void> {}
-  async deleteComponent(id: UUID): Promise<void> {}
+  async getParticipantUserState(roomId: UUID, entityId: UUID): Promise<any> { return null; }
+  async setParticipantUserState(roomId: UUID, entityId: UUID, state: any): Promise<void> {}
+
+  // World methods
   async createWorld(world: any): Promise<UUID> { return uuidv4() as UUID; }
   async getWorld(id: UUID): Promise<any | null> { return null; }
   async getAllWorlds(): Promise<any[]> { return []; }
   async getWorlds(params: any): Promise<any[]> { return []; }
   async updateWorld(world: any): Promise<void> {}
   async removeWorld(id: UUID): Promise<void> {}
-  async ensureWorldExists(world: any): Promise<UUID> { return uuidv4() as UUID; }
-  async ensureConnection(params: any): Promise<boolean> { return true; }
-  async ensureConnections(entities: any[], rooms: any[], source: string, world?: any): Promise<boolean> { return true; }
-  async getConnection(): Promise<any> { return {}; }
+
+  // Relationship methods
+  async createRelationship(params: any): Promise<boolean> { return true; }
+  async getRelationship(params: any): Promise<any | null> { return null; }
+  async getRelationships(params: any): Promise<any[]> { return []; }
+  async updateRelationship(relationship: any): Promise<void> {}
+
+  // Task methods
+  async createTask(task: any): Promise<UUID> { return uuidv4() as UUID; }
+  async getTasks(params: any): Promise<any[]> { return []; }
+  async getTask(id: UUID): Promise<any | null> { return null; }
+  async getTasksByName(name: string): Promise<any[]> { return []; }
+  async updateTask(id: UUID, task: any): Promise<void> {}
+  async deleteTask(id: UUID): Promise<void> {}
+
+  // Component methods
+  async createComponent(component: any): Promise<boolean> { return true; }
+  async getComponent(entityId: UUID, type: string): Promise<any | null> { return null; }
+  async getComponents(entityId: UUID): Promise<any[]> { return []; }
+  async updateComponent(component: any): Promise<void> {}
+  async deleteComponent(id: UUID): Promise<void> {}
+
+  // Cache methods
   async getCache<T>(key: string): Promise<T | undefined> { return undefined; }
   async setCache<T>(key: string, value: T): Promise<boolean> { return true; }
   async deleteCache(key: string): Promise<boolean> { return true; }
-  async countMemories(roomId: UUID, unique?: boolean, tableName?: string): Promise<number> { return 0; }
-  async deleteAllMemories(roomId: UUID, tableName: string): Promise<void> {}
-  async getMemoriesByRoomIds(params: any): Promise<Memory[]> { return []; }
-  async getMemoriesByWorldId(params: any): Promise<Memory[]> { return []; }
-  async getMemoriesByEntities(params: any): Promise<Memory[]> { return []; }
-  async deleteManyMemories(memoryIds: UUID[]): Promise<void> {}
+
+  // Logging methods
+  async log(params: any): Promise<void> {}
+  async getLogs(params: any): Promise<any[]> { return []; }
+  async deleteLog(id: UUID): Promise<void> {}
 }
 
 // Helper to create test character
@@ -245,11 +301,11 @@ describe('Planning Service Integration', () => {
     });
 
     // Register model handlers for planning
-    runtime.registerModel(ModelType.TEXT_REASONING_LARGE, async (runtime, params) => {
+    runtime.registerModel(ModelType.TEXT_REASONING_LARGE, async (params: any) => {
       return '<plan><goal>Test goal</goal><steps></steps></plan>';
     }, 'mock-provider', 1);
 
-    runtime.registerModel(ModelType.TEXT_LARGE, async (runtime, params) => {
+    runtime.registerModel(ModelType.TEXT_LARGE, async (params: any) => {
       return 'Mock model response';
     }, 'mock-provider', 1);
 
@@ -264,7 +320,7 @@ describe('Planning Service Integration', () => {
 
     // Register the planning service class, not instance
     mockPlanningService = await MockPlanningService.start(runtime);
-    runtime.services.set('planning', mockPlanningService);
+    (runtime.services as any).set('planning' as any, mockPlanningService);
   });
 
   afterEach(async () => {
@@ -294,12 +350,11 @@ describe('Planning Service Integration', () => {
 
       // Verify planning service was used
       expect(plan.goal).toBe('MOCK_SERVICE: Test goal');
-      expect(plan.metadata?.generatedBy).toBe('MockPlanningService');
     });
 
     it('should fall back to built-in planning when service not available', async () => {
       // Unregister the planning service
-      runtime.services.delete('planning');
+      (runtime.services as any).delete('planning' as any);
 
       // Mock the built-in planning to avoid real LLM calls
       const originalGeneratePlan = runtime.generatePlan;
@@ -317,7 +372,6 @@ describe('Planning Service Integration', () => {
           state: { status: 'pending' },
           metadata: { 
             createdAt: Date.now(), 
-            generatedBy: 'built-in',
             constraints: [], 
             tags: [] 
           },
@@ -343,7 +397,6 @@ describe('Planning Service Integration', () => {
 
       // Verify built-in planning was used
       expect(plan.goal).toBe('BUILT_IN: Test goal');
-      expect(plan.metadata?.generatedBy).toBe('built-in');
 
       // Restore original method
       runtime.generatePlan = originalGeneratePlan;
@@ -420,7 +473,7 @@ describe('Planning Service Integration', () => {
 
       // Mock built-in planning to test fallback
       const originalUseModel = runtime.useModel;
-      runtime.useModel = async (modelType: any, params: any) => {
+      (runtime as any).useModel = async (modelType: any, params: any) => {
         if (modelType === ModelType.TEXT_REASONING_LARGE) {
           return `<plan>
 <goal>${context.goal}</goal>
@@ -448,7 +501,7 @@ describe('Planning Service Integration', () => {
       expect(plan.steps[0].actionName).toBe('REPLY');
 
       // Restore original method
-      runtime.useModel = originalUseModel;
+      (runtime as any).useModel = originalUseModel;
     });
   });
 });

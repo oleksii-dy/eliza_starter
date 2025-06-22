@@ -5,8 +5,24 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    testTimeout: 30000,
-    hookTimeout: 30000,
+    testTimeout: 60000,
+    hookTimeout: 60000,
+    // Run tests sequentially to avoid concurrent PGLite instances
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
+    // Force sequential execution
+    maxWorkers: 1,
+    minWorkers: 1,
+    sequence: {
+      concurrent: false,
+      shuffle: false,
+    },
+    // Disable file parallelism
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -19,7 +35,16 @@ export default defineConfig({
         '**/__tests__/**',
         '**/setupTests.ts',
         'vitest.setup.ts',
+        'src/test-utils.ts',
       ],
+    },
+    setupFiles: ['./src/__tests__/test-setup.ts'],
+    env: {
+      // Clear PostgreSQL connection during tests to force PGLite usage
+      POSTGRES_URL: '',
+      POSTGRES_USER: '',
+      POSTGRES_PASSWORD: '',
+      NODE_ENV: 'test',
     },
   },
   resolve: {

@@ -1,4 +1,4 @@
-import type { IDatabaseAdapter } from '../types';
+import type { IDatabaseAdapter, UUID } from '../types';
 import { logger } from '../logger';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -44,7 +44,7 @@ export class TestDatabaseManager {
             {
               dataDir: dbPath,
             },
-            'test-agent-id'
+            '11111111-2222-3333-4444-555555555555' as UUID
           );
 
           this.tempPaths.add(dbPath);
@@ -463,17 +463,7 @@ export class TestDatabaseManager {
         return relationships;
       },
 
-      // Additional required methods (basic implementations)
       async getEntitiesByIds(ids: any) {
-        const entities = [];
-        for (const id of ids) {
-          const entity = storage.entities.get(id);
-          if (entity) entities.push(entity);
-        }
-        return entities;
-      },
-
-      async getEntityByIds(ids: any) {
         const entities = [];
         for (const id of ids) {
           const entity = storage.entities.get(id);

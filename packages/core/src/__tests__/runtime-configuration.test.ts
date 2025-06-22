@@ -168,7 +168,7 @@ describe('Runtime Configuration System E2E Tests', () => {
       ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
       
       // Entity methods
-      getEntityByIds: vi.fn().mockImplementation((ids: UUID[]) => {
+      getEntitiesByIds: vi.fn().mockImplementation((ids: UUID[]) => {
         const entities = ids.map((id: UUID) => createdEntities.get(id)).filter(Boolean);
         return Promise.resolve(entities.length > 0 ? entities : null);
       }),

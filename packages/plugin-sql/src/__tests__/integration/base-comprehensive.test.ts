@@ -143,7 +143,7 @@ describe('Base Adapter Comprehensive Tests', () => {
       ]);
 
       // Create related memory
-      await adapter.createMemory(
+      const memoryId = await adapter.createMemory(
         {
           id: uuidv4() as UUID,
           agentId: testAgentId,
@@ -156,20 +156,21 @@ describe('Base Adapter Comprehensive Tests', () => {
         'memories'
       );
 
-      // Delete entity (should cascade delete memory)
+      // Delete entity (should NOT cascade delete memory - memories are preserved)
       await adapter.deleteEntity(entityId);
 
       // Verify entity is deleted
-      const entities = await adapter.getEntityByIds([entityId]);
+      const entities = await adapter.getEntitiesByIds([entityId]);
       expect(entities).toHaveLength(0);
 
-      // Verify related memory is also deleted
+      // Verify related memory is NOT deleted (memories are preserved when entity is deleted)
       const memories = await adapter.getMemories({
         agentId: testAgentId,
         entityId: entityId,
         tableName: 'memories',
       });
-      expect(memories).toHaveLength(0);
+      expect(memories).toHaveLength(1); // Memory should still exist
+      expect(memories[0].id).toBe(memoryId);
     });
   });
 
@@ -470,7 +471,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         },
       ]);
 
-      const entities = await adapter.getEntityByIds([entityId]);
+      const entities = await adapter.getEntitiesByIds([entityId]);
       expect(entities?.[0]?.metadata).toEqual({});
 
       // Memory with required entityId
@@ -530,7 +531,7 @@ describe('Base Adapter Comprehensive Tests', () => {
 
       // Verify all were created
       const entityIds = entities.map((e) => e.id!);
-      const retrievedEntities = await adapter.getEntityByIds(entityIds);
+      const retrievedEntities = await adapter.getEntitiesByIds(entityIds);
       expect(retrievedEntities).toHaveLength(batchSize);
 
       const roomIds = rooms.map((r) => r.id);

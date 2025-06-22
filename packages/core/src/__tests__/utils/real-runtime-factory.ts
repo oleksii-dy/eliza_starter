@@ -5,6 +5,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Working memory-based database adapter for testing
 class InMemoryDatabaseAdapter implements IDatabaseAdapter {
+  // Required by IDatabaseAdapter interface
+  db: any = {};
+  
   private data = {
     agents: new Map<UUID, any>(),
     memories: new Map<UUID, Memory>(),
@@ -18,6 +21,10 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     worlds: new Map<UUID, any>(),
     components: new Map<UUID, any>(),
   };
+
+  async initialize(config?: any): Promise<void> {
+    // Memory adapter is ready immediately
+  }
 
   async init(): Promise<void> {
     // Memory adapter is ready immediately
@@ -48,8 +55,9 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     return this.data.agents.get(agentId) || null;
   }
 
-  async updateAgent(agent: any): Promise<void> {
-    this.data.agents.set(agent.id, agent);
+  async updateAgent(agentId: UUID, agent: any): Promise<boolean> {
+    this.data.agents.set(agentId, agent);
+    return true;
   }
 
   async getAgents(): Promise<any[]> {
@@ -103,11 +111,13 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     return filtered;
   }
 
-  async updateMemory(memoryId: UUID, updates: Partial<Memory>): Promise<void> {
-    const existing = this.data.memories.get(memoryId);
+  async updateMemory(memory: Partial<Memory> & { id: UUID }): Promise<boolean> {
+    const existing = this.data.memories.get(memory.id);
     if (existing) {
-      this.data.memories.set(memoryId, { ...existing, ...updates });
+      this.data.memories.set(memory.id, { ...existing, ...memory });
+      return true;
     }
+    return false;
   }
 
   async deleteMemory(memoryId: UUID): Promise<void> {
@@ -128,10 +138,30 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     this.data.entities.set(entity.id, entity);
   }
 
-  async getEntityByIds(entityIds: UUID[]): Promise<any[]> {
+  async getEntitiesByIds(entityIds: UUID[]): Promise<any[]> {
     return entityIds
       .map(id => this.data.entities.get(id))
       .filter(entity => entity !== undefined);
+  }
+
+  async getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<any[]> {
+    const participants = Array.from(this.data.participants.values())
+      .filter(p => p.roomId === roomId)
+      .map(p => p.entityId);
+    
+    const entities = participants
+      .map(entityId => this.data.entities.get(entityId))
+      .filter(entity => entity !== undefined);
+
+    if (includeComponents) {
+      // Add components to entities if requested
+      for (const entity of entities) {
+        entity.components = Array.from(this.data.components.values())
+          .filter(c => c.entityId === entity.id);
+      }
+    }
+
+    return entities;
   }
 
   async createEntities(entities: any[]): Promise<boolean> {
@@ -216,9 +246,9 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     this.data.participants.set(key, { entityId, roomId });
   }
 
-  async removeParticipant(entityId: UUID, roomId: UUID): Promise<void> {
+  async removeParticipant(entityId: UUID, roomId: UUID): Promise<boolean> {
     const key = `${entityId}-${roomId}`;
-    this.data.participants.delete(key);
+    return this.data.participants.delete(key);
   }
 
   async getParticipantsForRoom(roomId: UUID): Promise<any[]> {
@@ -283,10 +313,10 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     this.data.tasks.delete(taskId);
   }
 
-  async createComponent(component: any): Promise<UUID> {
+  async createComponent(component: any): Promise<boolean> {
     const id = component.id || (uuidv4() as UUID);
     this.data.components.set(id, { ...component, id });
-    return id;
+    return true;
   }
 
   async getComponent(entityId: UUID, type: string, worldId?: UUID, sourceEntityId?: UUID): Promise<any | null> {
@@ -320,22 +350,24 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     this.data.logs.push(log);
   }
 
-  async setCache(key: string, value: any): Promise<void> {
+  async setCache(key: string, value: any): Promise<boolean> {
     this.data.cache.set(key, value);
+    return true;
   }
 
   async getCache<T>(key: string): Promise<T | undefined> {
     return this.data.cache.get(key);
   }
 
-  async deleteCache(key: string): Promise<void> {
-    this.data.cache.delete(key);
+  async deleteCache(key: string): Promise<boolean> {
+    return this.data.cache.delete(key);
   }
 
   // Additional methods required by IDatabaseAdapter interface
-  async createRelationship(relationship: any): Promise<void> {
+  async createRelationship(relationship: any): Promise<boolean> {
     const id = relationship.id || (uuidv4() as UUID);
     this.data.relationships.set(id, { ...relationship, id });
+    return true;
   }
 
   async getRelationships(params: any): Promise<any[]> {
@@ -351,6 +383,31 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   async updateRelationship(relationship: any): Promise<void> {
     this.data.relationships.set(relationship.id, relationship);
   }
+
+  // Missing required methods
+  async runMigrations(): Promise<void> { return; }
+  async isReady(): Promise<boolean> { return true; }
+  async getConnection(): Promise<any> { return {}; }
+  async deleteAgent(agentId: UUID): Promise<boolean> { return true; }
+  async getMemoryById(id: UUID): Promise<any | null> { return null; }
+  async getMemoriesByIds(ids: UUID[]): Promise<any[]> { return []; }
+  async getMemoriesByRoomIds(params: any): Promise<any[]> { return []; }
+  async getCachedEmbeddings(params: any): Promise<any[]> { return []; }
+  async getLogs(params: any): Promise<any[]> { return []; }
+  async deleteLog(id: UUID): Promise<void> { return; }
+  async deleteManyMemories(ids: UUID[]): Promise<void> { return; }
+  async deleteAllMemories(roomId: UUID, tableName: string): Promise<void> { return; }
+  async countMemories(roomId: UUID): Promise<number> { return 0; }
+  async getAllWorlds(): Promise<any[]> { return []; }
+  async deleteRoomsByWorldId(worldId: UUID): Promise<void> { return; }
+  async getRoomsForParticipant(entityId: UUID): Promise<UUID[]> { return []; }
+  async getRoomsForParticipants(entityIds: UUID[]): Promise<UUID[]> { return []; }
+  async getRoomsByWorld(worldId: UUID): Promise<any[]> { return []; }
+  async getParticipantsForEntity(entityId: UUID): Promise<any[]> { return []; }
+  async getRelationship(params: any): Promise<any | null> { return null; }
+  async getTasksByName(name: string): Promise<any[]> { return []; }
+  async getMemoriesByWorldId(params: any): Promise<any[]> { return []; }
+  async ensureEmbeddingDimension(dimension: number): Promise<void> { return; }
 
   // Add any other missing methods that are required by the interface
   [key: string]: any;
@@ -382,7 +439,7 @@ export async function createRealTestRuntime(options: RealRuntimeOptions = {}): P
     {
       name: 'CHARACTER',
       get: async (runtime: any, message: any, state: any) => ({
-        text: `CHARACTER:\nName: ${runtime.character.name}\nBio: ${runtime.character.bio.join('\n')}\nSystem: ${runtime.character.system}`,
+        text: `CHARACTER:\nName: ${runtime.character.name}\nBio: ${Array.isArray(runtime.character.bio) ? runtime.character.bio.join('\n') : runtime.character.bio || 'Test character'}\nSystem: ${runtime.character.system}`,
         values: {
           character: runtime.character,
           agentName: runtime.character.name,
@@ -408,7 +465,7 @@ export async function createRealTestRuntime(options: RealRuntimeOptions = {}): P
           count: 5,
         });
         return {
-          text: `RECENT_MESSAGES:\n${messages.map(m => `${m.entityId === runtime.agentId ? 'Agent' : 'User'}: ${m.content.text}`).join('\n')}`,
+          text: `RECENT_MESSAGES:\n${messages.map((m: any) => `${m.entityId === runtime.agentId ? 'Agent' : 'User'}: ${m.content.text}`).join('\n')}`,
           values: { recentMessages: messages },
         };
       },
@@ -478,7 +535,6 @@ export async function createRealTestRuntime(options: RealRuntimeOptions = {}): P
       LOG_LEVEL: logLevel,
       ...settings,
     },
-    logger: createLogger({ agentName: character.name, logLevel }),
   });
 
   // Register core providers
@@ -492,7 +548,7 @@ export async function createRealTestRuntime(options: RealRuntimeOptions = {}): P
     // Register a proper TEXT_EMBEDDING model handler
     const mockEmbeddingHandler = async (runtime: any, params: any) => {
       const text = params?.text || '';
-      const hash = text.split('').reduce((a, b) => {
+      const hash = text.split('').reduce((a: number, b: string) => {
         a = ((a << 5) - a) + b.charCodeAt(0);
         return a & a;
       }, 0);
@@ -514,7 +570,7 @@ export async function createRealTestRuntime(options: RealRuntimeOptions = {}): P
 
     // Also override useModel as backup
     const originalUseModel = runtime.useModel.bind(runtime);
-    runtime.useModel = async (modelType: any, params: any) => {
+    (runtime as any).useModel = async (modelType: any, params: any) => {
       // FIRST check for embedding - highest priority
       if (modelType === 'TEXT_EMBEDDING') {
         return await mockEmbeddingHandler(runtime, params);
@@ -526,17 +582,7 @@ export async function createRealTestRuntime(options: RealRuntimeOptions = {}): P
         
         // Handle planning requests
         if (prompt.includes('plan') || prompt.includes('steps')) {
-          return `<plan>
-<goal>Execute user request</goal>
-<steps>
-<step>
-<id>${uuidv4()}</id>
-<action>REPLY</action>
-<parameters>{}</parameters>
-</step>
-</steps>
-<executionModel>sequential</executionModel>
-</plan>`;
+          return '<plan><goal>Execute user request</goal><steps><step><id>' + uuidv4() + '</id><action>REPLY</action><parameters>{}</parameters></step></steps><executionModel>sequential</executionModel></plan>';
         }
         
         // Handle fact extraction
@@ -710,7 +756,8 @@ export async function processMessageWithActions(
 ): Promise<{ responses: Memory[]; actionResults: any[] }> {
   // 1. Create basic state context 
   const character = runtime.character;
-  const contextPrompt = `CHARACTER:\nName: ${character.name}\nBio: ${character.bio?.join('\n') || 'Test character'}\nSystem: ${character.system}`;
+  const bioText = Array.isArray(character.bio) ? character.bio.join('\n') : character.bio || 'Test character';
+  const contextPrompt = `CHARACTER:\nName: ${character.name}\nBio: ${bioText}\nSystem: ${character.system}`;
   
   // 2. Generate LLM response with context
   const agentName = character?.name || 'TestAgent';
@@ -778,7 +825,7 @@ export async function processMessageWithActions(
       await runtime.processActions(message, responses, basicState, callback);
       actionResults.push({ success: true, actions });
     } catch (error) {
-      actionResults.push({ success: false, error: error.message, actions });
+      actionResults.push({ success: false, error: (error as Error).message, actions });
     }
   }
   

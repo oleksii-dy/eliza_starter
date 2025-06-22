@@ -175,9 +175,9 @@ dist
 # Finder (MacOS) folder config
 .DS_Store
 
-:memory:
+**:memory:**
 debug-cache-db
 .cursor
 coverage/
 .test-eliza
-.cursor
+.eliza*

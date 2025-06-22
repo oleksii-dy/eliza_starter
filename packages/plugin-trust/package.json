@@ -1,0 +1,56 @@
+{
+  "name": "@elizaos/plugin-trust",
+  "version": "0.0.1-alpha.1",
+  "main": "dist/index.js",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "description": "Comprehensive trust and security system for AI agents in ElizaOS with multi-dimensional scoring, behavioral analysis, and compliance-ready auditing",
+  "keywords": [
+    "elizaos",
+    "trust",
+    "security",
+    "ai-safety",
+    "permissions",
+    "behavioral-analysis",
+    "audit",
+    "compliance",
+    "threat-detection",
+    "access-control"
+  ],
+  "scripts": {
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' tsup",
+    "build:types": "NODE_OPTIONS='--max-old-space-size=8192' tsc --declaration --emitDeclarationOnly --outDir dist",
+    "build:watch": "NODE_OPTIONS='--max-old-space-size=4096' tsup --watch",
+    "dev": "tsup --format esm --watch",
+    "test": "elizaos test",
+    "test:watch": "vitest",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@elizaos/core": "workspace:*",
+    "drizzle-orm": "^0.33.0",
+    "dedent": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/dedent": "^0.7.2",
+    "tsup": "^8.3.5",
+    "typescript": "5.6.3",
+    "vitest": "^2.1.5",
+    "@vitest/coverage-v8": "^2.1.5"
+  },
+  "peerDependencies": {
+    "@elizaos/plugin-sql": "workspace:*"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

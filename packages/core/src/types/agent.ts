@@ -112,12 +112,12 @@ export interface Character {
 
   /** Optional configuration */
   settings?: {
-    [key: string]: string | boolean | number | Record<string, any>;
+    [key: string]: any;
   };
 
   /** Optional secrets */
   secrets?: {
-    [key: string]: string | boolean | number;
+    [key: string]: string | boolean | number | Record<string, any>;
   };
 
   /** Writing style guides */

@@ -1,4 +1,4 @@
-import { describe, expect, beforeEach, it } from 'bun:test';
+import { describe, expect, beforeEach, it } from 'vitest';
 import { DatabaseAdapter } from '../database';
 import type {
   Agent,
@@ -47,7 +47,7 @@ class MockDatabaseAdapter extends DatabaseAdapter {
   getConnection(): Promise<any> {
     throw new Error('Method not implemented.');
   }
-  getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null> {
+  getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null> {
     throw new Error('Method not implemented.');
   }
   createEntities(entities: Entity[]): Promise<boolean> {

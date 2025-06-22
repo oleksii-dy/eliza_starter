@@ -4,28 +4,58 @@ import { PGliteClientManager } from '../pglite/manager';
 import { v4 as uuidv4 } from 'uuid';
 import { ChannelType, type UUID } from '@elizaos/core';
 import { setDatabaseType } from '../schema/factory';
-import { memoryTable } from '../schema/memory';
 import { eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Set database type BEFORE importing schema to ensure proper lazy loading
+setDatabaseType('pglite');
+
+// Import schema and specific tables AFTER setting database type
+import * as schema from '../schema';
+import { memoryTable } from '../schema/memory';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 describe('Debug Memory Simple Operations', () => {
   let adapter: PgliteDatabaseAdapter;
   let manager: PGliteClientManager;
   let agentId: UUID;
+  let testDbPath: string;
 
   beforeEach(async () => {
-    // Set database type before creating adapter
-    setDatabaseType('pglite');
-
     agentId = uuidv4() as UUID;
-    manager = new PGliteClientManager({ dataDir: ':memory:' });
+    
+    // Create a unique temporary database directory for this test
+    testDbPath = path.join(__dirname, '.test-db', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    
+    // Ensure the directory exists
+    if (!fs.existsSync(path.dirname(testDbPath))) {
+      fs.mkdirSync(path.dirname(testDbPath), { recursive: true });
+    }
+    
+    // Create and initialize the manager with file-based database
+    manager = new PGliteClientManager({ dataDir: testDbPath });
+    await manager.initialize();
+    
+    // Then create the adapter with the initialized manager
     adapter = new PgliteDatabaseAdapter(agentId, manager);
 
-    // Initialize the adapter which will create tables
+    // Initialize the adapter (this will run unified migrations automatically)
     await adapter.init();
-
-    // Get the database instance to verify tables exist
+    
+    // Get database instance for queries
     const db = adapter.getDatabase();
+
+    // Debug: Check what's in the schema object
+    console.log('DEBUG: Schema object keys:', Object.keys(schema));
+    console.log('DEBUG: Schema.memoryTable exists:', !!schema.memoryTable);
+    console.log('DEBUG: Schema.agentTable exists:', !!schema.agentTable);
+    console.log('DEBUG: Direct memoryTable import exists:', !!memoryTable);
 
     // Check if the memories table exists by running a simple query
     try {
@@ -37,7 +67,18 @@ describe('Debug Memory Simple Operations', () => {
   });
 
   afterEach(async () => {
-    await adapter.close();
+    if (adapter) {
+      await adapter.close();
+    }
+    
+    // Clean up the test database directory
+    if (testDbPath && fs.existsSync(testDbPath)) {
+      try {
+        fs.rmSync(testDbPath, { recursive: true, force: true });
+      } catch (error) {
+        console.error('Failed to clean up test database:', error);
+      }
+    }
   });
 
   it('should access memory table without error', async () => {
@@ -57,12 +98,13 @@ describe('Debug Memory Simple Operations', () => {
 
     // Insert a simple memory without using sql template literals
     const memoryId = uuidv4() as UUID;
+    const entityId = uuidv4() as UUID; // Create a valid entity ID
     const memory = {
       id: memoryId,
       type: 'test',
       content: { text: 'Simple test' },
       metadata: {},
-      entityId: null,
+      entityId: entityId, // Use valid entity ID instead of null
       agentId: agentId,
       roomId: null,
       worldId: null,

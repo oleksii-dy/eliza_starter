@@ -134,7 +134,7 @@ class TestDatabaseAdapter extends DatabaseAdapter {
   updateAgent = vi.fn();
   deleteAgent = vi.fn();
   ensureEmbeddingDimension = vi.fn();
-  getEntityByIds = vi.fn();
+  getEntitiesByIds = vi.fn();
   getEntitiesForRoom = vi.fn();
   createEntities = vi.fn();
   updateEntity = vi.fn();

@@ -106,7 +106,7 @@ const success = await runtime.createEntities([
 const entity = await runtime.getEntityById(entityId);
 
 // Get multiple entities by IDs
-const entities = await runtime.getEntityByIds([entityId1, entityId2]);
+const entities = await runtime.getEntitiesByIds([entityId1, entityId2]);
 
 // Get all entities in a room
 const entitiesInRoom = await runtime.getEntitiesForRoom(roomId, true); // true to include components

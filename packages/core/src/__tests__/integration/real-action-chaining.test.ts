@@ -36,7 +36,7 @@ describe('Real Action Chaining Integration', () => {
           };
 
           // Store in working memory for next action
-          const workingMemory = runtime.getWorkingMemory(message.roomId);
+          const workingMemory = (runtime as any).getWorkingMemory(message.roomId);
           workingMemory.set('fetchedUserData', userData);
 
           if (callback) {
@@ -59,13 +59,13 @@ describe('Real Action Chaining Integration', () => {
         description: 'Process the fetched user data',
         validate: async (runtime, message, state) => {
           // Only validate if we have fetched data available
-          const workingMemory = runtime.getWorkingMemory(message.roomId);
+          const workingMemory = (runtime as any).getWorkingMemory(message.roomId);
           const userData = workingMemory.get('fetchedUserData');
           return userData !== undefined;
         },
         handler: async (runtime, message, state, options, callback) => {
           const context = options?.context;
-          const workingMemory = runtime.getWorkingMemory(message.roomId);
+          const workingMemory = (runtime as any).getWorkingMemory(message.roomId);
           const userData = workingMemory.get('fetchedUserData');
 
           if (!userData) {
@@ -106,12 +106,12 @@ describe('Real Action Chaining Integration', () => {
         name: 'SAVE_USER_PROFILE',
         description: 'Save processed user data as a profile',
         validate: async (runtime, message, state) => {
-          const workingMemory = runtime.getWorkingMemory(message.roomId);
+          const workingMemory = (runtime as any).getWorkingMemory(message.roomId);
           const processedData = workingMemory.get('processedUserData');
           return processedData !== undefined;
         },
         handler: async (runtime, message, state, options, callback) => {
-          const workingMemory = runtime.getWorkingMemory(message.roomId);
+          const workingMemory = (runtime as any).getWorkingMemory(message.roomId);
           const processedData = workingMemory.get('processedUserData');
 
           if (!processedData) {
@@ -165,20 +165,20 @@ describe('Real Action Chaining Integration', () => {
         description: 'Summarize the completed workflow',
         validate: async () => true,
         handler: async (runtime, message, state, options, callback) => {
-          const context = options?.context;
+          const context = options?.context as { previousResults?: ActionResult[] };
           const previousResults = context?.previousResults || [];
 
           // Analyze all previous action results
           const summary = {
             totalActions: previousResults.length,
-            actionsExecuted: previousResults.map((r) => r.data?.actionName || 'unknown'),
-            userProcessed: previousResults.some((r) => r.values?.userName),
-            profileSaved: previousResults.some((r) => r.values?.profileSaved),
+            actionsExecuted: previousResults.map((r: ActionResult) => r.data?.actionName || 'unknown'),
+            userProcessed: previousResults.some((r: ActionResult) => r.values?.userName),
+            profileSaved: previousResults.some((r: ActionResult) => r.values?.profileSaved),
             workflowComplete: true,
           };
 
           const userName =
-            previousResults.find((r) => r.values?.userName)?.values?.userName || 'Unknown';
+            previousResults.find((r: ActionResult) => r.values?.userName)?.values?.userName || 'Unknown';
 
           if (callback) {
             await callback({
@@ -214,8 +214,8 @@ describe('Real Action Chaining Integration', () => {
   });
 
   afterEach(async () => {
-    if (runtime?.databaseAdapter?.close) {
-      await runtime.databaseAdapter.close();
+    if ((runtime as any)?.databaseAdapter?.close) {
+      await (runtime as any).databaseAdapter.close();
     }
   });
 
@@ -273,7 +273,7 @@ describe('Real Action Chaining Integration', () => {
       );
 
       // Verify working memory has data
-      const workingMemory = runtime.getWorkingMemory(testRoomId);
+      const workingMemory = (runtime as any).getWorkingMemory(testRoomId);
       const userData = workingMemory.get('fetchedUserData');
       expect(userData).toBeDefined();
       expect(userData.name).toBe('John Doe');
@@ -342,7 +342,7 @@ describe('Real Action Chaining Integration', () => {
       expect(errorOccurred).toBe(false);
 
       // Working memory should still have data from successful first action
-      const workingMemory = runtime.getWorkingMemory(testRoomId);
+      const workingMemory = (runtime as any).getWorkingMemory(testRoomId);
       const userData = workingMemory.get('fetchedUserData');
       expect(userData).toBeDefined();
     });
@@ -426,7 +426,7 @@ describe('Real Action Chaining Integration', () => {
       expect(memories.length).toBeGreaterThan(0);
       const profileMemory = memories.find((m) => m.content.type === 'user_profile');
       expect(profileMemory).toBeDefined();
-      expect(profileMemory?.content.profile.name).toBe('John Doe');
+      expect((profileMemory?.content.profile as any)?.name).toBe('John Doe');
     });
 
     it('should clean up working memory after workflow completion', async () => {
@@ -446,7 +446,7 @@ describe('Real Action Chaining Integration', () => {
       );
 
       // Working memory should be cleared after SAVE_USER_PROFILE
-      const workingMemory = runtime.getWorkingMemory(testRoomId);
+      const workingMemory = (runtime as any).getWorkingMemory(testRoomId);
       const userData = workingMemory.get('fetchedUserData');
       const processedData = workingMemory.get('processedUserData');
 
@@ -483,7 +483,7 @@ describe('Real Action Chaining Integration', () => {
         );
 
         // Since no data was fetched, PROCESS_USER_DATA should not be able to process data
-        const workingMemory = runtime.getWorkingMemory(testRoomId);
+        const workingMemory = (runtime as any).getWorkingMemory(testRoomId);
         const processedData = workingMemory.get('processedUserData');
 
         // The key test is that no data should have been processed since none was fetched

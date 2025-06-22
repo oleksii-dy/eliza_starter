@@ -29,7 +29,7 @@ const mockSqlPlugin: Plugin = {
     // Entity methods
     createEntity: vi.fn().mockResolvedValue(undefined),
     getEntity: vi.fn().mockResolvedValue(null),
-    getEntityByIds: vi.fn().mockResolvedValue([]),
+    getEntitiesByIds: vi.fn().mockResolvedValue([]),
     updateEntity: vi.fn().mockResolvedValue(undefined),
     deleteEntity: vi.fn().mockResolvedValue(undefined),
     // Room methods

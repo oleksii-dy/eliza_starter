@@ -27,7 +27,7 @@ describe('PgliteDatabaseAdapter', () => {
         initialize: () => Promise.resolve(),
       } as any;
 
-      const adapter = new PgliteDatabaseAdapter(agentId, mockManager);
+      const adapter = new PgliteDatabaseAdapter(agentId, mockManager, './test-data');
       expect(adapter).toBeDefined();
       expect((adapter as any).agentId).toBe(agentId);
       expect((adapter as any).manager).toBe(mockManager);
@@ -54,8 +54,8 @@ describe('PgliteDatabaseAdapter', () => {
         initialize: () => Promise.resolve(),
       } as any;
 
-      const adapter = new PgliteDatabaseAdapter(agentId, mockManager);
-      expect((adapter as any).embeddingDimension).toBe('embedding_384');
+      const adapter = new PgliteDatabaseAdapter(agentId, mockManager, './test-data');
+      expect((adapter as any).embeddingDimension).toBe('dim_384');
     });
   });
 
@@ -81,8 +81,8 @@ describe('PgliteDatabaseAdapter', () => {
         initialize: () => Promise.resolve(),
       } as any;
 
-      const adapter = new PgliteDatabaseAdapter(agentId, mockManager);
-      
+      const adapter = new PgliteDatabaseAdapter(agentId, mockManager, './test-data');
+
       expect(typeof adapter.runMigrations).toBe('function');
       expect(typeof adapter.init).toBe('function');
       expect(typeof adapter.isReady).toBe('function');

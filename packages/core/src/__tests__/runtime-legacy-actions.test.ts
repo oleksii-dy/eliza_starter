@@ -30,7 +30,7 @@ describe('Runtime - Legacy Action Return Values', () => {
       updateAgent: vi.fn().mockResolvedValue(true),
       deleteAgent: vi.fn().mockResolvedValue(true),
       getEntityById: vi.fn().mockResolvedValue(null),
-      getEntityByIds: vi.fn().mockResolvedValue([]),
+      getEntitiesByIds: vi.fn().mockResolvedValue([]),
       createEntity: vi.fn().mockResolvedValue(true),
       createEntities: vi.fn().mockResolvedValue(true),
       updateEntity: vi.fn().mockResolvedValue(undefined),

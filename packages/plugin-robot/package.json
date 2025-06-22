@@ -1,0 +1,157 @@
+{
+  "name": "@elizaos/plugin-robot",
+  "description": "Comprehensive robot control plugin for ElizaOS - supports AiNex humanoid robot with Gazebo simulation, ROS 2 integration, and reinforcement learning",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageType": "plugin",
+  "platform": "node",
+  "license": "MIT",
+  "author": "ElizaOS",
+  "keywords": [
+    "plugin",
+    "elizaos",
+    "robot",
+    "ainex",
+    "humanoid",
+    "ros2",
+    "gazebo",
+    "simulation",
+    "reinforcement-learning",
+    "robotics"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elizaos/elizaos"
+  },
+  "homepage": "https://elizaos.ai",
+  "bugs": {
+    "url": "https://github.com/elizaos/elizaos/issues"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    ".npmignore",
+    "package.json",
+    "tsup.config.ts",
+    "urdf",
+    "gazebo",
+    "scripts"
+  ],
+  "dependencies": {
+    "@elizaos/core": "workspace:*",
+    "@elizaos/plugin-message-handling": "workspace:*",
+    "@elizaos/plugin-openai": "^1.0.0",
+    "@tensorflow-models/coco-ssd": "^2.2.3",
+    "@tensorflow-models/posenet": "^2.2.2",
+    "@tensorflow/tfjs-node": "^4.22.0",
+    "axios": "^1.7.2",
+    "canvas": "^2.11.2",
+    "face-api.js": "^0.22.2",
+    "sharp": "^0.33.5",
+    "tesseract.js": "^6.0.1",
+    "zod": "3.24.2",
+    "serialport": "^12.0.0",
+    "ws": "^8.16.0",
+    "roslib": "^1.1.0",
+    "mqtt": "^5.3.4",
+    "onnxruntime-node": "^1.16.3"
+  },
+  "peerDependencies": {},
+  "devDependencies": {
+    "@elizaos/cli": "workspace:*",
+    "@types/node": "^22.10.7",
+    "@types/tesseract.js": "^2.0.0",
+    "@types/ws": "^8.5.10",
+    "@types/serialport": "^8.0.5",
+    "dotenv": "^16.5.0",
+    "prettier": "3.5.3",
+    "tsup": "8.4.0",
+    "tsx": "^4.7.0",
+    "typescript": "5.8.2",
+    "vitest": "3.1.4"
+  },
+  "scripts": {
+    "start": "elizaos start",
+    "dev": "elizaos dev",
+    "build": "tsup",
+    "lint": "prettier --write ./src",
+    "test:component": "npx vitest run",
+    "test:e2e": "elizaos test",
+    "test:e2e:local": "tsx src/tests/e2e/run-local.ts",
+    "test:e2e:pipeline": "bash scripts/run-e2e-tests.sh",
+    "test:capture": "bun run src/tests/e2e/run-capture-log.ts",
+    "test": "elizaos test",
+    "typecheck": "tsc --noEmit",
+    "publish": "elizaos publish",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check ./src",
+    "demo": "tsx scripts/demo-robot-control.ts",
+    "demo:visual": "tsx scripts/demo-robot-visual-assistant.ts",
+    "demo:standalone": "tsx scripts/demo-standalone.ts",
+    "setup:robot": "bash scripts/setup-robot.sh",
+    "deploy:pi": "bash scripts/deploy-to-pi.sh"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "resolutions": {
+    "zod": "3.24.2"
+  },
+  "agentConfig": {
+    "pluginType": "elizaos:plugin:1.0.0",
+    "pluginParameters": {
+      "ROBOT_TYPE": {
+        "type": "string",
+        "description": "Type of robot (ainex, custom)",
+        "default": "ainex"
+      },
+      "ROBOT_IP": {
+        "type": "string",
+        "description": "IP address of the robot (Raspberry Pi)"
+      },
+      "ROBOT_PORT": {
+        "type": "number",
+        "description": "WebSocket port for robot communication",
+        "default": 9090
+      },
+      "ROS_DOMAIN_ID": {
+        "type": "number",
+        "description": "ROS 2 domain ID for communication",
+        "default": 0
+      },
+      "SIMULATION_MODE": {
+        "type": "boolean",
+        "description": "Run in simulation mode with Gazebo",
+        "default": false
+      },
+      "ENABLE_VISION": {
+        "type": "boolean",
+        "description": "Enable vision capabilities",
+        "default": true
+      },
+      "ENABLE_RL": {
+        "type": "boolean",
+        "description": "Enable reinforcement learning policy",
+        "default": false
+      },
+      "RL_MODEL_PATH": {
+        "type": "string",
+        "description": "Path to trained RL model"
+      }
+    }
+  },
+  "gitHead": "d5bd5c43bfebeb7ac02f9e029f924cb6cd5c2ec7"
+}

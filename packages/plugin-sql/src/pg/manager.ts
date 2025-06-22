@@ -7,8 +7,24 @@ export class PostgresConnectionManager {
   private db: NodePgDatabase;
 
   constructor(connectionString: string) {
-    // Simple initialization like the old working version
-    this.pool = new Pool({ connectionString });
+    // Parse connection string to check if SSL is needed
+    const poolConfig: any = { connectionString };
+
+    // If connecting to Supabase or other cloud providers, enable SSL
+    if (
+      connectionString.includes('supabase') ||
+      connectionString.includes('amazonaws') ||
+      connectionString.includes('azure') ||
+      connectionString.includes('gcp') ||
+      connectionString.includes('ssl=true') ||
+      connectionString.includes('sslmode=require')
+    ) {
+      poolConfig.ssl = {
+        rejectUnauthorized: false, // For development; in production, use proper certificates
+      };
+    }
+
+    this.pool = new Pool(poolConfig);
     this.db = drizzle(this.pool as any);
   }
 
@@ -48,16 +64,26 @@ export class PostgresConnectionManager {
     }
   }
 
+  private _isClosed = false;
+
   /**
    * Closes the connection pool.
    * @returns {Promise<void>}
    * @memberof PostgresConnectionManager
    */
   public async close(): Promise<void> {
+    if (this._isClosed) {
+      return;
+    }
+    this._isClosed = true;
     await this.pool.end();
   }
 
   public async end(): Promise<void> {
+    if (this._isClosed) {
+      return;
+    }
+    this._isClosed = true;
     await this.pool.end();
   }
 

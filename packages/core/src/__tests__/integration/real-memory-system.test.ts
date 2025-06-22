@@ -23,8 +23,8 @@ describe('Real Memory System Integration', () => {
   });
 
   afterEach(async () => {
-    if (runtime?.databaseAdapter?.close) {
-      await runtime.databaseAdapter.close();
+    if ((runtime as any)?.databaseAdapter?.close) {
+      await (runtime as any).databaseAdapter.close();
     }
   });
 
@@ -126,6 +126,7 @@ describe('Real Memory System Integration', () => {
       const outdoorResults = await runtime.searchMemories({
         embedding: outdoorEmbedding,
         roomId: testRoomId,
+        tableName: 'facts',
         count: 3,
         match_threshold: 0.1,
       });
@@ -162,6 +163,7 @@ describe('Real Memory System Integration', () => {
       const results = await runtime.searchMemories({
         embedding: pizzaEmbedding,
         roomId: testRoomId,
+        tableName: 'facts',
         count: 4,
         match_threshold: 0.1,
       });
@@ -287,6 +289,7 @@ describe('Real Memory System Integration', () => {
       const results = await runtime.searchMemories({
         embedding: searchEmbedding,
         roomId: testRoomId,
+        tableName: 'facts',
         count: 5,
         match_threshold: 0.8, // Higher threshold for similar content
       });

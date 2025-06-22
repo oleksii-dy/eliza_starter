@@ -25,6 +25,9 @@ import {
 } from './seed';
 import { sql } from 'drizzle-orm';
 
+// Set test environment flag
+process.env.ELIZA_TESTING_PLUGIN = 'true';
+
 describe('Memory Integration Tests', () => {
   let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
   let runtime: AgentRuntime;
@@ -36,15 +39,31 @@ describe('Memory Integration Tests', () => {
 
   beforeAll(async () => {
     try {
-      // Use random UUIDs to avoid conflicts
-      testAgentId = v4() as UUID;
+      // Create the test database first
+      const initialAgentId = v4() as UUID;
+      ({ adapter, runtime, cleanup } = await createTestDatabase(initialAgentId));
+
+      // Get the actual agentId from the adapter
+      testAgentId = (adapter as any).agentId;
+
+      // Generate other test IDs
       testRoomId = v4() as UUID;
       testEntityId = v4() as UUID;
       testWorldId = v4() as UUID;
 
-      ({ adapter, runtime, cleanup } = await createTestDatabase(testAgentId));
+      // Log the IDs for debugging
+      console.log('Test IDs:', {
+        testAgentId: testAgentId,
+        adapterAgentId: (adapter as any).agentId,
+        testEntityId,
+        testRoomId,
+        testWorldId,
+      });
 
       console.log('ADAPTER IS', adapter);
+
+      // Ensure the adapter is configured for 384-dimensional embeddings
+      await adapter.ensureEmbeddingDimension(384);
 
       await adapter.createWorld({
         id: testWorldId,
@@ -370,20 +389,25 @@ describe('Memory Integration Tests', () => {
 
   describe('Memory Search Operations', () => {
     it('should search memories by embedding similarity', async () => {
+      // Ensure the adapter is configured for 384-dimensional embeddings
+      await adapter.ensureEmbeddingDimension(384);
+
       const baseEmbedding = Array.from({ length: 384 }, () => Math.random());
-      const memory1: Partial<Memory> = {
+      const memory1: Memory = {
         id: v4() as UUID,
         content: { text: 'memory 1' },
         createdAt: new Date().getTime(),
         embedding: baseEmbedding,
+        agentId: testAgentId,
+        roomId: testRoomId,
+        entityId: testEntityId,
+        unique: false,
       };
-      memory1.agentId = testAgentId;
-      memory1.roomId = testRoomId;
-      memory1.entityId = testEntityId;
-      await adapter.createMemory(memory1 as Memory, 'search');
+
+      await adapter.createMemory(memory1, 'memories');
 
       const results = await adapter.searchMemoriesByEmbedding(baseEmbedding, {
-        tableName: 'search',
+        tableName: 'memories',
         roomId: testRoomId,
         count: 1,
       });

@@ -73,9 +73,7 @@ export class TestRunner {
     // Use a simple console logger for tests to avoid pino initialization issues
     this.logger = createTestLogger();
 
-    const isTestingPlugin = process.env.ELIZA_TESTING_PLUGIN === 'true';
-
-    if (isTestingPlugin && projectAgent?.plugins) {
+    if (projectAgent?.plugins) {
       let foundPlugin: Plugin | undefined;
       try {
         const packageJsonPath = path.join(process.cwd(), 'package.json');
@@ -91,7 +89,7 @@ export class TestRunner {
 
       // Fallback for safety, but the above should be primary
       if (!foundPlugin) {
-        const corePlugins = ['@elizaos/plugin-sql', 'bootstrap', 'openai'];
+        const corePlugins = ['sql'];
         const nonCorePlugins = projectAgent.plugins.filter(
           (plugin) => !corePlugins.includes(plugin.name)
         );

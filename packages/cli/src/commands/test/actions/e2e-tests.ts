@@ -203,8 +203,6 @@ export async function runE2eTests(
         if (project.isPlugin || project.agents.length === 0) {
           // Set environment variable to signal this is a direct plugin test
           // The TestRunner uses this to identify direct plugin tests
-          process.env.ELIZA_TESTING_PLUGIN = 'true';
-
           logger.info('Using default Eliza character as test agent');
           try {
             const pluginUnderTest = project.pluginModule;
@@ -348,10 +346,6 @@ export async function runE2eTests(
         }
         return { failed: true };
       } finally {
-        // Clean up the ELIZA_TESTING_PLUGIN environment variable
-        if (process.env.ELIZA_TESTING_PLUGIN) {
-          delete process.env.ELIZA_TESTING_PLUGIN;
-        }
 
         // Clean up database directory after tests complete
         // MOVED TO AFTER SERVER STOP TO AVOID DATABASE CORRUPTION

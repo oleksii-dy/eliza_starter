@@ -84,18 +84,14 @@ describe('Utils Comprehensive Tests', () => {
     const fixedTime = new Date('2024-01-15T12:00:00Z');
 
     beforeEach(() => {
-      // Mock the Date constructor to return our fixed time when called without arguments
-      vi.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
-        if (args.length === 0) {
-          return fixedTime;
-        }
-        return new (Date as any)(...args);
-      });
+      // Use fake timers with fixed time
+      vi.useFakeTimers();
+      vi.setSystemTime(fixedTime);
     });
 
     afterEach(() => {
-      // Restore all mocks
-      vi.clearAllMocks();
+      // Restore real timers
+      vi.useRealTimers();
     });
 
     it("should return 'just now' for recent timestamps", () => {

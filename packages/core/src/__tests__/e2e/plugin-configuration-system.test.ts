@@ -124,7 +124,7 @@ describe('Plugin Configuration System E2E Tests', () => {
       close: vi.fn().mockResolvedValue(undefined),
       getAgent: vi.fn().mockResolvedValue(null),
       createAgent: vi.fn().mockResolvedValue(true),
-      getEntityByIds: vi.fn().mockImplementation((ids) => {
+      getEntitiesByIds: vi.fn().mockImplementation((ids) => {
         // Return agent entity when requested
         return ids.map((id: string) => ({
           id,

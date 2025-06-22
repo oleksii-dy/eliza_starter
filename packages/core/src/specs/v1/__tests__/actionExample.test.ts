@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { Content } from '../types';
 import { Content as ContentV2, ActionExample as ActionExampleV2 } from '../../v2';
 import {
@@ -16,7 +16,7 @@ describe('ActionExample Module', () => {
     content: {
       text: 'Hello world',
       action: 'ACTION1',
-    } as Content,
+    },
   };
 
   // Equivalent v2 example
@@ -25,7 +25,7 @@ describe('ActionExample Module', () => {
     content: {
       text: 'Hello world',
       actions: ['ACTION1'],
-    } as ContentV2,
+    },
   };
 
   describe('convertContentToV1', () => {
@@ -110,9 +110,9 @@ describe('ActionExample Module', () => {
     it('should convert v2 ActionExample to v1 ActionExample', () => {
       const result = fromV2ActionExample(v2Example);
 
-      expect(result.user).toBe(v2Example.name);
-      expect(result.content.text).toBe(v2Example.content.text);
-      expect(result.content.action).toBe(v2Example.content.actions?.[0]);
+      expect(result.user).toBe(v2Example.name!);
+      expect(result.content.text).toBe('Hello world');
+      expect(result.content.action).toBe(v2Example.content.actions![0]);
     });
 
     it('should handle v2 example with minimal content', () => {
@@ -165,7 +165,7 @@ describe('ActionExample Module', () => {
 
       expect(result.name).toBe(v1Example.user);
       expect(result.content.text).toBe(v1Example.content.text);
-      expect(result.content.actions).toEqual([v1Example.content.action]);
+      expect(result.content.actions).toEqual(v1Example.content.action ? [v1Example.content.action] : []);
     });
 
     it('should handle v1 example with minimal content', () => {

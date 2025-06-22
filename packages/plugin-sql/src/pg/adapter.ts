@@ -7,9 +7,14 @@ import {
   type UUID,
 } from '@elizaos/core';
 import { drizzle } from 'drizzle-orm/node-postgres';
+import { sql } from 'drizzle-orm';
 import { BaseDrizzleAdapter } from '../base';
 import { DIMENSION_MAP, type EmbeddingDimensionColumn } from '../schema/embedding';
 import type { PostgresConnectionManager } from './manager';
+import { connectionRegistry } from '../connection-registry';
+import { UnifiedMigrator, createMigrator } from '../unified-migrator';
+import { setDatabaseType } from '../schema/factory';
+import * as schema from '../schema';
 
 /**
  * Adapter class for interacting with a PostgreSQL database.
@@ -17,23 +22,49 @@ import type { PostgresConnectionManager } from './manager';
  */
 export class PgDatabaseAdapter extends BaseDrizzleAdapter {
   public db: any;
-  protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[384];
   private manager: PostgresConnectionManager;
+  private initialized: boolean = false;
+  private migrationsComplete: boolean = false;
+  private migrator: UnifiedMigrator | null = null;
+  private postgresUrl: string;
 
-  constructor(agentId: UUID, manager: PostgresConnectionManager, schema?: any) {
+  constructor(agentId: UUID, manager: PostgresConnectionManager, postgresUrl?: string) {
     super(agentId);
     this.manager = manager;
     this.db = manager.getDatabase();
+    this.postgresUrl = postgresUrl || 'postgresql://localhost:5432/eliza';
+
+    // Set database type for schema factory
+    setDatabaseType('postgres');
+
+    // Register this adapter in the connection registry
+    connectionRegistry.registerAdapter(agentId, this);
   }
 
   /**
-   * Runs database migrations. For PostgreSQL, migrations should be handled
-   * externally or during deployment, so this is a no-op.
+   * Ensures tables are created using the unified migration system
+   * @returns {Promise<void>}
+   */
+  async ensureTables(): Promise<void> {
+    await this.runMigrations();
+    this.initialized = true;
+  }
+
+  /**
+   * Runs database migrations using the unified migration system.
    * @returns {Promise<void>}
    */
   async runMigrations(): Promise<void> {
-    logger.debug('PgDatabaseAdapter: Migrations should be handled externally');
-    // Migrations are handled by the migration service, not the adapter
+    logger.info(`[PgDatabaseAdapter] Starting unified migration process`);
+
+    if (!this.migrator) {
+      this.migrator = await createMigrator(this.agentId, 'postgres', this.postgresUrl);
+    }
+
+    await this.migrator.initialize();
+    
+    this.migrationsComplete = true;
+    logger.info(`[PgDatabaseAdapter] Unified migration completed`);
   }
 
   /**
@@ -44,11 +75,14 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
    * @returns {Promise<T>} A promise that resolves with the result of the operation.
    */
   protected async withDatabase<T>(operation: () => Promise<T>): Promise<T> {
+    // Ensure tables exist before any operation
+    await this.ensureTables();
+
     return await this.withRetry(async () => {
       const client = await this.manager.getClient();
       try {
         // Cast to any to avoid type conflicts between different pg versions
-        const db = drizzle(client as any);
+        const db = drizzle(client as any, { schema });
         this.db = db;
 
         return await operation();
@@ -59,13 +93,27 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
   }
 
   /**
-   * Asynchronously initializes the PgDatabaseAdapter by running migrations using the manager.
-   * Logs a success message if initialization is successful, otherwise logs an error message.
+   * Asynchronously initializes the PgDatabaseAdapter.
    *
    * @returns {Promise<void>} A promise that resolves when initialization is complete.
    */
   async init(): Promise<void> {
-    logger.debug('PgDatabaseAdapter initialized, skipping automatic migrations.');
+    logger.info('PgDatabaseAdapter: Initializing');
+
+    // Run migrations if not already complete
+    if (!this.migrationsComplete) {
+      await this.runMigrations();
+    }
+
+    // Ensure pgvector extension exists
+    try {
+      await this.db.execute('CREATE EXTENSION IF NOT EXISTS vector');
+      logger.info('PgDatabaseAdapter: pgvector extension ensured');
+    } catch (error) {
+      logger.warn('PgDatabaseAdapter: Could not create vector extension:', error);
+    }
+
+    logger.info('PgDatabaseAdapter: Initialization complete');
   }
 
   /**
@@ -73,7 +121,18 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
    * @returns {Promise<boolean>} A Promise that resolves to true if the connection is healthy.
    */
   async isReady(): Promise<boolean> {
-    return this.manager.testConnection();
+    try {
+      // Check if migrations are complete
+      if (!this.migrationsComplete) {
+        return false;
+      }
+
+      // Check if connection is healthy
+      return await this.manager.testConnection();
+    } catch (error) {
+      logger.debug('[PgDatabaseAdapter] isReady check failed:', error);
+      return false;
+    }
   }
 
   /**
@@ -86,6 +145,15 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
   }
 
   /**
+   * Runs core database migrations to ensure all tables exist
+   * This is the public interface method called by the SQL plugin
+   */
+  async migrate(): Promise<void> {
+    // Delegate to runMigrations for the actual implementation
+    await this.runMigrations();
+  }
+
+  /**
    * Asynchronously retrieves the connection from the manager.
    *
    * @returns {Promise<Pool>} A Promise that resolves with the connection.
@@ -95,6 +163,7 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
   }
 
   async createAgent(agent: Agent): Promise<boolean> {
+    await this.ensureTables();
     return super.createAgent(agent);
   }
 
@@ -114,8 +183,8 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
     return super.createEntities(entities);
   }
 
-  getEntityByIds(entityIds: UUID[]): Promise<Entity[]> {
-    return super.getEntityByIds(entityIds).then((result) => result || []);
+  getEntitiesByIds(entityIds: UUID[]): Promise<Entity[]> {
+    return super.getEntitiesByIds(entityIds).then((result) => result || []);
   }
 
   updateEntity(entity: Entity): Promise<void> {
@@ -165,5 +234,22 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
 
   getWorlds(): Promise<any[]> {
     return super.getAllWorlds();
+  }
+
+
+  /**
+   * List all tables in the PostgreSQL database
+   */
+  protected async listTables(): Promise<string[]> {
+    try {
+      const result = await this.db.execute(
+        sql.raw(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`)
+      );
+      
+      return result.map((row: any) => row.table_name);
+    } catch (error) {
+      logger.warn('Failed to list tables in PostgreSQL:', error);
+      return [];
+    }
   }
 }

@@ -26,12 +26,9 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "tsx src/test-runner.ts",
-    "test:scenarios": "tsx src/test-runner.ts",
-    "test:real": "tsx src/run-real-tests.ts",
     "lint": "eslint src --ext .ts,.tsx",
-    "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",

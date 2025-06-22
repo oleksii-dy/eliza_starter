@@ -21,13 +21,17 @@ import { AgentStatus } from '@elizaos/core';
 // Use PGLite for testing instead of real PostgreSQL
 describe('PostgreSQL E2E Tests', () => {
   const createTestAdapter = async () => {
-    const client = new PGlite();
-    const manager = new PGliteClientManager(client);
+    // Generate a unique agent ID for this test to ensure proper isolation
     const agentId = uuidv4() as UUID;
+    
+    // Use unique data directory for each test instead of shared :memory:
+    const dataDir = `:memory:`; // Each PGLite instance with :memory: is isolated
+    const manager = new PGliteClientManager({ dataDir });
     const adapter = new PgliteDatabaseAdapter(agentId, manager);
     await adapter.init();
 
-    // The adapter's init() method should handle table creation
+    // Add a small delay to ensure tables are fully ready
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     return { adapter, agentId };
   };
@@ -56,21 +60,26 @@ describe('PostgreSQL E2E Tests', () => {
     it('should create and retrieve an agent', async () => {
       const { adapter, agentId } = await createTestAdapter();
 
-      const agent: Partial<Agent> = {
+      const agent: Agent = {
         id: agentId,
-        name: 'Test Agent',
+        name: `Test Agent ${Date.now()}`,
+        username: `test_agent_${Date.now()}`,
+        bio: 'A test agent for e2e tests',
+        enabled: true,
         settings: {
           apiKey: 'test-key',
           model: 'gpt-4',
         },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       };
 
-      const created = await adapter.createAgent(agent as Agent);
+      const created = await adapter.createAgent(agent);
       expect(created).toBe(true);
 
       const retrieved = await adapter.getAgent(agentId);
       expect(retrieved).toBeDefined();
-      expect(retrieved?.name).toBe('Test Agent');
+      expect(retrieved?.name).toBe(agent.name);
       expect(retrieved?.settings).toEqual(agent.settings);
 
       await adapter.close();
@@ -79,22 +88,28 @@ describe('PostgreSQL E2E Tests', () => {
     it('should update an agent', async () => {
       const { adapter, agentId } = await createTestAdapter();
 
-      const agent: Partial<Agent> = {
+      const agent: Agent = {
         id: agentId,
-        name: 'Original Name',
+        name: `Original Name ${Date.now()}`,
+        username: `original_agent_${Date.now()}`,
+        bio: 'Original bio',
+        enabled: true,
+        settings: {},
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       };
 
-      await adapter.createAgent(agent as Agent);
+      await adapter.createAgent(agent);
 
       const updated = await adapter.updateAgent(agentId, {
-        name: 'Updated Name',
+        name: `Updated Name ${Date.now()}`,
         settings: { newSetting: 'value' },
       });
 
       expect(updated).toBe(true);
 
       const retrieved = await adapter.getAgent(agentId);
-      expect(retrieved?.name).toBe('Updated Name');
+      expect(retrieved?.name).toMatch(/^Updated Name/);
       expect(retrieved?.settings?.newSetting).toBe('value');
 
       await adapter.close();
@@ -103,12 +118,18 @@ describe('PostgreSQL E2E Tests', () => {
     it('should delete an agent', async () => {
       const { adapter, agentId } = await createTestAdapter();
 
-      const agent: Partial<Agent> = {
+      const agent: Agent = {
         id: agentId,
-        name: 'To Delete',
+        name: `To Delete ${Date.now()}`,
+        username: `delete_agent_${Date.now()}`,
+        bio: 'Agent to be deleted',
+        enabled: true,
+        settings: {},
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       };
 
-      await adapter.createAgent(agent as Agent);
+      await adapter.createAgent(agent);
       const deleted = await adapter.deleteAgent(agentId);
       expect(deleted).toBe(true);
 
@@ -127,6 +148,12 @@ describe('PostgreSQL E2E Tests', () => {
       await adapter.createAgent({
         id: agentId,
         name: 'Test Agent',
+        username: 'test_agent',
+        bio: 'Test agent for e2e tests',
+        enabled: true,
+        settings: {},
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       } as Agent);
 
       const entities: Entity[] = [
@@ -147,7 +174,7 @@ describe('PostgreSQL E2E Tests', () => {
       expect(created).toBe(true);
 
       const entityIds = entities.map((e) => e.id).filter((id): id is UUID => id !== undefined);
-      const retrieved = await adapter.getEntityByIds(entityIds);
+      const retrieved = await adapter.getEntitiesByIds(entityIds);
       expect(retrieved).toHaveLength(2);
 
       // Sort by name to ensure consistent order
@@ -165,6 +192,12 @@ describe('PostgreSQL E2E Tests', () => {
       await adapter.createAgent({
         id: agentId,
         name: 'Test Agent',
+        username: 'test_agent',
+        bio: 'Test agent for e2e tests',
+        enabled: true,
+        settings: {},
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       } as Agent);
 
       const entity: Entity = {
@@ -181,7 +214,7 @@ describe('PostgreSQL E2E Tests', () => {
         metadata: { updated: true },
       });
 
-      const retrieved = await adapter.getEntityByIds([entity.id!]);
+      const retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved?.[0].names).toContain('Updated');
       expect(retrieved?.[0].metadata).toEqual({ updated: true });
 
@@ -204,6 +237,12 @@ describe('PostgreSQL E2E Tests', () => {
       await adapter.createAgent({
         id: agentId,
         name: 'Test Agent',
+        username: 'test_agent',
+        bio: 'Test agent for e2e tests',
+        enabled: true,
+        settings: {},
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       } as Agent);
 
       roomId = uuidv4() as UUID;
@@ -348,6 +387,12 @@ describe('PostgreSQL E2E Tests', () => {
       await adapter.createAgent({
         id: agentId,
         name: 'Test Agent',
+        username: 'test_agent',
+        bio: 'Test agent for e2e tests',
+        enabled: true,
+        settings: {},
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       } as Agent);
 
       entityId = uuidv4() as UUID;
@@ -480,6 +525,12 @@ describe('PostgreSQL E2E Tests', () => {
       await adapter.createAgent({
         id: agentId,
         name: 'Test Agent',
+        username: 'test_agent',
+        bio: 'Test agent for e2e tests',
+        enabled: true,
+        settings: {},
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       } as Agent);
 
       const operations = Array(5)
@@ -506,6 +557,12 @@ describe('PostgreSQL E2E Tests', () => {
       await adapter.createAgent({
         id: agentId,
         name: 'Test Agent',
+        username: 'test_agent',
+        bio: 'Test agent for e2e tests',
+        enabled: true,
+        settings: {},
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       } as Agent);
 
       const entities: Entity[] = Array(100)
@@ -520,7 +577,7 @@ describe('PostgreSQL E2E Tests', () => {
       expect(created).toBe(true);
 
       const entityIds = entities.map((e) => e.id).filter((id): id is UUID => id !== undefined);
-      const retrieved = await adapter.getEntityByIds(entityIds);
+      const retrieved = await adapter.getEntitiesByIds(entityIds);
       expect(retrieved).toHaveLength(100);
 
       await adapter.close();
@@ -531,13 +588,19 @@ describe('PostgreSQL E2E Tests', () => {
     it('should handle duplicate agent creation', async () => {
       const { adapter, agentId } = await createTestAdapter();
 
-      const agent: Partial<Agent> = {
+      const agent: Agent = {
         id: agentId,
         name: 'Duplicate Test',
+        username: 'duplicate_test',
+        bio: 'Agent for duplicate test',
+        enabled: true,
+        settings: {},
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       };
 
-      await adapter.createAgent(agent as Agent);
-      const secondCreate = await adapter.createAgent(agent as Agent);
+      await adapter.createAgent(agent);
+      const secondCreate = await adapter.createAgent(agent);
       expect(secondCreate).toBe(false);
 
       await adapter.close();
@@ -547,7 +610,7 @@ describe('PostgreSQL E2E Tests', () => {
       const { adapter } = await createTestAdapter();
 
       const nonExistentId = uuidv4() as UUID;
-      const result = await adapter.getEntityByIds([nonExistentId]);
+      const result = await adapter.getEntitiesByIds([nonExistentId]);
       expect(result).toHaveLength(0);
 
       await adapter.close();

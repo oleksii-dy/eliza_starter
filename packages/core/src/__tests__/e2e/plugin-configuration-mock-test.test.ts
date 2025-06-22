@@ -152,7 +152,7 @@ class MockDatabaseAdapter implements IDatabaseAdapter {
     return true;
   }
 
-  async getEntityByIds(ids: UUID[]): Promise<Entity[] | null> {
+  async getEntitiesByIds(ids: UUID[]): Promise<Entity[] | null> {
     const entities: Entity[] = [];
     for (const id of ids) {
       const entity = this.data.get(`entity:${id}`);

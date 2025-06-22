@@ -17,7 +17,7 @@ function createEntityTable() {
       id: factory.uuid('id').notNull().primaryKey(),
       agentId: factory.uuid('agent_id').notNull(),
       createdAt: factory.timestamp('created_at').default(factory.defaultTimestamp()).notNull(),
-      names: factory.textArray('names').default(factory.defaultTextArray()).notNull(),
+      names: factory.json('names').default(factory.defaultJsonArray()).notNull(),
       metadata: factory.json('metadata').default(factory.defaultJsonObject()).notNull(),
     },
     (table) => {

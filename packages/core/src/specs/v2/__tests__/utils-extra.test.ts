@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { addHeader, parseKeyValueXml, safeReplacer, validateUuid } from '../utils';
 
 describe('utils extra', () => {

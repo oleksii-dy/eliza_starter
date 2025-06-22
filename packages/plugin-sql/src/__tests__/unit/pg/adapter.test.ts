@@ -19,7 +19,7 @@ describe('PgDatabaseAdapter', () => {
         logPoolStatus: () => {},
       } as any;
 
-      const adapter = new PgDatabaseAdapter(agentId, mockManager);
+      const adapter = new PgDatabaseAdapter(agentId, mockManager, 'postgresql://test');
       expect(adapter).toBeDefined();
       expect((adapter as any).agentId).toBe(agentId);
       expect((adapter as any).manager).toBe(mockManager);
@@ -38,8 +38,8 @@ describe('PgDatabaseAdapter', () => {
         logPoolStatus: () => {},
       } as any;
 
-      const adapter = new PgDatabaseAdapter(agentId, mockManager);
-      expect((adapter as any).embeddingDimension).toBe('embedding_384');
+      const adapter = new PgDatabaseAdapter(agentId, mockManager, 'postgresql://test');
+      expect((adapter as any).embeddingDimension).toBe('dim_384');
     });
   });
 
@@ -57,8 +57,8 @@ describe('PgDatabaseAdapter', () => {
         logPoolStatus: () => {},
       } as any;
 
-      const adapter = new PgDatabaseAdapter(agentId, mockManager);
-      
+      const adapter = new PgDatabaseAdapter(agentId, mockManager, 'postgresql://test');
+
       expect(typeof adapter.runMigrations).toBe('function');
       expect(typeof adapter.init).toBe('function');
       expect(typeof adapter.isReady).toBe('function');

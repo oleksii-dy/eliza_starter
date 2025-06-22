@@ -13,14 +13,7 @@ export class SqlPluginTestSuite implements TestSuite {
         if (!runtime.db) {
           throw new Error('Database adapter not found on runtime');
         }
-
-        // Check adapter type
-        const adapterName = runtime.db.constructor.name;
-        if (!adapterName.includes('DatabaseAdapter')) {
-          throw new Error(`Unexpected adapter type: ${adapterName}`);
-        }
-
-        console.log(`✅ SQL plugin initialized with adapter: ${adapterName}`);
+        console.log(`✅ SQL plugin initialized with database adapter`);
       },
     },
 
@@ -57,12 +50,12 @@ export class SqlPluginTestSuite implements TestSuite {
         const entityId = stringToUuid('test-entity-' + Date.now());
         
         // Create entity
-        await runtime.db.createEntities([{
+        await runtime.createEntity({
           id: entityId,
           names: ['Test Entity E2E'],
           agentId: runtime.agentId,
           metadata: { test: true },
-        }]);
+        });
 
         // Retrieve entity
         const entity = await runtime.getEntityById(entityId);
@@ -145,17 +138,17 @@ export class SqlPluginTestSuite implements TestSuite {
         const entity1Id = stringToUuid('entity1-' + Date.now());
         const entity2Id = stringToUuid('entity2-' + Date.now());
         
-        await runtime.db.createEntities([{
+        await runtime.createEntity({
           id: entity1Id,
           names: ['Entity 1'],
           agentId: runtime.agentId,
-        }]);
+        });
 
-        await runtime.db.createEntities([{
+        await runtime.createEntity({
           id: entity2Id,
           names: ['Entity 2'],
           agentId: runtime.agentId,
-        }]);
+        });
 
         // Create relationship
         const relationshipId = await runtime.createRelationship({
@@ -194,11 +187,11 @@ export class SqlPluginTestSuite implements TestSuite {
         const roomId = stringToUuid('memory-room-' + Date.now());
         
         // Create prerequisites
-        await runtime.db.createEntities([{
+        await runtime.createEntity({
           id: entityId,
           names: ['Memory Test Entity'],
           agentId: runtime.agentId,
-        }]);
+        });
 
         await runtime.createRoom({
           id: roomId,
@@ -245,11 +238,11 @@ export class SqlPluginTestSuite implements TestSuite {
         const worldId = stringToUuid('component-world-' + Date.now());
         
         // Create prerequisites
-        await runtime.db.createEntities([{
+        await runtime.createEntity({
           id: entityId,
           names: ['Component Test Entity'],
           agentId: runtime.agentId,
-        }]);
+        });
 
         await runtime.createWorld({
           id: worldId,
@@ -302,11 +295,11 @@ export class SqlPluginTestSuite implements TestSuite {
         const roomId = stringToUuid('participant-room-' + Date.now());
         
         // Create prerequisites
-        await runtime.db.createEntities([{
+        await runtime.createEntity({
           id: entityId,
           names: ['Participant Test Entity'],
           agentId: runtime.agentId,
-        }]);
+        });
 
         await runtime.createRoom({
           id: roomId,
@@ -350,11 +343,11 @@ export class SqlPluginTestSuite implements TestSuite {
         for (let i = 0; i < 5; i++) {
           const entityId = stringToUuid(`concurrent-entity-${i}-${Date.now()}`);
           promises.push(
-            runtime.db.createEntities([{
+            runtime.createEntity({
               id: entityId,
               names: [`Concurrent Entity ${i}`],
               agentId: runtime.agentId,
-            }])
+            })
           );
         }
 

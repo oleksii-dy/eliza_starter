@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import type { UUID  } from '@elizaos/core';
+import type { UUID } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { PGliteClientManager } from '../../pglite/manager';
 import { PGlite } from '@electric-sql/pglite';
-import { DatabaseMigrationService } from '../../migration-service';
+// Migration is handled by the adapter's UnifiedMigrator
+import { setDatabaseType } from '../../schema/factory';
 import * as schema from '../../schema';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -15,20 +16,15 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
     let testAgentId: UUID;
 
     beforeAll(async () => {
+      // Set database type for schema lazy loading
+      setDatabaseType('pglite');
+
       testAgentId = uuidv4() as UUID;
-      const client = new PGlite();
-      manager = new PGliteClientManager(client);
+      manager = new PGliteClientManager({});
       adapter = new PgliteDatabaseAdapter(testAgentId, manager);
       await adapter.init();
 
-      // Run migrations
-      const migrationService = new DatabaseMigrationService();
-      const db = adapter.getDatabase();
-      await migrationService.initializeWithDatabase(db);
-      migrationService.discoverAndRegisterPluginSchemas([
-        { name: '@elizaos/plugin-sql', description: 'SQL plugin', schema },
-      ]);
-      await migrationService.runAllPluginMigrations();
+      // Migrations are handled automatically by the adapter's UnifiedMigrator
     });
 
     afterAll(async () => {
@@ -171,7 +167,18 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
       it('should handle query errors gracefully', async () => {
         const db = adapter.getDatabase();
 
-        await expect(db.execute(sql`SELECT * FROM non_existent_table`)).rejects.toThrow();
+        // The execute method returns a promise, so we need to handle it properly
+        try {
+          await db.execute(sql`SELECT * FROM non_existent_table`);
+          // If we get here, the test should fail
+          expect.fail('Query should have thrown an error');
+        } catch (error) {
+          // Expected error
+          expect(error).toBeDefined();
+          // The error message format is "Failed query: SELECT * FROM non_existent_table"
+          expect(error.message).toContain('Failed query');
+          expect(error.message).toContain('non_existent_table');
+        }
       });
 
       it('should maintain connection after error', async () => {
@@ -264,8 +271,7 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
     describe('Adapter Shutdown', () => {
       it('should handle close gracefully', async () => {
         // Create a temporary adapter
-        const tempClient = new PGlite();
-        const tempManager = new PGliteClientManager(tempClient);
+        const tempManager = new PGliteClientManager({});
         const tempAdapter = new PgliteDatabaseAdapter(uuidv4() as UUID, tempManager);
         await tempAdapter.init();
 

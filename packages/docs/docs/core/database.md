@@ -91,7 +91,7 @@ All database adapters extend the `BaseDrizzleAdapter` abstract class, which prov
 | Method                   | Description                           |
 | ------------------------ | ------------------------------------- |
 | `createEntities()`       | Create new entities                   |
-| `getEntityByIds()`       | Retrieve entities by IDs              |
+| `getEntitiesByIds()`       | Retrieve entities by IDs              |
 | `getEntitiesForRoom()`   | Get all entities in a room            |
 | `updateEntity()`         | Update entity attributes              |
 | `deleteEntity()`         | Delete an entity                      |

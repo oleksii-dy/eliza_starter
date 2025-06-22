@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AgentRuntime } from '../runtime';
 import { AgentRuntime as CoreAgentRuntime } from '../../../runtime';
 import { MemoryType, ModelType } from '../types';
@@ -18,85 +18,81 @@ const stringToUuid = (id: string): UUID => id as UUID;
 
 // --- Mocks ---
 
-// Create mock functions
-const mockSplitChunks = mock();
-const mockSafeReplacer = mock((_key, value) => value);
-
-// Mock modules using bun:test
-mock.module('../utils', () => ({
-  splitChunks: mockSplitChunks,
+// Mock modules using vitest
+vi.mock('../utils', () => ({
+  splitChunks: vi.fn(),
 }));
 
-mock.module('./index', () => ({
-  safeReplacer: () => mockSafeReplacer,
+vi.mock('./index', () => ({
+  safeReplacer: () => vi.fn((_key, value) => value),
 }));
 
 // Mock IDatabaseAdapter (inline style matching your example)
 const mockDatabaseAdapter: IDatabaseAdapter = {
   db: {},
-  init: mock(async () => undefined),
-  close: mock(async () => undefined),
-  getConnection: mock(async () => ({})),
-  getEntityByIds: mock(async () => []),
-  createEntities: mock(async () => true),
-  getMemories: mock(async () => []),
-  getMemoryById: mock(async () => null),
-  getMemoriesByRoomIds: mock(async () => []),
-  getMemoriesByIds: mock(async () => []),
-  getCachedEmbeddings: mock(async () => []),
-  log: mock(async () => undefined),
-  searchMemories: mock(async () => []),
-  createMemory: mock(async () => stringToUuid(uuidv4())),
-  deleteMemory: mock(async () => undefined),
-  deleteAllMemories: mock(async () => undefined),
-  countMemories: mock(async () => 0),
-  getRoomsByIds: mock(async () => []),
-  createRooms: mock(async () => [stringToUuid(uuidv4())]),
-  deleteRoom: mock(async () => undefined),
-  getRoomsForParticipant: mock(async () => []),
-  getRoomsForParticipants: mock(async () => []),
-  addParticipantsRoom: mock(async () => true),
-  removeParticipant: mock(async () => true),
-  getParticipantsForEntity: mock(async () => []),
-  getParticipantsForRoom: mock(async () => []),
-  getParticipantUserState: mock(async () => null),
-  setParticipantUserState: mock(async () => undefined),
-  createRelationship: mock(async () => true),
-  getRelationship: mock(async () => null),
-  getRelationships: mock(async () => []),
-  getAgent: mock(async () => null),
-  getAgents: mock(async () => []),
-  createAgent: mock(async () => true),
-  updateAgent: mock(async () => true),
-  deleteAgent: mock(async () => true),
-  ensureEmbeddingDimension: mock(async () => undefined),
-  getEntitiesForRoom: mock(async () => []),
-  updateEntity: mock(async () => undefined),
-  getComponent: mock(async () => null),
-  getComponents: mock(async () => []),
-  createComponent: mock(async () => true),
-  updateComponent: mock(async () => undefined),
-  deleteComponent: mock(async () => undefined),
-  createWorld: mock(async () => stringToUuid(uuidv4())),
-  getWorld: mock(async () => null),
-  getAllWorlds: mock(async () => []),
-  updateWorld: mock(async () => undefined),
-  updateRoom: mock(async () => undefined),
-  getRoomsByWorld: mock(async () => []),
-  updateRelationship: mock(async () => undefined),
-  getCache: mock(async () => undefined),
-  setCache: mock(async () => true),
-  deleteCache: mock(async () => true),
-  createTask: mock(async () => stringToUuid(uuidv4())),
-  getTasks: mock(async () => []),
-  getTask: mock(async () => null),
-  getTasksByName: mock(async () => []),
-  updateTask: mock(async () => undefined),
-  deleteTask: mock(async () => undefined),
-  updateMemory: mock(async () => true),
-  getLogs: mock(async () => []),
-  deleteLog: mock(async () => undefined),
-  removeWorld: mock(async () => undefined),
+  init: vi.fn(async () => undefined),
+  close: vi.fn(async () => undefined),
+  getConnection: vi.fn(async () => ({})),
+  getEntitiesByIds: vi.fn(async () => []),
+  createEntities: vi.fn(async () => true),
+  getMemories: vi.fn(async () => []),
+  getMemoryById: vi.fn(async () => null),
+  getMemoriesByRoomIds: vi.fn(async () => []),
+  getMemoriesByIds: vi.fn(async () => []),
+  getCachedEmbeddings: vi.fn(async () => []),
+  log: vi.fn(async () => undefined),
+  searchMemories: vi.fn(async () => []),
+  createMemory: vi.fn(async () => stringToUuid(uuidv4())),
+  deleteMemory: vi.fn(async () => undefined),
+  deleteAllMemories: vi.fn(async () => undefined),
+  countMemories: vi.fn(async () => 0),
+  getRoomsByIds: vi.fn(async () => []),
+  createRooms: vi.fn(async () => [stringToUuid(uuidv4())]),
+  deleteRoom: vi.fn(async () => undefined),
+  getRoomsForParticipant: vi.fn(async () => []),
+  getRoomsForParticipants: vi.fn(async () => []),
+  addParticipantsRoom: vi.fn(async () => true),
+  removeParticipant: vi.fn(async () => true),
+  getParticipantsForEntity: vi.fn(async () => []),
+  getParticipantsForRoom: vi.fn(async () => []),
+  getParticipantUserState: vi.fn(async () => null),
+  setParticipantUserState: vi.fn(async () => undefined),
+  createRelationship: vi.fn(async () => true),
+  getRelationship: vi.fn(async () => null),
+  getRelationships: vi.fn(async () => []),
+  getAgent: vi.fn(async () => null),
+  getAgents: vi.fn(async () => []),
+  createAgent: vi.fn(async () => true),
+  updateAgent: vi.fn(async () => true),
+  deleteAgent: vi.fn(async () => true),
+  ensureEmbeddingDimension: vi.fn(async () => undefined),
+  getEntitiesForRoom: vi.fn(async () => []),
+  updateEntity: vi.fn(async () => undefined),
+  getComponent: vi.fn(async () => null),
+  getComponents: vi.fn(async () => []),
+  createComponent: vi.fn(async () => true),
+  updateComponent: vi.fn(async () => undefined),
+  deleteComponent: vi.fn(async () => undefined),
+  createWorld: vi.fn(async () => stringToUuid(uuidv4())),
+  getWorld: vi.fn(async () => null),
+  getAllWorlds: vi.fn(async () => []),
+  updateWorld: vi.fn(async () => undefined),
+  updateRoom: vi.fn(async () => undefined),
+  getRoomsByWorld: vi.fn(async () => []),
+  updateRelationship: vi.fn(async () => undefined),
+  getCache: vi.fn(async () => undefined),
+  setCache: vi.fn(async () => true),
+  deleteCache: vi.fn(async () => true),
+  createTask: vi.fn(async () => stringToUuid(uuidv4())),
+  getTasks: vi.fn(async () => []),
+  getTask: vi.fn(async () => null),
+  getTasksByName: vi.fn(async () => []),
+  updateTask: vi.fn(async () => undefined),
+  deleteTask: vi.fn(async () => undefined),
+  updateMemory: vi.fn(async () => true),
+  getLogs: vi.fn(async () => []),
+  deleteLog: vi.fn(async () => undefined),
+  removeWorld: vi.fn(async () => undefined),
   deleteRoomsByWorldId: function (_worldId: UUID): Promise<void> {
     throw new Error('Function not implemented.');
   },
@@ -107,7 +103,7 @@ const mockDatabaseAdapter: IDatabaseAdapter = {
   }): Promise<Memory[]> {
     throw new Error('Function not implemented.');
   },
-  deleteManyMemories: mock(async () => undefined),
+  deleteManyMemories: vi.fn(async () => undefined),
 };
 
 // Mock action creator (matches your example)
@@ -116,8 +112,8 @@ const createMockAction = (name: string): Action => ({
   description: `Test action ${name}`,
   similes: [`like ${name}`],
   examples: [],
-  handler: mock(async () => undefined),
-  validate: mock(async () => true),
+  handler: vi.fn(async () => undefined),
+  validate: vi.fn(async () => true),
 });
 
 // Mock Memory creator
@@ -171,11 +167,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
 
   beforeEach(() => {
     // Clear all mocks before each test
-    // Note: bun:test doesn't have a global clearAllMocks equivalent
-    // Only clear mocks that need to be reset between tests
-    if (mockDatabaseAdapter.log && 'mockReset' in mockDatabaseAdapter.log) {
-      (mockDatabaseAdapter.log as any).mockReset();
-    }
+    vi.clearAllMocks();
 
     agentId = mockCharacter.id!; // Use character's ID
 
@@ -211,7 +203,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
     });
 
     it('should call plugin init function', async () => {
-      const initMock = mock(async () => undefined);
+      const initMock = vi.fn(async () => undefined);
       const mockPlugin: Plugin = {
         name: 'InitPlugin',
         description: 'Plugin with init',
@@ -223,9 +215,9 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
     });
 
     it('should register plugin features (actions, providers, models) when initialized', async () => {
-      const actionHandler = mock();
-      const providerGet = mock(async () => ({ text: 'provider_text' }));
-      const modelHandler = mock(async () => 'model_result');
+      const actionHandler = vi.fn();
+      const providerGet = vi.fn(async () => ({ text: 'provider_text' }));
+      const modelHandler = vi.fn(async () => 'model_result');
 
       const mockPlugin: Plugin = {
         name: 'FeaturesPlugin',
@@ -259,7 +251,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
         enabled: true,
       }));
       (mockDatabaseAdapter.updateAgent as any).mockImplementation(async () => true);
-      (mockDatabaseAdapter.getEntityByIds as any).mockImplementation(async () => [
+      (mockDatabaseAdapter.getEntitiesByIds as any).mockImplementation(async () => [
         {
           id: agentId,
           agentId: agentId,
@@ -278,7 +270,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
 
   describe('Initialization', () => {
     it('should call the core runtime initialize method', async () => {
-      const coreInitializeSpy = spyOn(CoreAgentRuntime.prototype, 'initialize');
+      const coreInitializeSpy = vi.spyOn(CoreAgentRuntime.prototype, 'initialize');
       (coreInitializeSpy as any).mockImplementation(async () => {});
 
       await runtime.initialize();
@@ -296,7 +288,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
       });
 
       // We expect the core runtime's initialize to throw, so we can mock it to simulate the error
-      const coreInitializeSpy = spyOn(CoreAgentRuntime.prototype, 'initialize');
+      const coreInitializeSpy = vi.spyOn(CoreAgentRuntime.prototype, 'initialize');
       (coreInitializeSpy as any).mockImplementation(async () => {
         throw new Error('Database adapter not initialized');
       });
@@ -311,8 +303,8 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
 
   describe('State Composition', () => {
     it('should call provider get methods', async () => {
-      const provider1Get = mock(async () => ({ text: 'p1_text', values: { p1_val: 1 } }));
-      const provider2Get = mock(async () => ({ text: 'p2_text', values: { p2_val: 2 } }));
+      const provider1Get = vi.fn(async () => ({ text: 'p1_text', values: { p1_val: 1 } }));
+      const provider2Get = vi.fn(async () => ({ text: 'p2_text', values: { p2_val: 2 } }));
       const provider1: Provider = { name: 'P1', get: provider1Get };
       const provider2: Provider = { name: 'P2', get: provider2Get };
 
@@ -346,8 +338,8 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
     });
 
     it('should filter providers', async () => {
-      const provider1Get = mock(async () => ({ text: 'p1_text' }));
-      const provider2Get = mock(async () => ({ text: 'p2_text' }));
+      const provider1Get = vi.fn(async () => ({ text: 'p1_text' }));
+      const provider2Get = vi.fn(async () => ({ text: 'p2_text' }));
       const provider1: Provider = { name: 'P1', get: provider1Get };
       const provider2: Provider = { name: 'P2', get: provider2Get };
 
@@ -367,7 +359,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
 
   describe('Model Usage', () => {
     it('should call registered model handler', async () => {
-      const modelHandler = mock(async () => ({ result: 'success' }));
+      const modelHandler = vi.fn(async () => ({ result: 'success' }));
       const modelType = ModelType.TEXT_LARGE;
 
       runtime.registerModel(modelType, modelHandler);
@@ -384,7 +376,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
       expect(paramsArg.someOption).toBe(params.someOption);
       expect(paramsArg.runtime).toBeDefined();
       expect(paramsArg.runtime.agentId).toBe(runtime.agentId);
-      expect(result).toEqual({ result: 'success' });
+      expect(result).toMatchObject({ result: 'success' });
       // Check if log was called (part of useModel logic)
       expect(mockDatabaseAdapter.log).toHaveBeenCalledWith(
         expect.objectContaining({ type: `useModel:${modelType}` })
@@ -405,7 +397,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
     let responseMemory: Memory;
 
     beforeEach(() => {
-      mockActionHandler = mock(async () => undefined);
+      mockActionHandler = vi.fn(async () => undefined);
       testAction = createMockAction('TestAction');
       testAction.handler = mockActionHandler; // Assign mock handler
 
@@ -423,7 +415,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
 
       // Mock the internal _runtime's composeState method
       // @ts-ignore - accessing private property for testing
-      const composeStateSpy = spyOn(runtime._runtime, 'composeState');
+      const composeStateSpy = vi.spyOn(runtime._runtime, 'composeState');
       (composeStateSpy as any).mockImplementation(async () =>
         createMockState('composed state text')
       );
@@ -490,7 +482,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
   // --- Event Emitter Tests ---
   describe('Event Emitter (on/emit/off)', () => {
     it('should register and emit events', () => {
-      const handler = mock();
+      const handler = vi.fn();
       const eventName = 'testEvent';
       const eventData = { info: 'data' };
 
@@ -502,7 +494,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
     });
 
     it('should remove event handler with off', () => {
-      const handler = mock();
+      const handler = vi.fn();
       const eventName = 'testEvent';
 
       runtime.on(eventName, handler);
@@ -543,7 +535,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
         );
 
         // Mock provider needed by composeState
-        const providerGet = mock(async () => ({ text: 'provider text' }));
+        const providerGet = vi.fn(async () => ({ text: 'provider text' }));
         runtime.registerProvider({ name: 'TestProvider', get: providerGet });
 
         const state = await runtime.composeState(message);

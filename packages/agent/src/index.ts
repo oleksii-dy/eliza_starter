@@ -23,7 +23,7 @@ export const character: Character = {
     // ...(process.env.TELEGRAM_BOT_TOKEN ? ['@elizaos/plugin-telegram'] : []),
     // '@elizaos/plugin-autonomy', // Temporarily disabled due to dependency issues
     // '@elizaos/plugin-autocoder',    // Temporarily disabled due to WebSocket.Server issues
-    '@elizaos/plugin-self-modification', // Enable character evolution and self-modification
+    '@elizaos/plugin-personality', // Enable character evolution and self-modification
     // '@elizaos/plugin-planning',
     // '@elizaos/plugin-message-handling',
     // '@elizaos/plugin-research',

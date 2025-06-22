@@ -4,6 +4,7 @@ import { PGliteClientManager } from '../pglite/manager';
 import { v4 as uuidv4 } from 'uuid';
 import { ChannelType, type UUID, type Memory } from '@elizaos/core';
 import { setDatabaseType } from '../schema/factory';
+import { sql } from 'drizzle-orm';
 
 describe('Debug Memory Operations', () => {
   let adapter: PgliteDatabaseAdapter;
@@ -40,7 +41,7 @@ describe('Debug Memory Operations', () => {
         source: 'test',
         type: 'GROUP' as typeof ChannelType.GROUP,
         name: 'Test Room',
-        channelId: 'test-channel',
+        channelId: uuidv4() as UUID,
       },
     ]);
 
@@ -56,6 +57,19 @@ describe('Debug Memory Operations', () => {
 
   afterEach(async () => {
     await adapter.close();
+  });
+
+  it('should check embeddings table columns', async () => {
+    // Check what columns the embeddings table actually has
+    const result = await (adapter as any).db.execute(sql`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'embeddings'
+      ORDER BY column_name
+    `);
+
+    console.log('Embeddings table columns:', result.rows);
+    expect(result.rows).toBeDefined();
   });
 
   it('should create memory without embedding', async () => {

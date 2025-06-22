@@ -144,13 +144,15 @@ export class SchemaFactory {
   // Helper for JSON field access
   jsonFieldAccess(column: any, field: string) {
     // Use the ->> operator which works in both PostgreSQL and PGLite
-    return sql`${column}->>${field}`;
+    // Field needs to be a string literal
+    return sql`${column}->>${sql.raw(`'${field}'`)}`;
   }
 
   // Helper for JSON field existence check
   jsonFieldExists(column: any, field: string) {
     // Use a method that works in both PostgreSQL and PGLite
-    return sql`${column}->>${field} IS NOT NULL`;
+    // Field needs to be a string literal
+    return sql`${column}->>${sql.raw(`'${field}'`)} IS NOT NULL`;
   }
 }
 

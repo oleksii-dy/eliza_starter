@@ -74,7 +74,7 @@ export function createMockDatabase(overrides: MockDatabaseOverrides = {}): IData
     deleteAgent: vi.fn().mockResolvedValue(true),
 
     // Entity Management
-    getEntityByIds: vi.fn().mockResolvedValue([]),
+    getEntitiesByIds: vi.fn().mockResolvedValue([]),
     getEntitiesForRoom: vi.fn().mockResolvedValue([]),
     createEntities: vi.fn().mockResolvedValue(true),
     updateEntity: vi.fn().mockResolvedValue(undefined),

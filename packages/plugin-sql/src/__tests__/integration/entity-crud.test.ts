@@ -51,7 +51,7 @@ describe('Entity CRUD Operations', () => {
       const result = await adapter.createEntities([entity]);
       expect(result).toBe(true);
 
-      const retrieved = await adapter.getEntityByIds([entity.id!]);
+      const retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved).toHaveLength(1);
       expect(retrieved![0].id).toBe(entity.id);
     });
@@ -74,7 +74,7 @@ describe('Entity CRUD Operations', () => {
 
       await adapter.updateEntity(updatedEntity);
 
-      const retrieved = await adapter.getEntityByIds([entity.id!]);
+      const retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved![0].names).toContain('Updated Name');
       expect(retrieved![0].metadata?.version).toBe(2);
     });
@@ -90,14 +90,14 @@ describe('Entity CRUD Operations', () => {
       await adapter.createEntities([entity]);
 
       // Verify it exists
-      let retrieved = await adapter.getEntityByIds([entity.id!]);
+      let retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved).toHaveLength(1);
 
       // Delete it
       await adapter.deleteEntity(entity.id!);
 
       // Verify it's gone
-      retrieved = await adapter.getEntityByIds([entity.id!]);
+      retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved).toHaveLength(0);
     });
   });
@@ -196,7 +196,7 @@ describe('Entity CRUD Operations', () => {
 
       await adapter.createEntities([entity]);
 
-      const retrieved = await adapter.getEntityByIds([entity.id!]);
+      const retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved![0].metadata).toEqual(entity.metadata);
       expect((retrieved![0].metadata?.nested as any)?.array).toEqual([1, 2, 3]);
     });
@@ -235,7 +235,7 @@ describe('Entity CRUD Operations', () => {
 
       // Verify all were created
       const entityIds = entities.map((e) => e.id!);
-      const retrieved = await adapter.getEntityByIds(entityIds);
+      const retrieved = await adapter.getEntitiesByIds(entityIds);
       expect(retrieved).toHaveLength(5);
 
       // Delete all entities
@@ -244,7 +244,7 @@ describe('Entity CRUD Operations', () => {
       }
 
       // Verify all were deleted
-      const afterDelete = await adapter.getEntityByIds(entityIds);
+      const afterDelete = await adapter.getEntitiesByIds(entityIds);
       expect(afterDelete).toHaveLength(0);
     });
   });
@@ -284,7 +284,7 @@ describe('Entity CRUD Operations', () => {
       await adapter.updateEntity(entity);
 
       // Entity should not exist
-      const retrieved = await adapter.getEntityByIds([entity.id!]);
+      const retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved).toHaveLength(0);
     });
 

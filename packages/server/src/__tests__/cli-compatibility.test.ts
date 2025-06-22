@@ -99,7 +99,7 @@ vi.mock('@elizaos/plugin-sql', () => ({
       }
       return Promise.resolve(null);
     }),
-    getEntityByIds: vi.fn().mockResolvedValue([]),
+    getEntitiesByIds: vi.fn().mockResolvedValue([]),
     getEntitiesForRoom: vi.fn().mockResolvedValue([]),
     createEntity: vi.fn().mockResolvedValue('test-entity-id'),
     createEntities: vi.fn().mockResolvedValue(true),

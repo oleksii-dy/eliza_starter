@@ -190,7 +190,7 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
 
     // Entity Management
     getEntityById: vi.fn().mockResolvedValue(null),
-    getEntityByIds: vi.fn().mockResolvedValue([]),
+    getEntitiesByIds: vi.fn().mockResolvedValue([]),
     getEntitiesForRoom: vi.fn().mockResolvedValue([]),
     createEntity: vi.fn().mockResolvedValue('test-entity-id' as UUID),
     createEntities: vi.fn().mockResolvedValue(true),
@@ -205,6 +205,8 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
 
     // Memory Management
     getMemories: vi.fn().mockResolvedValue([]),
+    getAllMemories: overrides.getAllMemories || vi.fn().mockResolvedValue([]),
+    clearAllAgentMemories: vi.fn().mockResolvedValue(undefined),
     getMemoryById: vi.fn().mockResolvedValue(null),
     getMemoriesByIds: vi.fn().mockResolvedValue([]),
     getMemoriesByRoomIds: vi.fn().mockResolvedValue([]),

@@ -251,36 +251,52 @@ const options = {
 
       if (typeof arg1 === 'object') {
         if (arg1 instanceof Error) {
-          // When arg1 is an Error, pass the formatted error as the context object
+          // When arg1 is an Error, format it and log with message
           const errorContext = { error: formatError(arg1) };
           const messageParts = rest.map((arg) =>
             typeof arg === 'string' ? arg : JSON.stringify(arg)
           );
           const message = messageParts.join(' ') || 'Error occurred';
-          method.apply(this, [message, errorContext as any]);
+          // Call the method directly instead of using apply
+          (method as any).call(this, errorContext, message);
         } else {
           // When arg1 is a regular object, use it as context
           const messageParts = rest.map((arg) =>
             typeof arg === 'string' ? arg : JSON.stringify(arg)
           );
           const message = messageParts.join(' ');
-          method.apply(this, [message, arg1 as any]);
+          if (message) {
+            // Call with object first, then message
+            (method as any).call(this, arg1, message);
+          } else {
+            // If no message, just log the object as a string
+            (method as any).call(this, JSON.stringify(arg1));
+          }
         }
       } else {
-        // When arg1 is a string, build context from rest args
+        // When arg1 is a string, it's the message
         const context: Record<string, unknown> = {};
-        const messageParts = [arg1, ...rest].map((arg) => {
+        const messageParts: string[] = [arg1 as string];
+
+        // Process rest arguments
+        for (const arg of rest) {
           if (arg instanceof Error) {
-            return formatError(arg);
+            context.error = formatError(arg);
+          } else if (typeof arg === 'string') {
+            messageParts.push(arg);
+          } else if (typeof arg === 'object' && arg !== null) {
+            Object.assign(context, arg);
           }
-          return typeof arg === 'string' ? arg : arg;
-        });
-        const message = messageParts.filter((part) => typeof part === 'string').join(' ');
-        const jsonParts = messageParts.filter((part) => typeof part === 'object');
+        }
 
-        Object.assign(context, ...jsonParts);
+        const message = messageParts.join(' ');
 
-        method.apply(this, [message, context as any]);
+        // Only include context if it has properties
+        if (Object.keys(context).length > 0) {
+          (method as any).call(this, context, message);
+        } else {
+          (method as any).call(this, message);
+        }
       }
     },
   },

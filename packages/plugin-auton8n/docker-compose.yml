@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  auton8n:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auton8n
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-opus-4-20250514}
+      - PLUGIN_DATA_DIR=/data/plugins
+      - LOG_DIR=/logs
+      - MAX_CONCURRENT_JOBS=${MAX_CONCURRENT_JOBS:-10}
+      - RATE_LIMIT_JOBS_PER_HOUR=${RATE_LIMIT_JOBS_PER_HOUR:-10}
+      - ENABLE_METRICS=${ENABLE_METRICS:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - plugin_data:/data
+      - logs:/logs
+    ports:
+      - "${HEALTH_PORT:-8080}:8080"  # Health check endpoint
+      - "${METRICS_PORT:-9090}:9090"  # Prometheus metrics
+    networks:
+      - elizaos
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=auton8n"
+    labels:
+      - "com.elizaos.service=auton8n"
+      - "com.elizaos.version=1.0.0"
+
+  # Optional: Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9091}:9090"
+    networks:
+      - elizaos
+    depends_on:
+      - auton8n
+
+  # Optional: Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    networks:
+      - elizaos
+    depends_on:
+      - prometheus
+
+  # Optional: Redis for distributed rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - elizaos
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+networks:
+  elizaos:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  plugin_data:
+    driver: local
+  logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  redis_data:
+    driver: local 

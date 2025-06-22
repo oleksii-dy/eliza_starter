@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { asUUID, UUID } from '../uuid';
 
 describe('UUID Module', () => {

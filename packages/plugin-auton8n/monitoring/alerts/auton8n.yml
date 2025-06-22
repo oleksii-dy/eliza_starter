@@ -1,0 +1,83 @@
+groups:
+  - name: auton8n_alerts
+    interval: 30s
+    rules:
+      # Service availability
+      - alert: AutoN8nServiceDown
+        expr: up{job="auton8n"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "AutoN8n service is down"
+          description: "AutoN8n service has been down for more than 2 minutes"
+
+      # High error rate
+      - alert: AutoN8nHighErrorRate
+        expr: rate(auton8n_api_errors[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API error rate detected"
+          description: "API error rate is {{ $value }} errors/sec (threshold: 0.1)"
+
+      # Job queue backlog
+      - alert: AutoN8nJobQueueBacklog
+        expr: auton8n_pending_jobs > 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Large job queue backlog"
+          description: "{{ $value }} jobs are pending in the queue"
+
+      # Long running jobs
+      - alert: AutoN8nLongRunningJob
+        expr: auton8n_job_duration_seconds > 1800
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Job running for too long"
+          description: "Job has been running for {{ $value }} seconds (> 30 minutes)"
+
+      # High memory usage
+      - alert: AutoN8nHighMemoryUsage
+        expr: process_resident_memory_bytes{job="auton8n"} > 2e9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ humanize $value }} (threshold: 2GB)"
+
+      # Failed jobs rate
+      - alert: AutoN8nHighFailureRate
+        expr: rate(auton8n_failed_jobs[1h]) / rate(auton8n_total_jobs[1h]) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High job failure rate"
+          description: "{{ $value | humanizePercentage }} of jobs are failing"
+
+      # Rate limit approaching
+      - alert: AutoN8nRateLimitApproaching
+        expr: auton8n_rate_limit_remaining < 2
+        for: 1m
+        labels:
+          severity: info
+        annotations:
+          summary: "Approaching rate limit"
+          description: "Only {{ $value }} API calls remaining in rate limit window"
+
+      # Disk space
+      - alert: AutoN8nLowDiskSpace
+        expr: node_filesystem_avail_bytes{mountpoint="/data"} / node_filesystem_size_bytes{mountpoint="/data"} < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space on data volume"
+          description: "Only {{ $value | humanizePercentage }} disk space remaining" 

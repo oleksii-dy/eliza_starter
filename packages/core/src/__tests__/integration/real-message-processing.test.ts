@@ -135,8 +135,8 @@ describe('Real Message Processing Integration', () => {
   });
 
   afterEach(async () => {
-    if (runtime?.databaseAdapter?.close) {
-      await runtime.databaseAdapter.close();
+    if ((runtime as any)?.databaseAdapter?.close) {
+      await (runtime as any).databaseAdapter.close();
     }
   });
 
@@ -345,6 +345,7 @@ describe('Real Message Processing Integration', () => {
       const searchResults = await runtime.searchMemories({
         embedding: searchEmbedding,
         roomId: testRoomId,
+        tableName: 'facts',
         count: 3,
         match_threshold: 0.1,
       });

@@ -1,0 +1,42 @@
+{
+  "name": "@elizaos/plugin-memory-palace",
+  "description": "Advanced memory management plugin using memory palace techniques for enhanced agent knowledge retention and retrieval",
+  "version": "1.0.0",
+  "apis": [
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY", 
+    "MEMORY_PALACE_CONFIG"
+  ],
+  "components": {
+    "actions": [
+      "createMemoryPalace",
+      "storeMemory", 
+      "retrieveMemory",
+      "searchMemories",
+      "optimizeRetrieval"
+    ],
+    "providers": [
+      "memoryPalaceProvider",
+      "spatialContextProvider", 
+      "semanticRelationshipProvider"
+    ],
+    "services": [
+      "memoryPalaceService",
+      "spatialMappingService",
+      "knowledgeGraphService"
+    ],
+    "evaluators": [
+      "memoryRelevanceEvaluator",
+      "knowledgeRetentionEvaluator"
+    ]
+  },
+  "features": [
+    "Spatial memory organization using memory palace methodology",
+    "AI-powered semantic relationship mapping",
+    "Dynamic memory retrieval optimization",
+    "Knowledge graph construction and navigation",
+    "Memory consolidation and pruning algorithms"
+  ],
+  "complexity": "high",
+  "estimatedGenerationTime": "2-5 minutes"
+}

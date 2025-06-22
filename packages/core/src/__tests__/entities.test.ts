@@ -12,7 +12,7 @@ describe('entities', () => {
   let mockState: State;
 
   beforeEach(() => {
-    mock.restore();
+    vi.restoreAllMocks();
 
     // Mock logger methods to prevent undefined function errors
     // Mock both the index-exported logger and direct logger module

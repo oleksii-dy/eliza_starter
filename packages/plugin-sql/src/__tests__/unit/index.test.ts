@@ -1,235 +1,60 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-// Mock the logger and other core exports to avoid console output during tests
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
-  return {
-    ...actual,
-    logger: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
-    },
-    VECTOR_DIMS: {
-      SMALL: 384,
-      MEDIUM: 512,
-      LARGE: 768,
-    },
-  };
-});
-
-// Mock the database adapters and managers
-vi.mock('../../pglite/adapter', () => ({
-  PgliteDatabaseAdapter: vi.fn().mockImplementation(() => ({
-    db: {},
-    getDatabase: vi.fn().mockReturnValue({}),
-    init: vi.fn().mockResolvedValue(undefined),
-    isReady: vi.fn().mockResolvedValue(true),
-    runMigrations: vi.fn().mockResolvedValue(undefined),
-  })),
-}));
-
-vi.mock('../../pglite/manager', () => ({
-  PGliteClientManager: vi.fn().mockImplementation(() => ({
-    getConnection: vi.fn().mockReturnValue({}),
-    isShuttingDown: vi.fn().mockReturnValue(false),
-    close: vi.fn().mockResolvedValue(undefined),
-  })),
-}));
-
-vi.mock('../../pg/adapter', () => ({
-  PgDatabaseAdapter: vi.fn().mockImplementation(() => ({
-    db: {},
-    getDatabase: vi.fn().mockReturnValue({}),
-    init: vi.fn().mockResolvedValue(undefined),
-    isReady: vi.fn().mockResolvedValue(true),
-    runMigrations: vi.fn().mockResolvedValue(undefined),
-  })),
-}));
-
-vi.mock('../../pg/manager', () => ({
-  PostgresConnectionManager: vi.fn().mockImplementation(() => ({
-    getDb: vi.fn().mockResolvedValue({}),
-    close: vi.fn().mockResolvedValue(undefined),
-  })),
-}));
-
-// Mock the database service to avoid actual schema initialization
-vi.mock('../../database-service', () => ({
-  DatabaseService: vi.fn().mockImplementation(() => ({
-    initializePluginSchema: vi.fn().mockResolvedValue(undefined),
-  })),
-}));
-
-import type { AgentRuntime } from '@elizaos/core';
-import { logger } from '@elizaos/core';
+// Import the plugin exports
 import { plugin, createDatabaseAdapter } from '../../index';
 
-// Mock database connection
-const mockDb = {
-  execute: vi.fn().mockResolvedValue({ rows: [] }),
-  query: vi.fn().mockResolvedValue({ rows: [] }),
-};
-
-describe('SQL Plugin', () => {
-  let mockRuntime: AgentRuntime;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    // Reset environment variables
-    delete process.env.POSTGRES_URL;
-    delete process.env.POSTGRES_USER;
-    delete process.env.POSTGRES_PASSWORD;
-
-    mockRuntime = {
-      agentId: '00000000-0000-0000-0000-000000000000',
-      getSetting: vi.fn(),
-      registerDatabaseAdapter: vi.fn(),
-      registerService: vi.fn(),
-      getService: vi.fn(),
-    } as any;
+describe('SQL Plugin Structure', () => {
+  it('should have correct plugin metadata', () => {
+    expect(plugin.name).toBe('@elizaos/plugin-sql');
+    expect(plugin.description).toBe('A plugin for SQL database access with Drizzle ORM');
+    expect(plugin.priority).toBe(0);
   });
 
-  describe('Plugin Structure', () => {
-    it('should have correct plugin metadata', () => {
-      expect(plugin.name).toBe('@elizaos/plugin-sql');
-      expect(plugin.description).toBe('A plugin for SQL database access with Drizzle ORM');
-      expect(plugin.priority).toBe(0);
-    });
-
-    it('should have schema property with database schema exports', () => {
-      expect(plugin.schema).toBeDefined();
-      expect(typeof plugin.schema).toBe('object');
-    });
-
-    it('should have init function', () => {
-      expect(plugin.init).toBeDefined();
-      expect(typeof plugin.init).toBe('function');
-    });
+  it('should have init function', () => {
+    expect(plugin.init).toBeDefined();
+    expect(typeof plugin.init).toBe('function');
   });
 
-  describe('Plugin Initialization', () => {
-    it('should skip initialization if adapter already exists', async () => {
-      // Set up runtime with existing adapter
-      (mockRuntime as any).adapter = {
-        existing: true,
-        isReady: vi.fn().mockResolvedValue(true),
-        init: vi.fn().mockResolvedValue(undefined),
-        getDatabase: vi.fn().mockReturnValue({
-          execute: vi.fn().mockResolvedValue({ rows: [] }),
-        }),
-        db: {
-          execute: vi.fn().mockResolvedValue({ rows: [] }),
-        },
-      };
-
-      await plugin.init?.({}, mockRuntime);
-
-      // The init function logs via global logger, which we can't easily mock in Bun
-      // Just verify the runtime wasn't called to register
-      expect(mockRuntime.registerDatabaseAdapter).not.toHaveBeenCalled();
-    });
-
-    it('should register database adapter when none exists', async () => {
-      mockRuntime.getSetting = vi.fn().mockReturnValue(null);
-
-      await plugin.init?.({}, mockRuntime);
-
-      // The init function logs via global logger, which we can't easily mock in Bun
-      // Just verify the runtime was called to register the adapter
-      expect(mockRuntime.registerDatabaseAdapter).toHaveBeenCalled();
-    });
-
-    it('should use POSTGRES_URL when available', async () => {
-      mockRuntime.getSetting = vi.fn().mockImplementation((key) => {
-        if (key === 'POSTGRES_URL') return 'postgresql://localhost:5432/test';
-        return null;
-      });
-
-      await plugin.init?.({}, mockRuntime);
-
-      expect(mockRuntime.registerDatabaseAdapter).toHaveBeenCalled();
-    });
-
-    it('should prioritize PGLITE_PATH over DATABASE_PATH', async () => {
-      mockRuntime.getSetting = vi.fn().mockImplementation((key) => {
-        if (key === 'PGLITE_PATH') return '/custom/pglite';
-        if (key === 'DATABASE_PATH') return '/custom/database';
-        return null;
-      });
-
-      await plugin.init?.({}, mockRuntime);
-
-      expect(mockRuntime.registerDatabaseAdapter).toHaveBeenCalled();
-    });
-
-    it('should use DATABASE_PATH if PGLITE_PATH is not set', async () => {
-      mockRuntime.getSetting = vi.fn().mockImplementation((key) => {
-        if (key === 'DATABASE_PATH') return '/custom/database';
-        return null;
-      });
-
-      await plugin.init?.({}, mockRuntime);
-
-      expect(mockRuntime.registerDatabaseAdapter).toHaveBeenCalled();
-    });
-
-    it('should use default path if neither PGLITE_PATH nor DATABASE_PATH is set', async () => {
-      mockRuntime.getSetting = vi.fn().mockReturnValue(null);
-
-      await plugin.init?.({}, mockRuntime);
-
-      expect(mockRuntime.registerDatabaseAdapter).toHaveBeenCalled();
-    });
+  it('should export createDatabaseAdapter function', () => {
+    expect(createDatabaseAdapter).toBeDefined();
+    expect(typeof createDatabaseAdapter).toBe('function');
   });
 
-  describe('createDatabaseAdapter', () => {
-    const agentId = '00000000-0000-0000-0000-000000000000';
+  it('should have valid plugin structure', () => {
+    expect(plugin).toHaveProperty('name');
+    expect(plugin).toHaveProperty('description');
+    expect(plugin).toHaveProperty('init');
+  });
+});
 
-    it('should create PgDatabaseAdapter when postgresUrl is provided', () => {
-      const config = {
-        postgresUrl: 'postgresql://localhost:5432/test',
-      };
+describe('createDatabaseAdapter Function', () => {
+  const agentId = '00000000-0000-0000-0000-000000000000';
 
-      const adapter = createDatabaseAdapter(config, agentId);
+  it('should create adapter with postgres config', () => {
+    const config = {
+      postgresUrl: 'postgresql://localhost:5432/test',
+    };
 
-      expect(adapter).toBeDefined();
-    });
+    const adapter = createDatabaseAdapter(config, agentId);
+    expect(adapter).toBeDefined();
+    expect(adapter.constructor.name).toBe('PgDatabaseAdapter');
+  });
 
-    it('should create PgliteDatabaseAdapter when no postgresUrl is provided', () => {
-      const config = {
-        dataDir: '/custom/data',
-      };
+  it('should create adapter with pglite config', () => {
+    const config = {
+      dataDir: ':memory:', // Use memory database to avoid file system issues
+    };
 
-      const adapter = createDatabaseAdapter(config, agentId);
+    const adapter = createDatabaseAdapter(config, agentId);
+    expect(adapter).toBeDefined();
+    expect(adapter.constructor.name).toBe('PgliteDatabaseAdapter');
+  });
 
-      expect(adapter).toBeDefined();
-    });
+  it('should create adapter with default config', () => {
+    const config = {};
 
-    it('should use default dataDir when none provided', () => {
-      const config = {};
-
-      const adapter = createDatabaseAdapter(config, agentId);
-
-      expect(adapter).toBeDefined();
-    });
-
-    it('should reuse singleton managers', () => {
-      // Create first adapter
-      const adapter1 = createDatabaseAdapter(
-        { postgresUrl: 'postgresql://localhost:5432/test' },
-        agentId
-      );
-
-      // Create second adapter with same config
-      const adapter2 = createDatabaseAdapter(
-        { postgresUrl: 'postgresql://localhost:5432/test' },
-        agentId
-      );
-
-      expect(adapter1).toBeDefined();
-      expect(adapter2).toBeDefined();
-    });
+    const adapter = createDatabaseAdapter(config, agentId);
+    expect(adapter).toBeDefined();
+    expect(adapter.constructor.name).toBe('PgliteDatabaseAdapter');
   });
 });

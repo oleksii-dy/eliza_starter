@@ -20,7 +20,7 @@ import { apiKeyAuthMiddleware } from './authMiddleware.js';
 import { messageBusConnectorPlugin } from './services/message.js';
 import { loadCharacterTryPath, jsonToCharacter } from './loader.js';
 
-import { createDatabaseAdapter, plugin as sqlPlugin } from '@elizaos/plugin-sql';
+import { createDatabaseAdapter } from '@elizaos/plugin-sql';
 import internalMessageBus from './bus.js';
 import type {
   CentralRootMessage,
@@ -192,21 +192,17 @@ export class AgentServer {
       await this.database.init();
       logger.success('[INIT] Database adapter initialized');
 
-      // Initialize the SQL plugin schema immediately
+      // Run database migrations to ensure schema is up to date
       try {
-        logger.info('[INIT] Initializing core database schema...');
+        logger.info('[INIT] Running database migrations...');
 
-        // Import the SQL plugin to ensure schema is available
-        const { plugin: sqlPlugin } = await import('@elizaos/plugin-sql');
-
-        // Create a temporary database service to initialize the schema
-        const { DatabaseService } = await import('@elizaos/plugin-sql');
-        const db = (this.database as any).db || this.database;
-        const dbService = new DatabaseService({ agentId: migrationAgentId } as any, db);
-
-        // Initialize the plugin schema
-        await dbService.initializePluginSchema('@elizaos/plugin-sql', sqlPlugin.schema);
-        logger.success('[INIT] Core database schema initialized');
+        // Check if the adapter has a migrate method
+        if (typeof (this.database as any).migrate === 'function') {
+          await (this.database as any).migrate();
+          logger.success('[INIT] Database migrations completed');
+        } else {
+          logger.info('[INIT] Database adapter does not support migrations, skipping');
+        }
 
         // Add a small delay to ensure tables are ready
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -216,7 +212,7 @@ export class AgentServer {
         await this.ensureDefaultServer();
         logger.success('[INIT] Default server ensured');
       } catch (error) {
-        logger.error('[INIT] Failed to initialize database schema:', error);
+        logger.error('[INIT] Failed to initialize database:', error);
         throw error;
       }
 
@@ -262,7 +258,7 @@ export class AgentServer {
         try {
           await (this.database as any).db.execute(sql`
             INSERT INTO message_servers (id, name, source_type, source_id, metadata, created_at, updated_at)
-            VALUES (${'00000000-0000-0000-0000-000000000000'}, ${'Default Server'}, ${'eliza_default'}, ${null}, ${null}, ${new Date()}, ${new Date()})
+            VALUES (${'00000000-0000-0000-0000-000000000000'}, ${'Default Server'}, ${'eliza_default'}, ${null}, ${{}}, ${new Date()}, ${new Date()})
             ON CONFLICT (id) DO NOTHING
           `);
           logger.success('[AgentServer] Default server created via raw SQL');

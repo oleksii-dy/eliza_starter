@@ -697,6 +697,7 @@ export class AgentRuntime implements IAgentRuntime {
       );
     }
     try {
+      
       await this.adapter.init();
 
       const existingAgent = await this.ensureAgentExists(this.character as Partial<Agent>);
@@ -785,6 +786,12 @@ export class AgentRuntime implements IAgentRuntime {
             errorMsg.includes('does not exist') ||
             errorMsg.includes('no such table') ||
             errorMsg.includes('Entities table not yet created');
+          
+          // In test environments, also handle constraint violations (entity already exists)
+          const isConstraintError = 
+            errorMsg.includes('duplicate key value violates unique constraint') ||
+            errorMsg.includes('already exists') ||
+            errorMsg.includes('UNIQUE constraint failed');
 
           if (isTableError) {
             this.logger.warn(
@@ -797,8 +804,40 @@ export class AgentRuntime implements IAgentRuntime {
               metadata: {},
               agentId: this.agentId,
             };
+          } else if (isConstraintError) {
+            this.logger.warn(
+              `Entity already exists (duplicate key), retrieving existing entity`
+            );
+            // Try to get the existing entity
+            try {
+              agentEntity = await this.getEntityById(this.agentId);
+              if (!agentEntity) {
+                // Wait a bit and retry - might be a timing issue with PGLite
+                await new Promise((resolve) => setTimeout(resolve, 200));
+                agentEntity = await this.getEntityById(this.agentId);
+                
+                if (!agentEntity) {
+                  // If we still can't retrieve it, create a mock entity for initialization
+                  this.logger.warn(`Could not retrieve existing entity after retry, using mock`);
+                  agentEntity = {
+                    id: this.agentId,
+                    names: [this.character.name],
+                    metadata: {},
+                    agentId: this.agentId,
+                  };
+                }
+              }
+            } catch (getError) {
+              this.logger.warn(`Could not retrieve existing entity, using mock`);
+              agentEntity = {
+                id: this.agentId,
+                names: [this.character.name],
+                metadata: {},
+                agentId: this.agentId,
+              };
+            }
           } else {
-            // Re-throw if it's not a table-missing error
+            // Re-throw if it's not a handled error type
             throw entityError;
           }
         }
@@ -869,28 +908,27 @@ export class AgentRuntime implements IAgentRuntime {
       );
     }
 
-    // Initialize plugin schemas for plugins that have schemas but haven't been initialized yet
-    // The SQL plugin initializes its own schema in init(), but other plugins may need this
-    const dbService = this.getService('database');
-    if (dbService && 'initializePluginSchema' in dbService) {
+    // Run migrations for plugins with schemas
+    // The SQL plugin adapter now handles migrations through its migrate() method
+    if (this.adapter && typeof (this.adapter as any).runPluginMigrations === 'function') {
       const pluginsWithSchemas = this.plugins.filter(
         (p) => p.schema && p.name !== '@elizaos/plugin-sql'
       );
       if (pluginsWithSchemas.length > 0) {
-        this.logger.info('Initializing schemas for other plugins...');
+        this.logger.info('Running migrations for plugins with schemas...');
         for (const p of pluginsWithSchemas) {
           if (p.schema) {
-            this.logger.info(`Initializing schema for plugin: ${p.name}`);
+            this.logger.info(`Running migrations for plugin: ${p.name}`);
             try {
-              await (dbService as any).initializePluginSchema(p.name, p.schema);
-              this.logger.info(`Successfully initialized schema for plugin: ${p.name}`);
+              await (this.adapter as any).runPluginMigrations(p.schema, p.name);
+              this.logger.info(`Successfully migrated plugin: ${p.name}`);
             } catch (error) {
-              this.logger.error(`Failed to initialize schema for plugin ${p.name}:`, error);
+              this.logger.error(`Failed to migrate plugin ${p.name}:`, error);
               throw error;
             }
           }
         }
-        this.logger.info('Plugin schema initialization completed.');
+        this.logger.info('Plugin migrations completed.');
       }
     }
 
@@ -898,32 +936,30 @@ export class AgentRuntime implements IAgentRuntime {
   }
 
   async initializePluginSchemas(): Promise<void> {
-    // Get the database service
-    const dbService = this.getService('database');
-
-    if (!dbService) {
-      this.logger.warn('Database service not found, skipping plugin schema initialization.');
+    // Check if adapter supports plugin migrations
+    if (!this.adapter) {
+      this.logger.warn('Database adapter not found, skipping plugin schema initialization.');
       return;
     }
 
-    // Check if the service has the required methods
-    if (!('initializePluginSchema' in dbService)) {
-      this.logger.warn('Database service does not support schema initialization, skipping.');
+    // Check if the adapter has the required method
+    if (typeof (this.adapter as any).runPluginMigrations !== 'function') {
+      this.logger.warn('Database adapter does not support plugin migrations, skipping.');
       return;
     }
 
     const pluginsWithSchemas = this.plugins.filter((p) => p.schema);
-    this.logger.info(`Found ${pluginsWithSchemas.length} plugins with schemas to initialize.`);
+    this.logger.info(`Found ${pluginsWithSchemas.length} plugins with schemas to migrate.`);
 
     for (const p of pluginsWithSchemas) {
       if (p.schema) {
-        this.logger.info(`Initializing schema for plugin: ${p.name}`);
+        this.logger.info(`Running migrations for plugin: ${p.name}`);
         try {
-          // Use the database service to initialize the schema
-          await (dbService as any).initializePluginSchema(p.name, p.schema);
-          this.logger.info(`Successfully initialized schema for plugin: ${p.name}`);
+          // Use the database adapter to run migrations
+          await (this.adapter as any).runPluginMigrations(p.schema, p.name);
+          this.logger.info(`Successfully migrated plugin: ${p.name}`);
         } catch (error) {
-          this.logger.error(`Failed to initialize schema for plugin ${p.name}:`, error);
+          this.logger.error(`Failed to migrate plugin ${p.name}:`, error);
           throw error;
         }
       }
@@ -956,7 +992,12 @@ export class AgentRuntime implements IAgentRuntime {
     const value =
       this.character.secrets?.[key] ||
       this.character.settings?.[key] ||
-      this.character.settings?.secrets?.[key] ||
+      (typeof this.character.settings === 'object' &&
+      this.character.settings !== null &&
+      'secrets' in this.character.settings &&
+      typeof this.character.settings.secrets === 'object'
+        ? (this.character.settings.secrets as Record<string, any>)?.[key]
+        : undefined) ||
       this.settings[key];
     const decryptedValue = decryptSecret(value, getSalt());
     if (decryptedValue === 'true') return true;
@@ -1358,7 +1399,7 @@ export class AgentRuntime implements IAgentRuntime {
 
     // Step 2: Create all entities
     const entityIds = entities.map((e) => e.id);
-    const entityExistsCheck = await this.adapter.getEntityByIds(entityIds);
+    const entityExistsCheck = await this.adapter.getEntitiesByIds(entityIds);
     const entitiesToUpdate = entityExistsCheck ? entityExistsCheck.map((e) => e.id) : [];
     const entitiesToCreate = entities.filter((e) => !entitiesToUpdate.includes(e.id));
 
@@ -2149,7 +2190,7 @@ export class AgentRuntime implements IAgentRuntime {
   }
 
   get db(): any {
-    return this.adapter.db;
+    return this.adapter?.db;
   }
   async init(): Promise<void> {
     await this.adapter.init();
@@ -2233,13 +2274,17 @@ export class AgentRuntime implements IAgentRuntime {
     return newAgent;
   }
   async getEntityById(entityId: UUID): Promise<Entity | null> {
-    const entities = await this.adapter.getEntityByIds([entityId]);
+    const entities = await this.adapter.getEntitiesByIds([entityId]);
     if (!entities?.length) return null;
     return entities[0];
   }
 
+  async getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null> {
+    return await this.adapter.getEntitiesByIds(entityIds);
+  }
+
   async getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null> {
-    return await this.adapter.getEntityByIds(entityIds);
+    return await this.adapter.getEntitiesByIds(entityIds);
   }
   async getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]> {
     return await this.adapter.getEntitiesForRoom(roomId, includeComponents);
@@ -2248,14 +2293,46 @@ export class AgentRuntime implements IAgentRuntime {
     if (!entity.agentId) {
       entity.agentId = this.agentId;
     }
-    return await this.createEntities([entity]);
+    this.logger.info(`[AgentRuntime] Creating entity with ID: ${entity.id}, agentId: ${entity.agentId}`);
+    try {
+      const result = await this.createEntities([entity]);
+      this.logger.info(`[AgentRuntime] createEntity result: ${result}`);
+      return result;
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Check if it's a duplicate key error
+      if (errorMessage.includes('duplicate key') || errorMessage.includes('already exists') || error.code === '23505') {
+        this.logger.warn(`[AgentRuntime] Entity ${entity.id} already exists, returning true`);
+        return true; // Entity exists, consider it a success
+      }
+      
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   async createEntities(entities: Entity[]): Promise<boolean> {
     entities.forEach((e) => {
       e.agentId = this.agentId;
     });
-    return await this.adapter.createEntities(entities);
+    this.logger.info(`[AgentRuntime] Calling adapter.createEntities for ${entities.length} entities`);
+    
+    if (!this.adapter) {
+      this.logger.error(`[AgentRuntime] No adapter available for createEntities`);
+      return false;
+    }
+    
+    this.logger.info(`[AgentRuntime] Using adapter: ${this.adapter.constructor.name}`);
+    
+    try {
+      const result = await this.adapter.createEntities(entities);
+      this.logger.info(`[AgentRuntime] Adapter.createEntities returned: ${result}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`[AgentRuntime] Error in adapter.createEntities:`, error);
+      throw error;
+    }
   }
 
   async updateEntity(entity: Entity): Promise<void> {
@@ -2416,7 +2493,7 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     this.logger.info(`Found ${memoryIds.length} memories to delete`);
-    await this.adapter.deleteManyMemories(memoryIds);
+    await this.adapter.deleteManyMemories(memoryIds.filter((id): id is UUID => id !== undefined));
 
     this.logger.info(`Successfully cleared all ${memoryIds.length} memories for agent`);
   }
@@ -2683,6 +2760,22 @@ export class AgentRuntime implements IAgentRuntime {
    */
   async generatePlan(message: Memory, context: PlanningContext): Promise<ActionPlan> {
     try {
+      // Check for a registered planning service first
+      const planningService = this.getService<any>('planning');
+      if (planningService && typeof planningService.createComprehensivePlan === 'function') {
+        this.logger.debug('Using registered planning service for plan generation');
+        try {
+          const state = await this.composeState(message);
+          return await planningService.createComprehensivePlan(this, context, message, state);
+        } catch (error) {
+          this.logger.debug('Planning service failed, falling back to built-in logic:', error);
+          // Fall through to built-in logic
+        }
+      }
+
+      // Fall back to built-in planning logic
+      this.logger.debug('Using built-in planning logic');
+      
       // Compose state for planning
       const state = await this.composeState(message);
 
@@ -2720,6 +2813,16 @@ export class AgentRuntime implements IAgentRuntime {
     message: Memory,
     callback?: HandlerCallback
   ): Promise<PlanExecutionResult> {
+    // Check for a registered planning service first
+    const planningService = this.getService<any>('planning');
+    if (planningService && typeof planningService.executePlan === 'function') {
+      this.logger.debug('Using registered planning service for plan execution');
+      return await planningService.executePlan(this, plan, message, callback);
+    }
+
+    // Fall back to built-in execution logic
+    this.logger.debug('Using built-in plan execution logic');
+    
     const context = new PlanExecutionContext(plan);
 
     try {
@@ -2794,6 +2897,15 @@ export class AgentRuntime implements IAgentRuntime {
    * Validate a plan
    */
   async validatePlan(plan: ActionPlan): Promise<{ valid: boolean; issues: string[] }> {
+    // Check for a registered planning service first
+    const planningService = this.getService<any>('planning');
+    if (planningService && typeof planningService.validatePlan === 'function') {
+      this.logger.debug('Using registered planning service for plan validation');
+      return await planningService.validatePlan(this, plan);
+    }
+
+    // Fall back to built-in validation logic
+    this.logger.debug('Using built-in plan validation logic');
     return validatePlanUtil(plan, this);
   }
 

@@ -92,11 +92,11 @@ export const relationshipsTable = pgTable(
 export const embeddingsTable = pgTable('embeddings', {
   id: text('id').primaryKey(),
   memoryId: text('memory_id').notNull(),
-  embedding384: vector('embedding_384', { dimensions: 384 }),
-  embedding768: vector('embedding_768', { dimensions: 768 }),
-  embedding1024: vector('embedding_1024', { dimensions: 1024 }),
-  embedding1536: vector('embedding_1536', { dimensions: 1536 }),
-  embedding3072: vector('embedding_3072', { dimensions: 3072 }),
+  embedding384: vector('dim_384', { dimensions: 384 }),
+  embedding768: vector('dim_768', { dimensions: 768 }),
+  embedding1024: vector('dim_1024', { dimensions: 1024 }),
+  embedding1536: vector('dim_1536', { dimensions: 1536 }),
+  embedding3072: vector('dim_3072', { dimensions: 3072 }),
   createdAt: text('created_at')
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),

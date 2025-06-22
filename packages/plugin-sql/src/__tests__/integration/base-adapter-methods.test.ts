@@ -14,6 +14,9 @@ import {
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 
+// Set test environment flag
+process.env.ELIZA_TESTING_PLUGIN = 'true';
+
 describe('Base Adapter Methods Integration Tests', () => {
   let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
   let runtime: AgentRuntime;
@@ -47,6 +50,22 @@ describe('Base Adapter Methods Integration Tests', () => {
   });
 
   describe('CRUD Operations', () => {
+    beforeEach(async () => {
+      // Clean up any existing entities from previous tests
+      // This is important because tests may use similar entity names
+      const existingEntities = await adapter.searchEntitiesByName({
+        query: '',
+        agentId: testAgentId,
+        limit: 100,
+      });
+      for (const entity of existingEntities) {
+        // Don't delete the test entity for memories
+        if (entity.id && entity.id !== testEntityId) {
+          await adapter.deleteEntity(entity.id);
+        }
+      }
+    });
+
     it('should handle getMemories with various filters', async () => {
       const agentId = testAgentId;
       const roomId = uuidv4() as UUID;
@@ -184,7 +203,7 @@ describe('Base Adapter Methods Integration Tests', () => {
       const entity: Entity = {
         id: uuidv4() as UUID,
         agentId: testAgentId,
-        names: ['Test Entity'],
+        names: ['Update Test Entity'],
         metadata: {
           test: true,
           version: 1,
@@ -390,7 +409,7 @@ describe('Base Adapter Methods Integration Tests', () => {
       const entity: Entity = {
         id: uuidv4() as UUID,
         agentId: testAgentId,
-        names: ['Test Entity'],
+        names: ['Delete Test Entity'],
         metadata: { type: 'test' },
       };
 
@@ -470,7 +489,7 @@ describe('Base Adapter Methods Integration Tests', () => {
       const entity: Entity = {
         id: uuidv4() as UUID,
         agentId: testAgentId,
-        names: ['Test Entity'],
+        names: ['Metadata Test Entity'],
         metadata: {
           category: 'person',
           age: 25,

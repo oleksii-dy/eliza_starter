@@ -1,11 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PGlite } from '@electric-sql/pglite';
-import { PGliteClientManager } from '../../pglite/manager';
-import { PgliteDatabaseAdapter } from '../../pglite/adapter';
-import { DatabaseMigrationService } from '../../migration-service';
-import * as schema from '../../schema';
-import type { UUID } from '@elizaos/core';
+import { UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { PGliteClientManager } from '../../pglite/manager';
 
 describe('PostgreSQL Adapter Integration Tests', () => {
   let adapter: PgliteDatabaseAdapter;
@@ -15,19 +13,11 @@ describe('PostgreSQL Adapter Integration Tests', () => {
 
   beforeEach(async () => {
     agentId = uuidv4() as UUID;
-    const client = new PGlite();
-    manager = new PGliteClientManager(client);
+    manager = new PGliteClientManager({});
     adapter = new PgliteDatabaseAdapter(agentId, manager);
     await adapter.init();
 
-    // Run migrations
-    const migrationService = new DatabaseMigrationService();
-    const db = adapter.getDatabase();
-    await migrationService.initializeWithDatabase(db);
-    migrationService.discoverAndRegisterPluginSchemas([
-      { name: '@elizaos/plugin-sql', description: 'SQL plugin', schema },
-    ]);
-    await migrationService.runAllPluginMigrations();
+    // Migrations are handled automatically by the adapter's UnifiedMigrator
 
     cleanup = async () => {
       await adapter.close();

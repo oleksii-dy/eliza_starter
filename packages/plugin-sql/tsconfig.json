@@ -19,7 +19,7 @@
     "noEmitOnError": false,
     "moduleDetection": "force",
     "allowArbitraryExtensions": true,
-    "baseUrl": "."
+    "baseUrl": "src"
   },
   "include": ["src/**/*.ts"],
   "exclude": [

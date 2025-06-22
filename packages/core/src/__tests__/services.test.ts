@@ -105,7 +105,7 @@ describe('service builder', () => {
     await (Def as any).start(mockRuntime);
     const defInstance = new Def();
     // Should not throw when using default stop
-    expect(defInstance.stop()).resolves.toBeUndefined();
+    await expect(defInstance.stop()).resolves.toBeUndefined();
   });
 
   it('should set all properties correctly with chaining', () => {

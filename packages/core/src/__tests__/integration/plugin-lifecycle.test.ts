@@ -305,7 +305,7 @@ describe('Plugin Lifecycle Integration Tests', () => {
       ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
       
       // Entity methods - stateful to handle agent entity creation/retrieval
-      getEntityByIds: vi.fn().mockImplementation((ids: UUID[]) => {
+      getEntitiesByIds: vi.fn().mockImplementation((ids: UUID[]) => {
         const entities = ids.map((id: UUID) => entityStore.get(id)).filter(Boolean);
         return Promise.resolve(entities);
       }),

@@ -32,17 +32,19 @@ async function testSQLPlugin() {
     console.log('3. Testing runtime initialization with SQL plugin:');
     const character = {
       name: 'Test Agent',
-      bio: ['Test bio'],
       system: 'Test system',
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
-      clients: [],
       plugins: [],
       settings: {
         PGLITE_PATH: path.join(testDir, 'db'),
+      },
+      style: {
+        all: [],
+        chat: [],
+        post: [],
       },
     };
 
