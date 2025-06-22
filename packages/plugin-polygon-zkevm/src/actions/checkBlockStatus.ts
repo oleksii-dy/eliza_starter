@@ -31,7 +31,7 @@ interface BlockStatusResult {
  * Determines whether a block is trusted, virtual, or consolidated
  */
 export const checkBlockStatusAction: Action = {
-  name: 'CHECK_L2_BLOCK_STATUS',
+  name: 'POLYGON_CHECK_L2_BLOCK_STATUS_ZKEVM',
   similes: [
     'CHECK_BLOCK_STATUS',
     'BLOCK_STATUS',
@@ -93,7 +93,7 @@ export const checkBlockStatusAction: Action = {
         logger.error(`[checkBlockStatusAction] Configuration error: ${errorMessage}`);
         const errorContent: Content = {
           text: errorMessage,
-          actions: ['CHECK_L2_BLOCK_STATUS'],
+          actions: ['POLYGON_CHECK_L2_BLOCK_STATUS_ZKEVM'],
           data: { error: errorMessage },
         };
 
@@ -304,7 +304,7 @@ ${errorMessages.length > 0 ? `\n**Warnings/Errors:**\n${errorMessages.map((msg) 
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['CHECK_L2_BLOCK_STATUS'],
+        actions: ['POLYGON_CHECK_L2_BLOCK_STATUS_ZKEVM'],
         data: {
           result,
           errors: errorMessages,
@@ -323,7 +323,7 @@ ${errorMessages.length > 0 ? `\n**Warnings/Errors:**\n${errorMessages.map((msg) 
 
       const errorContent: Content = {
         text: `❌ ${errorMessage}`,
-        actions: ['CHECK_L2_BLOCK_STATUS'],
+        actions: ['POLYGON_CHECK_L2_BLOCK_STATUS_ZKEVM'],
         data: {
           error: errorMessage,
           success: false,
@@ -343,14 +343,14 @@ ${errorMessages.length > 0 ? `\n**Warnings/Errors:**\n${errorMessages.map((msg) 
       {
         name: '{{user1}}',
         content: {
-          text: 'Check the status of block 12345 on zkEVM',
+          text: 'Check the status of block 12345 on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: "I'll check the status of block 12345 on Polygon zkEVM for you.",
-          actions: ['CHECK_L2_BLOCK_STATUS'],
+          text: '📊 **Block Status: Consolidated** (Block: 12345)\n\nThis block has been finalized and its state is part of a consolidated batch on L1, ensuring the highest level of security.',
+          action: 'POLYGON_CHECK_L2_BLOCK_STATUS_ZKEVM',
         },
       },
     ],
@@ -358,14 +358,14 @@ ${errorMessages.length > 0 ? `\n**Warnings/Errors:**\n${errorMessages.map((msg) 
       {
         name: '{{user1}}',
         content: {
-          text: 'What is the finality status of the latest block?',
+          text: 'Is block 0xabc... on Polygon zkEVM finalized?',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me check the finality status of the latest block on Polygon zkEVM.',
-          actions: ['CHECK_L2_BLOCK_STATUS'],
+          text: 'Let me check the finality status of that block on Polygon zkEVM.',
+          action: 'POLYGON_CHECK_L2_BLOCK_STATUS_ZKEVM',
         },
       },
     ],

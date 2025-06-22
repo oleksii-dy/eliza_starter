@@ -14,12 +14,17 @@ import { initializeClobClient } from '../utils/clobClient';
 import { getOrderBookTemplate } from '../templates';
 import type { OrderBook } from '../types';
 
+enum Side {
+  BUY = 'buy',
+  SELL = 'sell',
+}
+
 /**
  * Get order book summary for a market token action for Polymarket
  * Fetches bid/ask data for a specific token
  */
 export const getOrderBookSummaryAction: Action = {
-  name: 'GET_ORDER_BOOK',
+  name: 'POLYMARKET_GET_ORDER_BOOK',
   similes: [
     'ORDER_BOOK',
     'BOOK_SUMMARY',
@@ -61,7 +66,7 @@ export const getOrderBookSummaryAction: Action = {
       logger.error(`[getOrderBookSummaryAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_ORDER_BOOK'],
+        actions: ['POLYMARKET_GET_ORDER_BOOK'],
         data: { error: errorMessage },
       };
 
@@ -94,7 +99,7 @@ Please provide a token ID in your request. For example:
 • "Show order book for token 123456"
 • "Get order book summary for 789012"
 • "ORDER_BOOK 345678"`,
-          actions: ['GET_ORDER_BOOK'],
+          actions: ['POLYMARKET_GET_ORDER_BOOK'],
           data: { error: errorMessage },
         };
 
@@ -148,7 +153,7 @@ Please provide a token ID in your request. For example:
 • "Show order book for token 123456"
 • "Get order book summary for 789012"
 • "ORDER_BOOK 345678"`,
-          actions: ['GET_ORDER_BOOK'],
+          actions: ['POLYMARKET_GET_ORDER_BOOK'],
           data: { error: errorMessage },
         };
 
@@ -163,12 +168,20 @@ Please provide a token ID in your request. For example:
       // Initialize CLOB client
       const clobClient = await initializeClobClient(runtime);
 
-      // Fetch order book data
-      const orderBook: OrderBook = await clobClient.getBook(tokenId);
+      // Fetch order book data for both sides
+      const [buyBook, sellBook] = await Promise.all([
+        clobClient.getOrderBooks([{ token_id: tokenId, side: 'buy' as any }]),
+        clobClient.getOrderBooks([{ token_id: tokenId, side: 'sell' as any }]),
+      ]);
 
-      if (!orderBook) {
+      if (!buyBook || buyBook.length === 0 || !sellBook || sellBook.length === 0) {
         throw new Error(`Order book not found for token ID: ${tokenId}`);
       }
+      const orderBook: OrderBook = {
+        ...buyBook[0],
+        bids: sellBook[0].bids, // bids are sells from the user's perspective
+        asks: buyBook[0].asks, // asks are buys from the user's perspective
+      };
 
       // Calculate summary statistics
       const bidCount = orderBook.bids?.length || 0;
@@ -231,7 +244,7 @@ Please provide a token ID in your request. For example:
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_ORDER_BOOK'],
+        actions: ['POLYMARKET_GET_ORDER_BOOK'],
         data: {
           orderBook,
           tokenId,
@@ -267,8 +280,8 @@ Please check:
 • Network connectivity is available
 • Polymarket CLOB service is operational
 
-**Token ID provided**: \`${tokenId}\``,
-        actions: ['GET_ORDER_BOOK'],
+**Token ID**: \`${tokenId}\``,
+        actions: ['POLYMARKET_GET_ORDER_BOOK'],
         data: {
           error: errorMessage,
           tokenId,
@@ -288,14 +301,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'Show order book for token 123456',
+          text: 'Show me the order book for token 123456 via Polymarket',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: "I'll fetch the order book data for that token.",
-          actions: ['GET_ORDER_BOOK'],
+          text: "I'll retrieve the order book summary for that token from Polymarket.",
+          action: 'POLYMARKET_GET_ORDER_BOOK',
         },
       },
     ],
@@ -303,14 +316,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'Get order book summary for 789012',
+          text: 'Can I get the market depth for 789012 via Polymarket?',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me get the order book summary for you.',
-          actions: ['GET_ORDER_BOOK'],
+          text: 'Fetching the market depth and order book data for you from Polymarket...',
+          action: 'POLYMARKET_GET_ORDER_BOOK',
         },
       },
     ],
@@ -324,8 +337,8 @@ Please check:
       {
         name: '{{user2}}',
         content: {
-          text: 'Fetching order book data for token 345678.',
-          actions: ['GET_ORDER_BOOK'],
+          text: 'Getting order book data for token 345678 from Polymarket.',
+          action: 'POLYMARKET_GET_ORDER_BOOK',
         },
       },
     ],

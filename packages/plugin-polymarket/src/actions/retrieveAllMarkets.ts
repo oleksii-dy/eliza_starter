@@ -19,7 +19,7 @@ import type { MarketFilters, Market } from '../types';
  * Fetches the complete list of prediction markets from the CLOB
  */
 export const retrieveAllMarketsAction: Action = {
-  name: 'GET_ALL_MARKETS',
+  name: 'POLYMARKET_GET_ALL_MARKETS',
   similes: [
     'LIST_MARKETS',
     'SHOW_MARKETS',
@@ -57,7 +57,7 @@ export const retrieveAllMarketsAction: Action = {
       logger.error(`[retrieveAllMarketsAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_ALL_MARKETS'],
+        actions: ['POLYMARKET_GET_ALL_MARKETS'],
         data: { error: errorMessage },
       };
 
@@ -144,7 +144,7 @@ export const retrieveAllMarketsAction: Action = {
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_ALL_MARKETS'],
+        actions: ['POLYMARKET_GET_ALL_MARKETS'],
         data: {
           markets,
           count: marketCount,
@@ -172,7 +172,7 @@ Please check:
 • CLOB_API_URL is correctly configured
 • Network connectivity is available
 • Polymarket CLOB service is operational`,
-        actions: ['GET_ALL_MARKETS'],
+        actions: ['POLYMARKET_GET_ALL_MARKETS'],
         data: {
           error: errorMessage,
           timestamp: new Date().toISOString(),
@@ -191,14 +191,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'Show me all available prediction markets',
+          text: 'Show me all available prediction markets via Polymarket',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: "I'll retrieve all available Polymarket prediction markets for you.",
-          actions: ['GET_ALL_MARKETS'],
+          action: 'POLYMARKET_GET_ALL_MARKETS',
         },
       },
     ],
@@ -213,7 +213,7 @@ Please check:
         name: '{{user2}}',
         content: {
           text: 'Let me fetch the current list of available markets from Polymarket.',
-          actions: ['GET_ALL_MARKETS'],
+          action: 'POLYMARKET_GET_ALL_MARKETS',
         },
       },
     ],
@@ -221,14 +221,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'List all active prediction markets',
+          text: 'List all active prediction markets via Polymarket',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: "I'll get all the active prediction markets currently available.",
-          actions: ['GET_ALL_MARKETS'],
+          text: "I'll get all the active prediction markets currently available via Polymarket.",
+          action: 'POLYMARKET_GET_ALL_MARKETS',
         },
       },
     ],

@@ -1,7 +1,7 @@
 import { Action, IAgentRuntime, Memory, State, HandlerCallback, logger } from '@elizaos/core';
 
 export const heimdallValidatorSetAction: Action = {
-  name: 'HEIMDALL_VALIDATOR_SET',
+  name: 'POLYGON_HEIMDALL_VALIDATOR_SET',
   similes: [
     'GET_HEIMDALL_VALIDATOR_SET',
     'HEIMDALL_VALIDATORS',
@@ -104,20 +104,41 @@ export const heimdallValidatorSetAction: Action = {
   examples: [
     [
       {
-        name: 'user',
-        content: { text: 'Show me the current Heimdall validator set' },
+        name: '{{user1}}',
+        content: { text: 'Show me the current Heimdall validator set on Polygon' },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Showing the current Heimdall validator set on Polygon',
+          action: 'POLYGON_HEIMDALL_VALIDATOR_SET',
+        },
       },
     ],
     [
       {
-        name: 'user',
-        content: { text: 'List all validators on Heimdall network' },
+        name: '{{user1}}',
+        content: { text: 'List all validators on Heimdall network on Polygon' },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Listing all validators on Heimdall network on Polygon',
+          action: 'POLYGON_HEIMDALL_VALIDATOR_SET',
+        },
       },
     ],
     [
       {
-        name: 'user',
-        content: { text: 'Get Heimdall validators' },
+        name: '{{user1}}',
+        content: { text: 'Get Heimdall validators on Polygon' },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Getting Heimdall validators on Polygon',
+          action: 'POLYGON_HEIMDALL_VALIDATOR_SET',
+        },
       },
     ],
   ],

@@ -10,7 +10,7 @@ import {
 import { PolygonRpcService } from '../services/PolygonRpcService.js';
 
 export const getL2BlockNumberAction: Action = {
-  name: 'GET_L2_BLOCK_NUMBER',
+  name: 'POLYGON_GET_L2_BLOCK_NUMBER',
   similes: ['GET_POLYGON_BLOCK_NUMBER', 'CHECK_CURRENT_BLOCK', 'SHOW_LATEST_BLOCK'],
   description: 'Gets the current block number on Polygon (L2).',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
@@ -57,7 +57,7 @@ export const getL2BlockNumberAction: Action = {
 
       const responseContent: Content = {
         text: `The current Polygon block number is ${blockNumber}.`,
-        actions: ['GET_L2_BLOCK_NUMBER'],
+        actions: ['POLYGON_GET_L2_BLOCK_NUMBER'],
         data: {
           blockNumber,
           network: 'polygon',
@@ -76,7 +76,7 @@ export const getL2BlockNumberAction: Action = {
 
       const errorContent: Content = {
         text: `Error retrieving current Polygon block number: ${errorMessage}`,
-        actions: ['GET_L2_BLOCK_NUMBER'],
+        actions: ['POLYGON_GET_L2_BLOCK_NUMBER'],
         data: { error: errorMessage },
       };
 
@@ -90,31 +90,31 @@ export const getL2BlockNumberAction: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
           text: 'get polygon block number',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
           text: 'The current Polygon block number is 65123456.',
-          actions: ['GET_L2_BLOCK_NUMBER'],
+          action: 'POLYGON_GET_L2_BLOCK_NUMBER',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
           text: 'what is the current block number on polygon?',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
           text: 'The current Polygon block number is 65123456.',
-          actions: ['GET_L2_BLOCK_NUMBER'],
+          action: 'POLYGON_GET_L2_BLOCK_NUMBER',
         },
       },
     ],

@@ -15,7 +15,7 @@ import { deploySmartContractTemplate } from '../templates';
 import { callLLMWithTimeout } from '../utils/llmHelpers';
 
 export const deploySmartContractAction: Action = {
-  name: 'DEPLOY_SMART_CONTRACT',
+  name: 'POLYGON_DEPLOY_SMART_CONTRACT_ZKEVM',
   similes: [
     'DEPLOY_CONTRACT',
     'DEPLOY_ZKEVM_CONTRACT',
@@ -57,7 +57,7 @@ export const deploySmartContractAction: Action = {
       logger.error(`[deploySmartContractAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['DEPLOY_SMART_CONTRACT'],
+        actions: ['POLYGON_DEPLOY_SMART_CONTRACT_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -72,7 +72,7 @@ export const deploySmartContractAction: Action = {
       logger.error(`[deploySmartContractAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['DEPLOY_SMART_CONTRACT'],
+        actions: ['POLYGON_DEPLOY_SMART_CONTRACT_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -135,7 +135,7 @@ export const deploySmartContractAction: Action = {
       logger.error(`[deploySmartContractAction] ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['DEPLOY_SMART_CONTRACT'],
+        actions: ['POLYGON_DEPLOY_SMART_CONTRACT_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -255,19 +255,15 @@ export const deploySmartContractAction: Action = {
     // Handle result and errors
     if (contractAddress && transactionHash) {
       const responseContent: Content = {
-        text: `✅ **Smart Contract Deployed Successfully!**
+        text: `✅ Smart contract deployed successfully to Polygon zkEVM!
 
 **Contract Address:** \`${contractAddress}\`
 **Transaction Hash:** \`${transactionHash}\`
-**Network:** Polygon zkEVM
 **Method Used:** ${methodUsed}
+**Network:** Polygon zkEVM
 
-🔗 **Blockchain Explorer:**
-- Contract: ${contractAddress}
-- Transaction: ${transactionHash}
-
-The contract is now live and ready for interaction! 🚀`,
-        actions: ['DEPLOY_SMART_CONTRACT'],
+You can now interact with your new contract.`,
+        actions: ['POLYGON_DEPLOY_SMART_CONTRACT_ZKEVM'],
         data: {
           contractAddress,
           transactionHash,
@@ -290,102 +286,49 @@ The contract is now live and ready for interaction! 🚀`,
       return responseContent;
     } else {
       // Deployment failed
-      const errorMessage = `❌ **Smart Contract Deployment Failed**
-
-Failed to deploy smart contract to Polygon zkEVM. 
-
-**Errors:** ${errorMessages.join('; ')}
-
-Please check your bytecode and configuration, then try again.`;
-      logger.error(errorMessage);
-
+      const finalErrorMessage = `❌ Failed to deploy smart contract. Errors: ${errorMessages.join('; ')}`;
       const errorContent: Content = {
-        text: errorMessage,
-        actions: ['DEPLOY_SMART_CONTRACT'],
-        data: { error: errorMessage, errors: errorMessages, deploymentParams },
+        text: finalErrorMessage,
+        actions: ['POLYGON_DEPLOY_SMART_CONTRACT_ZKEVM'],
+        data: { error: finalErrorMessage, errors: errorMessages, deploymentParams },
       };
 
       if (callback) {
         await callback(errorContent);
       }
 
-      throw new Error(errorMessage);
+      throw new Error(finalErrorMessage);
     }
   },
 
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'deploy smart contract with bytecode 0x608060405234801561001057600080fd5b50336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550610150806100606000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c8063893d20e81461003b578063a6f9dae114610059575b600080fd5b610043610075565b60405161005091906100d9565b60405180910390f35b610073600480360381019061006e919061009d565b61009e565b005b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff16905090565b8073ffffffffffffffffffffffffffffffffffffffff166000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b6000610104826100d9565b9050919050565b610114816100f9565b82525050565b600060208201905061012f600083018461010b565b9291505056fea2646970667358221220d85b6a81c6c0416d0c86f24342e2cb93cd803f56f1dc0423a11a05c9fc402c5164736f6c63430008120033',
+          text: 'Deploy a smart contract on Polygon zkEVM with bytecode 0x6080...',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: '✅ **Smart Contract Deployed Successfully!**\n\n**Contract Address:** `0x742d35Cc6634C0532925a3b8D4C9db96c4b4d8b7`\n**Transaction Hash:** `0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef`\n**Network:** Polygon zkEVM\n**Method Used:** alchemy\n\n🔗 **Blockchain Explorer:**\n- Contract: 0x742d35Cc6634C0532925a3b8D4C9db96c4b4d8b7\n- Transaction: 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\n\nThe contract is now live and ready for interaction! 🚀',
-          actions: ['DEPLOY_SMART_CONTRACT'],
-        },
-      },
-    ],
-    [
-      {
-        name: 'user',
-        content: {
-          text: 'deploy a new contract to polygon zkevm',
-        },
-      },
-      {
-        name: 'assistant',
-        content: {
-          text: '✅ **Smart Contract Deployed Successfully!**\n\n**Contract Address:** `0x123abc456def789...`\n**Transaction Hash:** `0xdef456789abc123...`\n**Network:** Polygon zkEVM\n**Method Used:** rpc\n\n🔗 **Blockchain Explorer:**\n- Contract: 0x123abc456def789...\n- Transaction: 0xdef456789abc123...\n\nThe contract is now live and ready for interaction! 🚀',
-          actions: ['DEPLOY_SMART_CONTRACT'],
+          text: '✅ Smart contract deployed successfully to Polygon zkEVM! Contract Address: 0xabc...',
+          action: 'POLYGON_DEPLOY_SMART_CONTRACT_ZKEVM',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'create smart contract on zkevm with this bytecode: 0x608060405234801561001057600080fd5b50...',
+          text: 'Create a new contract on Polygon zkEVM using bytecode 0x6080... and constructor args ["MyToken", "TKN"]',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: '✅ **Smart Contract Deployed Successfully!**\n\n**Contract Address:** `0x9876543210fedcba...`\n**Transaction Hash:** `0xabcdef123456789...`\n**Network:** Polygon zkEVM\n**Method Used:** alchemy\n\n🔗 **Blockchain Explorer:**\n- Contract: 0x9876543210fedcba...\n- Transaction: 0xabcdef123456789...\n\nThe contract is now live and ready for interaction! 🚀',
-          actions: ['DEPLOY_SMART_CONTRACT'],
-        },
-      },
-    ],
-    [
-      {
-        name: 'user',
-        content: {
-          text: 'publish a smart contract to polygon zkevm mainnet',
-        },
-      },
-      {
-        name: 'assistant',
-        content: {
-          text: '✅ **Smart Contract Deployed Successfully!**\n\n**Contract Address:** `0xabc123def456...`\n**Transaction Hash:** `0x789xyz012345...`\n**Network:** Polygon zkEVM\n**Method Used:** rpc\n\n🔗 **Blockchain Explorer:**\n- Contract: 0xabc123def456...\n- Transaction: 0x789xyz012345...\n\nThe contract is now live and ready for interaction! 🚀',
-          actions: ['DEPLOY_SMART_CONTRACT'],
-        },
-      },
-    ],
-    [
-      {
-        name: 'user',
-        content: {
-          text: 'can you deploy this contract for me? bytecode: 0x608060405234801561001057600080fd5b50336000...',
-        },
-      },
-      {
-        name: 'assistant',
-        content: {
-          text: '✅ **Smart Contract Deployed Successfully!**\n\n**Contract Address:** `0xfedcba987654321...`\n**Transaction Hash:** `0x456def789abc123...`\n**Network:** Polygon zkEVM\n**Method Used:** alchemy\n\n🔗 **Blockchain Explorer:**\n- Contract: 0xfedcba987654321...\n- Transaction: 0x456def789abc123...\n\nThe contract is now live and ready for interaction! 🚀',
-          actions: ['DEPLOY_SMART_CONTRACT'],
+          text: 'I will deploy the smart contract with the provided bytecode and constructor arguments to Polygon zkEVM.',
+          action: 'POLYGON_DEPLOY_SMART_CONTRACT_ZKEVM',
         },
       },
     ],

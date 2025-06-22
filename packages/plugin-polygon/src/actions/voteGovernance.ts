@@ -182,12 +182,12 @@ class PolygonVoteGovernanceActionRunner {
 }
 
 export const voteGovernanceAction: Action = {
-  name: 'VOTE_GOVERNANCE_POLYGON',
+  name: 'POLYGON_VOTE_GOVERNANCE',
   similes: ['CAST_VOTE_POLYGON', 'SUPPORT_PROPOSAL_POLYGON', 'VOTE_ON_PROPOSAL_POLYGON'],
-  description: 'Casts a vote on a governance proposal using the Polygon WalletProvider.',
+  description: 'Casts a vote on a governance proposal on Polygon.',
 
   validate: async (runtime: IAgentRuntime): Promise<boolean> => {
-    logger.debug('Validating VOTE_GOVERNANCE_POLYGON action...');
+    logger.debug('Validating POLYGON_VOTE_GOVERNANCE action...');
     if (
       !runtime.getSetting('WALLET_PRIVATE_KEY') ||
       !runtime.getSetting('POLYGON_PLUGINS_ENABLED')
@@ -215,7 +215,7 @@ export const voteGovernanceAction: Action = {
     callback: HandlerCallback | undefined,
     _responses: Memory[] | undefined
   ) => {
-    logger.info('Handling VOTE_GOVERNANCE_POLYGON for message:', message.id);
+    logger.info('Handling POLYGON_VOTE_GOVERNANCE for message:', message.id);
     const rawMessageText = message.content.text || '';
     let extractedParams: (Partial<VoteGovernanceParams> & { error?: string }) | null = null;
 
@@ -239,18 +239,18 @@ export const voteGovernanceAction: Action = {
             error?: string;
           };
         }
-        logger.debug('VOTE_GOVERNANCE_POLYGON: Extracted params via TEXT_SMALL:', extractedParams);
+        logger.debug('POLYGON_VOTE_GOVERNANCE: Extracted params via TEXT_SMALL:', extractedParams);
 
         if (extractedParams?.error) {
           logger.warn(
-            `VOTE_GOVERNANCE_POLYGON: Model responded with error: ${extractedParams.error}`
+            `POLYGON_VOTE_GOVERNANCE: Model responded with error: ${extractedParams.error}`
           );
           throw new Error(extractedParams.error);
         }
       } catch (e: unknown) {
         const errorMsg = e instanceof Error ? e.message : String(e);
         logger.warn(
-          `VOTE_GOVERNANCE_POLYGON: Failed to parse JSON from model response or model returned error (Proceeding to manual extraction): ${errorMsg}`
+          `POLYGON_VOTE_GOVERNANCE: Failed to parse JSON from model response or model returned error (Proceeding to manual extraction): ${errorMsg}`
         );
       }
 
@@ -263,7 +263,7 @@ export const voteGovernanceAction: Action = {
         extractedParams.support === undefined // Support can be 0
       ) {
         logger.info(
-          'VOTE_GOVERNANCE_POLYGON: Model extraction insufficient or failed, attempting manual parameter extraction.'
+          'POLYGON_VOTE_GOVERNANCE: Model extraction insufficient or failed, attempting manual parameter extraction.'
         );
         const manualParams = extractVoteGovernanceParamsFromText(rawMessageText);
 
@@ -282,7 +282,7 @@ export const voteGovernanceAction: Action = {
           extractedParams = manualParams;
         }
         logger.debug(
-          'VOTE_GOVERNANCE_POLYGON: Params after manual extraction attempt:',
+          'POLYGON_VOTE_GOVERNANCE: Params after manual extraction attempt:',
           extractedParams
         );
       }
@@ -295,7 +295,7 @@ export const voteGovernanceAction: Action = {
         ![0, 1, 2].includes(extractedParams.support)
       ) {
         logger.error(
-          'VOTE_GOVERNANCE_POLYGON: Incomplete or invalid parameters after all extraction attempts.',
+          'POLYGON_VOTE_GOVERNANCE: Incomplete or invalid parameters after all extraction attempts.',
           extractedParams
         );
         throw new Error(
@@ -313,20 +313,20 @@ export const voteGovernanceAction: Action = {
 
       if (callback) {
         await callback({
-          text: successMsg,
+          text: `Successfully cast vote for proposal ${voteParams.proposalId}. Tx hash: ${txResult.hash}`,
           content: { success: true, ...txResult },
-          actions: ['VOTE_GOVERNANCE_POLYGON'],
+          actions: ['POLYGON_VOTE_GOVERNANCE'],
           source: message.content.source,
         });
       }
       return { success: true, ...txResult };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      logger.error('Error in VOTE_GOVERNANCE_POLYGON handler:', errMsg, error);
+      logger.error(`Error in VOTE_GOVERNANCE_POLYGON handler: ${errMsg}`, error);
       if (callback) {
         await callback({
           text: `Error voting on proposal: ${errMsg}`,
-          actions: ['VOTE_GOVERNANCE_POLYGON'],
+          actions: ['POLYGON_VOTE_GOVERNANCE'],
           source: message.content.source,
         });
       }
@@ -337,15 +337,46 @@ export const voteGovernanceAction: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Vote FOR proposal 123 on Polygon governor 0xGov. Chain: polygon.',
+          text: 'Vote for proposal 123 on the Polygon mainnet governor 0xabc123.',
         },
       },
       {
-        name: 'user',
+        name: '{{agent}}',
         content: {
-          text: 'Support proposal 0xPropId with option 1 on governor 0xGovAddress for ethereum chain.',
+          text: 'I have cast a "for" vote on proposal 123 on the Polygon mainnet governor at 0xabc123.',
+          actions: ['POLYGON_VOTE_GOVERNANCE'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'Vote against proposal 456 on the Polygon mumbai governor 0xdef456. My reason is "This is not a good idea."',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'I have cast an "against" vote on proposal 456 on the Polygon mumbai governor at 0xdef456 with the reason "This is not a good idea."',
+          actions: ['POLYGON_VOTE_GOVERNANCE'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'Abstain from voting on proposal 789 on the Polygon mainnet governor 0xghi789.',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'I have cast an "abstain" vote on proposal 789 on the Polygon mainnet governor at 0xghi789.',
+          actions: ['POLYGON_VOTE_GOVERNANCE'],
         },
       },
     ],

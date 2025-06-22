@@ -10,9 +10,8 @@ import {
   parseJSONObjectFromText,
   type ActionExample,
 } from '@elizaos/core';
-import { HeimdallService } from '../services/HeimdallService';
+import { HeimdallService } from '../services/HeimdallService.js';
 import { z } from 'zod';
-import { heimdallTransferTokensActionTemplate } from '../templates'; // Will be created
 
 // --- Action Parameter Schema ---
 const heimdallTransferTokensParamsSchema = z.object({
@@ -70,7 +69,7 @@ function extractHeimdallTransferTokensParamsFromText(
 
 // --- Action Definition ---
 export const heimdallTransferTokensAction: Action = {
-  name: 'HEIMDALL_TRANSFER_TOKENS',
+  name: 'POLYGON_HEIMDALL_TRANSFER_TOKENS',
   similes: [
     'TRANSFER_HEIMDALL_MATIC',
     'SEND_HEIMDALL_TOKENS',
@@ -85,7 +84,7 @@ export const heimdallTransferTokensAction: Action = {
     'Transfers native tokens (e.g., MATIC) on the Heimdall network when the recipient address starts with "heimdall".',
 
   validate: async (runtime: IAgentRuntime): Promise<boolean> => {
-    logger.debug('Validating HEIMDALL_TRANSFER_TOKENS action...');
+    logger.debug('Validating POLYGON_HEIMDALL_TRANSFER_TOKENS action...');
     const heimdallRpcUrl = runtime.getSetting('HEIMDALL_RPC_URL');
     const privateKey = runtime.getSetting('PRIVATE_KEY');
 
@@ -97,7 +96,7 @@ export const heimdallTransferTokensAction: Action = {
       logger.error('PRIVATE_KEY is not configured.');
       return false;
     }
-    logger.debug('HEIMDALL_TRANSFER_TOKENS validation successful.');
+    logger.debug('POLYGON_HEIMDALL_TRANSFER_TOKENS validation successful.');
     return true;
   },
 
@@ -108,9 +107,9 @@ export const heimdallTransferTokensAction: Action = {
     _options: unknown,
     callback: HandlerCallback | undefined
   ) => {
-    logger.info(`Handling HEIMDALL_TRANSFER_TOKENS for message: ${message.id}`);
+    logger.info(`Handling POLYGON_HEIMDALL_TRANSFER_TOKENS for message: ${message.id}`);
     const rawMessageText = message.content.text || '';
-    let extractedParams: (Partial<HeimdallTransferTokensParams> & { error?: string }) | null = null;
+    let extractedParams: Partial<HeimdallTransferTokensParams> | null = null;
 
     try {
       const heimdallService = runtime.getService<HeimdallService>(HeimdallService.serviceType);
@@ -118,51 +117,16 @@ export const heimdallTransferTokensAction: Action = {
         throw new Error('HeimdallService is not available.');
       }
 
-      try {
-        const prompt = composePromptFromState({
-          state,
-          template: heimdallTransferTokensActionTemplate,
-        });
-        const modelResponse = await runtime.useModel(ModelType.TEXT_SMALL, {
-          prompt,
-        });
-        const parsed = parseJSONObjectFromText(modelResponse);
-        if (parsed) {
-          extractedParams = parsed as Partial<HeimdallTransferTokensParams>;
-        }
-        logger.debug('HEIMDALL_TRANSFER_TOKENS: Extracted params via TEXT_SMALL:', extractedParams);
-        if (extractedParams?.error) {
-          throw new Error(extractedParams.error);
-        }
-      } catch (e: unknown) {
-        const errorMsg = e instanceof Error ? e.message : String(e);
-        logger.warn(
-          `HEIMDALL_TRANSFER_TOKENS: Failed to parse JSON from model (Proceeding to manual): ${errorMsg}`
-        );
-      }
-
-      if (
-        !extractedParams ||
-        extractedParams.error ||
-        !extractedParams.recipientAddress ||
-        !extractedParams.amount
-      ) {
-        logger.info(
-          'HEIMDALL_TRANSFER_TOKENS: Model extraction insufficient, attempting manual extraction.'
-        );
-        const manualParams = extractHeimdallTransferTokensParamsFromText(rawMessageText);
-        if (extractedParams && !extractedParams.error) {
-          extractedParams = { ...manualParams, ...extractedParams };
-        } else {
-          extractedParams = manualParams;
-        }
-        logger.debug('HEIMDALL_TRANSFER_TOKENS: Params after manual extraction:', extractedParams);
-      }
+      extractedParams = extractHeimdallTransferTokensParamsFromText(rawMessageText);
+      logger.debug(
+        'POLYGON_HEIMDALL_TRANSFER_TOKENS: Params from manual extraction:',
+        extractedParams
+      );
 
       const validatedParams = heimdallTransferTokensParamsSchema.safeParse(extractedParams);
       if (!validatedParams.success) {
         logger.error(
-          'HEIMDALL_TRANSFER_TOKENS: Invalid parameters.',
+          'POLYGON_HEIMDALL_TRANSFER_TOKENS: Invalid parameters.',
           validatedParams.error.flatten()
         );
         throw new Error(
@@ -200,7 +164,7 @@ export const heimdallTransferTokensAction: Action = {
       };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      logger.error('Error in HEIMDALL_TRANSFER_TOKENS handler:', errMsg, error);
+      logger.error('Error in POLYGON_HEIMDALL_TRANSFER_TOKENS handler:', errMsg, error);
       if (callback) {
         await callback({
           text: `Error transferring Heimdall tokens: ${errMsg}`,
@@ -215,33 +179,33 @@ export const heimdallTransferTokensAction: Action = {
   examples: [
     [
       {
-        name: 'User transfers Heimdall MATIC',
-        id: 'htt-ex1-user',
-        role: 'user',
-        entityId: 'u1',
-        roomId: 'r1',
-        timestamp: new Date().toISOString(),
-        actions: ['HEIMDALL_TRANSFER_TOKENS'],
+        name: '{{user1}}',
         content: {
           text: 'Send 0.5 MATIC on Heimdall to heimdall1recipientaddress. The amount is 500000000000000000 in wei.',
-          source: 'user-input',
         },
-      } as ActionExample,
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Sending 0.5 MATIC on Heimdall to heimdall1recipientaddress.',
+          action: 'POLYGON_HEIMDALL_TRANSFER_TOKENS',
+        },
+      },
     ],
     [
       {
-        name: 'User transfers Heimdall tokens with different denom',
-        id: 'htt-ex2-user',
-        role: 'user',
-        entityId: 'u1',
-        roomId: 'r1',
-        timestamp: new Date().toISOString(),
-        actions: ['HEIMDALL_TRANSFER_TOKENS'],
+        name: '{{user1}}',
         content: {
           text: 'Transfer 100000 uatom on Heimdall to heimdallvaloper1validatoraddress.',
-          source: 'user-input',
         },
-      } as ActionExample,
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Transferring 100000 uatom on Heimdall to heimdallvaloper1validatoraddress.',
+          action: 'POLYGON_HEIMDALL_TRANSFER_TOKENS',
+        },
+      },
     ],
   ],
 };

@@ -9,8 +9,21 @@ import {
   ActionExample,
 } from '@elizaos/core';
 
-import { initializeClobClient, type PricePoint } from '../utils/clobClient.js';
+import { initializeClobClient } from '../utils/clobClient.js';
 import { callLLMWithTimeout } from '../utils/llmHelpers.js';
+
+export interface PricePoint {
+  t: number;
+  p: number;
+}
+
+export enum PriceHistoryInterval {
+  '1m' = '1m',
+  '5m' = '5m',
+  '1h' = '1h',
+  '1d' = '1d',
+  '1w' = '1w',
+}
 
 // Trigger words and phrases for price history action
 const PRICE_HISTORY_SIMILES = [
@@ -65,7 +78,7 @@ If tokenId is missing:
 `;
 
 export const getPriceHistory: Action = {
-  name: 'GET_PRICE_HISTORY',
+  name: 'POLYMARKET_GET_PRICE_HISTORY',
   similes: PRICE_HISTORY_SIMILES,
   description:
     'Get historical price data for a Polymarket token - returns time-series of price points with timestamps and prices',
@@ -120,7 +133,10 @@ export const getPriceHistory: Action = {
       logger.info(
         `[getPriceHistory] Fetching price history for token ${params.tokenId} with interval ${interval}`
       );
-      const priceHistory = await clobClient.getPricesHistory(params.tokenId, interval);
+      const priceHistory = await clobClient.getPricesHistory({
+        token_id: params.tokenId,
+        interval: interval as any,
+      });
 
       logger.info(`[getPriceHistory] Retrieved ${priceHistory?.length || 0} price points`);
 
@@ -135,7 +151,7 @@ export const getPriceHistory: Action = {
         await callback({
           text: responseMessage,
           content: {
-            action: 'price_history_retrieved',
+            action: 'POLYMARKET_PRICE_HISTORY_RETRIEVED',
             tokenId: params.tokenId,
             interval: interval,
             priceHistory: priceHistory,
@@ -161,7 +177,7 @@ Please check:
         await callback({
           text: errorMessage,
           content: {
-            action: 'price_history_error',
+            action: 'POLYMARKET_PRICE_HISTORY_ERROR',
             error: error instanceof Error ? error.message : 'Unknown error',
             timestamp: new Date().toISOString(),
           },
@@ -176,39 +192,39 @@ Please check:
     [
       {
         name: '{{user1}}',
-        content: { text: 'Get price history for token 123456 with 1d interval' },
+        content: { text: 'Get price history for token 123456 with 1d interval via Polymarket' },
       },
       {
         name: '{{user2}}',
         content: {
           text: '📈 **Price History for Token 123456**\n\n⏱️ **Interval**: 1d\n📊 **Data Points**: 30\n\n**Recent Price Points:**\n• 2024-01-15 12:00:00 - $0.6523 (65.23%)\n• 2024-01-14 12:00:00 - $0.6445 (64.45%)\n• 2024-01-13 12:00:00 - $0.6387 (63.87%)\n• 2024-01-12 12:00:00 - $0.6234 (62.34%)\n• 2024-01-11 12:00:00 - $0.6156 (61.56%)\n\n📈 **Price Trend**: +2.78% over the period\n💹 **Highest**: $0.6789 (67.89%)\n📉 **Lowest**: $0.5923 (59.23%)\n\n🕒 **Time Range**: Jan 15, 2024 - Dec 16, 2023',
-          action: 'price_history_retrieved',
+          action: 'POLYMARKET_PRICE_HISTORY_RETRIEVED',
         },
       },
     ],
     [
       {
         name: '{{user1}}',
-        content: { text: 'PRICE_HISTORY 789012' },
+        content: { text: 'PRICE_HISTORY 789012 via Polymarket' },
       },
       {
         name: '{{user2}}',
         content: {
           text: '📊 **Historical Prices for Token 789012**\n\n⏱️ **Interval**: 1d (default)\n📈 **Retrieved**: 25 price points\n\n**Price Summary:**\n• Current: $0.4523 (45.23%)\n• 24h ago: $0.4456 (44.56%)\n• 7d ago: $0.4234 (42.34%)\n• Change: +2.89% (24h) | +6.83% (7d)\n\n📊 **Complete time-series data available in response**',
-          action: 'price_history_retrieved',
+          action: 'POLYMARKET_PRICE_HISTORY_RETRIEVED',
         },
       },
     ],
     [
       {
         name: '{{user1}}',
-        content: { text: 'Show me 1h price chart for token 456789' },
+        content: { text: 'Show me 1h price chart for token 456789 via Polymarket' },
       },
       {
         name: '{{user2}}',
         content: {
           text: '⚡ **Hourly Price History - Token 456789**\n\n⏱️ **Interval**: 1h\n📊 **Data Points**: 48 (last 48 hours)\n\n**Recent Hourly Prices:**\n• 15:00 - $0.7234 (72.34%)\n• 14:00 - $0.7189 (71.89%)\n• 13:00 - $0.7156 (71.56%)\n• 12:00 - $0.7123 (71.23%)\n• 11:00 - $0.7098 (70.98%)\n\n📈 **Hourly Trend**: +1.36% over 48h\n🎯 **Volatility**: Moderate\n📊 **Trading Activity**: Active',
-          action: 'price_history_retrieved',
+          action: 'POLYMARKET_PRICE_HISTORY_RETRIEVED',
         },
       },
     ],

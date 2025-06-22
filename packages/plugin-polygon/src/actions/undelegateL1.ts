@@ -63,22 +63,17 @@ function extractParamsFromText(text: string): Partial<UndelegateL1Params> {
 }
 
 export const undelegateL1Action: Action = {
-  name: 'UNSTAKE_L1',
-  similes: [
-    'UNDELEGATE_L1',
-    'UNSTAKE_L1_SHARES',
-    'UNBOND_VALIDATOR_SHARES_L1',
-    'SELL_VALIDATOR_SHARES_L1',
-  ],
+  name: 'POLYGON_UNDELEGATE_L1',
+  similes: ['UNSTAKE_L1', 'UNBOND_VALIDATOR_SHARES_L1', 'SELL_VALIDATOR_SHARES_L1'],
   description:
-    'Initiates undelegation (unbonding) of Validator Shares from a Polygon validator on Ethereum L1.',
+    'Initiates undelegation (unbonding) of Validator Shares from a Polygon validator on Ethereum L1 via Polygon.',
 
   validate: async (
     runtime: IAgentRuntime,
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    logger.debug('Validating UNSTAKE_L1 action...');
+    logger.debug('Validating POLYGON_UNSTAKE_L1 action...');
 
     const requiredSettings = [
       'PRIVATE_KEY',
@@ -88,7 +83,7 @@ export const undelegateL1Action: Action = {
 
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
-        logger.error(`Required setting ${setting} not configured for UNSTAKE_L1 action.`);
+        logger.error(`Required setting ${setting} not configured for POLYGON_UNSTAKE_L1 action.`);
         return false;
       }
     }
@@ -96,11 +91,14 @@ export const undelegateL1Action: Action = {
     try {
       const service = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
       if (!service) {
-        logger.error('PolygonRpcService not initialized for UNSTAKE_L1.');
+        logger.error('PolygonRpcService not initialized for POLYGON_UNSTAKE_L1.');
         return false;
       }
     } catch (error: unknown) {
-      logger.error('Error accessing PolygonRpcService during UNSTAKE_L1 validation:', error);
+      logger.error(
+        'Error accessing PolygonRpcService during POLYGON_UNSTAKE_L1 validation:',
+        error
+      );
       return false;
     }
 
@@ -115,7 +113,7 @@ export const undelegateL1Action: Action = {
     callback: HandlerCallback | undefined,
     _recentMessages: Memory[] | undefined
   ) => {
-    logger.info('Handling UNSTAKE_L1 action for message:', message.id);
+    logger.info('Handling POLYGON_UNSTAKE_L1 action for message:', message.id);
     const rawMessageText = message.content.text || '';
     let params: UndelegateL1Params | null = null;
 
@@ -137,16 +135,16 @@ export const undelegateL1Action: Action = {
         });
 
         params = parseJSONObjectFromText(result) as UndelegateL1Params;
-        logger.debug('UNSTAKE_L1: Extracted params via TEXT_SMALL:', params);
+        logger.debug('POLYGON_UNSTAKE_L1: Extracted params via TEXT_SMALL:', params);
 
         // Check if the model response contains an error
         if (params.error) {
-          logger.warn(`UNSTAKE_L1: Model responded with error: ${params.error}`);
+          logger.warn(`POLYGON_UNSTAKE_L1: Model responded with error: ${params.error}`);
           throw new Error(params.error);
         }
       } catch (e) {
         logger.warn(
-          'UNSTAKE_L1: Failed to parse JSON from model response, trying manual extraction',
+          'POLYGON_UNSTAKE_L1: Failed to parse JSON from model response, trying manual extraction',
           e
         );
 
@@ -161,7 +159,7 @@ export const undelegateL1Action: Action = {
             sharesAmountWei: manualParams.sharesAmountWei,
             maticAmount: manualParams.maticAmount,
           };
-          logger.debug('UNSTAKE_L1: Extracted params via manual text parsing:', params);
+          logger.debug('POLYGON_UNSTAKE_L1: Extracted params via manual text parsing:', params);
         } else {
           throw new Error('Could not determine validator ID or amount from the message.');
         }
@@ -190,7 +188,7 @@ export const undelegateL1Action: Action = {
       }
 
       logger.debug(
-        `UNSTAKE_L1 parameters: validatorId: ${validatorId}, sharesAmount: ${sharesAmountBigInt}`
+        `POLYGON_UNSTAKE_L1 parameters: validatorId: ${validatorId}, sharesAmount: ${sharesAmountBigInt}`
       );
 
       const txHash = await rpcService.undelegate(validatorId, sharesAmountBigInt);
@@ -200,7 +198,7 @@ export const undelegateL1Action: Action = {
 
       const responseContent: Content = {
         text: successMsg,
-        actions: ['UNSTAKE_L1'],
+        actions: ['POLYGON_UNSTAKE_L1'],
         source: message.content.source,
         data: {
           transactionHash: txHash,
@@ -219,11 +217,11 @@ export const undelegateL1Action: Action = {
       return responseContent;
     } catch (error: unknown) {
       const parsedError = parseErrorMessage(error);
-      logger.error('Error in UNSTAKE_L1 handler:', parsedError);
+      logger.error('Error in POLYGON_UNSTAKE_L1 handler:', parsedError);
 
       const errorContent: Content = {
         text: `Error undelegating shares (L1): ${parsedError.message}`,
-        actions: ['UNSTAKE_L1'],
+        actions: ['POLYGON_UNSTAKE_L1'],
         source: message.content.source,
         data: {
           success: false,
@@ -242,33 +240,46 @@ export const undelegateL1Action: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'I want to undelegate 10 shares from validator 123 on L1',
+          text: 'I want to undelegate 10 shares from validator 123 on L1 on Polygon.',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'I am initiating the undelegation of 10 shares from validator 123 on L1 via Polygon. The transaction hash is [tx_hash]. Please note that there is an unbonding period before the funds are available.',
+          actions: ['POLYGON_UNDELEGATE_L1'],
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Unstake 5.5 validator shares from the Polygon validator ID 42',
+          text: 'Can you sell my validator shares for validator 456 on L1? Sell about 50 MATIC worth.',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'I am initiating the sale (undelegation) of your validator shares for validator 456 on L1, equivalent to approximately 50 MATIC, via Polygon. The transaction hash is [tx_hash].',
+          actions: ['POLYGON_UNDELEGATE_L1'],
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Undelegate 0.5 MATIC from validator 157',
+          text: 'Help me unstake from validator 789 on the Ethereum layer for Polygon.',
         },
       },
-    ],
-    [
       {
-        name: 'user',
+        name: '{{agent}}',
         content: {
-          text: 'Unstake 2.5 MATIC from the Polygon validator ID 100',
+          text: "I need a bit more information to help you unstake. Please provide the amount of shares or the equivalent MATIC value you'd like to unstake from validator 789 on L1 for Polygon.",
+          actions: ['POLYGON_UNDELEGATE_L1'],
         },
       },
     ],

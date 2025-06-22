@@ -72,7 +72,7 @@ function validateAndNormalizeAddress(address: string): string {
  * Retrieves native ETH balance and ERC-20 token balances for a given address
  */
 export const getAccountBalanceAction: Action = {
-  name: 'GET_ACCOUNT_BALANCE',
+  name: 'POLYGON_GET_ACCOUNT_BALANCE_ZKEVM',
   similes: [
     'GET_WALLET_BALANCE',
     'CHECK_ACCOUNT_BALANCE',
@@ -114,7 +114,7 @@ export const getAccountBalanceAction: Action = {
       logger.error(`[getAccountBalanceAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_ACCOUNT_BALANCE'],
+        actions: ['POLYGON_GET_ACCOUNT_BALANCE_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -167,7 +167,7 @@ export const getAccountBalanceAction: Action = {
 
       const errorContent: Content = {
         text: `❌ ${errorMessage}`,
-        actions: ['GET_ACCOUNT_BALANCE'],
+        actions: ['POLYGON_GET_ACCOUNT_BALANCE_ZKEVM'],
         data: { error: errorMessage, success: false },
       };
 
@@ -232,7 +232,7 @@ ${errorMessages.length > 0 ? `\n**Warnings:**\n${errorMessages.map((msg) => `- $
 
     const responseContent: Content = {
       text: responseText,
-      actions: ['GET_ACCOUNT_BALANCE'],
+      actions: ['POLYGON_GET_ACCOUNT_BALANCE_ZKEVM'],
       data: {
         result,
         network: 'polygon-zkevm',
@@ -253,14 +253,14 @@ ${errorMessages.length > 0 ? `\n**Warnings:**\n${errorMessages.map((msg) => `- $
       {
         name: '{{user1}}',
         content: {
-          text: 'Get balance for 0x742d35Cc6634C0532925A3B8D4C9dB96C4B4d8B6',
+          text: 'Get balance for address 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6 on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: "I'll get the account balance for that address on Polygon zkEVM.",
-          actions: ['GET_ACCOUNT_BALANCE'],
+          action: 'POLYGON_GET_ACCOUNT_BALANCE_ZKEVM',
         },
       },
     ],
@@ -268,14 +268,14 @@ ${errorMessages.length > 0 ? `\n**Warnings:**\n${errorMessages.map((msg) => `- $
       {
         name: '{{user1}}',
         content: {
-          text: 'Check wallet balance for 0x1234567890123456789012345678901234567890',
+          text: 'check my wallet balance on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me check the wallet balance for that address.',
-          actions: ['GET_ACCOUNT_BALANCE'],
+          text: 'I can do that. Please provide your wallet address.',
+          action: 'POLYGON_GET_ACCOUNT_BALANCE_ZKEVM',
         },
       },
     ],

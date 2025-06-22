@@ -27,7 +27,7 @@ interface CheckpointParams {
 }
 
 export const getCheckpointStatusAction: Action = {
-  name: 'GET_CHECKPOINT_STATUS',
+  name: 'POLYGON_GET_CHECKPOINT_STATUS',
   similes: ['CHECK_CHECKPOINT', 'POLYGON_CHECKPOINT_STATE'],
   description: 'Checks if a Polygon L2 block has been checkpointed to Ethereum L1.',
 
@@ -36,7 +36,7 @@ export const getCheckpointStatusAction: Action = {
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    logger.debug('Validating GET_CHECKPOINT_STATUS action...');
+    logger.debug('Validating POLYGON_GET_CHECKPOINT_STATUS action...');
 
     // Check for required settings
     const requiredSettings = [
@@ -49,7 +49,7 @@ export const getCheckpointStatusAction: Action = {
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
         logger.error(
-          `Required setting ${setting} not configured for GET_CHECKPOINT_STATUS action.`
+          `Required setting ${setting} not configured for POLYGON_GET_CHECKPOINT_STATUS action.`
         );
         return false;
       }
@@ -78,7 +78,7 @@ export const getCheckpointStatusAction: Action = {
     callback: HandlerCallback | undefined,
     _responses: Memory[] | undefined
   ) => {
-    logger.info('Handling GET_CHECKPOINT_STATUS action for message:', message.id);
+    logger.info('Handling POLYGON_GET_CHECKPOINT_STATUS action for message:', message.id);
 
     try {
       // Get the PolygonRpcService
@@ -101,11 +101,11 @@ export const getCheckpointStatusAction: Action = {
 
       try {
         params = parseJSONObjectFromText(modelResponse) as CheckpointParams;
-        logger.debug('GET_CHECKPOINT_STATUS: Extracted params:', params);
+        logger.debug('POLYGON_GET_CHECKPOINT_STATUS: Extracted params:', params);
 
         if (params.error) {
           // Check if the model response contains an error
-          logger.warn(`GET_CHECKPOINT_STATUS: Model responded with error: ${params.error}`);
+          logger.warn(`POLYGON_GET_CHECKPOINT_STATUS: Model responded with error: ${params.error}`);
           throw new Error(params.error);
         }
       } catch (error: unknown) {
@@ -157,7 +157,7 @@ export const getCheckpointStatusAction: Action = {
       // Format the response content
       const responseContent: Content = {
         text: responseMsg,
-        actions: ['GET_CHECKPOINT_STATUS'],
+        actions: ['POLYGON_GET_CHECKPOINT_STATUS'],
         source: message.content.source,
         data: {
           blockNumber: params.blockNumber,
@@ -174,12 +174,12 @@ export const getCheckpointStatusAction: Action = {
     } catch (error: unknown) {
       // Handle errors
       const errMsg = error instanceof Error ? error.message : String(error);
-      logger.error('Error in GET_CHECKPOINT_STATUS handler:', errMsg, error);
+      logger.error('Error in POLYGON_GET_CHECKPOINT_STATUS handler:', errMsg, error);
 
       // Format error response
       const errorContent: Content = {
         text: `Error checking checkpoint status: ${errMsg}`,
-        actions: ['GET_CHECKPOINT_STATUS'],
+        actions: ['POLYGON_GET_CHECKPOINT_STATUS'],
         source: message.content.source,
         data: { success: false, error: errMsg },
       };
@@ -194,17 +194,31 @@ export const getCheckpointStatusAction: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
           text: 'Check if Polygon block 42000000 has been checkpointed',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Checking if Polygon block 42000000 has been checkpointed.',
+          action: 'POLYGON_GET_CHECKPOINT_STATUS',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
           text: 'Has block 41500000 on Polygon been checkpointed to Ethereum yet?',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Checking if block 41500000 on Polygon has been checkpointed to Ethereum.',
+          action: 'POLYGON_GET_CHECKPOINT_STATUS',
         },
       },
     ],

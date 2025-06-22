@@ -1,7 +1,7 @@
 import { Action, IAgentRuntime, Memory, State, HandlerCallback, logger } from '@elizaos/core';
 
 export const heimdallCheckpointStatusAction: Action = {
-  name: 'HEIMDALL_CHECKPOINT_STATUS',
+  name: 'POLYGON_HEIMDALL_CHECKPOINT_STATUS',
   similes: [
     'GET_HEIMDALL_CHECKPOINT_STATUS',
     'HEIMDALL_CHECKPOINT_LATEST',
@@ -89,14 +89,28 @@ export const heimdallCheckpointStatusAction: Action = {
   examples: [
     [
       {
-        name: 'user',
-        content: { text: 'Get the latest checkpoint status from Heimdall' },
+        name: '{{user1}}',
+        content: { text: 'Get the latest checkpoint status from Heimdall on Polygon' },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Getting the latest checkpoint status from Heimdall on Polygon',
+          action: 'POLYGON_HEIMDALL_CHECKPOINT_STATUS',
+        },
       },
     ],
     [
       {
-        name: 'user',
-        content: { text: 'Show me the current Heimdall checkpoint info' },
+        name: '{{user1}}',
+        content: { text: 'Show me the current Heimdall checkpoint info on Polygon' },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Showing the current Heimdall checkpoint info on Polygon',
+          action: 'POLYGON_HEIMDALL_CHECKPOINT_STATUS',
+        },
       },
     ],
   ],

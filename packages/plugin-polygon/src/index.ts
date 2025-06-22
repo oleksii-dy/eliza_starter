@@ -7,6 +7,8 @@ import {
   logger,
   type Service,
   elizaLogger,
+  type Memory,
+  type State,
 } from '@elizaos/core';
 import { z } from 'zod';
 import { ethers } from 'ethers';
@@ -17,19 +19,19 @@ process.on('unhandledRejection', (reason, promise) => {
   // Don't crash, just log the error and continue
 });
 
-import { transferPolygonAction } from './actions/transfer';
-import { delegateL1Action } from './actions/delegateL1';
-import { getCheckpointStatusAction } from './actions/getCheckpointStatus';
-import { getValidatorInfoAction } from './actions/getValidatorInfo';
-import { getDelegatorInfoAction } from './actions/getDelegatorInfo';
-import { withdrawRewardsAction } from './actions/withdrawRewardsL1';
-import { bridgeDepositAction } from './actions/bridgeDeposit';
-import { getL2BlockNumberAction } from './actions/getL2BlockNumber';
-import { getMaticBalanceAction } from './actions/getMaticBalance';
-import { getPolygonGasEstimatesAction } from './actions/getPolygonGasEstimates';
-import { undelegateL1Action } from './actions/undelegateL1';
-import { restakeRewardsL1Action } from './actions/restakeRewardsL1';
-import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed';
+import { transferPolygonAction } from './actions/transfer.js';
+import { delegateL1Action } from './actions/delegateL1.js';
+import { getCheckpointStatusAction } from './actions/getCheckpointStatus.js';
+import { getValidatorInfoAction } from './actions/getValidatorInfo.js';
+import { getDelegatorInfoAction } from './actions/getDelegatorInfo.js';
+import { withdrawRewardsAction } from './actions/withdrawRewardsL1.js';
+import { bridgeDepositAction } from './actions/bridgeDeposit.js';
+import { getL2BlockNumberAction } from './actions/getL2BlockNumber.js';
+import { getMaticBalanceAction } from './actions/getMaticBalance.js';
+import { getPolygonGasEstimatesAction } from './actions/getPolygonGasEstimates.js';
+import { undelegateL1Action } from './actions/undelegateL1.js';
+import { restakeRewardsL1Action } from './actions/restakeRewardsL1.js';
+import { isL2BlockCheckpointedAction } from './actions/isL2BlockCheckpointed.js';
 // Heimdall read-only query actions
 import { heimdallValidatorInfoAction } from './actions/heimdallValidatorInfoAction.js';
 import { heimdallValidatorSetAction } from './actions/heimdallValidatorSetAction.js';
@@ -38,21 +40,26 @@ import { heimdallCheckpointStatusAction } from './actions/heimdallCheckpointStat
 import { getUSDCBalanceAction, getWETHBalanceAction } from './actions/getBalanceInfo.js';
 import { getBlockNumberAction, getBlockDetailsAction } from './actions/getBlockInfo.js';
 import { getPolygonBlockDetailsAction } from './actions/getPolygonBlockDetails.js';
+import { proposeGovernanceAction } from './actions/proposeGovernance.js';
+import { executeGovernanceAction } from './actions/executeGovernance.js';
+import { voteGovernanceAction } from './actions/voteGovernance.js';
+import { queueGovernanceAction } from './actions/queueGovernance.js';
+import { swapPolygonAction } from './actions/swap.js';
 
 import {
   WalletProvider,
   initWalletProvider,
   polygonWalletProvider,
-} from './providers/PolygonWalletProvider';
+} from './providers/PolygonWalletProvider.js';
 import {
   PolygonRpcService,
   type ValidatorInfo,
   type DelegatorInfo,
   ValidatorStatus,
-} from './services/PolygonRpcService';
-import { HeimdallService } from './services/HeimdallService';
-import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService';
-import { parseBigIntString } from './utils'; // Import from utils
+} from './services/PolygonRpcService.js';
+import { HeimdallService } from './services/HeimdallService.js';
+import { getGasPriceEstimates, type GasPriceEstimates } from './services/GasService.js';
+import { parseBigIntString } from './utils.js'; // Import from utils
 
 // --- Configuration Schema --- //
 const configSchema = z.object({
@@ -89,6 +96,11 @@ const polygonActions: Action[] = [
   heimdallValidatorInfoAction,
   heimdallValidatorSetAction,
   heimdallCheckpointStatusAction,
+  proposeGovernanceAction,
+  executeGovernanceAction,
+  voteGovernanceAction,
+  queueGovernanceAction,
+  swapPolygonAction,
 ];
 
 // Debug logging for action registration
@@ -109,7 +121,11 @@ logger.info(
  */
 const polygonProviderInfo: Provider = {
   name: 'Polygon Provider Info',
-  async get(runtime: IAgentRuntime, _message, state): Promise<ProviderResult> {
+  async get(
+    runtime: IAgentRuntime,
+    _message: Memory,
+    state: State | undefined
+  ): Promise<ProviderResult> {
     try {
       // 1. Initialize WalletProvider to get address
       const polygonWalletProviderInstance = await initWalletProvider(runtime);

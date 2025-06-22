@@ -19,7 +19,7 @@ import type { Market } from '../types';
  * Fetches detailed information about a specific prediction market
  */
 export const getMarketDetailsAction: Action = {
-  name: 'GET_MARKET_DETAILS',
+  name: 'POLYMARKET_GET_MARKET_DETAILS',
   similes: [
     'GET_MARKET',
     'MARKET_DETAILS',
@@ -62,7 +62,7 @@ export const getMarketDetailsAction: Action = {
       logger.error(`[getMarketDetailsAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_MARKET_DETAILS'],
+        actions: ['POLYMARKET_GET_MARKET_DETAILS'],
         data: { error: errorMessage },
       };
 
@@ -92,7 +92,7 @@ export const getMarketDetailsAction: Action = {
 Please provide a market condition ID in your request. For example:
 • "Show me market 0x1234567890abcdef..."
 • "Get details for condition ID 0xabc123..."`,
-          actions: ['GET_MARKET_DETAILS'],
+          actions: ['POLYMARKET_GET_MARKET_DETAILS'],
           data: { error: errorMessage },
         };
 
@@ -124,7 +124,7 @@ Please provide a market condition ID in your request. For example:
 Please provide a market condition ID in your request. For example:
 • "Show me market 0x1234567890abcdef..."
 • "Get details for condition ID 0xabc123..."`,
-        actions: ['GET_MARKET_DETAILS'],
+        actions: ['POLYMARKET_GET_MARKET_DETAILS'],
         data: { error: errorMessage },
       };
 
@@ -200,7 +200,7 @@ Please provide a market condition ID in your request. For example:
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_MARKET_DETAILS'],
+        actions: ['POLYMARKET_GET_MARKET_DETAILS'],
         data: {
           market,
           conditionId,
@@ -230,7 +230,7 @@ Please check:
 • Polymarket CLOB service is operational
 
 **Condition ID provided**: \`${conditionId}\``,
-        actions: ['GET_MARKET_DETAILS'],
+        actions: ['POLYMARKET_GET_MARKET_DETAILS'],
         data: {
           error: errorMessage,
           conditionId,
@@ -250,14 +250,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'Show me details for market 0x1234567890abcdef1234567890abcdef12345678',
+          text: 'Show me the details for market 0x123abc...',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: "I'll fetch the detailed information for that market.",
-          actions: ['GET_MARKET_DETAILS'],
+          text: "I'll retrieve the details for that market from Polymarket.",
+          action: 'POLYMARKET_GET_MARKET_DETAILS',
         },
       },
     ],
@@ -265,14 +265,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'Get market info for condition ID 0xabc123def456...',
+          text: 'Can I get info on condition ID 0xdef456...?',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me get the detailed market information for you.',
-          actions: ['GET_MARKET_DETAILS'],
+          text: 'Fetching details for the specified market condition ID from Polymarket...',
+          action: 'POLYMARKET_GET_MARKET_DETAILS',
         },
       },
     ],
@@ -280,14 +280,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'What are the details of this specific market?',
+          text: 'GET_MARKET_DETAILS 0x789ghi...',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: "I'll need a market condition ID to fetch the details. Please provide the specific market identifier.",
-          actions: ['GET_MARKET_DETAILS'],
+          text: 'Getting market details for 0x789ghi... from Polymarket.',
+          action: 'POLYMARKET_GET_MARKET_DETAILS',
         },
       },
     ],

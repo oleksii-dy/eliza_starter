@@ -17,7 +17,7 @@ import { getGasPriceTemplate } from '../templates';
  * Retrieves current gas price
  */
 export const getGasPriceAction: Action = {
-  name: 'GET_GAS_PRICE_ZKEVM',
+  name: 'POLYGON_GET_GAS_PRICE_ZKEVM',
   similes: ['GAS_PRICE', 'CURRENT_GAS', 'GAS_FEE', 'GWEI'],
   description: 'Get current gas price on Polygon zkEVM',
 
@@ -49,7 +49,7 @@ export const getGasPriceAction: Action = {
       logger.error(`[getGasPriceAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_GAS_PRICE_ZKEVM'],
+        actions: ['POLYGON_GET_GAS_PRICE_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -127,7 +127,7 @@ export const getGasPriceAction: Action = {
 
     const responseContent: Content = {
       text: responseText,
-      actions: ['GET_GAS_PRICE_ZKEVM'],
+      actions: ['POLYGON_GET_GAS_PRICE_ZKEVM'],
       data: {
         gasPrice: gasPriceInWei.toString(),
         gasPriceGwei: gasPriceInGwei,
@@ -149,14 +149,14 @@ export const getGasPriceAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'What is the current gas price?',
+          text: 'What is the current gas price on Polygon zkEVM?',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: "I'll get the current gas price for Polygon zkEVM.",
-          actions: ['GET_GAS_PRICE_ZKEVM'],
+          action: 'POLYGON_GET_GAS_PRICE_ZKEVM',
         },
       },
     ],

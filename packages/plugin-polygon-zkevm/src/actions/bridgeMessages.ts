@@ -46,7 +46,7 @@ const NETWORK_IDS = {
 };
 
 export const bridgeMessagesAction: Action = {
-  name: 'BRIDGE_MESSAGES',
+  name: 'POLYGON_BRIDGE_MESSAGES_ZKEVM',
   similes: [
     'SEND_MESSAGE',
     'CROSS_CHAIN_MESSAGE',
@@ -106,7 +106,7 @@ export const bridgeMessagesAction: Action = {
       logger.error(`[bridgeMessagesAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['BRIDGE_MESSAGES'],
+        actions: ['POLYGON_BRIDGE_MESSAGES_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -121,7 +121,7 @@ export const bridgeMessagesAction: Action = {
       logger.error(`[bridgeMessagesAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['BRIDGE_MESSAGES'],
+        actions: ['POLYGON_BRIDGE_MESSAGES_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -423,7 +423,7 @@ ${depositCount !== null ? `- Deposit Count: ${depositCount}` : ''}
 
       const successContent: Content = {
         text: successMessage,
-        actions: ['BRIDGE_MESSAGES'],
+        actions: ['POLYGON_BRIDGE_MESSAGES_ZKEVM'],
         data: {
           success: true,
           transactionHash: tx.hash,
@@ -448,7 +448,7 @@ ${depositCount !== null ? `- Deposit Count: ${depositCount}` : ''}
 
       const errorContent: Content = {
         text: `❌ ${errorMessage}`,
-        actions: ['BRIDGE_MESSAGES'],
+        actions: ['POLYGON_BRIDGE_MESSAGES_ZKEVM'],
         data: {
           error: errorMessage,
           destinationChain: messageParams?.destinationChain,
@@ -476,7 +476,7 @@ ${depositCount !== null ? `- Deposit Count: ${depositCount}` : ''}
         name: 'assistant',
         content: {
           text: '✅ Message bridged successfully!\n\n**Transaction Details:**\n- Transaction Hash: `0x1234567890abcdef...`\n- From: zkEVM\n- To: ethereum\n- Block Number: 12345\n- Gas Used: 200000\n- Message ID: `zkEVM-0-12345`\n\n**Message Data:** `0xa9059cbb000000000000000000000000742d35cc6000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a7640000`\n\n**Note:** The message will be available for claiming on the destination chain once the transaction is finalized (typically 30-60 minutes for zkEVM).',
-          actions: ['BRIDGE_MESSAGES'],
+          actions: ['POLYGON_BRIDGE_MESSAGES_ZKEVM'],
         },
       },
     ],
@@ -491,7 +491,7 @@ ${depositCount !== null ? `- Deposit Count: ${depositCount}` : ''}
         name: 'assistant',
         content: {
           text: '✅ Message bridged successfully!\n\n**Transaction Details:**\n- Transaction Hash: `0xabcdef1234567890...`\n- From: Ethereum\n- To: zkevm\n- Block Number: 18500000\n- Gas Used: 150000\n- Message ID: `Ethereum-1-67890`\n\n**Message Data:** `0x095ea7b3000000000000000000000000742d35cc60000000000000000000000000000000000000000000000000000000000000000000000000000001bc16d674ec80000`\n\n**Note:** The message will be available for claiming on the destination chain once the transaction is finalized (typically 30-60 minutes for zkEVM).',
-          actions: ['BRIDGE_MESSAGES'],
+          actions: ['POLYGON_BRIDGE_MESSAGES_ZKEVM'],
         },
       },
     ],
@@ -506,7 +506,7 @@ ${depositCount !== null ? `- Deposit Count: ${depositCount}` : ''}
         name: 'assistant',
         content: {
           text: '✅ Message bridged successfully!\n\n**Transaction Details:**\n- Transaction Hash: `0xfedcba0987654321...`\n- From: zkEVM\n- To: ethereum\n- Block Number: 8500000\n- Gas Used: 180000\n- Message ID: `zkEVM-0-55555`\n\n**Message Data:** `0x1234abcd`\n\n**Note:** The message will be available for claiming on the destination chain once the transaction is finalized (typically 30-60 minutes for zkEVM).',
-          actions: ['BRIDGE_MESSAGES'],
+          actions: ['POLYGON_BRIDGE_MESSAGES_ZKEVM'],
         },
       },
     ],
@@ -521,7 +521,7 @@ ${depositCount !== null ? `- Deposit Count: ${depositCount}` : ''}
         name: 'assistant',
         content: {
           text: '✅ Message bridged successfully!\n\n**Transaction Details:**\n- Transaction Hash: `0x9876543210fedcba...`\n- From: Ethereum\n- To: zkevm\n- Block Number: 18600000\n- Gas Used: 165000\n- Message ID: `Ethereum-1-77777`\n\n**Message Data:** `0xabcdef1234567890`\n\n**Note:** The message will be available for claiming on the destination chain once the transaction is finalized (typically 30-60 minutes for zkEVM).',
-          actions: ['BRIDGE_MESSAGES'],
+          actions: ['POLYGON_BRIDGE_MESSAGES_ZKEVM'],
         },
       },
     ],

@@ -79,7 +79,7 @@ async function attemptParamExtraction(responseText: string): Promise<ValidatorPa
 }
 
 export const getValidatorInfoAction: Action = {
-  name: 'GET_VALIDATOR_INFO',
+  name: 'POLYGON_GET_VALIDATOR_INFO',
   similes: ['QUERY_VALIDATOR', 'VALIDATOR_DETAILS', 'GET_L1_VALIDATOR_INFO'],
   description: 'Retrieves information about a specific Polygon validator.',
 
@@ -88,7 +88,7 @@ export const getValidatorInfoAction: Action = {
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    coreLogger.debug('Validating GET_VALIDATOR_INFO action...');
+    coreLogger.debug('Validating POLYGON_GET_VALIDATOR_INFO action...');
 
     // Check for required settings
     const requiredSettings = [
@@ -101,7 +101,7 @@ export const getValidatorInfoAction: Action = {
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
         coreLogger.error(
-          `Required setting ${setting} not configured for GET_VALIDATOR_INFO action.`
+          `Required setting ${setting} not configured for POLYGON_GET_VALIDATOR_INFO action.`
         );
         return false;
       }
@@ -130,7 +130,7 @@ export const getValidatorInfoAction: Action = {
     callback: HandlerCallback | undefined,
     _responses: Memory[] | undefined
   ) => {
-    coreLogger.info('Handling GET_VALIDATOR_INFO action for message:', message.id);
+    coreLogger.info('Handling POLYGON_GET_VALIDATOR_INFO action for message:', message.id);
 
     try {
       // Get the PolygonRpcService
@@ -203,7 +203,7 @@ export const getValidatorInfoAction: Action = {
             'Could not understand validator parameters. Please provide a valid validator ID (number).',
             errorMsg.details || undefined
           ),
-          actions: ['GET_VALIDATOR_INFO'],
+          actions: ['POLYGON_GET_VALIDATOR_INFO'],
           source: message.content?.source,
           data: {
             success: false,
@@ -243,12 +243,17 @@ export const getValidatorInfoAction: Action = {
         // Format total stake as human-readable MATIC
         // viem formatUnits takes bigint and number directly, no need for .toString()
         const totalStakeMatic = formatUnits(validatorInfo.totalStake, 18);
+        const selfStakeMatic = formatUnits(validatorInfo.selfStake, 18);
+        const delegatedStakeMatic = formatUnits(validatorInfo.delegatedStake, 18);
 
         // Prepare response message
         const responseMsg = `Validator #${params.validatorId} Info:
 - Status: ${statusLabel}
 - Total Staked: ${totalStakeMatic} MATIC
-- Commission Rate: ${validatorInfo.commissionRate * 100}%
+- Self Stake: ${selfStakeMatic} MATIC
+- Delegated Stake: ${delegatedStakeMatic} MATIC
+- Uptime Percent: ${validatorInfo.uptimePercent}%
+- Commission Rate: ${validatorInfo.commissionRate}%
 - Signer Address: ${validatorInfo.signerAddress}
 - Contract Address: ${validatorInfo.contractAddress}`;
 
@@ -257,7 +262,7 @@ export const getValidatorInfoAction: Action = {
         // Format the response content
         const responseContent: Content = {
           text: responseMsg,
-          actions: ['GET_VALIDATOR_INFO'],
+          actions: ['POLYGON_GET_VALIDATOR_INFO'],
           source: message.content.source,
           data: {
             validatorId: params.validatorId,
@@ -290,7 +295,7 @@ export const getValidatorInfoAction: Action = {
             'Validator info retrieval',
             `Failed to get validator #${params.validatorId} info from Ethereum L1`
           ),
-          actions: ['GET_VALIDATOR_INFO'],
+          actions: ['POLYGON_GET_VALIDATOR_INFO'],
           source: message.content?.source,
           data: {
             success: false,
@@ -308,7 +313,7 @@ export const getValidatorInfoAction: Action = {
       }
     } catch (error: unknown) {
       const parsedErrorObj = parseErrorMessage(error);
-      coreLogger.error(`Error in GET_VALIDATOR_INFO handler: ${parsedErrorObj.message}`);
+      coreLogger.error(`Error in POLYGON_GET_VALIDATOR_INFO handler: ${parsedErrorObj.message}`);
 
       if (parsedErrorObj.details) {
         coreLogger.error(`Details: ${parsedErrorObj.details}`);
@@ -325,14 +330,14 @@ export const getValidatorInfoAction: Action = {
       }
 
       const formattedError = formatErrorMessage(
-        'GET_VALIDATOR_INFO',
+        'POLYGON_GET_VALIDATOR_INFO',
         parsedErrorObj.message,
         parsedErrorObj.details || undefined
       );
 
       const errorContent: Content = {
         text: `Error retrieving validator information: ${formattedError}`,
-        actions: ['GET_VALIDATOR_INFO'],
+        actions: ['POLYGON_GET_VALIDATOR_INFO'],
         source: message.content.source,
         data: {
           success: false,
@@ -351,25 +356,31 @@ export const getValidatorInfoAction: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Show details for Polygon validator 123',
+          text: 'Get info for validator 42 on Polygon',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Getting info for validator 42 on Polygon',
+          action: 'POLYGON_GET_VALIDATOR_INFO',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'What is the commission rate of validator ID 42?',
+          text: 'Show me details for Polygon validator #157',
         },
       },
-    ],
-    [
       {
-        name: 'user',
+        name: '{{user2}}',
         content: {
-          text: 'Tell me about validator #56 on Polygon',
+          text: 'Showing details for validator 157 on Polygon',
+          action: 'POLYGON_GET_VALIDATOR_INFO',
         },
       },
     ],

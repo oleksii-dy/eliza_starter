@@ -18,7 +18,7 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves storage value at a specific slot for a contract address
  */
 export const getStorageAtAction: Action = {
-  name: 'GET_STORAGE_AT_ZKEVM',
+  name: 'POLYGON_GET_STORAGE_AT_ZKEVM',
   similes: ['GET_STORAGE', 'STORAGE_SLOT', 'CONTRACT_STORAGE', 'STORAGE_VALUE'],
   description: 'Get storage value at a specific slot for a contract address on Polygon zkEVM',
 
@@ -50,7 +50,7 @@ export const getStorageAtAction: Action = {
       logger.error(`[getStorageAtAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_STORAGE_AT_ZKEVM'],
+        actions: ['POLYGON_GET_STORAGE_AT_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -156,7 +156,7 @@ export const getStorageAtAction: Action = {
 
     const responseContent: Content = {
       text: responseText,
-      actions: ['GET_STORAGE_AT_ZKEVM'],
+      actions: ['POLYGON_GET_STORAGE_AT_ZKEVM'],
       data: {
         address,
         position,
@@ -179,14 +179,14 @@ export const getStorageAtAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Get storage slot 0 for contract 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+          text: 'Get storage slot 0 for contract 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6 on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: "I'll get the storage value at that slot for the contract.",
-          actions: ['GET_STORAGE_AT_ZKEVM'],
+          text: "I'll get the storage value at that slot for the contract on Polygon zkEVM.",
+          action: 'POLYGON_GET_STORAGE_AT_ZKEVM',
         },
       },
     ],

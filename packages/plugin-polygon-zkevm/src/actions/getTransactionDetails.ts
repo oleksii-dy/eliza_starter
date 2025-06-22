@@ -18,7 +18,7 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves both transaction data and receipt for a given transaction hash
  */
 export const getTransactionDetailsAction: Action = {
-  name: 'GET_TRANSACTION_DETAILS',
+  name: 'POLYGON_GET_TRANSACTION_DETAILS_ZKEVM',
   similes: [
     'GET_TX_DETAILS',
     'TRANSACTION_DETAILS',
@@ -60,7 +60,7 @@ export const getTransactionDetailsAction: Action = {
         logger.error(`[getTransactionDetailsAction] Configuration error: ${errorMessage}`);
         const errorContent: Content = {
           text: errorMessage,
-          actions: ['GET_TRANSACTION_DETAILS'],
+          actions: ['POLYGON_GET_TRANSACTION_DETAILS_ZKEVM'],
           data: { error: errorMessage },
         };
 
@@ -182,7 +182,7 @@ export const getTransactionDetailsAction: Action = {
 
         const errorContent: Content = {
           text: errorMessage,
-          actions: ['GET_TRANSACTION_DETAILS'],
+          actions: ['POLYGON_GET_TRANSACTION_DETAILS_ZKEVM'],
           data: { error: errorMessage },
         };
 
@@ -280,8 +280,10 @@ export const getTransactionDetailsAction: Action = {
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_TRANSACTION_DETAILS'],
-        data: combinedData,
+        actions: ['POLYGON_GET_TRANSACTION_DETAILS_ZKEVM'],
+        data: {
+          transactionDetails: combinedData,
+        },
       };
 
       if (callback) {
@@ -293,7 +295,7 @@ export const getTransactionDetailsAction: Action = {
 
       const errorContent: Content = {
         text: `❌ Error getting transaction details: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        actions: ['GET_TRANSACTION_DETAILS'],
+        actions: ['POLYGON_GET_TRANSACTION_DETAILS_ZKEVM'],
         data: { error: error instanceof Error ? error.message : 'Unknown error' },
       };
 
@@ -309,14 +311,14 @@ export const getTransactionDetailsAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Get transaction details for 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+          text: 'Get details for transaction 0xabc123... on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: '📋 **Transaction Details for 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef**\n\n**Transaction Info:**\n• From: 0xabc123...\n• To: 0xdef456...\n• Value: 1.500000 ETH\n• Block: 12345678\n• Nonce: 42\n• Gas Limit: 21000\n\n**Receipt Info:**\n• Status: ✅ Success\n• Gas Used: 21000\n• Logs Count: 0\n\n⛽ Gas Efficiency: 100.00% (21000/21000)\n\n🔗 Retrieved via Alchemy API',
-          actions: ['GET_TRANSACTION_DETAILS'],
+          text: 'Getting transaction details for 0xabc123... on Polygon zkEVM',
+          action: 'POLYGON_GET_TRANSACTION_DETAILS_ZKEVM',
         },
       },
     ],
@@ -324,14 +326,14 @@ export const getTransactionDetailsAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Show me details for transaction 0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+          text: 'Show me info for tx 0xdef456... on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: '📋 **Transaction Details for 0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890**\n\n**Transaction Info:**\n• From: 0x123abc...\n• To: Contract Creation\n• Value: 0.000000 ETH\n• Block: 12345679\n• Nonce: 1\n• Gas Limit: 500000\n\n**Receipt Info:**\n• Status: ✅ Success\n• Gas Used: 450000\n• Logs Count: 3\n• Contract Created: 0x789def...\n\n⛽ Gas Efficiency: 90.00% (450000/500000)\n\n🔗 Retrieved via Direct RPC',
-          actions: ['GET_TRANSACTION_DETAILS'],
+          text: 'Retrieving transaction info for 0xdef456... on Polygon zkEVM',
+          action: 'POLYGON_GET_TRANSACTION_DETAILS_ZKEVM',
         },
       },
     ],
