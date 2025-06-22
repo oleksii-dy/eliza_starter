@@ -1,0 +1,174 @@
+import {
+  ModelType,
+  elizaLogger,
+  type Action,
+  type HandlerCallback,
+  type IAgentRuntime,
+  type ITunnelService,
+  type Memory,
+  type State
+} from '@elizaos/core';
+
+const startTunnelTemplate = `
+Respond with a JSON object containing the port number to start the ngrok tunnel on.
+The user said: "{{userMessage}}"
+
+Extract the port number from their message, or use the default port 3000 if not specified.
+
+Response format:
+\`\`\`json
+{
+  "port": 3000
+}
+\`\`\`
+`;
+
+export const startTunnelAction: Action = {
+  name: 'START_TUNNEL',
+  similes: ['OPEN_TUNNEL', 'CREATE_TUNNEL', 'NGROK_START', 'TUNNEL_UP'],
+  description: 'Start an ngrok tunnel to expose a local port to the internet',
+  validate: async (runtime: IAgentRuntime, message: Memory) => {
+    const tunnelService = runtime.getService('tunnel') as ITunnelService;
+    if (!tunnelService) {
+      return false;
+    }
+
+    // Check if tunnel is already active
+    if (tunnelService.isActive()) {
+      elizaLogger.warn('Tunnel is already active');
+      return false;
+    }
+
+    return true;
+  },
+  handler: async (
+    runtime: IAgentRuntime,
+    message: Memory,
+    state?: State,
+    options?: any,
+    callback?: HandlerCallback
+  ): Promise<boolean> => {
+    const tunnelService = runtime.getService('tunnel') as ITunnelService;
+    if (!tunnelService) {
+      elizaLogger.error('Tunnel service is not available');
+      if (callback) {
+      await callback({
+        text: 'Tunnel service is not available. Please ensure the ngrok plugin is properly configured.',
+      });
+      }
+      return false;
+    }
+
+    if (tunnelService.isActive()) {
+      elizaLogger.warn('Tunnel is already active');
+      if (callback) {
+      await callback({
+        text: 'Tunnel is already active. Please stop the existing tunnel before starting a new one.',
+      });
+      }
+      return false;
+    }
+
+    elizaLogger.info('Starting ngrok tunnel...');
+
+    try {
+      // Extract port from message
+      const context = {
+        userMessage: message.content.text,
+      };
+
+      const portResponse = await runtime.useModel(ModelType.TEXT_SMALL, {
+        prompt: startTunnelTemplate,
+        context,
+        temperature: 0.3,
+      });
+
+      let port = 3000; // default
+      try {
+        const parsed = JSON.parse(portResponse);
+        if (parsed.port) {
+          // Handle both number and string port values
+          const portNum = typeof parsed.port === 'string' ? parseInt(parsed.port, 10) : parsed.port;
+          if (!isNaN(portNum) && portNum > 0 && portNum <= 65535) {
+            port = portNum;
+          }
+        }
+      } catch (e) {
+        // Try to extract port from plain text response
+        const portMatch = portResponse.match(/\b(\d{1,5})\b/);
+        if (portMatch) {
+          const portNum = parseInt(portMatch[1], 10);
+          if (!isNaN(portNum) && portNum > 0 && portNum <= 65535) {
+            port = portNum;
+          }
+        }
+        elizaLogger.warn('Failed to parse port from response, using default 3000');
+      }
+
+      const url = await tunnelService.startTunnel(port);
+
+      const responseText = `✅ Ngrok tunnel started successfully!\n\n🌐 Public URL: ${url}\n🔌 Local Port: ${port}\n\nYour local service is now accessible from the internet.`;
+
+      if (callback) {
+        await callback({
+          text: responseText,
+          metadata: {
+            tunnelUrl: url,
+            port: port,
+            action: 'tunnel_started',
+          },
+        });
+      }
+
+      return true;
+    } catch (error: any) {
+      elizaLogger.error('Failed to start tunnel:', error);
+
+      if (callback) {
+        await callback({
+          text: `❌ Failed to start ngrok tunnel: ${error.message}\n\nPlease make sure ngrok is installed and configured properly.`,
+          metadata: {
+            error: error.message,
+            action: 'tunnel_failed',
+          },
+        });
+      }
+
+      return false;
+    }
+  },
+  examples: [
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'Start an ngrok tunnel on port 8080',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: '✅ Ngrok tunnel started successfully!\n\n🌐 Public URL: https://abc123.ngrok.io\n🔌 Local Port: 8080\n\nYour local service is now accessible from the internet.',
+          action: 'START_TUNNEL',
+        },
+      },
+    ],
+    [
+      {
+        name: 'user',
+        content: {
+          text: 'Can you create a tunnel for my local server?',
+        },
+      },
+      {
+        name: 'assistant',
+        content: {
+          text: '✅ Ngrok tunnel started successfully!\n\n🌐 Public URL: https://xyz789.ngrok.io\n🔌 Local Port: 3000\n\nYour local service is now accessible from the internet.',
+          action: 'START_TUNNEL',
+        },
+      },
+    ],
+  ],
+};
+
+export default startTunnelAction;
