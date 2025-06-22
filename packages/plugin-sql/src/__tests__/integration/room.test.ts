@@ -1,4 +1,4 @@
-import { type Room, type UUID, AgentRuntime, ChannelType } from '@elizaos/core';
+import { AgentRuntime, ChannelType, type Room, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { PgDatabaseAdapter } from '../../pg/adapter';
@@ -26,7 +26,7 @@ describe('Room Integration Tests', () => {
       id: testWorldId,
       agentId: testAgentId,
       name: 'Test World',
-      serverId: 'test-server',
+      serverId: uuidv4() as UUID,
     });
   }, 30000);
 

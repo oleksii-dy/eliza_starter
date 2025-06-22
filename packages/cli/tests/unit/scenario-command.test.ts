@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ScenarioActionTracker } from '../../src/commands/scenario/action-tracker.js';
 import type { Scenario } from '../../src/scenario-runner/types.js';
 
-// Mock fs module
+// Mock fs and fs/promises at the top level
 vi.mock('fs');
 vi.mock('fs/promises');
 

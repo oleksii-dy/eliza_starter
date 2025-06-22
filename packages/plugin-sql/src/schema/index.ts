@@ -1,6 +1,3 @@
-import { pgTable, uuid, text, jsonb, timestamp } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
-
 // Export all schema tables for external use
 export { agentTable } from './agent';
 export { cacheTable } from './cache';
@@ -19,6 +16,9 @@ export { roomTable } from './room';
 export { serverAgentsTable } from './serverAgent';
 export { tasksTable } from './tasks';
 export { worldTable } from './world';
+
+// Export core schema
+export { coreSchema } from './core';
 
 // Re-export factory for external use
 export { setDatabaseType, getSchemaFactory } from './factory';

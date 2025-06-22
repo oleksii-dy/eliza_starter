@@ -16,8 +16,8 @@ export async function isWorkspacePackage(packageName: string): Promise<boolean> 
 
     const rootPackageJson = JSON.parse(await fs.readFile(rootPackageJsonPath, 'utf-8'));
 
-    // Check for npm/yarn/pnpm workspaces
-    if (!rootPackageJson.workspaces && !rootPackageJson.pnpm?.workspace) {
+    // Check for npm/yarn/bun workspaces
+    if (!rootPackageJson.workspaces && !rootPackageJson.bun?.workspace) {
       // Not a workspace-enabled project
       return false;
     }
@@ -139,7 +139,7 @@ export function isMonorepoRoot(): boolean {
     const rootPackageJson = JSON.parse(require('fs').readFileSync(rootPackageJsonPath, 'utf-8'));
 
     // Check for workspace configuration
-    return !!(rootPackageJson.workspaces || rootPackageJson.pnpm?.workspace);
+    return !!(rootPackageJson.workspaces || rootPackageJson.bun?.workspace);
   } catch {
     return false;
   }

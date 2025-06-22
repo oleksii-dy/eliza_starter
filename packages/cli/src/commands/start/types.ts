@@ -11,6 +11,10 @@ import { type AgentServer } from '@elizaos/server';
 export interface StartOptions {
   port?: number;
   configDir?: string;
+  timeout?: number; // Duration in seconds to run before shutdown
+  autonomous?: boolean; // Enable autonomous mode
+  adminPort?: number; // Admin interface port
+  saveLogsTo?: string; // Directory to save logs
 }
 
 /**

@@ -165,7 +165,7 @@ async function runCypressCommand(
 
     // Determine the package manager
     const hasYarnLock = existsSync(path.join(projectPath, 'yarn.lock'));
-    const hasPnpmLock = existsSync(path.join(projectPath, 'pnpm-lock.yaml'));
+    const hasPnpmLock = existsSync(path.join(projectPath, 'bun-lock.yaml'));
     const hasBunLock = existsSync(path.join(projectPath, 'bun.lockb'));
 
     let packageManager = 'npm';
@@ -178,15 +178,15 @@ async function runCypressCommand(
       packageManager = 'yarn';
       runCommand = 'yarn';
     } else if (hasPnpmLock) {
-      packageManager = 'pnpm';
-      runCommand = 'pnpm exec';
+      packageManager = 'bun';
+      runCommand = 'bun exec';
     }
 
-    // Run Cypress directly using npx/bunx/yarn/pnpm exec
+    // Run Cypress directly using npx/bunx/yarn/bun exec
     const cypressArgs =
       runCommand === 'yarn'
         ? ['cypress', 'run', '--headless']
-        : runCommand === 'pnpm exec'
+        : runCommand === 'bun exec'
           ? ['cypress', 'run', '--headless']
           : runCommand.includes('x')
             ? ['cypress', 'run', '--headless']
@@ -196,7 +196,7 @@ async function runCypressCommand(
     const command = runCommand.includes('x') ? runCommand : packageManager;
     const args = runCommand.includes('x')
       ? cypressArgs
-      : [runCommand.replace('pnpm ', ''), ...cypressArgs];
+      : [runCommand.replace('bun ', ''), ...cypressArgs];
 
     logger.info(`Running: ${command} ${args.join(' ')}`);
 

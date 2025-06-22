@@ -1,4 +1,5 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from '../types.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const paymentTrustExemptionsScenario: Scenario = {
   id: 'payment-trust-exemptions-001',
@@ -9,7 +10,7 @@ const paymentTrustExemptionsScenario: Scenario = {
 
   actors: [
     {
-      id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567891',
+      id: uuidv4() as any,
       name: 'Payment Service Agent',
       role: 'subject',
       bio: 'An AI agent that provides paid services with role-based exemptions',
@@ -25,7 +26,7 @@ Always check user roles and trust before charging.`,
       script: { steps: [] },
     },
     {
-      id: 'b2c3d4e5-f6a7-8901-bcde-f23456789013',
+      id: uuidv4() as any,
       name: 'Admin User',
       role: 'assistant',
       script: {
@@ -56,7 +57,7 @@ Always check user roles and trust before charging.`,
       },
     },
     {
-      id: 'c3d4e5f6-a7b8-9012-cdef-345678901234',
+      id: uuidv4() as any,
       name: 'Regular User',
       role: 'observer',
       script: {
@@ -148,7 +149,7 @@ Always check user roles and trust before charging.`,
     ],
     expectedOutcomes: [
       {
-        actorId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567891',
+        actorId: uuidv4() as any,
         outcome: 'Correctly applied role-based payment exemptions',
         verification: {
           id: 'exemptions-applied',

@@ -21,8 +21,9 @@ export const character: Character = {
     ...(!process.env.OPENAI_API_KEY ? ['@elizaos/plugin-local-ai'] : []),
     // ...(process.env.DISCORD_API_TOKEN ? ['@elizaos/plugin-discord'] : []),
     // ...(process.env.TELEGRAM_BOT_TOKEN ? ['@elizaos/plugin-telegram'] : []),
-    '@elizaos/plugin-autonomy',
-    '@elizaos/plugin-autocoder',
+    // '@elizaos/plugin-autonomy', // Temporarily disabled due to dependency issues
+    // '@elizaos/plugin-autocoder',    // Temporarily disabled due to WebSocket.Server issues
+    '@elizaos/plugin-self-modification', // Enable character evolution and self-modification
     // '@elizaos/plugin-planning',
     // '@elizaos/plugin-message-handling',
     // '@elizaos/plugin-research',
@@ -30,9 +31,9 @@ export const character: Character = {
     // '@elizaos/plugin-stagehand',
     // '@elizaos/plugin-knowledge',
     // '@elizaos/plugin-discord',
-    '@elizaos/plugin-plugin-manager',
-    '@elizaos/plugin-secrets-manager',
-    '@elizaos/plugin-github',
+    // '@elizaos/plugin-plugin-manager', // Temporarily disabled
+    // '@elizaos/plugin-secrets-manager', // Temporarily disabled
+    // '@elizaos/plugin-github',         // Temporarily disabled
     // '@elizaos/plugin-solana',
     // '@elizaos/plugin-evm',
     // '@elizaos/plugin-shell',

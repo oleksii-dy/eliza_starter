@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from '../types.js';
+import { v4 as uuidv4 } from 'uuid';
 
 export const rolodexComponentStorageScenario: Scenario = {
-  id: 'b8f9c2d1-4e5a-4f7b-8c3d-9e2f1a0b5d6c',
+  id: uuidv4() as any,
   name: 'Rolodex Component Storage with World/Room Creation',
   description: 'Test that Rolodex plugin properly creates world and room for component storage',
   category: 'integration',
@@ -9,13 +10,13 @@ export const rolodexComponentStorageScenario: Scenario = {
 
   actors: [
     {
-      id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+      id: uuidv4() as any,
       name: 'Component Storage Agent',
       role: 'subject',
       script: { steps: [] },
     },
     {
-      id: 'f9e8d7c6-b5a4-3210-fedc-ba0987654321',
+      id: uuidv4() as any,
       name: 'Contact Manager',
       role: 'subject',
       script: {
@@ -215,7 +216,7 @@ Check for warning logs: "[RolodexService] Could not create room/world, will save
     ],
     expectedOutcomes: [
       {
-        actorId: 'f9e8d7c6-b5a4-3210-fedc-ba0987654321',
+        actorId: uuidv4() as any,
         outcome: 'Successfully stored and managed contacts with proper component infrastructure',
         verification: {
           id: 'complete-storage',

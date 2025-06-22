@@ -5,6 +5,8 @@ import type { Character, World, UUID } from '../types';
 
 // Mock database adapter with getWorlds implementation
 class TestDatabaseAdapter extends DatabaseAdapter {
+  db = {}; // Add the required abstract property
+  
   private worlds: World[] = [
     {
       id: 'world-1' as UUID,
@@ -200,14 +202,11 @@ describe('End-to-End getWorlds API test', () => {
     const mockCharacter: Character = {
       id: 'agent-1' as UUID,
       name: 'Test Agent',
-      clients: [],
       plugins: [],
       bio: [],
-      lore: [],
       knowledge: [],
       messageExamples: [],
       postExamples: [],
-      people: [],
       topics: [],
       adjectives: [],
       style: { all: [], chat: [], post: [] },

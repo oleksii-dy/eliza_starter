@@ -1,4 +1,5 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const simpleTestScenario: Scenario = {
   id: 'simple-test-001',
@@ -9,7 +10,7 @@ export const simpleTestScenario: Scenario = {
 
   actors: [
     {
-      id: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+      id: uuidv4() as any,
       name: 'Test Agent',
       role: 'subject',
       bio: 'A simple test agent',
@@ -18,7 +19,7 @@ export const simpleTestScenario: Scenario = {
       script: { steps: [] },
     },
     {
-      id: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
+      id: uuidv4() as any,
       name: 'Test User',
       role: 'assistant',
       script: {
@@ -73,7 +74,7 @@ export const simpleTestScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+        actorId: uuidv4() as any,
         outcome: 'Successfully responded to messages',
         verification: {
           id: 'basic-response',

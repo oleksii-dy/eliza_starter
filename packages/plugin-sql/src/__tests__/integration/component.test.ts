@@ -1,12 +1,12 @@
 import {
   AgentRuntime,
   ChannelType,
+  stringToUuid,
   type Component,
   type Entity,
   type Room,
   type UUID,
   type World,
-  stringToUuid,
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -41,7 +41,7 @@ describe('Component Integration Tests', () => {
       id: testWorldId,
       agentId: testAgentId,
       name: 'Test World',
-      serverId: 'test-server',
+      serverId: uuidv4() as UUID,
     } as World);
     await adapter.createRooms([
       {

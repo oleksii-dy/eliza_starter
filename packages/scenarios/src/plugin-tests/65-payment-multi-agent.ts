@@ -1,4 +1,5 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from '../types.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const paymentMultiAgentScenario: Scenario = {
   id: 'payment-multi-agent-001',
@@ -10,7 +11,7 @@ const paymentMultiAgentScenario: Scenario = {
 
   actors: [
     {
-      id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567895',
+      id: uuidv4() as any,
       name: 'Research Agent',
       role: 'subject',
       bio: 'Specialized in research and data gathering',
@@ -25,7 +26,7 @@ Always be transparent about collaborative pricing.`,
       script: { steps: [] },
     },
     {
-      id: 'b2c3d4e5-f6a7-8901-bcde-f23456789017',
+      id: uuidv4() as any,
       name: 'Analysis Agent',
       role: 'assistant',
       bio: 'Expert in data analysis and insights',
@@ -61,7 +62,7 @@ Focus on providing analytical insights.`,
       },
     },
     {
-      id: 'c3d4e5f6-a7b8-9012-cdef-345678901237',
+      id: uuidv4() as any,
       name: 'Enterprise Client',
       role: 'observer',
       bio: 'A business client needing comprehensive services',
@@ -102,7 +103,7 @@ Focus on providing analytical insights.`,
       },
     },
     {
-      id: 'd4e5f6a7-b8c9-0123-def4-567890123456',
+      id: uuidv4() as any,
       name: 'Payment Auditor',
       role: 'observer',
       bio: 'Monitors payment flows and transparency',
@@ -219,7 +220,7 @@ Focus on providing analytical insights.`,
     ],
     expectedOutcomes: [
       {
-        actorId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567895',
+        actorId: uuidv4() as any,
         outcome: 'Successfully coordinated multi-agent payment',
         verification: {
           id: 'multi-agent-payment-complete',

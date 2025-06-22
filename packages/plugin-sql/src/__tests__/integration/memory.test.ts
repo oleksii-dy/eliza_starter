@@ -9,11 +9,10 @@ import {
   type UUID,
   type World,
 } from '@elizaos/core';
-import { v4 } from 'uuid';
+import { v4, v4 as uuidv4 } from 'uuid';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
-import { embeddingTable, memoryTable } from '../../schema';
 import { createTestDatabase } from '../test-helpers';
 import {
   documentMemoryId,
@@ -24,6 +23,7 @@ import {
   memoryTestMemories,
   memoryTestMemoriesWithEmbedding,
 } from './seed';
+import { sql } from 'drizzle-orm';
 
 describe('Memory Integration Tests', () => {
   let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
@@ -50,7 +50,7 @@ describe('Memory Integration Tests', () => {
         id: testWorldId,
         agentId: testAgentId,
         name: 'Test World',
-        serverId: 'test-server',
+        serverId: uuidv4() as UUID,
       } as World);
       await adapter.createRooms([
         {
@@ -82,8 +82,8 @@ describe('Memory Integration Tests', () => {
     // Clean up memories and embeddings before each test
     const db = adapter.getDatabase();
     // Delete embeddings first due to foreign key constraints
-    await db.delete(embeddingTable);
-    await db.delete(memoryTable);
+    await db.execute(sql`DELETE FROM embeddings`);
+    await db.execute(sql`DELETE FROM memories`);
   });
 
   const createTestMemory = (
@@ -119,8 +119,8 @@ describe('Memory Integration Tests', () => {
     // Clean up memories after each test to ensure isolation
     const db = adapter.getDatabase();
     // Delete in correct order to avoid foreign key constraint violations
-    await db.delete(embeddingTable);
-    await db.delete(memoryTable);
+    await db.execute(sql`DELETE FROM embeddings`);
+    await db.execute(sql`DELETE FROM memories`);
   });
 
   describe('Memory CRUD Operations', () => {
@@ -594,5 +594,3 @@ describe('Memory Integration Tests', () => {
     });
   });
 });
-
-// Import tables at the end to avoid circular dependencies if needed in this file

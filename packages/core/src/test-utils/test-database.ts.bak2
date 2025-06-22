@@ -1,0 +1,512 @@
+import type { IDatabaseAdapter } from '../types';
+import { logger } from '../logger';
+import { v4 as uuidv4 } from 'uuid';
+
+/**
+ * Test Database Manager - Creates isolated database instances for testing
+ * Each test gets its own database to prevent interference and ensure isolation
+ */
+export class TestDatabaseManager {
+  private testDatabases: Map<string, IDatabaseAdapter> = new Map();
+  private tempPaths: Set<string> = new Set();
+
+  /**
+   * Creates an isolated database for testing
+   * Uses in-memory PGLite for speed while maintaining PostgreSQL compatibility
+   */
+  async createIsolatedDatabase(testId: string): Promise<IDatabaseAdapter> {
+    try {
+      logger.debug(`Creating isolated test database for ${testId}`);
+
+      // Use dynamic import to avoid breaking if PGLite not available
+      let adapter: IDatabaseAdapter;
+
+      try {
+        // Try to use PGLite for in-memory PostgreSQL
+        logger.debug(`Attempting to load PGLite adapter for ${testId}`);
+        
+        const sqlPlugin = await import('@elizaos/plugin-sql');
+        const PGliteAdapter = sqlPlugin.PgliteDatabaseAdapter || sqlPlugin.default?.PgliteDatabaseAdapter;
+        
+        if (!PGliteAdapter) {
+          throw new Error('PGliteAdapter not found in plugin-sql exports');
+        }
+        
+        const dbPath = `:memory:test-${testId}`;
+        adapter = new PGliteAdapter({
+          dataDir: dbPath,
+        });
+
+        this.tempPaths.add(dbPath);
+        logger.debug(`Successfully created PGLite adapter for ${testId}`);
+
+      } catch (pgliteError) {
+        logger.info(`PGLite unavailable, using functional mock database: ${pgliteError instanceof Error ? pgliteError.message : String(pgliteError)}`);
+        
+        // Fallback to functional mock database if PGLite not available
+        adapter = this.createMockDatabase(testId);
+      }
+
+      // Initialize the database
+      await adapter.init();
+
+      // Store for cleanup
+      this.testDatabases.set(testId, adapter);
+
+      logger.debug(`Successfully created isolated database for ${testId}`);
+      return adapter;
+
+    } catch (error) {
+      logger.error(`Failed to create test database for ${testId}: ${error.message}`);
+      throw new Error(`Test database creation failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Creates a minimal mock database adapter for testing when real database unavailable
+   * This is a FUNCTIONAL mock that actually stores data in memory
+   */
+  private createMockDatabase(testId: string): IDatabaseAdapter {
+    // In-memory storage for this test instance
+    const storage = {
+      entities: new Map(),
+      memories: new Map(),
+      relationships: new Map(),
+      rooms: new Map(),
+      participants: new Map(),
+      cache: new Map(),
+      worlds: new Map(),
+      tasks: new Map(),
+    };
+
+    const adapter: IDatabaseAdapter = {
+      async init() {
+        logger.debug(`Initialized mock database for ${testId}`);
+      },
+
+      async close() {
+        storage.entities.clear();
+        storage.memories.clear();
+        storage.relationships.clear();
+        storage.rooms.clear();
+        storage.participants.clear();
+        storage.cache.clear();
+        storage.worlds.clear();
+        storage.tasks.clear();
+      },
+
+      // Entity operations
+      async createEntity(entity) {
+        const id = entity.id || uuidv4();
+        const fullEntity = { ...entity, id };
+        storage.entities.set(id, fullEntity);
+        return fullEntity;
+      },
+
+      async getEntityById(id) {
+        return storage.entities.get(id) || null;
+      },
+
+      async updateEntity(entity) {
+        if (!entity.id || !storage.entities.has(entity.id)) {
+          throw new Error('Entity not found');
+        }
+        storage.entities.set(entity.id, entity);
+        return;
+      },
+
+      async getEntitiesForRoom(roomId) {
+        const participants = Array.from(storage.participants.values())
+          .filter((p: any) => p.roomId === roomId);
+        
+        const entities = [];
+        for (const participant of participants) {
+          const entity = storage.entities.get(participant.entityId);
+          if (entity) entities.push(entity);
+        }
+        return entities;
+      },
+
+      // Memory operations
+      async createMemory(memory, tableName = 'messages', unique = false) {
+        const id = memory.id || uuidv4();
+        const fullMemory = { 
+          ...memory, 
+          id,
+          createdAt: memory.createdAt || Date.now(),
+        };
+        
+        if (!storage.memories.has(tableName)) {
+          storage.memories.set(tableName, new Map());
+        }
+        
+        storage.memories.get(tableName).set(id, fullMemory);
+        return id as `${string}-${string}-${string}-${string}-${string}`;
+      },
+
+      async getMemories(params) {
+        const tableName = params.tableName || 'messages';
+        const tableData = storage.memories.get(tableName);
+        
+        if (!tableData) return [];
+        
+        let memories = Array.from(tableData.values()) as any[];
+        
+        // Apply filters
+        if (params.roomId) {
+          memories = memories.filter((m: any) => m.roomId === params.roomId);
+        }
+        
+        if (params.entityId) {
+          memories = memories.filter((m: any) => m.entityId === params.entityId);
+        }
+        
+        // Sort by creation time (newest first)
+        memories.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
+        
+        // Apply limit
+        if (params.count) {
+          memories = memories.slice(0, params.count);
+        }
+        
+        return memories;
+      },
+
+      async searchMemories(params) {
+        // Simple text search for testing
+        const tableName = params.tableName || 'messages';
+        const tableData = storage.memories.get(tableName);
+        
+        if (!tableData) return [];
+        
+        let memories = Array.from(tableData.values()) as any[];
+        
+        if (params.roomId) {
+          memories = memories.filter((m: any) => m.roomId === params.roomId);
+        }
+        
+        // Simple text matching instead of vector search
+        if (params.query) {
+          memories = memories.filter((m: any) => 
+            m.content?.text?.toLowerCase().includes(params.query.toLowerCase())
+          );
+        }
+        
+        return memories.slice(0, params.count || 10);
+      },
+
+      async deleteMemory(memoryId, tableName = 'messages') {
+        const tableData = storage.memories.get(tableName);
+        if (tableData) {
+          return tableData.delete(memoryId);
+        }
+        return false;
+      },
+
+      // Room operations
+      async createRoom(room) {
+        const id = room.id || uuidv4();
+        const fullRoom = { ...room, id };
+        storage.rooms.set(id, fullRoom);
+        return;
+      },
+
+      async getRoom(roomId) {
+        return storage.rooms.get(roomId) || null;
+      },
+
+      async getRooms(worldId) {
+        return Array.from(storage.rooms.values())
+          .filter(room => !worldId || room.worldId === worldId);
+      },
+
+      // Participant operations
+      async addParticipant(entityId, roomId) {
+        const participantId = `${entityId}-${roomId}`;
+        storage.participants.set(participantId, { entityId, roomId });
+        return true;
+      },
+
+      async removeParticipant(entityId, roomId) {
+        const participantId = `${entityId}-${roomId}`;
+        return storage.participants.delete(participantId);
+      },
+
+      async getParticipantsForRoom(roomId) {
+        return Array.from(storage.participants.values())
+          .filter((p: any) => p.roomId === roomId)
+          .map((p: any) => p.entityId);
+      },
+
+      // Cache operations
+      async setCache(key, value) {
+        storage.cache.set(key, {
+          value,
+          createdAt: Date.now(),
+        });
+        return true;
+      },
+
+      async getCache(key) {
+        const cached = storage.cache.get(key);
+        return cached ? cached.value : null;
+      },
+
+      async deleteCache(key) {
+        return storage.cache.delete(key);
+      },
+
+      // World operations
+      async createWorld(world) {
+        const id = world.id || uuidv4();
+        const fullWorld = { ...world, id };
+        storage.worlds.set(id, fullWorld);
+        return id as `${string}-${string}-${string}-${string}-${string}`;
+      },
+
+      async getWorld(worldId) {
+        return storage.worlds.get(worldId) || null;
+      },
+
+      async getAllWorlds() {
+        return Array.from(storage.worlds.values());
+      },
+
+      // Task operations
+      async createTask(task) {
+        const id = task.id || uuidv4();
+        const fullTask = { 
+          ...task, 
+          id,
+          updatedAt: task.updatedAt || Date.now(),
+        };
+        storage.tasks.set(id, fullTask);
+        return id as `${string}-${string}-${string}-${string}-${string}`;
+      },
+
+      async getTasks(params) {
+        let tasks = Array.from(storage.tasks.values());
+        
+        if (params.roomId) {
+          tasks = tasks.filter(task => task.roomId === params.roomId);
+        }
+        
+        if (params.tags) {
+          tasks = tasks.filter(task => 
+            params.tags.some(tag => task.tags.includes(tag))
+          );
+        }
+        
+        return tasks;
+      },
+
+      async deleteTask(taskId) {
+        storage.tasks.delete(taskId);
+        return;
+      },
+
+      // Relationship operations
+      async createRelationship(relationship) {
+        const id = uuidv4();
+        const fullRelationship = { ...relationship, id };
+        storage.relationships.set(id, fullRelationship);
+        return true;
+      },
+
+      async getRelationships(params) {
+        let relationships = Array.from(storage.relationships.values());
+        
+        if (params.entityId) {
+          relationships = relationships.filter(rel => 
+            rel.sourceEntityId === params.entityId || 
+            rel.targetEntityId === params.entityId
+          );
+        }
+        
+        return relationships;
+      },
+
+      // Additional required methods (basic implementations)
+      async getEntitiesByIds(ids) {
+        const entities = [];
+        for (const id of ids) {
+          const entity = storage.entities.get(id);
+          if (entity) entities.push(entity);
+        }
+        return entities;
+      },
+
+      async updateMemory(memory) {
+        const tableName = 'messages'; // Default table
+        const tableData = storage.memories.get(tableName);
+        if (tableData && tableData.has(memory.id)) {
+          const existing = tableData.get(memory.id);
+          const updated = { ...existing, ...memory };
+          tableData.set(memory.id, updated);
+          return true;
+        }
+        return false;
+      },
+
+      async countMemories(roomId, tableName = 'messages') {
+        const tableData = storage.memories.get(tableName);
+        if (!tableData) return 0;
+        
+        if (!roomId) return tableData.size;
+        
+        return Array.from(tableData.values())
+          .filter(m => m.roomId === roomId).length;
+      },
+
+      async getMemoriesByEntityIds(entityIds, tableName = 'messages') {
+        const tableData = storage.memories.get(tableName);
+        if (!tableData) return [];
+        
+        return Array.from(tableData.values())
+          .filter(m => entityIds.includes(m.entityId));
+      },
+
+      async removeAllMemories(roomId, tableName = 'messages') {
+        const tableData = storage.memories.get(tableName);
+        if (!tableData) return;
+        
+        const toDelete = [];
+        for (const [id, memory] of tableData) {
+          if (memory.roomId === roomId) {
+            toDelete.push(id);
+          }
+        }
+        
+        for (const id of toDelete) {
+          tableData.delete(id);
+        }
+      },
+
+      async updateRoom(room) {
+        if (!room.id || !storage.rooms.has(room.id)) {
+          throw new Error('Room not found');
+        }
+        storage.rooms.set(room.id, room);
+        return;
+      },
+
+      async deleteRoom(roomId) {
+        storage.rooms.delete(roomId);
+        return;
+      },
+
+      async createComponent(component) {
+        // Store in a components map within the entity
+        const entityComponents = storage.entities.get(component.entityId)?.components || [];
+        entityComponents.push(component);
+        
+        const entity = storage.entities.get(component.entityId);
+        if (entity) {
+          entity.components = entityComponents;
+          storage.entities.set(component.entityId, entity);
+        }
+        
+        return true;
+      },
+
+      async getComponents(entityId) {
+        const entity = storage.entities.get(entityId);
+        return entity?.components || [];
+      },
+
+      async updateComponent(component) {
+        const entity = storage.entities.get(component.entityId);
+        if (entity && entity.components) {
+          const index = entity.components.findIndex(c => c.id === component.id);
+          if (index >= 0) {
+            entity.components[index] = component;
+            storage.entities.set(component.entityId, entity);
+            return;
+          }
+        }
+        throw new Error('Component not found');
+      },
+
+      async deleteComponent(componentId) {
+        for (const entity of storage.entities.values()) {
+          if (entity.components) {
+            const index = entity.components.findIndex(c => c.id === componentId);
+            if (index >= 0) {
+              entity.components.splice(index, 1);
+              storage.entities.set(entity.id, entity);
+              return;
+            }
+          }
+        }
+        return;
+      },
+    };
+
+    return adapter;
+  }
+
+  /**
+   * Cleanup a specific test database
+   */
+  async cleanupDatabase(testId: string): Promise<void> {
+    try {
+      const adapter = this.testDatabases.get(testId);
+      if (adapter) {
+        await adapter.close();
+        this.testDatabases.delete(testId);
+        logger.debug(`Cleaned up database for ${testId}`);
+      }
+    } catch (error) {
+      logger.warn(`Error cleaning up database ${testId}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Cleanup all test databases
+   */
+  async cleanup(): Promise<void> {
+    logger.debug('Cleaning up all test databases');
+
+    const cleanupPromises = Array.from(this.testDatabases.keys()).map(
+      testId => this.cleanupDatabase(testId)
+    );
+
+    await Promise.all(cleanupPromises);
+
+    // Clear tracking sets
+    this.tempPaths.clear();
+    this.testDatabases.clear();
+
+    logger.debug('Successfully cleaned up all test databases');
+  }
+
+  /**
+   * Get statistics about test databases
+   */
+  getStats(): {
+    activeDatabases: number;
+    tempPaths: string[];
+    memoryUsage: string;
+  } {
+    return {
+      activeDatabases: this.testDatabases.size,
+      tempPaths: Array.from(this.tempPaths),
+      memoryUsage: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`,
+    };
+  }
+}
+
+/**
+ * Convenience function to create an isolated test database
+ */
+export async function createTestDatabase(testId?: string): Promise<{
+  adapter: IDatabaseAdapter;
+  manager: TestDatabaseManager;
+  testId: string;
+}> {
+  const actualTestId = testId || `test-${uuidv4().slice(0, 8)}`;
+  const manager = new TestDatabaseManager();
+  const adapter = await manager.createIsolatedDatabase(actualTestId);
+
+  return { adapter, manager, testId: actualTestId };
+}

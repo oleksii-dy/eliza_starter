@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/test-runner.ts'],
+  entry: ['src/index.ts', 'src/test-runner.ts', 'src/real-test-runner.ts'],
   format: ['esm'],
   dts: false, // Disable for now to get build working
   sourcemap: true,
@@ -13,6 +13,7 @@ export default defineConfig({
   },
   external: [
     '@elizaos/core',
+    '@elizaos/server',
     '@elizaos/plugin-sql',
     '@elizaos/plugin-github',
     '@elizaos/plugin-todo',
@@ -34,9 +35,9 @@ export default defineConfig({
     '@elizaos/plugin-goals',
     '@elizaos/plugin-mcp',
     '@elizaos/plugin-ngrok',
-    '@elizaos/plugin-tasks'
+    '@elizaos/plugin-tasks',
   ],
-  bundle: false,
+  bundle: true,
   target: 'es2022',
-  outDir: 'dist'
+  outDir: 'dist',
 });

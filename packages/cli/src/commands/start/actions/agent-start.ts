@@ -6,6 +6,7 @@ import {
   type Character,
   type IAgentRuntime,
   type Plugin,
+  type IDatabaseAdapter,
 } from '@elizaos/core';
 import { AgentServer } from '@elizaos/server';
 import { AgentStartOptions } from '../types';
@@ -63,11 +64,20 @@ export async function startAgent(
   // Resolve dependencies and get final plugin list
   const finalPlugins = resolvePluginDependencies(allAvailablePlugins, options.isTestMode);
 
-  const runtime = new AgentRuntime({
+  // In test mode, use the server's database adapter to ensure consistency
+  const runtimeOptions: any = {
     character: encryptedCharacter(character),
     plugins: finalPlugins,
     settings: await loadEnvConfig(),
-  });
+  };
+
+  // If in test mode and server has a database, use it
+  if (options.isTestMode && server.database) {
+    runtimeOptions.adapter = server.database;
+    logger.debug('Using server database adapter for test agent runtime');
+  }
+
+  const runtime = new AgentRuntime(runtimeOptions);
 
   const initWrapper = async (runtime: IAgentRuntime) => {
     if (init) {
@@ -81,7 +91,7 @@ export async function startAgent(
 
   try {
     logger.info('Running plugin migrations...');
-    await runtime.runPluginMigrations();
+    await runtime.runMigrations();
     logger.info('Plugin migrations completed.');
   } catch (error) {
     logger.error('Failed to run plugin migrations:', error);

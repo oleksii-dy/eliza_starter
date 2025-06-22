@@ -1,6 +1,7 @@
 import type { Scenario } from '../types.js';
 
 import scenario_01_research_knowledge_integration from './01-research-knowledge-integration.js';
+import scenario_01_research_real_test from './01-research-real-test.js';
 import scenario_02_github_todo_workflow from './02-github-todo-workflow.js';
 import scenario_03_planning_execution from './03-planning-execution.js';
 import scenario_04_rolodex_relationship_management from './04-rolodex-relationship-management.js';
@@ -63,6 +64,7 @@ import scenario_65_payment_multi_agent from './65-payment-multi-agent.js';
 // Plugin test scenarios for testing specific plugin functionality
 export const pluginTestScenarios: Scenario[] = [
   scenario_01_research_knowledge_integration,
+  scenario_01_research_real_test,
   scenario_02_github_todo_workflow,
   scenario_03_planning_execution,
   scenario_04_rolodex_relationship_management,

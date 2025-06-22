@@ -1,4 +1,4 @@
-import { Plugin } from '@elizaos/core';
+import type { Plugin } from '@elizaos/core';
 import { messageClassifierProvider } from './providers/message-classifier';
 import {
   analyzeInputAction,
@@ -6,19 +6,26 @@ import {
   executeFinalAction,
   createPlanAction,
 } from './actions/chain-example';
+import { PlanningService } from './services/planning-service';
+import { testSuites } from './__tests__/e2e';
 
 export * from './types';
+export * from './services/planning-service';
 
-export const strategyPlugin: Plugin = {
-  name: '@elizaos/plugin-strategy',
-  description: 'Strategy planning and execution plugin with action chaining support',
+export const planningPlugin: Plugin = {
+  name: '@elizaos/plugin-planning',
+  description: 'Comprehensive planning and execution plugin with unified planning service',
 
   providers: [messageClassifierProvider],
 
   actions: [analyzeInputAction, processAnalysisAction, executeFinalAction, createPlanAction],
 
-  services: [],
+  services: [PlanningService],
   evaluators: [],
+  tests: testSuites,
 };
 
-export default strategyPlugin;
+// Maintain backwards compatibility
+export const strategyPlugin = planningPlugin;
+
+export default planningPlugin;

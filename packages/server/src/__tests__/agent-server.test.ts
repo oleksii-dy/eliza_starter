@@ -39,16 +39,133 @@ vi.mock('@elizaos/core', async () => {
       AGENT_UPDATE: 'agent_update',
       CONNECTION: 'connection',
     },
+    AgentRuntime: class MockAgentRuntime {
+      constructor(config: any) {
+        this.agentId = config.agentId;
+        this.character = config.character;
+        this.adapter = config.adapter;
+        this.plugins = config.plugins || [];
+      }
+      async initialize() {
+        // Mock successful initialization
+        return Promise.resolve();
+      }
+      agentId: string;
+      character: any;
+      adapter: any;
+      plugins: any[];
+    },
   };
 });
 
 vi.mock('@elizaos/plugin-sql', () => ({
   createDatabaseAdapter: vi.fn(() => ({
+    // Core database methods
     init: vi.fn().mockResolvedValue(undefined),
     close: vi.fn().mockResolvedValue(undefined),
     getDatabase: vi.fn(() => ({
       execute: vi.fn().mockResolvedValue([]),
     })),
+    db: { execute: vi.fn().mockResolvedValue([]) },
+    isReady: vi.fn().mockResolvedValue(true),
+    runMigrations: vi.fn().mockResolvedValue(undefined),
+
+    // Agent management
+    getAgents: vi.fn().mockResolvedValue([]),
+    getAgent: vi.fn().mockResolvedValue({
+      id: '00000000-0000-0000-0000-000000000000',
+      name: 'MigrationAgent',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+    createAgent: vi.fn().mockResolvedValue(true),
+    updateAgent: vi.fn().mockResolvedValue(true),
+    deleteAgent: vi.fn().mockResolvedValue(true),
+
+    // Entity management
+    getEntityById: vi.fn().mockResolvedValue(null),
+    getEntityByIds: vi.fn().mockResolvedValue([]),
+    getEntitiesForRoom: vi.fn().mockResolvedValue([]),
+    createEntity: vi.fn().mockResolvedValue('test-entity-id'),
+    createEntities: vi.fn().mockResolvedValue(true),
+    updateEntity: vi.fn().mockResolvedValue(undefined),
+
+    // Component management
+    getComponent: vi.fn().mockResolvedValue(null),
+    getComponents: vi.fn().mockResolvedValue([]),
+    createComponent: vi.fn().mockResolvedValue('test-component-id'),
+    updateComponent: vi.fn().mockResolvedValue(undefined),
+    deleteComponent: vi.fn().mockResolvedValue(undefined),
+
+    // Memory management
+    getMemories: vi.fn().mockResolvedValue([]),
+    getMemoryById: vi.fn().mockResolvedValue(null),
+    getMemoriesByIds: vi.fn().mockResolvedValue([]),
+    getMemoriesByRoomIds: vi.fn().mockResolvedValue([]),
+    getMemoriesByWorldId: vi.fn().mockResolvedValue([]),
+    getCachedEmbeddings: vi.fn().mockResolvedValue([]),
+    log: vi.fn().mockResolvedValue(undefined),
+    getLogs: vi.fn().mockResolvedValue([]),
+    deleteLog: vi.fn().mockResolvedValue(undefined),
+    searchMemories: vi.fn().mockResolvedValue([]),
+    createMemory: vi.fn().mockResolvedValue('test-memory-id'),
+    updateMemory: vi.fn().mockResolvedValue(true),
+    deleteMemory: vi.fn().mockResolvedValue(undefined),
+    deleteManyMemories: vi.fn().mockResolvedValue(undefined),
+    deleteAllMemories: vi.fn().mockResolvedValue(undefined),
+    countMemories: vi.fn().mockResolvedValue(0),
+    ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
+
+    // World management
+    createWorld: vi.fn().mockResolvedValue('test-world-id'),
+    getWorld: vi.fn().mockResolvedValue(null),
+    removeWorld: vi.fn().mockResolvedValue(undefined),
+    getWorlds: vi.fn().mockResolvedValue([]),
+    getAllWorlds: vi.fn().mockResolvedValue([]),
+    updateWorld: vi.fn().mockResolvedValue(undefined),
+
+    // Room management
+    getRoom: vi.fn().mockResolvedValue(null),
+    getRooms: vi.fn().mockResolvedValue([]),
+    getRoomsByIds: vi.fn().mockResolvedValue([]),
+    createRoom: vi.fn().mockResolvedValue('test-room-id'),
+    createRooms: vi.fn().mockResolvedValue([]),
+    deleteRoom: vi.fn().mockResolvedValue(undefined),
+    deleteRoomsByWorldId: vi.fn().mockResolvedValue(undefined),
+    updateRoom: vi.fn().mockResolvedValue(undefined),
+    getRoomsForParticipant: vi.fn().mockResolvedValue([]),
+    getRoomsForParticipants: vi.fn().mockResolvedValue([]),
+    getRoomsByWorld: vi.fn().mockResolvedValue([]),
+
+    // Participant management
+    addParticipant: vi.fn().mockResolvedValue(true),
+    removeParticipant: vi.fn().mockResolvedValue(true),
+    addParticipantsRoom: vi.fn().mockResolvedValue(true),
+    getParticipantsForEntity: vi.fn().mockResolvedValue([]),
+    getParticipantsForRoom: vi.fn().mockResolvedValue([]),
+    getParticipantUserState: vi.fn().mockResolvedValue(null),
+    setParticipantUserState: vi.fn().mockResolvedValue(undefined),
+
+    // Relationship management
+    createRelationship: vi.fn().mockResolvedValue(true),
+    updateRelationship: vi.fn().mockResolvedValue(undefined),
+    getRelationship: vi.fn().mockResolvedValue(null),
+    getRelationships: vi.fn().mockResolvedValue([]),
+
+    // Cache management
+    getCache: vi.fn().mockResolvedValue(undefined),
+    setCache: vi.fn().mockResolvedValue(true),
+    deleteCache: vi.fn().mockResolvedValue(true),
+
+    // Task management
+    createTask: vi.fn().mockResolvedValue('test-task-id'),
+    getTasks: vi.fn().mockResolvedValue([]),
+    getTask: vi.fn().mockResolvedValue(null),
+    getTasksByName: vi.fn().mockResolvedValue([]),
+    updateTask: vi.fn().mockResolvedValue(undefined),
+    deleteTask: vi.fn().mockResolvedValue(undefined),
+
+    // Message server management
     getMessageServers: vi.fn(() =>
       Promise.resolve([{ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' }])
     ),
@@ -60,14 +177,24 @@ vi.mock('@elizaos/plugin-sql', () => ({
     getChannelsForServer: vi.fn().mockResolvedValue([]),
     createChannel: vi.fn().mockResolvedValue({ id: '123e4567-e89b-12d3-a456-426614174000' }),
     getAgentsForServer: vi.fn().mockResolvedValue([]),
-    db: { execute: vi.fn().mockResolvedValue([]) },
+  })),
+  DatabaseService: vi.fn().mockImplementation((runtime, db) => ({
+    initializePluginSchema: vi.fn().mockResolvedValue(undefined),
   })),
   DatabaseMigrationService: vi.fn(() => ({
     initializeWithDatabase: vi.fn().mockResolvedValue(undefined),
     discoverAndRegisterPluginSchemas: vi.fn(),
     runAllPluginMigrations: vi.fn().mockResolvedValue(undefined),
   })),
-  plugin: {},
+  plugin: {
+    name: '@elizaos/plugin-sql',
+    description: 'SQL database plugin',
+    actions: [],
+    providers: [],
+    evaluators: [],
+    services: [],
+    schema: {},
+  },
 }));
 
 // Mock filesystem operations

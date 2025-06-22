@@ -65,17 +65,19 @@ export async function runScenarioWithAgents(
       logger.warn('Failed to load SQL plugin:', error);
     }
 
-    // Always include bootstrap plugin for message handling
+    // Always include messageHandling plugin for message handling
     try {
-      const bootstrapModule = await import('@elizaos/plugin-bootstrap');
-      const bootstrapPlugin =
-        bootstrapModule.default || (bootstrapModule as any).plugin || bootstrapModule;
-      if (bootstrapPlugin && bootstrapPlugin.name) {
-        plugins.push(bootstrapPlugin as Plugin);
-        logger.info('Loaded bootstrap plugin for message handling');
+      const messageHandlingModule = await import('@elizaos/plugin-message-handling');
+      const messageHandlingPlugin =
+        messageHandlingModule.default ||
+        (messageHandlingModule as any).plugin ||
+        messageHandlingModule;
+      if (messageHandlingPlugin && messageHandlingPlugin.name) {
+        plugins.push(messageHandlingPlugin as Plugin);
+        logger.info('Loaded messageHandling plugin for message handling');
       }
     } catch (error) {
-      logger.warn('Failed to load bootstrap plugin:', error);
+      logger.warn('Failed to load messageHandling plugin:', error);
     }
 
     // Always include OpenAI plugin for embeddings and LLM
@@ -99,7 +101,7 @@ export async function runScenarioWithAgents(
       openai: '@elizaos/plugin-openai',
       anthropic: '@elizaos/plugin-anthropic',
       sql: '@elizaos/plugin-sql',
-      bootstrap: '@elizaos/plugin-bootstrap',
+      messageHandling: '@elizaos/plugin-messageHandling',
 
       // Knowledge and research plugins
       knowledge: '@elizaos/plugin-knowledge',

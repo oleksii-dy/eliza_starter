@@ -38,30 +38,83 @@ vi.mock('@elizaos/core', async () => {
       AGENT_UPDATE: 'agent_update',
       CONNECTION: 'connection',
     },
+    AgentRuntime: class MockAgentRuntime {
+      constructor(config: any) {
+        this.agentId = config.agentId;
+        this.character = config.character;
+        this.adapter = config.adapter;
+        this.plugins = config.plugins || [];
+      }
+      async initialize() {
+        // Mock successful initialization
+        return Promise.resolve();
+      }
+      agentId: string;
+      character: any;
+      adapter: any;
+      plugins: any[];
+    },
   };
 });
 
 vi.mock('@elizaos/plugin-sql', () => ({
   createDatabaseAdapter: vi.fn(() => ({
+    // Core database methods
     init: vi.fn().mockResolvedValue(undefined),
     close: vi.fn().mockResolvedValue(undefined),
     getDatabase: vi.fn(() => ({
       execute: vi.fn().mockResolvedValue([]),
     })),
+    db: { execute: vi.fn().mockResolvedValue([]) },
+    isReady: vi.fn().mockResolvedValue(true),
+    runMigrations: vi.fn().mockResolvedValue(undefined),
+
+    // Agent management
+    getAgents: vi.fn().mockResolvedValue([]),
+    getAgent: vi.fn().mockResolvedValue({
+      id: '00000000-0000-0000-0000-000000000000',
+      name: 'MigrationAgent',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+    createAgent: vi.fn().mockResolvedValue(true),
+    updateAgent: vi.fn().mockResolvedValue(true),
+    deleteAgent: vi.fn().mockResolvedValue(true),
+
+    // Entity management
+    getEntityById: vi.fn().mockResolvedValue(null),
+    getEntityByIds: vi.fn().mockResolvedValue([]),
+    getEntitiesForRoom: vi.fn().mockResolvedValue([]),
+    createEntity: vi.fn().mockResolvedValue('test-entity-id'),
+    createEntities: vi.fn().mockResolvedValue(true),
+    updateEntity: vi.fn().mockResolvedValue(undefined),
+
+    // Message server management
     getMessageServers: vi
       .fn()
       .mockResolvedValue([{ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' }]),
     createMessageServer: vi.fn().mockResolvedValue({ id: '00000000-0000-0000-0000-000000000000' }),
     getAgentsForServer: vi.fn().mockResolvedValue([]),
     addAgentToServer: vi.fn().mockResolvedValue(undefined),
-    db: { execute: vi.fn().mockResolvedValue([]) },
+
+    // Add other methods as needed by tests
+    getMemories: vi.fn().mockResolvedValue([]),
+    createMemory: vi.fn().mockResolvedValue('test-memory-id'),
+    searchMemories: vi.fn().mockResolvedValue([]),
   })),
   DatabaseMigrationService: vi.fn(() => ({
     initializeWithDatabase: vi.fn().mockResolvedValue(undefined),
     discoverAndRegisterPluginSchemas: vi.fn(),
     runAllPluginMigrations: vi.fn().mockResolvedValue(undefined),
   })),
-  plugin: {},
+  plugin: {
+    name: '@elizaos/plugin-sql',
+    description: 'SQL database plugin',
+    actions: [],
+    providers: [],
+    evaluators: [],
+    services: [],
+  },
 }));
 
 vi.mock('node:fs', () => ({

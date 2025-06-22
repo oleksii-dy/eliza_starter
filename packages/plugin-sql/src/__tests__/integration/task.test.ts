@@ -40,7 +40,7 @@ describe('Task Integration Tests', () => {
       id: testWorldId,
       agentId: testAgentId,
       name: 'Test World',
-      serverId: 'test-server',
+      serverId: uuidv4() as UUID,
     } as World);
 
     // Create test room

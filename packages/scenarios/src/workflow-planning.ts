@@ -1,5 +1,4 @@
-import type { Scenario } from "./types.js";
-import { asUUID } from '@elizaos/core';
+import type { Scenario } from './types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const workflowPlanningScenario: Scenario = {
@@ -12,13 +11,13 @@ export const workflowPlanningScenario: Scenario = {
 
   actors: [
     {
-      id: asUUID(uuidv4()),
+      id: uuidv4() as any,
       name: 'Planning Agent',
       role: 'subject',
       // Uses the main agent being tested
     },
     {
-      id: asUUID(uuidv4()),
+      id: uuidv4() as any,
       name: 'Project Stakeholder',
       role: 'subject',
       script: {

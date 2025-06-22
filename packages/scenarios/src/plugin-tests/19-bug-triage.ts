@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const bugtriageScenario: Scenario = {
-  id: 'cd06c939-58c6-4b78-9ac7-deb7cad0b47f',
+  id: uuidv4() as any,
   name: 'Automated Bug Triage System',
   description: 'Automatically triage and prioritize GitHub issues',
   category: 'integration',
@@ -9,13 +10,13 @@ export const bugtriageScenario: Scenario = {
   
   actors: [
     {
-      id: 'dc08421e-fd56-4ac2-8132-59533c981677',
+      id: uuidv4() as any,
       name: 'Integration Agent',
       role: 'subject',
       script: { steps: [] },
     },
     {
-      id: 'a8c4dfe4-516e-43c5-8171-ed5abf201369',
+      id: uuidv4() as any,
       name: 'Test User',
       role: 'subject',
       script: {
@@ -83,7 +84,7 @@ export const bugtriageScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: '86a3f0ff-beef-47f4-a801-854fe9d69666',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'All required plugins were utilized',
         config: {
@@ -92,7 +93,7 @@ export const bugtriageScenario: Scenario = {
         weight: 3,
       },
       {
-        id: '1b9e95cf-fa0a-4fe3-af4f-293ad1251b91',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Workflow completed successfully',
         config: {
@@ -101,7 +102,7 @@ export const bugtriageScenario: Scenario = {
         weight: 4,
       },
       {
-        id: 'ce35bf49-b1ee-4dd9-b2d1-0a41040accdf',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Actions were properly chained',
         config: {
@@ -112,10 +113,10 @@ export const bugtriageScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'a8c4dfe4-516e-43c5-8171-ed5abf201369',
+        actorId: uuidv4() as any,
         outcome: 'Successfully completed integration workflow',
         verification: {
-          id: '28298306-4acd-4493-8c84-8b94720a8e19',
+          id: uuidv4() as any,
           type: 'llm',
           description: 'Integration test passed',
           config: {

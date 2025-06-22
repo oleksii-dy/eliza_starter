@@ -1,68 +1,40 @@
-import { getSchemaFactory } from './factory';
-import { agentTable } from './agent';
-import { entityTable } from './entity';
-import { roomTable } from './room';
+import { getSchemaFactory, createLazyTableProxy } from './factory';
 
 /**
  * Lazy-loaded participant table definition.
  * This function returns the participant table schema when called,
  * ensuring the database type is set before schema creation.
+ * Foreign key references are removed to avoid circular dependencies.
+ * The database constraints will be enforced at the application level.
+ 
  */
 function createParticipantTable() {
   const factory = getSchemaFactory();
   
-  return factory.table(
-    'participants',
-    {
-      id: (() => {
-        const defaultUuid = factory.defaultRandomUuid();
-        const column = factory.uuid('id').notNull().primaryKey();
-        return defaultUuid ? column.default(defaultUuid) : column;
-      })(),
-      createdAt: factory.timestamp('created_at', { withTimezone: true })
-        .default(factory.defaultTimestamp())
-        .notNull(),
-      entityId: factory.uuid('entityId').references(() => entityTable.id, {
-        onDelete: 'cascade',
-      }),
-      roomId: factory.uuid('roomId').references(() => roomTable.id, {
-        onDelete: 'cascade',
-      }),
-      agentId: factory.uuid('agentId').references(() => agentTable.id, {
-        onDelete: 'cascade',
-      }),
-      roomState: factory.text('roomState'),
-    },
-    (table) => [
-      // factory.unique("participants_user_room_agent_unique").on(table.entityId, table.roomId, table.agentId),
-      factory.index('idx_participants_user').on(table.entityId),
-      factory.index('idx_participants_room').on(table.roomId),
-      factory.foreignKey({
-        name: 'fk_room',
-        columns: [table.roomId],
-        foreignColumns: [roomTable.id],
-      }).onDelete('cascade'),
-      factory.foreignKey({
-        name: 'fk_user',
-        columns: [table.entityId],
-        foreignColumns: [entityTable.id],
-      }).onDelete('cascade'),
-    ]
-  );
+  const tableColumns = {
+    entityId: factory.uuid('entity_id').notNull(),
+    roomId: factory.uuid('room_id').notNull(),
+    agentId: factory.uuid('agent_id').notNull(),
+    lastReadAt: factory.timestamp('last_read_at', { mode: 'date' }),
+    userState: factory.text('user_state'),
+    createdAt: factory.timestamp('created_at', { mode: 'date' })
+      .default(factory.defaultTimestamp())
+      .notNull(),
+    updatedAt: factory.timestamp('updated_at', { mode: 'date' })
+      .default(factory.defaultTimestamp())
+      .notNull(),
+  };
+
+  return factory.table('participants', tableColumns, (table) => ({
+    pk: factory.primaryKey({ columns: [table.entityId, table.roomId] }),
+    entityIdx: factory.index('participants_entity_id_idx').on(table.entityId),
+    roomIdx: factory.index('participants_room_id_idx').on(table.roomId),
+    agentIdx: factory.index('participants_agent_id_idx').on(table.agentId),
+  }));
 }
 
-// Cache the table once created
-let _participantTable: any = null;
-
 /**
- * Defines the schema for the "participants" table in the database.
+ * Represents a table for storing participant data.
  * Uses lazy initialization to ensure proper database type configuration.
  */
-export const participantTable = new Proxy({} as any, {
-  get(target, prop, receiver) {
-    if (!_participantTable) {
-      _participantTable = createParticipantTable();
-    }
-    return Reflect.get(_participantTable, prop, receiver);
-  }
-});
+export const participantTable = createLazyTableProxy(createParticipantTable);

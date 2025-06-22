@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const researchKnowledgeIntegrationScenario: Scenario = {
-  id: '6fbc1f01-8e44-42bf-afa0-57b619012067',
+  id: uuidv4() as any,
   name: 'Academic Paper Research and Knowledge Storage',
   description:
     'Test research plugin conducting deep research, then storing findings in knowledge base for future retrieval',
@@ -10,7 +11,7 @@ export const researchKnowledgeIntegrationScenario: Scenario = {
 
   actors: [
     {
-      id: '57783c5e-6b70-4e3b-899c-1412cfb55cbd',
+      id: uuidv4() as any,
       name: 'Research Agent',
       role: 'subject',
       bio: 'A specialized research assistant with academic expertise',
@@ -94,7 +95,7 @@ export const researchKnowledgeIntegrationScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: '57783c5e-6b70-4e3b-899c-1412cfb55cbd',
+        actorId: uuidv4() as any,
         outcome: 'Provided information about AI in education',
         verification: {
           id: 'outcome-1',

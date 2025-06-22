@@ -1,6 +1,6 @@
 {
   "name": "@elizaos/core",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "",
   "type": "module",
   "main": "dist/index.js",
@@ -12,6 +12,12 @@
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      }
+    },
+    "./test-utils": {
+      "import": {
+        "types": "./dist/test-utils/index.d.ts",
+        "default": "./dist/test-utils/index.js"
       }
     },
     "./v1": {
@@ -36,7 +42,7 @@
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
     "dev": "tsup --watch",
     "build:docs": "cd docs && bun run build",
-    "test": "vitest run --coverage",
+    "test": "elizaos test",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "format": "prettier --write ./src",
@@ -86,7 +92,7 @@
     "unique-names-generator": "4.7.1",
     "uuid": "11.0.3",
     "vitest": "^3.1.4",
-    "zod": "^3.24.4"
+    "zod": "3.23.8"
   },
   "publishConfig": {
     "access": "public"

@@ -1,4 +1,5 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from '../types.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const paymentInsufficientFundsScenario: Scenario = {
   id: 'payment-insufficient-funds-001',
@@ -9,7 +10,7 @@ const paymentInsufficientFundsScenario: Scenario = {
 
   actors: [
     {
-      id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567893',
+      id: uuidv4() as any,
       name: 'Payment Processing Agent',
       role: 'subject',
       bio: 'An AI agent that handles payment failures gracefully',
@@ -33,7 +34,7 @@ When users have insufficient funds:
       script: { steps: [] },
     },
     {
-      id: 'b2c3d4e5-f6a7-8901-bcde-f23456789015',
+      id: uuidv4() as any,
       name: 'Low Balance User',
       role: 'assistant',
       bio: 'A user with limited funds trying to access services',
@@ -81,7 +82,7 @@ When users have insufficient funds:
       },
     },
     {
-      id: 'c3d4e5f6-a7b8-9012-cdef-345678901235',
+      id: uuidv4() as any,
       name: 'Observer',
       role: 'observer',
       script: {
@@ -185,7 +186,7 @@ When users have insufficient funds:
     ],
     expectedOutcomes: [
       {
-        actorId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567893',
+        actorId: uuidv4() as any,
         outcome: 'Handled insufficient funds professionally',
         verification: {
           id: 'funds-handling-complete',

@@ -40,7 +40,7 @@
     "tsup.config.ts"
   ],
   "dependencies": {
-    "@elizaos/core": "^1.0.0",
+    "@elizaos/core": "workspace:*",
     "@tanstack/react-query": "^5.80.7",
     "clsx": "^2.1.1",
     "tailwindcss": "^4.1.10",
@@ -51,7 +51,7 @@
   "peerDependencies": {},
   "devDependencies": {
     "@cypress/react": "^9.0.1",
-    "@elizaos/cli": "^1.0.0",
+    "@elizaos/cli": "workspace:*",
     "@tailwindcss/vite": "^4.1.10",
     "@testing-library/cypress": "^10.0.3",
     "@vitejs/plugin-react-swc": "^3.10.2",

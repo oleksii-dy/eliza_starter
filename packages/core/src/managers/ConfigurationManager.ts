@@ -60,6 +60,12 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
       try {
         const configs = await source.load();
 
+        // Safety check: ensure configs is not null before processing
+        if (!configs || typeof configs !== 'object') {
+          this.logger.warn(`Configuration source ${source.name} returned invalid data, skipping`);
+          continue;
+        }
+
         // Merge configurations
         for (const [pluginName, config] of Object.entries(configs)) {
           const existing = this.configurations.get(pluginName);

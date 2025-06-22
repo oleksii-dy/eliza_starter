@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const pluginManagerSystemScenario: Scenario = {
-  id: 'd9e0f1a2-b3c4-5d6e-7f8a-9b0c1d2e3f4a',
+  id: uuidv4() as any,
   name: 'Dynamic Plugin Management System',
   description:
     'Test plugin manager discovering, installing, updating, and managing plugins dynamically',
@@ -10,7 +11,7 @@ export const pluginManagerSystemScenario: Scenario = {
 
   actors: [
     {
-      id: 'e0f1a2b3-c4d5-6e7f-8a9b-0c1d2e3f4a5b',
+      id: uuidv4() as any,
       name: 'System Administrator Agent',
       role: 'subject',
       bio: 'A system administration agent that manages plugins and system configuration',
@@ -20,7 +21,7 @@ export const pluginManagerSystemScenario: Scenario = {
       script: { steps: [] },
     },
     {
-      id: 'f1a2b3c4-d5e6-7f8a-9b0c-1d2e3f4a5b6c',
+      id: uuidv4() as any,
       name: 'DevOps Engineer',
       role: 'assistant',
       script: {
@@ -71,7 +72,7 @@ export const pluginManagerSystemScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: 'a2b3c4d5-e6f7-8a9b-0c1d-2e3f4a5b6c7d',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Plugin management help was provided',
         config: {
@@ -80,7 +81,7 @@ export const pluginManagerSystemScenario: Scenario = {
         },
       },
       {
-        id: 'b3c4d5e6-f7a8-9b0c-1d2e-3f4a5b6c7d8e',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Best practices were explained',
         config: {
@@ -90,7 +91,7 @@ export const pluginManagerSystemScenario: Scenario = {
         },
       },
       {
-        id: 'c4d5e6f7-a8b9-0c1d-2e3f-4a5b6c7d8e9f',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Compatibility guidance was provided',
         config: {
@@ -102,10 +103,10 @@ export const pluginManagerSystemScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'e0f1a2b3-c4d5-6e7f-8a9b-0c1d2e3f4a5b',
+        actorId: uuidv4() as any,
         outcome: 'Provided plugin management guidance',
         verification: {
-          id: 'b9c0d1e2-f3a4-5b6c-7d8e-9f0a1b2c3d4e',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'Plugin management assistance was provided',
           config: {

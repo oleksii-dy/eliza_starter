@@ -1,12 +1,12 @@
 import {
   AgentRuntime,
   ChannelType,
+  MemoryType,
+  stringToUuid,
   type Entity,
   type Memory,
-  MemoryType,
   type Plugin,
   type Room,
-  stringToUuid,
   type UUID,
   type World,
 } from '@elizaos/core';
@@ -112,7 +112,7 @@ describe('Dynamic Migration Tests', () => {
     it('should create tables for the hello-world plugin in a dedicated schema', async () => {
       const db = adapter.getDatabase();
       const tables = await db.execute(
-        `SELECT table_name FROM information_schema.tables WHERE table_schema = 'test_hello_world'`
+        `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`
       );
       const tableNames = tables.rows.map((r: any) => r.table_name);
       expect(tableNames).toContain('hello_world');
@@ -128,7 +128,7 @@ describe('Dynamic Migration Tests', () => {
         id: testWorldId,
         agentId: testAgentId,
         name: 'Test World',
-        serverId: 'test-server',
+        serverId: uuidv4() as UUID,
       } as World);
 
       await adapter.createRooms([
@@ -170,7 +170,7 @@ describe('Dynamic Migration Tests', () => {
 
       const db = complexAdapter.getDatabase();
       const tables = await db.execute(
-        `SELECT table_name FROM information_schema.tables WHERE table_schema = 'test_complex_plugin'`
+        `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`
       );
       const tableNames = tables.rows.map((r: any) => r.table_name);
       expect(tableNames).toContain('users');

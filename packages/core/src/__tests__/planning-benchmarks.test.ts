@@ -239,9 +239,9 @@ describe('Planning Benchmarks', () => {
           result.planValidated = true;
 
           if (executionResult.errors) {
-            result.errors = executionResult.errors.map((e) => e.message);
+            result.errors = executionResult.errors.map((e: any) => e.message);
           }
-        } catch (error) {
+        } catch (error: unknown) {
           result.errors = [error instanceof Error ? error.message : String(error)];
         }
 

@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const crisisResponseScenario: Scenario = {
-  id: '0f91c3e5-f65c-44a2-bebd-37c34f043dbf',
+  id: uuidv4() as any,
   name: 'Emergency Crisis Response Coordination',
   description:
     'Test coordinated crisis response using multiple plugins for rapid information gathering and action planning',
@@ -10,13 +11,13 @@ export const crisisResponseScenario: Scenario = {
 
   actors: [
     {
-      id: 'fd35ce52-ff2c-4b6e-bfdf-db4edf879b29',
+      id: uuidv4() as any,
       name: 'Crisis Response Agent',
       role: 'assistant',
       script: { steps: [] },
     },
     {
-      id: 'a12d0dea-8927-4994-a54e-4ae5862c01f0',
+      id: uuidv4() as any,
       name: 'Emergency Coordinator',
       role: 'subject',
       script: {
@@ -86,7 +87,7 @@ export const crisisResponseScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: 'c782dc44-3914-400a-96f5-790d808a6697',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Threat research was initiated',
         config: {
@@ -95,7 +96,7 @@ export const crisisResponseScenario: Scenario = {
         weight: 3,
       },
       {
-        id: '1dc82d2a-2a7b-406a-a3a8-86f8a5b261a8',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Incident response plan created',
         config: {
@@ -104,7 +105,7 @@ export const crisisResponseScenario: Scenario = {
         weight: 4,
       },
       {
-        id: '5c6b3c17-0f41-457b-92e1-c2c1f70c5402',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Procedures retrieved from knowledge base',
         config: {
@@ -113,7 +114,7 @@ export const crisisResponseScenario: Scenario = {
         weight: 2,
       },
       {
-        id: '7887e390-ac45-4659-a2d2-255687062ebb',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Crisis todos were created',
         config: {
@@ -122,7 +123,7 @@ export const crisisResponseScenario: Scenario = {
         weight: 3,
       },
       {
-        id: 'c2058c6a-f1de-4b1c-9e3d-d3f6e3c8bf77',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Response was rapid and organized',
         config: {
@@ -134,10 +135,10 @@ export const crisisResponseScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'a12d0dea-8927-4994-a54e-4ae5862c01f0',
+        actorId: uuidv4() as any,
         outcome: 'Successfully coordinated crisis response',
         verification: {
-          id: 'ba80cadc-bf78-4e9b-95b0-cb0909a3b691',
+          id: uuidv4() as any,
           type: 'llm',
           description: 'Crisis response was effective',
           config: {

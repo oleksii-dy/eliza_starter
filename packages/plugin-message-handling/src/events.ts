@@ -11,6 +11,7 @@ import {
   type EventPayload,
   EventType,
   type IAgentRuntime,
+  type IPlanningService,
   imageDescriptionTemplate,
   type InvokePayload,
   logger,
@@ -523,7 +524,49 @@ const messageReceivedHandler = async ({
             // without actions there can't be more than one message
             await callback(responseContent);
           } else {
-            await runtime.processActions(message, responseMessages, state, callback);
+            // Check if planning service is available for enhanced planning
+            const planningService = runtime.getService<IPlanningService>('planning');
+            
+            if (planningService && responseContent) {
+              try {
+                logger.debug('[Message Handling] Using planning service for action coordination');
+                
+                // Create a simple plan using the planning service
+                const plan = await planningService.createSimplePlan(
+                  runtime,
+                  message,
+                  state,
+                  responseContent
+                );
+
+                if (plan) {
+                  // Execute the plan through the planning service
+                  const planResult = await planningService.executePlan(
+                    runtime,
+                    plan,
+                    message,
+                    callback
+                  );
+
+                  logger.debug(`[Message Handling] Plan execution completed. Success: ${planResult.success}`);
+
+                  // If plan execution failed, fall back to regular action processing
+                  if (!planResult.success) {
+                    logger.warn('[Message Handling] Plan execution failed, falling back to regular action processing');
+                    await runtime.processActions(message, responseMessages, state, callback);
+                  }
+                } else {
+                  // No plan created, use regular action processing
+                  await runtime.processActions(message, responseMessages, state, callback);
+                }
+              } catch (error) {
+                logger.error('[Message Handling] Planning service error, falling back to regular action processing:', error);
+                await runtime.processActions(message, responseMessages, state, callback);
+              }
+            } else {
+              // No planning service available, use regular action processing
+              await runtime.processActions(message, responseMessages, state, callback);
+            }
           }
           await runtime.evaluate(message, state, shouldRespond, callback, responseMessages);
         } else {

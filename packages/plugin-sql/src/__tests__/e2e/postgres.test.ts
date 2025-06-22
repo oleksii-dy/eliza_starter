@@ -2,14 +2,21 @@ import { describe, it, expect, beforeAll, beforeEach, afterAll, afterEach } from
 import { PostgresConnectionManager } from '../../pg/manager';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { v4 as uuidv4 } from 'uuid';
-import type { UUID, Entity, Memory, Component, Agent, ChannelType } from '@elizaos/core';
-import { DatabaseMigrationService } from '../../migration-service';
+import {
+  ChannelType,
+  type UUID,
+  type Entity,
+  type Memory,
+  type Component,
+  type Agent,
+} from '@elizaos/core';
 import * as schema from '../../schema';
 import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
 import { sql } from 'drizzle-orm';
 import { PGliteClientManager } from '../../pglite/manager';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
+import { AgentStatus } from '@elizaos/core';
 
 // Use PGLite for testing instead of real PostgreSQL
 describe('PostgreSQL E2E Tests', () => {
@@ -20,14 +27,7 @@ describe('PostgreSQL E2E Tests', () => {
     const adapter = new PgliteDatabaseAdapter(agentId, manager);
     await adapter.init();
 
-    // Run migrations for each adapter
-    const migrationService = new DatabaseMigrationService();
-    const db = adapter.getDatabase();
-    await migrationService.initializeWithDatabase(db);
-    migrationService.discoverAndRegisterPluginSchemas([
-      { name: '@elizaos/plugin-sql', description: 'SQL plugin', schema },
-    ]);
-    await migrationService.runAllPluginMigrations();
+    // The adapter's init() method should handle table creation
 
     return { adapter, agentId };
   };
@@ -215,7 +215,7 @@ describe('PostgreSQL E2E Tests', () => {
           id: roomId,
           agentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Test Room',
         },
       ]);
@@ -368,7 +368,7 @@ describe('PostgreSQL E2E Tests', () => {
           id: roomId,
           agentId,
           source: 'test',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: 'Test Room',
         },
       ]);

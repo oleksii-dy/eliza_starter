@@ -1,7 +1,8 @@
 import { Command } from 'commander';
 import { logger } from '@elizaos/core';
 import { runScenarioTests } from '../test/actions/scenario-tests.js';
-import { ConsolidatedScenarioTestRunner } from '@elizaos/scenarios';
+// Removed ConsolidatedScenarioTestRunner import to fix build issues
+// Using plugin-based scenario system instead
 import { getProjectType } from '../test/utils/project-utils.js';
 import { loadPluginsFromProject } from '../test/utils/plugin-utils.js';
 import { ScenarioRuntimeValidator } from '@elizaos/core';
@@ -9,6 +10,7 @@ import { createTestAgent } from '../test/utils/agent-utils.js';
 import type { PluginScenario } from '@elizaos/core';
 import { generateScenarioCommand } from './generate.js';
 import * as fs from 'fs';
+import { runScenarioWithAgents } from './run-scenario.js';
 
 export const scenarioCommand = new Command('scenario')
   .description('Run and manage scenario tests for ElizaOS agents')
@@ -27,6 +29,7 @@ scenarioCommand
   .option('--format <type>', 'Output format (json|text|html)', 'text')
   .option('--parallel', 'Run scenarios in parallel', false)
   .option('--max-concurrency <num>', 'Maximum concurrent scenarios', '1')
+  .option('--source <type>', 'Scenario source (plugin|standalone|all)', 'all')
   .action(async (options) => {
     console.log('Scenario run command started with options:', options);
 
@@ -45,68 +48,142 @@ scenarioCommand
     }
 
     try {
-      // Use the new plugin scenario system instead of the old standalone scenarios
-      
-      // Convert CLI options to test command options
-      const testOptions = {
-        type: 'scenario' as const,
-        port: options.port,
-        name: options.filter, // Map filter to name for test command compatibility
-        skipBuild: true,
-        skipTypeCheck: true,
-        verbose: options.verbose,
-        benchmark: options.benchmark,
-        parallel: options.parallel,
-        maxConcurrency: parseInt(options.maxConcurrency) || 1
-      };
+      const results = [];
 
-      logger.info('Running scenarios using plugin scenario system...');
-      const result = await runScenarioTests(undefined, testOptions);
+      // Run plugin scenarios if requested
+      if (options.source === 'plugin' || options.source === 'all') {
+        // Use the new plugin scenario system instead of the old standalone scenarios
 
-      // Display results using existing display function but adapt the data
-      const adaptedResults = [];
-      for (const pluginResult of result.results) {
-        for (const scenario of pluginResult.scenarios) {
-          adaptedResults.push({
-            scenarioId: scenario.scenarioId,
-            name: scenario.name,
-            passed: scenario.passed,
-            error: scenario.errors.length > 0 ? scenario.errors[0] : undefined,
-            duration: scenario.duration,
-            metrics: {
+        // Convert CLI options to test command options
+        const testOptions = {
+          type: 'scenario' as const,
+          port: options.port,
+          name: options.filter, // Map filter to name for test command compatibility
+          skipBuild: true,
+          skipTypeCheck: true,
+          verbose: options.verbose,
+          benchmark: options.benchmark,
+          parallel: options.parallel,
+          maxConcurrency: parseInt(options.maxConcurrency) || 1,
+        };
+
+        logger.info('Running plugin scenarios...');
+        const pluginResult = await runScenarioTests(undefined, testOptions);
+
+        // Display results using existing display function but adapt the data
+        for (const pluginTestResult of pluginResult.results) {
+          for (const scenario of pluginTestResult.scenarios) {
+            results.push({
+              scenarioId: scenario.scenarioId,
+              name: scenario.name,
+              passed: scenario.passed,
+              error: scenario.errors.length > 0 ? scenario.errors[0] : undefined,
               duration: scenario.duration,
-              messageCount: scenario.metrics.messageCount,
-              stepCount: scenario.metrics.stepCount,
-              tokenUsage: scenario.metrics.tokenUsage,
-              memoryUsage: {
-                peak: scenario.metrics.memoryUsage.peak,
-                average: scenario.metrics.memoryUsage.average,
-                memoryOperations: scenario.metrics.memoryUsage.operations
+              metrics: {
+                duration: scenario.duration,
+                messageCount: scenario.metrics.messageCount,
+                stepCount: scenario.metrics.stepCount,
+                tokenUsage: scenario.metrics.tokenUsage,
+                memoryUsage: {
+                  peak: scenario.metrics.memoryUsage.peak,
+                  average: scenario.metrics.memoryUsage.average,
+                  memoryOperations: scenario.metrics.memoryUsage.operations,
+                },
+                actionCounts: {}, // Would need to be extracted from transcript
+                responseLatency: scenario.metrics.responseLatency,
               },
-              actionCounts: {}, // Would need to be extracted from transcript
-              responseLatency: scenario.metrics.responseLatency,
-            },
-            verificationResults: scenario.verificationResults,
-            transcript: scenario.transcript,
-          });
+              verificationResults: scenario.verificationResults,
+              transcript: scenario.transcript,
+            });
+          }
         }
       }
 
-      if (adaptedResults.length === 0) {
-        logger.warn('No scenarios found in plugins matching the criteria');
+      // Run standalone scenarios if requested
+      if (options.source === 'standalone' || options.source === 'all') {
+        logger.info('Loading standalone scenarios from @elizaos/scenarios...');
+
+        try {
+          // Dynamically import scenarios from the scenarios package
+          const scenariosModule = await import('@elizaos/scenarios');
+          const { allScenarios, getScenariosByCategory, getScenarioById } = scenariosModule;
+
+          let scenariosToRun = allScenarios || [];
+
+          // Apply filters
+          if (options.filter) {
+            const filterRegex = new RegExp(options.filter, 'i');
+            scenariosToRun = scenariosToRun.filter(
+              (s: any) =>
+                filterRegex.test(s.name) ||
+                filterRegex.test(s.description) ||
+                filterRegex.test(s.id)
+            );
+          }
+
+          if (options.scenario) {
+            // Load specific scenario by ID
+            const scenario = getScenarioById(options.scenario);
+            if (scenario) {
+              scenariosToRun = [scenario];
+            } else {
+              logger.warn(`Scenario with ID ${options.scenario} not found`);
+              scenariosToRun = [];
+            }
+          }
+
+          logger.info(`Found ${scenariosToRun.length} standalone scenarios to run`);
+
+          // Run each standalone scenario
+          for (const scenario of scenariosToRun) {
+            logger.info(`Running standalone scenario: ${scenario.name}`);
+
+            try {
+              const result = await runScenarioWithAgents(scenario, options);
+              results.push(result);
+            } catch (error) {
+              logger.error(`Failed to run scenario ${scenario.name}:`, error);
+              results.push({
+                scenarioId: scenario.id,
+                name: scenario.name,
+                passed: false,
+                duration: 0,
+                error: error instanceof Error ? error.message : String(error),
+                metrics: {
+                  duration: 0,
+                  messageCount: 0,
+                  stepCount: 0,
+                  tokenUsage: { input: 0, output: 0, total: 0 },
+                  memoryUsage: { peak: 0, average: 0, memoryOperations: 0 },
+                  actionCounts: {},
+                  responseLatency: { min: 0, max: 0, average: 0, p95: 0 },
+                },
+                verificationResults: [],
+                transcript: [],
+              });
+            }
+          }
+        } catch (error) {
+          logger.error('Failed to load standalone scenarios:', error);
+          logger.info('Make sure @elizaos/scenarios package is built and available');
+        }
+      }
+
+      if (results.length === 0) {
+        logger.warn('No scenarios found matching the criteria');
         return;
       }
 
       // Display results
-      displayResults(adaptedResults, options);
+      displayResults(results, options);
 
       // Save results if requested
       if (options.output) {
-        await saveResultsToFile(adaptedResults, options.output, options.format);
+        await saveResultsToFile(results, options.output, options.format);
       }
 
       // Exit with appropriate code
-      const failed = adaptedResults.filter((r) => !r.passed).length;
+      const failed = results.filter((r) => !r.passed).length;
       process.exit(failed > 0 ? 1 : 0);
     } catch (error) {
       logger.error('Scenario run failed:', error);
@@ -124,38 +201,41 @@ scenarioCommand
   .action(async (options) => {
     try {
       logger.info('📋 Loading scenarios from plugins...');
-      
+
       const projectInfo = getProjectType(process.cwd());
       const plugins = await loadPluginsFromProject(process.cwd(), projectInfo);
-      
+
       let totalScenarios = 0;
       let filteredScenarios = 0;
-      
+
       for (const plugin of plugins) {
         if (plugin.scenarios && plugin.scenarios.length > 0) {
           // Apply plugin filter if specified
           if (options.plugin && plugin.name !== options.plugin) {
             continue;
           }
-          
+
           let scenarios = plugin.scenarios;
           totalScenarios += scenarios.length;
-          
+
           // Apply name filter if specified
           if (options.filter) {
             const pattern = options.filter.toLowerCase();
-            scenarios = scenarios.filter(s => 
-              s.name.toLowerCase().includes(pattern) ||
-              s.description?.toLowerCase().includes(pattern)
+            scenarios = scenarios.filter(
+              (s) =>
+                s.name.toLowerCase().includes(pattern) ||
+                s.description?.toLowerCase().includes(pattern)
             );
           }
-          
+
           filteredScenarios += scenarios.length;
-          
+
           if (scenarios.length > 0) {
             console.log(`\n📦 Plugin: ${plugin.name}`);
-            console.log(`   Scenarios: ${scenarios.length}${options.filter ? ` (filtered from ${plugin.scenarios.length})` : ''}`);
-            
+            console.log(
+              `   Scenarios: ${scenarios.length}${options.filter ? ` (filtered from ${plugin.scenarios.length})` : ''}`
+            );
+
             for (const scenario of scenarios) {
               console.log(`   📋 ${scenario.name}`);
               if (options.detailed) {
@@ -171,7 +251,11 @@ scenarioCommand
                 if (scenario.script && scenario.script.steps && scenario.script.steps.length > 0) {
                   console.log(`      Steps: ${scenario.script.steps.length}`);
                 }
-                if (scenario.verification && scenario.verification.rules && scenario.verification.rules.length > 0) {
+                if (
+                  scenario.verification &&
+                  scenario.verification.rules &&
+                  scenario.verification.rules.length > 0
+                ) {
                   console.log(`      Verification rules: ${scenario.verification.rules.length}`);
                 }
                 console.log('');
@@ -180,13 +264,16 @@ scenarioCommand
           }
         }
       }
-      
-      console.log(`\n📊 Summary: ${filteredScenarios} scenario(s) listed${options.filter ? ` (filtered from ${totalScenarios} total)` : ''}`);
-      
+
+      console.log(
+        `\n📊 Summary: ${filteredScenarios} scenario(s) listed${options.filter ? ` (filtered from ${totalScenarios} total)` : ''}`
+      );
+
       if (totalScenarios === 0) {
-        logger.warn('No scenarios found in any plugins. Make sure plugins are properly installed and have scenarios defined.');
+        logger.warn(
+          'No scenarios found in any plugins. Make sure plugins are properly installed and have scenarios defined.'
+        );
       }
-      
     } catch (error) {
       logger.error('Failed to list scenarios:', error);
       process.exit(1);
@@ -218,7 +305,7 @@ scenarioCommand
       if (runOptions.verbose) {
         argv.push('--verbose');
       }
-      
+
       await runCommand.parseAsync(argv, { from: 'user' });
     }
   });
@@ -232,75 +319,76 @@ scenarioCommand
   .action(async (options) => {
     try {
       logger.info('🔧 Validating scenario environments...');
-      
+
       const projectInfo = getProjectType(process.cwd());
       const plugins = await loadPluginsFromProject(process.cwd(), projectInfo);
-      
+
       // Extract all scenarios from plugins
       const allScenarios: PluginScenario[] = [];
       const pluginScenarioMap = new Map<string, PluginScenario[]>();
-      
+
       for (const plugin of plugins) {
         if (plugin.scenarios && plugin.scenarios.length > 0) {
           // Apply plugin filter if specified
           if (options.plugin && plugin.name !== options.plugin) {
             continue;
           }
-          
+
           let scenarios = plugin.scenarios;
-          
+
           // Apply name filter if specified
           if (options.filter) {
             const pattern = options.filter.toLowerCase();
-            scenarios = scenarios.filter(s => 
-              s.name.toLowerCase().includes(pattern) ||
-              s.description?.toLowerCase().includes(pattern)
+            scenarios = scenarios.filter(
+              (s) =>
+                s.name.toLowerCase().includes(pattern) ||
+                s.description?.toLowerCase().includes(pattern)
             );
           }
-          
+
           if (scenarios.length > 0) {
             allScenarios.push(...scenarios);
             pluginScenarioMap.set(plugin.name, scenarios);
           }
         }
       }
-      
+
       if (allScenarios.length === 0) {
         logger.warn('No scenarios found for validation');
         return;
       }
-      
+
       logger.info(`Validating ${allScenarios.length} scenarios...`);
-      
+
       // Create a minimal runtime for validation
       const runtime = await createTestAgent(plugins, 3000);
-      
+
       // Validate scenarios
       const validationResults = await ScenarioRuntimeValidator.validateScenarios(
         allScenarios,
         runtime
       );
-      
+
       // Display validation results
       console.log(`\n🔍 Validation Results`);
       console.log('═'.repeat(50));
-      
+
       let totalValid = 0;
       let totalInvalid = 0;
       let totalSkipped = 0;
-      
+
       for (const [pluginName, scenarios] of pluginScenarioMap) {
         console.log(`\n📦 Plugin: ${pluginName}`);
-        
+
         for (const scenario of scenarios) {
-          const isExecutable = validationResults.executable.some(s => s.id === scenario.id);
-          const isSkipped = validationResults.skipped.some(s => s.scenario.id === scenario.id);
-          
+          const isExecutable = validationResults.executable.some((s) => s.id === scenario.id);
+          const isSkipped = validationResults.skipped.some((s) => s.scenario.id === scenario.id);
+
           if (isExecutable) {
             console.log(`   ✅ ${scenario.name} - Valid`);
             totalValid++;
           } else if (isSkipped) {
-            const skipInfo = validationResults.skipped.find(s => s.scenario.id === scenario.id);
+            const skipInfo = validationResults.skipped.find((s) => s.scenario.id === scenario.id);
             console.log(`   ⚠️  ${scenario.name} - Skipped: ${skipInfo?.reason}`);
             totalSkipped++;
           } else {
@@ -309,12 +397,12 @@ scenarioCommand
           }
         }
       }
-      
+
       // Environment validation details
       if (validationResults.environmentValidations.size > 0) {
         console.log(`\n🔧 Environment Issues`);
         console.log('─'.repeat(30));
-        
+
         for (const [pluginName, validations] of validationResults.environmentValidations) {
           console.log(`\nPlugin: ${pluginName}`);
           for (const validation of validations) {
@@ -329,7 +417,7 @@ scenarioCommand
           }
         }
       }
-      
+
       // Summary
       console.log(`\n📊 Validation Summary`);
       console.log('═'.repeat(50));
@@ -337,24 +425,25 @@ scenarioCommand
       console.log(`✅ Valid: ${totalValid}`);
       console.log(`❌ Invalid: ${totalInvalid}`);
       console.log(`⚠️  Skipped: ${totalSkipped}`);
-      
+
       if (validationResults.warnings.length > 0) {
         console.log(`\n⚠️  Warnings:`);
         for (const warning of validationResults.warnings) {
           console.log(`   ${warning}`);
         }
       }
-      
+
       // Exit with appropriate code
       process.exit(totalInvalid > 0 ? 1 : 0);
-      
     } catch (error) {
       logger.error('Failed to validate scenarios:', error);
       process.exit(1);
     }
   });
 
-// Add comprehensive test command using the scenarios package
+// Temporarily disabled test-all command due to ConsolidatedScenarioTestRunner dependency issues
+// TODO: Re-enable once scenarios package dependency is properly resolved
+/*
 scenarioCommand
   .command('test-all')
   .description('Run all scenarios using the consolidated test runner')
@@ -394,7 +483,7 @@ scenarioCommand
       process.exit(1);
     }
   });
-
+*/
 
 function displayResults(results: any[], options: any): void {
   console.log('\n🧪 ElizaOS Scenario Test Results');

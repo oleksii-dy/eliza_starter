@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AgentRuntime } from '../../runtime';
+import { stringToUuid } from '../../utils';
 import type { 
   Plugin, 
   Action, 
@@ -10,7 +11,9 @@ import type {
   IDatabaseAdapter,
   Memory,
   State,
-  HandlerCallback
+  HandlerCallback,
+  UUID,
+  Entity
 } from '../../types';
 import { Service } from '../../types/service';
 
@@ -98,7 +101,7 @@ const testQueryAction: Action = {
     return true;
   },
 
-  handler: async (runtime: IAgentRuntime, message: Memory, state: State, options: any, callback: HandlerCallback) => {
+  handler: async (runtime: IAgentRuntime, message: Memory, state?: State, options?: any, callback?: HandlerCallback) => {
     const dbService = runtime.getService('test-database') as TestDatabaseService;
     if (!dbService) {
       throw new Error('Database service not available');
@@ -110,11 +113,13 @@ const testQueryAction: Action = {
     
     console.log(`TEST_QUERY executed with ${connections.length} connections`);
     
-    await callback({
-      text: `Query executed successfully. Active connections: ${connections.length}`,
-      thought: 'Database query completed',
-      actions: ['TEST_QUERY']
-    });
+    if (callback) {
+      await callback({
+        text: `Query executed successfully. Active connections: ${connections.length}`,
+        thought: 'Database query completed',
+        actions: ['TEST_QUERY']
+      });
+    }
 
     return {
       text: 'Query completed',
@@ -163,7 +168,7 @@ const testMetricsEvaluator: Evaluator = {
     return Math.random() > 0.7;
   },
 
-  handler: async (runtime: IAgentRuntime, message: Memory, state: State) => {
+  handler: async (runtime: IAgentRuntime, message: Memory, state?: State, options?: any, callback?: HandlerCallback) => {
     const dbService = runtime.getService('test-database') as TestDatabaseService;
     
     const metrics = {
@@ -232,10 +237,12 @@ const testPluginNoEnv: Plugin = {
     examples: [],
     validate: async () => true,
     handler: async (runtime, message, state, options, callback) => {
-      await callback({
-        text: 'Simple test action executed',
-        actions: ['TEST_SIMPLE']
-      });
+      if (callback) {
+        await callback({
+          text: 'Simple test action executed',
+          actions: ['TEST_SIMPLE']
+        });
+      }
       return { text: 'Simple action completed' };
     }
   }],
@@ -298,13 +305,13 @@ describe('Plugin Lifecycle Integration Tests', () => {
       ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
       
       // Entity methods - stateful to handle agent entity creation/retrieval
-      getEntityByIds: vi.fn().mockImplementation((ids) => {
-        const entities = ids.map(id => entityStore.get(id)).filter(Boolean);
+      getEntityByIds: vi.fn().mockImplementation((ids: UUID[]) => {
+        const entities = ids.map((id: UUID) => entityStore.get(id)).filter(Boolean);
         return Promise.resolve(entities);
       }),
       getEntitiesForRoom: vi.fn().mockResolvedValue([]),
-      createEntities: vi.fn().mockImplementation((entities) => {
-        entities.forEach(entity => {
+      createEntities: vi.fn().mockImplementation((entities: Entity[]) => {
+        entities.forEach((entity: Entity) => {
           const entityData = {
             id: entity.id,
             names: entity.names || ['TestAgent'],
@@ -541,11 +548,15 @@ describe('Plugin Lifecycle Integration Tests', () => {
       const queryAction = runtime.actions.find(a => a.name === 'TEST_QUERY');
       expect(queryAction).toBeDefined();
       
+      if (!queryAction) {
+        throw new Error('TEST_QUERY action not found');
+      }
+      
       const testMessage: Memory = {
-        id: 'test-msg-1',
-        entityId: 'test-entity',
+        id: stringToUuid('test-msg-1'),
+        entityId: stringToUuid('test-entity'),
         agentId: runtime.agentId,
-        roomId: 'test-room',
+        roomId: stringToUuid('test-room'),
         content: { text: 'run test query' },
         createdAt: Date.now()
       };
@@ -572,12 +583,16 @@ describe('Plugin Lifecycle Integration Tests', () => {
       );
       
       expect(callbackCalled).toBe(true);
-      expect(result.text).toBe('Query completed');
-      expect(result.values?.connectionCount).toBeGreaterThan(0);
+      expect((result as any).text).toBe('Query completed');
+      expect((result as any).values?.connectionCount).toBeGreaterThan(0);
       
       // Test provider functionality
       const systemProvider = runtime.providers.find(p => p.name === 'TEST_SYSTEM_INFO');
       expect(systemProvider).toBeDefined();
+      
+      if (!systemProvider) {
+        throw new Error('TEST_SYSTEM_INFO provider not found');
+      }
       
       const providerResult = await systemProvider.get(
         runtime,
@@ -586,9 +601,9 @@ describe('Plugin Lifecycle Integration Tests', () => {
       );
       
       expect(providerResult.text).toContain('[SYSTEM INFO]');
-      expect(providerResult.values.hasDatabase).toBe(true);
-      expect(providerResult.values.isDbRunning).toBe(true);
-      expect(providerResult.values.connectionCount).toBeGreaterThan(0);
+      expect(providerResult.values?.hasDatabase).toBe(true);
+      expect(providerResult.values?.isDbRunning).toBe(true);
+      expect(providerResult.values?.connectionCount).toBeGreaterThan(0);
       
       console.log('=== All components verified functional ===');
     });
@@ -782,11 +797,15 @@ describe('Plugin Lifecycle Integration Tests', () => {
       
       // Execute action multiple times to test stateful behavior
       const queryAction = runtime.actions.find(a => a.name === 'TEST_QUERY');
+      if (!queryAction) {
+        throw new Error('TEST_QUERY action not found');
+      }
+      
       const testMessage: Memory = {
-        id: 'test-msg-complex',
-        entityId: 'test-entity',
+        id: stringToUuid('test-msg-complex'),
+        entityId: stringToUuid('test-entity'),
         agentId: runtime.agentId,
-        roomId: 'test-room',
+        roomId: stringToUuid('test-room'),
         content: { text: 'run complex test query' },
         createdAt: Date.now()
       };
@@ -808,10 +827,10 @@ describe('Plugin Lifecycle Integration Tests', () => {
           mockCallback
         );
         
-        console.log(`Iteration ${i}: Initial connections: ${initialConnections}, Current connections: ${dbService.getConnections().length}, Result connections: ${result.values?.connectionCount}`);
-        expect(result.text).toBe('Query completed');
+        console.log(`Iteration ${i}: Initial connections: ${initialConnections}, Current connections: ${dbService.getConnections().length}, Result connections: ${(result as any).values?.connectionCount}`);
+        expect((result as any).text).toBe('Query completed');
         // The result should show the current connection count after creation
-        expect(result.values?.connectionCount).toBe(dbService.getConnections().length);
+        expect((result as any).values?.connectionCount).toBe(dbService.getConnections().length);
       }
       
       expect(totalExecutions).toBe(3);
@@ -826,13 +845,17 @@ describe('Plugin Lifecycle Integration Tests', () => {
       
       const systemProvider = runtime.providers.find(p => p.name === 'TEST_SYSTEM_INFO');
       const testMessage: Memory = {
-        id: 'test-msg-provider',
-        entityId: 'test-entity',
+        id: stringToUuid('test-msg-provider'),
+        entityId: stringToUuid('test-entity'),
         agentId: runtime.agentId,
-        roomId: 'test-room',
+        roomId: stringToUuid('test-room'),
         content: { text: 'get system info' },
         createdAt: Date.now()
       };
+      
+      if (!systemProvider) {
+        throw new Error('TEST_SYSTEM_INFO provider not found');
+      }
       
       // Get initial state
       const initialState = await systemProvider.get(
@@ -841,8 +864,8 @@ describe('Plugin Lifecycle Integration Tests', () => {
         { values: {}, data: {}, text: '' }
       );
       
-      expect(initialState.values.hasDatabase).toBe(true);
-      expect(initialState.values.isDbRunning).toBe(true);
+      expect(initialState.values?.hasDatabase).toBe(true);
+      expect(initialState.values?.isDbRunning).toBe(true);
       
       // Disable database service
       await runtime.configurePlugin('test-plugin-env', {
@@ -856,9 +879,9 @@ describe('Plugin Lifecycle Integration Tests', () => {
         { values: {}, data: {}, text: '' }
       );
       
-      expect(disabledState.values.hasDatabase).toBe(false);
-      expect(disabledState.values.isDbRunning).toBe(false);
-      expect(disabledState.values.connectionCount).toBe(0);
+      expect(disabledState.values?.hasDatabase).toBe(false);
+      expect(disabledState.values?.isDbRunning).toBe(false);
+      expect(disabledState.values?.connectionCount).toBe(0);
       
       console.log('=== Provider correctly reflects service state changes ===');
     });
@@ -936,16 +959,20 @@ describe('Plugin Lifecycle Integration Tests', () => {
       
       // Test actions from both plugins work
       const testMessage: Memory = {
-        id: 'test-msg-multi',
-        entityId: 'test-entity',
+        id: stringToUuid('test-msg-multi'),
+        entityId: stringToUuid('test-entity'),
         agentId: runtime.agentId,
-        roomId: 'test-room',
+        roomId: stringToUuid('test-room'),
         content: { text: 'test both plugins' },
         createdAt: Date.now()
       };
       
       const queryAction = runtime.actions.find(a => a.name === 'TEST_QUERY');
       const simpleAction = runtime.actions.find(a => a.name === 'TEST_SIMPLE');
+      
+      if (!queryAction || !simpleAction) {
+        throw new Error('Required actions not found');
+      }
       
       let queryCallbackCalled = false;
       let simpleCallbackCalled = false;

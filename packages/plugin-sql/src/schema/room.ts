@@ -1,52 +1,40 @@
-import { getSchemaFactory } from './factory';
-import { agentTable } from './agent';
-import { worldTable } from './world';
+import { getSchemaFactory, createLazyTableProxy } from './factory';
 
 /**
  * Lazy-loaded room table definition.
  * This function returns the room table schema when called,
  * ensuring the database type is set before schema creation.
+ * Foreign key references are removed to avoid circular dependencies.
+ * The database constraints will be enforced at the application level.
+ 
  */
 function createRoomTable() {
   const factory = getSchemaFactory();
   
-  return factory.table('rooms', {
-    id: (() => {
-      const defaultUuid = factory.defaultRandomUuid();
-      const column = factory.uuid('id').notNull().primaryKey();
-      return defaultUuid ? column.default(defaultUuid) : column;
-    })(),
-    agentId: factory.uuid('agentId').references(() => agentTable.id, {
-      onDelete: 'cascade',
-    }),
-    source: factory.text('source').notNull(),
-    type: factory.text('type').notNull(),
-    serverId: factory.text('serverId'),
-    worldId: factory.uuid('worldId'), // no guarantee that world exists, it is optional for now
-    // .references(() => worldTable.id, {
-    //   onDelete: 'cascade',
-    // }),
+  const tableColumns = {
+    id: factory.uuid('id').primaryKey(),
     name: factory.text('name'),
+    channelId: factory.uuid('channel_id'),
+    agentId: factory.uuid('agent_id'),
+    serverId: factory.uuid('server_id'),
+    worldId: factory.uuid('world_id'),
+    type: factory.text('type').notNull(),
+    source: factory.text('source').notNull(),
     metadata: factory.json('metadata'),
-    channelId: factory.text('channelId'),
-    createdAt: factory.timestamp('createdAt')
+    createdAt: factory.timestamp('created_at', { mode: 'date' })
       .default(factory.defaultTimestamp())
       .notNull(),
-  });
+    updatedAt: factory.timestamp('updated_at', { mode: 'date' })
+      .default(factory.defaultTimestamp())
+      .notNull(),
+  };
+
+  return factory.table('rooms', tableColumns);
 }
 
-// Cache the table once created
-let _roomTable: any = null;
-
 /**
- * Represents the room table in the database.
+ * Represents a table for storing room data.
  * Uses lazy initialization to ensure proper database type configuration.
+ 
  */
-export const roomTable = new Proxy({} as any, {
-  get(target, prop, receiver) {
-    if (!_roomTable) {
-      _roomTable = createRoomTable();
-    }
-    return Reflect.get(_roomTable, prop, receiver);
-  }
-});
+export const roomTable = createLazyTableProxy(createRoomTable);

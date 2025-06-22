@@ -15,7 +15,17 @@ describe('PgliteDatabaseAdapter', () => {
         }),
         close: () => Promise.resolve(),
         isShuttingDown: () => false,
-      };
+        client: {},
+        shuttingDown: false,
+        shutdownTimeout: null,
+        queryCount: 0,
+        lastQueryTime: Date.now(),
+        idleCheckInterval: null,
+        maxIdleTime: 300000,
+        checkIdleTime: () => {},
+        resetIdleTimer: () => {},
+        initialize: () => Promise.resolve(),
+      } as any;
 
       const adapter = new PgliteDatabaseAdapter(agentId, mockManager);
       expect(adapter).toBeDefined();
@@ -32,10 +42,20 @@ describe('PgliteDatabaseAdapter', () => {
         }),
         close: () => Promise.resolve(),
         isShuttingDown: () => false,
-      };
+        client: {},
+        shuttingDown: false,
+        shutdownTimeout: null,
+        queryCount: 0,
+        lastQueryTime: Date.now(),
+        idleCheckInterval: null,
+        maxIdleTime: 300000,
+        checkIdleTime: () => {},
+        resetIdleTimer: () => {},
+        initialize: () => Promise.resolve(),
+      } as any;
 
       const adapter = new PgliteDatabaseAdapter(agentId, mockManager);
-      expect((adapter as any).embeddingDimension).toBe('dim384');
+      expect((adapter as any).embeddingDimension).toBe('embedding_384');
     });
   });
 
@@ -49,7 +69,17 @@ describe('PgliteDatabaseAdapter', () => {
         }),
         close: () => Promise.resolve(),
         isShuttingDown: () => false,
-      };
+        client: {},
+        shuttingDown: false,
+        shutdownTimeout: null,
+        queryCount: 0,
+        lastQueryTime: Date.now(),
+        idleCheckInterval: null,
+        maxIdleTime: 300000,
+        checkIdleTime: () => {},
+        resetIdleTimer: () => {},
+        initialize: () => Promise.resolve(),
+      } as any;
 
       const adapter = new PgliteDatabaseAdapter(agentId, mockManager);
       

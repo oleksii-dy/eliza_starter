@@ -26,7 +26,7 @@ describe('Logger', () => {
     originalEnv = { ...process.env };
     // Reset environment variables
     Object.keys(mockEnv).forEach((key) => {
-      process.env[key] = mockEnv[key];
+      process.env[key] = mockEnv[key as keyof typeof mockEnv];
     });
     vi.clearAllMocks();
   });

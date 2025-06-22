@@ -102,7 +102,7 @@ describe('settings utilities', () => {
         secret: true,
         dependsOn: ['OTHER_SETTING'],
         onSetAction: onSetActionFn,
-        visibleIf: (settings) => settings['OTHER_SETTING']?.value === 'enabled',
+        visibleIf: (settings: any) => settings['OTHER_SETTING']?.value === 'enabled',
       };
 
       const setting = createSettingFromConfig(cfg);
@@ -115,7 +115,7 @@ describe('settings utilities', () => {
       expect(setting.onSetAction).toBe(onSetActionFn);
       expect(setting.visibleIf).toBeInstanceOf(Function);
       expect(
-        setting.visibleIf({
+        setting.visibleIf?.({
           OTHER_SETTING: {
             name: 'OTHER_SETTING',
             description: 'Other setting',
@@ -127,7 +127,7 @@ describe('settings utilities', () => {
         })
       ).toBe(true);
       expect(
-        setting.visibleIf({
+        setting.visibleIf?.({
           OTHER_SETTING: {
             name: 'OTHER_SETTING',
             description: 'Other setting',

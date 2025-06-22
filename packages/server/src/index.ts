@@ -19,10 +19,7 @@ import { apiKeyAuthMiddleware } from './authMiddleware.js';
 import { messageBusConnectorPlugin } from './services/message.js';
 import { loadCharacterTryPath, jsonToCharacter } from './loader.js';
 
-import {
-  createDatabaseAdapter,
-  plugin as sqlPlugin,
-} from '@elizaos/plugin-sql';
+import { createDatabaseAdapter, plugin as sqlPlugin } from '@elizaos/plugin-sql';
 import internalMessageBus from './bus.js';
 import type {
   CentralRootMessage,
@@ -33,6 +30,7 @@ import type {
 import { existsSync } from 'node:fs';
 import { resolveEnvFile } from './api/system/environment.js';
 import dotenv from 'dotenv';
+import { sql } from 'drizzle-orm';
 
 /**
  * Expands a file path starting with `~` to the project directory.
@@ -174,58 +172,61 @@ export class AgentServer {
 
       const agentDataDir = await resolvePgliteDir(options?.dataDir);
       logger.info(`[INIT] Database Dir for SQL plugin: ${agentDataDir}`);
+
+      // Define migration agent ID
+      const migrationAgentId = '00000000-0000-0000-0000-000000000000' as UUID;
+
+      // Initialize database adapter
+      logger.info('[INIT] Initializing database adapter...');
+
+      const postgresUrl = process.env.POSTGRES_URL || options?.postgresUrl;
+      const dataDir = agentDataDir;
+
       this.database = createDatabaseAdapter(
         {
-          dataDir: agentDataDir,
-          postgresUrl: options?.postgresUrl,
+          dataDir,
+          postgresUrl,
         },
-        '00000000-0000-0000-0000-000000000002'
+        migrationAgentId
       ) as DatabaseAdapter;
+
+      // Initialize the adapter
       await this.database.init();
-      logger.success('Consolidated database initialized successfully');
+      logger.success('[INIT] Database adapter initialized');
 
-      // First, we need to create a minimal runtime with just the SQL plugin for migrations
-      logger.info('[INIT] Running database migrations for messaging tables...');
+      // Initialize the SQL plugin schema immediately
       try {
-        // Create a temporary runtime for migration purposes
-        const coreModule = await import('@elizaos/core');
-        const migrationRuntime = new coreModule.AgentRuntime({
-          adapter: this.database,
-          agentId: '00000000-0000-0000-0000-000000000000' as UUID,
-          character: {
-            name: 'MigrationAgent',
-            bio: ['Migration agent for database setup'],
-            system: 'You are a helpful assistant.',
-            plugins: [sqlPlugin.name],
-          } as Character,
-          plugins: [sqlPlugin],
-        });
+        logger.info('[INIT] Initializing core database schema...');
 
-        // Initialize the runtime - this should handle plugin migrations
-        await migrationRuntime.initialize();
+        // Import the SQL plugin to ensure schema is available
+        const { plugin: sqlPlugin } = await import('@elizaos/plugin-sql');
 
-        logger.success('[INIT] Database migrations completed successfully');
-      } catch (migrationError) {
-        logger.error('[INIT] Failed to run database migrations:', migrationError);
-        throw new Error(
-          `Database migration failed: ${migrationError instanceof Error ? migrationError.message : String(migrationError)}`
-        );
+        // Create a temporary database service to initialize the schema
+        const { DatabaseService } = await import('@elizaos/plugin-sql');
+        const db = (this.database as any).db || this.database;
+        const dbService = new DatabaseService({ agentId: migrationAgentId } as any, db);
+
+        // Initialize the plugin schema
+        await dbService.initializePluginSchema('@elizaos/plugin-sql', sqlPlugin.schema);
+        logger.success('[INIT] Core database schema initialized');
+
+        // Add a small delay to ensure tables are ready
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Now ensure the default server exists
+        logger.info('[INIT] Ensuring default server exists...');
+        await this.ensureDefaultServer();
+        logger.success('[INIT] Default server ensured');
+      } catch (error) {
+        logger.error('[INIT] Failed to initialize database schema:', error);
+        throw error;
       }
-
-      // Add a small delay to ensure database is fully ready
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Ensure default server exists
-      logger.info('[INIT] Ensuring default server exists...');
-      await this.ensureDefaultServer();
-      logger.success('[INIT] Default server setup complete');
 
       await this.initializeServer(options);
       await new Promise((resolve) => setTimeout(resolve, 250));
       this.isInitialized = true;
     } catch (error) {
       logger.error('Failed to initialize AgentServer (async operations):', error);
-      console.trace(error);
       throw error;
     }
   }
@@ -234,8 +235,16 @@ export class AgentServer {
     try {
       // Check if the default server exists
       logger.info('[AgentServer] Checking for default server...');
-      const servers = await (this.database as any).getMessageServers();
-      logger.debug(`[AgentServer] Found ${servers.length} existing servers`);
+      let servers: any[] = [];
+      try {
+        servers = await (this.database as any).getMessageServers();
+        logger.debug(`[AgentServer] Found ${servers.length} existing servers`);
+      } catch (error) {
+        logger.warn(
+          'Message servers table not yet created during initialization, returning empty array'
+        );
+        servers = [];
+      }
 
       // Log all existing servers for debugging
       servers.forEach((s: any) => {
@@ -253,9 +262,9 @@ export class AgentServer {
 
         // Use raw SQL to ensure the server is created with the exact ID
         try {
-          await (this.database as any).db.execute(`
-            INSERT INTO message_servers (id, name, source_type, created_at, updated_at)
-            VALUES ('00000000-0000-0000-0000-000000000000', 'Default Server', 'eliza_default', NOW(), NOW())
+          await (this.database as any).db.execute(sql`
+            INSERT INTO message_servers (id, name, source_type, source_id, metadata, created_at, updated_at)
+            VALUES (${'00000000-0000-0000-0000-000000000000'}, ${'Default Server'}, ${'eliza_default'}, ${null}, ${null}, ${new Date()}, ${new Date()})
             ON CONFLICT (id) DO NOTHING
           `);
           logger.success('[AgentServer] Default server created via raw SQL');
@@ -685,6 +694,19 @@ export class AgentServer {
       }
       if (!runtime.character) {
         throw new Error('Runtime missing character configuration');
+      }
+
+      // Default server is now ensured during initialization
+      if (this.agents.size === 0) {
+        logger.info('[AgentServer] First agent registration');
+        try {
+          // No need to ensure default server here anymore
+          logger.debug('[AgentServer] Default server already exists from initialization');
+        } catch (error) {
+          logger.warn(
+            '[AgentServer] Could not ensure default server, it will be created when tables are ready'
+          );
+        }
       }
 
       this.agents.set(runtime.agentId, runtime);
@@ -1145,7 +1167,9 @@ export class AgentServer {
       this.socketIO.to(room).emit(event, data);
       logger.debug(`[AgentServer] Emitted '${event}' event to room '${room}'`);
     } else {
-      logger.warn(`[AgentServer] Cannot emit '${event}' to room '${room}' - SocketIO not initialized`);
+      logger.warn(
+        `[AgentServer] Cannot emit '${event}' to room '${room}' - SocketIO not initialized`
+      );
     }
   }
 }

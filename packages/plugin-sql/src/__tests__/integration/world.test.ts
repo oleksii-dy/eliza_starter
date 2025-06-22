@@ -1,4 +1,4 @@
-import { type UUID, type World, AgentRuntime } from '@elizaos/core';
+import { AgentRuntime, type UUID, type World } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { PgDatabaseAdapter } from '../../pg/adapter';
@@ -39,7 +39,7 @@ describe('World Integration Tests', () => {
         agentId: testAgentId,
         name: 'Test World',
         metadata: { owner: 'test-user' },
-        serverId: 'server1',
+        serverId: uuidv4() as UUID,
       };
       await adapter.createWorld(world);
 
@@ -54,13 +54,13 @@ describe('World Integration Tests', () => {
         id: worldId,
         agentId: testAgentId,
         name: 'Test World 1',
-        serverId: 'server1',
+        serverId: uuidv4() as UUID,
       };
       const world2: World = {
         id: worldId,
         agentId: testAgentId,
         name: 'Test World 2',
-        serverId: 'server2',
+        serverId: uuidv4() as UUID,
       };
       await adapter.createWorld(world1);
       await expect(adapter.createWorld(world2)).rejects.toThrow();
@@ -72,7 +72,7 @@ describe('World Integration Tests', () => {
         id: worldId,
         agentId: testAgentId,
         name: 'Original World',
-        serverId: 'server1',
+        serverId: uuidv4() as UUID,
       };
       await adapter.createWorld(originalWorld);
 
@@ -88,13 +88,13 @@ describe('World Integration Tests', () => {
         id: uuidv4() as UUID,
         agentId: testAgentId,
         name: 'World One',
-        serverId: 'server1',
+        serverId: uuidv4() as UUID,
       };
       const world2: World = {
         id: uuidv4() as UUID,
         agentId: testAgentId,
         name: 'World Two',
-        serverId: 'server2',
+        serverId: uuidv4() as UUID,
       };
       await adapter.createWorld(world1);
       await adapter.createWorld(world2);
@@ -114,7 +114,7 @@ describe('World Integration Tests', () => {
         id: worldId,
         agentId: testAgentId,
         name: 'To Be Deleted',
-        serverId: 'server1',
+        serverId: uuidv4() as UUID,
       };
       await adapter.createWorld(world);
 
@@ -136,13 +136,13 @@ describe('World Integration Tests', () => {
         id: uuidv4() as UUID,
         agentId: testAgentId,
         name: 'World 0',
-        serverId: 'server0',
+        serverId: uuidv4() as UUID,
       };
       const world2: World = {
         id: uuidv4() as UUID,
         agentId: testAgentId,
         name: 'World 1',
-        serverId: 'server1',
+        serverId: uuidv4() as UUID,
       };
       await adapter.createWorld(world1);
       await adapter.createWorld(world2);

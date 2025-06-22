@@ -1,40 +1,29 @@
-import { getSchemaFactory } from './factory';
-import { channelTable } from './channel';
+import { getSchemaFactory, createLazyTableProxy } from './factory';
 
 /**
  * Lazy-loaded channel participants table definition.
  * This function returns the channel participants table schema when called,
  * ensuring the database type is set before schema creation.
+ * Foreign key references are removed to avoid circular dependencies.
+ * The database constraints will be enforced at the application level.
  */
 function createChannelParticipantsTable() {
   const factory = getSchemaFactory();
   
-  return factory.table(
-    'channel_participants',
-    {
-      channelId: factory.text('channel_id')
-        .notNull()
-        .references(() => channelTable.id, { onDelete: 'cascade' }),
-      userId: factory.text('user_id').notNull(), // This is a central UUID (can be an agentId or a dedicated central user ID)
-    },
-    (table) => ({
-      pk: factory.primaryKey({ columns: [table.channelId, table.userId] }),
-    })
-  );
+  const tableColumns = {
+    channelId: factory.uuid('channel_id').notNull(),
+    userId: factory.uuid('user_id').notNull(),
+  };
+
+  return factory.table('channel_participants', tableColumns, (table) => ({
+    pk: factory.primaryKey({ columns: [table.channelId, table.userId] }),
+    channelIdx: factory.index('channel_participants_channel_id_idx').on(table.channelId),
+    userIdx: factory.index('channel_participants_user_id_idx').on(table.userId),
+  }));
 }
 
-// Cache the table once created
-let _channelParticipantsTable: any = null;
-
 /**
- * Represents the channel participants table in the database.
+ * Represents a table for storing channel participant associations.
  * Uses lazy initialization to ensure proper database type configuration.
  */
-export const channelParticipantsTable = new Proxy({} as any, {
-  get(target, prop, receiver) {
-    if (!_channelParticipantsTable) {
-      _channelParticipantsTable = createChannelParticipantsTable();
-    }
-    return Reflect.get(_channelParticipantsTable, prop, receiver);
-  }
-});
+export const channelParticipantsTable = createLazyTableProxy(createChannelParticipantsTable);

@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const pluginWorkflowEdgeCasesScenario: Scenario = {
-  id: '9d6e3b2f-1c4a-5e8b-7f9c-3a5d7e9f1b3c',
+  id: uuidv4() as any,
   name: 'Plugin Development Workflow Edge Cases',
   description:
     'Test edge cases, error handling, and UX optimizations in plugin development workflow including existing plugin detection, secret recovery, and upgrade scenarios',
@@ -10,7 +11,7 @@ export const pluginWorkflowEdgeCasesScenario: Scenario = {
 
   actors: [
     {
-      id: '3d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a',
+      id: uuidv4() as any,
       name: 'Advanced Plugin Development Agent',
       role: 'subject',
       bio: 'An advanced plugin development assistant that handles complex scenarios',
@@ -50,7 +51,7 @@ Always prioritize user experience and provide helpful guidance throughout the pr
       script: { steps: [] },
     },
     {
-      id: '4e5f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b',
+      id: uuidv4() as any,
       name: 'Challenging User',
       role: 'assistant',
       script: {
@@ -153,7 +154,7 @@ Always prioritize user experience and provide helpful guidance throughout the pr
   verification: {
     rules: [
       {
-        id: '1e2f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5a6b',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Comprehensive plugin discovery performed',
         config: {
@@ -163,7 +164,7 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         weight: 4,
       },
       {
-        id: '2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Intelligent recommendation provided',
         config: {
@@ -172,7 +173,7 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         weight: 4,
       },
       {
-        id: '3a4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Guided secret collection process',
         config: {
@@ -182,7 +183,7 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         weight: 4,
       },
       {
-        id: '4b5c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Multi-platform architecture consideration',
         config: {
@@ -191,7 +192,7 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         weight: 3,
       },
       {
-        id: '5c6d7e8f-9a0b-1c2d-3e4f-5a6b7c8d9e0f',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Error handling strategy explained',
         config: {
@@ -200,7 +201,7 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         weight: 3,
       },
       {
-        id: '6d7e8f9a-0b1c-2d3e-4f5a-6b7c8d9e0f1a',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Progress transparency provided',
         config: {
@@ -210,7 +211,7 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         weight: 3,
       },
       {
-        id: '7e8f9a0b-1c2d-3e4f-5a6b-7c8d9e0f1a2b',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Update workflow planning',
         config: {
@@ -220,7 +221,7 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         weight: 3,
       },
       {
-        id: '8f9a0b1c-2d3e-4f5a-6b7c-8d9e0f1a2b3c',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Dependency conflict detection',
         config: {
@@ -229,7 +230,7 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         weight: 3,
       },
       {
-        id: '9a0b1c2d-3e4f-5a6b-7c8d-9e0f1a2b3c4d',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Proactive problem solving',
         config: {
@@ -238,7 +239,7 @@ Always prioritize user experience and provide helpful guidance throughout the pr
         weight: 4,
       },
       {
-        id: '0b1c2d3e-4f5a-6b7c-8d9e-0f1a2b3c4d5e',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'User experience optimization',
         config: {
@@ -249,10 +250,10 @@ Always prioritize user experience and provide helpful guidance throughout the pr
     ],
     expectedOutcomes: [
       {
-        actorId: '3d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a',
+        actorId: uuidv4() as any,
         outcome: 'Successfully handled complex plugin development scenario with optimal UX',
         verification: {
-          id: 'b1c2d3e4-5f6a-7b8c-9d0e-1f2a3b4c5d6e',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'Complex scenario handled with excellence',
           config: {

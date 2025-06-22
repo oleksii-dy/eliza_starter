@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const blockchainDefiWorkflowScenario: Scenario = {
-  id: 'a9b0c1d2-e3f4-5a6b-7c8d-9e0f1a2b3c4d',
+  id: uuidv4() as any,
   name: 'Cross-Chain DeFi Operations',
   description: 'Test Solana and EVM plugins performing DeFi operations across multiple blockchains',
   category: 'integration',
@@ -9,7 +10,7 @@ export const blockchainDefiWorkflowScenario: Scenario = {
 
   actors: [
     {
-      id: 'b0c1d2e3-f4a5-6b7c-8d9e-0f1a2b3c4d5e',
+      id: uuidv4() as any,
       name: 'DeFi Agent',
       role: 'subject',
       bio: 'A blockchain agent specialized in DeFi operations across multiple chains',
@@ -19,7 +20,7 @@ export const blockchainDefiWorkflowScenario: Scenario = {
       script: { steps: [] },
     },
     {
-      id: 'c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f',
+      id: uuidv4() as any,
       name: 'Crypto Trader',
       role: 'assistant',
       script: {
@@ -71,7 +72,7 @@ export const blockchainDefiWorkflowScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: 'd2e3f4a5-b6c7-8d9e-0f1a-2b3c4d5e6f7a',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'DeFi explanation was provided',
         config: {
@@ -80,7 +81,7 @@ export const blockchainDefiWorkflowScenario: Scenario = {
         },
       },
       {
-        id: 'e3f4a5b6-c7d8-9e0f-1a2b-3c4d5e6f7a8b',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Chain differences were explained',
         config: {
@@ -89,7 +90,7 @@ export const blockchainDefiWorkflowScenario: Scenario = {
         },
       },
       {
-        id: 'f4a5b6c7-d8e9-0f1a-2b3c-4d5e6f7a8b9c',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Bridge functionality was explained',
         config: {
@@ -100,10 +101,10 @@ export const blockchainDefiWorkflowScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'b0c1d2e3-f4a5-6b7c-8d9e-0f1a2b3c4d5e',
+        actorId: uuidv4() as any,
         outcome: 'Provided DeFi education and guidance',
         verification: {
-          id: 'd8e9f0a1-b2c3-4d5e-6f7a-8b9c0d1e2f3a',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'DeFi education was provided',
           config: {

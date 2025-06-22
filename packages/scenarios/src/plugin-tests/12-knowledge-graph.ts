@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const knowledgeGraphScenario: Scenario = {
-  id: 'af920078-4462-4ce2-8d12-ad5509daa837',
+  id: uuidv4() as any,
   name: 'Knowledge Graph Construction',
   description: 'Build comprehensive knowledge graph from web research and entity relationships',
   category: 'integration',
@@ -9,13 +10,13 @@ export const knowledgeGraphScenario: Scenario = {
 
   actors: [
     {
-      id: '2aefb04d-54b2-4a76-9084-cf6d5b11c3be',
+      id: uuidv4() as any,
       name: 'Knowledge Graph Agent',
       role: 'subject',
       script: { steps: [] },
     },
     {
-      id: 'f33f7942-2b50-4c33-ac3b-0fb643393df5',
+      id: uuidv4() as any,
       name: 'Data Scientist',
       role: 'subject',
       script: {
@@ -88,7 +89,7 @@ export const knowledgeGraphScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: '63f824c2-2f4e-43b9-8376-a5dddf1b59a0',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Research was conducted',
         config: {
@@ -97,7 +98,7 @@ export const knowledgeGraphScenario: Scenario = {
         weight: 3,
       },
       {
-        id: '16ecaebc-3f21-4134-a76c-0a34ed634033',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Websites were visited',
         config: {
@@ -106,7 +107,7 @@ export const knowledgeGraphScenario: Scenario = {
         weight: 2,
       },
       {
-        id: '6acbb2a9-1269-4ef0-afb2-97186c8e265a',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Entities were created',
         config: {
@@ -115,7 +116,7 @@ export const knowledgeGraphScenario: Scenario = {
         weight: 3,
       },
       {
-        id: '97082be0-754f-40be-9c58-56edd2f20ce1',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Relationships were established',
         config: {
@@ -124,7 +125,7 @@ export const knowledgeGraphScenario: Scenario = {
         weight: 3,
       },
       {
-        id: '3f773c12-a35e-4f57-9519-7d3feb7ef424',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Knowledge was stored',
         config: {
@@ -133,7 +134,7 @@ export const knowledgeGraphScenario: Scenario = {
         weight: 2,
       },
       {
-        id: 'ce4bc622-1318-4f05-94c6-baae6b382765',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Knowledge graph is comprehensive',
         config: {
@@ -145,10 +146,10 @@ export const knowledgeGraphScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'f33f7942-2b50-4c33-ac3b-0fb643393df5',
+        actorId: uuidv4() as any,
         outcome: 'Successfully built knowledge graph',
         verification: {
-          id: 'cbec9359-6b44-4146-9bfd-1e105d9ee7ce',
+          id: uuidv4() as any,
           type: 'llm',
           description: 'Knowledge graph construction successful',
           config: {

@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const automatedDeploymentScenario: Scenario = {
-  id: 'f1a2b3c4-d5e6-7f8a-9b0c-1d2e3f4a5b6c',
+  id: uuidv4() as any,
   name: 'Automated CI/CD Deployment Pipeline',
   description: 'Test automated deployment workflow using GitHub, planning, and deployment plugins',
   category: 'integration',
@@ -9,7 +10,7 @@ export const automatedDeploymentScenario: Scenario = {
 
   actors: [
     {
-      id: 'a2b3c4d5-e6f7-8a9b-0c1d-2e3f4a5b6c7d',
+      id: uuidv4() as any,
       name: 'DevOps Agent',
       role: 'subject',
       bio: 'A DevOps automation agent that manages CI/CD pipelines and deployments',
@@ -19,7 +20,7 @@ export const automatedDeploymentScenario: Scenario = {
       script: { steps: [] },
     },
     {
-      id: 'b3c4d5e6-f7a8-9b0c-1d2e-3f4a5b6c7d8e',
+      id: uuidv4() as any,
       name: 'Release Manager',
       role: 'assistant',
       script: {
@@ -71,7 +72,7 @@ export const automatedDeploymentScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: 'c4d5e6f7-a8b9-0c1d-2e3f-4a5b6c7d8e9f',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Deployment planning guidance was provided',
         config: {
@@ -81,7 +82,7 @@ export const automatedDeploymentScenario: Scenario = {
         },
       },
       {
-        id: 'd5e6f7a8-b9c0-1d2e-3f4a-5b6c7d8e9f0a',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Deployment checklist was explained',
         config: {
@@ -90,7 +91,7 @@ export const automatedDeploymentScenario: Scenario = {
         },
       },
       {
-        id: 'e6f7a8b9-c0d1-2e3f-4a5b-6c7d8e9f0a1b',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Rollback procedures were covered',
         config: {
@@ -101,10 +102,10 @@ export const automatedDeploymentScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'a2b3c4d5-e6f7-8a9b-0c1d-2e3f4a5b6c7d',
+        actorId: uuidv4() as any,
         outcome: 'Provided deployment guidance and best practices',
         verification: {
-          id: 'd1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6a',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'Deployment assistance was provided',
           config: {

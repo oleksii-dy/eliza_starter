@@ -18,4 +18,7 @@ const project: Project = {
 // Export test suites for the test runner
 export { testSuites } from './__tests__/e2e';
 
+// Export character for tests
+export { character };
+
 export default project;

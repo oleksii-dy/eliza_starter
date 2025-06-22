@@ -6,3 +6,4 @@ models
 templates/
 :memory:
 .eliza
+.cursor

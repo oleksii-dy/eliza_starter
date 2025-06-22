@@ -1,4 +1,5 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from '../types.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const paymentBasicFlowScenario: Scenario = {
   id: 'payment-basic-flow-001',
@@ -10,7 +11,7 @@ const paymentBasicFlowScenario: Scenario = {
 
   actors: [
     {
-      id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+      id: uuidv4() as any,
       name: 'Payment Agent',
       role: 'subject',
       bio: 'An AI agent with payment capabilities for premium services',
@@ -25,7 +26,7 @@ Always be transparent about pricing and provide value for paid services.`,
       script: { steps: [] },
     },
     {
-      id: 'b2c3d4e5-f6a7-8901-bcde-f23456789012',
+      id: uuidv4() as any,
       name: 'Customer',
       role: 'assistant',
       script: {
@@ -130,7 +131,7 @@ Always be transparent about pricing and provide value for paid services.`,
     ],
     expectedOutcomes: [
       {
-        actorId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+        actorId: uuidv4() as any,
         outcome: 'Successfully processed payment and delivered research',
         verification: {
           id: 'payment-flow-complete',

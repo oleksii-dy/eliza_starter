@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const complexInvestigationScenario: Scenario = {
-  id: 'a0b1c2d3-e4f5-6a7b-8c9d-0e1f2a3b4c5d',
+  id: uuidv4() as any,
   name: 'Multi-Plugin OSINT Investigation',
   description:
     'Test multiple plugins working together for a complex open-source intelligence investigation',
@@ -10,7 +11,7 @@ export const complexInvestigationScenario: Scenario = {
 
   actors: [
     {
-      id: 'b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e',
+      id: uuidv4() as any,
       name: 'Investigation Agent',
       role: 'subject',
       bio: 'An OSINT specialist that conducts comprehensive investigations using multiple data sources',
@@ -25,7 +26,7 @@ export const complexInvestigationScenario: Scenario = {
       script: { steps: [] },
     },
     {
-      id: 'c2d3e4f5-a6b7-8c9d-0e1f-2a3b4c5d6e7f',
+      id: uuidv4() as any,
       name: 'Intelligence Analyst',
       role: 'assistant',
       script: {
@@ -77,7 +78,7 @@ export const complexInvestigationScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: 'd3e4f5a6-b7c8-9d0e-1f2a-3b4c5d6e7f8a',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Investigation guidance was provided',
         config: {
@@ -87,7 +88,7 @@ export const complexInvestigationScenario: Scenario = {
         },
       },
       {
-        id: 'e4f5a6b7-c8d9-0e1f-2a3b-4c5d6e7f8a9b',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Verification methods were explained',
         config: {
@@ -97,7 +98,7 @@ export const complexInvestigationScenario: Scenario = {
         },
       },
       {
-        id: 'f5a6b7c8-d9e0-1f2a-3b4c-5d6e7f8a9b0c',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Organization advice was given',
         config: {
@@ -109,10 +110,10 @@ export const complexInvestigationScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e',
+        actorId: uuidv4() as any,
         outcome: 'Provided investigation guidance and methodology',
         verification: {
-          id: 'e0f1a2b3-c4d5-6e7f-8a9b-0c1d2e3f4a5b',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'Investigation assistance was provided',
           config: {

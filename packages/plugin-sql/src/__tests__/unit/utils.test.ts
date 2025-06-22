@@ -3,18 +3,6 @@ import { expandTildePath, resolveEnvFile, resolvePgliteDir } from '../../utils';
 import * as path from 'path';
 import * as os from 'os';
 
-// Mock dotenv to prevent loading actual .env file
-import { mock } from 'vitest';
-
-mock('dotenv', () => ({
-  default: {
-    config: () => {
-      // Return empty object to prevent loading actual .env files
-      return {};
-    },
-  },
-}));
-
 describe('Utils', () => {
   describe('expandTildePath', () => {
     it('should expand paths starting with ~', () => {
