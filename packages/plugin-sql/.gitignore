@@ -177,5 +177,7 @@ dist
 
 :memory:
 debug-cache-db
-./cursor
+.cursor
 coverage/
+.test-eliza
+.cursor

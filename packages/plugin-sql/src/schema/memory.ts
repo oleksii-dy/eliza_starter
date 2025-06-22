@@ -1,14 +1,13 @@
-import { relations, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { getSchemaFactory, createLazyTableProxy } from './factory';
-import { agentTable } from './agent';
-import { embeddingTable } from './embedding';
-import { entityTable } from './entity';
-import { roomTable } from './room';
 
 /**
  * Lazy-loaded memory table definition.
  * This function returns the memory table schema when called,
  * ensuring the database type is set before schema creation.
+ * Foreign key references are removed to avoid circular dependencies.
+ * The database constraints will be enforced at the application level.
+ 
  */
 function createMemoryTable() {
   const factory = getSchemaFactory();
@@ -18,24 +17,12 @@ function createMemoryTable() {
     {
       id: factory.uuid('id').primaryKey().notNull(),
       type: factory.text('type').notNull(),
-      createdAt: factory.timestamp('createdAt').default(factory.defaultTimestamp()).notNull(),
+      createdAt: factory.timestamp('created_at').default(factory.defaultTimestamp()).notNull(),
       content: factory.json('content').notNull(),
-      entityId: factory.uuid('entityId').references(() => entityTable.id, {
-        onDelete: 'cascade',
-      }),
-      agentId: factory
-        .uuid('agentId')
-        .references(() => agentTable.id, {
-          onDelete: 'cascade',
-        })
-        .notNull(),
-      roomId: factory.uuid('roomId').references(() => roomTable.id, {
-        onDelete: 'cascade',
-      }),
-      worldId: factory.uuid('worldId'),
-      // .references(() => worldTable.id, {
-      //   onDelete: 'set null',
-      // }),
+      entityId: factory.uuid('entity_id'),
+      agentId: factory.uuid('agent_id').notNull(),
+      roomId: factory.uuid('room_id'),
+      worldId: factory.uuid('world_id'),
       unique: factory.boolean('unique').default(true).notNull(),
       metadata: factory.json('metadata').default(factory.defaultJsonObject()).notNull(),
     },
@@ -44,44 +31,21 @@ function createMemoryTable() {
       return [
         factory.index('idx_memories_type_room').on(table.type, table.roomId),
         factory.index('idx_memories_world_id').on(table.worldId),
-        factory
-          .foreignKey({
-            name: 'fk_room',
-            columns: [table.roomId],
-            foreignColumns: [roomTable.id],
-          })
-          .onDelete('cascade'),
-        factory
-          .foreignKey({
-            name: 'fk_user',
-            columns: [table.entityId],
-            foreignColumns: [entityTable.id],
-          })
-          .onDelete('cascade'),
-        factory
-          .foreignKey({
-            name: 'fk_agent',
-            columns: [table.agentId],
-            foreignColumns: [agentTable.id],
-          })
-          .onDelete('cascade'),
-        // foreignKey({
-        //   name: 'fk_world',
-        //   columns: [table.worldId],
-        //   foreignColumns: [worldTable.id],
-        // }).onDelete('set null'),
-        factory.index('idx_memories_metadata_type').on(sql`((metadata->>'type'))`),
-        factory.index('idx_memories_document_id').on(sql`((metadata->>'documentId'))`),
+        factory.index('idx_memories_entity_id').on(table.entityId),
+        factory.index('idx_memories_agent_id').on(table.agentId),
+        factory.index('idx_memories_room_id').on(table.roomId),
+        factory.index('idx_memories_metadata_type').on(factory.jsonFieldAccess(table.metadata, 'type')),
+        factory.index('idx_memories_document_id').on(factory.jsonFieldAccess(table.metadata, 'documentId')),
         factory
           .index('idx_fragments_order')
-          .on(sql`((metadata->>'documentId'))`, sql`((metadata->>'position'))`),
+          .on(factory.jsonFieldAccess(table.metadata, 'documentId'), factory.jsonFieldAccess(table.metadata, 'position')),
         factory.check(
           'fragment_metadata_check',
           sql`
                 CASE 
-                    WHEN metadata->>'type' = 'fragment' THEN
-                        metadata ? 'documentId' AND 
-                        metadata ? 'position'
+                    WHEN ${factory.jsonFieldAccess(table.metadata, 'type')} = 'fragment' THEN
+                        ${factory.jsonFieldExists(table.metadata, 'documentId')} AND 
+                        ${factory.jsonFieldExists(table.metadata, 'position')}
                     ELSE true
                 END
             `
@@ -90,8 +54,8 @@ function createMemoryTable() {
           'document_metadata_check',
           sql`
                 CASE 
-                    WHEN metadata->>'type' = 'document' THEN
-                        metadata ? 'timestamp'
+                    WHEN ${factory.jsonFieldAccess(table.metadata, 'type')} = 'document' THEN
+                        ${factory.jsonFieldExists(table.metadata, 'timestamp')}
                     ELSE true
                 END
             `
@@ -104,9 +68,6 @@ function createMemoryTable() {
 /**
  * Represents the memory table in the database.
  * Uses lazy initialization to ensure proper database type configuration.
+ 
  */
 export const memoryTable = createLazyTableProxy(createMemoryTable);
-
-export const memoryRelations = relations(memoryTable, ({ one }) => ({
-  embedding: one(embeddingTable),
-}));

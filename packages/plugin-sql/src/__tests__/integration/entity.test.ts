@@ -1,6 +1,6 @@
-import { type Entity, type UUID, AgentRuntime } from '@elizaos/core';
+import { AgentRuntime, type Entity, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'bun:test';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { entityTable } from '../../schema';
@@ -18,7 +18,7 @@ describe('Entity Integration Tests', () => {
     runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {
@@ -29,8 +29,10 @@ describe('Entity Integration Tests', () => {
   describe('Entity Tests', () => {
     beforeEach(async () => {
       // Clear entities before each test to ensure a clean slate
-      const db = adapter.getDatabase();
-      await db.delete(entityTable);
+      if (adapter && adapter.getDatabase) {
+        const db = adapter.getDatabase();
+        await db.delete(entityTable);
+      }
     });
 
     it('should create and retrieve a basic entity', async () => {

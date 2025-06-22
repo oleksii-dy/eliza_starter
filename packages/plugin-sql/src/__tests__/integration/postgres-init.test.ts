@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { plugin } from '../../index';
-import type { IAgentRuntime } from '@elizaos/core';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import type { AgentRuntime } from '@elizaos/core';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 describe('PostgreSQL Initialization Tests', () => {
-  let mockRuntime: IAgentRuntime;
+  let mockRuntime: AgentRuntime;
   let originalEnv: NodeJS.ProcessEnv;
 
   beforeEach(() => {
@@ -16,16 +16,16 @@ describe('PostgreSQL Initialization Tests', () => {
 
     mockRuntime = {
       agentId: '00000000-0000-0000-0000-000000000000',
-      getSetting: mock(),
-      registerDatabaseAdapter: mock(),
-      registerService: mock(),
-      getService: mock(),
+      getSetting: vi.fn(),
+      registerDatabaseAdapter: vi.fn(),
+      registerService: vi.fn(),
+      getService: vi.fn(),
     } as any;
   });
 
   afterEach(() => {
     process.env = originalEnv;
-    // Mocks auto-clear in bun:test;
+    vi.clearAllMocks();
   });
 
   it('should initialize with PostgreSQL when POSTGRES_URL is provided', async () => {
@@ -45,7 +45,17 @@ describe('PostgreSQL Initialization Tests', () => {
 
   it('should skip initialization if database adapter already exists', async () => {
     // Simulate existing adapter
-    (mockRuntime as any).databaseAdapter = { test: true };
+    (mockRuntime as any).adapter = {
+      test: true,
+      isReady: vi.fn().mockResolvedValue(true),
+      init: vi.fn().mockResolvedValue(undefined),
+      getDatabase: vi.fn().mockReturnValue({
+        execute: vi.fn().mockResolvedValue({ rows: [] }),
+      }),
+      db: {
+        execute: vi.fn().mockResolvedValue({ rows: [] }),
+      },
+    };
 
     await plugin.init?.({}, mockRuntime);
 
@@ -96,14 +106,7 @@ describe('PostgreSQL Initialization Tests', () => {
   });
 
   it('should handle errors gracefully during adapter check', async () => {
-    // Make databaseAdapter throw an error when accessed
-    Object.defineProperty(mockRuntime, 'databaseAdapter', {
-      get() {
-        throw new Error('No adapter');
-      },
-      configurable: true,
-    });
-
+    // Simulate no adapter by not setting the adapter property
     (mockRuntime.getSetting as any).mockReturnValue(undefined);
 
     await plugin.init?.({}, mockRuntime);

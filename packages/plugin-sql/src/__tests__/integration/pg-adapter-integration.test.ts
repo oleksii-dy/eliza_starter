@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
-import { type UUID } from '@elizaos/core';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import type { UUID  } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { PGliteClientManager } from '../../pglite/manager';

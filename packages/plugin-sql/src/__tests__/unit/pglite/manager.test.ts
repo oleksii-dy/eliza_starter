@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PGliteClientManager } from '../../../pglite/manager';
 
 describe('PGliteClientManager', () => {

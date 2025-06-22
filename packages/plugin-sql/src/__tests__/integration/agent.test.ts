@@ -1,6 +1,6 @@
-import { type Agent, stringToUuid, type UUID } from '@elizaos/core';
+import { AgentRuntime, stringToUuid, type Agent, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'bun:test';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { agentTable } from '../../schema';
@@ -9,6 +9,7 @@ import { createIsolatedTestDatabase, createTestDatabase } from '../test-helpers'
 
 describe('Agent Integration Tests', () => {
   let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
+  let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
   let testAgent: Agent;
@@ -16,9 +17,10 @@ describe('Agent Integration Tests', () => {
   beforeAll(async () => {
     const setup = await createIsolatedTestDatabase('agent-tests');
     adapter = setup.adapter;
+    runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  });
+  }, 30000);
 
   beforeEach(() => {
     // Reset or seed data before each test if needed
@@ -54,6 +56,8 @@ describe('Agent Integration Tests', () => {
     });
 
     describe('createAgent', () => {
+      let newAgentId: UUID;
+
       it('should successfully create an agent', async () => {
         const newAgentId = stringToUuid('new-test-agent-create');
         const newAgent: Agent = {
@@ -186,13 +190,11 @@ describe('Agent Integration Tests', () => {
 
         // Verify the complex settings were stored correctly
         const createdAgent = await adapter.getAgent(newAgent.id);
-        expect(createdAgent?.settings?.apiSettings?.['endpoints']?.primary).toBe(
+        expect(createdAgent?.settings?.apiSettings?.endpoints?.primary).toBe(
           'https://api.example.com'
         );
-        expect(createdAgent?.settings?.apiSettings?.['auth']?.tokens?.refresh).toBe(
-          'refresh-token'
-        );
-        expect(createdAgent?.settings?.preferences?.['languages']).toEqual(['en', 'fr', 'es']);
+        expect(createdAgent?.settings?.apiSettings?.auth?.tokens?.refresh).toBe('refresh-token');
+        expect(createdAgent?.settings?.preferences?.languages).toEqual(['en', 'fr', 'es']);
         expect(createdAgent?.settings?.features?.[0]?.id).toBe('feature1');
         expect(createdAgent?.settings?.features?.[1]?.enabled).toBe(false);
       });
@@ -300,7 +302,7 @@ describe('Agent Integration Tests', () => {
 
         // Verify the agent was updated
         const updatedAgent = await adapter.getAgent(newAgent.id);
-        expect(updatedAgent?.bio).toBe(updateData.bio as string);
+        expect(updatedAgent?.bio).toBe(updateData.bio);
         expect(updatedAgent?.settings).toHaveProperty('updatedSetting', 'new value');
       });
 
@@ -363,7 +365,7 @@ describe('Agent Integration Tests', () => {
               password: null, // This should be removed
               token: 'newToken', // This should be updated
             },
-          } as any,
+          },
         };
 
         await adapter.updateAgent(newAgent.id, updateData as any);
@@ -404,8 +406,8 @@ describe('Agent Integration Tests', () => {
 
         // Verify the agent was updated correctly
         const updatedAgent = await adapter.getAgent(newAgent.id);
-        expect(updatedAgent?.bio).toBe(updateData.bio as string);
-        expect(updatedAgent?.username).toBe(updateData.username as string);
+        expect(updatedAgent?.bio).toBe(updateData.bio);
+        expect(updatedAgent?.username).toBe(updateData.username);
         expect(updatedAgent?.settings).toHaveProperty('initialSetting', 'should remain unchanged');
       });
 
@@ -472,7 +474,7 @@ describe('Agent Integration Tests', () => {
             nestedObject: {
               propToRemove: null,
             },
-          } as any,
+          },
         };
 
         await adapter.updateAgent(agentId, updateData as any);
@@ -481,11 +483,9 @@ describe('Agent Integration Tests', () => {
         expect(updatedAgent?.settings).not.toHaveProperty('topLevelToBeRemoved');
         expect(updatedAgent?.settings?.anotherTopLevel).toBe('this should stay');
         expect(updatedAgent?.settings?.secrets).not.toHaveProperty('secretKeyToRemove');
-        expect(updatedAgent?.settings?.secrets?.['anotherSecret']).toBe(
-          'this secret should also stay'
-        );
+        expect(updatedAgent?.settings?.secrets?.anotherSecret).toBe('this secret should also stay');
         expect(updatedAgent?.settings?.nestedObject).not.toHaveProperty('propToRemove');
-        expect(updatedAgent?.settings?.nestedObject?.['prop1']).toBe('value1');
+        expect(updatedAgent?.settings?.nestedObject?.prop1).toBe('value1');
       });
 
       it('should correctly remove specific secrets from a complex settings object when set to null', async () => {
@@ -546,11 +546,11 @@ describe('Agent Integration Tests', () => {
         expect(updatedSecrets).toBeDefined();
         expect(updatedSecrets).not.toHaveProperty('DISCORD_API_TOKEN');
         expect(updatedSecrets).not.toHaveProperty('ELEVENLABS_VOICE_ID');
-        expect(updatedSecrets?.['ELEVENLABS_XI_API_KEY']).toBe('elevenlabs_xi_api_key_new');
-        expect(updatedSecrets?.['DISCORD_APPLICATION_ID']).toBe(
+        expect(updatedSecrets?.ELEVENLABS_XI_API_KEY).toBe('elevenlabs_xi_api_key_new');
+        expect(updatedSecrets?.DISCORD_APPLICATION_ID).toBe(
           initialAgentSettings.secrets.DISCORD_APPLICATION_ID
         );
-        expect(updatedSecrets?.['PERPLEXITY_API_KEY']).toBe(
+        expect(updatedSecrets?.PERPLEXITY_API_KEY).toBe(
           initialAgentSettings.secrets.PERPLEXITY_API_KEY
         );
       });
@@ -708,6 +708,9 @@ describe('Agent Integration Tests', () => {
 
         try {
           // The agent was already created by the test helper
+
+          // Create related data for the agent
+          const db = cascadeAdapter.getDatabase();
 
           // Create a world
           const worldId = uuidv4() as UUID;

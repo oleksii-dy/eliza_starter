@@ -1,18 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { expandTildePath, resolveEnvFile, resolvePgliteDir } from '../../utils';
-import * as path from 'node:path';
-
-// Mock dotenv to prevent loading actual .env file
-import { mock } from 'vitest';
-
-mock('dotenv', () => ({
-  default: {
-    config: () => {
-      // Return empty object to prevent loading actual .env files
-      return {};
-    },
-  },
-}));
+import * as path from 'path';
+import * as os from 'os';
 
 describe('Utils', () => {
   describe('expandTildePath', () => {
@@ -57,7 +46,7 @@ describe('Utils', () => {
     beforeEach(() => {
       originalEnv = process.env.PGLITE_DATA_DIR;
       delete process.env.PGLITE_DATA_DIR;
-      // No need to clear all mocks in bun:test
+      vi.clearAllMocks();
     });
 
     afterEach(() => {

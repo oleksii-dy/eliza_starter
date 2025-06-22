@@ -1,5 +1,5 @@
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { Pool, type PoolClient, type PoolConfig } from 'pg';
+import { Pool, type PoolClient } from 'pg';
 import { logger } from '@elizaos/core';
 
 export class PostgresConnectionManager {
@@ -7,48 +7,24 @@ export class PostgresConnectionManager {
   private db: NodePgDatabase;
 
   constructor(connectionString: string) {
-    // Optimized pool configuration for better performance
-    const poolConfig: PoolConfig = {
-      connectionString,
-      // Connection pool settings
-      max: 20, // Maximum number of clients in the pool
-      min: 2, // Minimum number of clients in the pool  
-      idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-      connectionTimeoutMillis: 2000, // Return error after 2 seconds if unable to get connection
-      // Query settings
-      query_timeout: 30000, // Cancel query after 30 seconds
-      statement_timeout: 30000, // Cancel statement after 30 seconds
-      // Connection settings
-      keepAlive: true, // Enable TCP keep-alive
-      keepAliveInitialDelayMillis: 10000, // Initial delay for keep-alive
-    };
-
-    this.pool = new Pool(poolConfig);
+    // Simple initialization like the old working version
+    this.pool = new Pool({ connectionString });
     this.db = drizzle(this.pool as any);
-
-    // Set up pool event handlers for monitoring
-    this.pool.on('connect', () => {
-      logger.debug('PostgreSQL pool: New client connected');
-    });
-    
-    this.pool.on('acquire', () => {
-      logger.debug('PostgreSQL pool: Client acquired from pool');
-    });
-    
-    this.pool.on('release', () => {
-      logger.debug('PostgreSQL pool: Client released back to pool');
-    });
-    
-    this.pool.on('error', (err) => {
-      logger.error('PostgreSQL pool: Unexpected error on idle client', err);
-    });
   }
 
   public getDatabase(): NodePgDatabase {
     return this.db;
   }
 
+  public getDb(): NodePgDatabase {
+    return this.db;
+  }
+
   public getConnection(): Pool {
+    return this.pool;
+  }
+
+  public getPool(): Pool {
     return this.pool;
   }
 
@@ -73,6 +49,25 @@ export class PostgresConnectionManager {
   }
 
   /**
+   * Closes the connection pool.
+   * @returns {Promise<void>}
+   * @memberof PostgresConnectionManager
+   */
+  public async close(): Promise<void> {
+    await this.pool.end();
+  }
+
+  public async end(): Promise<void> {
+    await this.pool.end();
+  }
+
+  // For backward compatibility with new adapter
+  async waitForInitialization(): Promise<void> {
+    // No-op since we initialize synchronously
+    return Promise.resolve();
+  }
+
+  /**
    * Get pool statistics for monitoring and optimization
    */
   public getPoolStats() {
@@ -80,8 +75,8 @@ export class PostgresConnectionManager {
       totalCount: this.pool.totalCount,
       idleCount: this.pool.idleCount,
       waitingCount: this.pool.waitingCount,
-      maxConnections: this.pool.options.max || 10,
-      minConnections: this.pool.options.min || 0,
+      maxConnections: 10,
+      minConnections: 0,
     };
   }
 
@@ -96,18 +91,7 @@ export class PostgresConnectionManager {
       waiting: stats.waitingCount,
       max: stats.maxConnections,
       min: stats.minConnections,
-      utilization: `${Math.round((stats.totalCount / stats.maxConnections) * 100)}%`
+      utilization: `${Math.round((stats.totalCount / stats.maxConnections) * 100)}%`,
     });
-  }
-
-  /**
-   * Closes the connection pool.
-   * @returns {Promise<void>}
-   * @memberof PostgresConnectionManager
-   */
-  public async close(): Promise<void> {
-    logger.info('Closing PostgreSQL connection pool...');
-    this.logPoolStatus();
-    await this.pool.end();
   }
 }

@@ -1,4 +1,4 @@
-import { getSchemaFactory } from './factory';
+import { getSchemaFactory, createLazyTableProxy } from './factory';
 
 /**
  * Lazy-loaded message server table definition.
@@ -23,18 +23,8 @@ function createMessageServerTable() {
   });
 }
 
-// Cache the table once created
-let _messageServerTable: any = null;
-
 /**
  * Represents the message server table in the database.
  * Uses lazy initialization to ensure proper database type configuration.
  */
-export const messageServerTable = new Proxy({} as any, {
-  get(target, prop, receiver) {
-    if (!_messageServerTable) {
-      _messageServerTable = createMessageServerTable();
-    }
-    return Reflect.get(_messageServerTable, prop, receiver);
-  }
-});
+export const messageServerTable = createLazyTableProxy(createMessageServerTable);

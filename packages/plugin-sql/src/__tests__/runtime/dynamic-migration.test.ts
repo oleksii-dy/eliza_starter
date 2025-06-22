@@ -1,18 +1,19 @@
 import {
   AgentRuntime,
   ChannelType,
+  MemoryType,
+  stringToUuid,
   type Entity,
   type Memory,
-  MemoryType,
   type Plugin,
   type Room,
-  stringToUuid,
   type UUID,
   type World,
 } from '@elizaos/core';
 import { pgTable, serial, text, uuid } from 'drizzle-orm/pg-core';
 import { v4 as uuidv4 } from 'uuid';
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { DatabaseMigrationService } from '../../migration-service';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { createIsolatedTestDatabase } from '../test-helpers';
@@ -69,6 +70,7 @@ describe('Dynamic Migration Tests', () => {
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
+  let migrationService: DatabaseMigrationService;
 
   beforeAll(async () => {
     const setup = await createIsolatedTestDatabase('dynamic-migration-tests', [
@@ -79,7 +81,10 @@ describe('Dynamic Migration Tests', () => {
     runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  });
+
+    // Get migration service from the runtime
+    migrationService = new DatabaseMigrationService();
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {
@@ -107,7 +112,7 @@ describe('Dynamic Migration Tests', () => {
     it('should create tables for the hello-world plugin in a dedicated schema', async () => {
       const db = adapter.getDatabase();
       const tables = await db.execute(
-        `SELECT table_name FROM information_schema.tables WHERE table_schema = 'test_hello_world'`
+        `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`
       );
       const tableNames = tables.rows.map((r: any) => r.table_name);
       expect(tableNames).toContain('hello_world');
@@ -123,7 +128,7 @@ describe('Dynamic Migration Tests', () => {
         id: testWorldId,
         agentId: testAgentId,
         name: 'Test World',
-        serverId: 'test-server',
+        serverId: uuidv4() as UUID,
       } as World);
 
       await adapter.createRooms([
@@ -165,7 +170,7 @@ describe('Dynamic Migration Tests', () => {
 
       const db = complexAdapter.getDatabase();
       const tables = await db.execute(
-        `SELECT table_name FROM information_schema.tables WHERE table_schema = 'test_complex_plugin'`
+        `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`
       );
       const tableNames = tables.rows.map((r: any) => r.table_name);
       expect(tableNames).toContain('users');

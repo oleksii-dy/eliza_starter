@@ -13,7 +13,11 @@ describe('PgDatabaseAdapter', () => {
         testConnection: () => Promise.resolve(true),
         close: () => Promise.resolve(),
         getConnection: () => ({ connect: () => {}, end: () => {} }),
-      };
+        pool: {},
+        db: {},
+        getPoolStats: () => ({}),
+        logPoolStatus: () => {},
+      } as any;
 
       const adapter = new PgDatabaseAdapter(agentId, mockManager);
       expect(adapter).toBeDefined();
@@ -28,10 +32,14 @@ describe('PgDatabaseAdapter', () => {
         testConnection: () => Promise.resolve(true),
         close: () => Promise.resolve(),
         getConnection: () => ({ connect: () => {}, end: () => {} }),
-      };
+        pool: {},
+        db: {},
+        getPoolStats: () => ({}),
+        logPoolStatus: () => {},
+      } as any;
 
       const adapter = new PgDatabaseAdapter(agentId, mockManager);
-      expect((adapter as any).embeddingDimension).toBe('dim384');
+      expect((adapter as any).embeddingDimension).toBe('embedding_384');
     });
   });
 
@@ -43,7 +51,11 @@ describe('PgDatabaseAdapter', () => {
         testConnection: () => Promise.resolve(true),
         close: () => Promise.resolve(),
         getConnection: () => ({ connect: () => {}, end: () => {} }),
-      };
+        pool: {},
+        db: {},
+        getPoolStats: () => ({}),
+        logPoolStatus: () => {},
+      } as any;
 
       const adapter = new PgDatabaseAdapter(agentId, mockManager);
       

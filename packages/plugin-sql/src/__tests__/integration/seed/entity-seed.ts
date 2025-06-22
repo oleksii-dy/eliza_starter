@@ -1,7 +1,7 @@
 /**
  * Seed data for entity integration tests
  */
-import { type UUID, AgentStatus, type Agent } from '@elizaos/core';
+import { AgentStatus, type UUID, type Agent, type Component } from '@elizaos/core';
 import { v4 } from 'uuid';
 
 /**

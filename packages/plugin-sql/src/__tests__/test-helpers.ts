@@ -5,14 +5,24 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { v4 } from 'uuid';
+
+// Import and set database type BEFORE importing anything that uses the schema
+import { setDatabaseType } from '../schema/factory';
+
+// Set database type based on environment variable at module load time
+if (process.env.POSTGRES_URL) {
+  setDatabaseType('postgres');
+} else {
+  setDatabaseType('pglite');
+}
+
+// Now import the rest
 import { plugin as sqlPlugin } from '../index';
-import { ensureCoreTablesExist } from '../simple-migrator';
 import { PgDatabaseAdapter } from '../pg/adapter';
 import { PostgresConnectionManager } from '../pg/manager';
 import { PgliteDatabaseAdapter } from '../pglite/adapter';
 import { PGliteClientManager } from '../pglite/manager';
 import { mockCharacter } from './fixtures';
-import { setDatabaseType } from '../schema/factory';
 
 /**
  * Creates a fully initialized, in-memory PGlite database adapter and a corresponding
@@ -34,85 +44,70 @@ export async function createTestDatabase(
   cleanup: () => Promise<void>;
 }> {
   if (process.env.POSTGRES_URL) {
-    // PostgreSQL testing
-    console.log('[TEST] Using PostgreSQL for test database');
-    setDatabaseType('postgres');
-    const connectionManager = new PostgresConnectionManager(process.env.POSTGRES_URL);
-    const adapter = new PgDatabaseAdapter(testAgentId, connectionManager);
-    await adapter.init();
+    try {
+      // PostgreSQL testing
+      console.log('[TEST] Attempting to use PostgreSQL for test database');
+      setDatabaseType('postgres');
+      const connectionManager = new PostgresConnectionManager(process.env.POSTGRES_URL);
+      const adapter = new PgDatabaseAdapter(testAgentId, connectionManager);
+      // Don't init adapter yet - let the plugin do it
 
-    const runtime = new AgentRuntime({
-      character: { ...mockCharacter, id: undefined },
-      agentId: testAgentId,
-      plugins: [sqlPlugin, ...testPlugins],
-    });
-    runtime.registerDatabaseAdapter(adapter);
+      const schemaName = `test_${testAgentId.replace(/-/g, '_')}`;
+      const db = connectionManager.getDatabase();
 
-    const schemaName = `test_${testAgentId.replace(/-/g, '_')}`;
-    const db = connectionManager.getDatabase();
-
-    // Drop schema if it exists to ensure clean state
-    await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
-    await db.execute(sql.raw(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`));
-    await db.execute(sql.raw(`SET search_path TO ${schemaName}, public`));
-
-    // Initialize the runtime to register plugins
-    await runtime.initialize();
-
-    // Ensure core tables exist after initialization
-    console.log('[TEST] About to ensure core tables exist');
-    const adapterDb = adapter.getDatabase();
-    await ensureCoreTablesExist(adapterDb);
-    console.log('[TEST] Core tables creation completed');
-
-    await adapter.createAgent({
-      id: testAgentId,
-      ...mockCharacter,
-    } as any);
-
-    const cleanup = async () => {
+      // Drop schema if it exists to ensure clean state
       await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
-      await adapter.close();
-    };
+      await db.execute(sql.raw(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`));
+      await db.execute(sql.raw(`SET search_path TO ${schemaName}, public`));
 
-    return { adapter, runtime, cleanup };
-  } else {
-    // PGlite testing
-    setDatabaseType('pglite');
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'eliza-test-'));
-    const connectionManager = new PGliteClientManager({ dataDir: tempDir });
-    await connectionManager.initialize();
-    const adapter = new PgliteDatabaseAdapter(testAgentId, connectionManager);
-    await adapter.init();
+      // Create and initialize runtime - this will create tables via plugin init
+      const runtime = new AgentRuntime({
+        character: { ...mockCharacter, id: testAgentId },
+        agentId: testAgentId,
+        plugins: [sqlPlugin as Plugin, ...testPlugins],
+        adapter: adapter, // Pass adapter in constructor
+      });
 
-    const runtime = new AgentRuntime({
-      character: { ...mockCharacter, id: undefined },
-      agentId: testAgentId,
-      plugins: [sqlPlugin, ...testPlugins],
-    });
-    runtime.registerDatabaseAdapter(adapter);
+      // Initialize the runtime - this will trigger plugin init and create tables
+      await runtime.initialize();
 
-    // Initialize the runtime to register plugins
-    await runtime.initialize();
+      const cleanup = async () => {
+        await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
+        await adapter.close();
+      };
 
-    // Ensure core tables exist after initialization
-    console.log('[TEST] About to ensure core tables exist');
-    const adapterDb = adapter.getDatabase();
-    await ensureCoreTablesExist(adapterDb);
-    console.log('[TEST] Core tables creation completed');
-
-    await adapter.createAgent({
-      id: testAgentId,
-      ...mockCharacter,
-    } as any);
-
-    const cleanup = async () => {
-      await adapter.close();
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    };
-
-    return { adapter, runtime, cleanup };
+      return { adapter, runtime, cleanup };
+    } catch (error) {
+      console.warn('[TEST] Failed to connect to PostgreSQL, falling back to PGlite:', error);
+      // Fall through to PGlite setup below
+    }
   }
+
+  // PGlite testing (fallback or when POSTGRES_URL not set)
+  setDatabaseType('pglite');
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'eliza-test-'));
+  const connectionManager = new PGliteClientManager({ dataDir: tempDir });
+  await connectionManager.initialize();
+  const adapter = new PgliteDatabaseAdapter(testAgentId, connectionManager);
+  // Don't init adapter yet - let the plugin do it
+
+  // Create and initialize runtime - this will create tables via plugin init
+  const runtime = new AgentRuntime({
+    character: { ...mockCharacter, id: testAgentId },
+    agentId: testAgentId,
+    plugins: [sqlPlugin as Plugin, ...testPlugins],
+    adapter: adapter, // Pass adapter in constructor
+  });
+
+  // Initialize the runtime - this will trigger plugin init and create tables
+  await runtime.initialize();
+
+  const cleanup = async () => {
+    await adapter.close();
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  };
+
+  return { adapter, runtime, cleanup };
 }
 
 /**
@@ -137,84 +132,80 @@ export async function createIsolatedTestDatabase(
   const testId = testName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
 
   if (process.env.POSTGRES_URL) {
-    // PostgreSQL - use unique schema per test
-    const schemaName = `test_${testId}_${Date.now()}`;
-    console.log(`[TEST] Creating isolated PostgreSQL schema: ${schemaName}`);
+    try {
+      // PostgreSQL - use unique schema per test
+      const schemaName = `test_${testId}_${Date.now()}`;
+      console.log(`[TEST] Creating isolated PostgreSQL schema: ${schemaName}`);
 
-    setDatabaseType('postgres');
-    const connectionManager = new PostgresConnectionManager(process.env.POSTGRES_URL);
-    const adapter = new PgDatabaseAdapter(testAgentId, connectionManager);
-    await adapter.init();
+      setDatabaseType('postgres');
+      const connectionManager = new PostgresConnectionManager(process.env.POSTGRES_URL);
+      const adapter = new PgDatabaseAdapter(testAgentId, connectionManager);
+      // Don't init adapter yet - let the plugin do it
 
-    const runtime = new AgentRuntime({
-      character: { ...mockCharacter, id: undefined },
-      agentId: testAgentId,
-      plugins: [sqlPlugin, ...testPlugins],
-    });
-    runtime.registerDatabaseAdapter(adapter);
+      const db = connectionManager.getDatabase();
 
-    const db = connectionManager.getDatabase();
+      // Create isolated schema
+      await db.execute(sql.raw(`CREATE SCHEMA ${schemaName}`));
+      // Include public in search path so we can access the vector extension
+      await db.execute(sql.raw(`SET search_path TO ${schemaName}, public`));
 
-    // Create isolated schema
-    await db.execute(sql.raw(`CREATE SCHEMA ${schemaName}`));
-    // Include public in search path so we can access the vector extension
-    await db.execute(sql.raw(`SET search_path TO ${schemaName}, public`));
+      // Create and initialize runtime - this will create tables via plugin init
+      const runtime = new AgentRuntime({
+        character: { ...mockCharacter, id: testAgentId },
+        agentId: testAgentId,
+        plugins: [sqlPlugin as Plugin, ...testPlugins],
+        adapter: adapter, // Pass adapter in constructor
+      });
 
-    // Initialize the runtime to register plugins
-    await runtime.initialize();
+      // Initialize the runtime - this will trigger plugin init and create tables
+      await runtime.initialize();
 
-    // Create test agent
-    await adapter.createAgent({
-      id: testAgentId,
-      ...mockCharacter,
-    } as any);
+      const cleanup = async () => {
+        try {
+          await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
+        } catch (error) {
+          console.error(`[TEST] Failed to drop schema ${schemaName}:`, error);
+        }
+        await adapter.close();
+      };
 
-    const cleanup = async () => {
-      try {
-        await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
-      } catch (error) {
-        console.error(`[TEST] Failed to drop schema ${schemaName}:`, error);
-      }
-      await adapter.close();
-    };
-
-    return { adapter, runtime, cleanup, testAgentId };
-  } else {
-    // PGLite - use unique directory per test
-    const tempDir = path.join(os.tmpdir(), `eliza-test-${testId}-${Date.now()}`);
-    console.log(`[TEST] Creating isolated PGLite database: ${tempDir}`);
-
-    setDatabaseType('pglite');
-    const connectionManager = new PGliteClientManager({ dataDir: tempDir });
-    await connectionManager.initialize();
-    const adapter = new PgliteDatabaseAdapter(testAgentId, connectionManager);
-    await adapter.init();
-
-    const runtime = new AgentRuntime({
-      character: { ...mockCharacter, id: undefined },
-      agentId: testAgentId,
-      plugins: [sqlPlugin, ...testPlugins],
-    });
-    runtime.registerDatabaseAdapter(adapter);
-
-    // Initialize the runtime to register plugins
-    await runtime.initialize();
-
-    // Create test agent
-    await adapter.createAgent({
-      id: testAgentId,
-      ...mockCharacter,
-    } as any);
-
-    const cleanup = async () => {
-      await adapter.close();
-      try {
-        fs.rmSync(tempDir, { recursive: true, force: true });
-      } catch (error) {
-        console.error(`[TEST] Failed to remove temp directory ${tempDir}:`, error);
-      }
-    };
-
-    return { adapter, runtime, cleanup, testAgentId };
+      return { adapter, runtime, cleanup, testAgentId };
+    } catch (error) {
+      console.warn('[TEST] Failed to connect to PostgreSQL, falling back to PGlite:', error);
+      // Fall through to PGlite setup below
+    }
   }
+
+  // PGLite fallback
+  // PGLite - use unique directory per test
+  const tempDir = path.join(os.tmpdir(), `eliza-test-${testId}-${Date.now()}`);
+  console.log(`[TEST] Creating isolated PGLite database: ${tempDir}`);
+
+  setDatabaseType('pglite');
+  const connectionManager = new PGliteClientManager({ dataDir: tempDir });
+  await connectionManager.initialize();
+  const adapter = new PgliteDatabaseAdapter(testAgentId, connectionManager);
+  // Don't init adapter yet - let the plugin do it
+
+  // Create and initialize runtime - this will create tables via plugin init
+  const runtime = new AgentRuntime({
+    character: { ...mockCharacter, id: testAgentId },
+    agentId: testAgentId,
+    plugins: [sqlPlugin as Plugin, ...testPlugins],
+    adapter: adapter, // Pass adapter in constructor
+  });
+
+  // Initialize the runtime - this will trigger plugin init and create tables
+  await runtime.initialize();
+
+  const cleanup = async () => {
+    await adapter.close();
+    try {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    } catch (error) {
+      console.error(`[TEST] Failed to remove temp directory ${tempDir}:`, error);
+    }
+  };
+
+  return { adapter, runtime, cleanup, testAgentId };
 }

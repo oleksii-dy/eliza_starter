@@ -1,11 +1,7 @@
-import type { IAgentRuntime } from '@elizaos/core';
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import { plugin, createDatabaseAdapter } from '../../index';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the logger and other core exports to avoid console output during tests
-import { mock } from 'vitest';
-
-mock('@elizaos/core', async () => {
+vi.mock('@elizaos/core', async () => {
   const actual = await vi.importActual('@elizaos/core');
   return {
     ...actual,
@@ -24,15 +20,63 @@ mock('@elizaos/core', async () => {
 });
 
 // Mock the database adapters and managers
-mock('../../pglite/adapter');
-mock('../../pglite/manager');
-mock('../../pg/adapter');
-mock('../../pg/manager');
+vi.mock('../../pglite/adapter', () => ({
+  PgliteDatabaseAdapter: vi.fn().mockImplementation(() => ({
+    db: {},
+    getDatabase: vi.fn().mockReturnValue({}),
+    init: vi.fn().mockResolvedValue(undefined),
+    isReady: vi.fn().mockResolvedValue(true),
+    runMigrations: vi.fn().mockResolvedValue(undefined),
+  })),
+}));
+
+vi.mock('../../pglite/manager', () => ({
+  PGliteClientManager: vi.fn().mockImplementation(() => ({
+    getConnection: vi.fn().mockReturnValue({}),
+    isShuttingDown: vi.fn().mockReturnValue(false),
+    close: vi.fn().mockResolvedValue(undefined),
+  })),
+}));
+
+vi.mock('../../pg/adapter', () => ({
+  PgDatabaseAdapter: vi.fn().mockImplementation(() => ({
+    db: {},
+    getDatabase: vi.fn().mockReturnValue({}),
+    init: vi.fn().mockResolvedValue(undefined),
+    isReady: vi.fn().mockResolvedValue(true),
+    runMigrations: vi.fn().mockResolvedValue(undefined),
+  })),
+}));
+
+vi.mock('../../pg/manager', () => ({
+  PostgresConnectionManager: vi.fn().mockImplementation(() => ({
+    getDb: vi.fn().mockResolvedValue({}),
+    close: vi.fn().mockResolvedValue(undefined),
+  })),
+}));
+
+// Mock the database service to avoid actual schema initialization
+vi.mock('../../database-service', () => ({
+  DatabaseService: vi.fn().mockImplementation(() => ({
+    initializePluginSchema: vi.fn().mockResolvedValue(undefined),
+  })),
+}));
+
+import type { AgentRuntime } from '@elizaos/core';
+import { logger } from '@elizaos/core';
+import { plugin, createDatabaseAdapter } from '../../index';
+
+// Mock database connection
+const mockDb = {
+  execute: vi.fn().mockResolvedValue({ rows: [] }),
+  query: vi.fn().mockResolvedValue({ rows: [] }),
+};
 
 describe('SQL Plugin', () => {
-  let mockRuntime: IAgentRuntime;
+  let mockRuntime: AgentRuntime;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     // Reset environment variables
     delete process.env.POSTGRES_URL;
     delete process.env.POSTGRES_USER;
@@ -40,25 +84,23 @@ describe('SQL Plugin', () => {
 
     mockRuntime = {
       agentId: '00000000-0000-0000-0000-000000000000',
-      getSetting: mock(() => null),
-      registerDatabaseAdapter: mock(() => {}),
-      registerService: mock(() => {}),
-      getService: mock(() => {}),
-      databaseAdapter: undefined,
+      getSetting: vi.fn(),
+      registerDatabaseAdapter: vi.fn(),
+      registerService: vi.fn(),
+      getService: vi.fn(),
     } as any;
   });
 
   describe('Plugin Structure', () => {
     it('should have correct plugin metadata', () => {
       expect(plugin.name).toBe('@elizaos/plugin-sql');
-      expect(plugin.description).toBe(
-        'A plugin for SQL database access with Drizzle ORM'
-      );
+      expect(plugin.description).toBe('A plugin for SQL database access with Drizzle ORM');
       expect(plugin.priority).toBe(0);
     });
 
-    it('should not have schema property to avoid circular dependencies', () => {
-      expect(plugin.schema).toBeUndefined();
+    it('should have schema property with database schema exports', () => {
+      expect(plugin.schema).toBeDefined();
+      expect(typeof plugin.schema).toBe('object');
     });
 
     it('should have init function', () => {
@@ -70,7 +112,17 @@ describe('SQL Plugin', () => {
   describe('Plugin Initialization', () => {
     it('should skip initialization if adapter already exists', async () => {
       // Set up runtime with existing adapter
-      (mockRuntime as any).databaseAdapter = { existing: true };
+      (mockRuntime as any).adapter = {
+        existing: true,
+        isReady: vi.fn().mockResolvedValue(true),
+        init: vi.fn().mockResolvedValue(undefined),
+        getDatabase: vi.fn().mockReturnValue({
+          execute: vi.fn().mockResolvedValue({ rows: [] }),
+        }),
+        db: {
+          execute: vi.fn().mockResolvedValue({ rows: [] }),
+        },
+      };
 
       await plugin.init?.({}, mockRuntime);
 
@@ -80,7 +132,7 @@ describe('SQL Plugin', () => {
     });
 
     it('should register database adapter when none exists', async () => {
-      mockRuntime.getSetting = mock(() => null);
+      mockRuntime.getSetting = vi.fn().mockReturnValue(null);
 
       await plugin.init?.({}, mockRuntime);
 
@@ -90,7 +142,7 @@ describe('SQL Plugin', () => {
     });
 
     it('should use POSTGRES_URL when available', async () => {
-      mockRuntime.getSetting = mock((key) => {
+      mockRuntime.getSetting = vi.fn().mockImplementation((key) => {
         if (key === 'POSTGRES_URL') return 'postgresql://localhost:5432/test';
         return null;
       });
@@ -101,7 +153,7 @@ describe('SQL Plugin', () => {
     });
 
     it('should prioritize PGLITE_PATH over DATABASE_PATH', async () => {
-      mockRuntime.getSetting = mock((key) => {
+      mockRuntime.getSetting = vi.fn().mockImplementation((key) => {
         if (key === 'PGLITE_PATH') return '/custom/pglite';
         if (key === 'DATABASE_PATH') return '/custom/database';
         return null;
@@ -113,7 +165,7 @@ describe('SQL Plugin', () => {
     });
 
     it('should use DATABASE_PATH if PGLITE_PATH is not set', async () => {
-      mockRuntime.getSetting = mock((key) => {
+      mockRuntime.getSetting = vi.fn().mockImplementation((key) => {
         if (key === 'DATABASE_PATH') return '/custom/database';
         return null;
       });
@@ -124,7 +176,7 @@ describe('SQL Plugin', () => {
     });
 
     it('should use default path if neither PGLITE_PATH nor DATABASE_PATH is set', async () => {
-      mockRuntime.getSetting = mock(() => null);
+      mockRuntime.getSetting = vi.fn().mockReturnValue(null);
 
       await plugin.init?.({}, mockRuntime);
 

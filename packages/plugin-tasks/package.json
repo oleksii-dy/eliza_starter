@@ -27,6 +27,7 @@
   ],
   "dependencies": {
     "@elizaos/core": "workspace:*",
+    "@elizaos/plugin-anthropic": "1.0.3",
     "@elizaos/plugin-sql": "workspace:*"
   },
   "devDependencies": {

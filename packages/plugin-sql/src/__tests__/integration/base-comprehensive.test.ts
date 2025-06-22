@@ -1,16 +1,7 @@
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { v4 as uuidv4 } from 'uuid';
-import type {
-  Entity,
-  Memory,
-  Component,
-  Room,
-  UUID,
-  Content,
-  AgentRuntime,
-  ChannelType,
-} from '@elizaos/core';
+import { ChannelType, type Entity, type Memory, type Component, type Room, type World, type UUID, type Content, type AgentRuntime } from '@elizaos/core';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 
@@ -49,7 +40,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         id: testRoomId,
         agentId: testAgentId,
         source: 'test',
-        type: 'GROUP' as ChannelType,
+        type: ChannelType.GROUP,
         name: 'Test Room',
       },
     ]);
@@ -63,7 +54,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         metadata: { type: 'test' },
       },
     ]);
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (cleanup) {
@@ -260,7 +251,7 @@ describe('Base Adapter Comprehensive Tests', () => {
             id: roomId,
             agentId: testAgentId,
             source: 'test',
-            type: 'GROUP' as ChannelType,
+            type: ChannelType.GROUP,
             name: `Room ${i}`,
           },
         ]);
@@ -373,7 +364,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         id: roomId,
         agentId: testAgentId,
         source: 'test',
-        type: 'DM' as ChannelType,
+        type: ChannelType.DM,
         name: 'DM Room',
         metadata: {
           participants: ['user1', 'user2'],
@@ -530,7 +521,7 @@ describe('Base Adapter Comprehensive Tests', () => {
           id: uuidv4() as UUID,
           agentId: testAgentId,
           source: 'batch',
-          type: 'GROUP' as ChannelType,
+          type: ChannelType.GROUP,
           name: `Batch Room ${i}`,
         });
       }

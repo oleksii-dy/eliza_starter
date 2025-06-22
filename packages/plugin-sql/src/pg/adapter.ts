@@ -1,4 +1,11 @@
-import { type UUID, logger, Agent, Entity, Memory, Component } from '@elizaos/core';
+import {
+  logger,
+  type Agent,
+  type Component,
+  type Entity,
+  type Memory,
+  type UUID,
+} from '@elizaos/core';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { BaseDrizzleAdapter } from '../base';
 import { DIMENSION_MAP, type EmbeddingDimensionColumn } from '../schema/embedding';
@@ -9,10 +16,11 @@ import type { PostgresConnectionManager } from './manager';
  * Extends BaseDrizzleAdapter.
  */
 export class PgDatabaseAdapter extends BaseDrizzleAdapter {
+  public db: any;
   protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[384];
   private manager: PostgresConnectionManager;
 
-  constructor(agentId: UUID, manager: PostgresConnectionManager, _schema?: any) {
+  constructor(agentId: UUID, manager: PostgresConnectionManager, schema?: any) {
     super(agentId);
     this.manager = manager;
     this.db = manager.getDatabase();
@@ -153,5 +161,9 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
 
   deleteComponent(componentId: UUID): Promise<void> {
     return super.deleteComponent(componentId);
+  }
+
+  getWorlds(): Promise<any[]> {
+    return super.getAllWorlds();
   }
 }
