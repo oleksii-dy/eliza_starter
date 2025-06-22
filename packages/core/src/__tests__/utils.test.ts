@@ -85,7 +85,7 @@ describe('Utils Comprehensive Tests', () => {
 
     beforeEach(() => {
       // Mock the Date constructor to return our fixed time when called without arguments
-      vi.vi.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
+      vi.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
         if (args.length === 0) {
           return fixedTime;
         }

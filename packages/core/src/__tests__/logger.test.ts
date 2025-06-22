@@ -1,5 +1,4 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
-import { mock, vi } from 'vitest';
 import { createLogger, logger, elizaLogger } from '../logger';
 
 // Mock environment variables
@@ -12,7 +11,7 @@ const mockEnv = {
 };
 
 // Mock pino-pretty
-mock.module('pino-pretty', () => ({
+vi.mock('pino-pretty', () => ({
   default: vi.fn(() => ({
     write: vi.fn(),
   })),
@@ -28,7 +27,7 @@ describe('Logger', () => {
     Object.keys(mockEnv).forEach((key) => {
       process.env[key] = mockEnv[key as keyof typeof mockEnv];
     });
-    mock.restore();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

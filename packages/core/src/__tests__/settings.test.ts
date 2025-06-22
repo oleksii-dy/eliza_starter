@@ -40,7 +40,7 @@ describe('settings utilities', () => {
     vi.clearAllMocks();
 
     // Set up scoped mocks for this test
-    vi.vi.spyOn(entities, 'createUniqueUuid').mockImplementation(
+    vi.spyOn(entities, 'createUniqueUuid').mockImplementation(
       (_runtime: any, serverId: any) => `world-${serverId}` as UUID
     );
 
@@ -49,7 +49,7 @@ describe('settings utilities', () => {
       const methods = ['error', 'info', 'warn', 'debug'];
       methods.forEach((method) => {
         if (typeof logger_module.logger[method] === 'function') {
-          vi.vi.spyOn(logger_module.logger, method).mockImplementation(() => {});
+          vi.spyOn(logger_module.logger, method).mockImplementation(() => {});
         } else {
           logger_module.logger[method] = vi.fn(() => {});
         }

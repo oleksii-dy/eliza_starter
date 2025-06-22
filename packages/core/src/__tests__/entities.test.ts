@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { mock, spyOn, vi } from 'vitest';
 import { findEntityByName, createUniqueUuid, getEntityDetails, formatEntities } from '../entities';
 import type { IAgentRuntime } from '../types/runtime';
 import type { Entity, UUID, Memory, State } from '../types';

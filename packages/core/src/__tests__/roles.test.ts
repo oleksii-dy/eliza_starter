@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { mock, spyOn, vi } from 'vitest';
 import { getUserServerRole, findWorldsForOwner } from '../roles';
 import { Role, type IAgentRuntime, type UUID, type World } from '../types';
 import * as entities from '../entities';
@@ -9,7 +8,7 @@ describe('roles utilities', () => {
   let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
-    mock.restore();
+    vi.clearAllMocks();
 
     // Set up scoped mocks for this test
     vi.spyOn(entities, 'createUniqueUuid').mockImplementation(
