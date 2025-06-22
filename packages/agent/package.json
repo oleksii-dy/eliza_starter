@@ -33,7 +33,6 @@
     "@elizaos/plugin-knowledge": "workspace:*",
     "@elizaos/plugin-message-handling": "workspace:*",
     "@elizaos/plugin-planning": "workspace:*",
-    "@elizaos/plugin-shell": "workspace:*",
     "@elizaos/plugin-sql": "workspace:*",
     "@tanstack/react-query": "^5.29.0",
     "clsx": "^2.1.1",

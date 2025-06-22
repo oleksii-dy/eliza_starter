@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
-import { mock, spyOn } from 'bun:test';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { mock, spyOn, vi } from 'vitest';
 import { getUserServerRole, findWorldsForOwner } from '../roles';
 import { Role, type IAgentRuntime, type UUID, type World } from '../types';
 import * as entities from '../entities';
@@ -12,7 +12,7 @@ describe('roles utilities', () => {
     mock.restore();
 
     // Set up scoped mocks for this test
-    spyOn(entities, 'createUniqueUuid').mockImplementation(
+    vi.spyOn(entities, 'createUniqueUuid').mockImplementation(
       (_runtime, serverId) => `unique-${serverId}` as UUID
     );
 
@@ -21,17 +21,17 @@ describe('roles utilities', () => {
       const methods = ['error', 'info', 'warn', 'debug'];
       methods.forEach((method) => {
         if (typeof logger_module.logger[method] === 'function') {
-          spyOn(logger_module.logger, method).mockImplementation(() => {});
+          vi.spyOn(logger_module.logger, method).mockImplementation(() => {});
         } else {
-          logger_module.logger[method] = mock(() => {});
+          logger_module.logger[method] = vi.fn(() => {});
         }
       });
     }
 
     mockRuntime = {
       agentId: 'agent-123' as UUID,
-      getWorld: mock(),
-      getAllWorlds: mock(),
+      getWorld: vi.fn(),
+      getAllWorlds: vi.fn(),
     } as unknown as IAgentRuntime;
   });
 

@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test, it } from 'bun:test';
+import { beforeAll, describe, expect, test, it } from 'vitest';
 import { formatEntities } from '../entities';
 import { formatMessages, formatTimestamp } from '../utils';
 import type { Content, Entity, Memory, UUID } from '../types';

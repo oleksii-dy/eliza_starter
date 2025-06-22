@@ -1,5 +1,5 @@
-import { describe, expect, it, beforeEach, afterEach } from 'bun:test';
-import { mock } from 'bun:test';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
+import { mock, vi } from 'vitest';
 import { createLogger, logger, elizaLogger } from '../logger';
 
 // Mock environment variables
@@ -13,8 +13,8 @@ const mockEnv = {
 
 // Mock pino-pretty
 mock.module('pino-pretty', () => ({
-  default: mock(() => ({
-    write: mock(),
+  default: vi.fn(() => ({
+    write: vi.fn(),
   })),
 }));
 

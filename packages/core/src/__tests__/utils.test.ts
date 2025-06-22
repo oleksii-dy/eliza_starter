@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, setSystemTime, spyOn, mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Content, Entity, IAgentRuntime, Memory, ModelType, State } from '../types';
 import * as utils from '../utils';
 import {
@@ -85,7 +85,7 @@ describe('Utils Comprehensive Tests', () => {
 
     beforeEach(() => {
       // Mock the Date constructor to return our fixed time when called without arguments
-      spyOn(global, 'Date').mockImplementation((...args: any[]) => {
+      vi.vi.spyOn(global, 'Date').mockImplementation((...args: any[]) => {
         if (args.length === 0) {
           return fixedTime;
         }
@@ -95,7 +95,7 @@ describe('Utils Comprehensive Tests', () => {
 
     afterEach(() => {
       // Restore all mocks
-      mock.restore();
+      vi.clearAllMocks();
     });
 
     it("should return 'just now' for recent timestamps", () => {
@@ -258,7 +258,7 @@ describe('Utils Comprehensive Tests', () => {
 
     beforeEach(() => {
       mockRuntime = {
-        useModel: mock(async (type, params) => {
+        useModel: vi.fn(async (type: any, params: any) => {
           if (type === 'TEXT_TOKENIZER_ENCODE') {
             // Simple mock: each word is a token
             return params.prompt.split(' ');
@@ -1035,14 +1035,14 @@ describe('Utils Comprehensive Tests', () => {
   });
 
   it('composePrompt inserts state values', () => {
-    //const spy = vi.spyOn(utils, 'composeRandomUser').mockImplementation((t) => t);
+    //const spy = vi.vi.spyOn(utils, 'composeRandomUser').mockImplementation((t) => t);
     const out = utils.composePrompt({ state: { a: 'x' }, template: 'Hello {{a}}' });
     expect(out).toBe('Hello x');
     //spy.mockRestore();
   });
 
   it('composePromptFromState flattens state values', () => {
-    //const spy = vi.spyOn(utils, 'composeRandomUser').mockImplementation((t) => t);
+    //const spy = vi.vi.spyOn(utils, 'composeRandomUser').mockImplementation((t) => t);
     const out = utils.composePromptFromState({
       state: { values: { b: 'y' }, data: {}, text: '', c: 'z' },
       template: '{{b}} {{c}}',
@@ -1078,7 +1078,7 @@ describe('Utils Comprehensive Tests', () => {
 
   it('trimTokens truncates using runtime tokenizer', async () => {
     const runtime = {
-      useModel: mock(
+      useModel: vi.fn(
         async (type: (typeof ModelType)[keyof typeof ModelType], { prompt, tokens }: any) => {
           if (type === ModelType.TEXT_TOKENIZER_ENCODE) return prompt.split(' ');
           if (type === ModelType.TEXT_TOKENIZER_DECODE) return tokens.join(' ');

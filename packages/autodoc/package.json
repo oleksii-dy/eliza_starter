@@ -15,8 +15,7 @@
     "lint": "prettier --write ./src",
     "test": "echo \"No tests configured for @elizaos/autodoc\"",
     "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src",
-    "test": "echo 'No tests yet for autodoc package' && exit 0"
+    "format:check": "prettier --check ./src"
   },
   "keywords": [],
   "author": "",

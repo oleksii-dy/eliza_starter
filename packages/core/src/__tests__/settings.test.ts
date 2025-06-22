@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
-import { mock, spyOn } from 'bun:test';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   createSettingFromConfig,
   getSalt,
@@ -38,11 +37,11 @@ describe('settings utilities', () => {
   let mockWorld: World;
 
   beforeEach(() => {
-    mock.restore();
+    vi.clearAllMocks();
 
     // Set up scoped mocks for this test
-    spyOn(entities, 'createUniqueUuid').mockImplementation(
-      (_runtime, serverId) => `world-${serverId}` as UUID
+    vi.vi.spyOn(entities, 'createUniqueUuid').mockImplementation(
+      (_runtime: any, serverId: any) => `world-${serverId}` as UUID
     );
 
     // Mock logger if it doesn't have the methods
@@ -50,9 +49,9 @@ describe('settings utilities', () => {
       const methods = ['error', 'info', 'warn', 'debug'];
       methods.forEach((method) => {
         if (typeof logger_module.logger[method] === 'function') {
-          spyOn(logger_module.logger, method).mockImplementation(() => {});
+          vi.vi.spyOn(logger_module.logger, method).mockImplementation(() => {});
         } else {
-          logger_module.logger[method] = mock(() => {});
+          logger_module.logger[method] = vi.fn(() => {});
         }
       });
     }
@@ -62,8 +61,8 @@ describe('settings utilities', () => {
 
     mockRuntime = {
       agentId: 'agent-123' as any,
-      getWorld: mock(),
-      updateWorld: mock(),
+      getWorld: vi.fn(),
+      updateWorld: vi.fn(),
     } as unknown as IAgentRuntime;
 
     mockWorld = {
@@ -640,10 +639,11 @@ describe('settings utilities', () => {
 
       const encrypted = encryptedCharacter(character);
 
-      expect(encrypted.settings?.secrets?.['API_KEY']).not.toBe('secret-api-key');
-      expect(encrypted.settings?.secrets?.['API_KEY']).toContain(':');
-      expect(encrypted.settings?.secrets?.['PASSWORD']).not.toBe('secret-password');
-      expect(encrypted.settings?.secrets?.['PASSWORD']).toContain(':');
+      const secrets = encrypted.settings?.secrets as Record<string, any>;
+      expect(secrets?.['API_KEY']).not.toBe('secret-api-key');
+      expect(secrets?.['API_KEY']).toContain(':');
+      expect(secrets?.['PASSWORD']).not.toBe('secret-password');
+      expect(secrets?.['PASSWORD']).toContain(':');
     });
 
     it('should encrypt character.secrets', () => {
@@ -711,8 +711,9 @@ describe('settings utilities', () => {
 
       const decrypted = decryptedCharacter(character, mockRuntime);
 
-      expect(decrypted.settings?.secrets?.['API_KEY']).toBe('secret-api-key');
-      expect(decrypted.settings?.secrets?.['PASSWORD']).toBe('secret-password');
+      const secrets = decrypted.settings?.secrets as Record<string, any>;
+      expect(secrets?.['API_KEY']).toBe('secret-api-key');
+      expect(secrets?.['PASSWORD']).toBe('secret-password');
     });
 
     it('should decrypt character.secrets', () => {

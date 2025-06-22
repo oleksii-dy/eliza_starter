@@ -1,22 +1,20 @@
 {
   "name": "@elizaos/app",
-  "version": "1.0.6",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "start": "tauri dev",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "test": "echo \"No tests configured for @elizaos/app\"",
+    "test": "vitest run",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src",
-    "lint": "prettier --write ./src",
-    "test": "vitest run"
+    "lint": "prettier --write ./src"
   },
   "dependencies": {
     "@elizaos/cli": "^1.0.6",
