@@ -78,6 +78,7 @@ export interface ActionPlan {
     priority?: number;
     constraints?: Constraint[];
     tags?: string[];
+    adaptations?: string[];
   };
 }
 
@@ -151,4 +152,91 @@ export interface PlanningContext {
     maxSteps?: number;
     timeoutMs?: number;
   };
+}
+
+/**
+ * Unified Planning Service Interface
+ * Provides both simple inline planning and complex multi-step planning capabilities
+ */
+export interface IPlanningService {
+  /**
+   * Service identifier for registration
+   */
+  readonly serviceName: string;
+
+  /**
+   * Service type for categorization
+   */
+  readonly serviceType: string;
+
+  /**
+   * Service capability description
+   */
+  readonly capabilityDescription: string;
+
+  /**
+   * Creates a simple plan for basic message handling
+   * Used by message-handling for backwards compatibility
+   */
+  createSimplePlan(
+    runtime: import('./runtime').IAgentRuntime,
+    message: import('./memory').Memory,
+    state: import('./state').State,
+    responseContent: import('./primitives').Content
+  ): Promise<ActionPlan | null>;
+
+  /**
+   * Creates a comprehensive multi-step plan
+   * Used for complex planning scenarios
+   */
+  createComprehensivePlan(
+    runtime: import('./runtime').IAgentRuntime,
+    context: PlanningContext,
+    message?: import('./memory').Memory,
+    state?: import('./state').State
+  ): Promise<ActionPlan>;
+
+  /**
+   * Executes a plan with full runtime integration
+   */
+  executePlan(
+    runtime: import('./runtime').IAgentRuntime,
+    plan: ActionPlan,
+    message: import('./memory').Memory,
+    callback?: import('./components').HandlerCallback
+  ): Promise<PlanExecutionResult>;
+
+  /**
+   * Validates a plan before execution
+   */
+  validatePlan(
+    runtime: import('./runtime').IAgentRuntime,
+    plan: ActionPlan
+  ): Promise<{ valid: boolean; issues?: string[] }>;
+
+  /**
+   * Adapts a plan during execution based on results
+   */
+  adaptPlan(
+    runtime: import('./runtime').IAgentRuntime,
+    plan: ActionPlan,
+    currentStepIndex: number,
+    results: ActionResult[],
+    error?: Error
+  ): Promise<ActionPlan>;
+
+  /**
+   * Gets the current execution status of a plan
+   */
+  getPlanStatus(planId: UUID): Promise<PlanState | null>;
+
+  /**
+   * Cancels plan execution
+   */
+  cancelPlan(planId: UUID): Promise<boolean>;
+
+  /**
+   * Cleanup method called when service is stopped
+   */
+  stop(): Promise<void>;
 }

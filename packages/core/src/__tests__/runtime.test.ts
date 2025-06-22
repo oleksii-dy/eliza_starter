@@ -116,6 +116,7 @@ const mockDatabaseAdapter: IDatabaseAdapter = {
   }): Promise<Memory[]> {
     throw new Error('Function not implemented.');
   },
+  getWorlds: vi.fn().mockResolvedValue([]),
 };
 
 // Mock action creator (matches your example)

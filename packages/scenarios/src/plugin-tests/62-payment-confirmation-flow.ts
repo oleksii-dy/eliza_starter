@@ -1,4 +1,5 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from '../types.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const paymentConfirmationFlowScenario: Scenario = {
   id: 'payment-confirmation-flow-001',
@@ -9,7 +10,7 @@ const paymentConfirmationFlowScenario: Scenario = {
 
   actors: [
     {
-      id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567892',
+      id: uuidv4() as any,
       name: 'Premium Service Agent',
       role: 'subject',
       bio: 'An AI agent offering high-value services requiring payment confirmation',
@@ -25,7 +26,7 @@ Use the task system to get explicit approval.`,
       script: { steps: [] },
     },
     {
-      id: 'b2c3d4e5-f6a7-8901-bcde-f23456789014',
+      id: uuidv4() as any,
       name: 'Business Customer',
       role: 'assistant',
       bio: 'A business user needing premium services',
@@ -153,7 +154,7 @@ Use the task system to get explicit approval.`,
     ],
     expectedOutcomes: [
       {
-        actorId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567892',
+        actorId: uuidv4() as any,
         outcome: 'Successfully managed payment confirmation flow',
         verification: {
           id: 'confirmation-flow-complete',

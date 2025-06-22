@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const githubTodoWorkflowScenario: Scenario = {
-  id: '6617ea8c-5156-4cd7-96bf-9017d20727c0',
+  id: uuidv4() as any,
   name: 'GitHub Issue to Todo Task Management',
   description:
     'Test GitHub plugin fetching issues and creating corresponding todos with proper tracking and completion',
@@ -10,7 +11,7 @@ export const githubTodoWorkflowScenario: Scenario = {
 
   actors: [
     {
-      id: '4880ef5d-03c8-4952-98fd-f3409df64b1a',
+      id: uuidv4() as any,
       name: 'Project Manager Agent',
       role: 'subject',
       bio: 'An efficient project management assistant',
@@ -20,7 +21,7 @@ export const githubTodoWorkflowScenario: Scenario = {
       script: { steps: [] },
     },
     {
-      id: 'de52b6f0-d31b-48a4-bce9-712bf17b2ac2',
+      id: uuidv4() as any,
       name: 'Software Developer',
       role: 'assistant',
       script: {
@@ -71,7 +72,7 @@ export const githubTodoWorkflowScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: '8f7e9d0c-1a2b-3c4d-5e6f-7a8b9c0d1e2f',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Agent responded to project help request',
         config: {
@@ -81,7 +82,7 @@ export const githubTodoWorkflowScenario: Scenario = {
         },
       },
       {
-        id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Todo creation was handled',
         config: {
@@ -91,7 +92,7 @@ export const githubTodoWorkflowScenario: Scenario = {
         },
       },
       {
-        id: '2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Todo listing was provided',
         config: {
@@ -103,10 +104,10 @@ export const githubTodoWorkflowScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: '4880ef5d-03c8-4952-98fd-f3409df64b1a',
+        actorId: uuidv4() as any,
         outcome: 'Assisted with project task management',
         verification: {
-          id: '7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'Project management assistance was provided',
           config: {

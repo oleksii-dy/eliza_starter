@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const blockchainAnalyticsScenario: Scenario = {
-  id: 'df6edd92-3d38-416d-bb09-01ebb31aff64',
+  id: uuidv4() as any,
   name: 'Cross-Chain DeFi Analytics and Risk Assessment',
   description:
     'Analyze DeFi protocols across Solana and EVM chains, research risks, and create comprehensive reports',
@@ -10,13 +11,13 @@ export const blockchainAnalyticsScenario: Scenario = {
 
   actors: [
     {
-      id: '992c483d-3e9a-471f-a326-93a6366b458a',
+      id: uuidv4() as any,
       name: 'DeFi Analyst Agent',
       role: 'subject',
       script: { steps: [] },
     },
     {
-      id: '48492a4c-03e9-43c3-8658-ae898d6734a0',
+      id: uuidv4() as any,
       name: 'DeFi Trader',
       role: 'subject',
       script: {
@@ -99,7 +100,7 @@ export const blockchainAnalyticsScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: '66fd0a77-4364-4328-bc1f-5e17f84e9b10',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Solana DeFi protocol data was fetched',
         config: {
@@ -108,7 +109,7 @@ export const blockchainAnalyticsScenario: Scenario = {
         weight: 3,
       },
       {
-        id: '282ef655-9d3e-412b-9e2b-64fe80c923ba',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'EVM chain DeFi data was fetched',
         config: {
@@ -117,7 +118,7 @@ export const blockchainAnalyticsScenario: Scenario = {
         weight: 3,
       },
       {
-        id: 'c782dc44-3914-400a-96f5-790d808a6697',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Research project for exploit history was started',
         config: {
@@ -126,7 +127,7 @@ export const blockchainAnalyticsScenario: Scenario = {
         weight: 2,
       },
       {
-        id: '3f1071d9-9f06-4c76-9681-1a79372252f6',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Risk assessment matrix was created',
         config: {
@@ -136,7 +137,7 @@ export const blockchainAnalyticsScenario: Scenario = {
         weight: 3,
       },
       {
-        id: '3f773c12-a35e-4f57-9519-7d3feb7ef424',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Analytics findings stored in knowledge base',
         config: {
@@ -145,7 +146,7 @@ export const blockchainAnalyticsScenario: Scenario = {
         weight: 2,
       },
       {
-        id: '17bb317a-15bd-4cf9-903d-f64d6239a8a9',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Cross-chain protocols were properly compared',
         config: {
@@ -155,7 +156,7 @@ export const blockchainAnalyticsScenario: Scenario = {
         weight: 3,
       },
       {
-        id: 'afa9c637-52c0-496a-a941-ebff05c93b52',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Optimal yield strategy was recommended',
         config: {
@@ -167,10 +168,10 @@ export const blockchainAnalyticsScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: '992c483d-3e9a-471f-a326-93a6366b458a',
+        actorId: uuidv4() as any,
         outcome: 'Comprehensive DeFi analytics report with cross-chain insights',
         verification: {
-          id: '9af16cd3-b9d4-43d2-b051-0e5feb6e39e3',
+          id: uuidv4() as any,
           type: 'llm',
           description: 'Complete DeFi analysis workflow executed',
           config: {

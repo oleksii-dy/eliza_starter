@@ -52,7 +52,7 @@ export async function startTestServer(options: ServerOptions): Promise<ChildProc
 
   // Determine the package manager
   const hasYarnLock = existsSync(path.join(projectPath, 'yarn.lock'));
-  const hasPnpmLock = existsSync(path.join(projectPath, 'pnpm-lock.yaml'));
+  const hasPnpmLock = existsSync(path.join(projectPath, 'bun-lock.yaml'));
   const hasBunLock = existsSync(path.join(projectPath, 'bun.lockb'));
 
   let packageManager = 'npm';
@@ -61,7 +61,7 @@ export async function startTestServer(options: ServerOptions): Promise<ChildProc
   } else if (hasYarnLock) {
     packageManager = 'yarn';
   } else if (hasPnpmLock) {
-    packageManager = 'pnpm';
+    packageManager = 'bun';
   }
 
   // Prepare the command arguments

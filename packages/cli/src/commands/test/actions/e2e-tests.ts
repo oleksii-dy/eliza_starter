@@ -8,7 +8,7 @@ import {
   UserEnvironment,
 } from '@/src/utils';
 import { type DirectoryInfo } from '@/src/utils/directory-detection';
-import { logger, type IAgentRuntime, type ProjectAgent } from '@elizaos/core';
+import { logger, type IAgentRuntime, type ProjectAgent, type UUID } from '@elizaos/core';
 import * as dotenv from 'dotenv';
 import * as fs from 'node:fs';
 import path from 'node:path';
@@ -16,6 +16,7 @@ import { getElizaCharacter } from '@/src/characters/eliza';
 import { startAgent } from '@/src/commands/start';
 import { E2ETestOptions, TestResult } from '../types';
 import { findMonorepoRoot, processFilterName } from '../utils/project-utils';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Function that runs the end-to-end tests.
@@ -125,6 +126,20 @@ export async function runE2eTests(
         postgresUrl,
       });
       logger.info('Server initialized successfully');
+
+      // Ensure core tables exist before proceeding
+      if (server.database) {
+        logger.info('Ensuring core database tables exist...');
+        try {
+          // The SQL plugin should have already created tables during server initialization
+          // but we'll double-check here for test reliability
+          const agents = await server.database.getAgents();
+          logger.info(`Database ready, found ${agents.length} existing agents`);
+        } catch (dbError) {
+          logger.warn('Database tables may not be fully initialized yet:', dbError);
+          // Continue anyway - the runtime initialization will handle missing tables
+        }
+      }
     } catch (initError) {
       logger.error('Server initialization failed:', initError);
       throw initError;
@@ -198,10 +213,18 @@ export async function runE2eTests(
             }
             const defaultElizaCharacter = getElizaCharacter();
 
+            // Ensure the test agent character has a valid ID
+            // Use a deterministic ID for tests to avoid the default server ID issue
+            const testAgentId = uuidv4() as UUID;
+            const testCharacter = {
+              ...defaultElizaCharacter,
+              id: testAgentId,
+            };
+
             // The startAgent function now handles all dependency resolution,
             // including testDependencies when isTestMode is true.
             const runtime = await startAgent(
-              defaultElizaCharacter,
+              testCharacter,
               server,
               undefined, // No custom init for default test setup
               [pluginUnderTest], // Pass the local plugin module directly
@@ -213,7 +236,7 @@ export async function runE2eTests(
             // Pass all loaded plugins to the projectAgent so TestRunner can identify
             // which one is the plugin under test vs dependencies
             projectAgents.push({
-              character: defaultElizaCharacter,
+              character: testCharacter,
               plugins: runtime.plugins, // Pass all plugins, not just the one under test
             });
 
@@ -331,6 +354,22 @@ export async function runE2eTests(
         }
 
         // Clean up database directory after tests complete
+        // MOVED TO AFTER SERVER STOP TO AVOID DATABASE CORRUPTION
+
+        // Stop the server to prevent hanging
+        if (server) {
+          try {
+            logger.info('Stopping test server...');
+            // Give any remaining async operations time to complete
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            await server.stop();
+            logger.info('Test server stopped successfully');
+          } catch (stopError) {
+            logger.warn('Error stopping test server:', stopError);
+          }
+        }
+
+        // Clean up database directory after server is stopped
         try {
           if (fs.existsSync(elizaDbDir)) {
             console.info(`Cleaning up test database directory: ${elizaDbDir}`);
@@ -345,19 +384,6 @@ export async function runE2eTests(
         } catch (cleanupError) {
           console.warn(`Failed to clean up test database directory: ${cleanupError}`);
           // Don't fail the test run due to cleanup issues
-        }
-
-        // Stop the server to prevent hanging
-        if (server) {
-          try {
-            logger.info('Stopping test server...');
-            // Give any remaining async operations time to complete
-            await new Promise((resolve) => setTimeout(resolve, 100));
-            await server.stop();
-            logger.info('Test server stopped successfully');
-          } catch (stopError) {
-            logger.warn('Error stopping test server:', stopError);
-          }
         }
       }
     } catch (error) {

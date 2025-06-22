@@ -7,7 +7,7 @@ import {
   validateUuid,
   type UUID,
 } from '@elizaos/core';
-import express from 'express';
+import express, { type RequestHandler } from 'express';
 import internalMessageBus from '../../bus';
 import type { AgentServer } from '../../index';
 import type { MessageServiceStructure as MessageService } from '../../types';
@@ -948,7 +948,7 @@ export function createChannelsRouter(
             recentMessages,
             values: {},
             data: {},
-            text: recentMessages,
+            text: '',
           },
           template: `
 Based on the conversation below, generate a short, descriptive title for this chat. The title should capture the main topic or theme of the discussion.

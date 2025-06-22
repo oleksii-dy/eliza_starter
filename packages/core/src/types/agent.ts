@@ -98,6 +98,13 @@ export interface Character {
           settings?: Record<string, any>;
         };
       };
+      /** Service configurations */
+      services?: {
+        [serviceName: string]: {
+          enabled?: boolean;
+          settings?: Record<string, any>;
+        };
+      };
       /** Plugin-level settings */
       settings?: Record<string, any>;
     };

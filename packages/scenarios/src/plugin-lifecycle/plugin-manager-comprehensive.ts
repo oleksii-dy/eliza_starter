@@ -1,12 +1,13 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from '../types.js';
 
 export const pluginManagerComprehensiveScenario: Scenario = {
   id: 'plugin-manager-comprehensive',
   name: 'Plugin Manager Comprehensive Lifecycle Testing',
-  description: 'Thorough testing of plugin discovery, installation, configuration, loading, unloading, updating, and management through the CLI',
+  description:
+    'Thorough testing of plugin discovery, installation, configuration, loading, unloading, updating, and management through the CLI',
   category: 'plugin-system',
   tags: ['plugin-manager', 'lifecycle', 'cli', 'integration'],
-  
+
   actors: [
     {
       id: 'plugin-manager-agent',
@@ -32,7 +33,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
         steps: [
           {
             type: 'message',
-            content: 'I need to set up a comprehensive plugin environment. Can you help me explore what plugins are available?',
+            content:
+              'I need to set up a comprehensive plugin environment. Can you help me explore what plugins are available?',
             timing: 2000,
           },
           {
@@ -41,7 +43,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
           },
           {
             type: 'message',
-            content: 'Great! Now I want to install the @elizaos/plugin-github plugin. Can you walk me through the installation process?',
+            content:
+              'Great! Now I want to install the @elizaos/plugin-github plugin. Can you walk me through the installation process?',
             timing: 2000,
           },
           {
@@ -50,7 +53,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
           },
           {
             type: 'message',
-            content: 'Perfect! Now I need to configure the GitHub plugin with my authentication token. How do I set that up securely?',
+            content:
+              'Perfect! Now I need to configure the GitHub plugin with my authentication token. How do I set that up securely?',
             timing: 2000,
           },
           {
@@ -59,7 +63,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
           },
           {
             type: 'message',
-            content: 'Excellent. Now I want to install @elizaos/plugin-autocoder as well. Can you install it and then show me the current list of loaded plugins?',
+            content:
+              'Excellent. Now I want to install @elizaos/plugin-autocoder as well. Can you install it and then show me the current list of loaded plugins?',
             timing: 2000,
           },
           {
@@ -68,7 +73,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
           },
           {
             type: 'message',
-            content: 'I heard there might be a conflict between these plugins. Can you check for any compatibility issues and resolve them?',
+            content:
+              'I heard there might be a conflict between these plugins. Can you check for any compatibility issues and resolve them?',
             timing: 2000,
           },
           {
@@ -77,7 +83,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
           },
           {
             type: 'message',
-            content: 'Now I want to temporarily unload the GitHub plugin without uninstalling it. How do I do that?',
+            content:
+              'Now I want to temporarily unload the GitHub plugin without uninstalling it. How do I do that?',
             timing: 2000,
           },
           {
@@ -86,7 +93,7 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
           },
           {
             type: 'message',
-            content: 'Great! Can you reload the GitHub plugin and verify it\'s working correctly?',
+            content: "Great! Can you reload the GitHub plugin and verify it's working correctly?",
             timing: 2000,
           },
           {
@@ -95,7 +102,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
           },
           {
             type: 'message',
-            content: 'Finally, I want to check if there are any updates available for my plugins and update them if needed.',
+            content:
+              'Finally, I want to check if there are any updates available for my plugins and update them if needed.',
             timing: 2000,
           },
         ],
@@ -113,7 +121,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
           },
           {
             type: 'message',
-            content: 'I need to verify the plugin system is working correctly. Can you run a comprehensive health check on all installed plugins?',
+            content:
+              'I need to verify the plugin system is working correctly. Can you run a comprehensive health check on all installed plugins?',
             timing: 2000,
           },
           {
@@ -122,7 +131,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
           },
           {
             type: 'message',
-            content: 'Also, please test that the plugin manager properly handles error cases - try installing a non-existent plugin.',',
+            content:
+              'Also, please test that the plugin manager properly handles error cases - try installing a non-existent plugin.',
             timing: 2000,
           },
           {
@@ -131,14 +141,15 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
           },
           {
             type: 'message',
-            content: 'Finally, demonstrate that plugin state persistence works by restarting the agent and verifying plugins remain configured.',
+            content:
+              'Finally, demonstrate that plugin state persistence works by restarting the agent and verifying plugins remain configured.',
             timing: 2000,
           },
         ],
       },
     },
   ],
-  
+
   setup: {
     roomName: 'Plugin Manager Test Environment',
     roomType: 'group',
@@ -148,13 +159,13 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
       pluginSystemEnabled: true,
     },
   },
-  
+
   execution: {
     maxDuration: 120000, // 2 minutes for comprehensive testing
     maxSteps: 50,
     strategy: 'sequential',
   },
-  
+
   verification: {
     strategy: 'llm', // Only LLM-based verification
     confidence: 0.8,
@@ -165,7 +176,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
         description: 'Agent successfully discovers and lists available plugins',
         weight: 3,
         config: {
-          successCriteria: 'Agent provides a list of available plugins with descriptions and demonstrates knowledge of plugin discovery mechanisms',
+          successCriteria:
+            'Agent provides a list of available plugins with descriptions and demonstrates knowledge of plugin discovery mechanisms',
           category: 'functional',
           priority: 'HIGH',
         },
@@ -176,7 +188,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
         description: 'Agent successfully installs plugins with proper dependency resolution',
         weight: 3,
         config: {
-          successCriteria: 'Agent installs plugins correctly, handles dependencies, and provides installation feedback',
+          successCriteria:
+            'Agent installs plugins correctly, handles dependencies, and provides installation feedback',
           category: 'functional',
           priority: 'HIGH',
         },
@@ -184,10 +197,12 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
       {
         id: 'plugin-configuration-secure',
         type: 'llm',
-        description: 'Agent handles plugin configuration securely, especially sensitive data like tokens',
+        description:
+          'Agent handles plugin configuration securely, especially sensitive data like tokens',
         weight: 3,
         config: {
-          successCriteria: 'Agent demonstrates secure configuration practices, uses proper secrets management, and validates configuration',
+          successCriteria:
+            'Agent demonstrates secure configuration practices, uses proper secrets management, and validates configuration',
           category: 'security',
           priority: 'HIGH',
         },
@@ -198,7 +213,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
         description: 'Agent can dynamically load and unload plugins without system restart',
         weight: 2,
         config: {
-          successCriteria: 'Agent demonstrates hot-loading/unloading of plugins with proper state management',
+          successCriteria:
+            'Agent demonstrates hot-loading/unloading of plugins with proper state management',
           category: 'functional',
           priority: 'MEDIUM',
         },
@@ -209,7 +225,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
         description: 'Agent identifies and resolves plugin conflicts effectively',
         weight: 2,
         config: {
-          successCriteria: 'Agent detects potential conflicts, explains issues, and provides resolution strategies',
+          successCriteria:
+            'Agent detects potential conflicts, explains issues, and provides resolution strategies',
           category: 'edge-case',
           priority: 'MEDIUM',
         },
@@ -220,7 +237,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
         description: 'Agent can monitor plugin health and diagnose issues',
         weight: 2,
         config: {
-          successCriteria: 'Agent provides comprehensive health checks, identifies issues, and suggests remediation',
+          successCriteria:
+            'Agent provides comprehensive health checks, identifies issues, and suggests remediation',
           category: 'performance',
           priority: 'MEDIUM',
         },
@@ -231,7 +249,8 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
         description: 'Agent handles plugin errors gracefully without system failure',
         weight: 2,
         config: {
-          successCriteria: 'Agent properly handles invalid plugins, network failures, and configuration errors',
+          successCriteria:
+            'Agent properly handles invalid plugins, network failures, and configuration errors',
           category: 'edge-case',
           priority: 'MEDIUM',
         },
@@ -249,7 +268,7 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
       },
     ],
   },
-  
+
   benchmarks: {
     responseTime: 8000, // Plugin operations can be slow
     completionTime: 120000, // 2 minutes
@@ -260,7 +279,7 @@ When asked to perform plugin operations, use the appropriate plugin manager acti
       errorRecoveryCount: 1,
     },
   },
-  
+
   metadata: {
     complexity: 'high',
     systemRequirements: ['plugin-manager', 'secrets-manager'],

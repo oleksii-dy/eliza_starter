@@ -1,9 +1,11 @@
 import { mock, spyOn } from 'bun:test';
 import { Content, IAgentRuntime, Memory, State, logger } from '@elizaos/core';
 import {
-  createMockRuntime as createCoreMockRuntime,
-  createMockMessage as createCoreMockMessage,
-  createMockState as createCoreMockState,
+  createMockRuntime as baseMockRuntime,
+  createMockMemory as baseMockMemory,
+  createMockState as baseMockState,
+} from '@elizaos/core/test-utils';
+import {
   documentTestResult,
   runCoreActionTests,
 } from './utils/core-test-utils';
@@ -18,12 +20,8 @@ import plugin from '../plugin';
  * @returns A mock runtime for testing
  */
 export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
-  // Create base mock runtime with default core utilities
-  const baseRuntime = createCoreMockRuntime();
-
-  // Enhance with project-specific configuration
-  const mockRuntime = {
-    ...baseRuntime,
+  // Use the centralized mock runtime with project-specific configuration
+  return baseMockRuntime({
     character: character,
     plugins: [plugin],
     registerPlugin: mock(),
@@ -35,9 +33,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     evaluateProviders: mock().mockResolvedValue([]),
     evaluate: mock().mockResolvedValue([]),
     ...overrides,
-  } as unknown as IAgentRuntime;
-
-  return mockRuntime;
+  });
 }
 
 /**
@@ -48,11 +44,13 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
  * @returns A mock memory object
  */
 export function createMockMessage(text: string, overrides: Partial<Memory> = {}): Memory {
-  const baseMessage = createCoreMockMessage(text);
-  return {
-    ...baseMessage,
+  return baseMockMemory({
+    content: {
+      text,
+      source: 'project-starter-test',
+    },
     ...overrides,
-  };
+  });
 }
 
 /**
@@ -62,11 +60,13 @@ export function createMockMessage(text: string, overrides: Partial<Memory> = {})
  * @returns A mock state object
  */
 export function createMockState(overrides: Partial<State> = {}): State {
-  const baseState = createCoreMockState();
-  return {
-    ...baseState,
+  return baseMockState({
+    values: {
+      projectType: 'starter-project',
+    },
+    text: 'Project starter test context',
     ...overrides,
-  };
+  });
 }
 
 /**

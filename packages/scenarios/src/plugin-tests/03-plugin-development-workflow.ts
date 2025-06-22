@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const pluginDevelopmentWorkflowScenario: Scenario = {
-  id: '8c5d2a3f-9e1b-4c6d-8f7a-2b4c6e8d0f1a',
+  id: uuidv4() as any,
   name: 'Complete Plugin Development Workflow',
   description:
     'Test the full integration between plugin manager, autocoder, and secrets manager for discovering, creating, and publishing plugins',
@@ -10,7 +11,7 @@ export const pluginDevelopmentWorkflowScenario: Scenario = {
 
   actors: [
     {
-      id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
+      id: uuidv4() as any,
       name: 'Plugin Development Agent',
       role: 'subject',
       bio: 'An AI-powered plugin development assistant',
@@ -35,7 +36,7 @@ Always explain your decision-making process and provide clear status updates.`,
       script: { steps: [] },
     },
     {
-      id: '2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e',
+      id: uuidv4() as any,
       name: 'Plugin Developer',
       role: 'assistant',
       script: {
@@ -127,7 +128,7 @@ Always explain your decision-making process and provide clear status updates.`,
   verification: {
     rules: [
       {
-        id: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Plugin discovery search was performed',
         config: {
@@ -137,7 +138,7 @@ Always explain your decision-making process and provide clear status updates.`,
         weight: 4,
       },
       {
-        id: '2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Plugin recommendation analysis',
         config: {
@@ -146,7 +147,7 @@ Always explain your decision-making process and provide clear status updates.`,
         weight: 3,
       },
       {
-        id: '3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Secure secret collection',
         config: {
@@ -156,7 +157,7 @@ Always explain your decision-making process and provide clear status updates.`,
         weight: 4,
       },
       {
-        id: '4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Plugin creation initiated',
         config: {
@@ -166,7 +167,7 @@ Always explain your decision-making process and provide clear status updates.`,
         weight: 4,
       },
       {
-        id: '5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Development status monitoring',
         config: {
@@ -176,7 +177,7 @@ Always explain your decision-making process and provide clear status updates.`,
         weight: 3,
       },
       {
-        id: '6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Plugin testing verification',
         config: {
@@ -185,7 +186,7 @@ Always explain your decision-making process and provide clear status updates.`,
         weight: 3,
       },
       {
-        id: '7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Plugin publishing',
         config: {
@@ -195,7 +196,7 @@ Always explain your decision-making process and provide clear status updates.`,
         weight: 4,
       },
       {
-        id: '8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Registry verification',
         config: {
@@ -204,7 +205,7 @@ Always explain your decision-making process and provide clear status updates.`,
         weight: 3,
       },
       {
-        id: '9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Complete workflow integration',
         config: {
@@ -215,10 +216,10 @@ Always explain your decision-making process and provide clear status updates.`,
     ],
     expectedOutcomes: [
       {
-        actorId: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
+        actorId: uuidv4() as any,
         outcome: 'Successfully created and published weather plugin using integrated workflow',
         verification: {
-          id: 'a0b1c2d3-4e5f-6a7b-8c9d-0e1f2a3b4c5d',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'End-to-end workflow completed successfully',
           config: {

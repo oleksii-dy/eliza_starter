@@ -2,30 +2,30 @@
  * Integration tests for AgentServer class
  */
 
-import { describe, it, expect, mock, beforeEach, afterEach, jest } from 'bun:test';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AgentServer } from '../index';
 import { logger, type UUID, ChannelType } from '@elizaos/core';
 import type { ServerOptions } from '../index';
 import http from 'node:http';
 
 // Mock dependencies
-mock.module('@elizaos/core', async () => {
-  const actual = await import('@elizaos/core');
+vi.mock('@elizaos/core', async () => {
+  const actual = await vi.importActual('@elizaos/core');
   return {
     ...actual,
     logger: {
-      warn: jest.fn(),
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      success: jest.fn(),
+      warn: vi.fn(),
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      success: vi.fn(),
     },
     Service: class MockService {
       constructor() {}
       async initialize() {}
       async cleanup() {}
     },
-    createUniqueUuid: jest.fn(() => '123e4567-e89b-12d3-a456-426614174000'),
+    createUniqueUuid: vi.fn(() => '123e4567-e89b-12d3-a456-426614174000'),
     ChannelType: {
       DIRECT: 'direct',
       GROUP: 'group',
@@ -39,85 +39,205 @@ mock.module('@elizaos/core', async () => {
       AGENT_UPDATE: 'agent_update',
       CONNECTION: 'connection',
     },
+    AgentRuntime: class MockAgentRuntime {
+      constructor(config: any) {
+        this.agentId = config.agentId;
+        this.character = config.character;
+        this.adapter = config.adapter;
+        this.plugins = config.plugins || [];
+      }
+      async initialize() {
+        // Mock successful initialization
+        return Promise.resolve();
+      }
+      agentId: string;
+      character: any;
+      adapter: any;
+      plugins: any[];
+    },
   };
 });
 
-mock.module('@elizaos/plugin-sql', () => ({
-  createDatabaseAdapter: jest.fn(() => ({
-    init: jest.fn().mockReturnValue(Promise.resolve(undefined)),
-    close: jest.fn().mockReturnValue(Promise.resolve(undefined)),
-    getDatabase: jest.fn(() => ({
-      execute: jest.fn().mockReturnValue(Promise.resolve([])),
+vi.mock('@elizaos/plugin-sql', () => ({
+  createDatabaseAdapter: vi.fn(() => ({
+    // Core database methods
+    init: vi.fn().mockResolvedValue(undefined),
+    close: vi.fn().mockResolvedValue(undefined),
+    getDatabase: vi.fn(() => ({
+      execute: vi.fn().mockResolvedValue([]),
     })),
-    getMessageServers: jest.fn(() =>
+    db: { execute: vi.fn().mockResolvedValue([]) },
+    isReady: vi.fn().mockResolvedValue(true),
+    runMigrations: vi.fn().mockResolvedValue(undefined),
+
+    // Agent management
+    getAgents: vi.fn().mockResolvedValue([]),
+    getAgent: vi.fn().mockResolvedValue({
+      id: '00000000-0000-0000-0000-000000000000',
+      name: 'MigrationAgent',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+    createAgent: vi.fn().mockResolvedValue(true),
+    updateAgent: vi.fn().mockResolvedValue(true),
+    deleteAgent: vi.fn().mockResolvedValue(true),
+
+    // Entity management
+    getEntityById: vi.fn().mockResolvedValue(null),
+    getEntityByIds: vi.fn().mockResolvedValue([]),
+    getEntitiesForRoom: vi.fn().mockResolvedValue([]),
+    createEntity: vi.fn().mockResolvedValue('test-entity-id'),
+    createEntities: vi.fn().mockResolvedValue(true),
+    updateEntity: vi.fn().mockResolvedValue(undefined),
+
+    // Component management
+    getComponent: vi.fn().mockResolvedValue(null),
+    getComponents: vi.fn().mockResolvedValue([]),
+    createComponent: vi.fn().mockResolvedValue('test-component-id'),
+    updateComponent: vi.fn().mockResolvedValue(undefined),
+    deleteComponent: vi.fn().mockResolvedValue(undefined),
+
+    // Memory management
+    getMemories: vi.fn().mockResolvedValue([]),
+    getMemoryById: vi.fn().mockResolvedValue(null),
+    getMemoriesByIds: vi.fn().mockResolvedValue([]),
+    getMemoriesByRoomIds: vi.fn().mockResolvedValue([]),
+    getMemoriesByWorldId: vi.fn().mockResolvedValue([]),
+    getCachedEmbeddings: vi.fn().mockResolvedValue([]),
+    log: vi.fn().mockResolvedValue(undefined),
+    getLogs: vi.fn().mockResolvedValue([]),
+    deleteLog: vi.fn().mockResolvedValue(undefined),
+    searchMemories: vi.fn().mockResolvedValue([]),
+    createMemory: vi.fn().mockResolvedValue('test-memory-id'),
+    updateMemory: vi.fn().mockResolvedValue(true),
+    deleteMemory: vi.fn().mockResolvedValue(undefined),
+    deleteManyMemories: vi.fn().mockResolvedValue(undefined),
+    deleteAllMemories: vi.fn().mockResolvedValue(undefined),
+    countMemories: vi.fn().mockResolvedValue(0),
+    ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
+
+    // World management
+    createWorld: vi.fn().mockResolvedValue('test-world-id'),
+    getWorld: vi.fn().mockResolvedValue(null),
+    removeWorld: vi.fn().mockResolvedValue(undefined),
+    getWorlds: vi.fn().mockResolvedValue([]),
+    getAllWorlds: vi.fn().mockResolvedValue([]),
+    updateWorld: vi.fn().mockResolvedValue(undefined),
+
+    // Room management
+    getRoom: vi.fn().mockResolvedValue(null),
+    getRooms: vi.fn().mockResolvedValue([]),
+    getRoomsByIds: vi.fn().mockResolvedValue([]),
+    createRoom: vi.fn().mockResolvedValue('test-room-id'),
+    createRooms: vi.fn().mockResolvedValue([]),
+    deleteRoom: vi.fn().mockResolvedValue(undefined),
+    deleteRoomsByWorldId: vi.fn().mockResolvedValue(undefined),
+    updateRoom: vi.fn().mockResolvedValue(undefined),
+    getRoomsForParticipant: vi.fn().mockResolvedValue([]),
+    getRoomsForParticipants: vi.fn().mockResolvedValue([]),
+    getRoomsByWorld: vi.fn().mockResolvedValue([]),
+
+    // Participant management
+    addParticipant: vi.fn().mockResolvedValue(true),
+    removeParticipant: vi.fn().mockResolvedValue(true),
+    addParticipantsRoom: vi.fn().mockResolvedValue(true),
+    getParticipantsForEntity: vi.fn().mockResolvedValue([]),
+    getParticipantsForRoom: vi.fn().mockResolvedValue([]),
+    getParticipantUserState: vi.fn().mockResolvedValue(null),
+    setParticipantUserState: vi.fn().mockResolvedValue(undefined),
+
+    // Relationship management
+    createRelationship: vi.fn().mockResolvedValue(true),
+    updateRelationship: vi.fn().mockResolvedValue(undefined),
+    getRelationship: vi.fn().mockResolvedValue(null),
+    getRelationships: vi.fn().mockResolvedValue([]),
+
+    // Cache management
+    getCache: vi.fn().mockResolvedValue(undefined),
+    setCache: vi.fn().mockResolvedValue(true),
+    deleteCache: vi.fn().mockResolvedValue(true),
+
+    // Task management
+    createTask: vi.fn().mockResolvedValue('test-task-id'),
+    getTasks: vi.fn().mockResolvedValue([]),
+    getTask: vi.fn().mockResolvedValue(null),
+    getTasksByName: vi.fn().mockResolvedValue([]),
+    updateTask: vi.fn().mockResolvedValue(undefined),
+    deleteTask: vi.fn().mockResolvedValue(undefined),
+
+    // Message server management
+    getMessageServers: vi.fn(() =>
       Promise.resolve([{ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' }])
     ),
-    createMessageServer: jest
+    createMessageServer: vi
       .fn()
-      .mockReturnValue(Promise.resolve({ id: '00000000-0000-0000-0000-000000000000' })),
-    getMessageServerById: jest
-      .fn()
-      .mockReturnValue(
-        Promise.resolve({ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' })
-      ),
-    addAgentToServer: jest.fn().mockReturnValue(Promise.resolve(undefined)),
-    getChannelsForServer: jest.fn().mockReturnValue(Promise.resolve([])),
-    createChannel: jest
-      .fn()
-      .mockReturnValue(Promise.resolve({ id: '123e4567-e89b-12d3-a456-426614174000' })),
-    getAgentsForServer: jest.fn().mockReturnValue(Promise.resolve([])),
-    db: { execute: jest.fn().mockReturnValue(Promise.resolve([])) },
+      .mockResolvedValue({ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' }),
+    addAgentToServer: vi.fn().mockResolvedValue(undefined),
+    getChannelsForServer: vi.fn().mockResolvedValue([]),
+    createChannel: vi.fn().mockResolvedValue({ id: '123e4567-e89b-12d3-a456-426614174000' }),
+    getAgentsForServer: vi.fn().mockResolvedValue([]),
   })),
-  DatabaseMigrationService: jest.fn(() => ({
-    initializeWithDatabase: jest.fn().mockReturnValue(Promise.resolve(undefined)),
-    discoverAndRegisterPluginSchemas: jest.fn(),
-    runAllPluginMigrations: jest.fn().mockReturnValue(Promise.resolve(undefined)),
+  DatabaseService: vi.fn().mockImplementation((runtime, db) => ({
+    initializePluginSchema: vi.fn().mockResolvedValue(undefined),
   })),
-  plugin: {},
+  DatabaseMigrationService: vi.fn(() => ({
+    initializeWithDatabase: vi.fn().mockResolvedValue(undefined),
+    discoverAndRegisterPluginSchemas: vi.fn(),
+    runAllPluginMigrations: vi.fn().mockResolvedValue(undefined),
+  })),
+  plugin: {
+    name: '@elizaos/plugin-sql',
+    description: 'SQL database plugin',
+    actions: [],
+    providers: [],
+    evaluators: [],
+    services: [],
+    schema: {},
+  },
 }));
 
 // Mock filesystem operations
-mock.module('node:fs', () => ({
+vi.mock('node:fs', () => ({
   default: {
-    mkdirSync: jest.fn(),
-    existsSync: jest.fn(() => true),
-    readFileSync: jest.fn(() => '{}'),
-    writeFileSync: jest.fn(),
+    mkdirSync: vi.fn(),
+    existsSync: vi.fn(() => true),
+    readFileSync: vi.fn(() => '{}'),
+    writeFileSync: vi.fn(),
   },
-  mkdirSync: jest.fn(),
-  existsSync: jest.fn(() => true),
-  readFileSync: jest.fn(() => '{}'),
-  writeFileSync: jest.fn(),
+  mkdirSync: vi.fn(),
+  existsSync: vi.fn(() => true),
+  readFileSync: vi.fn(() => '{}'),
+  writeFileSync: vi.fn(),
 }));
 
 // Mock Socket.IO
-mock.module('socket.io', () => ({
-  Server: jest.fn(() => ({
-    on: jest.fn(),
-    emit: jest.fn(),
-    to: jest.fn(() => ({
-      emit: jest.fn(),
+vi.mock('socket.io', () => ({
+  Server: vi.fn(() => ({
+    on: vi.fn(),
+    emit: vi.fn(),
+    to: vi.fn(() => ({
+      emit: vi.fn(),
     })),
-    close: jest.fn((callback) => {
+    close: vi.fn((callback) => {
       if (callback) callback();
     }),
   })),
 }));
 
 // Mock the socketio module
-mock.module('../src/socketio/index', () => ({
-  setupSocketIO: jest.fn(() => ({
-    on: jest.fn(),
-    emit: jest.fn(),
-    to: jest.fn(() => ({
-      emit: jest.fn(),
+vi.mock('../src/socketio/index', () => ({
+  setupSocketIO: vi.fn(() => ({
+    on: vi.fn(),
+    emit: vi.fn(),
+    to: vi.fn(() => ({
+      emit: vi.fn(),
     })),
-    close: jest.fn((callback) => {
+    close: vi.fn((callback) => {
       if (callback) callback();
     }),
   })),
-  SocketIORouter: jest.fn(() => ({
-    setupListeners: jest.fn(),
+  SocketIORouter: vi.fn(() => ({
+    setupListeners: vi.fn(),
   })),
 }));
 
@@ -126,27 +246,27 @@ describe('AgentServer Integration Tests', () => {
   let mockServer: any;
 
   beforeEach(() => {
-    mock.restore();
+    vi.clearAllMocks();
 
     // Mock HTTP server with all methods Socket.IO expects
     mockServer = {
-      listen: jest.fn((_port, callback) => {
+      listen: vi.fn((_port, callback) => {
         if (callback) callback();
       }),
-      close: jest.fn((callback) => {
+      close: vi.fn((callback) => {
         if (callback) callback();
       }),
-      listeners: jest.fn(() => []),
-      removeAllListeners: jest.fn(),
-      on: jest.fn(),
-      once: jest.fn(),
-      emit: jest.fn(),
-      address: jest.fn(() => ({ port: 3000 })),
+      listeners: vi.fn(() => []),
+      removeAllListeners: vi.fn(),
+      on: vi.fn(),
+      once: vi.fn(),
+      emit: vi.fn(),
+      address: vi.fn(() => ({ port: 3000 })),
       timeout: 0,
       keepAliveTimeout: 5000,
     };
 
-    jest.spyOn(http, 'createServer').mockReturnValue(mockServer as any);
+    vi.spyOn(http, 'createServer').mockReturnValue(mockServer as any);
 
     server = new AgentServer();
   });
@@ -155,7 +275,7 @@ describe('AgentServer Integration Tests', () => {
     if (server) {
       await server.stop();
     }
-    mock.restore();
+    vi.clearAllMocks();
   });
 
   describe('Constructor', () => {
@@ -196,7 +316,7 @@ describe('AgentServer Integration Tests', () => {
     it('should prevent double initialization', async () => {
       await server.initialize();
 
-      const loggerWarnSpy = jest.spyOn(logger, 'warn');
+      const loggerWarnSpy = vi.spyOn(logger, 'warn');
       await server.initialize();
 
       expect(loggerWarnSpy).toHaveBeenCalledWith(
@@ -207,12 +327,12 @@ describe('AgentServer Integration Tests', () => {
     it('should handle initialization errors gracefully', async () => {
       // Mock database initialization to fail
       const mockDatabaseAdapter = {
-        init: jest.fn().mockRejectedValue(new Error('Database connection failed')),
+        init: vi.fn().mockRejectedValue(new Error('Database connection failed')),
       };
 
-      mock.module('@elizaos/plugin-sql', () => ({
-        createDatabaseAdapter: () => mockDatabaseAdapter,
-      }));
+      vi.mocked(vi.importActual('@elizaos/plugin-sql')).createDatabaseAdapter = vi.fn(
+        () => mockDatabaseAdapter
+      );
 
       await expect(server.initialize()).rejects.toThrow('Database connection failed');
     });
@@ -255,22 +375,22 @@ describe('AgentServer Integration Tests', () => {
       mockRuntime = {
         agentId: '123e4567-e89b-12d3-a456-426614174000',
         character: { name: 'TestAgent' },
-        registerPlugin: jest.fn().mockReturnValue(Promise.resolve(undefined)),
-        stop: jest.fn().mockReturnValue(Promise.resolve(undefined)),
+        registerPlugin: vi.fn().mockResolvedValue(undefined),
+        stop: vi.fn().mockResolvedValue(undefined),
         plugins: [],
-        registerProvider: jest.fn(),
-        registerAction: jest.fn(),
+        registerProvider: vi.fn(),
+        registerAction: vi.fn(),
       };
 
       // Mock the database methods
       server.database = {
         ...server.database,
-        getMessageServers: jest.fn().mockReturnValue(Promise.resolve([])),
-        createMessageServer: jest.fn().mockReturnValue(Promise.resolve({ id: 'server-id' })),
+        getMessageServers: vi.fn().mockResolvedValue([]),
+        createMessageServer: vi.fn().mockResolvedValue({ id: 'server-id' }),
         db: {
-          execute: jest.fn().mockReturnValue(Promise.resolve([])),
+          execute: vi.fn().mockResolvedValue([]),
         },
-        addAgentToServer: jest.fn().mockReturnValue(Promise.resolve(undefined)),
+        addAgentToServer: vi.fn().mockResolvedValue(undefined),
       } as any;
     });
 
@@ -330,7 +450,7 @@ describe('AgentServer Integration Tests', () => {
     });
 
     it('should register custom middleware', () => {
-      const customMiddleware = jest.fn((_req, _res, next) => next());
+      const customMiddleware = vi.fn((_req, _res, next) => next());
 
       server.registerMiddleware(customMiddleware);
 
@@ -346,17 +466,15 @@ describe('AgentServer Integration Tests', () => {
       // Mock database methods
       server.database = {
         ...server.database,
-        createMessageServer: jest
-          .fn()
-          .mockReturnValue(Promise.resolve({ id: 'server-id', name: 'Test Server' })),
-        getMessageServers: jest.fn().mockReturnValue(Promise.resolve([])),
-        getMessageServerById: jest.fn().mockReturnValue(Promise.resolve({ id: 'server-id' })),
-        createChannel: jest.fn().mockReturnValue(Promise.resolve({ id: 'channel-id' })),
-        getChannelsForServer: jest.fn().mockReturnValue(Promise.resolve([])),
-        createMessage: jest.fn().mockReturnValue(Promise.resolve({ id: 'message-id' })),
-        getMessagesForChannel: jest.fn().mockReturnValue(Promise.resolve([])),
-        addAgentToServer: jest.fn().mockReturnValue(Promise.resolve(undefined)),
-        getAgentsForServer: jest.fn().mockReturnValue(Promise.resolve([])),
+        createMessageServer: vi.fn().mockResolvedValue({ id: 'server-id', name: 'Test Server' }),
+        getMessageServers: vi.fn().mockResolvedValue([]),
+        getMessageServerById: vi.fn().mockResolvedValue({ id: 'server-id' }),
+        createChannel: vi.fn().mockResolvedValue({ id: 'channel-id' }),
+        getChannelsForServer: vi.fn().mockResolvedValue([]),
+        createMessage: vi.fn().mockResolvedValue({ id: 'message-id' }),
+        getMessagesForChannel: vi.fn().mockResolvedValue([]),
+        addAgentToServer: vi.fn().mockResolvedValue(undefined),
+        getAgentsForServer: vi.fn().mockResolvedValue([]),
       } as any;
     });
 
@@ -412,9 +530,7 @@ describe('AgentServer Integration Tests', () => {
     });
 
     it('should throw error when adding agent to non-existent server', async () => {
-      (server.database as any).getMessageServerById = jest
-        .fn()
-        .mockReturnValue(Promise.resolve(null));
+      (server.database as any).getMessageServerById = vi.fn().mockResolvedValue(null);
 
       const serverId = 'non-existent-server' as any;
       const agentId = 'agent-id' as any;
@@ -428,7 +544,7 @@ describe('AgentServer Integration Tests', () => {
   describe('Error Handling', () => {
     it('should handle constructor errors gracefully', () => {
       // Mock logger to throw error
-      jest.spyOn(logger, 'debug').mockImplementation(() => {
+      vi.spyOn(logger, 'debug').mockImplementation(() => {
         throw new Error('Logger error');
       });
 
@@ -440,14 +556,14 @@ describe('AgentServer Integration Tests', () => {
 
       // Mock database init to fail
       const mockDatabaseAdapter = {
-        init: jest.fn().mockRejectedValue(mockError),
+        init: vi.fn().mockRejectedValue(mockError),
       };
 
-      mock.module('@elizaos/plugin-sql', () => ({
-        createDatabaseAdapter: () => mockDatabaseAdapter,
-      }));
+      vi.mocked(vi.importActual('@elizaos/plugin-sql')).createDatabaseAdapter = vi.fn(
+        () => mockDatabaseAdapter
+      );
 
-      const errorSpy = jest.spyOn(logger, 'error');
+      const errorSpy = vi.spyOn(logger, 'error');
 
       await expect(server.initialize()).rejects.toThrow('Initialization failed');
       expect(errorSpy).toHaveBeenCalledWith(

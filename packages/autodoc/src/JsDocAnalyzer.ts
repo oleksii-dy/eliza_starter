@@ -749,7 +749,7 @@ export class JsDocAnalyzer {
       // Safely traverse child nodes
       if ('body' in node) {
         const body = Array.isArray(node.body) ? node.body : [node.body];
-        body.forEach((child: TSESTree.Node) => {
+        body.forEach((child: any) => {
           if (child && typeof child === 'object') {
             traverse(child as TSESTree.Node);
           }

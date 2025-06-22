@@ -110,7 +110,7 @@ export function isMonorepoContext(): boolean {
 
   while (currentDir !== '/') {
     if (
-      existsSync(join(currentDir, 'pnpm-workspace.yaml')) ||
+      existsSync(join(currentDir, 'bun-workspace.yaml')) ||
       existsSync(join(currentDir, 'lerna.json')) ||
       existsSync(join(currentDir, 'rush.json'))
     ) {

@@ -82,40 +82,12 @@ export const runCoreActionTests = (actions: Action[]) => {
   };
 };
 
-/**
- * Creates a mock runtime for testing
- */
-export const createMockRuntime = (): IAgentRuntime => {
-  return {
-    character: {
-      name: 'Test Character',
-      system: 'You are a helpful assistant for testing.',
-    },
-    getSetting: (key: string) => null,
-    // Include real model functionality
-    models: {},
-    // Add real database functionality
-    db: {
-      get: async () => null,
-      set: async () => true,
-      delete: async () => true,
-      getKeys: async () => [],
-    },
-    // Add real memory functionality
-    memory: {
-      add: async () => {},
-      get: async () => null,
-      getByEntityId: async () => [],
-      getLatest: async () => null,
-      getRecentMessages: async () => [],
-      search: async () => [],
-    },
-    actions: [],
-    providers: [],
-    getService: mock(),
-    processActions: mock(),
-  } as any as IAgentRuntime;
-};
+// Re-export from core test-utils
+export {
+  createMockRuntime,
+  createMockMemory as createMockMessage,
+  createMockState,
+} from '@elizaos/core/test-utils';
 
 /**
  * Documents test results for logging and debugging
@@ -154,27 +126,5 @@ export const documentTestResult = (testName: string, result: any, error: Error |
   }
 };
 
-/**
- * Creates a mock message for testing
- */
-export const createMockMessage = (text: string): Memory => {
-  return {
-    entityId: uuidv4(),
-    roomId: uuidv4(),
-    content: {
-      text,
-      source: 'test',
-    },
-  } as Memory;
-};
-
-/**
- * Creates a mock state for testing
- */
-export const createMockState = (): State => {
-  return {
-    values: {},
-    data: {},
-    text: '',
-  };
-};
+// Note: createMockMessage and createMockState moved to @elizaos/core/test-utils
+// Use the centralized mock system instead

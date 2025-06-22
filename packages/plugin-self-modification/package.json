@@ -1,0 +1,46 @@
+{
+  "name": "@elizaos/plugin-self-modification",
+  "version": "1.0.0",
+  "description": "ElizaOS plugin for agent self-modification and character evolution",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "elizaos test",
+    "test:e2e": "elizaos test --type e2e",
+    "test:vitest": "vitest"
+  },
+  "dependencies": {
+    "@elizaos/core": "workspace:*",
+    "fs-extra": "^11.2.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.11.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "keywords": [
+    "elizaos",
+    "plugin",
+    "self-modification",
+    "character-evolution",
+    "agi"
+  ],
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

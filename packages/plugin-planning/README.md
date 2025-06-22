@@ -1,186 +1,373 @@
-# @elizaos/plugin-strategy
+# ElizaOS Planning Plugin & Benchmark System
 
-A strategy planning and execution plugin for ElizaOS that demonstrates action chaining functionality with data passing and abort controller support.
+A comprehensive planning and execution system for ElizaOS agents with state-of-the-art benchmarking capabilities against REALM-Bench and API-Bank test suites.
 
-## Features
+## Overview
 
-- **Action Chaining**: Chain multiple actions together with data passing between them
-- **Abort Controller Support**: Cancel action chains mid-execution with proper cleanup
-- **Message Classification**: Automatically classify messages to determine if they need strategic planning
-- **Conditional Execution**: Actions can decide whether to continue the chain based on their results
+This plugin provides a unified planning service that enables ElizaOS agents to:
+
+- **Break down complex requests** into actionable step-by-step plans
+- **Execute plans efficiently** with different execution models (sequential, parallel, DAG)
+- **Adapt plans dynamically** when execution encounters errors or changing conditions
+- **Validate planning capabilities** against established benchmarks (REALM-Bench, API-Bank)
+- **Benchmark performance** with comprehensive metrics and reporting
+
+## Key Features
+
+### 🎯 Unified Planning Service
+- **IPlanningService Interface**: Standardized planning contract in core package
+- **PlanningService Implementation**: Production-ready service with full runtime integration
+- **Message Handler Integration**: Seamless fallback from inline planning to service-based planning
+- **Action Plan Execution**: Support for sequential, parallel, and DAG execution models
+
+### 📊 Comprehensive Benchmarking
+- **REALM-Bench Integration**: Tests planning patterns (sequential, reactive, complex multi-step)
+- **API-Bank Integration**: Tests tool-use scenarios across 3 complexity levels
+- **Real Runtime Testing**: Uses actual agent runtime with real providers and context
+- **Performance Metrics**: Token usage, response latency, memory usage, plan quality
+
+### 🔧 Production-Ready Features
+- **Error Handling**: Robust error handling with plan adaptation and recovery
+- **Working Memory**: Maintains state across plan execution steps
+- **Validation**: Plan structure validation and feasibility checking
+- **Monitoring**: Comprehensive logging and metrics collection
 
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-strategy
-```
+# Install the plugin
+npm install @elizaos/plugin-planning
 
-## Usage
-
-### Basic Setup
-
-```typescript
-import { strategyPlugin } from '@elizaos/plugin-strategy';
-
-// Register the plugin with your agent runtime
-runtime.registerPlugin(strategyPlugin);
-```
-
-### Action Chaining Example
-
-The plugin includes example actions that demonstrate chaining:
-
-1. **ANALYZE_INPUT**: Analyzes user input and extracts key information
-2. **PROCESS_ANALYSIS**: Processes the analysis results and makes decisions
-3. **EXECUTE_FINAL**: Executes the final action based on processing results
-
-These actions automatically chain together, passing data from one to the next:
-
-```typescript
-// In your message handler, specify multiple actions
-const response = {
-  content: {
-    actions: ['ANALYZE_INPUT', 'PROCESS_ANALYSIS', 'EXECUTE_FINAL'],
-    thought: 'I will analyze your message and respond appropriately',
-  },
-};
-
-// The runtime will execute them in sequence with data passing
-const results = await runtime.processActions(message, [response], state);
-```
-
-### Creating Chained Actions
-
-To create your own chained actions:
-
-```typescript
-import { IAction, ActionResult, ActionOptions } from '@elizaos/core';
-
-export const myFirstAction: IAction = {
-  name: 'MY_FIRST_ACTION',
-  description: 'First action in the chain',
-  returnsData: true, // Indicates this action returns data
-
-  handler: async (runtime, message, state, options) => {
-    // Your action logic here
-    const data = { computed: 'value' };
-
-    return {
-      success: true,
-      data, // This data will be available to the next action
-      continueChain: true, // Continue to next action
-      metadata: { duration: 100 },
-    };
-  },
-};
-
-export const mySecondAction: IAction = {
-  name: 'MY_SECOND_ACTION',
-  description: 'Second action that uses data from first',
-  acceptsInput: true, // Indicates this action accepts input
-  requiresPreviousResult: true, // Requires previous action result
-
-  handler: async (runtime, message, state, options) => {
-    // Access previous results
-    const previousData = options?.previousResults?.[0]?.data;
-
-    // Use the data from the previous action
-    const result = processData(previousData);
-
-    return {
-      success: true,
-      data: result,
-      continueChain: false, // End the chain
-      cleanup: async () => {
-        // Optional cleanup function if aborted
-        console.log('Cleaning up resources');
-      },
-    };
-  },
-};
-```
-
-### Abort Controller Support
-
-Actions can be aborted mid-execution:
-
-```typescript
-const controller = new AbortController();
-
-// Set a timeout
-setTimeout(() => controller.abort(), 5000); // Abort after 5 seconds
-
-// Pass the abort signal to processActions
-try {
-  const results = await runtime.processActions(
-    message,
-    [response],
-    state,
-    callback,
-    controller.signal
-  );
-} catch (error) {
-  if (error.message === 'Action chain aborted') {
-    console.log('Chain was aborted');
-  }
+# Add to your character's plugins array
+{
+  "plugins": ["@elizaos/plugin-planning"]
 }
 ```
 
-### Message Classification
+## Quick Start
 
-The plugin includes a message classifier provider that categorizes messages:
+### Basic Usage
 
-- **SIMPLE**: Basic requests that can be handled with a single action
-- **STRATEGIC**: Complex requests requiring multi-step planning
-- **CAPABILITY_REQUEST**: Requests for new capabilities or integrations
-- **RESEARCH_NEEDED**: Requests requiring research or information gathering
+```typescript
+import { planningPlugin } from '@elizaos/plugin-planning';
+
+// The plugin automatically registers the planning service
+// Message handling will use the planning service when available
+```
+
+### Running Benchmarks
+
+```bash
+# Run all benchmarks with default settings
+npm run benchmark
+
+# Run with custom character and specific benchmark data
+npm run benchmark -- --character ./my-character.json --realm-bench ./realm-bench-data
+
+# Run API-Bank only with verbose output
+npm run benchmark -- --api-bank ./api-bank-data --verbose --max-tests 50
+
+# Quick test run
+npm run benchmark:quick
+```
+
+## Architecture
+
+### Planning Service Flow
+
+```
+User Request → Message Handler → Planning Service → Plan Creation → Plan Execution → Response
+                     ↓                                    ↓              ↓
+              Fallback to inline              Comprehensive        Working Memory
+              planning if service             planning with        & State Management
+              unavailable                     context analysis
+```
+
+### Execution Models
+
+1. **Sequential**: Steps execute one after another (default)
+2. **Parallel**: Independent steps execute simultaneously
+3. **DAG**: Complex dependency-aware execution with cycle detection
+
+### Plan Structure
+
+```typescript
+interface ActionPlan {
+  id: UUID;
+  goal: string;
+  steps: PlanStep[];
+  executionModel: 'sequential' | 'parallel' | 'dag';
+  constraints: PlanConstraint[];
+  createdAt: number;
+  estimatedDuration: number;
+}
+```
+
+## Benchmarking
+
+### REALM-Bench Tests
+
+Tests planning capabilities across different patterns:
+
+- **Sequential**: Simple step-by-step task execution
+- **Reactive**: Dynamic response to changing conditions
+- **Complex**: Multi-step reasoning with dependencies
+
+### API-Bank Tests
+
+Tests tool-use scenarios across 3 levels:
+
+- **Level 1**: Single API calls with simple parameters
+- **Level 2**: Multiple API calls with parameter dependencies
+- **Level 3**: Complex multi-turn scenarios with conditional logic
+
+### Metrics Collected
+
+- **Success Rates**: Overall and per-category success percentages
+- **Planning Quality**: LLM-evaluated plan structure and feasibility
+- **API Accuracy**: Correct tool selection and parameter extraction
+- **Response Quality**: ROUGE-L scores for response relevance
+- **Performance**: Planning time, execution time, memory usage
+
+## Configuration
+
+### Character Configuration
+
+```json
+{
+  "name": "PlanningAgent",
+  "plugins": ["@elizaos/plugin-planning"],
+  "system": "You are a planning-focused agent...",
+  "bio": ["I excel at breaking down complex tasks..."],
+  "topics": ["planning", "task management", "coordination"]
+}
+```
+
+### Benchmark Configuration
+
+```typescript
+const config: BenchmarkConfig = {
+  character: myCharacter,
+  plugins: [planningPlugin],
+  runRealmBench: true,
+  runApiBank: true,
+  maxTestsPerCategory: 100,
+  timeoutMs: 60000,
+  outputDir: './benchmark-results',
+  enableMetrics: true,
+};
+```
 
 ## API Reference
 
-### ActionResult Interface
+### IPlanningService Interface
 
 ```typescript
-interface ActionResult {
-  data?: any; // Data to pass to next action
-  success: boolean; // Whether the action succeeded
-  error?: string; // Error message if failed
-  continueChain?: boolean; // Whether to continue the chain
-  metadata?: Record<string, any>; // Additional metadata
-  cleanup?: () => Promise<void>; // Cleanup function if aborted
+interface IPlanningService {
+  // Simple planning for basic tasks
+  createSimplePlan(
+    runtime: IAgentRuntime,
+    message: Memory,
+    state: State
+  ): Promise<ActionPlan>;
+
+  // Comprehensive planning with context
+  createComprehensivePlan(
+    runtime: IAgentRuntime,
+    context: PlanningContext,
+    message: Memory,
+    state: State
+  ): Promise<ActionPlan>;
+
+  // Execute plans with callback handling
+  executePlan(
+    runtime: IAgentRuntime,
+    plan: ActionPlan,
+    message: Memory,
+    callback: HandlerCallback
+  ): Promise<PlanExecutionResult>;
+
+  // Validate plan structure and feasibility
+  validatePlan(
+    runtime: IAgentRuntime,
+    plan: ActionPlan
+  ): Promise<PlanValidationResult>;
+
+  // Adapt plans when execution fails
+  adaptPlan(
+    runtime: IAgentRuntime,
+    originalPlan: ActionPlan,
+    failureContext: PlanFailureContext
+  ): Promise<ActionPlan>;
 }
 ```
 
-### ActionOptions Interface
+### BenchmarkRunner
 
 ```typescript
-interface ActionOptions {
-  previousResults?: ActionResult[]; // Results from previous actions
-  abortSignal?: AbortSignal; // Signal to check for abort
-  chainContext?: {
-    chainId: string; // Unique ID for this chain
-    totalActions: number; // Total number of actions
-    currentIndex: number; // Current action index
-  };
-}
+const runner = new BenchmarkRunner(config);
+const results = await runner.runBenchmarks();
+
+// Results include comprehensive metrics and analysis
+console.log(`Success Rate: ${results.overallMetrics.overallSuccessRate}`);
+console.log(`Performance Score: ${results.summary.performanceScore}/100`);
 ```
 
-## Testing
+## Examples
 
-Run the tests to see action chaining in action:
+### Basic Planning Request
+
+```typescript
+// User: "Send an email to John about the meeting"
+// → Creates plan with SEND_EMAIL action
+// → Executes sequentially with parameter extraction
+```
+
+### Complex Multi-Step Request
+
+```typescript
+// User: "Research climate change, analyze trends, and create a summary report"
+// → Creates comprehensive plan:
+//   1. SEARCH for climate change data
+//   2. ANALYZE collected information
+//   3. COMPILE_REPORT with findings
+// → Executes with working memory to maintain context
+```
+
+### Tool-Use Scenario
+
+```typescript
+// User: "Book a restaurant reservation after checking my calendar"
+// → Creates DAG plan with dependencies:
+//   1. GET_CALENDAR_AVAILABILITY
+//   2. SEARCH_RESTAURANTS (depends on #1)
+//   3. MAKE_RESERVATION (depends on #2)
+```
+
+## Benchmark Results
+
+Example benchmark output:
+
+```
+🎯 PLANNING BENCHMARK RESULTS
+═══════════════════════════════════════════════════════
+📊 Overall Performance: 87/100
+✅ Success Rate: 78.5%
+📈 Tests Passed: 157/200
+⚡ Avg Planning Time: 1,247ms
+🚀 Avg Execution Time: 2,156ms
+
+🔍 Key Findings:
+• Strong performance in sequential planning pattern
+• High-quality plan generation capabilities
+• Multiple strength areas identified
+
+📋 REALM-Bench Results:
+  Success Rate: 82.1%
+  Tests: 82/100
+  Plan Quality: 85.3%
+
+🔧 API-Bank Results:
+  Success Rate: 75.0%
+  Tests: 75/100
+  API Call Accuracy: 78.9%
+  Response Quality: 71.2%
+```
+
+## Development
+
+### Project Structure
+
+```
+packages/plugin-planning/
+├── src/
+│   ├── services/
+│   │   └── planning-service.ts     # Core planning implementation
+│   ├── benchmarks/
+│   │   ├── realm-bench-adapter.ts  # REALM-Bench integration
+│   │   ├── api-bank-adapter.ts     # API-Bank integration
+│   │   └── benchmark-runner.ts     # Orchestrates all benchmarks
+│   ├── cli/
+│   │   └── benchmark-command.ts    # CLI interface
+│   ├── __tests__/
+│   │   ├── planning-integration.test.ts
+│   │   └── test-utils.ts
+│   └── index.ts                    # Plugin export
+├── scripts/
+│   └── run-benchmarks.ts           # Comprehensive benchmark runner
+└── README.md                       # This file
+```
+
+### Testing
 
 ```bash
+# Run unit tests
 npm test
+
+# Run integration tests
+npm run test:integration
+
+# Run benchmarks
+npm run benchmark
+
+# Quick benchmark test
+npm run benchmark:quick
 ```
 
-## Contributing
+### Contributing
 
-This plugin demonstrates the core action chaining functionality. Feel free to extend it with:
+1. **Fork the repository**
+2. **Create a feature branch**
+3. **Add tests for new functionality**
+4. **Run the full test suite**
+5. **Submit a pull request**
 
-- More sophisticated planning algorithms
-- Integration with external services
-- Complex DAG execution
-- Advanced error recovery strategies
+## Performance Considerations
+
+- **Planning Time**: Typically 1-3 seconds for complex plans
+- **Memory Usage**: Maintains working memory state for plan execution
+- **Token Consumption**: Optimized prompts for efficient LLM usage
+- **Scalability**: Handles plans with 100+ steps efficiently
+
+## Troubleshooting
+
+### Common Issues
+
+**Planning Service Not Available**
+```typescript
+// Check if service is registered
+const planningService = runtime.getService<IPlanningService>('planning');
+if (!planningService) {
+  // Falls back to inline planning in message handler
+}
+```
+
+**Benchmark Data Not Found**
+```bash
+# Ensure benchmark data is available
+mkdir -p benchmark-data/realm-bench
+mkdir -p benchmark-data/api-bank
+# Copy test data to these directories
+```
+
+**High Planning Latency**
+- Reduce `maxSteps` in planning preferences
+- Use smaller LLM models for simple plans
+- Enable plan caching for repeated patterns
 
 ## License
 
-MIT
+MIT License - see LICENSE file for details.
+
+## Related Packages
+
+- **@elizaos/core**: Core ElizaOS framework
+- **@elizaos/plugin-sql**: Database integration
+- **@elizaos/plugin-message-handling**: Message processing
+
+## Resources
+
+- [REALM-Bench Paper](https://github.com/genglongling/REALM-Bench)
+- [API-Bank Paper](https://github.com/AlibabaResearch/DAMO-ConvAI/tree/main/api-bank)
+- [ElizaOS Documentation](https://elizaos.github.io/docs)
+- [Planning Theory and Practice](https://planning.wiki)

@@ -1,0 +1,22 @@
+{
+  "name": "BasicTestAgent",
+  "system": "You are a helpful test agent. Always respond with 'Basic test successful!' when greeted.",
+  "bio": ["Test agent for basic CLI functionality validation"],
+  "messageExamples": [
+    [
+      {
+        "name": "user",
+        "content": {
+          "text": "hello"
+        }
+      },
+      {
+        "name": "BasicTestAgent",
+        "content": {
+          "text": "Basic test successful!"
+        }
+      }
+    ]
+  ],
+  "plugins": ["@elizaos/plugin-autonomy"]
+}

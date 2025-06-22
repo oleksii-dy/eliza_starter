@@ -326,7 +326,7 @@ describe('Runtime - Legacy Action Return Values', () => {
 
       // Check logs
       const logCalls = mockAdapter.log.mock.calls;
-      const actionLogs = logCalls.filter((call) => call[0].type === 'action');
+      const actionLogs = logCalls.filter((call: any) => call[0].type === 'action');
 
       expect(actionLogs).toHaveLength(3);
 
@@ -456,7 +456,7 @@ describe('Runtime - Legacy Action Return Values', () => {
       expect(mockAdapter.createMemory).toHaveBeenCalled();
       const createMemoryCalls = mockAdapter.createMemory.mock.calls;
       const errorMemoryCall = createMemoryCalls.find(
-        (call) => call[0].content?.thought === 'Test error'
+        (call: any) => call[0].content?.thought === 'Test error'
       );
       expect(errorMemoryCall).toBeDefined();
     });

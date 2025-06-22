@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const stagehandWebResearchScenario: Scenario = {
-  id: '8c9d0e1f-2a3b-4c5d-6e7f-8a9b0c1d2e3f',
+  id: uuidv4() as any,
   name: 'Automated Web Research',
   description:
     'Test Stagehand browser plugin conducting automated web research and information extraction',
@@ -10,7 +11,7 @@ export const stagehandWebResearchScenario: Scenario = {
 
   actors: [
     {
-      id: 'd0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a',
+      id: uuidv4() as any,
       name: 'Web Research Agent',
       role: 'subject',
       bio: 'An AI agent specialized in automated web research and data extraction',
@@ -20,7 +21,7 @@ export const stagehandWebResearchScenario: Scenario = {
       script: { steps: [] },
     },
     {
-      id: 'e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b',
+      id: uuidv4() as any,
       name: 'Market Researcher',
       role: 'assistant',
       script: {
@@ -72,7 +73,7 @@ export const stagehandWebResearchScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: 'f2a3b4c5-d6e7-8f9a-0b1c-2d3e4f5a6b7c',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Research assistance was provided',
         config: {
@@ -81,7 +82,7 @@ export const stagehandWebResearchScenario: Scenario = {
         },
       },
       {
-        id: 'a3b4c5d6-e7f8-9a0b-1c2d-3e4f5a6b7c8d',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Comparison factors were explained',
         config: {
@@ -90,7 +91,7 @@ export const stagehandWebResearchScenario: Scenario = {
         },
       },
       {
-        id: 'b4c5d6e7-f8a9-0b1c-2d3e-4f5a6b7c8d9e',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Summary was provided',
         config: {
@@ -101,10 +102,10 @@ export const stagehandWebResearchScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'd0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a',
+        actorId: uuidv4() as any,
         outcome: 'Provided web research assistance',
         verification: {
-          id: 'f8a9b0c1-d2e3-4f5a-6b7c-8d9e0f1a2b3c',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'Research assistance was completed',
           config: {

@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const secretsSecurityWorkflowScenario: Scenario = {
-  id: 'c0d1e2f3-a4b5-6c7d-8e9f-0a1b2c3d4e5f',
+  id: uuidv4() as any,
   name: 'Secure Secrets Management Workflow',
   description:
     'Test secrets manager plugin handling secure credential storage, rotation, and access control',
@@ -10,7 +11,7 @@ export const secretsSecurityWorkflowScenario: Scenario = {
 
   actors: [
     {
-      id: 'd1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6a',
+      id: uuidv4() as any,
       name: 'Security Agent',
       role: 'subject',
       bio: 'A security-focused agent that manages secrets and credentials securely',
@@ -20,7 +21,7 @@ export const secretsSecurityWorkflowScenario: Scenario = {
       script: { steps: [] },
     },
     {
-      id: 'e2f3a4b5-c6d7-8e9f-0a1b-2c3d4e5f6a7b',
+      id: uuidv4() as any,
       name: 'Security Engineer',
       role: 'assistant',
       script: {
@@ -72,7 +73,7 @@ export const secretsSecurityWorkflowScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: 'f3a4b5c6-d7e8-9f0a-1b2c-3d4e5f6a7b8c',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Security best practices were explained',
         config: {
@@ -82,7 +83,7 @@ export const secretsSecurityWorkflowScenario: Scenario = {
         },
       },
       {
-        id: 'a4b5c6d7-e8f9-0a1b-2c3d-4e5f6a7b8c9d',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Rotation and access control were covered',
         config: {
@@ -92,7 +93,7 @@ export const secretsSecurityWorkflowScenario: Scenario = {
         },
       },
       {
-        id: 'b5c6d7e8-f9a0-1b2c-3d4e-5f6a7b8c9d0e',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Auditing guidance was provided',
         config: {
@@ -104,10 +105,10 @@ export const secretsSecurityWorkflowScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'd1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5f6a',
+        actorId: uuidv4() as any,
         outcome: 'Provided security best practices guidance',
         verification: {
-          id: 'f9a0b1c2-d3e4-5f6a-7b8c-9d0e1f2a3b4c',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'Security guidance was provided',
           config: {

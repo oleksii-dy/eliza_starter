@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const dependencyresolutionScenario: Scenario = {
-  id: '5cd533a3-fea5-48b2-bb9c-3da2c2baf682',
+  id: uuidv4() as any,
   name: 'Plugin Dependency Resolution',
   description: 'Resolve complex plugin dependency chains',
   category: 'integration',
@@ -9,13 +10,13 @@ export const dependencyresolutionScenario: Scenario = {
   
   actors: [
     {
-      id: '40641772-9f5d-486f-9adc-c3066a472f38',
+      id: uuidv4() as any,
       name: 'Integration Agent',
       role: 'subject',
       script: { steps: [] },
     },
     {
-      id: 'ff459637-ff85-43d5-8f9e-41e3ab333bbd',
+      id: uuidv4() as any,
       name: 'Test User',
       role: 'subject',
       script: {
@@ -83,7 +84,7 @@ export const dependencyresolutionScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: '86a3f0ff-beef-47f4-a801-854fe9d69666',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'All required plugins were utilized',
         config: {
@@ -92,7 +93,7 @@ export const dependencyresolutionScenario: Scenario = {
         weight: 3,
       },
       {
-        id: '1b9e95cf-fa0a-4fe3-af4f-293ad1251b91',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Workflow completed successfully',
         config: {
@@ -101,7 +102,7 @@ export const dependencyresolutionScenario: Scenario = {
         weight: 4,
       },
       {
-        id: 'ce35bf49-b1ee-4dd9-b2d1-0a41040accdf',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Actions were properly chained',
         config: {
@@ -112,10 +113,10 @@ export const dependencyresolutionScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'ff459637-ff85-43d5-8f9e-41e3ab333bbd',
+        actorId: uuidv4() as any,
         outcome: 'Successfully completed integration workflow',
         verification: {
-          id: '28298306-4acd-4493-8c84-8b94720a8e19',
+          id: uuidv4() as any,
           type: 'llm',
           description: 'Integration test passed',
           config: {

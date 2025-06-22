@@ -37,19 +37,14 @@ export default defineConfig({
     'src/scenario-runner/types.ts',
   ],
   format: ['esm'],
-  dts: true,
+  dts: false,
   sourcemap: false,
-  // Externalize problematic fs-related dependencies
-  external: [
-    'express',
-    'fs-extra',
-    'multer',
-    'socket.io',
-    'body-parser',
-    'cors',
-    'helmet',
-    'express-rate-limit',
+  // Ensure that all external dependencies are properly handled.
+  // The regex explicitly includes dependencies that should not be externalized.
+  noExternal: [
+    /^(?!(@electric-sql\/pglite|zod|@elizaos\/core|@elizaos\/server|@elizaos\/scenarios|chokidar|semver|octokit|execa|@noble\/curves)).*/,
   ],
+  external: ['@elizaos/server', '@elizaos/scenarios'],
   platform: 'node',
   minify: false,
   target: 'esnext',

@@ -30,6 +30,9 @@ export interface ServiceTypeRegistry {
   TOKEN_DATA: 'token_data';
   TUNNEL: 'tunnel';
   MIGRATION: 'migration';
+  KNOWLEDGE: 'knowledge';
+  PLUGIN_MANAGER: 'plugin_manager';
+  SECURITY: 'security';
 }
 
 /**
@@ -99,6 +102,9 @@ export const ServiceType = {
   TOKEN_DATA: 'token_data',
   TUNNEL: 'tunnel',
   MIGRATION: 'migration',
+  KNOWLEDGE: 'knowledge',
+  PLUGIN_MANAGER: 'plugin_manager',
+  SECURITY: 'security',
 } as const satisfies ServiceTypeRegistry;
 
 /**

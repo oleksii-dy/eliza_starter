@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
 # Load BATS helpers - try multiple locations
-if [[ -f "${BATS_TEST_DIRNAME}/../../../../../node_modules/bats-support/load.bash" ]]; then
-  # Monorepo root location
+if [[ -f "${BATS_TEST_DIRNAME}/../../../../node_modules/bats-support/load.bash" ]]; then
+  # Monorepo root location from tests/bats/
+  source "${BATS_TEST_DIRNAME}/../../../../node_modules/bats-support/load.bash"
+  source "${BATS_TEST_DIRNAME}/../../../../node_modules/bats-assert/load.bash"
+elif [[ -f "${BATS_TEST_DIRNAME}/../../../../../node_modules/bats-support/load.bash" ]]; then
+  # Monorepo root location from tests/bats/subdirectory/
   source "${BATS_TEST_DIRNAME}/../../../../../node_modules/bats-support/load.bash"
   source "${BATS_TEST_DIRNAME}/../../../../../node_modules/bats-assert/load.bash"
 elif [[ -f "${BATS_TEST_DIRNAME}/../../../node_modules/bats-support/load.bash" ]]; then
@@ -13,6 +17,16 @@ elif [[ -d "/usr/local/lib/bats-support" ]]; then
   load '/usr/local/lib/bats-support/load'
   load '/usr/local/lib/bats-assert/load'
   load '/usr/local/lib/bats-file/load'
+else
+  # Fallback: try to find in common locations
+  echo "Warning: BATS helper libraries not found in expected locations" >&2
+  echo "BATS_TEST_DIRNAME: ${BATS_TEST_DIRNAME}" >&2
+  echo "Looking for paths:" >&2
+  echo "  ${BATS_TEST_DIRNAME}/../../../../node_modules/bats-support/load.bash" >&2
+  echo "  ${BATS_TEST_DIRNAME}/../../../../../node_modules/bats-support/load.bash" >&2
+  ls -la "${BATS_TEST_DIRNAME}/../../../../node_modules/" 2>/dev/null | grep bats >&2 || \
+  ls -la "${BATS_TEST_DIRNAME}/../../../../../node_modules/" 2>/dev/null | grep bats >&2 || \
+  echo "No bats modules found in either location" >&2
 fi
 
 # Global variables

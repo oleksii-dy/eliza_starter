@@ -45,6 +45,16 @@ export interface IAgentRuntime extends IDatabaseAdapter {
 
   registerService(service: typeof Service): Promise<void>;
 
+  // Core interface providers
+  getTrustProvider(): import('./trust').ITrustProvider | null;
+  registerTrustProvider(provider: import('./trust').ITrustProvider): void;
+
+  getIdentityManager(): import('./identity').IIdentityManager | null;
+  registerIdentityManager(manager: import('./identity').IIdentityManager): void;
+
+  getPaymentProvider(): import('./payment').IPaymentProvider | null;
+  registerPaymentProvider(provider: import('./payment').IPaymentProvider): void;
+
   /**
    * Get the configuration manager for plugin component configuration
    */
@@ -177,6 +187,12 @@ export interface IAgentRuntime extends IDatabaseAdapter {
    */
   getWorlds(options?: GetWorldsOptions): Promise<World[]>;
 
+  /**
+   * Get all worlds without filtering - delegates to adapter.getAllWorlds()
+   * @returns Promise resolving to an array of all World objects
+   */
+  getAllWorlds(): Promise<World[]>;
+
   registerSendHandler(source: string, handler: SendHandlerFunction): void;
 
   sendMessageToTarget(target: TargetInfo, content: Content): Promise<void>;
@@ -210,8 +226,8 @@ export interface IAgentRuntime extends IDatabaseAdapter {
    * Enable a specific component dynamically
    */
   enableComponent(
-    pluginName: string, 
-    componentName: string, 
+    pluginName: string,
+    componentName: string,
     componentType: 'action' | 'provider' | 'evaluator' | 'service',
     component: any
   ): Promise<void>;

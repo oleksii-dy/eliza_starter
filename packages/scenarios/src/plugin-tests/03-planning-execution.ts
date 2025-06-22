@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const planningExecutionScenario: Scenario = {
-  id: '7f8e9d0c-1a2b-3c4d-5e6f-7a8b9c0d1e2f',
+  id: uuidv4() as any,
   name: 'Comprehensive Planning',
   description:
     'Test planning plugin creating comprehensive plans that are executed through multiple plugins',
@@ -10,7 +11,7 @@ export const planningExecutionScenario: Scenario = {
 
   actors: [
     {
-      id: '9a0b1c2d-3e4f-5a6b-7c8d-9e0f1a2b3c4d',
+      id: uuidv4() as any,
       name: 'Strategic Planning Agent',
       role: 'subject',
       bio: 'A strategic planning AI that orchestrates complex multi-step workflows',
@@ -25,7 +26,7 @@ export const planningExecutionScenario: Scenario = {
       script: { steps: [] },
     },
     {
-      id: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+      id: uuidv4() as any,
       name: 'Business Analyst',
       role: 'assistant',
       script: {
@@ -77,7 +78,7 @@ export const planningExecutionScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Planning assistance was provided',
         config: {
@@ -86,7 +87,7 @@ export const planningExecutionScenario: Scenario = {
         },
       },
       {
-        id: 'c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Phases were outlined',
         config: {
@@ -95,7 +96,7 @@ export const planningExecutionScenario: Scenario = {
         },
       },
       {
-        id: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Priorities were identified',
         config: {
@@ -106,10 +107,10 @@ export const planningExecutionScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: '9a0b1c2d-3e4f-5a6b-7c8d-9e0f1a2b3c4d',
+        actorId: uuidv4() as any,
         outcome: 'Provided strategic planning assistance',
         verification: {
-          id: 'c9d0e1f2-a3b4-5c6d-7e8f-9a0b1c2d3e4f',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'Planning guidance was provided',
           config: {

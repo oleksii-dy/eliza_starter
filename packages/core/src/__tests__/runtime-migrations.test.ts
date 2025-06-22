@@ -68,6 +68,14 @@ describe('AgentRuntime Plugin Migrations', () => {
       const runtimeAny = runtime as any;
       runtimeAny._plugins = [mockSqlPlugin];
 
+      // Also ensure the public plugins getter returns the same array
+      Object.defineProperty(runtime, 'plugins', {
+        get: function () {
+          return runtimeAny._plugins;
+        },
+        configurable: true,
+      });
+
       await runtime.runPluginMigrations();
 
       expect(mockLogger.info).toHaveBeenCalledWith('Found 0 plugins with schemas to migrate.');
@@ -101,7 +109,7 @@ describe('AgentRuntime Plugin Migrations', () => {
       await runtime.runPluginMigrations();
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('SQL plugin not found or missing runPluginMigrations method')
+        'SQL plugin not found, skipping plugin migrations.'
       );
     });
 

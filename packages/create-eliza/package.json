@@ -12,7 +12,7 @@
   },
   "scripts": {
     "create-eliza": "bun run index.mjs",
-    "test": "echo \"No tests configured for create-eliza\""
+    "test": "vitest run"
   },
   "license": "MIT",
   "author": {

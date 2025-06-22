@@ -5,84 +5,150 @@
  * with the CLI package usage patterns.
  */
 
-import { describe, it, expect, mock, jest } from 'bun:test';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock core dependencies
-mock.module('@elizaos/core', () => ({
-  logger: {
-    warn: jest.fn(),
-    info: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    success: jest.fn(),
-  },
-  validateUuid: (id: string) => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(id) ? id : null;
-  },
-  Service: class MockService {
-    constructor() {}
-    async initialize() {}
-    async cleanup() {}
-  },
-  createUniqueUuid: jest.fn(() => '123e4567-e89b-12d3-a456-426614174000'),
-  ChannelType: {
-    DIRECT: 'direct',
-    GROUP: 'group',
-  },
-  EventType: {
-    MESSAGE: 'message',
-    USER_JOIN: 'user_join',
-  },
-  SOCKET_MESSAGE_TYPE: {
-    MESSAGE: 'message',
-    AGENT_UPDATE: 'agent_update',
-    CONNECTION: 'connection',
-  },
-}));
+vi.mock('@elizaos/core', async () => {
+  const actual = await vi.importActual('@elizaos/core');
+  return {
+    ...actual,
+    logger: {
+      warn: vi.fn(),
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      success: vi.fn(),
+    },
+    validateUuid: (id: string) => {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      return uuidRegex.test(id) ? id : null;
+    },
+    Service: class MockService {
+      constructor() {}
+      async initialize() {}
+      async cleanup() {}
+    },
+    createUniqueUuid: vi.fn(() => '123e4567-e89b-12d3-a456-426614174000'),
+    ChannelType: {
+      DIRECT: 'direct',
+      GROUP: 'group',
+    },
+    EventType: {
+      MESSAGE: 'message',
+      USER_JOIN: 'user_join',
+    },
+    SOCKET_MESSAGE_TYPE: {
+      MESSAGE: 'message',
+      AGENT_UPDATE: 'agent_update',
+      CONNECTION: 'connection',
+    },
+    AgentRuntime: class MockAgentRuntime {
+      constructor(config: any) {
+        this.agentId = config.agentId;
+        this.character = config.character;
+        this.adapter = config.adapter;
+        this.plugins = config.plugins || [];
+      }
+      async initialize() {
+        // Mock successful initialization
+        return Promise.resolve();
+      }
+      agentId: string;
+      character: any;
+      adapter: any;
+      plugins: any[];
+    },
+  };
+});
 
 // Mock plugin-sql
-mock.module('@elizaos/plugin-sql', () => ({
-  createDatabaseAdapter: jest.fn(() => ({
-    init: jest.fn().mockReturnValue(Promise.resolve(undefined)),
-    close: jest.fn().mockReturnValue(Promise.resolve(undefined)),
-    getDatabase: jest.fn(() => ({
-      execute: jest.fn().mockReturnValue(Promise.resolve([])),
+vi.mock('@elizaos/plugin-sql', () => ({
+  createDatabaseAdapter: vi.fn(() => ({
+    // Core database methods
+    init: vi.fn().mockResolvedValue(undefined),
+    close: vi.fn().mockResolvedValue(undefined),
+    getDatabase: vi.fn(() => ({
+      execute: vi.fn().mockResolvedValue([]),
     })),
-    getMessageServers: jest.fn(() =>
+    db: { execute: vi.fn().mockResolvedValue([]) },
+    isReady: vi.fn().mockResolvedValue(true),
+    runMigrations: vi.fn().mockResolvedValue(undefined),
+
+    // Agent management
+    getAgents: vi.fn().mockResolvedValue([]),
+    getAgent: vi.fn().mockResolvedValue({
+      id: '00000000-0000-0000-0000-000000000000',
+      name: 'MigrationAgent',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+    createAgent: vi.fn().mockResolvedValue(true),
+    updateAgent: vi.fn().mockResolvedValue(true),
+    deleteAgent: vi.fn().mockResolvedValue(true),
+
+    // Entity management
+    getEntityById: vi.fn((id) => {
+      // Return a mock entity for the migration agent
+      if (id === '00000000-0000-0000-0000-000000000000') {
+        return Promise.resolve({
+          id: '00000000-0000-0000-0000-000000000000',
+          names: ['MigrationAgent'],
+          metadata: {},
+          agentId: '00000000-0000-0000-0000-000000000000',
+        });
+      }
+      return Promise.resolve(null);
+    }),
+    getEntityByIds: vi.fn().mockResolvedValue([]),
+    getEntitiesForRoom: vi.fn().mockResolvedValue([]),
+    createEntity: vi.fn().mockResolvedValue('test-entity-id'),
+    createEntities: vi.fn().mockResolvedValue(true),
+    updateEntity: vi.fn().mockResolvedValue(undefined),
+
+    // Message server management
+    getMessageServers: vi.fn(() =>
       Promise.resolve([{ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' }])
     ),
-    createMessageServer: jest
+    createMessageServer: vi
       .fn()
-      .mockReturnValue(Promise.resolve({ id: '00000000-0000-0000-0000-000000000000' })),
-    getMessageServerById: jest
-      .fn()
-      .mockReturnValue(
-        Promise.resolve({ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' })
-      ),
-    addAgentToServer: jest.fn().mockReturnValue(Promise.resolve(undefined)),
-    db: { execute: jest.fn().mockReturnValue(Promise.resolve([])) },
+      .mockResolvedValue({ id: '00000000-0000-0000-0000-000000000000', name: 'Default Server' }),
+    addAgentToServer: vi.fn().mockResolvedValue(undefined),
+    getChannelsForServer: vi.fn().mockResolvedValue([]),
+    createChannel: vi.fn().mockResolvedValue({ id: '123e4567-e89b-12d3-a456-426614174000' }),
+    getAgentsForServer: vi.fn().mockResolvedValue([]),
+
+    // Add other methods as needed by tests
+    getMemories: vi.fn().mockResolvedValue([]),
+    createMemory: vi.fn().mockResolvedValue('test-memory-id'),
+    searchMemories: vi.fn().mockResolvedValue([]),
   })),
-  DatabaseMigrationService: jest.fn(() => ({
-    initializeWithDatabase: jest.fn().mockReturnValue(Promise.resolve(undefined)),
-    discoverAndRegisterPluginSchemas: jest.fn(),
-    runAllPluginMigrations: jest.fn().mockReturnValue(Promise.resolve(undefined)),
+  DatabaseMigrationService: vi.fn(() => ({
+    initializeWithDatabase: vi.fn().mockResolvedValue(undefined),
+    discoverAndRegisterPluginSchemas: vi.fn(),
+    runAllPluginMigrations: vi.fn().mockResolvedValue(undefined),
   })),
-  plugin: {},
+  plugin: {
+    name: '@elizaos/plugin-sql',
+    description: 'SQL database plugin',
+    actions: [],
+    providers: [],
+    evaluators: [],
+    services: [],
+  },
 }));
 
 // Mock filesystem
-mock.module('node:fs', () => ({
+vi.mock('node:fs', () => ({
   default: {
-    mkdirSync: jest.fn(),
-    existsSync: jest.fn(() => true),
-    readFileSync: jest.fn(() => '{}'),
-    writeFileSync: jest.fn(),
+    mkdirSync: vi.fn(),
+    existsSync: vi.fn(() => true),
+    readFileSync: vi.fn(() => '{}'),
+    writeFileSync: vi.fn(),
   },
-  mkdirSync: jest.fn(),
-  existsSync: jest.fn(() => true),
-  readFileSync: jest.fn(() => '{}'),
-  writeFileSync: jest.fn(),
+  mkdirSync: vi.fn(),
+  existsSync: vi.fn(() => true),
+  readFileSync: vi.fn(() => '{}'),
+  writeFileSync: vi.fn(),
 }));
 
 describe('CLI Compatibility Tests', () => {
@@ -113,10 +179,10 @@ describe('CLI Compatibility Tests', () => {
       const server = new AgentServer();
 
       // Simulate CLI's pattern of extending the server
-      const mockStartAgent = jest.fn();
-      const mockStopAgent = jest.fn();
-      const mockLoadCharacterTryPath = jest.fn();
-      const mockJsonToCharacter = jest.fn();
+      const mockStartAgent = vi.fn();
+      const mockStopAgent = vi.fn();
+      const mockLoadCharacterTryPath = vi.fn();
+      const mockJsonToCharacter = vi.fn();
 
       (server as any).startAgent = mockStartAgent;
       (server as any).stopAgent = mockStopAgent;
@@ -241,10 +307,10 @@ describe('CLI Compatibility Tests', () => {
 
       // Mock HTTP server for testing
       const mockServer = {
-        listen: jest.fn((_port, callback) => {
+        listen: vi.fn((_port, callback) => {
           if (callback) callback();
         }),
-        close: jest.fn((callback) => {
+        close: vi.fn((callback) => {
           if (callback) callback();
         }),
       };
@@ -265,18 +331,18 @@ describe('CLI Compatibility Tests', () => {
       const mockRuntime = {
         agentId: '123e4567-e89b-12d3-a456-426614174000' as any,
         character: { name: 'TestAgent' },
-        registerPlugin: jest.fn().mockReturnValue(Promise.resolve(undefined)),
+        registerPlugin: vi.fn().mockResolvedValue(undefined),
         plugins: [],
-        registerProvider: jest.fn(),
-        registerAction: jest.fn(),
+        registerProvider: vi.fn(),
+        registerAction: vi.fn(),
       } as any;
 
       // Mock database methods that registration uses
       server.database = {
         ...server.database,
-        getMessageServers: jest.fn().mockReturnValue(Promise.resolve([])),
-        addAgentToServer: jest.fn().mockReturnValue(Promise.resolve(undefined)),
-        db: { execute: jest.fn().mockReturnValue(Promise.resolve([])) },
+        getMessageServers: vi.fn().mockResolvedValue([]),
+        addAgentToServer: vi.fn().mockResolvedValue(undefined),
+        db: { execute: vi.fn().mockResolvedValue([]) },
       } as any;
 
       // Test CLI's agent registration pattern

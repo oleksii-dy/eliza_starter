@@ -1,17 +1,17 @@
 // Export all example scenarios
-export { default as truthVsLieScenario } from './truth-vs-lie';
-export { default as researchTaskScenario } from './research-task';
-export { default as codingChallengeScenario } from './coding-challenge';
-export { default as workflowPlanningScenario } from './workflow-planning';
+export { default as truthVsLieScenario } from './truth-vs-lie.js';
+export { default as researchTaskScenario } from './research-task.js';
+export { default as codingChallengeScenario } from './coding-challenge.js';
+export { default as workflowPlanningScenario } from './workflow-planning.js';
 
-import { truthVsLieScenario } from './truth-vs-lie';
-import { researchTaskScenario } from './research-task';
-import { codingChallengeScenario } from './coding-challenge';
-import { workflowPlanningScenario } from './workflow-planning';
+import { truthVsLieScenario } from './truth-vs-lie.js';
+import { researchTaskScenario } from './research-task.js';
+import { codingChallengeScenario } from './coding-challenge.js';
+import { workflowPlanningScenario } from './workflow-planning.js';
 
 // Import plugin test scenarios
-import { pluginTestScenarios } from './plugin-tests';
-export { pluginTestScenarios } from './plugin-tests';
+import { pluginTestScenarios } from './plugin-tests/index.js';
+export { pluginTestScenarios } from './plugin-tests/index.js';
 
 // Import rolodex scenarios
 import {
@@ -20,7 +20,7 @@ import {
   trustEvolutionScenario,
   complexNetworkScenario,
   followUpManagementScenario,
-} from './rolodex';
+} from './rolodex/index.js';
 
 export {
   entityIntroductionScenario,
@@ -28,7 +28,7 @@ export {
   trustEvolutionScenario,
   complexNetworkScenario,
   followUpManagementScenario,
-} from './rolodex';
+} from './rolodex/index.js';
 
 // Export individual example scenarios
 export const exampleScenarios = [
@@ -65,10 +65,10 @@ export const builtInScenarios = [
 export const scenarios = allScenarios;
 
 // Export test runner and related utilities
-export { 
-  ConsolidatedScenarioTestRunner, 
+export {
+  ConsolidatedScenarioTestRunner,
   ScenarioManifestValidator,
-  runScenarioTests 
+  runScenarioTests,
 } from './test-runner.js';
 
 // Scenario categories

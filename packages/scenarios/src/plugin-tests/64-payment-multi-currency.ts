@@ -1,4 +1,5 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from '../types.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const paymentMultiCurrencyScenario: Scenario = {
   id: 'payment-multi-currency-001',
@@ -9,7 +10,7 @@ const paymentMultiCurrencyScenario: Scenario = {
 
   actors: [
     {
-      id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567894',
+      id: uuidv4() as any,
       name: 'Multi-Currency Agent',
       role: 'subject',
       bio: 'An AI agent accepting payments in multiple cryptocurrencies',
@@ -35,7 +36,7 @@ Priority: USDC > ETH > SOL > other coins`,
       script: { steps: [] },
     },
     {
-      id: 'b2c3d4e5-f6a7-8901-bcde-f23456789016',
+      id: uuidv4() as any,
       name: 'ETH Holder',
       role: 'assistant',
       bio: 'A user preferring to pay with ETH',
@@ -74,7 +75,7 @@ Priority: USDC > ETH > SOL > other coins`,
       },
     },
     {
-      id: 'c3d4e5f6-a7b8-9012-cdef-345678901236',
+      id: uuidv4() as any,
       name: 'SOL User',
       role: 'observer',
       bio: 'A Solana ecosystem user',
@@ -197,7 +198,7 @@ Priority: USDC > ETH > SOL > other coins`,
     ],
     expectedOutcomes: [
       {
-        actorId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567894',
+        actorId: uuidv4() as any,
         outcome: 'Successfully processed multi-currency payments',
         verification: {
           id: 'multi-currency-complete',

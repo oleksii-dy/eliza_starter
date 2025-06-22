@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const defistrategy38Scenario: Scenario = {
-  id: 'a5356475-a305-48a9-9e2d-fae5892920a2',
+  id: uuidv4() as any,
   name: 'DeFi Strategy Optimization 38',
   description: 'Optimize DeFi strategies across chains',
   category: 'integration',
@@ -9,13 +10,13 @@ export const defistrategy38Scenario: Scenario = {
   
   actors: [
     {
-      id: 'b7e02899-68f7-4fe8-bc3d-1f0f3d0e6db3',
+      id: uuidv4() as any,
       name: 'Integration Agent',
       role: 'subject',
       script: { steps: [] },
     },
     {
-      id: 'cd6e1533-983e-4fa5-b1d4-8244e239d927',
+      id: uuidv4() as any,
       name: 'Test User',
       role: 'subject',
       script: {
@@ -83,7 +84,7 @@ export const defistrategy38Scenario: Scenario = {
   verification: {
     rules: [
       {
-        id: '86a3f0ff-beef-47f4-a801-854fe9d69666',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'All required plugins were utilized',
         config: {
@@ -92,7 +93,7 @@ export const defistrategy38Scenario: Scenario = {
         weight: 3,
       },
       {
-        id: '1b9e95cf-fa0a-4fe3-af4f-293ad1251b91',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Workflow completed successfully',
         config: {
@@ -101,7 +102,7 @@ export const defistrategy38Scenario: Scenario = {
         weight: 4,
       },
       {
-        id: 'ce35bf49-b1ee-4dd9-b2d1-0a41040accdf',
+        id: uuidv4() as any,
         type: 'llm',
         description: 'Actions were properly chained',
         config: {
@@ -112,10 +113,10 @@ export const defistrategy38Scenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: 'cd6e1533-983e-4fa5-b1d4-8244e239d927',
+        actorId: uuidv4() as any,
         outcome: 'Successfully completed integration workflow',
         verification: {
-          id: '28298306-4acd-4493-8c84-8b94720a8e19',
+          id: uuidv4() as any,
           type: 'llm',
           description: 'Integration test passed',
           config: {

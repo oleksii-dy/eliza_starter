@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const secretsIntegrationWorkflowScenario: Scenario = {
-  id: 'f3e7d9c1-8b2a-4f6e-9d1c-5a7b9e3f1d5c',
+  id: uuidv4() as any,
   name: 'Secrets Manager Integration Workflow',
   description:
     'Test comprehensive secrets manager integration including automatic secret detection, secure web forms, multi-level storage, and seamless integration with plugin development',
@@ -10,7 +11,7 @@ export const secretsIntegrationWorkflowScenario: Scenario = {
 
   actors: [
     {
-      id: '5f1d3c7e-9a2b-4e6f-8c1d-7b9e3a5f1d3c',
+      id: uuidv4() as any,
       name: 'Secrets Management Agent',
       role: 'subject',
       bio: 'An intelligent agent specializing in secure secret management and plugin development',
@@ -49,7 +50,7 @@ Always prioritize security while maintaining excellent user experience.`,
       script: { steps: [] },
     },
     {
-      id: '6a2e4f8c-1b3d-5e7f-9a2e-4c6f8a2e4f8c',
+      id: uuidv4() as any,
       name: 'Security-Conscious Developer',
       role: 'assistant',
       script: {
@@ -151,7 +152,7 @@ Always prioritize security while maintaining excellent user experience.`,
   verification: {
     rules: [
       {
-        id: '1f3e7d9c-8b2a-4f6e-9d1c-5a7b9e3f1d5c',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Automatic secret detection performed',
         config: {
@@ -160,7 +161,7 @@ Always prioritize security while maintaining excellent user experience.`,
         weight: 4,
       },
       {
-        id: '2e4f8c1b-3d5e-7f9a-2e4c-6f8a2e4f8c1b',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Secure web form generated',
         config: {
@@ -170,7 +171,7 @@ Always prioritize security while maintaining excellent user experience.`,
         weight: 5,
       },
       {
-        id: '3d5e7f9a-2e4c-6f8a-2e4f-8c1b3d5e7f9a',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Storage level guidance provided',
         config: {
@@ -179,7 +180,7 @@ Always prioritize security while maintaining excellent user experience.`,
         weight: 3,
       },
       {
-        id: '4c6f8a2e-4f8c-1b3d-5e7f-9a2e4c6f8a2e',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Secret rotation workflow explained',
         config: {
@@ -188,7 +189,7 @@ Always prioritize security while maintaining excellent user experience.`,
         weight: 3,
       },
       {
-        id: '5b7f9a2e-4c6f-8a2e-4f8c-1b3d5e7f9a2e',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Plugin development integration',
         config: {
@@ -198,7 +199,7 @@ Always prioritize security while maintaining excellent user experience.`,
         weight: 4,
       },
       {
-        id: '6a8e4f8c-1b3d-5e7f-9a2e-4c6f8a2e4f8c',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Secret validation and error handling',
         config: {
@@ -207,7 +208,7 @@ Always prioritize security while maintaining excellent user experience.`,
         weight: 3,
       },
       {
-        id: '79d2e4c6-f8a2-e4f8-c1b3-d5e7f9a2e4c6',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Secret listing and verification',
         config: {
@@ -217,7 +218,7 @@ Always prioritize security while maintaining excellent user experience.`,
         weight: 3,
       },
       {
-        id: '8c1f5e7f-9a2e-4c6f-8a2e-4f8c1b3d5e7f',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Collaboration security guidance',
         config: {
@@ -226,7 +227,7 @@ Always prioritize security while maintaining excellent user experience.`,
         weight: 3,
       },
       {
-        id: '9b3e7f9a-2e4c-6f8a-2e4f-8c1b3d5e7f9a',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Comprehensive security workflow',
         config: {
@@ -235,7 +236,7 @@ Always prioritize security while maintaining excellent user experience.`,
         weight: 5,
       },
       {
-        id: 'a2f4c6f8-a2e4-f8c1-b3d5-e7f9a2e4c6f8',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'User experience optimization',
         config: {
@@ -246,10 +247,10 @@ Always prioritize security while maintaining excellent user experience.`,
     ],
     expectedOutcomes: [
       {
-        actorId: '5f1d3c7e-9a2b-4e6f-8c1d-7b9e3a5f1d3c',
+        actorId: uuidv4() as any,
         outcome: 'Successfully demonstrated comprehensive secure secret management workflow',
         verification: {
-          id: 'b3f6e8a2-e4f8-c1b3-d5e7-f9a2e4c6f8a2',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'Complete secure workflow demonstrated',
           config: {

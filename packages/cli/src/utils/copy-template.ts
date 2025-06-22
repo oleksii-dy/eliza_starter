@@ -180,12 +180,29 @@ export async function copyTemplate(
       logger.debug('Removed private field from template package.json');
     }
 
+    // Define which packages are published to npm vs workspace-only
+    const publishedPackages = [
+      '@elizaos/core',
+      '@elizaos/cli',
+      '@elizaos/plugin-discord',
+      '@elizaos/plugin-sql'
+    ];
+    
+    const isPublishedPackage = (packageName: string): boolean => {
+      return publishedPackages.includes(packageName);
+    };
+
     // Only update dependency versions - leave everything else unchanged
     if (packageJson.dependencies) {
       for (const depName of Object.keys(packageJson.dependencies)) {
         if (depName.startsWith('@elizaos/')) {
-          logger.info(`Setting ${depName} to use version ${cliPackageVersion}`);
-          packageJson.dependencies[depName] = 'latest';
+          if (isPublishedPackage(depName)) {
+            logger.info(`Setting ${depName} to use published version: latest`);
+            packageJson.dependencies[depName] = 'latest';
+          } else {
+            logger.info(`Setting ${depName} to use workspace version: workspace:*`);
+            packageJson.dependencies[depName] = 'workspace:*';
+          }
         }
       }
     }
@@ -193,8 +210,13 @@ export async function copyTemplate(
     if (packageJson.devDependencies) {
       for (const depName of Object.keys(packageJson.devDependencies)) {
         if (depName.startsWith('@elizaos/')) {
-          logger.info(`Setting dev dependency ${depName} to use version ${cliPackageVersion}`);
-          packageJson.devDependencies[depName] = 'latest';
+          if (isPublishedPackage(depName)) {
+            logger.info(`Setting dev dependency ${depName} to use published version: latest`);
+            packageJson.devDependencies[depName] = 'latest';
+          } else {
+            logger.info(`Setting dev dependency ${depName} to use workspace version: workspace:*`);
+            packageJson.devDependencies[depName] = 'workspace:*';
+          }
         }
       }
     }

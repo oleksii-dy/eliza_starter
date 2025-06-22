@@ -7,7 +7,8 @@ import type {
   Evaluator, 
   IAgentRuntime,
   Character,
-  IDatabaseAdapter 
+  IDatabaseAdapter,
+  UUID
 } from '../types';
 import { Service } from '../types/service';
 
@@ -167,13 +168,13 @@ describe('Runtime Configuration System E2E Tests', () => {
       ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
       
       // Entity methods
-      getEntityByIds: vi.fn().mockImplementation((ids) => {
-        const entities = ids.map(id => createdEntities.get(id)).filter(Boolean);
+      getEntityByIds: vi.fn().mockImplementation((ids: UUID[]) => {
+        const entities = ids.map((id: UUID) => createdEntities.get(id)).filter(Boolean);
         return Promise.resolve(entities.length > 0 ? entities : null);
       }),
       getEntitiesForRoom: vi.fn().mockResolvedValue([]),
-      createEntities: vi.fn().mockImplementation((entities) => {
-        entities.forEach(entity => {
+      createEntities: vi.fn().mockImplementation((entities: any[]) => {
+        entities.forEach((entity: any) => {
           const entityData = { id: entity.id, names: entity.names, metadata: entity.metadata, agentId: entity.agentId };
           createdEntities.set(entity.id, entityData);
         });
@@ -303,12 +304,12 @@ describe('Runtime Configuration System E2E Tests', () => {
       const pluginConfig = configManager.getPluginConfiguration('test-plugin');
       
       expect(pluginConfig).toBeDefined();
-      expect(pluginConfig.pluginName).toBe('test-plugin');
-      expect(pluginConfig.enabled).toBe(true);
-      expect(pluginConfig.actions).toBeDefined();
-      expect(pluginConfig.providers).toBeDefined();
-      expect(pluginConfig.evaluators).toBeDefined();
-      expect(pluginConfig.services).toBeDefined();
+      expect(pluginConfig!.pluginName).toBe('test-plugin');
+      expect(pluginConfig!.enabled).toBe(true);
+      expect(pluginConfig!.actions).toBeDefined();
+      expect(pluginConfig!.providers).toBeDefined();
+      expect(pluginConfig!.evaluators).toBeDefined();
+      expect(pluginConfig!.services).toBeDefined();
     });
 
     it('should update component configuration and reflect in runtime', async () => {
@@ -521,18 +522,19 @@ describe('Runtime Configuration System E2E Tests', () => {
       const allConfigs = configManager.listConfigurations();
       const testPluginConfig = allConfigs.find(c => c.pluginName === 'test-plugin');
       expect(testPluginConfig).toBeDefined();
-      expect(testPluginConfig.actions['TEST_ACTION'].enabled).toBe(false);
-      expect(testPluginConfig.actions['TEST_ACTION'].settings?.testSetting).toBe('value');
+      expect(testPluginConfig!.actions['TEST_ACTION'].enabled).toBe(false);
+      expect(testPluginConfig!.actions['TEST_ACTION'].settings?.testSetting).toBe('value');
     });
 
     it('should handle configuration override levels correctly', async () => {
       const configManager = runtime.getConfigurationManager();
       
       // Set plugin-level default
-      await configManager.setOverride('plugin', 'test-plugin', {
+      await configManager.setOverride('database', 'test-plugin', {
         actions: {
           TEST_ACTION: {
             enabled: true,
+            overrideLevel: 'database',
             settings: { level: 'plugin' }
           }
         }
@@ -543,6 +545,7 @@ describe('Runtime Configuration System E2E Tests', () => {
         actions: {
           TEST_ACTION: {
             enabled: false,
+            overrideLevel: 'gui',
             settings: { level: 'gui' }
           }
         }

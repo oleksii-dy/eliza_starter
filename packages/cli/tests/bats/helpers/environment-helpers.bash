@@ -24,7 +24,7 @@ is_monorepo_context() {
   local check_dir="$current_dir"
   
   while [[ "$check_dir" != "/" ]]; do
-    if [[ -f "$check_dir/pnpm-workspace.yaml" ]] || [[ -f "$check_dir/lerna.json" ]]; then
+    if [[ -f "$check_dir/bun-workspace.yaml" ]] || [[ -f "$check_dir/lerna.json" ]]; then
       return 0
     fi
     check_dir="$(dirname "$check_dir")"

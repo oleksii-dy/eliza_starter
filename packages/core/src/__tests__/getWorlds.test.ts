@@ -146,14 +146,11 @@ describe('getWorlds functionality', () => {
     mockCharacter = {
       id: 'agent-1' as UUID,
       name: 'Test Agent',
-      clients: [],
       plugins: [],
       bio: [],
-      lore: [],
       knowledge: [],
       messageExamples: [],
       postExamples: [],
-      people: [],
       topics: [],
       adjectives: [],
       style: { all: [], chat: [], post: [] },
@@ -165,7 +162,7 @@ describe('getWorlds functionality', () => {
     });
 
     // Register the database adapter
-    runtime.registerDatabaseAdapter(mockAdapter as IDatabaseAdapter);
+    runtime.registerDatabaseAdapter(mockAdapter as unknown as IDatabaseAdapter);
   });
 
   describe('AgentRuntime.getWorlds()', () => {

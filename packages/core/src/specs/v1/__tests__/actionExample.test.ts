@@ -112,7 +112,7 @@ describe('ActionExample Module', () => {
 
       expect(result.user).toBe(v2Example.name);
       expect(result.content.text).toBe(v2Example.content.text);
-      expect(result.content.action).toBe(v2Example.content.actions[0]);
+      expect(result.content.action).toBe(v2Example.content.actions?.[0]);
     });
 
     it('should handle v2 example with minimal content', () => {

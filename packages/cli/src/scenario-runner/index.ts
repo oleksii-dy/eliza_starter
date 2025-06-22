@@ -507,22 +507,41 @@ export class ScenarioRunner {
           // Store the message in the subject's memory
           subjectActor
             .runtime!.createMemory(messageForSubject, 'messages')
-            .then(() => {
-              // Trigger message processing through the runtime's event system
-              subjectActor
-                .runtime!.emitEvent(EventType.MESSAGE_RECEIVED, {
-                  runtime: subjectActor.runtime!,
-                  message: messageForSubject,
-                  callback,
-                })
-                .then(() => {
-                  logger.info('Message event emitted successfully');
-                })
-                .catch((error) => {
-                  logger.error(`Error emitting message event:`, error);
-                  clearTimeout(timeout);
-                  resolve();
-                });
+            .then(async () => {
+              // Use the runtime's message handler directly if available
+              const messageManager = (subjectActor.runtime as any).messageManager;
+              if (messageManager && messageManager.handleMessage) {
+                logger.info('Using message manager to handle message');
+                try {
+                  const response = await messageManager.handleMessage({
+                    message: messageForSubject,
+                    runtime: subjectActor.runtime!,
+                    callback,
+                  });
+                  if (response) {
+                    callback(response);
+                  }
+                } catch (error) {
+                  logger.error('Error handling message through message manager:', error);
+                }
+              } else {
+                // Fallback to event system
+                logger.info('Using event system to handle message');
+                subjectActor
+                  .runtime!.emitEvent(EventType.MESSAGE_RECEIVED, {
+                    runtime: subjectActor.runtime!,
+                    message: messageForSubject,
+                    callback,
+                  })
+                  .then(() => {
+                    logger.info('Message event emitted successfully');
+                  })
+                  .catch((error) => {
+                    logger.error(`Error emitting message event:`, error);
+                    clearTimeout(timeout);
+                    resolve();
+                  });
+              }
             })
             .catch((error) => {
               logger.error(`Error creating memory for subject:`, error);

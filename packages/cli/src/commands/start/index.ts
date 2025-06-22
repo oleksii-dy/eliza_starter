@@ -16,6 +16,10 @@ export const start = new Command()
   .option('-c, --configure', 'Reconfigure services and AI models')
   .option('-p, --port <port>', 'Port to listen on', validatePort)
   .option('--character <paths...>', 'Character file(s) to use')
+  .option('-t, --timeout <seconds>', 'Run for specified duration (seconds)', parseInt)
+  .option('--autonomous', 'Enable autonomous mode with OODA loop')
+  .option('--admin-port <port>', 'Admin interface port', parseInt)
+  .option('--save-logs-to <dir>', 'Directory to save logs')
   .hook('preAction', async () => {
     await displayBanner();
   })

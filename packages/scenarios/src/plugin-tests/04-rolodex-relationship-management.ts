@@ -1,7 +1,8 @@
-import type { Scenario } from "../types.js";
+import type { Scenario } from "../types.js"
+import { v4 as uuidv4 } from 'uuid';
 
 export const rolodexRelationshipScenario: Scenario = {
-  id: '2ffd1591-6fe6-4fd7-b5d7-c66c005a2e6c',
+  id: uuidv4() as any,
   name: 'Complex Entity and Relationship Management',
   description:
     'Test Rolodex plugin tracking entities, relationships, and interactions across multiple contexts',
@@ -10,7 +11,7 @@ export const rolodexRelationshipScenario: Scenario = {
 
   actors: [
     {
-      id: '3df32928-c921-4704-a860-7dc78d997080',
+      id: uuidv4() as any,
       name: 'Relationship Manager Agent',
       role: 'subject',
       bio: 'A specialized agent for tracking professional relationships and organizational networks',
@@ -20,7 +21,7 @@ export const rolodexRelationshipScenario: Scenario = {
       script: { steps: [] },
     },
     {
-      id: 'b35ef4c1-3aeb-4c98-a715-d00b682568c7',
+      id: uuidv4() as any,
       name: 'Business Networker',
       role: 'assistant',
       script: {
@@ -73,7 +74,7 @@ export const rolodexRelationshipScenario: Scenario = {
   verification: {
     rules: [
       {
-        id: '6acbb2a9-1269-4ef0-afb2-97186c8e265a',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Agent acknowledged entity information',
         config: {
@@ -83,7 +84,7 @@ export const rolodexRelationshipScenario: Scenario = {
         },
       },
       {
-        id: '805c4307-97d4-4842-8644-da35ea2a256c',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Relationship tracking was offered',
         config: {
@@ -92,7 +93,7 @@ export const rolodexRelationshipScenario: Scenario = {
         },
       },
       {
-        id: '838d89f5-54b8-417f-ade2-43bc7a3d8aec',
+        id: uuidv4() as any,
         type: 'llm' as const,
         description: 'Professional details were recognized',
         config: {
@@ -104,10 +105,10 @@ export const rolodexRelationshipScenario: Scenario = {
     ],
     expectedOutcomes: [
       {
-        actorId: '3df32928-c921-4704-a860-7dc78d997080',
+        actorId: uuidv4() as any,
         outcome: 'Provided relationship management assistance',
         verification: {
-          id: '3fd8e3ac-50a6-4808-bd38-be447f2550d1',
+          id: uuidv4() as any,
           type: 'llm' as const,
           description: 'Relationship tracking assistance was provided',
           config: {
