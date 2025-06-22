@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/select';
 import { getAllVoiceModels, getVoiceModelByValue, providerPluginMap } from '../config/voice-models';
 import { useElevenLabsVoices } from '@/hooks/use-elevenlabs-voices';
+import { useContainerWidth } from '@/hooks/use-container-width';
 import { Trash, Loader2, RotateCcw, Download, Upload, Save, StopCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { agentTemplates, getTemplateById } from '@/config/agent-templates';
@@ -86,33 +87,6 @@ export type CharacterFormProps = {
   };
 };
 
-// Custom hook to detect container width and determine if labels should be shown
-const useContainerWidth = (threshold: number = 768) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [showLabels, setShowLabels] = useState(true);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width } = entry.contentRect;
-        setShowLabels(width >= threshold);
-      }
-    });
-
-    resizeObserver.observe(container);
-
-    // Initial check
-    const { width } = container.getBoundingClientRect();
-    setShowLabels(width >= threshold);
-
-    return () => resizeObserver.disconnect();
-  }, [threshold]);
-
-  return { containerRef, showLabels };
-};
 
 export default function CharacterForm({
   characterValue,

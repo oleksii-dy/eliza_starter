@@ -24,7 +24,7 @@ import { useChannelDetails, useChannelMessages, useChannelParticipants, useClear
 import type { UiMessage } from '@/hooks/messaging/use-channel-messages';
 import { useSocketChat } from '@/hooks/use-socket-chat';
 import { useToast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api';
+import { elizaClient } from '@/lib/eliza-client';
 import clientLogger from '@/lib/logger';
 import { parseMediaFromText, removeMediaUrlsFromText, type MediaInfo } from '@/lib/media-utils';
 import {
@@ -438,7 +438,7 @@ export default function Chat({
       async () => {
         clientLogger.info(`[Chat] Deleting DM channel ${channelToDelete.id}`);
         try {
-          await apiClient.deleteChannel(channelToDelete.id);
+          await elizaClient.messaging.deleteChannel(channelToDelete.id);
 
           // --- Optimistically update the React-Query cache so UI refreshes instantly ---
           queryClient.setQueryData<MessageChannel[] | undefined>(
@@ -660,14 +660,14 @@ export default function Chat({
       return;
     }
 
-    const data = await apiClient.getChannelTitle(finalChannelIdForHooks, contextId);
+    const titleResponse = await elizaClient.messaging.getChannelTitle(finalChannelIdForHooks, contextId);
 
-    const title = data?.data?.title;
-    const participants = await apiClient.getChannelParticipants(chatState.currentDmChannelId);
-    if (title && participants) {
-      await apiClient.updateChannel(finalChannelIdForHooks, {
+    const title = titleResponse?.title;
+    const participantsResponse = await elizaClient.messaging.getChannelParticipants(chatState.currentDmChannelId);
+    if (title && participantsResponse) {
+      await elizaClient.messaging.updateChannel(finalChannelIdForHooks, {
         name: title,
-        participantCentralUserIds: participants.data,
+        participantCentralUserIds: participantsResponse.participants,
       });
 
       const currentUserId = getEntityId();
@@ -1235,7 +1235,7 @@ export default function Chat({
                         },
                         async () => {
                           try {
-                            await apiClient.deleteChannel(finalChannelIdForHooks);
+                            await elizaClient.messaging.deleteChannel(finalChannelIdForHooks);
                             toast({
                               title: 'Group Deleted',
                               description: 'The group has been successfully deleted.',

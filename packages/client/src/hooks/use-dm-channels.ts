@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
+import { elizaClient } from '@/lib/eliza-client';
 import { useToast } from '@/hooks/use-toast';
 import { type UUID, ChannelType } from '@elizaos/core';
 import type { MessageChannel } from '@/types';
@@ -23,7 +23,7 @@ export function useGetOrCreateDmChannel() {
         '[useGetOrCreateDmChannel] Getting or creating canonical DM channel with target:',
         targetUserId
       );
-      const response = await apiClient.getOrCreateDmChannel(targetUserId, currentUserId);
+      const response = await elizaClient.messaging.getOrCreateDmChannel({ targetUserId, currentUserId });
       return response.data;
     },
     onSuccess: (data) => {
@@ -68,7 +68,7 @@ export function useDmChannelsForAgent(
         agentId
       );
 
-      const response = await apiClient.getChannelsForServer(serverId);
+      const response = await elizaClient.messaging.getServerChannels(serverId);
       const allChannels = response.data?.channels || [];
 
       const dmChannels = allChannels.filter((channel) => {
@@ -147,7 +147,7 @@ export function useCreateDmChannel() {
         throw new Error('Channel name cannot be empty for a new DM conversation.');
       }
 
-      const newChannelResponse = await apiClient.createCentralGroupChat({
+      const newChannelResponse = await elizaClient.messaging.createGroupChannel({
         name: channelName.trim(),
         participantCentralUserIds: [currentUserId, agentId],
         type: ChannelType.DM, // Set type to DM

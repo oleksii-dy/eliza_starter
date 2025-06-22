@@ -1,5 +1,5 @@
 import { useToast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api';
+import { elizaClient } from '@/lib/eliza-client';
 import { useMutation } from '@tanstack/react-query';
 import { Ellipsis, StopCircle, Volume2 } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -14,7 +14,7 @@ export default function ChatTtsButton({ agentId, text }: { agentId: string; text
 
   const mutation = useMutation({
     mutationKey: ['tts', text],
-    mutationFn: () => apiClient.ttsStream(agentId, text),
+    mutationFn: () => elizaClient.audio.textToSpeech(agentId, { text }),
     onSuccess: (data: Blob) => {
       setAudioBlob(data);
       play();

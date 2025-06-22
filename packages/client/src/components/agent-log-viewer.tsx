@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useAgents } from '../hooks/use-query-hooks';
-import { apiClient } from '../lib/api';
+import { elizaClient } from '../lib/eliza-client';
 import SocketIOManager, { type LogStreamData } from '../lib/socketio-manager';
 
 // Types
@@ -247,7 +247,7 @@ export function AgentLogViewer({ agentName, level }: AgentLogViewerProps) {
   } = useQuery<LogResponse>({
     queryKey: ['logs', selectedLevel, selectedAgentName],
     queryFn: () =>
-      apiClient.getGlobalLogs({
+      elizaClient.system.getGlobalLogs({
         level: selectedLevel === 'all' ? '' : selectedLevel,
         agentName: selectedAgentName === 'all' ? undefined : selectedAgentName,
       }),
@@ -379,7 +379,7 @@ export function AgentLogViewer({ agentName, level }: AgentLogViewerProps) {
     ) {
       try {
         setIsClearing(true);
-        await apiClient.deleteGlobalLogs();
+        await elizaClient.system.deleteGlobalLogs();
         queryClient.invalidateQueries({ queryKey: ['logs'] });
 
         // Also clear WebSocket logs if in WebSocket mode

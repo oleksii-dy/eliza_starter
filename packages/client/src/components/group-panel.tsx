@@ -3,7 +3,7 @@ import { Separator } from '@/components/ui/separator';
 import { GROUP_CHAT_SOURCE } from '@/constants';
 import { useAgentsWithDetails } from '@/hooks/agents';
 import { useChannels } from '@/hooks/messaging';
-import { apiClient } from '@/lib/api';
+import { elizaClient } from '@/lib/eliza-client';
 import { type Agent, AgentStatus, type UUID, validateUuid } from '@elizaos/core';
 import { useQueryClient, useQuery, useMutation, type UseQueryResult } from '@tanstack/react-query';
 import { Loader2, Trash, X } from 'lucide-react';
@@ -75,7 +75,7 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
   // Create group mutation
   const createGroupMutation = useMutation({
     mutationFn: async ({ name, participantIds }: { name: string; participantIds: UUID[] }) => {
-      return await apiClient.createCentralGroupChat({
+      return await elizaClient.messaging.createGroupChannel({
         name,
         participantCentralUserIds: participantIds,
         type: ChannelType.GROUP,
@@ -105,7 +105,7 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
   const updateGroupMutation = useMutation({
     mutationFn: async ({ name, participantIds }: { name: string; participantIds: UUID[] }) => {
       if (!channelId) throw new Error('Channel ID is required for update');
-      return await apiClient.updateChannel(channelId, {
+      return await elizaClient.messaging.updateChannel(channelId, {
         name,
         participantCentralUserIds: participantIds,
       });
@@ -130,7 +130,7 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
   const deleteGroupMutation = useMutation({
     mutationFn: async () => {
       if (!channelId) throw new Error('Channel ID is required for delete');
-      return await apiClient.deleteChannel(channelId);
+      return await elizaClient.messaging.deleteChannel(channelId);
     },
     onSuccess: () => {
       toast({ title: 'Group Deleted', description: 'The group has been successfully deleted.' });
@@ -163,7 +163,7 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
     queryKey: ['channelParticipants', channelId],
     queryFn: async () => {
       if (!channelId) return { success: true, data: [] };
-      return apiClient.getChannelParticipants(channelId);
+      return elizaClient.messaging.getChannelParticipants(channelId);
     },
     enabled: !!channelId,
   });

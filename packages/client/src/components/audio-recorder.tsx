@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api';
+import { elizaClient } from '@/lib/eliza-client';
 import { cn } from '@/lib/utils';
 import type { UUID } from '@elizaos/core';
 import { useMutation } from '@tanstack/react-query';
@@ -68,7 +68,7 @@ export const AudioRecorder = ({ className, timerClassName, agentId, onChange }: 
 
   const mutation = useMutation({
     mutationKey: ['whisper'],
-    mutationFn: (file: Blob) => apiClient.transcribeAudio(agentId, file),
+    mutationFn: (file: Blob) => elizaClient.audio.transcribeAudio(agentId, file),
     onSuccess: (data: { data: { text: string } }) => {
       if (data?.data?.text) {
         onChange(data.data.text);

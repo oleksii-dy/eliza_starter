@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { getContentTypeFromMimeType } from '@elizaos/core';
 import { UUID, Media, ChannelType } from '@elizaos/core';
 import { randomUUID } from '@/lib/utils';
-import { apiClient } from '@/lib/api';
+import { elizaClient } from '@/lib/eliza-client';
 import { useToast } from '@/hooks/use-toast';
 import clientLogger from '@/lib/logger';
 
@@ -125,8 +125,8 @@ export function useFileUpload({ agentId, channelId, chatType }: UseFileUploadPro
         try {
           const uploadResult =
             chatType === ChannelType.DM && agentId
-              ? await apiClient.uploadAgentMedia(agentId, fileData.file)
-              : await apiClient.uploadChannelMedia(channelId!, fileData.file);
+              ? await elizaClient.media.uploadAgentMedia(agentId, fileData.file)
+              : await elizaClient.media.uploadChannelMedia(channelId!, fileData.file);
 
           if (uploadResult.success) {
             return {

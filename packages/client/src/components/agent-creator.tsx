@@ -1,6 +1,6 @@
 import CharacterForm from '@/components/character-form';
 import { useToast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api';
+import { elizaClient } from '@/lib/eliza-client';
 import type { Agent } from '@elizaos/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -55,8 +55,8 @@ export default function AgentCreator() {
   const handleSubmit = async (character: Agent) => {
     try {
       const completeCharacter = ensureRequiredFields(character);
-      await apiClient.createAgent({
-        characterJson: completeCharacter,
+      await elizaClient.agents.createAgent({
+        character: completeCharacter,
       });
 
       // Invalidate the characters query to refresh the characters list

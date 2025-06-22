@@ -4,7 +4,7 @@ import { useAgentManagement } from '@/hooks/use-agent-management';
 import ConfirmationDialog from '@/components/confirmation-dialog';
 import { useConfirmation } from '@/hooks/use-confirmation';
 import { useToast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api';
+import { elizaClient } from '@/lib/eliza-client';
 import type { Agent, UUID } from '@elizaos/core';
 import { AgentStatus } from '@elizaos/core';
 import { useQueryClient } from '@tanstack/react-query';
@@ -71,7 +71,7 @@ export default function AgentSettings({
             settings: { secrets },
           };
 
-          await apiClient.updateAgent(agentId, forceUpdate as Partial<Agent>);
+          await elizaClient.agents.updateAgent(agentId, forceUpdate as Partial<Agent>);
 
           queryClient.invalidateQueries({ queryKey: ['agent', agentId] });
           queryClient.invalidateQueries({ queryKey: ['agents'] });
@@ -110,7 +110,7 @@ export default function AgentSettings({
       };
 
       // Send the partial update
-      await apiClient.updateAgent(agentId, partialUpdate as Agent);
+      await elizaClient.agents.updateAgent(agentId, partialUpdate as Agent);
 
       // Invalidate both the agent query and the agents list
       queryClient.invalidateQueries({ queryKey: ['agent', agentId] });
@@ -178,7 +178,7 @@ export default function AgentSettings({
           }
         }, 8000);
 
-        const response = await apiClient.deleteAgent(agentId);
+        const response = await elizaClient.agents.deleteAgent(agentId);
         responseReceived = true;
 
         if (navigationTimer) {
