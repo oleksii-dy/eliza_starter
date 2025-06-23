@@ -14,6 +14,13 @@ import {
   deployAliAgentTokenAction,
   deployHiveUtilityTokenAction,
   executeAirdropAction,
+  createHiveAction,
+  updateHiveUriAction,
+  joinHiveAction,
+  leaveHiveAction,
+  getLinkedAssetDetailsAction,
+  handleGovernanceErrorsAction,
+  participateInVoteAction,
   // Other actions will be added here
 } from './actions'; // Import from actions/index.ts
 
@@ -103,6 +110,12 @@ export const hiveActions: Action[] = [
   distributeHiveTokensAction,
   createLiquidityPoolAction,
   deployHiveUtilityTokenAction,
+  createHiveAction,
+  updateHiveUriAction,
+  joinHiveAction,
+  leaveHiveAction,
+  getLinkedAssetDetailsAction,
+  // Other hive actions will be added here
 ];
 
 /**
@@ -113,7 +126,11 @@ export const tokenActions: Action[] = [deployAliAgentTokenAction, executeAirdrop
 /**
  * Actions for governance operations (proposals, voting)
  */
-export const governanceActions: Action[] = [];
+export const governanceActions: Action[] = [
+  handleGovernanceErrorsAction,
+  participateInVoteAction,
+  // Other governance actions will be added here
+];
 
 /**
  * Actions for market data retrieval and analysis

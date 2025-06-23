@@ -37,7 +37,7 @@ export const ALI_TOKEN_ADDRESS = '0x97c806e7665d3afd84a8fe1837921403d59f3dcc';
 
 /**
  * ALI Token Contract Address (Ethereum Mainnet)
- * This is the ALI token used for paying for iNFT keys on Ethereum.
+ * This is the token used for iNFT intelligence upgrades and for paying for iNFT keys on Ethereum.
  * Reference: https://etherscan.io/token/0x6B0b3a982b4634aC68dD83a4DBF02311cE324181
  */
 export const ALI_TOKEN_ADDRESS_ETHEREUM = '0x6B0b3a982b4634aC68dD83a4DBF02311cE324181';
@@ -57,7 +57,7 @@ export const DEFAULT_POD_NFT_CONTRACT_ADDRESS = 'YOUR_DEFAULT_POD_NFT_CONTRACT_A
 export const DISPERSE_APP_ADDRESS = '0xD152f549545093347A162Dce210e7293f1452150';
 
 /**
- * Hive Registry Contract Address (Base Mainnet)
+ * Hive Registry Contract Address (Base Mainnet & Ethereum Mainnet)
  * Used for Hive operations - creating hives, linking assets, etc.
  * Reference: https://github.com/AI-Protocol-Official/Documentation/blob/main/guides/how-to-hive.md
  */
@@ -82,3 +82,23 @@ export const UNISWAP_V3_FEE_TIERS = {
   MEDIUM: 3000, // 0.3%
   HIGH: 10000, // 1%
 } as const;
+
+/**
+ * AI Pod Contract Address (Base Mainnet)
+ * From documentation: 0xa189121eE045AEAA8DA80b72F7a1132e3B216237
+ */
+export const AI_POD_CONTRACT_ADDRESS = '0xa189121eE045AEAA8DA80b72F7a1132e3B216237';
+
+/**
+ * IntelligentNFTv2 Contract Address (Ethereum Mainnet)
+ * This contract manages iNFT records and ALI token locking for intelligence upgrades.
+ * Reference: https://etherscan.io/address/0xa189121eE045AEAA8DA80b72F7a1132e3B216237#code
+ */
+export const INTELLIGENT_NFT_V2_ADDRESS = '0xa189121eE045AEAA8DA80b72F7a1132e3B216237';
+
+/**
+ * PersonalityPod Contract Address (Ethereum Mainnet)
+ * This ERC-721 contract represents the "soul" or "personality" of an iNFT.
+ * Reference: https://etherscan.io/address/0xDd70AF84BA86F29bf437756B655110D134b5651C
+ */
+export const PERSONALITY_POD_CONTRACT_ADDRESS = '0xDd70AF84BA86F29bf437756B655110D134b5651C';
