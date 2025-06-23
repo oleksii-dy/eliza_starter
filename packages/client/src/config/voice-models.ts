@@ -182,7 +182,13 @@ export const getRequiredPluginForProvider = (
   provider: string,
   metadata: PluginMetadata[] = installedPluginMetadata,
 ): string | undefined => {
-  const map = provider === undefined ? {} : buildProviderPluginMap(metadata);
+  // Use the pre-built map for the default case to avoid re-computation.
+  if (metadata === installedPluginMetadata) {
+    return providerPluginMap[provider];
+  }
+
+  // Build the map on-demand only for custom metadata.
+  const map = buildProviderPluginMap(metadata);
   return map[provider];
 };
 
