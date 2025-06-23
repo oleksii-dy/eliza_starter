@@ -28,6 +28,7 @@ import {
   providerPluginMap,
 } from '../config/voice-models';
 import { Button } from './ui/button';
+import EnvVarsModal from './env-vars-modal';
 
 interface PluginsPanelProps {
   characterValue: Agent;
@@ -72,6 +73,8 @@ export default function PluginsPanel({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [isEnvVarsModalOpen, setIsEnvVarsModalOpen] = useState(false);
+  const [selectedPluginForEnvVars, setSelectedPluginForEnvVars] = useState<string>('');
 
   // Ensure we always have arrays and normalize plugin names
   const safeCharacterPlugins = useMemo(() => {
@@ -131,14 +134,44 @@ export default function PluginsPanel({
   const handlePluginAdd = (plugin: string) => {
     if (safeCharacterPlugins.includes(plugin)) return;
 
+    // Show environment variables modal for plugin configuration
+    setSelectedPluginForEnvVars(plugin);
+    setIsEnvVarsModalOpen(true);
+    setIsDialogOpen(false);
+  };
+
+  const handleEnvVarsSave = (envVars: Record<string, string>) => {
+    // Add the plugin to the character
     if (setCharacterValue.addPlugin) {
-      setCharacterValue.addPlugin(plugin);
+      setCharacterValue.addPlugin(selectedPluginForEnvVars);
     } else if (setCharacterValue.updateField) {
       const currentPlugins = Array.isArray(characterValue.plugins)
         ? [...characterValue.plugins]
         : [];
-      setCharacterValue.updateField('plugins', [...currentPlugins, plugin]);
+      setCharacterValue.updateField('plugins', [...currentPlugins, selectedPluginForEnvVars]);
     }
+
+    // Show success message with environment variables info
+    if (Object.keys(envVars).length > 0) {
+      toast({
+        title: 'Plugin Added Successfully',
+        description: `${selectedPluginForEnvVars} has been added with ${Object.keys(envVars).length} environment variables configured.`,
+      });
+    } else {
+      toast({
+        title: 'Plugin Added Successfully',
+        description: `${selectedPluginForEnvVars} has been added. No environment variables were configured.`,
+      });
+    }
+
+    // Reset state
+    setSelectedPluginForEnvVars('');
+    setIsEnvVarsModalOpen(false);
+  };
+
+  const handleEnvVarsClose = () => {
+    setSelectedPluginForEnvVars('');
+    setIsEnvVarsModalOpen(false);
   };
 
   const handlePluginRemove = (plugin: string) => {
@@ -268,11 +301,10 @@ export default function PluginsPanel({
                             variant="ghost"
                             size="sm"
                             key={plugin}
-                            className={`inline-flex items-center rounded-full ${
-                              isEssential
-                                ? 'bg-blue-800 text-blue-700 hover:bg-blue-600'
-                                : 'bg-primary/10 text-primary hover:bg-primary/20'
-                            } px-2.5 py-0.5 text-xs font-medium h-auto`}
+                            className={`inline-flex items-center rounded-full ${isEssential
+                              ? 'bg-blue-800 text-blue-700 hover:bg-blue-600'
+                              : 'bg-primary/10 text-primary hover:bg-primary/20'
+                              } px-2.5 py-0.5 text-xs font-medium h-auto`}
                             onClick={() => {
                               // Don't allow removing if it's required by the voice model
                               if (isRequiredByVoice) {
@@ -350,7 +382,6 @@ export default function PluginsPanel({
                               onClick={() => {
                                 handlePluginAdd(plugin);
                                 setSearchQuery('');
-                                setIsDialogOpen(false);
                               }}
                             >
                               {plugin}
@@ -369,6 +400,14 @@ export default function PluginsPanel({
           )}
         </div>
       </div>
+
+      {/* Environment Variables Modal */}
+      <EnvVarsModal
+        isOpen={isEnvVarsModalOpen}
+        onClose={handleEnvVarsClose}
+        onSave={handleEnvVarsSave}
+        pluginName={selectedPluginForEnvVars}
+      />
     </div>
   );
 }
