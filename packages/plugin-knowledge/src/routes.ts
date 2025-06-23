@@ -1,5 +1,5 @@
 import type { IAgentRuntime, Route, UUID, Memory, KnowledgeItem } from '@elizaos/core';
-import { MemoryType, createUniqueUuid, logger, ModelType } from '@elizaos/core';
+import { MemoryType, createUniqueUuid, logger, ModelType, getTempPath } from '@elizaos/core';
 import { KnowledgeService } from './service';
 import fs from 'node:fs'; // For file operations in upload
 import path from 'node:path'; // For path operations
@@ -8,7 +8,7 @@ import { fetchUrlContent, normalizeS3Url } from './utils.ts'; // Import utils fu
 
 // Create multer configuration function that uses runtime settings
 const createUploadMiddleware = (runtime: IAgentRuntime) => {
-  const uploadDir = runtime.getSetting('KNOWLEDGE_UPLOAD_DIR') || '/tmp/uploads/';
+  const uploadDir = runtime.getSetting('KNOWLEDGE_UPLOAD_DIR') || getTempPath('uploads');
   const maxFileSize = parseInt(runtime.getSetting('KNOWLEDGE_MAX_FILE_SIZE') || '52428800'); // 50MB default
   const maxFiles = parseInt(runtime.getSetting('KNOWLEDGE_MAX_FILES') || '10');
   const allowedMimeTypes = runtime.getSetting('KNOWLEDGE_ALLOWED_MIME_TYPES')?.split(',') || [

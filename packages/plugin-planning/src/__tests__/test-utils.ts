@@ -16,7 +16,6 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       postExamples: [],
       topics: ['planning', 'testing'],
       knowledge: [],
-      clients: [],
       plugins: ['@elizaos/plugin-planning'],
     } as Character,
 

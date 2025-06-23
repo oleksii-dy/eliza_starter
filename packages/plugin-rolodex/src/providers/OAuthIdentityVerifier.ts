@@ -35,10 +35,10 @@ export class OAuthIdentityVerifier {
       if (!oauthService) {
         return {
           success: false,
-          valid: false,
+          isVerified: false,
           confidence: 0,
           reason: 'OAuth service not available',
-          metaproofData: { error: 'OAuth service not found' },
+          metadata: { error: 'OAuth service not found' },
         };
       }
 
@@ -48,10 +48,10 @@ export class OAuthIdentityVerifier {
       if (!oauthService.isProviderAvailable(platform)) {
         return {
           success: false,
-          valid: false,
+          isVerified: false,
           confidence: 0,
           reason: `OAuth provider '${platform}' not available`,
-          metaproofData: { availableProviders: oauthService.getAvailableProviders() },
+          metadata: { availableProviders: oauthService.getAvailableProviders() },
         };
       }
 
@@ -65,10 +65,10 @@ export class OAuthIdentityVerifier {
         } else {
           return {
             success: false,
-            valid: false,
+            isVerified: false,
             confidence: 0,
             reason: 'OAuth verification requires authorization code and state',
-            metaproofData: { 
+            metadata: { 
               hint: 'Use createOAuthChallenge to start OAuth flow',
               availableProviders: oauthService.getAvailableProviders(),
             },
@@ -78,10 +78,10 @@ export class OAuthIdentityVerifier {
         logger.error('[OAuthIdentityVerifier] OAuth callback handling failed:', error);
         return {
           success: false,
-          valid: false,
+          isVerified: false,
           confidence: 0,
           reason: `OAuth verification failed: ${error.message}`,
-          metaproofData: { error: error.message },
+          metadata: { error: error.message },
         };
       }
 
@@ -89,10 +89,10 @@ export class OAuthIdentityVerifier {
       if (expectedUserId && userProfile.id !== expectedUserId) {
         return {
           success: false,
-          valid: false,
+          isVerified: false,
           confidence: 0,
           reason: 'OAuth user ID does not match expected user',
-          metaproofData: { 
+          metadata: { 
             expected: expectedUserId, 
             actual: userProfile.id,
             platform,
@@ -105,15 +105,15 @@ export class OAuthIdentityVerifier {
 
       // Update trust score for verified platform
       await this.entityGraphService.updateTrust(entityId, {
-        proofType: 'oauth-verification',
+        type: 'oauth-verification',
         impact: 0.15, // Significant trust boost for OAuth verification
         reason: `Verified ${platform} identity: ${userProfile.name} (${userProfile.email})`,
-        metaproofData: {
+        metadata: {
           platform,
           verifiedId: userProfile.id,
           verifiedEmail: userProfile.email,
           verifiedName: userProfile.name,
-          verifiedAt: userProfile.validAt,
+          verifiedAt: userProfile.verifiedAt,
         },
       });
 
@@ -129,10 +129,10 @@ export class OAuthIdentityVerifier {
 
       return {
         success: true,
-        valid: true,
+        isVerified: true,
         confidence: 0.95, // High confidence for OAuth verification
         reason: `Successfully verified ${platform} identity`,
-        metaproofData: {
+        metadata: {
           platform,
           verifiedProfile: {
             id: userProfile.id,
@@ -140,7 +140,7 @@ export class OAuthIdentityVerifier {
             name: userProfile.name,
             picture: userProfile.picture,
           },
-          verifiedAt: userProfile.validAt,
+          verifiedAt: userProfile.verifiedAt,
           trustBoost: 0.15,
         },
       };
@@ -148,10 +148,10 @@ export class OAuthIdentityVerifier {
       logger.error('[OAuthIdentityVerifier] OAuth verification error:', error);
       return {
         success: false,
-        valid: false,
+        isVerified: false,
         confidence: 0,
         reason: `Verification failed: ${error.message}`,
-        metaproofData: { error: error.message },
+        metadata: { error: error.message },
       };
     }
   }
@@ -224,7 +224,7 @@ export class OAuthIdentityVerifier {
         const entity = result.entity;
         const platformData = entity.platforms?.[platform];
         
-        if (platformData?.valid && (
+        if (platformData?.verified && (
           platformData.id === platformId ||
           platformData.userId === platformId ||
           platformData.username === platformId
@@ -265,8 +265,8 @@ export class OAuthIdentityVerifier {
           name: userProfile.name,
           username: userProfile.name,
           picture: userProfile.picture,
-          valid: true,
-          verifiedAt: userProfile.validAt,
+          isVerified: true,
+          verifiedAt: userProfile.verifiedAt,
           verificationMethod: 'oauth',
           linkedAt: new Date().toISOString(),
         },
@@ -276,7 +276,7 @@ export class OAuthIdentityVerifier {
       await this.entityGraphService.batchUpdateEntities([
         {
           entityId,
-          proofData: {
+          data: {
             platforms: updatedPlatforms,
             updatedAt: new Date().toISOString(),
           },
@@ -343,8 +343,8 @@ export class OAuthIdentityVerifier {
           await this.entityGraphService.batchUpdateEntities([
             {
               entityId,
-              proofData: {
-                metaproofData: updatedMetadata,
+              data: {
+                metadata: updatedMetadata,
                 updatedAt: new Date().toISOString(),
               },
             },

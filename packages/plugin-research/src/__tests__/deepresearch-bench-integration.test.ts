@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { IAgentRuntime, UUID, Memory, State } from '@elizaos/core';
+import { IAgentRuntime, UUID, Memory, State, Service, ServiceTypeName } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { ResearchService } from '../service';
 import researchPlugin from '../index';
@@ -17,8 +17,7 @@ class MockRuntime implements IAgentRuntime {
     messageExamples: [],
     postExamples: [],
     topics: [],
-    knowledge: [],
-    clients: [],
+    knowledge: [],,
     plugins: [],
   };
 
@@ -26,7 +25,7 @@ class MockRuntime implements IAgentRuntime {
   actions: any[] = [];
   evaluators: any[] = [];
   plugins: any[] = [];
-  services: Map<string, any> = new Map();
+  services: Map<ServiceTypeName, Service> = new Map();
   memory: Map<string, Memory> = new Map();
   settings: Map<string, string> = new Map();
 

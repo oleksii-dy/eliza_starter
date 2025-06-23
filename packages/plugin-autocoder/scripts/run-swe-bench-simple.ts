@@ -36,7 +36,6 @@ async function runSWEBenchReal() {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      clients: [],
       plugins: [],
     },
     // Add action processing capability

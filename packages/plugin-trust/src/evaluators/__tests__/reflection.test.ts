@@ -3,18 +3,6 @@ import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
 import { reflectionEvaluator } from '../reflection';
 
-// Mock getEntityDetails
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
-  return {
-    ...actual,
-    getEntityDetails: vi.fn().mockResolvedValue([
-      { id: 'entity-1', names: ['User 1'] },
-      { id: 'test-agent', names: ['Test Agent'] },
-    ]),
-  };
-});
-
 const createMockRuntime = (): IAgentRuntime => {
   return {
     agentId: 'test-agent' as UUID,
@@ -29,6 +17,19 @@ const createMockRuntime = (): IAgentRuntime => {
     ]),
     getConversationLength: vi.fn().mockReturnValue(4),
     getRelationships: vi.fn().mockResolvedValue([]),
+    getRoom: vi.fn().mockResolvedValue({
+      id: 'room-1',
+      name: 'Test Room',
+      source: 'test'
+    }),
+    getEntitiesForRoom: vi.fn().mockResolvedValue([
+      { id: 'entity-1', names: ['User 1'] },
+      { id: 'test-agent', names: ['Test Agent'] }
+    ]),
+    getMemoriesByRoomIds: vi.fn().mockResolvedValue([
+      { userId: 'entity-1', agentId: 'test-agent' },
+      { userId: 'test-agent', agentId: 'test-agent' }
+    ]),
     useModel: vi.fn().mockResolvedValue({
       thought: 'I am reflecting on this conversation',
       facts: [

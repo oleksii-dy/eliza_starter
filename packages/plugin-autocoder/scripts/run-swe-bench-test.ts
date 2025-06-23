@@ -31,7 +31,6 @@ async function runSWEBenchTest() {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      clients: [],
       plugins: [],
     },
     logger: {

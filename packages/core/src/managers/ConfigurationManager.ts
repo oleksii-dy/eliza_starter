@@ -7,7 +7,7 @@ import type {
   PluginConfiguration,
   ConfigurablePlugin,
   ComponentConfig,
-} from '../types/plugin-config.js';
+} from '../types/plugin';
 import type {
   ComponentDependency,
   ValidationResult,
@@ -447,7 +447,7 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
     for (const dependency of context.dependencies) {
       const pluginName = dependency.pluginName || context.pluginName;
       const dependentComponents = context.enabledComponents.get(pluginName);
-      
+
       if (!dependentComponents) {
         if (!dependency.optional) {
           errors.push(
@@ -535,7 +535,7 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
       };
 
       const validationResult = this.validateComponentDependencies(validationContext);
-      
+
       // If validation fails and there are required dependencies missing, don't enable
       if (!validationResult.valid) {
         this.logger.warn(
@@ -554,7 +554,7 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
 
     // Apply the configuration update
     const componentConfig: Partial<PluginConfiguration> = {};
-    
+
     // Create a complete ComponentConfigState from the partial config
     const fullConfig: ComponentConfigState = {
       enabled: config.enabled ?? true,
@@ -563,7 +563,7 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
       settings: config.settings ?? {},
       lastModified: config.lastModified ?? new Date(),
     };
-    
+
     if (componentType === 'action') {
       componentConfig.actions = { [componentName]: fullConfig };
     } else if (componentType === 'provider') {
@@ -605,14 +605,17 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
     // Process unified components
     for (const componentDef of components) {
       let componentName: string;
-      
+
       if (componentDef.type === 'service') {
         // For services, use serviceName property or fallback to name
-        componentName = componentDef.name || (componentDef.component as any).serviceName || componentDef.component.name;
+        componentName =
+          componentDef.name ||
+          (componentDef.component as any).serviceName ||
+          componentDef.component.name;
       } else {
         componentName = componentDef.name || componentDef.component.name;
       }
-      
+
       const componentConfig = this.createComponentConfigState(componentDef.config);
 
       if (componentDef.type === 'action') {

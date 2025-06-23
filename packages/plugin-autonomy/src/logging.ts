@@ -1,4 +1,4 @@
-import { type IAgentRuntime } from '@elizaos/core';
+import { type IAgentRuntime, getTempLogPath } from '@elizaos/core';
 import { type LogEntry, LogLevel, OODAPhase } from './types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -29,7 +29,7 @@ export class AutonomyLogger {
     this.config = {
       level: LogLevel.INFO,
       enableFileLogging: process.env.AUTONOMOUS_FILE_LOGGING === 'true',
-      logDirectory: process.env.AUTONOMOUS_LOG_DIR || './logs/autonomy',
+      logDirectory: process.env.AUTONOMOUS_LOG_DIR || getTempLogPath('autonomy'),
       maxFileSize: 50 * 1024 * 1024, // 50MB
       maxFiles: 100,
       enableConsole: true,

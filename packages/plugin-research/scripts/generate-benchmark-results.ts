@@ -17,8 +17,7 @@ class MockRuntime implements IAgentRuntime {
     messageExamples: [],
     postExamples: [],
     topics: [],
-    knowledge: [],
-    clients: [],
+    knowledge: [],,
     plugins: [],
   };
 

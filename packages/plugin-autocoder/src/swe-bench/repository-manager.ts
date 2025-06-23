@@ -10,7 +10,7 @@ export class RepositoryManager {
   private workDir: string;
   private activeRepos: Map<string, string> = new Map();
 
-  constructor(workDir: string = path.join(process.cwd(), '.swe-bench-repos')) {
+  constructor(workDir: string = path.join(process.cwd(), '.eliza-temp', 'swe-bench-repos')) {
     this.workDir = workDir;
   }
 

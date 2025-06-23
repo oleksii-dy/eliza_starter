@@ -1542,9 +1542,28 @@ export class AutonomousRelationshipManager {
 
     // Privacy setting not available, log instead
     if (decision.action === 'increase_privacy_restrictions') {
-      await this.rolodexService.setContactPrivacy(decision.entityId, 'restricted');
+      // Privacy method not available in RolodexService, update metadata instead
+      const contact = await this.rolodexService.getEntity(decision.entityId);
+      if (contact) {
+        await this.rolodexService.upsertEntity({
+          id: decision.entityId,
+          metadata: {
+            ...contact.metadata,
+            privacy: 'restricted',
+          },
+        });
+      }
     } else if (decision.action === 'relax_privacy_restrictions') {
-      await this.rolodexService.setContactPrivacy(decision.entityId, 'public');
+      const contact = await this.rolodexService.getEntity(decision.entityId);
+      if (contact) {
+        await this.rolodexService.upsertEntity({
+          id: decision.entityId,
+          metadata: {
+            ...contact.metadata,
+            privacy: 'public',
+          },
+        });
+      }
     }
   }
 
@@ -1758,7 +1777,12 @@ export class AutonomousRelationshipManager {
   private async learnTrustFactors(entityId: UUID): Promise<LearningInsight | null> {
     if (!this.rolodexService) return null;
 
-    const trustEval = await this.rolodexService.evaluateContactTrust(entityId, 'LEARNING');
+    const trustScore = await this.rolodexService.getTrustScore(entityId);
+    const trustEval = {
+      trustScore: trustScore?.score || 50,
+      allowed: true,
+      reasoning: 'Learning evaluation'
+    };
 
     if (trustEval.trustScore > 70) {
       return {

@@ -32,8 +32,7 @@ describe('Secrets Manager Integration', () => {
         knowledge: [],
         messageExamples: [],
         postExamples: [],
-        topics: [],
-        clients: [],
+        topics: [],,
         plugins: [],
       },
     };

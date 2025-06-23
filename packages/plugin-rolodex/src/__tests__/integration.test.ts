@@ -130,10 +130,31 @@ describe('Rolodex Plugin Integration Tests', () => {
         text: message.content.text,
       };
 
+      // Mock validation response - validation expects specific response format
+      mockRuntime.useModel.mockImplementation((modelType, params) => {
+        // For validation prompts, return 'yes'
+        if (params?.messages && params.messages[0]?.content?.includes('follow-up')) {
+          return Promise.resolve('yes');
+        }
+        if (params?.prompt?.includes('follow-up')) {
+          return Promise.resolve('yes');
+        }
+        return Promise.resolve('yes');
+      });
+      
       const isValid = await scheduleFollowUpAction.validate(mockRuntime, message, state);
       expect(isValid).toBe(true);
 
       const mockCallback = vi.fn();
+      
+      // Mock the LLM response for follow-up extraction
+      mockRuntime.useModel.mockResolvedValueOnce(JSON.stringify({
+        entityName: 'Sarah Chen',
+        scheduledFor: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Next week
+        message: 'partnership discussion',
+        priority: 'medium'
+      }));
+      
       const result = await scheduleFollowUpAction.handler(
         mockRuntime,
         message,
@@ -159,7 +180,7 @@ describe('Rolodex Plugin Integration Tests', () => {
         const example = trackEntityAction.examples[0];
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBeGreaterThan(0);
-        expect(example[0]).toHaveProperty('user');
+        expect(example[0]).toHaveProperty('name');
         expect(example[0]).toHaveProperty('content');
       }
     });

@@ -8,6 +8,7 @@ import type {
 } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 import { MCPCreationService } from '../services/mcp-creation-service';
+import path from 'path';
 
 /**
  * Action to create MCP (Model Context Protocol) servers
@@ -114,7 +115,7 @@ export const createMCPAction: Action = {
       const result = await mcpService.createMCPProject({
         name: mcpName,
         description: messageText,
-        outputDir: process.cwd() + '/mcp-projects',
+        outputDir: path.join(process.cwd(), '.eliza-temp', 'mcp-projects'),
         tools: tools.map((t) => ({ name: t.name, description: t.description })),
         resources: resources.map((r) => ({ name: r.name, description: r.description })),
         dependencies: dependencies,

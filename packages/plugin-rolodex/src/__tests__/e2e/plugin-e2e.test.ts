@@ -17,8 +17,8 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing complete entity management workflow...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
-        const followUpService = runtime.getService('followUp') as FollowUpManager;
+        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+        const followUpService = runtime.getService('followUp') as unknown as FollowUpManager;
         
         if (!entityGraphService || !followUpService) {
           throw new Error('Required services not available');
@@ -134,7 +134,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing natural language entity extraction...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -203,7 +203,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing trust score evolution...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -284,8 +284,8 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing follow-up task management...');
         
-        const followUpService = runtime.getService('followUp') as FollowUpManager;
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+        const followUpService = runtime.getService('followUp') as unknown as FollowUpManager;
+        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         
         if (!followUpService || !entityGraphService) {
           throw new Error('Required services not available');

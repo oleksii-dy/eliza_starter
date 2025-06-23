@@ -425,7 +425,6 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
       postExamples: [],
       topics: [],
       knowledge: [],
-      clients: [],
       plugins: [],
     },
 

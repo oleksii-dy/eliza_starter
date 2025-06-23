@@ -31,7 +31,7 @@ export class SWEBenchDataLoader {
   };
   private instances: Map<string, SWEBenchInstance> = new Map();
 
-  constructor(cacheDir: string = path.join(process.cwd(), '.swe-bench-cache')) {
+  constructor(cacheDir: string = path.join(process.cwd(), '.eliza-temp', 'swe-bench-cache')) {
     this.cacheDir = cacheDir;
   }
 

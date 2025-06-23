@@ -10,10 +10,6 @@ import {
   type VerificationProof,
   type VerificationResult,
   type MergeProposal,
-  type any,
-  type any,
-  type any,
-  type any,
   type ValidationResult,
 } from '@elizaos/core';
 import { EntityGraphManager } from '../managers/EntityGraphManager';
@@ -52,10 +48,10 @@ export class CoreIdentityProvider implements IIdentityManager {
       if (!resolved || resolved.length === 0) {
         return {
           success: false,
-          entityId: null,
+          entityId: undefined,
           confidence: 0,
           reason: 'No entity found matching identifier',
-          metaproofData: {},
+          metadata: {},
         };
       }
 
@@ -69,12 +65,12 @@ export class CoreIdentityProvider implements IIdentityManager {
 
       // Convert to core format
       return {
-        success: true,
+        confidence: 1.0,
         entityId: bestMatch.entityId,
         confidence: bestMatch.confidence || 0.8,
         reason,
         alternativeMatches: resolved.slice(1).map(alt => alt.entityId),
-        metaproofData: {
+        metadata: {
           source: context.source,
           originalProfile: bestMatch,
           resolutionMethod: 'entity-resolution-service',
@@ -86,10 +82,10 @@ export class CoreIdentityProvider implements IIdentityManager {
       logger.error('[CoreIdentityProvider] Error resolving entity:', error);
       return {
         success: false,
-        entityId: null,
+        entityId: undefined,
         confidence: 0,
         reason: `Resolution failed: ${errorMessage}`,
-        metaproofData: { error: errorMessage },
+        metadata: { error: errorMessage },
       };
     }
   }
@@ -114,20 +110,20 @@ export class CoreIdentityProvider implements IIdentityManager {
       const relationships = await this.entityGraphService.getEntityRelationships(entityId);
 
       // Build platform identities from entity platforms data
-      const platformIdentities: Record<string, any> = {};
+      const platformIdentityIds: Record<string, any> = {};
       Object.entries(entity.platforms || {}).forEach(([platform, data]) => {
         if (typeof data === 'string') {
           platformIdentities[platform] = {
             platformId: data,
-            valid: false,
-            metaproofData: {},
+            verified: false,
+            metadata: {},
             linkedAt: entity.createdAt,
           };
         } else if (typeof data === 'object' && data !== null) {
           platformIdentities[platform] = {
             platformId: (data as any).id || (data as any).username || platform,
-            valid: (data as any).valid || false,
-            metaproofData: data,
+            verified: (data as any).verified || false,
+            metadata: data,
             linkedAt: (data as any).linkedAt || entity.createdAt,
           };
         }
@@ -138,18 +134,18 @@ export class CoreIdentityProvider implements IIdentityManager {
         entityId,
         primaryName: entity.names[0] || 'Unknown',
         aliases: entity.names.slice(1),
-        entityType: entity.proofType as any,
+        entityType: entity.type as any,
         trustScore: entity.trustScore || 0.5,
         verificationLevel: this.calculateVerificationLevel(entity),
-        platformIdentities,
+        platformIdentityIds,
         relationships: relationships.map(rel => ({
           targetEntityId: rel.targetEntityId,
-          proofType: rel.metadata?.proofType as string || 'unknown',
+          type: rel.metadata?.type as string || 'unknown',
           strength: rel.metadata?.strength as number || 0.5,
-          valid: rel.metadata?.valid === true,
-          metaproofData: rel.metadata || {},
+          verified: rel.metadata?.verified === true,
+          metadata: rel.metadata || {},
         })),
-        metaproofData: {
+        metadata: {
           summary: entity.summary,
           tags: entity.tags,
           ...entity.metadata,
@@ -172,7 +168,7 @@ export class CoreIdentityProvider implements IIdentityManager {
    */
   async verifyIdentity(entityId: UUID, proof: VerificationProof): Promise<VerificationResult> {
     try {
-      logger.info('[CoreIdentityProvider] Verifying identity:', { entityId, proofType: proof.proofType });
+      logger.info('[CoreIdentityProvider] Verifying identity:', { entityId, type: proof.proofType });
 
       const entity = await this.entityGraphService.trackEntity(
         entityId,
@@ -182,16 +178,15 @@ export class CoreIdentityProvider implements IIdentityManager {
 
       if (!entity) {
         return {
-          success: false,
-          valid: false,
+          verified: false,
           confidence: 0,
           reason: 'Entity not found',
-          metaproofData: {},
+          metadata: {},
         };
       }
 
       // Handle different proof types
-      let verificationResult: { valid: boolean; confidence: number; reason: string; metaproofData: any };
+      let verificationResult: { verified: boolean; confidence: number; reason: string; metadata: any };
 
       switch (proof.proofType) {
         case 'oauth':
@@ -209,34 +204,34 @@ export class CoreIdentityProvider implements IIdentityManager {
         default:
           return {
             success: false,
-            valid: false,
+            verified: false,
             confidence: 0,
-            reason: `Unsupported proof proofType: ${proof.proofType}`,
-            metaproofData: {},
+            reason: `Unsupported proof type: ${proof.proofType}`,
+            metadata: {},
           };
       }
 
       // Update entity verification status if successful
-      if (verificationResult.valid) {
+      if (verificationResult.verified) {
         await this.updateEntityVerification(entityId, proof, verificationResult);
       }
 
       return {
-        success: true,
-        valid: verificationResult.valid,
+        confidence: 1.0,
+        verified: verificationResult.verified,
         confidence: verificationResult.confidence,
         reason: verificationResult.reason,
-        metaproofData: verificationResult.metadata,
+        metadata: verificationResult.metadata,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('[CoreIdentityProvider] Error verifying identity:', error);
       return {
         success: false,
-        valid: false,
+        verified: false,
         confidence: 0,
         reason: `Verification failed: ${errorMessage}`,
-        metaproofData: { error: errorMessage },
+        metadata: { error: errorMessage },
       };
     }
   }
@@ -248,7 +243,7 @@ export class CoreIdentityProvider implements IIdentityManager {
     entityId: UUID,
     platform: string,
     platformId: string,
-    valid: boolean,
+    verified: boolean,
     metadata?: Record<string, any>
   ): Promise<void> {
     try {
@@ -284,7 +279,7 @@ export class CoreIdentityProvider implements IIdentityManager {
       await this.entityGraphService.batchUpdateEntities([
         {
           entityId,
-          proofData: {
+          data: {
             platforms: updatedPlatforms,
             updatedAt: new Date().toISOString(),
           },
@@ -294,10 +289,10 @@ export class CoreIdentityProvider implements IIdentityManager {
       // Record trust event for verified platforms
       if (verified) {
         await this.entityGraphService.updateTrust(entityId, {
-          proofType: 'platform-verification',
+          type: 'platform-verification',
           impact: 0.1,
           reason: `Verified ${platform} identity: ${platformId}`,
-          metaproofData: { platform, platformId, ...metadata },
+          metadata: { platform, platformId, ...metadata },
         });
       }
 
@@ -349,17 +344,17 @@ export class CoreIdentityProvider implements IIdentityManager {
   /**
    * Propose merging multiple entities
    */
-  async proposeEntityMerge(entities: UUID[]): Promise<MergeProposal> {
+  async proposeEntityMerge(entityIds: UUID[]): Promise<MergeProposal> {
     try {
-      logger.info('[CoreIdentityProvider] Proposing entity merge:', { entities });
+      logger.info('[CoreIdentityProvider] Proposing entity merge:', { entityIds });
 
-      if (entities.length < 2) {
+      if (entityIds.length < 2) {
         throw new Error('At least 2 entities required for merge');
       }
 
       // Get all entity profiles
       const profiles: EntityProfile[] = [];
-      for (const entityId of entities) {
+      for (const entityId of entityIds) {
         const entity = await this.entityGraphService.trackEntity(
           entityId,
           'Merge analysis',
@@ -370,12 +365,12 @@ export class CoreIdentityProvider implements IIdentityManager {
         }
       }
 
-      if (profiles.length !== entities.length) {
+      if (profiles.length !== entityIds.length) {
         throw new Error('Some entities not found');
       }
 
       // Analyze merge feasibility using EntityResolutionManager
-      const mergeAnalysis = await this.entityResolutionService.analyzeMergeCandidate(
+      const mergeAnalysis = await this.entityResolutionService.analyzeIdentityMatch(
         profiles[0],
         profiles.slice(1)
       );
@@ -383,14 +378,14 @@ export class CoreIdentityProvider implements IIdentityManager {
       // Build merge proposal
       const proposal: MergeProposal = {
         id: stringToUuid(`merge-${Date.now()}`),
-        entities,
+        entityIds,
         confidence: mergeAnalysis.confidence,
         reason: mergeAnalysis.reason,
         conflicts: mergeAnalysis.conflicts || [],
-        suggestedPrimary: mergeAnalysis.suggestedPrimary || entities[0],
-        mergeStrategy: mergeAnalysis.strategy || 'conservative',
+        primaryEntityId: mergeAnalysis.primaryEntityId || entityIds[0],
+        strategy: mergeAnalysis.strategy || 'conservative',
         estimatedRisk: mergeAnalysis.risk || 'medium',
-        metaproofData: {
+        metadata: {
           profiles,
           analysis: mergeAnalysis,
           createdAt: new Date().toISOString(),
@@ -412,16 +407,16 @@ export class CoreIdentityProvider implements IIdentityManager {
       logger.info('[CoreIdentityProvider] Executing entity merge:', { proposalId: proposal.id });
 
       // Validate proposal is still current
-      if (!proposal.entities || proposal.entities.length < 2) {
+      if (!proposal.entityIds || proposal.entityIds.length < 2) {
         throw new Error('Invalid merge proposal');
       }
 
       // Execute merge using EntityResolutionManager
       const mergeResult = await this.entityResolutionService.mergeEntities(
-        proposal.suggestedPrimary,
-        proposal.entities.filter(id => id !== proposal.suggestedPrimary),
+        proposal.primaryEntityId,
+        proposal.entityIds.filter(id => id !== proposal.primaryEntityId),
         {
-          strategy: proposal.mergeStrategy,
+          strategy: proposal.strategy,
           preserveHistory: true,
           updateRelationships: true,
         }
@@ -430,33 +425,33 @@ export class CoreIdentityProvider implements IIdentityManager {
       if (!mergeResult.success) {
         return {
           success: false,
-          primaryEntityId: proposal.suggestedPrimary,
+          primaryEntityId: proposal.primaryEntityId,
           mergedEntityIds: [],
           conflicts: mergeResult.conflicts || [],
           rollbackData: null,
-          metaproofData: { error: mergeResult.error },
+          metadata: { error: mergeResult.error },
         };
       }
 
       // Record trust events for successful merge
-      await this.entityGraphService.updateTrust(proposal.suggestedPrimary, {
-        proofType: 'entity-merge',
+      await this.entityGraphService.updateTrust(proposal.primaryEntityId, {
+        type: 'entity-merge',
         impact: 0.05,
-        reason: `Successfully merged ${proposal.entities.length} entities`,
-        metaproofData: {
-          mergedEntities: proposal.entities,
-          mergeStrategy: proposal.mergeStrategy,
+        reason: `Successfully merged ${proposal.entityIds.length} entities`,
+        metadata: {
+          mergedEntities: proposal.entityIds,
+          strategy: proposal.strategy,
           proposalId: proposal.id,
         },
       });
 
       return {
-        success: true,
-        primaryEntityId: proposal.suggestedPrimary,
-        mergedEntityIds: proposal.entities.filter(id => id !== proposal.suggestedPrimary),
+        confidence: 1.0,
+        primaryEntityId: proposal.primaryEntityId,
+        mergedEntityIds: proposal.entityIds.filter(id => id !== proposal.primaryEntityId),
         conflicts: [],
         rollbackData: mergeResult.rollbackData,
-        metaproofData: {
+        metadata: {
           proposal,
           mergeResult,
           completedAt: new Date().toISOString(),
@@ -471,7 +466,7 @@ export class CoreIdentityProvider implements IIdentityManager {
   /**
    * Get entity history
    */
-  async getany(entityId: UUID): Promise<any> {
+  async getEntityHistory(entityId: UUID): Promise<any> {
     try {
       // Get entity and relationships
       const entity = await this.entityGraphService.trackEntity(
@@ -490,18 +485,18 @@ export class CoreIdentityProvider implements IIdentityManager {
       const events = [
         {
           timestamp: entity.createdAt,
-          proofType: 'entity-created' as const,
+          type: 'entity-created' as const,
           description: 'Entity created',
-          metaproofData: { initialData: entity },
+          metadata: { initialData: entity },
         },
       ];
 
       if (entity.updatedAt !== entity.createdAt) {
         events.push({
           timestamp: entity.updatedAt,
-          proofType: 'entity-updated' as const,
+          type: 'entity-updated' as const,
           description: 'Entity updated',
-          metaproofData: {},
+          metadata: {},
         });
       }
 
@@ -510,9 +505,9 @@ export class CoreIdentityProvider implements IIdentityManager {
         if (rel.createdAt) {
           events.push({
             timestamp: rel.createdAt,
-            proofType: 'relationship-created' as const,
+            type: 'relationship-created' as const,
             description: `Relationship created with ${rel.targetEntityId}`,
-            metaproofData: { relationship: rel },
+            metadata: { relationship: rel },
           });
         }
       });
@@ -523,7 +518,7 @@ export class CoreIdentityProvider implements IIdentityManager {
       return {
         entityId,
         events,
-        metaproofData: {
+        metadata: {
           totalEvents: events.length,
           firstEvent: events[0]?.timestamp,
           lastEvent: events[events.length - 1]?.timestamp,
@@ -553,7 +548,7 @@ export class CoreIdentityProvider implements IIdentityManager {
       const searchResults = await this.entityGraphService.searchEntities(
         searchText.trim(),
         {
-          proofType: query.entityType,
+          type: query.entityType,
           minTrust: query.minTrustScore,
           limit: query.limit || 20,
           offset: query.offset || 0,
@@ -581,7 +576,7 @@ export class CoreIdentityProvider implements IIdentityManager {
             profile,
             score: result.relevanceScore,
             matchReason: result.matchReason,
-            metaproofData: {
+            metadata: {
               searchQuery: query,
               originalResult: result,
             },
@@ -599,7 +594,7 @@ export class CoreIdentityProvider implements IIdentityManager {
   /**
    * Validate identity data structure
    */
-  async validateIdentityData(proofData: any): Promise<ValidationResult> {
+  async validateIdentityData(data: any): Promise<ValidationResult> {
     try {
       const errors: string[] = [];
       const warnings: string[] = [];
@@ -648,7 +643,7 @@ export class CoreIdentityProvider implements IIdentityManager {
           if (!rel.targetEntityId) {
             errors.push(`Relationship ${index} missing targetEntityId`);
           }
-          if (!rel.proofType) {
+          if (!rel.type) {
             warnings.push(`Relationship ${index} missing type`);
           }
         });
@@ -660,7 +655,7 @@ export class CoreIdentityProvider implements IIdentityManager {
         warnings,
       };
     } catch (error) {
-      logger.error('[CoreIdentityProvider] Error validating identity proofData:', error);
+      logger.error('[CoreIdentityProvider] Error validating identity data:', error);
       return {
         valid: false,
         errors: [`Validation failed: ${error.message}`],
@@ -673,7 +668,7 @@ export class CoreIdentityProvider implements IIdentityManager {
 
   private calculateVerificationLevel(entity: EntityProfile): 'unverified' | 'basic' | 'verified' | 'high_trust' {
     const verifiedPlatforms = Object.values(entity.platforms || {}).filter(
-      (p: any) => p.valid === true
+      (p: any) => p.verified === true
     ).length;
     
     const trustScore = entity.trustScore || 0.5;
@@ -690,10 +685,10 @@ export class CoreIdentityProvider implements IIdentityManager {
   }
 
   private async verifyOAuthProof(entity: EntityProfile, proof: VerificationProof): Promise<{
-    valid: boolean;
+    verified: boolean;
     confidence: number;
     reason: string;
-    metaproofData: any;
+    metadata: any;
   }> {
     try {
       // Import and use the OAuth identity verifier
@@ -708,99 +703,125 @@ export class CoreIdentityProvider implements IIdentityManager {
       const result = await oauthVerifier.verifyOAuthIdentity(entity.entityId, proof);
 
       return {
-        valid: result.valid,
+        verified: result.verified,
         confidence: result.confidence,
         reason: result.reason,
-        metaproofData: result.metadata,
+        metadata: result.metadata,
       };
     } catch (error) {
       logger.error('[CoreIdentityProvider] OAuth verification failed:', error);
       return {
-        valid: false,
+        verified: false,
         confidence: 0,
         reason: `OAuth verification error: ${error.message}`,
-        metaproofData: { error: error.message },
+        metadata: { error: error.message },
       };
     }
   }
 
   private async verifyCryptographicProof(entity: EntityProfile, proof: VerificationProof): Promise<{
-    valid: boolean;
+    verified: boolean;
     confidence: number;
     reason: string;
-    metaproofData: any;
+    metadata: any;
   }> {
     // Cryptographic verification (e.g., signature verification)
     return {
-      valid: false,
+      verified: false,
       confidence: 0,
       reason: 'Cryptographic verification not yet implemented',
-      metaproofData: {},
+      metadata: {},
     };
   }
 
   private async verifyBehavioralProof(entity: EntityProfile, proof: VerificationProof): Promise<{
-    valid: boolean;
+    verified: boolean;
     confidence: number;
     reason: string;
-    metaproofData: any;
+    metadata: any;
   }> {
     // Behavioral verification based on interaction patterns
     const { behaviorPattern, timeWindow } = proof.proofData;
 
     // Use EntityGraphManager to analyze recent behavior
     return {
-      valid: false,
+      verified: false,
       confidence: 0,
       reason: 'Behavioral verification not yet implemented',
-      metaproofData: { behaviorPattern, timeWindow },
+      metadata: { behaviorPattern, timeWindow },
     };
   }
 
   private async verifySocialProof(entity: EntityProfile, proof: VerificationProof): Promise<{
-    valid: boolean;
+    verified: boolean;
     confidence: number;
     reason: string;
-    metaproofData: any;
+    metadata: any;
   }> {
     // Social proof verification (e.g., vouching by trusted entities)
     const { vouchingEntities, socialNetwork } = proof.proofData;
 
     return {
-      valid: false,
+      verified: false,
       confidence: 0,
       reason: 'Social proof verification not yet implemented',
-      metaproofData: { vouchingEntities, socialNetwork },
+      metadata: { vouchingEntities, socialNetwork },
     };
   }
 
   private async updateEntityVerification(
     entityId: UUID,
     proof: VerificationProof,
-    result: { valid: boolean; confidence: number; reason: string; metaproofData: any }
+    result: { verified: boolean; confidence: number; reason: string; metadata: any }
   ): Promise<void> {
     // Update entity with verification information
     await this.entityGraphService.updateTrust(entityId, {
-      proofType: 'identity-verification',
+      type: 'identity-verification',
       impact: result.confidence * 0.2, // Scale to trust impact
       reason: result.reason,
-      metaproofData: {
-        proofType: proof.proofType,
-        valid: result.valid,
+      metadata: {
+        type: proof.proofType,
+        verified: result.verified,
         confidence: result.confidence,
         ...result.metadata,
       },
     });
 
     // Link platform identity if OAuth verification
-    if (proof.proofType === 'oauth' && result.valid && proof.proofData.platform) {
+    if (proof.proofType === 'oauth' && result.verified && proof.result.platform) {
       await this.linkPlatformIdentity(
         entityId,
-        proof.proofData.platform,
-        proof.proofData.expectedUserId || proof.proofData.actualUserId,
+        proof.result.platform,
+        proof.result.expectedUserId || proof.result.actualUserId,
         true,
         result.metadata
       );
     }
+  }
+
+  // Add missing IIdentityManager methods
+  async executeMerge(proposal: any): Promise<any> {
+    return this.executeEntityMerge(proposal);
+  }
+
+  async searchEntities(query: any): Promise<IdentityProfile[]> {
+    return this.searchEntitiesByIdentity(query);
+  }
+
+  async getIdentityLinks(entityId: UUID): Promise<any[]> {
+    // This functionality is handled by getIdentityProfile
+    const profile = await this.getIdentityProfile(entityId);
+    if (!profile) return [];
+    
+    return Object.entries(profile.platformIdentities || {}).map(([platform, data]: [string, any]) => ({
+      platform,
+      platformId: data.platformId,
+      verified: data.verified || false,
+      metadata: data.metadata || {}
+    }));
+  }
+
+  async createIdentityLink(entityId: UUID, platform: string, platformId: string, metadata?: any): Promise<void> {
+    await this.linkPlatformIdentity(entityId, platform, platformId, false, metadata);
   }
 }

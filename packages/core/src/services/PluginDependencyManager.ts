@@ -6,7 +6,7 @@ import {
   ConfigurationValidationResult,
   ConfigurationError,
   ConfigurationWarning,
-} from '../types/plugin-configuration';
+} from '../types/plugin';
 import { WalletCapability } from '../types/universal-wallet';
 import { elizaLogger } from '../logger';
 

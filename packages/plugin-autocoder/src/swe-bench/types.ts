@@ -91,7 +91,7 @@ export interface ValidationDetails {
  */
 export interface EvaluationConfig {
   dataset: 'multi-swe-bench';
-  language_filter: Array<'TypeScript' | 'JavaScript'>;
+  language_filter: Array<'TypeScript' | 'JavaScript' | 'Java' | 'Go' | 'Rust' | 'C' | 'C++'>;
   max_instances?: number;
   timeout_per_instance?: number;
   docker_enabled: boolean;
@@ -249,7 +249,7 @@ export interface EvaluationSummary {
 export interface BenchmarkOptions {
   instance_ids?: string[];
   max_instances?: number;
-  language_filter?: Array<'TypeScript' | 'JavaScript'>;
+  language_filter?: Array<'TypeScript' | 'JavaScript' | 'Java' | 'Go' | 'Rust' | 'C' | 'C++'>;
   complexity_filter?: Array<'low' | 'medium' | 'high'>;
   repo_filter?: string[];
   timeout_per_instance?: number;

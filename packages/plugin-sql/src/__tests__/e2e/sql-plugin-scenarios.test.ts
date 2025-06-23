@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { AgentRuntime } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import type { UUID, IAgentRuntime, Memory, Character } from '@elizaos/core';

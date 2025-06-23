@@ -1,3 +1,4 @@
+import './test-setup'; // Load environment variables
 import { type TestSuite } from '@elizaos/core';
 import { ResearchService } from '../service';
 import { ResearchDepth } from '../types';

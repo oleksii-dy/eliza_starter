@@ -1,9 +1,8 @@
 import { AgentRuntime, type Entity, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
-import { relationshipTable } from '../../schema';
 import { createIsolatedTestDatabase } from '../test-helpers';
 
 describe('Relationship Integration Tests', () => {
@@ -30,7 +29,7 @@ describe('Relationship Integration Tests', () => {
       { id: testEntityId, agentId: testAgentId, names: ['Test Entity'] } as Entity,
       { id: testTargetEntityId, agentId: testAgentId, names: ['Target Entity'] } as Entity,
     ]);
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {
@@ -39,10 +38,6 @@ describe('Relationship Integration Tests', () => {
   });
 
   describe('Relationship Tests', () => {
-    beforeEach(async () => {
-      await adapter.getDatabase().delete(relationshipTable);
-    });
-
     it('should create and retrieve a relationship', async () => {
       const relationshipData = {
         sourceEntityId: testEntityId,

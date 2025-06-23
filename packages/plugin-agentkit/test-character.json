@@ -1,0 +1,15 @@
+{
+    "name": "AgentKit Test Agent",
+    "description": "A test agent for AgentKit plugin",
+    "bio": ["I am a test agent for the AgentKit plugin"],
+    "knowledge": [],
+    "topics": ["crypto", "blockchain", "defi"],
+    "plugins": [
+        "/Users/shawwalters/eliza-self/packages/plugin-agentkit/dist/index.js"
+    ],
+    "settings": {
+        "CDP_API_KEY_NAME": "",
+        "CDP_API_KEY_PRIVATE_KEY": "",
+        "CDP_NETWORK_ID": "base-sepolia"
+    }
+} 

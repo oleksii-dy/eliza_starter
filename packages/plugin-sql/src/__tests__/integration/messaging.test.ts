@@ -1,6 +1,6 @@
 import { AgentRuntime, ChannelType, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { createIsolatedTestDatabase } from '../test-helpers';
@@ -37,7 +37,7 @@ describe('Messaging Integration Tests', () => {
   describe('Message Server Tests', () => {
     it('should create and retrieve a message channel', async () => {
       const channelData = {
-        messageServerId: serverId,
+        serverId: serverId,
         name: 'test-channel',
         type: ChannelType.GROUP,
       };
@@ -53,7 +53,7 @@ describe('Messaging Integration Tests', () => {
     it('should create and retrieve a message', async () => {
       const channel = await adapter.createChannel(
         {
-          messageServerId: serverId,
+          serverId: serverId,
           name: 'message-channel',
           type: ChannelType.GROUP,
         },
@@ -76,7 +76,7 @@ describe('Messaging Integration Tests', () => {
     it('should add and retrieve channel participants', async () => {
       const channel = await adapter.createChannel(
         {
-          messageServerId: serverId,
+          serverId: serverId,
           name: 'participant-channel',
           type: ChannelType.GROUP,
         },

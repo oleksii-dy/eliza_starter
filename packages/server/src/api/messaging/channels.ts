@@ -110,7 +110,7 @@ export function createChannelsRouter(
 
             const channelData = {
               id: channelIdParam as UUID, // Use the specific channel ID from the URL
-              messageServerId: server_id as UUID,
+              serverId: server_id as UUID,
               name: isDmChannel
                 ? `DM ${channelIdParam.substring(0, 8)}`
                 : `Chat ${channelIdParam.substring(0, 8)}`,
@@ -303,25 +303,25 @@ export function createChannelsRouter(
 
   // POST /channels - Create a new central channel
   (router as any).post('/channels', async (req: express.Request, res: express.Response) => {
-    const { messageServerId, name, type, sourceType, sourceId, topic, metadata } = req.body;
+    const { serverId, name, type, sourceType, sourceId, topic, metadata } = req.body;
 
-    if (!messageServerId || !name || !type) {
+    if (!serverId || !name || !type) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: messageServerId, name, type',
+        error: 'Missing required fields: serverId, name, type',
       });
     }
 
-    if (!validateUuid(messageServerId)) {
+    if (!validateUuid(serverId)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid messageServerId format',
+        error: 'Invalid serverId format',
       });
     }
 
     try {
       const channel = await serverInstance.createChannel({
-        messageServerId: messageServerId as UUID,
+        serverId: serverId as UUID,
         name,
         type,
         sourceType,
@@ -398,7 +398,7 @@ export function createChannelsRouter(
       name,
       participantCentralUserIds,
       type = ChannelType.GROUP,
-      server_id,
+      server_id = DEFAULT_SERVER_ID, // Default to DEFAULT_SERVER_ID if not provided
       metadata,
     } = req.body;
 
@@ -414,13 +414,13 @@ export function createChannelsRouter(
       return res.status(400).json({
         success: false,
         error:
-          'Invalid payload. Required: name, server_id (UUID or "0"), participantCentralUserIds (array of UUIDs). Optional: type, metadata.',
+          'Invalid payload. Required: name, participantCentralUserIds (array of UUIDs). Optional: type, server_id (defaults to default server), metadata.',
       });
     }
 
     try {
       const channelData = {
-        messageServerId: server_id as UUID,
+        serverId: server_id as UUID,
         name,
         type: type as ChannelType,
         metadata: {

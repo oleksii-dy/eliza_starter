@@ -286,7 +286,7 @@ export class SocketIORouter {
 
           const channelData = {
             id: channelId as UUID, // Use the specific channel ID from the client
-            messageServerId: serverId as UUID,
+            serverId: serverId as UUID,
             name: isDmChannel
               ? `DM ${channelId.substring(0, 8)}`
               : `Chat ${channelId.substring(0, 8)}`,

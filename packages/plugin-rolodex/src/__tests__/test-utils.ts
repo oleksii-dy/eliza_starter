@@ -137,6 +137,10 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
       if (params?.prompt?.toLowerCase().includes('answer only yes or no')) {
         return Promise.resolve('yes');
       }
+      // Check if it's a follow-up intent detector
+      if (params?.messages && params.messages[0]?.content?.includes('follow-up intent detector')) {
+        return Promise.resolve('yes');
+      }
       // Default response
       return Promise.resolve('test response');
     }),

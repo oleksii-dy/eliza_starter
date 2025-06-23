@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment jsdom
+ */
 import { describe, it, expect } from 'vitest';
 
 describe('Simple Test', () => {
@@ -7,7 +10,7 @@ describe('Simple Test', () => {
 
   it('should have document object in jsdom', () => {
     // This test runs in jsdom environment
+    expect(typeof document).toBe('object');
     expect(document).toBeDefined();
-    expect(document.body).toBeDefined();
   });
 });

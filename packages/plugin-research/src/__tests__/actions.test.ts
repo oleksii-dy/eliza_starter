@@ -41,7 +41,6 @@ function createTestRuntime(): IAgentRuntime {
       postExamples: [],
       topics: [],
       knowledge: [],
-      clients: [],
       plugins: [],
     },
     getSetting: (key: string) => {

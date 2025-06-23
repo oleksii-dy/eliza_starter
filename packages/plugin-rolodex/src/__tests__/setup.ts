@@ -1,3 +1,4 @@
+import "./setup-window-mock";
 // Temporarily disable jest-dom due to lodash import issue
 // import '@testing-library/jest-dom';
 import { afterEach } from 'vitest';

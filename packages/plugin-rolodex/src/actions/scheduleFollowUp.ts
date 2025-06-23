@@ -209,7 +209,7 @@ export const scheduleFollowUpAction: Action = {
         if (!message.entityId) {
           throw new Error('No entity ID found for follow-up');
         }
-        entityId = message.entityId as UUID;
+        entityId = message.entityId !;
       }
 
       // Schedule the follow-up

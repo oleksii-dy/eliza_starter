@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createUniqueUuid } from './entities';
 import { decryptSecret, getSalt, safeReplacer } from './index';
 import { createLogger } from './logger';
-import type { PluginConfiguration } from './types/plugin-config.js';
+import type { PluginConfiguration } from './types/plugin';
 import {
   ChannelType,
   ModelType,
@@ -59,11 +59,7 @@ import {
 import type { ActionPlan, PlanningContext, PlanExecutionResult } from './types/planning';
 import { ConfigurationManager } from './managers/ConfigurationManager.js';
 import { CharacterConfigurationSource } from './configuration/CharacterConfigurationSource.js';
-import type {
-  ConfigurablePlugin,
-  ConfigurableAction,
-  ConfigurableProvider,
-} from './types/plugin-config.js';
+import type { ConfigurablePlugin, ConfigurableAction, ConfigurableProvider } from './types/plugin';
 
 const environmentSettings: RuntimeSettings = {};
 

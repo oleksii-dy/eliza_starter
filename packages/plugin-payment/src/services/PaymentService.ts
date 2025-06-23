@@ -265,13 +265,22 @@ export class PaymentService extends Service implements IPaymentService {
         userId: request.userId,
       });
 
-      // Validate request
-      const validation = await this.validatePaymentRequest(request);
-      if (!validation.isValid) {
-        return this.createFailedResult(request, validation.error || 'Invalid payment request');
+      // Basic validation first (amount, method support)
+      if (!request.amount || request.amount <= BigInt(0)) {
+        return this.createFailedResult(request, 'Invalid payment amount');
       }
 
-      // Check trust requirements
+      const adapter = this.getAdapterForMethod(request.method);
+      if (!adapter) {
+        return this.createFailedResult(request, `Payment method ${request.method} not supported`);
+      }
+
+      // Check if confirmation is required BEFORE checking balance
+      if (this.shouldRequireConfirmation(request)) {
+        return await this.createPendingPayment(request, 'USER_CONFIRMATION_REQUIRED');
+      }
+
+      // Check trust requirements BEFORE checking balance
       if (this.trustService && request.trustRequired) {
         const trustScore = await this.getTrustScore(request.userId);
         if (trustScore < this.settings.trustThreshold) {
@@ -279,9 +288,10 @@ export class PaymentService extends Service implements IPaymentService {
         }
       }
 
-      // Check if confirmation is required
-      if (this.shouldRequireConfirmation(request)) {
-        return await this.createPendingPayment(request, 'USER_CONFIRMATION_REQUIRED');
+      // Now validate the full request including balance
+      const validation = await this.validatePaymentRequest(request);
+      if (!validation.isValid) {
+        return this.createFailedResult(request, validation.error || 'Invalid payment request');
       }
 
       // Process payment immediately
@@ -307,7 +317,7 @@ export class PaymentService extends Service implements IPaymentService {
       return { isValid: false, error: `Payment method ${request.method} not supported` };
     }
 
-    // Check daily limit
+    // Check daily limit BEFORE checking balance
     const dailySpent = await this.getDailySpending(request.userId);
     const amountUsd = await this.convertToUSD(request.amount, request.method);
 
@@ -318,7 +328,7 @@ export class PaymentService extends Service implements IPaymentService {
       };
     }
 
-    // Check balance
+    // Check balance last
     const hasBalance = await this.checkBalance(request);
     if (!hasBalance) {
       return { isValid: false, error: 'Insufficient funds' };
@@ -350,16 +360,23 @@ export class PaymentService extends Service implements IPaymentService {
       const newTransaction: NewPaymentTransaction = {
         id: transactionId,
         payerId: request.userId,
-        recipientId: request.recipientAddress ? asUUID(request.recipientAddress) : asUUID('00000000-0000-0000-0000-000000000000'),
+        recipientId: undefined, // Don't use recipientId for addresses
         agentId: this.runtime.agentId,
         amount: request.amount,
         currency: this.getPaymentCurrency(request.method),
         method: request.method,
         status: PaymentStatus.PENDING,
+        toAddress: request.recipientAddress, // Use toAddress for addresses
         metadata: { ...request.metadata, pendingReason: reason },
       };
 
       await this.db.insert(paymentTransactions).values(newTransaction);
+
+      // Generate verification code for confirmations
+      let verificationCode: string | undefined;
+      if (reason === 'USER_CONFIRMATION_REQUIRED' || reason === 'TRUST_VERIFICATION_REQUIRED') {
+        verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      }
 
       // Also create payment request record
       const newRequest: NewPaymentRequest = {
@@ -373,7 +390,13 @@ export class PaymentService extends Service implements IPaymentService {
         requiresConfirmation: request.requiresConfirmation || true,
         trustRequired: request.trustRequired || false,
         minimumTrustLevel: request.minimumTrustLevel,
-        metadata: request.metadata,
+        metadata: {
+          ...request.metadata,
+          ...(verificationCode ? {
+            verificationCode,
+            verificationCodeExpiry: Date.now() + 300000, // 5 minutes
+          } : {})
+        },
         expiresAt: request.expiresAt ? new Date(request.expiresAt) : undefined,
       };
 
@@ -429,12 +452,13 @@ export class PaymentService extends Service implements IPaymentService {
       const newTransaction: NewPaymentTransaction = {
         id: transactionId,
         payerId: request.userId,
-        recipientId: request.recipientAddress ? asUUID(request.recipientAddress) : asUUID('00000000-0000-0000-0000-000000000000'),
+        recipientId: undefined, // Don't use recipientId for addresses
         agentId: this.runtime.agentId,
         amount: request.amount,
         currency: this.getPaymentCurrency(request.method),
         method: request.method,
         status: PaymentStatus.PROCESSING,
+        toAddress: request.recipientAddress, // Use toAddress for addresses
         metadata: request.metadata,
       };
 

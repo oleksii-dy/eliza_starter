@@ -24,7 +24,6 @@ async function runSWEBenchMockTest() {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      clients: [],
       plugins: [],
     },
   } as any;

@@ -366,12 +366,28 @@ export const CORE_TABLES: TableSchema[] = [
     dependencies: ['message_servers'], // Depends on message_servers table
     sql: `CREATE TABLE IF NOT EXISTS "channels" (
       "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      "agent_id" UUID NOT NULL,
       "server_id" UUID NOT NULL,
+      "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updated_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "name" TEXT NOT NULL,
       "type" TEXT NOT NULL,
-      "metadata" JSONB DEFAULT '{}',
-      "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      "source_type" TEXT,
+      "source_id" TEXT,
+      "topic" TEXT,
+      "metadata" JSONB DEFAULT '{}'
+    )`,
+    // Fallback SQL for PGLite
+    fallbackSql: `CREATE TABLE IF NOT EXISTS channels (
+      id TEXT PRIMARY KEY,
+      server_id TEXT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      source_type TEXT,
+      source_id TEXT,
+      topic TEXT,
+      metadata TEXT DEFAULT '{}'
     )`,
   },
 

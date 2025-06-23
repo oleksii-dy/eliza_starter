@@ -126,7 +126,6 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning p
     'Process improvement principles',
     'Decision-making frameworks',
   ],
-  clients: [],
   plugins: ['@elizaos/plugin-planning', '@elizaos/plugin-sql'],
 };
 

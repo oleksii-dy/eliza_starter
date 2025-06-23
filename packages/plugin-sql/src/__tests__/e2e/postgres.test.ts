@@ -1,22 +1,15 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll, afterEach } from 'vitest';
-import { PostgresConnectionManager } from '../../pg/manager';
-import { PgDatabaseAdapter } from '../../pg/adapter';
-import { v4 as uuidv4 } from 'uuid';
 import {
   ChannelType,
-  type UUID,
+  type Agent,
+  type Component,
   type Entity,
   type Memory,
-  type Component,
-  type Agent,
+  type UUID,
 } from '@elizaos/core';
-import * as schema from '../../schema';
-import { PGlite } from '@electric-sql/pglite';
-import { drizzle } from 'drizzle-orm/pglite';
-import { sql } from 'drizzle-orm';
-import { PGliteClientManager } from '../../pglite/manager';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { v4 as uuidv4 } from 'uuid';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
-import { AgentStatus } from '@elizaos/core';
+import { PGliteClientManager } from '../../pglite/manager';
 
 // Use PGLite for testing instead of real PostgreSQL
 describe('PostgreSQL E2E Tests', () => {

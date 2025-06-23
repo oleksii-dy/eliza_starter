@@ -63,7 +63,6 @@ async function runIndividualBenchmark() {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      clients: [],
       plugins: [],
     },
   } as any;

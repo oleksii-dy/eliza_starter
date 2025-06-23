@@ -27,20 +27,22 @@ class SchemaRegistry {
    * Register a table schema from a plugin
    */
   registerTable(schema: TableSchema): void {
-    logger.info(`[SchemaRegistry] Registering table '${schema.name}' from plugin '${schema.pluginName}'`);
-    
+    logger.info(
+      `[SchemaRegistry] Registering table '${schema.name}' from plugin '${schema.pluginName}'`
+    );
+
     if (this.tables.has(schema.name)) {
       const existing = this.tables.get(schema.name)!;
       if (existing.pluginName !== schema.pluginName) {
         throw new Error(
           `Table name conflict: '${schema.name}' is already registered by plugin '${existing.pluginName}', ` +
-          `cannot register from plugin '${schema.pluginName}'`
+            `cannot register from plugin '${schema.pluginName}'`
         );
       }
       logger.debug(`[SchemaRegistry] Table '${schema.name}' already registered, skipping`);
       return;
     }
-    
+
     this.tables.set(schema.name, schema);
   }
 
@@ -66,7 +68,7 @@ class SchemaRegistry {
       if (visiting.has(tableName)) {
         throw new Error(`Circular dependency detected involving table: ${tableName}`);
       }
-      
+
       if (visited.has(tableName)) {
         return;
       }
@@ -126,21 +128,29 @@ class SchemaRegistry {
    */
   async createTables(db: any, dbType: DatabaseType): Promise<void> {
     logger.info('[SchemaRegistry] Creating all registered tables...');
-    
+
     // Debug: Log current state
-    logger.debug(`[SchemaRegistry] Current state: ${this.tables.size} tables registered, ${this.createdTables.size} already created`);
-    logger.debug(`[SchemaRegistry] Registered table names: ${Array.from(this.tables.keys()).join(', ')}`);
-    
+    logger.debug(
+      `[SchemaRegistry] Current state: ${this.tables.size} tables registered, ${this.createdTables.size} already created`
+    );
+    logger.debug(
+      `[SchemaRegistry] Registered table names: ${Array.from(this.tables.keys()).join(', ')}`
+    );
+
     // Check vector availability first
     const vectorAvailable = await this.checkVectorAvailability(db);
-    
+
     const orderedTables = this.getTablesInOrder();
-    logger.info(`[SchemaRegistry] Found ${orderedTables.length} tables to create in dependency order`);
+    logger.info(
+      `[SchemaRegistry] Found ${orderedTables.length} tables to create in dependency order`
+    );
 
     // Ensure we have tables to create
     if (orderedTables.length === 0) {
       logger.error('[SchemaRegistry] No tables to create! Tables registered:', this.tables.size);
-      logger.error('[SchemaRegistry] This is likely a bug - tables should have been registered before createTables is called');
+      logger.error(
+        '[SchemaRegistry] This is likely a bug - tables should have been registered before createTables is called'
+      );
       throw new Error('No tables registered for creation');
     }
 
@@ -151,51 +161,109 @@ class SchemaRegistry {
       }
 
       try {
-        logger.info(`[SchemaRegistry] Creating table '${table.name}' from plugin '${table.pluginName}'`);
-        
+        logger.info(
+          `[SchemaRegistry] Creating table '${table.name}' from plugin '${table.pluginName}'`
+        );
+
         // Determine which SQL to use
         let sqlToExecute = table.sql;
-        
+
         // For core tables that have fallback SQL, always use fallback for PGLite
         if (table.fallbackSql && dbType === 'pglite') {
-          logger.info(`[SchemaRegistry] Using fallback SQL for table '${table.name}' (PGLite database type)`);
+          logger.info(
+            `[SchemaRegistry] Using fallback SQL for table '${table.name}' (PGLite database type)`
+          );
           sqlToExecute = table.fallbackSql;
         }
         // For vector-related tables without vector support
         else if (table.fallbackSql && !vectorAvailable && table.name === 'embeddings') {
-          logger.info(`[SchemaRegistry] Using fallback SQL for table '${table.name}' (vector extension not available)`);
+          logger.info(
+            `[SchemaRegistry] Using fallback SQL for table '${table.name}' (vector extension not available)`
+          );
           sqlToExecute = table.fallbackSql;
         }
-        
+
+        // Apply schema qualification to table names
+        const qualifiedTableName = this.getQualifiedTableName(table.name);
+        if (qualifiedTableName !== table.name) {
+          // Replace table name in SQL with qualified name
+          const tableNameRegex = new RegExp(
+            `(CREATE TABLE IF NOT EXISTS\\s+)["']?${table.name}["']?`,
+            'i'
+          );
+          sqlToExecute = sqlToExecute.replace(tableNameRegex, `$1${qualifiedTableName}`);
+          logger.debug(`[SchemaRegistry] Using qualified table name: ${qualifiedTableName}`);
+        }
+
         // Log the SQL for debugging
         logger.debug(`[SchemaRegistry] Executing SQL for table '${table.name}':`, sqlToExecute);
-        
+
         // Execute the table creation SQL
         await db.execute(sql.raw(sqlToExecute));
-        
+
         // Verify the table was actually created
         try {
-          // Use table name without quotes for PGLite compatibility
-          const verifyQuery = dbType === 'pglite' 
-            ? `SELECT 1 FROM ${table.name} WHERE 1=0`
-            : `SELECT 1 FROM "${table.name}" WHERE 1=0`;
+          // Use qualified table name for verification
+          const verifyQuery =
+            dbType === 'pglite'
+              ? `SELECT 1 FROM ${qualifiedTableName} WHERE 1=0`
+              : `SELECT 1 FROM "${qualifiedTableName}" WHERE 1=0`;
           await db.execute(sql.raw(verifyQuery));
           logger.info(`[SchemaRegistry] Successfully created and verified table '${table.name}'`);
           this.createdTables.add(table.name);
         } catch (verifyError) {
           // If verification fails, the table wasn't created
-          logger.error(`[SchemaRegistry] Table '${table.name}' creation appeared to succeed but verification failed:`, verifyError);
+          logger.error(
+            `[SchemaRegistry] Table '${table.name}' creation appeared to succeed but verification failed:`,
+            verifyError
+          );
           throw new Error(`Table '${table.name}' was not created successfully`);
         }
       } catch (error) {
         logger.error(`[SchemaRegistry] Failed to create table '${table.name}':`, error);
         // Log the actual SQL that failed
-        logger.error(`[SchemaRegistry] Failed SQL:`, table.fallbackSql && dbType === 'pglite' ? table.fallbackSql : table.sql);
+        logger.error(
+          `[SchemaRegistry] Failed SQL:`,
+          table.fallbackSql && dbType === 'pglite' ? table.fallbackSql : table.sql
+        );
         throw error;
       }
     }
 
     logger.info('[SchemaRegistry] All tables created successfully');
+  }
+
+  /**
+   * Get current schema based on environment
+   */
+  private getCurrentSchema(): string {
+    // Use test schema when running tests
+    const isTest =
+      process.env.NODE_ENV === 'test' ||
+      process.env.VITEST === 'true' ||
+      process.env.JEST_WORKER_ID !== undefined;
+
+    return isTest ? 'test' : 'public';
+  }
+
+  /**
+   * Get table name with schema prefix
+   */
+  private getQualifiedTableName(tableName: string, schema?: string): string {
+    const currentSchema = schema || this.getCurrentSchema();
+
+    // For test schema in PGLite, use table prefix
+    if (currentSchema === 'test' && process.env.DATABASE_TYPE === 'pglite') {
+      return `test_${tableName}`;
+    }
+
+    // For PostgreSQL, use schema qualification
+    if (process.env.DATABASE_TYPE === 'postgres' && currentSchema !== 'public') {
+      return `${currentSchema}.${tableName}`;
+    }
+
+    // Default: just table name
+    return tableName;
   }
 
   /**
@@ -223,7 +291,9 @@ class SchemaRegistry {
    * Clear all registrations (useful for tests)
    */
   clear(): void {
-    logger.warn('[SchemaRegistry] CLEARING ALL TABLE REGISTRATIONS - this should only happen in tests!');
+    logger.warn(
+      '[SchemaRegistry] CLEARING ALL TABLE REGISTRATIONS - this should only happen in tests!'
+    );
     logger.debug('[SchemaRegistry] Stack trace:', new Error().stack);
     this.tables.clear();
     this.createdTables.clear();
@@ -238,7 +308,7 @@ class SchemaRegistry {
     this.createdTables.clear();
     this.vectorAvailable = null;
   }
-  
+
   /**
    * Get number of registered tables
    */

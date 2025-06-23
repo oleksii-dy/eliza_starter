@@ -39,7 +39,6 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       postExamples: [],
       topics: [],
       knowledge: [],
-      clients: [],
       plugins: [],
     },
 

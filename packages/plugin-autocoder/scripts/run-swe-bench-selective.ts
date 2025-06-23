@@ -34,7 +34,6 @@ async function runSelectiveSWEBench() {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      clients: [],
       plugins: [],
     },
     logger: {

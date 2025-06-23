@@ -13,17 +13,14 @@ function createChannelTable() {
 
   return factory.table('channels', {
     id: factory.uuid('id').primaryKey().notNull(),
-    agentId: factory
-      .uuid('agent_id')
-      .notNull()
-      ,
-    serverId: factory
-      .uuid('server_id')
-      .notNull()
-      ,
+    serverId: factory.uuid('server_id').notNull(),
     createdAt: factory.timestamp('created_at').notNull().default(factory.defaultTimestamp()),
+    updatedAt: factory.timestamp('updated_at').notNull().default(factory.defaultTimestamp()),
     name: factory.text('name').notNull(),
     type: factory.text('type').notNull(),
+    sourceType: factory.text('source_type'),
+    sourceId: factory.text('source_id'),
+    topic: factory.text('topic'),
     metadata: factory.json('metadata').default(factory.defaultJsonObject()).notNull(),
   });
 }

@@ -4,8 +4,7 @@ export default {
     {
       name: 'test-agent',
       character: {
-        name: 'Test Agent',
-        clients: [],
+        name: 'Test Agent',,
         plugins: [
           '@elizaos/plugin-message-handling',
           '@elizaos/plugin-github', 

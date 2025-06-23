@@ -50,8 +50,8 @@ export const verifyOAuthIdentityAction: Action = {
       logger.info('[verifyOAuthIdentityAction] Starting OAuth identity verification');
 
       // Get required services
-      const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
-      const entityResolutionService = runtime.getService('entityResolution') as EntityResolutionManager;
+      const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+      const entityResolutionService = runtime.getService('entityResolution') as unknown as EntityResolutionManager;
 
       if (!entityGraphService || !entityResolutionService) {
         if (callback) {

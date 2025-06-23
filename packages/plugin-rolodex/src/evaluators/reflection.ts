@@ -20,7 +20,7 @@ const relationshipSchema = z.object({
   sourceEntityId: z.string(),
   targetEntityId: z.string(),
   tags: z.array(z.string()),
-  metadata: z
+  context: z
     .object({
       interactions: z.number(),
     })
@@ -318,7 +318,7 @@ async function handler(
           sourceEntityId: sourceId,
           targetEntityId: targetId,
           tags: relationship.tags,
-          metadata: {
+          context: {
             interactions: 1,
             ...relationship.metadata,
           },

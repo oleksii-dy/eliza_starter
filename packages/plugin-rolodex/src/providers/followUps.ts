@@ -148,13 +148,13 @@ export const followUpsProvider: Provider = {
           upcomingCount: upcoming.length,
           suggestionsCount: suggestedEntities.length,
         },
-        proofData: {
+        data: {
           followUps: allFollowUps.map((f) => ({
             id: f.id,
             entityId: f.entityId,
             scheduledFor: f.scheduledFor,
             message: f.message,
-            metaproofData: f.metadata,
+            metadata: f.metadata,
           })),
           suggestions: suggestedEntities.slice(0, 5),
         },

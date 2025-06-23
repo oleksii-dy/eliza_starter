@@ -22,7 +22,7 @@ export class EvaluationBridge {
   constructor(
     pythonPath: string = 'python3',
     evaluationScriptPath?: string,
-    workDir: string = path.join(process.cwd(), '.swe-bench-eval')
+    workDir: string = path.join(process.cwd(), '.eliza-temp', 'swe-bench-eval')
   ) {
     this.pythonPath = pythonPath;
     this.evaluationScriptPath =

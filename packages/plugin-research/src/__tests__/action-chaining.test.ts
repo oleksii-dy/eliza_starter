@@ -9,6 +9,12 @@ import {
   TaskType,
   ResearchDepth,
   ResearchReport,
+  ResearchProject,
+  SearchApproach,
+  SourceType,
+  ResultType,
+  ScoringMethod,
+  PhaseTiming,
 } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -36,7 +42,6 @@ function createSimpleRuntime(serviceOverrides?: Partial<ResearchService>): IAgen
       postExamples: [],
       topics: [],
       knowledge: [],
-      clients: [],
       plugins: [],
     },
     getSetting: (key: string) => {
@@ -599,60 +604,168 @@ describe('Action Chaining Integration Tests', () => {
 
   describe('Refine Research Query', () => {
     it('should refine research with additional queries', async () => {
-      const runtime = createSimpleRuntime();
+      // Create mock service methods
+      const mockProjects: ResearchProject[] = [
+        {
+          id: 'test-project-id',
+          query: 'research machine learning',
+          status: ResearchStatus.ACTIVE,
+          phase: ResearchPhase.SEARCHING,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          findings: [],
+          sources: [],
+          metadata: {
+            domain: ResearchDomain.GENERAL,
+            taskType: TaskType.EXPLORATORY,
+            depth: ResearchDepth.MODERATE,
+            language: 'en',
+            queryPlan: {
+              mainQuery: 'research machine learning',
+              subQueries: [],
+              searchStrategy: {
+                approach: SearchApproach.BREADTH_FIRST,
+                sourceTypes: [SourceType.WEB, SourceType.ACADEMIC],
+                qualityThreshold: 0.7,
+                diversityRequirement: true,
+                languagePreferences: ['en'],
+              },
+              expectedSources: 10,
+              iterationCount: 1,
+              adaptiveRefinement: true,
+              domainSpecificApproach: {
+                methodology: 'general',
+                keyTerms: [],
+                authoritySource: [],
+                evaluationFocus: [],
+              },
+            },
+            evaluationCriteria: {
+              comprehensiveness: {
+                name: 'comprehensiveness',
+                description: 'Coverage of the topic',
+                weight: 0.25,
+                rubric: [],
+                scoringMethod: ScoringMethod.SCALE,
+              },
+              depth: {
+                name: 'depth',
+                description: 'Depth of analysis',
+                weight: 0.25,
+                rubric: [],
+                scoringMethod: ScoringMethod.SCALE,
+              },
+              instructionFollowing: {
+                name: 'instructionFollowing',
+                description: 'Following instructions',
+                weight: 0.25,
+                rubric: [],
+                scoringMethod: ScoringMethod.SCALE,
+              },
+              readability: {
+                name: 'readability',
+                description: 'Readability of content',
+                weight: 0.25,
+                rubric: [],
+                scoringMethod: ScoringMethod.SCALE,
+              },
+            },
+            iterationHistory: [],
+            performanceMetrics: {
+              totalDuration: 0,
+              phaseBreakdown: {} as Record<ResearchPhase, PhaseTiming>,
+              searchQueries: 0,
+              sourcesProcessed: 0,
+              tokensGenerated: 0,
+              cacheHits: 0,
+              parallelOperations: 0,
+            },
+          },
+        },
+      ];
+
+      const serviceOverrides: Partial<ResearchService> = {
+        getActiveProjects: async () => mockProjects,
+        addRefinedQueries: async (projectId: string, queries: string[]) => {
+          const project = mockProjects.find((p) => p.id === projectId);
+          if (project) {
+            // Add queries to the queryPlan subQueries instead
+            queries.forEach((query, index) => {
+              project.metadata.queryPlan.subQueries.push({
+                id: `subquery-${index}`,
+                query,
+                purpose: 'refinement',
+                priority: 1,
+                dependsOn: [],
+                searchProviders: ['web'],
+                expectedResultType: ResultType.FACTUAL,
+                completed: false,
+              });
+            });
+          }
+        },
+      };
+
+      const runtime = createSimpleRuntime(serviceOverrides);
+
+      // Add mock for refinement prompt response
+      const originalUseModel = runtime.useModel;
+      (runtime as any).useModel = async (modelType: any, params: any) => {
+        const content = params.messages?.[0]?.content || '';
+
+        if (content.includes('Analyze this refinement request')) {
+          return JSON.stringify({
+            refinementType: 'deepen',
+            focusAreas: ['neural networks', 'deep learning architectures'],
+            queries: [
+              'neural network architectures for machine learning',
+              'deep learning techniques and applications',
+            ],
+          });
+        }
+
+        return originalUseModel(modelType, params);
+      };
+
       const responses: any[] = [];
       const callback = async (response: any) => {
         responses.push(response);
         return [];
       };
 
-      // Create research first
-      const createMessage = createTestMemory('research machine learning');
-      const createResult = await researchAction.handler(
-        runtime,
-        createMessage,
-        { values: {}, data: {}, text: '' },
-        {},
-        callback
-      );
-
-      if (!createResult || !(createResult as any).success) {
-        expect(true).toBe(true); // Test passes if research cannot be created
-        return;
-      }
-
-      let projectId: string;
-      if (responses.length > 0 && responses[0].metadata?.projectId) {
-        projectId = responses[0].metadata.projectId;
-      } else {
-        projectId = (createResult as any).metadata?.projectId;
-        if (!projectId) {
-          expect(true).toBe(true);
-          return;
-        }
-      }
-
-      // Refine the research
-      responses.length = 0;
+      // Test refining research with an active project
       const refineMessage = createTestMemory({
         text: 'refine with focus on neural networks',
         action: 'REFINE_RESEARCH_QUERY',
-        metadata: { projectId },
       });
 
-      await refineResearchQueryAction.handler(
+      const result = await refineResearchQueryAction.handler(
         runtime,
         refineMessage,
-        { values: { research_project_id: projectId }, data: {}, text: '' },
+        { values: { research_project_id: mockProjects[0].id }, data: {}, text: '' },
         {},
         callback
       );
 
-      if (responses.length > 0) {
-        expect(responses[0].text).toContain('refin');
-        expect(responses[0].metadata.refinement).toBeDefined();
+      expect(result).toBeDefined();
+
+      // Type guard for ActionResult
+      if (result && typeof result === 'object' && 'success' in result) {
+        expect(result.success).toBe(true);
+
+        if (responses.length > 0) {
+          expect(responses[0].text).toContain('refined');
+          expect(responses[0].metadata.refinement).toBeDefined();
+          expect(responses[0].metadata.refinement.focusAreas).toContain('neural networks');
+        }
+      } else {
+        // Test should fail if result is not an ActionResult
+        fail('Result should be an ActionResult object');
       }
-    });
+
+      // Verify the project was updated
+      expect(mockProjects[0].metadata.queryPlan.subQueries).toHaveLength(2);
+    }, 10000); // Add 10 second timeout
   });
 
   describe('Action Result Chaining', () => {

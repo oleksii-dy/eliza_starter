@@ -1,7 +1,7 @@
 import { getElizaCharacter } from '@/src/characters/eliza';
 import { AgentServer, jsonToCharacter, loadCharacterTryPath } from '@elizaos/server';
 import { configureDatabaseSettings, findNextAvailablePort, resolvePgliteDir } from '@/src/utils';
-import { logger, type Character, type ProjectAgent } from '@elizaos/core';
+import { logger, type Character, type ProjectAgent, getTempLogPath } from '@elizaos/core';
 import { startAgent, stopAgent } from './agent-start';
 import { gracefulShutdownHandler } from '@/src/utils/graceful-shutdown';
 import { LogArchiver } from '@/src/utils/log-archiver';
@@ -41,7 +41,7 @@ export async function startAgents(options: ServerStartOptions): Promise<void> {
       process.env.AUTONOMOUS_FILE_LOGGING = 'true';
     }
     if (!process.env.AUTONOMOUS_LOG_DIR) {
-      process.env.AUTONOMOUS_LOG_DIR = './logs/autonomy';
+      process.env.AUTONOMOUS_LOG_DIR = getTempLogPath('autonomy');
     }
     if (!process.env.AUTONOMOUS_LOOP_INTERVAL) {
       process.env.AUTONOMOUS_LOOP_INTERVAL = '5000'; // 5 seconds default

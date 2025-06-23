@@ -2,7 +2,7 @@ import type {
   ConfigurationSource,
   PluginConfiguration,
   ComponentConfigState,
-} from '../types/plugin-config.js';
+} from '../types/plugin';
 import type { Character } from '../types/agent.js';
 import { elizaLogger } from '../logger.js';
 
@@ -99,10 +99,7 @@ export class CharacterConfigurationSource implements ConfigurationSource {
   /**
    * Character configuration source is read-only, cannot update
    */
-  async updatePluginConfig(
-    pluginName: string,
-    config: PluginConfiguration
-  ): Promise<void> {
+  async updatePluginConfig(pluginName: string, config: PluginConfiguration): Promise<void> {
     this.logger.warn(
       `Cannot update plugin configuration for "${pluginName}" - character configuration source is read-only`
     );

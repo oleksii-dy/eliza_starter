@@ -10,7 +10,7 @@ export const followUpRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing follow-up scheduling from conversation...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -66,7 +66,7 @@ export const followUpRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing multiple follow-up scheduling...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }
@@ -127,7 +127,7 @@ export const followUpRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing follow-up completion tracking...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
         }

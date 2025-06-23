@@ -1,7 +1,7 @@
 import { PGlite } from '@electric-sql/pglite';
 import { UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { PGliteClientManager } from '../../pglite/manager';
 

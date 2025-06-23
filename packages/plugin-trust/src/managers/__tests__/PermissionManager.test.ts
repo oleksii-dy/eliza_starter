@@ -284,9 +284,10 @@ describe('PermissionManager', () => {
   describe('stop', () => {
     it('should clean up resources', async () => {
       await permissionManager.initialize(mockRuntime, mockTrustEngine, mockSecurityManager);
-      
+
       // Should not throw
-      await expect(permissionManager.stop()).resolves.not.toThrow();
+      await permissionManager.stop();
+      // Test passes if no error is thrown
     });
   });
 }); 

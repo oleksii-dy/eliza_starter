@@ -8,9 +8,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "elizaos test",
-    "test:e2e": "elizaos test --type e2e",
-    "test:vitest": "vitest"
+    "test": "bun test",
+    "test:e2e": "elizaos test --type e2e"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",

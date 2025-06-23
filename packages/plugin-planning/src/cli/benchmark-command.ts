@@ -102,7 +102,6 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning a
     'workflow optimization',
   ],
   knowledge: [],
-  clients: [],
   plugins: [],
 };
 

@@ -38,7 +38,6 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
       postExamples: [],
       topics: [],
       knowledge: [],
-      clients: [],
       plugins: [
         '@elizaos/plugin-trust',
         '@elizaos/plugin-rolodex',

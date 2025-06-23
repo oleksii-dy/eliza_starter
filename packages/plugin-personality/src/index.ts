@@ -6,10 +6,7 @@ import { modifyCharacterAction } from './actions/modify-character.js';
 import { restoreCharacterAction } from './actions/restore-character.js';
 import { characterEvolutionProvider } from './providers/character-evolution.js';
 import { CharacterFileManager } from './services/character-file-manager.js';
-import SelfModificationTestSuite from './__tests__/e2e/self-modification.test.js';
-import AgentIntegrationTestSuite from './__tests__/integration/agent-integration.test.js';
-import PersonalityResistanceRuntimeTestSuite from './__tests__/e2e/personality-resistance-runtime.test.js';
-import BackupRestorationRuntimeTestSuite from './__tests__/e2e/backup-restoration-runtime.test.js';
+// Test imports removed - tests now use bun:test format
 // Temporarily comment out scenarios until type issues are resolved
 // import adminCharacterModificationScenario from './scenarios/admin-character-modification.js';
 // import agentSelfModificationScenario from './scenarios/agent-self-modification.js';
@@ -44,13 +41,8 @@ export const selfModificationPlugin: Plugin = {
   providers: [characterEvolutionProvider],
   services: [CharacterFileManager],
 
-  // Test suites for ElizaOS test runner
-  tests: [
-    SelfModificationTestSuite,
-    AgentIntegrationTestSuite,
-    PersonalityResistanceRuntimeTestSuite,
-    BackupRestorationRuntimeTestSuite,
-  ],
+  // Test suites removed - now using bun:test format
+  tests: [],
 
   // Scenario tests for comprehensive workflow validation (temporarily disabled for build)
   scenarios: [
@@ -161,20 +153,7 @@ export {
   CharacterFileManager,
 };
 
-// Export test suites and scenarios
-export {
-  SelfModificationTestSuite,
-  AgentIntegrationTestSuite,
-  PersonalityResistanceRuntimeTestSuite,
-  BackupRestorationRuntimeTestSuite,
-  // Scenarios temporarily disabled for build issues
-  // adminCharacterModificationScenario,
-  // agentSelfModificationScenario,
-  // personalityEvolutionScenario,
-  // personalityResistanceScenario,
-  // selectivePersonalityChangesScenario,
-  // coreIdentityPreservationScenario
-};
+// Test suites and scenarios exports removed - now using bun:test format
 
 // Default export for easy import
 export default selfModificationPlugin;

@@ -39,11 +39,36 @@ export const evaluateTrustAction: Action = {
     if (requestData?.entityId) {
       targetEntityId = requestData.entityId as UUID;
     } else if (requestData?.entityName) {
-      // TODO: Resolve entity name to ID using rolodex or other service
-      return {
-        text: 'Entity name resolution not yet implemented. Please provide entity ID.',
-        error: true,
-      };
+      // Try to resolve entity name to ID
+      // First check if we have a rolodex or entity service
+      const entityService = runtime.getService('entities') as any;
+      if (entityService && typeof entityService.findByName === 'function') {
+        const entity = await entityService.findByName(requestData.entityName);
+        if (entity) {
+          targetEntityId = entity.id;
+        }
+      }
+      
+      // If no entity service or entity not found, try database query
+      if (!targetEntityId && runtime.getEntitiesForRoom) {
+        const entities = await runtime.getEntitiesForRoom(message.roomId);
+        if (entities) {
+          const matchingEntity = entities.find(
+            e => e.names?.some(name => name.toLowerCase() === requestData.entityName!.toLowerCase())
+          );
+          if (matchingEntity) {
+            targetEntityId = matchingEntity.id;
+          }
+        }
+      }
+      
+      // If still not found, return helpful error
+      if (!targetEntityId) {
+        return {
+          text: `Could not find entity with name "${requestData.entityName}". Please check the name or provide an entity ID instead.`,
+          error: true,
+        };
+      }
     } else {
       // Default to evaluating the message sender
       targetEntityId = message.entityId;

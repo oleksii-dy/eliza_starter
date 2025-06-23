@@ -1,8 +1,10 @@
 import { logger, type UUID } from '@elizaos/core';
-import { PGliteClientManager } from './pglite/manager';
-import { PostgresConnectionManager } from './pg/manager';
 import type { PgliteDatabaseAdapter } from './pglite/adapter';
 import type { PgDatabaseAdapter } from './pg/adapter';
+import { PostgresConnectionManager } from './pg/manager';
+import { PGliteClientManager } from './pglite/manager';
+import path from 'path';
+import fs from 'fs';
 
 /**
  * Global registry for database connections to ensure all parts of the system
@@ -14,23 +16,62 @@ class DatabaseConnectionRegistry {
   private postgresManagers = new Map<string, PostgresConnectionManager>();
   private adapters = new Map<UUID, PgliteDatabaseAdapter | PgDatabaseAdapter>();
   private migrationLocks = new Map<string, Promise<void>>();
+  private pgliteManagers = new Map<string, PGliteClientManager>();
 
   /**
    * Get or create a PGLite manager for the given path
    */
   getPGLiteManager(dataDir: string): PGliteClientManager {
+    // For unified database approach, use a single connection
+    // In test mode, use test database; otherwise use production database
+    const isTest =
+      process.env.NODE_ENV === 'test' ||
+      process.env.VITEST === 'true' ||
+      process.env.JEST_WORKER_ID !== undefined;
+
     // Normalize the path to handle trailing slashes and dots
     let normalizedDir = dataDir || 'default';
-    if (normalizedDir !== 'default' && !normalizedDir.startsWith(':memory:')) {
-      // Remove trailing slashes and normalize path
-      normalizedDir = normalizedDir.replace(/\/+$/, '').replace(/\/\.$/, '');
+
+    // Only use unified database paths for non-test scenarios or when explicitly requested
+    if (!normalizedDir.startsWith(':memory:') && !isTest) {
+      // Force unified database location for production
+      normalizedDir = 'production-db';
+    }
+
+    // Normalize file paths to handle trailing slashes and dots
+    if (
+      !normalizedDir.startsWith(':memory:') &&
+      normalizedDir !== 'default' &&
+      normalizedDir !== 'production-db'
+    ) {
+      normalizedDir = path.resolve(normalizedDir);
     }
 
     const key = normalizedDir;
 
-    // Always return the singleton manager instance
-    logger.info(`[ConnectionRegistry] Returning singleton PGLite manager for: ${key}`);
-    return PGliteClientManager.getInstance({ dataDir });
+    if (!this.pgliteManagers.has(key)) {
+      logger.info(`[ConnectionRegistry] Creating new PGLite manager for: ${key}`);
+      const actualDataDir = normalizedDir.startsWith(':memory:')
+        ? dataDir
+        : normalizedDir === 'default' || normalizedDir === 'production-db'
+          ? `.eliza-temp/databases/${normalizedDir}`
+          : normalizedDir.startsWith('/')
+            ? normalizedDir // Use absolute paths as-is
+            : `.eliza-temp/databases/${normalizedDir}`;
+
+      // Ensure directory exists
+      if (!normalizedDir.startsWith(':memory:')) {
+        const dirPath = path.dirname(actualDataDir);
+        if (!fs.existsSync(dirPath)) {
+          fs.mkdirSync(dirPath, { recursive: true });
+        }
+      }
+
+      const manager = new PGliteClientManager({ dataDir: actualDataDir });
+      this.pgliteManagers.set(key, manager);
+    }
+
+    return this.pgliteManagers.get(key)!;
   }
 
   /**
@@ -139,11 +180,17 @@ class DatabaseConnectionRegistry {
       }
     }
 
-    // PGLite manager is now a singleton and will be closed by graceful shutdown
-    logger.info(
-      '[ConnectionRegistry] PGLite manager is singleton, will be closed by graceful shutdown'
-    );
+    // Close all PGLite managers
+    for (const [key, manager] of this.pgliteManagers) {
+      try {
+        await manager.close();
+        logger.debug(`[ConnectionRegistry] Closed PGLite manager: ${key}`);
+      } catch (error) {
+        logger.error(`[ConnectionRegistry] Error closing PGLite manager ${key}:`, error);
+      }
+    }
 
+    // Close all PostgreSQL managers
     for (const [key, manager] of this.postgresManagers) {
       try {
         await manager.close();
@@ -157,16 +204,30 @@ class DatabaseConnectionRegistry {
     this.adapters.clear();
     this.postgresManagers.clear();
     this.migrationLocks.clear();
+    this.pgliteManagers.clear();
   }
 
   /**
    * Clear all connections synchronously (for tests)
    */
   clearAll(): void {
+    // Close PGLite managers synchronously
+    for (const [key, manager] of this.pgliteManagers) {
+      try {
+        // Force synchronous close for tests
+        manager.close().catch((error) => {
+          logger.debug(`[ConnectionRegistry] Error during clearAll PGLite close: ${key}`, error);
+        });
+      } catch (error) {
+        // Ignore errors during test cleanup
+      }
+    }
+
     // Clear all maps without async cleanup
     this.adapters.clear();
     this.postgresManagers.clear();
     this.migrationLocks.clear();
+    this.pgliteManagers.clear();
   }
 }
 

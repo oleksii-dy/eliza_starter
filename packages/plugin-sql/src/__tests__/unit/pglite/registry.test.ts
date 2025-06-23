@@ -1,41 +1,33 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { connectionRegistry } from '../../../connection-registry';
 import { PGliteClientManager } from '../../../pglite/manager';
 import { PgliteDatabaseAdapter } from '../../../pglite/adapter';
 import { PostgresConnectionManager } from '../../../pg/manager';
 import { PgDatabaseAdapter } from '../../../pg/adapter';
 import { type UUID, logger } from '@elizaos/core';
-import { rm } from 'fs/promises';
-import { existsSync } from 'fs';
+import { TestDbManager, generateTestDbPath } from '../../test-db-utils';
 import path from 'path';
 
 // Suppress logs during tests
 logger.level = 'error';
 
 describe('Connection Registry Tests', () => {
-  const testDirs: string[] = [];
+  const testDbManager = new TestDbManager();
 
   beforeEach(() => {
     connectionRegistry.clearAll();
   });
 
   afterEach(async () => {
-    // Clean up all test directories
-    for (const dir of testDirs) {
-      if (existsSync(dir)) {
-        await rm(dir, { recursive: true, force: true });
-      }
-    }
-    testDirs.length = 0;
-    
+    // Clean up all test databases
+    await testDbManager.cleanupAll();
     connectionRegistry.clearAll();
   });
 
   describe('PGLite Manager Registry', () => {
-    it('should create singleton managers per directory', () => {
-      const dir1 = path.join(process.cwd(), `.test-registry-1-${Date.now()}`);
-      const dir2 = path.join(process.cwd(), `.test-registry-2-${Date.now()}`);
-      testDirs.push(dir1, dir2);
+    it('should create singleton managers per directory', async () => {
+      const dir1 = await testDbManager.createTestDb('registry-1');
+      const dir2 = await testDbManager.createTestDb('registry-2');
 
       // Get managers for different directories
       const manager1a = connectionRegistry.getPGLiteManager(dir1);
@@ -44,14 +36,13 @@ describe('Connection Registry Tests', () => {
 
       // Same directory should return same manager
       expect(manager1a).toBe(manager1b);
-      
+
       // Different directories should return different managers
       expect(manager1a).not.toBe(manager2);
     });
 
-    it('should normalize directory paths', () => {
-      const baseDir = path.join(process.cwd(), `.test-registry-norm-${Date.now()}`);
-      testDirs.push(baseDir);
+    it('should normalize directory paths', async () => {
+      const baseDir = await testDbManager.createTestDb('registry-norm');
 
       // Different path representations of same directory
       const manager1 = connectionRegistry.getPGLiteManager(baseDir);
@@ -63,15 +54,13 @@ describe('Connection Registry Tests', () => {
       expect(manager1).toBe(manager3);
     });
 
-    it('should handle relative paths', () => {
+    it('should handle relative paths', async () => {
       const relPath1 = './.test-registry-rel1';
       const relPath2 = './.test-registry-rel2';
-      
+
       // Store absolute paths for cleanup
-      testDirs.push(
-        path.resolve(relPath1),
-        path.resolve(relPath2)
-      );
+      testDbManager['testDbs'].add(path.resolve(relPath1));
+      testDbManager['testDbs'].add(path.resolve(relPath2));
 
       const manager1 = connectionRegistry.getPGLiteManager(relPath1);
       const manager2 = connectionRegistry.getPGLiteManager(relPath2);
@@ -80,11 +69,10 @@ describe('Connection Registry Tests', () => {
     });
 
     it('should track manager lifecycle', async () => {
-      const dir = path.join(process.cwd(), `.test-registry-lifecycle-${Date.now()}`);
-      testDirs.push(dir);
+      const dir = await testDbManager.createTestDb('registry-lifecycle');
 
       const manager = connectionRegistry.getPGLiteManager(dir);
-      
+
       // Initialize and verify
       await manager.initialize();
       expect(manager.getConnection()).toBeDefined();
@@ -110,14 +98,14 @@ describe('Connection Registry Tests', () => {
 
       // Same URL should return same manager
       expect(manager1a).toBe(manager1b);
-      
+
       // Different URLs should return different managers
       expect(manager1a).not.toBe(manager2);
     });
 
     it('should handle URL variations', () => {
       const baseUrl = 'postgres://user:pass@localhost:5432/testdb';
-      
+
       // Different representations
       const manager1 = connectionRegistry.getPostgresManager(baseUrl);
       const manager2 = connectionRegistry.getPostgresManager(`${baseUrl}?ssl=false`);
@@ -131,8 +119,7 @@ describe('Connection Registry Tests', () => {
 
   describe('Adapter Registry', () => {
     it('should register and retrieve adapters by agent ID', async () => {
-      const dir = path.join(process.cwd(), `.test-adapter-reg-${Date.now()}`);
-      testDirs.push(dir);
+      const dir = await testDbManager.createTestDb('adapter-reg');
 
       const agentId1 = 'agent-1' as UUID;
       const agentId2 = 'agent-2' as UUID;
@@ -147,8 +134,7 @@ describe('Connection Registry Tests', () => {
     });
 
     it('should handle adapter replacement', async () => {
-      const dir = path.join(process.cwd(), `.test-adapter-replace-${Date.now()}`);
-      testDirs.push(dir);
+      const dir = await testDbManager.createTestDb('adapter-replace');
 
       const agentId = 'test-agent' as UUID;
       const manager = connectionRegistry.getPGLiteManager(dir);
@@ -159,15 +145,14 @@ describe('Connection Registry Tests', () => {
 
       // Create second adapter for same agent
       const adapter2 = new PgliteDatabaseAdapter(agentId, manager, dir);
-      
+
       // Should replace the first one
       expect(connectionRegistry.getAdapter(agentId)).toBe(adapter2);
       expect(connectionRegistry.getAdapter(agentId)).not.toBe(adapter1);
     });
 
-    it('should handle mixed adapter types', () => {
-      const dir = path.join(process.cwd(), `.test-mixed-adapters-${Date.now()}`);
-      testDirs.push(dir);
+    it('should handle mixed adapter types', async () => {
+      const dir = await testDbManager.createTestDb('mixed-adapters');
 
       const pgUrl = 'postgres://user:pass@localhost:5432/testdb';
       const agentId1 = 'pglite-agent' as UUID;
@@ -189,14 +174,13 @@ describe('Connection Registry Tests', () => {
 
   describe('Registry Cleanup', () => {
     it('should clear all managers on clearAll', async () => {
-      const dir1 = path.join(process.cwd(), `.test-clear-1-${Date.now()}`);
-      const dir2 = path.join(process.cwd(), `.test-clear-2-${Date.now()}`);
-      testDirs.push(dir1, dir2);
+      const dir1 = await testDbManager.createTestDb('clear-1');
+      const dir2 = await testDbManager.createTestDb('clear-2');
 
       // Create managers
       const manager1 = connectionRegistry.getPGLiteManager(dir1);
       const manager2 = connectionRegistry.getPGLiteManager(dir2);
-      
+
       await manager1.initialize();
       await manager2.initialize();
 
@@ -228,22 +212,25 @@ describe('Connection Registry Tests', () => {
     });
 
     it('should handle clearAll during active operations', async () => {
-      const dir = path.join(process.cwd(), `.test-clear-active-${Date.now()}`);
-      testDirs.push(dir);
+      const dir = await testDbManager.createTestDb('clear-active');
 
       const manager = connectionRegistry.getPGLiteManager(dir);
       const adapter = new PgliteDatabaseAdapter('test-agent' as UUID, manager, dir);
-      
+
       await adapter.init();
 
       // Start some operations
-      const operations = Array.from({ length: 5 }, (_, i) =>
-        adapter.createMemory({
-          entityId: 'test-entity' as UUID,
-          roomId: 'test-room' as UUID,
-          content: { text: `Memory ${i}` },
-          createdAt: Date.now() + i,
-        }).catch(() => {}) // Ignore errors
+      const operations = Array.from(
+        { length: 5 },
+        (_, i) =>
+          adapter
+            .createMemory({
+              entityId: 'test-entity' as UUID,
+              roomId: 'test-room' as UUID,
+              content: { text: `Memory ${i}` },
+              createdAt: Date.now() + i,
+            })
+            .catch(() => {}) // Ignore errors
       );
 
       // Clear registry while operations are in flight
@@ -276,36 +263,31 @@ describe('Connection Registry Tests', () => {
       expect(manager1).toBe(manager3);
     });
 
-    it('should handle special characters in paths', () => {
-      const specialDir = path.join(process.cwd(), `.test-special-${Date.now()}-äöü-你好`);
-      testDirs.push(specialDir);
+    it('should handle special characters in paths', async () => {
+      const specialDir = await testDbManager.createTestDb('special-chars-äöü-你好');
 
       // Should handle without error
       const manager = connectionRegistry.getPGLiteManager(specialDir);
       expect(manager).toBeDefined();
     });
 
-    it('should handle very long paths', () => {
-      const longSegment = 'a'.repeat(50);
-      const longPath = path.join(
-        process.cwd(),
-        `.test-long-${Date.now()}`,
-        longSegment,
-        longSegment,
-        longSegment
-      );
-      testDirs.push(longPath);
+    it('should handle very long paths', async () => {
+      // This test was problematic - now using centralized test db with short paths
+      const longTestName = 'a'.repeat(100); // Will be truncated by sanitizeTestName
+      const dbPath = await generateTestDbPath(longTestName);
+
+      // The path should be reasonable length now
+      expect(dbPath.length).toBeLessThan(260); // Windows MAX_PATH limit
 
       // Should handle without error
-      const manager = connectionRegistry.getPGLiteManager(longPath);
+      const manager = connectionRegistry.getPGLiteManager(dbPath);
       expect(manager).toBeDefined();
     });
   });
 
   describe('Concurrency', () => {
     it('should handle concurrent manager requests', async () => {
-      const dir = path.join(process.cwd(), `.test-concurrent-${Date.now()}`);
-      testDirs.push(dir);
+      const dir = await testDbManager.createTestDb('concurrent');
 
       // Request same manager from multiple "threads"
       const promises = Array.from({ length: 10 }, () =>
@@ -316,22 +298,19 @@ describe('Connection Registry Tests', () => {
 
       // All should be the same instance
       const firstManager = managers[0];
-      managers.forEach(manager => {
+      managers.forEach((manager) => {
         expect(manager).toBe(firstManager);
       });
     });
 
     it('should handle concurrent adapter registration', async () => {
-      const dir = path.join(process.cwd(), `.test-concurrent-adapters-${Date.now()}`);
-      testDirs.push(dir);
+      const dir = await testDbManager.createTestDb('concurrent-adapters');
 
       const manager = connectionRegistry.getPGLiteManager(dir);
 
       // Create adapters concurrently
       const adapterPromises = Array.from({ length: 10 }, (_, i) =>
-        Promise.resolve(
-          new PgliteDatabaseAdapter(`agent-${i}` as UUID, manager, dir)
-        )
+        Promise.resolve(new PgliteDatabaseAdapter(`agent-${i}` as UUID, manager, dir))
       );
 
       const adapters = await Promise.all(adapterPromises);

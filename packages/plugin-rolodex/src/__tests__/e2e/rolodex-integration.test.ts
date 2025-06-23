@@ -25,7 +25,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
           const userId = stringToUuid(`test-user-${Date.now()}`);
 
           // Get EntityGraphManager
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+          const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
           if (!entityGraphService) {
             throw new Error('EntityGraphManager not available');
           }
@@ -87,7 +87,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
         console.log('🧪 Testing entity profile management...');
 
         try {
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+          const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
           if (!entityGraphService) {
             throw new Error('EntityGraphManager not available');
           }
@@ -161,7 +161,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
         console.log('🧪 Testing relationship creation and tracking...');
 
         try {
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+          const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
           if (!entityGraphService) {
             throw new Error('EntityGraphManager not available');
           }
@@ -245,7 +245,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
         console.log('🧪 Testing entity resolution service functionality...');
 
         try {
-          const resolutionService = runtime.getService('entity-resolution') as EntityResolutionManager;
+          const resolutionService = runtime.getService('entity-resolution') as unknown as EntityResolutionManager;
           if (!resolutionService) {
             throw new Error('EntityResolutionManager not available');
           }
@@ -340,7 +340,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
         console.log('🧪 Testing follow-up scheduling and management...');
 
         try {
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+          const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
           if (!entityGraphService) {
             throw new Error('EntityGraphManager not available');
           }
@@ -476,8 +476,8 @@ export class RolodexIntegrationTestSuite implements TestSuite {
 
         try {
           // Verify all core services are available
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
-          const resolutionService = runtime.getService('entity-resolution') as EntityResolutionManager;
+          const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
+          const resolutionService = runtime.getService('entity-resolution') as unknown as EntityResolutionManager;
 
           if (!entityGraphService) {
             throw new Error('EntityGraphManager not available');

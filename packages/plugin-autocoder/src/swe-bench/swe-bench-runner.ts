@@ -43,8 +43,8 @@ export class SWEBenchRunner {
 
     // Initialize configuration
     this.config = {
-      cache_dir: path.join(process.cwd(), '.swe-bench-cache'),
-      work_dir: path.join(process.cwd(), '.swe-bench-work'),
+      cache_dir: path.join(process.cwd(), '.eliza-temp', 'swe-bench-cache'),
+      work_dir: path.join(process.cwd(), '.eliza-temp', 'swe-bench-work'),
       docker_enabled: false, // Start without Docker for simplicity
       max_parallel_instances: 1,
       timeout_per_instance: 300000, // 5 minutes

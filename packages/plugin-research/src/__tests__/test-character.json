@@ -1,0 +1,17 @@
+{
+  "name": "ResearchTestAgent",
+  "plugins": ["@elizaos/plugin-research"],
+  "clients": [],
+  "modelProvider": "openai",
+  "bio": ["Test agent for research plugin E2E tests"],
+  "system": "You are a test research assistant for conducting comprehensive internet research.",
+  "settings": {
+    "model": "gpt-4-turbo-preview",
+    "temperature": 0.7,
+    "RESEARCH_MAX_RESULTS": "50",
+    "RESEARCH_DEPTH": "deep",
+    "RESEARCH_DOMAIN": "general",
+    "RESEARCH_SEARCH_PROVIDERS": "web,academic",
+    "RESEARCH_EVALUATION_ENABLED": "true"
+  }
+} 

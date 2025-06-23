@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { PGliteClientManager } from '../../pglite/manager';
 import { asUUID } from '@elizaos/core';

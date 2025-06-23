@@ -9,6 +9,8 @@
     "build": "tsup",
     "clean": "rm -rf dist",
     "test": "elizaos test",
+    "test:unit": "vitest run --exclude='**/*.e2e.test.ts'",
+    "test:unit:watch": "vitest --exclude='**/*.e2e.test.ts'",
     "test:watch": "vitest",
     "dev": "tsup --watch",
     "lint": "eslint src --ext ts,tsx",

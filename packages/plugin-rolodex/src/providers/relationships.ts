@@ -43,7 +43,7 @@ async function formatRelationships(runtime: IAgentRuntime, relationships: Relati
     }
   });
 
-  const formatMetadata = (metaproofData: any) => {
+  const formatMetadata = (metadata: any) => {
     return JSON.stringify(
       Object.entries(metadata)
         .map(
@@ -97,7 +97,7 @@ const relationshipsProvider: Provider = {
 
     if (!relationships || relationships.length === 0) {
       return {
-        proofData: {
+        data: {
           relationships: [],
         },
         values: {
@@ -111,7 +111,7 @@ const relationshipsProvider: Provider = {
 
     if (!formattedRelationships) {
       return {
-        proofData: {
+        data: {
           relationships: [],
         },
         values: {
@@ -121,7 +121,7 @@ const relationshipsProvider: Provider = {
       };
     }
     return {
-      proofData: {
+      data: {
         relationships: formattedRelationships,
       },
       values: {

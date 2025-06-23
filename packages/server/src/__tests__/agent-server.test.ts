@@ -471,7 +471,7 @@ describe('AgentServer Integration Tests', () => {
     it('should create channel', async () => {
       const channelData = {
         name: 'Test Channel',
-        messageServerId: 'server-id' as UUID,
+        serverId: 'server-id' as UUID,
         type: 'group' as ChannelType,
       };
 
@@ -480,7 +480,7 @@ describe('AgentServer Integration Tests', () => {
       expect((server.database as any).createChannel).toHaveBeenCalledWith(channelData, undefined);
       expect(result).toEqual({
         id: 'channel-id' as UUID,
-        messageServerId: 'server-id' as UUID,
+        serverId: 'server-id' as UUID,
         name: 'Test Channel',
         type: 'group' as ChannelType,
         createdAt: expect.any(Date),

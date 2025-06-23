@@ -33,7 +33,9 @@ export class TestRunner {
    */
   async setup(implementation: Implementation, testSuite: TestSuite): Promise<void> {
     // Create temp directory
-    this.tempDir = await fs.mkdtemp(path.join(process.cwd(), '.test-runner-'));
+    const tempBase = path.join(process.cwd(), '.eliza-temp', 'test-runner');
+    await fs.mkdir(tempBase, { recursive: true });
+    this.tempDir = await fs.mkdtemp(path.join(tempBase, 'test-'));
 
     // Write implementation files
     for (const file of implementation.files) {

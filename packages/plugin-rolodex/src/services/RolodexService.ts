@@ -179,9 +179,17 @@ export class RolodexService extends Service {
    */
   private async verifyTables(): Promise<boolean> {
     try {
-      // Test queries to verify tables exist
-      await this.runtime.db.query('SELECT 1 FROM entities LIMIT 1');
-      await this.runtime.db.query('SELECT 1 FROM relationships LIMIT 1');
+      // The plugin uses the runtime's built-in entity and relationship storage
+      // No custom tables needed - just verify the runtime is properly initialized
+      if (!this.runtime.db) {
+        logger.error('[RolodexService] Database adapter not available');
+        return false;
+      }
+      
+      // Try to get entities to verify the runtime's database is working
+      const roomIds = await this.runtime.getRoomsForParticipant(this.runtime.agentId);
+      logger.info(`[RolodexService] Runtime database verified, found ${roomIds.length} rooms`);
+      
       return true;
     } catch (error) {
       logger.error('[RolodexService] Table verification failed:', error);
@@ -548,10 +556,28 @@ export class RolodexService extends Service {
     this.ensureReady();
 
     try {
-      return await this.runtime.db.query(
-        'SELECT * FROM entities WHERE agentId = ?',
-        [this.runtime.agentId]
-      );
+      // Get all rooms for the agent
+      const roomIds = await this.runtime.getRoomsForParticipant(this.runtime.agentId);
+      const allEntities: Entity[] = [];
+      const seenIds = new Set<string>();
+
+      // Collect entities from all rooms
+      for (const roomId of roomIds) {
+        const entities = await this.runtime.getEntitiesForRoom(roomId);
+        
+        for (const entity of entities) {
+          if (!entity.id || seenIds.has(entity.id)) continue;
+          seenIds.add(entity.id);
+          allEntities.push({
+            id: entity.id,
+            agentId: entity.agentId,
+            names: entity.names,
+            metadata: entity.metadata || {}
+          });
+        }
+      }
+
+      return allEntities;
     } catch (error) {
       logger.error('[RolodexService] Failed to export contacts:', error);
       return [];

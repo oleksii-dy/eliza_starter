@@ -19,7 +19,7 @@ import {
   BulkOperationStep,
   ValidationStep,
   ValidationCheck,
-} from '../types/scenario-extensions.js';
+} from '../types/scenario';
 
 export class ExtendedScenarioRunner {
   private sandboxPath?: string;
@@ -43,11 +43,11 @@ export class ExtendedScenarioRunner {
         try {
           const result = await this.executeStep(step);
           stepResults.push(result);
-          
+
           if (!result.success) {
             success = false;
             errors.push(`Step ${step.type}: ${result.error}`);
-            
+
             // Check failure strategy
             if (this.scenario.metadata?.parallel !== true) {
               break; // Stop on first failure for sequential execution
@@ -86,7 +86,6 @@ export class ExtendedScenarioRunner {
           }
         }
       }
-
     } catch (error) {
       success = false;
       errors.push(`Scenario failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -111,13 +110,10 @@ export class ExtendedScenarioRunner {
     }
 
     const tempId = `eliza-test-${uuidv4().substring(0, 8)}`;
-    this.sandboxPath = path.join(
-      this.scenario.setup.sandbox.tempDirectory || tmpdir(),
-      tempId
-    );
+    this.sandboxPath = path.join(this.scenario.setup.sandbox.tempDirectory || tmpdir(), tempId);
 
     await fs.mkdir(this.sandboxPath, { recursive: true });
-    
+
     // Setup git config if needed
     if (this.scenario.setup.sandbox.gitConfig) {
       const { name, email } = this.scenario.setup.sandbox.gitConfig;
@@ -131,10 +127,10 @@ export class ExtendedScenarioRunner {
 
   private async executeStep(step: ExtendedScenarioStep): Promise<StepResult> {
     const startTime = Date.now();
-    
+
     try {
       let result: any;
-      
+
       switch (step.type) {
         case 'file_operation':
           result = await this.executeFileOperation(step as FileSystemStep);
@@ -178,9 +174,12 @@ export class ExtendedScenarioRunner {
 
   private async executeFileOperation(step: FileSystemStep): Promise<any> {
     const targetPath = this.resolvePath(step.path);
-    
+
     // Validate path is within allowed operations
-    if (this.scenario.setup.filesystem?.restrictToTemp && !targetPath.startsWith(this.sandboxPath || '')) {
+    if (
+      this.scenario.setup.filesystem?.restrictToTemp &&
+      !targetPath.startsWith(this.sandboxPath || '')
+    ) {
       throw new Error(`File operation outside sandbox: ${targetPath}`);
     }
 
@@ -216,7 +215,10 @@ export class ExtendedScenarioRunner {
         return { path: targetPath };
 
       case 'exists':
-        const exists = await fs.access(targetPath).then(() => true).catch(() => false);
+        const exists = await fs
+          .access(targetPath)
+          .then(() => true)
+          .catch(() => false);
         return { exists, path: targetPath };
 
       case 'mkdir':
@@ -230,7 +232,7 @@ export class ExtendedScenarioRunner {
 
   private async executeGitOperation(step: GitStep): Promise<any> {
     const workDir = this.resolvePath(step.workingDirectory);
-    
+
     switch (step.operation) {
       case 'clone':
         if (!step.repository) throw new Error('Repository URL required for clone');
@@ -261,12 +263,12 @@ export class ExtendedScenarioRunner {
     if (step.mock?.enabled) {
       // Return mock response
       if (step.mock.delay) {
-        await new Promise(resolve => setTimeout(resolve, step.mock!.delay));
+        await new Promise((resolve) => setTimeout(resolve, step.mock!.delay));
       }
-      return { 
-        status: step.expectedStatus, 
+      return {
+        status: step.expectedStatus,
         data: step.mock.response,
-        mocked: true 
+        mocked: true,
       };
     }
 
@@ -293,23 +295,28 @@ export class ExtendedScenarioRunner {
         stderr += data.toString();
       });
 
-      const timeout = step.timeout ? setTimeout(() => {
-        child.kill();
-        reject(new Error(`Command timed out after ${step.timeout}ms`));
-      }, step.timeout) : null;
+      const timeout = step.timeout
+        ? setTimeout(() => {
+            child.kill();
+            reject(new Error(`Command timed out after ${step.timeout}ms`));
+          }, step.timeout)
+        : null;
 
       child.on('close', (code) => {
         if (timeout) clearTimeout(timeout);
-        
+
         if (code !== step.expectedExitCode) {
-          reject(new Error(`Expected exit code ${step.expectedExitCode}, got ${code}. stderr: ${stderr}`));
+          reject(
+            new Error(`Expected exit code ${step.expectedExitCode}, got ${code}. stderr: ${stderr}`)
+          );
           return;
         }
 
         if (step.expectedOutput) {
-          const match = step.expectedOutput instanceof RegExp 
-            ? step.expectedOutput.test(stdout)
-            : stdout.includes(step.expectedOutput);
+          const match =
+            step.expectedOutput instanceof RegExp
+              ? step.expectedOutput.test(stdout)
+              : stdout.includes(step.expectedOutput);
           if (!match) {
             reject(new Error(`Output didn't match expected pattern. Got: ${stdout}`));
             return;
@@ -330,10 +337,10 @@ export class ExtendedScenarioRunner {
     const results: any[] = [];
     const errors: string[] = [];
     const batchSize = step.batchSize || step.targets.length;
-    
+
     for (let i = 0; i < step.targets.length; i += batchSize) {
       const batch = step.targets.slice(i, i + batchSize);
-      
+
       if (step.parallelism && step.parallelism > 1) {
         // Parallel execution
         const promises = batch.map(async (target) => {
@@ -345,7 +352,7 @@ export class ExtendedScenarioRunner {
             return { target, success: false, error };
           }
         });
-        
+
         const batchResults = await Promise.all(promises);
         results.push(...batchResults);
       } else {
@@ -356,7 +363,7 @@ export class ExtendedScenarioRunner {
           } catch (error) {
             errors.push(`${target}: ${error}`);
             results.push({ target, success: false, error });
-            
+
             if (step.failureStrategy === 'stop_on_first') {
               break;
             }
@@ -365,12 +372,12 @@ export class ExtendedScenarioRunner {
       }
     }
 
-    return { results, errors, successCount: results.filter(r => r.success).length };
+    return { results, errors, successCount: results.filter((r) => r.success).length };
   }
 
   private async executeValidation(step: ValidationStep): Promise<any> {
     const results: any[] = [];
-    
+
     for (const check of step.checks) {
       try {
         const result = await this.runValidationCheck(check);
@@ -384,14 +391,17 @@ export class ExtendedScenarioRunner {
       }
     }
 
-    return { results, allPassed: results.every(r => r.success) };
+    return { results, allPassed: results.every((r) => r.success) };
   }
 
   private async runValidationCheck(check: ValidationCheck): Promise<boolean> {
     switch (check.type) {
       case 'file_exists':
         if (!check.target) throw new Error('Target path required for file_exists check');
-        return fs.access(this.resolvePath(check.target)).then(() => true).catch(() => false);
+        return fs
+          .access(this.resolvePath(check.target))
+          .then(() => true)
+          .catch(() => false);
 
       case 'file_content':
         if (!check.target) throw new Error('Target path required for file_content check');
@@ -415,7 +425,7 @@ export class ExtendedScenarioRunner {
 
   private async runVerification(): Promise<{ success: boolean; errors: string[] }> {
     const errors: string[] = [];
-    
+
     for (const rule of this.scenario.verification.rules) {
       try {
         const result = await this.runValidationCheck(rule);
@@ -450,9 +460,10 @@ export class ExtendedScenarioRunner {
 
     // Clean up sandbox
     if (this.sandboxPath && this.scenario.setup.sandbox?.cleanupStrategy !== 'never') {
-      const shouldCleanup = this.scenario.setup.sandbox?.cleanupStrategy === 'always' ||
-                           (this.scenario.setup.sandbox?.cleanupStrategy === 'on_success');
-      
+      const shouldCleanup =
+        this.scenario.setup.sandbox?.cleanupStrategy === 'always' ||
+        this.scenario.setup.sandbox?.cleanupStrategy === 'on_success';
+
       if (shouldCleanup) {
         try {
           await fs.rm(this.sandboxPath, { recursive: true, force: true });

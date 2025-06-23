@@ -1,3 +1,4 @@
+import './test-setup'; // Load environment variables
 import { IAgentRuntime, Memory, elizaLogger } from '@elizaos/core';
 import { ResearchService } from '../service';
 import { ResearchProject, ResearchStatus } from '../types';

@@ -80,7 +80,7 @@ const factsProvider: Provider = {
           values: {
             facts: '',
           },
-          proofData: {
+          data: {
             facts: allFacts,
           },
           text: 'No facts available.',
@@ -97,7 +97,7 @@ const factsProvider: Provider = {
         values: {
           facts: formattedFacts,
         },
-        proofData: {
+        data: {
           facts: allFacts,
         },
         text,
@@ -108,7 +108,7 @@ const factsProvider: Provider = {
         values: {
           facts: '',
         },
-        proofData: {
+        data: {
           facts: [],
         },
         text: 'Error retrieving facts.',

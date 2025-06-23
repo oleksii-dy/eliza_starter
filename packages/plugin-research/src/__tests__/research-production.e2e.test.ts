@@ -1,3 +1,4 @@
+import './test-setup'; // Load environment variables
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { elizaLogger, IAgentRuntime, ModelType } from '@elizaos/core';
 import { ResearchService } from '../service';
@@ -13,8 +14,7 @@ class ProductionTestRuntime implements IAgentRuntime {
     messageExamples: [],
     postExamples: [],
     topics: [],
-    knowledge: [],
-    clients: [],
+    knowledge: [],,
     plugins: [],
   };
 
@@ -456,7 +456,10 @@ describe('Research Service Error Handling', () => {
 
     const service = new ResearchService(runtime);
 
-    // Should handle shutdown gracefully
-    await expect(service.stop()).resolves.not.toThrow();
+    // Should handle shutdown gracefully - just await without throwing
+    await service.stop();
+    
+    // If we get here, the method didn't throw
+    expect(true).toBe(true);
   });
 });

@@ -21,7 +21,7 @@ export const entityResolutionProvider: Provider = {
       // Check for potential identity conflicts or duplicates
       const resolutionContext: ResolutionContext = {
         roomId,
-        conversationHistory: state.proofData?.recentMessages || [],
+        conversationHistory: state.data?.recentMessages || [],
         platformContext: {
           platform: message.content.source || 'unknown',
         },
@@ -101,7 +101,7 @@ export const entityResolutionProvider: Provider = {
         }
 
         if (unverifiedPlatforms.length > 0) {
-          lines.push('**Unvalid:**');
+          lines.push('**Unverified:**');
           for (const platform of unverifiedPlatforms.slice(0, 2)) {
             const confidence = Math.round(platform.confidence * 100);
             lines.push(
@@ -145,14 +145,14 @@ export const entityResolutionProvider: Provider = {
           riskLevel,
           riskFactorCount: allRiskFactors.length,
         },
-        proofData: {
+        data: {
           resolutionCandidates,
           currentEntityMatch: currentEntity,
           riskFactors: allRiskFactors,
         },
       };
     } catch (error) {
-      logger.error('[EntityResolutionProvider] Error getting resolution proofData:', error);
+      logger.error('[EntityResolutionProvider] Error getting resolution data:', error);
       return { text: 'Unable to retrieve entity resolution information at this time.' };
     }
   },

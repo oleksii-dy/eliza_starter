@@ -666,11 +666,23 @@ export function stringToUuid(target: string | number): UUID {
 }
 
 export const getContentTypeFromMimeType = (mimeType: string): ContentType | undefined => {
-  if (mimeType.startsWith('image/')) return ContentType.IMAGE;
-  if (mimeType.startsWith('video/')) return ContentType.VIDEO;
-  if (mimeType.startsWith('audio/')) return ContentType.AUDIO;
-  if (mimeType.includes('pdf') || mimeType.includes('document') || mimeType.startsWith('text/')) {
-    return ContentType.DOCUMENT;
-  }
-  return undefined;
+  const mimeTypeMap: Record<string, ContentType> = {
+    'text/plain': ContentType.DOCUMENT,
+    'text/html': ContentType.DOCUMENT,
+    'image/jpeg': ContentType.IMAGE,
+    'image/jpg': ContentType.IMAGE,
+    'image/png': ContentType.IMAGE,
+    'image/gif': ContentType.IMAGE,
+    'image/webp': ContentType.IMAGE,
+    'audio/mpeg': ContentType.AUDIO,
+    'audio/wav': ContentType.AUDIO,
+    'audio/ogg': ContentType.AUDIO,
+    'video/mp4': ContentType.VIDEO,
+    'video/mpeg': ContentType.VIDEO,
+    'video/webm': ContentType.VIDEO,
+  };
+  return mimeTypeMap[mimeType.toLowerCase()];
 };
+
+// Export temp utilities
+export * from './utils/temp';

@@ -16,7 +16,6 @@ export async function createMockRuntime(): Promise<Partial<IAgentRuntime>> {
       postExamples: [],
       topics: [],
       knowledge: [],
-      clients: [],
       plugins: [],
     },
 

@@ -26,7 +26,6 @@ export const messageHandlingPlugin: Plugin = {
     providers.evaluatorsProvider,
     providers.anxietyProvider,
     providers.timeProvider,
-    providers.settingsProvider,
     providers.capabilitiesProvider,
     providers.attachmentsProvider,
     providers.providersProvider,

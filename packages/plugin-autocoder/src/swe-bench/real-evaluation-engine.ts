@@ -26,7 +26,7 @@ export class RealEvaluationEngine {
   private instances: Map<string, SWEBenchInstance> = new Map();
 
   constructor(config: EvaluationConfig) {
-    this.workDir = config.output_dir || path.join(process.cwd(), '.swe-bench-real-eval');
+    this.workDir = config.output_dir || path.join(process.cwd(), '.eliza-temp', 'swe-bench-real-eval');
     this.cacheDir = config.cache_dir || path.join(this.workDir, 'cache');
     this.timeout = config.timeout_per_instance || 300; // 5 minutes default
     this.maxParallel = config.parallel_instances || 2; // Conservative default

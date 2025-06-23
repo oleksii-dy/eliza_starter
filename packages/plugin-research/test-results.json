@@ -1,0 +1,1797 @@
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:23] INFO: [36mStarting research: domain=general, type=exploratory, depth=moderate[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Starting comprehensive research for: research quantum computing applications[39m
+[2025-06-23 10:13:23] WARN: [36mCould not extract task type from response: based on the search results, here is a concise answer to your query.[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: true, TechDocs: false[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Academic query detected - including scholarly sources[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Selected providers: web, academic[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"522caf14-6fd2-416e-a994-a0de9ec0ad76","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673603857}[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Analyzing query relevance for: research quantum computing applications[39m
+[2025-06-23 10:13:23] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: research quantum computing applications[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchLogger] Initializing session for project: 522caf14-6fd2-416e-a994-a0de9ec0ad76[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:23] INFO: [36mStarting research: domain=general, type=exploratory, depth=moderate[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Starting comprehensive research for: research AI ethics[39m
+[2025-06-23 10:13:23] WARN: [36mCould not extract task type from response: based on the search results, here is a concise answer to your query.[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: true, TechDocs: false[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Academic query detected - including scholarly sources[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Selected providers: web, academic[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"be722d09-a94e-4cf7-a2cc-95ebe054ee27","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673603868}[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Analyzing query relevance for: research AI ethics[39m
+[2025-06-23 10:13:23] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: research AI ethics[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchLogger] Initializing session for project: be722d09-a94e-4cf7-a2cc-95ebe054ee27[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"be722d09-a94e-4cf7-a2cc-95ebe054ee27","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673603871}[39m
+[2025-06-23 10:13:23] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:23] INFO: [36m[Tavily] Searching for: research AI ethics[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"522caf14-6fd2-416e-a994-a0de9ec0ad76","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673603892}[39m
+[2025-06-23 10:13:23] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:23] INFO: [36m[Tavily] Searching for: research quantum computing applications[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"be722d09-a94e-4cf7-a2cc-95ebe054ee27","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673603969}[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Analyzing query relevance for: research AI ethics[39m
+[2025-06-23 10:13:23] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: research AI ethics[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchLogger] Initializing session for project: be722d09-a94e-4cf7-a2cc-95ebe054ee27[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:23] INFO: [36mStarting research: domain=general, type=exploratory, depth=moderate[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Starting comprehensive research for: research quantum cryptography[39m
+[2025-06-23 10:13:23] WARN: [36mCould not extract task type from response: based on the search results, here is a concise answer to your query.[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: true, TechDocs: false[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Academic query detected - including scholarly sources[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Selected providers: web, academic[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"2dfdc17e-aeae-4453-a288-f27317525e96","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673603970}[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Analyzing query relevance for: research quantum cryptography[39m
+[2025-06-23 10:13:23] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: research quantum cryptography[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchLogger] Initializing session for project: 2dfdc17e-aeae-4453-a288-f27317525e96[39m
+[2025-06-23 10:13:23] INFO: [36mStarting evaluation for project 2dfdc17e-aeae-4453-a288-f27317525e96[39m
+[2025-06-23 10:13:23] ERROR: [36m[RACEEvaluator] Failed to extract score for comprehensiveness[39m
+[2025-06-23 10:13:23] ERROR: [36m[RACEEvaluator] Failed to extract score for depth[39m
+[2025-06-23 10:13:23] ERROR: [36m[RACEEvaluator] Failed to extract score for instructionFollowing[39m
+[2025-06-23 10:13:23] ERROR: [36m[RACEEvaluator] Failed to extract score for readability[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:23] INFO: [36mStarting research: domain=general, type=exploratory, depth=moderate[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Starting comprehensive research for: research AI safety[39m
+[2025-06-23 10:13:23] WARN: [36mCould not extract task type from response: based on the search results, here is a concise answer to your query.[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: true, TechDocs: false[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Academic query detected - including scholarly sources[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Selected providers: web, academic[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"f15efa82-9c2f-46c6-8c4f-bef4021cce5e","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673603972}[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Analyzing query relevance for: research AI safety[39m
+[2025-06-23 10:13:23] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: research AI safety[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchLogger] Initializing session for project: f15efa82-9c2f-46c6-8c4f-bef4021cce5e[39m
+[2025-06-23 10:13:23] INFO: [36mStarting research: domain=general, type=exploratory, depth=moderate[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Starting comprehensive research for: research AI ethics[39m
+[2025-06-23 10:13:23] WARN: [36mCould not extract task type from response: based on the search results, here is a concise answer to your query.[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: true, TechDocs: false[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Academic query detected - including scholarly sources[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Selected providers: web, academic[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"c100c43a-84af-4dfd-9215-10e3c93dc2d4","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673603973}[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Analyzing query relevance for: research AI ethics[39m
+[2025-06-23 10:13:23] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: research AI ethics[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchLogger] Initializing session for project: c100c43a-84af-4dfd-9215-10e3c93dc2d4[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:23] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:23] INFO: [36mStarting research: domain=general, type=exploratory, depth=moderate[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Starting comprehensive research for: research blockchain technology[39m
+[2025-06-23 10:13:23] WARN: [36mCould not extract task type from response: based on the search results, here is a concise answer to your query.[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: true, TechDocs: false[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Academic query detected - including scholarly sources[39m
+[2025-06-23 10:13:23] INFO: [36m[ProviderSelection] Selected providers: web, academic, github[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic, github[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"ebb02539-b473-4d68-84d5-a006bbe478f1","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673603974}[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchService] Analyzing query relevance for: research blockchain technology[39m
+[2025-06-23 10:13:23] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: research blockchain technology[39m
+[2025-06-23 10:13:23] INFO: [36m[ResearchLogger] Initializing session for project: ebb02539-b473-4d68-84d5-a006bbe478f1[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"be722d09-a94e-4cf7-a2cc-95ebe054ee27","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673603975}[39m
+[2025-06-23 10:13:23] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:23] INFO: [36m[Tavily] Searching for: research AI ethics[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"f15efa82-9c2f-46c6-8c4f-bef4021cce5e","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673603976}[39m
+[2025-06-23 10:13:23] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:23] INFO: [36m[Tavily] Searching for: research AI safety[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"2dfdc17e-aeae-4453-a288-f27317525e96","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673603976}[39m
+[2025-06-23 10:13:23] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:23] INFO: [36m[Tavily] Searching for: research quantum cryptography[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"c100c43a-84af-4dfd-9215-10e3c93dc2d4","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673603977}[39m
+[2025-06-23 10:13:23] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:23] INFO: [36m[Tavily] Searching for: research AI ethics[39m
+[2025-06-23 10:13:23] INFO: [36mResearch progress: {"projectId":"ebb02539-b473-4d68-84d5-a006bbe478f1","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673603977}[39m
+[2025-06-23 10:13:23] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:23] INFO: [36m[Tavily] Searching for: research blockchain technology[39m
+[2025-06-23 10:13:24] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project 522caf14-6fd2-416e-a994-a0de9ec0ad76:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project be722d09-a94e-4cf7-a2cc-95ebe054ee27:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 50
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 50
+- Max Depth: 5
+- Timeout: 600000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:24] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 50
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: true, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Code-related query detected - prioritizing technical sources[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic, github[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"21ba3858-d5db-4238-b557-a0b85c6099c4","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604221}[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: 21ba3858-d5db-4238-b557-a0b85c6099c4[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"21ba3858-d5db-4238-b557-a0b85c6099c4","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604222}[39m
+[2025-06-23 10:13:24] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:24] INFO: [36m[Tavily] Searching for: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 50
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: true, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Code-related query detected - prioritizing technical sources[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic, github[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"51c2abd9-7799-4364-881f-e53c2c324277","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604226}[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 50
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: Analyze the impact of central bank digital currencies (CBDCs) on monetary policy transmission mechanisms. Compare implementation approaches across different countries and predict potential effects on financial stability.[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: true, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Code-related query detected - prioritizing technical sources[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic, github[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: 51c2abd9-7799-4364-881f-e53c2c324277[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"21f4245b-76fb-4ecd-912c-bacdaa8687ca","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604226}[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: Analyze the impact of central bank digital currencies (CBDCs) on monetary policy transmission mechanisms. Compare implementation approaches across different countries and predict potential effects on financial stability.[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: Analyze the impact of central bank digital currencies (CBDCs) on monetary policy transmission mechanisms. Compare implementation approaches across different countries and predict potential effects on financial stability.[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: 21f4245b-76fb-4ecd-912c-bacdaa8687ca[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 50
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: true, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Code-related query detected - prioritizing technical sources[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic, github[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"ad9dcf4d-7823-4b0f-bcaf-64d43b40f00d","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604227}[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: ad9dcf4d-7823-4b0f-bcaf-64d43b40f00d[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"51c2abd9-7799-4364-881f-e53c2c324277","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604229}[39m
+[2025-06-23 10:13:24] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:24] INFO: [36m[Tavily] Searching for: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"21f4245b-76fb-4ecd-912c-bacdaa8687ca","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604230}[39m
+[2025-06-23 10:13:24] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:24] INFO: [36m[Tavily] Searching for: Analyze the impact of central bank digital currencies (CBDCs) on monetary policy transmission mechanisms. Compare implementation approaches across different countries and predict potential effects on financial stability.[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"ad9dcf4d-7823-4b0f-bcaf-64d43b40f00d","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604232}[39m
+[2025-06-23 10:13:24] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:24] INFO: [36m[Tavily] Searching for: Analyze the current state of quantum error correction codes for topological quantum computing, focusing on surface codes and color codes. Compare their threshold error rates, resource requirements, and feasibility for near-term implementation.[39m
+[2025-06-23 10:13:24] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:24] ERROR: [36mFailed to resume research be722d09-a94e-4cf7-a2cc-95ebe054ee27:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project f15efa82-9c2f-46c6-8c4f-bef4021cce5e:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project ebb02539-b473-4d68-84d5-a006bbe478f1:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project 2dfdc17e-aeae-4453-a288-f27317525e96:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] WARN: [36mNo search API keys found - some tests may be limited[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 60000ms
+- Research Depth: moderate
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:24] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:24] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:24] INFO: [36mResearch service initialized for production testing[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: What are the benefits of renewable energy?[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: environmental_science, Selected providers: web, academic[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"1c81190e-1644-4106-bd17-17c8663f3dff","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604267}[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: What are the benefits of renewable energy?[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: What are the benefits of renewable energy?[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: 1c81190e-1644-4106-bd17-17c8663f3dff[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: Test query[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"4a902f8d-df44-4077-b8d4-a844c602b2ab","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604267}[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: Test query[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: Test query[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: Test query[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: 4a902f8d-df44-4077-b8d4-a844c602b2ab[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"b7a08cea-afb7-4fc7-b939-223b72f26520","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604268}[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: Test query[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: Test query[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: b7a08cea-afb7-4fc7-b939-223b72f26520[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: What is machine learning?[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"96154239-a4df-461c-8de2-78ef9d3c8bdd","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604268}[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: What is machine learning?[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: What is machine learning?[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: 96154239-a4df-461c-8de2-78ef9d3c8bdd[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: What is artificial intelligence?[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: What is quantum computing?[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: What is blockchain?[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"834fb854-1c29-47ab-b70f-f3fdaa48af20","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604268}[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"08ec3643-99b9-4afb-a3be-9052e7bc6062","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604268}[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"e55b8f3a-712e-47c3-a2e9-717535ad96b4","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604268}[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: What is artificial intelligence?[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: What is artificial intelligence?[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: What is quantum computing?[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: What is quantum computing?[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: What is blockchain?[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: What is blockchain?[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: 834fb854-1c29-47ab-b70f-f3fdaa48af20[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: 08ec3643-99b9-4afb-a3be-9052e7bc6062[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: e55b8f3a-712e-47c3-a2e9-717535ad96b4[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: Test configuration validation[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: true[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Technical documentation query detected[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Selected providers: web, github[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic, github[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"e7a3c213-a554-4a3f-ace3-69f9fd8ee69b","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604269}[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: Test configuration validation[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: Test configuration validation[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: e7a3c213-a554-4a3f-ace3-69f9fd8ee69b[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Starting comprehensive research for: Cleanup test query[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:24] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic, github[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"276eb034-209d-4551-ad26-3d48849b30a5","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673604269}[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Analyzing query relevance for: Cleanup test query[39m
+[2025-06-23 10:13:24] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: Cleanup test query[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchLogger] Initializing session for project: 276eb034-209d-4551-ad26-3d48849b30a5[39m
+[2025-06-23 10:13:24] WARN: [36mSkipping search provider test - no API keys configured[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 60000ms
+- Research Depth: moderate
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:24] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:24] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "moderate"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:24] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 60000ms
+- Research Depth: moderate
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:24] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:24] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"1c81190e-1644-4106-bd17-17c8663f3dff","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604272}[39m
+[2025-06-23 10:13:24] WARN: [36m⚠️ Using EXA as fallback (TAVILY_API_KEY not configured)[39m
+[2025-06-23 10:13:24] INFO: [36m[Exa] Searching for: What are the benefits of renewable energy?[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"b7a08cea-afb7-4fc7-b939-223b72f26520","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604272}[39m
+[2025-06-23 10:13:24] WARN: [36m⚠️ Using EXA as fallback (TAVILY_API_KEY not configured)[39m
+[2025-06-23 10:13:24] INFO: [36m[Exa] Searching for: Test query[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"4a902f8d-df44-4077-b8d4-a844c602b2ab","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604273}[39m
+[2025-06-23 10:13:24] WARN: [36m⚠️ Using EXA as fallback (TAVILY_API_KEY not configured)[39m
+[2025-06-23 10:13:24] INFO: [36m[Exa] Searching for: Test query[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"96154239-a4df-461c-8de2-78ef9d3c8bdd","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604274}[39m
+[2025-06-23 10:13:24] WARN: [36m⚠️ Using EXA as fallback (TAVILY_API_KEY not configured)[39m
+[2025-06-23 10:13:24] INFO: [36m[Exa] Searching for: What is machine learning?[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"834fb854-1c29-47ab-b70f-f3fdaa48af20","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604274}[39m
+[2025-06-23 10:13:24] WARN: [36m⚠️ Using EXA as fallback (TAVILY_API_KEY not configured)[39m
+[2025-06-23 10:13:24] INFO: [36m[Exa] Searching for: What is artificial intelligence?[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"08ec3643-99b9-4afb-a3be-9052e7bc6062","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604274}[39m
+[2025-06-23 10:13:24] WARN: [36m⚠️ Using EXA as fallback (TAVILY_API_KEY not configured)[39m
+[2025-06-23 10:13:24] INFO: [36m[Exa] Searching for: What is quantum computing?[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"e55b8f3a-712e-47c3-a2e9-717535ad96b4","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604275}[39m
+[2025-06-23 10:13:24] WARN: [36m⚠️ Using EXA as fallback (TAVILY_API_KEY not configured)[39m
+[2025-06-23 10:13:24] INFO: [36m[Exa] Searching for: What is blockchain?[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"e7a3c213-a554-4a3f-ace3-69f9fd8ee69b","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604275}[39m
+[2025-06-23 10:13:24] WARN: [36m⚠️ Using EXA as fallback (TAVILY_API_KEY not configured)[39m
+[2025-06-23 10:13:24] INFO: [36m[Exa] Searching for: Test configuration validation[39m
+[2025-06-23 10:13:24] INFO: [36mResearch progress: {"projectId":"276eb034-209d-4551-ad26-3d48849b30a5","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673604275}[39m
+[2025-06-23 10:13:24] WARN: [36m⚠️ Using EXA as fallback (TAVILY_API_KEY not configured)[39m
+[2025-06-23 10:13:24] INFO: [36m[Exa] Searching for: Cleanup test query[39m
+[2025-06-23 10:13:24] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project c100c43a-84af-4dfd-9215-10e3c93dc2d4:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] INFO: [36m[Cache] Miss for query: test query[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Hit for query: test query[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Miss for query: test query[39m
+[2025-06-23 10:13:24] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project 21ba3858-d5db-4238-b557-a0b85c6099c4:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project 51c2abd9-7799-4364-881f-e53c2c324277:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Exa] API error: 400 - {"requestId":"77610f3d57e14de7f333c9a7edbcb092","error":"x-api-key header is invalid"}[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project b7a08cea-afb7-4fc7-b939-223b72f26520:[39m
+    error: {
+      "message": "(AxiosError) Request failed with status code 400",
+      "stack": [
+        "AxiosError: Request failed with status code 400",
+        "at settle (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/settle.js:19:12)",
+        "at IncomingMessage.handleStreamEnd (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/adapters/http.js:599:11)",
+        "at IncomingMessage.emit (node:events:519:35)",
+        "at endReadableNT (node:internal/streams/readable:1696:12)",
+        "at processTicksAndRejections (node:internal/process/task_queues:90:21)",
+        "at Axios.request (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/Axios.js:45:41)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ExaSearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/exa.ts:34:24)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] INFO: [36m[Cache] Miss for query: test query[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Miss for query: query 1[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Miss for query: query 2[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Hit for query: query 1[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Hit for query: query 2[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Miss for query: query[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Miss for query: query[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Miss for query: query[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Miss for query: query[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Miss for query: test[39m
+[2025-06-23 10:13:24] INFO: [36m[Cache] Hit for query: test[39m
+[2025-06-23 10:13:24] WARN: [36m[RateLimited(MockProvider)] Rate limit reached, waiting...[39m
+[2025-06-23 10:13:24] ERROR: [36m[Exa] API error: 400 - {"requestId":"337d977b18cc668c1cda166e77000ce6","error":"x-api-key header is invalid"}[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project e7a3c213-a554-4a3f-ace3-69f9fd8ee69b:[39m
+    error: {
+      "message": "(AxiosError) Request failed with status code 400",
+      "stack": [
+        "AxiosError: Request failed with status code 400",
+        "at settle (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/settle.js:19:12)",
+        "at IncomingMessage.handleStreamEnd (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/adapters/http.js:599:11)",
+        "at IncomingMessage.emit (node:events:519:35)",
+        "at endReadableNT (node:internal/streams/readable:1696:12)",
+        "at processTicksAndRejections (node:internal/process/task_queues:90:21)",
+        "at Axios.request (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/Axios.js:45:41)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ExaSearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/exa.ts:34:24)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Exa] API error: 400 - {"requestId":"3b4cc261a4f23540321a735b46583fa1","error":"x-api-key header is invalid"}[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project 96154239-a4df-461c-8de2-78ef9d3c8bdd:[39m
+    error: {
+      "message": "(AxiosError) Request failed with status code 400",
+      "stack": [
+        "AxiosError: Request failed with status code 400",
+        "at settle (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/settle.js:19:12)",
+        "at IncomingMessage.handleStreamEnd (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/adapters/http.js:599:11)",
+        "at IncomingMessage.emit (node:events:519:35)",
+        "at endReadableNT (node:internal/streams/readable:1696:12)",
+        "at processTicksAndRejections (node:internal/process/task_queues:90:21)",
+        "at Axios.request (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/Axios.js:45:41)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ExaSearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/exa.ts:34:24)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Exa] API error: 400 - {"requestId":"3b6c0a31cefe34faf03d5c0bf7f5bb92","error":"x-api-key header is invalid"}[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project 08ec3643-99b9-4afb-a3be-9052e7bc6062:[39m
+    error: {
+      "message": "(AxiosError) Request failed with status code 400",
+      "stack": [
+        "AxiosError: Request failed with status code 400",
+        "at settle (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/settle.js:19:12)",
+        "at IncomingMessage.handleStreamEnd (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/adapters/http.js:599:11)",
+        "at IncomingMessage.emit (node:events:519:35)",
+        "at endReadableNT (node:internal/streams/readable:1696:12)",
+        "at processTicksAndRejections (node:internal/process/task_queues:90:21)",
+        "at Axios.request (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/Axios.js:45:41)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ExaSearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/exa.ts:34:24)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Exa] API error: 400 - {"requestId":"4e947c33d7b0df7a589d0783d9d144ad","error":"x-api-key header is invalid"}[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project 276eb034-209d-4551-ad26-3d48849b30a5:[39m
+    error: {
+      "message": "(AxiosError) Request failed with status code 400",
+      "stack": [
+        "AxiosError: Request failed with status code 400",
+        "at settle (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/settle.js:19:12)",
+        "at IncomingMessage.handleStreamEnd (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/adapters/http.js:599:11)",
+        "at IncomingMessage.emit (node:events:519:35)",
+        "at endReadableNT (node:internal/streams/readable:1696:12)",
+        "at processTicksAndRejections (node:internal/process/task_queues:90:21)",
+        "at Axios.request (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/Axios.js:45:41)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ExaSearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/exa.ts:34:24)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Exa] API error: 400 - {"requestId":"0647e9562e035eb120d57c113f64a263","error":"x-api-key header is invalid"}[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project 4a902f8d-df44-4077-b8d4-a844c602b2ab:[39m
+    error: {
+      "message": "(AxiosError) Request failed with status code 400",
+      "stack": [
+        "AxiosError: Request failed with status code 400",
+        "at settle (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/settle.js:19:12)",
+        "at IncomingMessage.handleStreamEnd (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/adapters/http.js:599:11)",
+        "at IncomingMessage.emit (node:events:519:35)",
+        "at endReadableNT (node:internal/streams/readable:1696:12)",
+        "at processTicksAndRejections (node:internal/process/task_queues:90:21)",
+        "at Axios.request (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/Axios.js:45:41)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ExaSearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/exa.ts:34:24)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Exa] API error: 400 - {"requestId":"e0744cff814a1c30a2e6af87daa7dff2","error":"x-api-key header is invalid"}[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project 1c81190e-1644-4106-bd17-17c8663f3dff:[39m
+    error: {
+      "message": "(AxiosError) Request failed with status code 400",
+      "stack": [
+        "AxiosError: Request failed with status code 400",
+        "at settle (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/settle.js:19:12)",
+        "at IncomingMessage.handleStreamEnd (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/adapters/http.js:599:11)",
+        "at IncomingMessage.emit (node:events:519:35)",
+        "at endReadableNT (node:internal/streams/readable:1696:12)",
+        "at processTicksAndRejections (node:internal/process/task_queues:90:21)",
+        "at Axios.request (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/Axios.js:45:41)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ExaSearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/exa.ts:34:24)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Exa] API error: 400 - {"requestId":"0713d53badcb794c4031a5d51d2fcbe1","error":"x-api-key header is invalid"}[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project 834fb854-1c29-47ab-b70f-f3fdaa48af20:[39m
+    error: {
+      "message": "(AxiosError) Request failed with status code 400",
+      "stack": [
+        "AxiosError: Request failed with status code 400",
+        "at settle (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/settle.js:19:12)",
+        "at IncomingMessage.handleStreamEnd (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/adapters/http.js:599:11)",
+        "at IncomingMessage.emit (node:events:519:35)",
+        "at endReadableNT (node:internal/streams/readable:1696:12)",
+        "at processTicksAndRejections (node:internal/process/task_queues:90:21)",
+        "at Axios.request (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/Axios.js:45:41)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ExaSearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/exa.ts:34:24)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Exa] API error: 400 - {"requestId":"b70f7b0ffd25d401f3104772e5faafd7","error":"x-api-key header is invalid"}[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project e55b8f3a-712e-47c3-a2e9-717535ad96b4:[39m
+    error: {
+      "message": "(AxiosError) Request failed with status code 400",
+      "stack": [
+        "AxiosError: Request failed with status code 400",
+        "at settle (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/settle.js:19:12)",
+        "at IncomingMessage.handleStreamEnd (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/adapters/http.js:599:11)",
+        "at IncomingMessage.emit (node:events:519:35)",
+        "at endReadableNT (node:internal/streams/readable:1696:12)",
+        "at processTicksAndRejections (node:internal/process/task_queues:90:21)",
+        "at Axios.request (file:///Users/shawwalters/eliza-self/node_modules/axios/lib/core/Axios.js:45:41)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ExaSearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/exa.ts:34:24)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project ad9dcf4d-7823-4b0f-bcaf-64d43b40f00d:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:24] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:24] ERROR: [36mResearch failed for project 21f4245b-76fb-4ecd-912c-bacdaa8687ca:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:25] WARN: [36m[AdaptiveRateLimiter] Backing off for 2000ms after 1 rate limit errors[39m
+[2025-06-23 10:13:27] INFO: [36m[Cache] Miss for query: test[39m
+[2025-06-23 10:13:27] INFO: [36m[Cache] Hit for query: test[39m
+[2025-06-23 10:13:27] INFO: [36m[Cache] Hit for query: test[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Starting comprehensive research for: quantum computing breakthroughs in 2024[39m
+[2025-06-23 10:13:27] WARN: [36mCould not extract task type from response: key insights: significant breakthroughs in quantum error correction[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"c38e9d6e-f47c-4a0c-a8eb-a44bc906db39","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673607421}[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Analyzing query relevance for: quantum computing breakthroughs in 2024[39m
+[2025-06-23 10:13:27] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: quantum computing breakthroughs in 2024[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchLogger] Initializing session for project: c38e9d6e-f47c-4a0c-a8eb-a44bc906db39[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Starting comprehensive research for: AI healthcare impact[39m
+[2025-06-23 10:13:27] WARN: [36mCould not extract task type from response: key insights: significant breakthroughs in quantum error correction[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"70464ec5-8630-4806-941e-86cf3dd29724","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673607422}[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Analyzing query relevance for: AI healthcare impact[39m
+[2025-06-23 10:13:27] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: AI healthcare impact[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchLogger] Initializing session for project: 70464ec5-8630-4806-941e-86cf3dd29724[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Starting comprehensive research for: test query[39m
+[2025-06-23 10:13:27] WARN: [36mCould not extract task type from response: key insights: significant breakthroughs in quantum error correction[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"7e9f8c94-5275-4517-9a50-4f2faead238a","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673607423}[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Analyzing query relevance for: test query[39m
+[2025-06-23 10:13:27] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: test query[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchLogger] Initializing session for project: 7e9f8c94-5275-4517-9a50-4f2faead238a[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Starting comprehensive research for: query 1[39m
+[2025-06-23 10:13:27] WARN: [36mCould not extract task type from response: key insights: significant breakthroughs in quantum error correction[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"674bef36-5427-4626-80d9-0418af053a00","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673607423}[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Analyzing query relevance for: query 1[39m
+[2025-06-23 10:13:27] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: query 1[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Starting comprehensive research for: query 2[39m
+[2025-06-23 10:13:27] WARN: [36mCould not extract task type from response: key insights: significant breakthroughs in quantum error correction[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchLogger] Initializing session for project: 674bef36-5427-4626-80d9-0418af053a00[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"e66ab703-b7c7-47a1-bbd2-fe6d0fdbd7cf","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673607423}[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Analyzing query relevance for: query 2[39m
+[2025-06-23 10:13:27] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: query 2[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchLogger] Initializing session for project: e66ab703-b7c7-47a1-bbd2-fe6d0fdbd7cf[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Starting comprehensive research for: active query[39m
+[2025-06-23 10:13:27] WARN: [36mCould not extract task type from response: key insights: significant breakthroughs in quantum error correction[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"9b0f2804-fa16-4ecc-a339-18ec7360ee4a","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673607424}[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Analyzing query relevance for: active query[39m
+[2025-06-23 10:13:27] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: active query[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchLogger] Initializing session for project: 9b0f2804-fa16-4ecc-a339-18ec7360ee4a[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"c38e9d6e-f47c-4a0c-a8eb-a44bc906db39","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673607424}[39m
+[2025-06-23 10:13:27] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:27] INFO: [36m[Tavily] Searching for: quantum computing breakthroughs in 2024[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"70464ec5-8630-4806-941e-86cf3dd29724","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673607425}[39m
+[2025-06-23 10:13:27] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:27] INFO: [36m[Tavily] Searching for: AI healthcare impact[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"674bef36-5427-4626-80d9-0418af053a00","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673607425}[39m
+[2025-06-23 10:13:27] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:27] INFO: [36m[Tavily] Searching for: query 1[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"e66ab703-b7c7-47a1-bbd2-fe6d0fdbd7cf","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673607425}[39m
+[2025-06-23 10:13:27] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:27] INFO: [36m[Tavily] Searching for: query 2[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"9b0f2804-fa16-4ecc-a339-18ec7360ee4a","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673607425}[39m
+[2025-06-23 10:13:27] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:27] INFO: [36m[Tavily] Searching for: active query[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"7e9f8c94-5275-4517-9a50-4f2faead238a","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673607426}[39m
+[2025-06-23 10:13:27] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:27] INFO: [36m[Tavily] Searching for: test query[39m
+[2025-06-23 10:13:27] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:27] ERROR: [36mResearch failed for project c38e9d6e-f47c-4a0c-a8eb-a44bc906db39:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:27] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:27] ERROR: [36mResearch failed for project 674bef36-5427-4626-80d9-0418af053a00:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:27] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:27] ERROR: [36mResearch failed for project e66ab703-b7c7-47a1-bbd2-fe6d0fdbd7cf:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:27] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:27] ERROR: [36mResearch failed for project 9b0f2804-fa16-4ecc-a339-18ec7360ee4a:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:27] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:27] ERROR: [36mResearch failed for project 70464ec5-8630-4806-941e-86cf3dd29724:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:27] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:27] ERROR: [36mResearch failed for project 7e9f8c94-5275-4517-9a50-4f2faead238a:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Starting comprehensive research for: pausable query[39m
+[2025-06-23 10:13:27] WARN: [36mCould not extract task type from response: key insights: significant breakthroughs in quantum error correction[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"527022c0-58e3-4a1c-b7f5-3d8d2aa29af3","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673607526}[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Analyzing query relevance for: pausable query[39m
+[2025-06-23 10:13:27] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: pausable query[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchLogger] Initializing session for project: 527022c0-58e3-4a1c-b7f5-3d8d2aa29af3[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"527022c0-58e3-4a1c-b7f5-3d8d2aa29af3","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673607526}[39m
+[2025-06-23 10:13:27] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:27] INFO: [36m[Tavily] Searching for: pausable query[39m
+[2025-06-23 10:13:27] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:27] ERROR: [36mResearch failed for project 527022c0-58e3-4a1c-b7f5-3d8d2aa29af3:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"527022c0-58e3-4a1c-b7f5-3d8d2aa29af3","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673607628}[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Analyzing query relevance for: pausable query[39m
+[2025-06-23 10:13:27] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: pausable query[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchLogger] Initializing session for project: 527022c0-58e3-4a1c-b7f5-3d8d2aa29af3[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:27] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Starting comprehensive research for: phase test query[39m
+[2025-06-23 10:13:27] WARN: [36mCould not extract task type from response: key insights: significant breakthroughs in quantum error correction[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: false, TechDocs: false[39m
+[2025-06-23 10:13:27] INFO: [36m[ProviderSelection] Selected providers: web[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"42eaa4e0-21d3-41e8-a105-bc608679e3ce","phase":"planning","message":"Starting planning phase","progress":14.285714285714285,"timestamp":1750673607629}[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchService] Analyzing query relevance for: phase test query[39m
+[2025-06-23 10:13:27] INFO: [36m[RelevanceAnalyzer] Analyzing query intent: phase test query[39m
+[2025-06-23 10:13:27] INFO: [36m[ResearchLogger] Initializing session for project: 42eaa4e0-21d3-41e8-a105-bc608679e3ce[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"527022c0-58e3-4a1c-b7f5-3d8d2aa29af3","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673607629}[39m
+[2025-06-23 10:13:27] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:27] INFO: [36m[Tavily] Searching for: pausable query[39m
+[2025-06-23 10:13:27] INFO: [36mResearch progress: {"projectId":"42eaa4e0-21d3-41e8-a105-bc608679e3ce","phase":"searching","message":"Starting searching phase","progress":28.57142857142857,"timestamp":1750673607629}[39m
+[2025-06-23 10:13:27] INFO: [36m🎯 Using TAVILY as primary web search provider (user preference)[39m
+[2025-06-23 10:13:27] INFO: [36m[Tavily] Searching for: phase test query[39m
+[2025-06-23 10:13:27] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:27] ERROR: [36mFailed to resume research 527022c0-58e3-4a1c-b7f5-3d8d2aa29af3:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:27] ERROR: [36m[Tavily] Invalid API key[39m
+[2025-06-23 10:13:27] ERROR: [36mResearch failed for project 42eaa4e0-21d3-41e8-a105-bc608679e3ce:[39m
+    error: {
+      "message": "(Error) Invalid Tavily API key",
+      "stack": [
+        "Error: Invalid Tavily API key",
+        "at TavilySearchProvider.search (/Users/shawwalters/eliza-self/packages/plugin-research/src/integrations/search-providers/tavily.ts:129:17)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at ResearchService.executeSearchWithRelevance (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:965:24)",
+        "at ResearchService.startResearch (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:828:7)"
+      ]
+    }
+[2025-06-23 10:13:28] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:28] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:28] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:28] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:28] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:28] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:28] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:28] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:28] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:28] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:28] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:28] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:28] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:28] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:28] INFO: [36m[NPM] Searching for: react[39m
+[2025-06-23 10:13:28] WARN: [36m[NPM] Failed to get details for react-router: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "version"
+    ],
+    "message": "Required"
+  }
+][39m
+[2025-06-23 10:13:29] WARN: [36m[NPM] Failed to get details for react: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "version"
+    ],
+    "message": "Required"
+  }
+][39m
+[2025-06-23 10:13:29] WARN: [36m[NPM] Failed to get details for react-is: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "version"
+    ],
+    "message": "Required"
+  }
+][39m
+[2025-06-23 10:13:29] INFO: [36m[NPM] Found 3 results in 973ms[39m
+[2025-06-23 10:13:29] INFO: [36m[PyPI] Searching for: numpy[39m
+[2025-06-23 10:13:29] INFO: [36m[PyPI] Found 0 results in 154ms[39m
+[2025-06-23 10:13:29] INFO: [36m[NPM] Searching for: react[39m
+[2025-06-23 10:13:29] WARN: [36m[NPM] Failed to get details for react: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "version"
+    ],
+    "message": "Required"
+  }
+][39m
+[2025-06-23 10:13:29] INFO: [36m[NPM] Found 1 results in 631ms[39m
+[2025-06-23 10:13:29] INFO: [36m[PyPI] Searching for: numpy[39m
+[2025-06-23 10:13:30] INFO: [36m[PyPI] Found 0 results in 103ms[39m
+[2025-06-23 10:13:30] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:30] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:30] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:30] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:30] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:30] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:30] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:30] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:30] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:30] INFO: [36m[ResearchConfig] Validating search provider configuration[39m
+[2025-06-23 10:13:30] INFO: [36m[ResearchConfig] All search provider requirements validated[39m
+[2025-06-23 10:13:30] INFO: [36m[ResearchService] Initializing with configuration: Research Configuration:
+- Max Results: 10
+- Max Depth: 5
+- Timeout: 300000ms
+- Research Depth: deep
+- Domain: general
+- Search Providers: web, academic
+- Evaluation: enabled
+- Cache: enabled
+- Quality Threshold: 0.7[39m
+[2025-06-23 10:13:30] INFO: [36mAdded Firecrawl content extractor as backup[39m
+[2025-06-23 10:13:30] INFO: [36mAdded Playwright content extractor as last resort[39m
+[2025-06-23 10:13:30] INFO: [36mStarting research: domain=general, type=exploratory, depth=moderate[39m
+[2025-06-23 10:13:30] INFO: [36m[ResearchConfig] Loading configuration from runtime settings[39m
+[2025-06-23 10:13:30] INFO: [36m[ResearchConfig] Configuration loaded:[39m
+    maxSearchResults: 10
+    researchDepth: "deep"
+    domain: "general"
+    searchProviders: [
+      "web",
+      "academic"
+    ]
+    evaluationEnabled: true
+[2025-06-23 10:13:30] INFO: [36m[ResearchService] Starting comprehensive research for: research quantum computing[39m
+[2025-06-23 10:13:30] INFO: [36m[ProviderSelection] Query analysis - Code: false, Academic: true, TechDocs: false[39m
+[2025-06-23 10:13:30] INFO: [36m[ProviderSelection] Academic query detected - including scholarly sources[39m
+[2025-06-23 10:13:30] INFO: [36m[ProviderSelection] Selected providers: web, academic[39m
+[2025-06-23 10:13:30] INFO: [36m[ResearchService] Domain: general, Selected providers: web, academic[39m
+[2025-06-23 10:13:30] ERROR: [36mError generating sub-queries with AI:[39m
+    error: {
+      "message": "(Error) [QueryPlanner] AI model failed to generate valid sub-queries. This indicates a model configuration or prompt issue.",
+      "stack": [
+        "Error: [QueryPlanner] AI model failed to generate valid sub-queries. This indicates a model configuration or prompt issue.",
+        "at QueryPlanner.generateSubQueries (/Users/shawwalters/eliza-self/packages/plugin-research/src/strategies/research-strategies.ts:503:13)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at QueryPlanner.createQueryPlan (/Users/shawwalters/eliza-self/packages/plugin-research/src/strategies/research-strategies.ts:395:24)",
+        "at ResearchService.extractMetadata (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:220:23)",
+        "at ResearchService.createResearchProject (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:171:22)",
+        "at Object.handler (/Users/shawwalters/eliza-self/packages/plugin-research/src/actions.ts:166:23)",
+        "at /Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/actions.test.ts:126:20",
+        "at runTest (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/@vitest/runner/dist/index.js:781:11)",
+        "at runSuite (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/@vitest/runner/dist/index.js:909:15)",
+        "at runSuite (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/@vitest/runner/dist/index.js:909:15)",
+        "at runFiles (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/@vitest/runner/dist/index.js:958:5)",
+        "at startTests (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/@vitest/runner/dist/index.js:967:3)",
+        "at file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7",
+        "at withEnv (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)",
+        "at run (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:105:3)",
+        "at runBaseTests (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/vendor/base.Ybri3C14.js:30:3)",
+        "at ForksBaseWorker.runTests (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/workers/forks.js:25:7)",
+        "at run (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/worker.js:99:5)",
+        "at onMessage (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/tinypool/dist/esm/entry/process.js:51:20)"
+      ]
+    }
+[2025-06-23 10:13:30] ERROR: [36mFailed to start research:[39m
+    error: {
+      "message": "(Error) [QueryPlanner] AI model failed to generate valid sub-queries. This indicates a model configuration or prompt issue.",
+      "stack": [
+        "Error: [QueryPlanner] AI model failed to generate valid sub-queries. This indicates a model configuration or prompt issue.",
+        "at QueryPlanner.generateSubQueries (/Users/shawwalters/eliza-self/packages/plugin-research/src/strategies/research-strategies.ts:503:13)",
+        "at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+        "at QueryPlanner.createQueryPlan (/Users/shawwalters/eliza-self/packages/plugin-research/src/strategies/research-strategies.ts:395:24)",
+        "at ResearchService.extractMetadata (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:220:23)",
+        "at ResearchService.createResearchProject (/Users/shawwalters/eliza-self/packages/plugin-research/src/service.ts:171:22)",
+        "at Object.handler (/Users/shawwalters/eliza-self/packages/plugin-research/src/actions.ts:166:23)",
+        "at /Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/actions.test.ts:126:20",
+        "at runTest (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/@vitest/runner/dist/index.js:781:11)",
+        "at runSuite (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/@vitest/runner/dist/index.js:909:15)",
+        "at runSuite (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/@vitest/runner/dist/index.js:909:15)",
+        "at runFiles (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/@vitest/runner/dist/index.js:958:5)",
+        "at startTests (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/@vitest/runner/dist/index.js:967:3)",
+        "at file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:116:7",
+        "at withEnv (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:83:5)",
+        "at run (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/chunks/runtime-runBaseTests.oAvMKtQC.js:105:3)",
+        "at runBaseTests (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/vendor/base.Ybri3C14.js:30:3)",
+        "at ForksBaseWorker.runTests (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/workers/forks.js:25:7)",
+        "at run (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/dist/worker.js:99:5)",
+        "at onMessage (file:///Users/shawwalters/eliza-self/packages/plugin-research/node_modules/vitest/node_modules/tinypool/dist/esm/entry/process.js:51:20)"
+      ]
+    }
+[2025-06-23 10:13:30] INFO: [36m[Tavily] Searching for: test[39m
+[2025-06-23 10:13:31] INFO: [36m[Tavily] Found 1 results in 1617ms[39m
+[2025-06-23 10:13:31] INFO: [36m[Exa] Searching for: test[39m
+[2025-06-23 10:13:33] INFO: [36m[Exa] Found 1 results[39m
+[2025-06-23 10:13:33] INFO: [36m[SerpAPI] Searching for: test[39m
+[2025-06-23 10:13:33] INFO: [36m[SerpAPI] Found 1 results[39m
+[2025-06-23 10:13:33] INFO: [36m[Academic] Searching for: test[39m
+[2025-06-23 10:13:33] WARN: [36m[Semantic Scholar] HTTP 403: Forbidden[39m
+[2025-06-23 10:13:33] INFO: [36m[arXiv] Found 1 results[39m
+[2025-06-23 10:13:33] WARN: [36m[CrossRef] HTTP 400: Query too short or invalid[39m
+[2025-06-23 10:13:33] INFO: [36m[Firecrawl] Extracting content from: https://example.com[39m
+[2025-06-23 10:13:35] INFO: [36m[Firecrawl] Content extracted in 1815ms (231 characters)[39m
+{"numTotalTestSuites":59,"numPassedTestSuites":53,"numFailedTestSuites":6,"numPendingTestSuites":0,"numTotalTests":86,"numPassedTests":86,"numFailedTests":0,"numPendingTests":0,"numTodoTests":0,"startTime":1750673603019,"success":false,"testResults":[{"assertionResults":[{"ancestorTitles":["","Action Chaining Integration Tests","Research Creation → Status Check Chain"],"fullName":" Action Chaining Integration Tests Research Creation → Status Check Chain should create research and check its status","status":"passed","title":"should create research and check its status","duration":16,"failureMessages":[]},{"ancestorTitles":["","Action Chaining Integration Tests","Pause → Resume Chain"],"fullName":" Action Chaining Integration Tests Pause → Resume Chain should pause and resume research","status":"passed","title":"should pause and resume research","duration":102,"failureMessages":[]},{"ancestorTitles":["","Action Chaining Integration Tests","Research → Evaluate → Export Chain"],"fullName":" Action Chaining Integration Tests Research → Evaluate → Export Chain should create, evaluate, and export research","status":"passed","title":"should create, evaluate, and export research","duration":2,"failureMessages":[]},{"ancestorTitles":["","Action Chaining Integration Tests","Action Validation"],"fullName":" Action Chaining Integration Tests Action Validation should validate actions based on service availability","status":"passed","title":"should validate actions based on service availability","duration":1,"failureMessages":[]},{"ancestorTitles":["","Action Chaining Integration Tests","Compare Research Projects"],"fullName":" Action Chaining Integration Tests Compare Research Projects should compare multiple research projects","status":"passed","title":"should compare multiple research projects","duration":1,"failureMessages":[]},{"ancestorTitles":["","Action Chaining Integration Tests","Refine Research Query"],"fullName":" Action Chaining Integration Tests Refine Research Query should refine research with additional queries","status":"passed","title":"should refine research with additional queries","duration":1,"failureMessages":[]},{"ancestorTitles":["","Action Chaining Integration Tests","Action Result Chaining"],"fullName":" Action Chaining Integration Tests Action Result Chaining should pass data between actions via result objects","status":"passed","title":"should pass data between actions via result objects","duration":0,"failureMessages":[]}],"startTime":1750673603851,"endTime":1750673603974,"status":"passed","message":"","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/action-chaining.test.ts"},{"assertionResults":[{"ancestorTitles":["","Research Actions - Real Implementation Tests"],"fullName":" Research Actions - Real Implementation Tests should validate actions correctly","status":"passed","title":"should validate actions correctly","duration":1,"failureMessages":[]},{"ancestorTitles":["","Research Actions - Real Implementation Tests"],"fullName":" Research Actions - Real Implementation Tests should handle research action correctly","status":"passed","title":"should handle research action correctly","duration":3,"failureMessages":[]}],"startTime":1750673610052,"endTime":1750673610056,"status":"passed","message":"","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/actions.test.ts"},{"assertionResults":[{"ancestorTitles":["","CachedSearchProvider"],"fullName":" CachedSearchProvider should cache search results","status":"passed","title":"should cache search results","duration":1,"failureMessages":[]},{"ancestorTitles":["","CachedSearchProvider"],"fullName":" CachedSearchProvider should respect TTL eventually","status":"passed","title":"should respect TTL eventually","duration":100,"failureMessages":[]},{"ancestorTitles":["","CachedSearchProvider"],"fullName":" CachedSearchProvider should cache different queries separately","status":"passed","title":"should cache different queries separately","duration":0,"failureMessages":[]},{"ancestorTitles":["","CachedSearchProvider"],"fullName":" CachedSearchProvider should handle different maxResults parameters","status":"passed","title":"should handle different maxResults parameters","duration":0,"failureMessages":[]},{"ancestorTitles":["","CachedSearchProvider"],"fullName":" CachedSearchProvider should clear cache","status":"passed","title":"should clear cache","duration":0,"failureMessages":[]},{"ancestorTitles":["","CachedSearchProvider"],"fullName":" CachedSearchProvider should work with withCache helper","status":"passed","title":"should work with withCache helper","duration":0,"failureMessages":[]},{"ancestorTitles":["","RateLimitedProvider"],"fullName":" RateLimitedProvider should allow requests within rate limit","status":"passed","title":"should allow requests within rate limit","duration":1,"failureMessages":[]},{"ancestorTitles":["","RateLimitedProvider"],"fullName":" RateLimitedProvider should block when rate limit exceeded","status":"passed","title":"should block when rate limit exceeded","duration":1001,"failureMessages":[]},{"ancestorTitles":["","RateLimitedProvider"],"fullName":" RateLimitedProvider should work with createRateLimitedProvider helper","status":"passed","title":"should work with createRateLimitedProvider helper","duration":0,"failureMessages":[]},{"ancestorTitles":["","RateLimitedProvider"],"fullName":" RateLimitedProvider should handle per-hour limits","status":"passed","title":"should handle per-hour limits","duration":0,"failureMessages":[]},{"ancestorTitles":["","RateLimitedProvider"],"fullName":" RateLimitedProvider should handle per-day limits","status":"passed","title":"should handle per-day limits","duration":0,"failureMessages":[]},{"ancestorTitles":["","AdaptiveRateLimiter"],"fullName":" AdaptiveRateLimiter should handle rate limit errors with backoff","status":"passed","title":"should handle rate limit errors with backoff","duration":2001,"failureMessages":[]},{"ancestorTitles":["","AdaptiveRateLimiter"],"fullName":" AdaptiveRateLimiter should track statistics","status":"passed","title":"should track statistics","duration":0,"failureMessages":[]},{"ancestorTitles":["","AdaptiveRateLimiter"],"fullName":" AdaptiveRateLimiter should reduce error count on success","status":"passed","title":"should reduce error count on success","duration":0,"failureMessages":[]},{"ancestorTitles":["","Combined Cache and Rate Limiting"],"fullName":" Combined Cache and Rate Limiting should work together","status":"passed","title":"should work together","duration":1,"failureMessages":[]}],"startTime":1750673604295,"endTime":1750673607400,"status":"passed","message":"","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/cache-rate-limiter.test.ts"},{"assertionResults":[{"ancestorTitles":["","Content Extractors - Real Implementation Tests"],"fullName":" Content Extractors - Real Implementation Tests should initialize Firecrawl extractor","status":"passed","title":"should initialize Firecrawl extractor","duration":0,"failureMessages":[]},{"ancestorTitles":["","Content Extractors - Real Implementation Tests"],"fullName":" Content Extractors - Real Implementation Tests should initialize Playwright extractor","status":"passed","title":"should initialize Playwright extractor","duration":0,"failureMessages":[]},{"ancestorTitles":["","Content Extractors - Real Implementation Tests"],"fullName":" Content Extractors - Real Implementation Tests should handle missing API key for Firecrawl","status":"passed","title":"should handle missing API key for Firecrawl","duration":0,"failureMessages":[]}],"startTime":1750673615827,"endTime":1750673615827,"status":"passed","message":"","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/content-extractors.test.ts"},{"assertionResults":[],"startTime":1750673603019,"endTime":1750673603019,"status":"failed","message":"No test suite found in file /Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/deepresearch-bench-full.e2e.test.ts","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/deepresearch-bench-full.e2e.test.ts"},{"assertionResults":[{"ancestorTitles":["","DeepResearch Bench Integration","DeepResearch Bench Format"],"fullName":" DeepResearch Bench Integration DeepResearch Bench Format should export results in correct format","status":"passed","title":"should export results in correct format","duration":2,"failureMessages":[]},{"ancestorTitles":["","DeepResearch Bench Integration","DeepResearch Bench Format"],"fullName":" DeepResearch Bench Integration DeepResearch Bench Format should generate results file in correct location","status":"passed","title":"should generate results file in correct location","duration":3,"failureMessages":[]},{"ancestorTitles":["","DeepResearch Bench Integration","Benchmark Performance"],"fullName":" DeepResearch Bench Integration Benchmark Performance should track performance metrics","status":"passed","title":"should track performance metrics","duration":2,"failureMessages":[]},{"ancestorTitles":["","DeepResearch Bench Integration","Integration with Evaluation"],"fullName":" DeepResearch Bench Integration Integration with Evaluation should integrate with RACE and FACT evaluators","status":"passed","title":"should integrate with RACE and FACT evaluators","duration":0,"failureMessages":[]}],"startTime":1750673604220,"endTime":1750673604227,"status":"passed","message":"","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/deepresearch-bench-integration.test.ts"},{"assertionResults":[],"startTime":1750673603019,"endTime":1750673603019,"status":"failed","message":"No test suite found in file /Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/deepresearch-bench-simplified.e2e.test.ts","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/deepresearch-bench-simplified.e2e.test.ts"},{"assertionResults":[],"startTime":1750673603019,"endTime":1750673603019,"status":"failed","message":"No test suite found in file /Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/deepresearch-bench.e2e.test.ts","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/deepresearch-bench.e2e.test.ts"},{"assertionResults":[],"startTime":1750673603019,"endTime":1750673603019,"status":"failed","message":"No test suite found in file /Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/e2e.test.ts","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/e2e.test.ts"},{"assertionResults":[{"ancestorTitles":["","Research Providers","activeResearchProvider"],"fullName":" Research Providers activeResearchProvider should provide active research project information","status":"passed","title":"should provide active research project information","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Providers","activeResearchProvider"],"fullName":" Research Providers activeResearchProvider should handle no active projects","status":"passed","title":"should handle no active projects","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Providers","activeResearchProvider"],"fullName":" Research Providers activeResearchProvider should handle service not available","status":"passed","title":"should handle service not available","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Providers","completedResearchProvider"],"fullName":" Research Providers completedResearchProvider should provide completed research project information","status":"passed","title":"should provide completed research project information","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Providers","completedResearchProvider"],"fullName":" Research Providers completedResearchProvider should handle no completed projects","status":"passed","title":"should handle no completed projects","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Providers","researchCapabilitiesProvider"],"fullName":" Research Providers researchCapabilitiesProvider should provide research capabilities information","status":"passed","title":"should provide research capabilities information","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Providers","researchCapabilitiesProvider"],"fullName":" Research Providers researchCapabilitiesProvider should work even without service","status":"passed","title":"should work even without service","duration":0,"failureMessages":[]}],"startTime":1750673610033,"endTime":1750673610033,"status":"passed","message":"","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/providers.test.ts"},{"assertionResults":[],"startTime":1750673603019,"endTime":1750673603019,"status":"failed","message":"No test suite found in file /Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/real-world.e2e.test.ts","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/real-world.e2e.test.ts"},{"assertionResults":[{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should initialize research service with production configuration","status":"passed","title":"should initialize research service with production configuration","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should validate configuration on startup","status":"passed","title":"should validate configuration on startup","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should fail fast when AI model is not available","status":"passed","title":"should fail fast when AI model is not available","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should fail fast when required API keys are missing","status":"passed","title":"should fail fast when required API keys are missing","duration":1,"failureMessages":[]},{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should create research project with proper validation","status":"passed","title":"should create research project with proper validation","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should reject invalid configuration parameters","status":"passed","title":"should reject invalid configuration parameters","duration":1,"failureMessages":[]},{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should handle research project lifecycle correctly","status":"passed","title":"should handle research project lifecycle correctly","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should handle concurrent research projects","status":"passed","title":"should handle concurrent research projects","duration":1,"failureMessages":[]},{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should validate research configuration at runtime","status":"passed","title":"should validate research configuration at runtime","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should provide comprehensive service capabilities","status":"passed","title":"should provide comprehensive service capabilities","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should cleanup resources properly","status":"passed","title":"should cleanup resources properly","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Service Production E2E Tests"],"fullName":" Research Service Production E2E Tests should integrate with real search providers when configured","status":"passed","title":"should integrate with real search providers when configured","duration":1,"failureMessages":[]},{"ancestorTitles":["","Research Service Error Handling"],"fullName":" Research Service Error Handling should handle missing runtime gracefully","status":"passed","title":"should handle missing runtime gracefully","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Service Error Handling"],"fullName":" Research Service Error Handling should handle invalid project IDs","status":"passed","title":"should handle invalid project IDs","duration":0,"failureMessages":[]},{"ancestorTitles":["","Research Service Error Handling"],"fullName":" Research Service Error Handling should handle graceful shutdown","status":"passed","title":"should handle graceful shutdown","duration":0,"failureMessages":[]}],"startTime":1750673604266,"endTime":1750673604270,"status":"passed","message":"","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/research-production.e2e.test.ts"},{"assertionResults":[{"ancestorTitles":["","Realistic Research Scenarios","Scenario 1: PhD-Level Quantum Computing Research"],"fullName":" Realistic Research Scenarios Scenario 1: PhD-Level Quantum Computing Research should conduct comprehensive research on quantum computing impact on cryptography","status":"passed","title":"should conduct comprehensive research on quantum computing impact on cryptography","duration":2,"failureMessages":[]},{"ancestorTitles":["","Realistic Research Scenarios","Scenario 2: Comparative Climate Change Research"],"fullName":" Realistic Research Scenarios Scenario 2: Comparative Climate Change Research should compare climate policies across Nordic countries","status":"passed","title":"should compare climate policies across Nordic countries","duration":1,"failureMessages":[]},{"ancestorTitles":["","Realistic Research Scenarios","Scenario 3: AI Ethics Deep Research"],"fullName":" Realistic Research Scenarios Scenario 3: AI Ethics Deep Research should conduct deep research on AI ethics in healthcare with iterative refinement","status":"passed","title":"should conduct deep research on AI ethics in healthcare with iterative refinement","duration":0,"failureMessages":[]},{"ancestorTitles":["","Realistic Research Scenarios","Scenario 4: CRISPR Technology Evaluation"],"fullName":" Realistic Research Scenarios Scenario 4: CRISPR Technology Evaluation should evaluate CRISPR gene editing research with RACE/FACT criteria","status":"passed","title":"should evaluate CRISPR gene editing research with RACE/FACT criteria","duration":1,"failureMessages":[]},{"ancestorTitles":["","Realistic Research Scenarios","Scenario 5: Historical Research - Renaissance Art"],"fullName":" Realistic Research Scenarios Scenario 5: Historical Research - Renaissance Art should conduct surface-level exploratory research on Renaissance art","status":"passed","title":"should conduct surface-level exploratory research on Renaissance art","duration":0,"failureMessages":[]},{"ancestorTitles":["","Realistic Research Scenarios","Action Chaining Scenarios"],"fullName":" Realistic Research Scenarios Action Chaining Scenarios should demonstrate complete action chain from start to export","status":"passed","title":"should demonstrate complete action chain from start to export","duration":1,"failureMessages":[]}],"startTime":1750673603522,"endTime":1750673603527,"status":"passed","message":"","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/research-scenarios.test.ts"},{"assertionResults":[],"startTime":1750673603019,"endTime":1750673603019,"status":"failed","message":"No test suite found in file /Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/research.e2e.test.ts","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/research.e2e.test.ts"},{"assertionResults":[{"ancestorTitles":["","ResearchService","service initialization"],"fullName":" ResearchService service initialization should create service with default config","status":"passed","title":"should create service with default config","duration":0,"failureMessages":[]},{"ancestorTitles":["","ResearchService","service initialization"],"fullName":" ResearchService service initialization should create service with custom config","status":"passed","title":"should create service with custom config","duration":1,"failureMessages":[]},{"ancestorTitles":["","ResearchService","createResearchProject"],"fullName":" ResearchService createResearchProject should create a new research project","status":"passed","title":"should create a new research project","duration":1,"failureMessages":[]},{"ancestorTitles":["","ResearchService","createResearchProject"],"fullName":" ResearchService createResearchProject should create project with custom config","status":"passed","title":"should create project with custom config","duration":0,"failureMessages":[]},{"ancestorTitles":["","ResearchService","project lifecycle"],"fullName":" ResearchService project lifecycle should get project by id","status":"passed","title":"should get project by id","duration":1,"failureMessages":[]},{"ancestorTitles":["","ResearchService","project lifecycle"],"fullName":" ResearchService project lifecycle should get all projects","status":"passed","title":"should get all projects","duration":1,"failureMessages":[]},{"ancestorTitles":["","ResearchService","project lifecycle"],"fullName":" ResearchService project lifecycle should get active projects","status":"passed","title":"should get active projects","duration":101,"failureMessages":[]},{"ancestorTitles":["","ResearchService","project lifecycle"],"fullName":" ResearchService project lifecycle should pause and resume research","status":"passed","title":"should pause and resume research","duration":103,"failureMessages":[]},{"ancestorTitles":["","ResearchService","research phases"],"fullName":" ResearchService research phases should progress through research phases","status":"passed","title":"should progress through research phases","duration":510,"failureMessages":[]},{"ancestorTitles":["","ResearchService","error handling"],"fullName":" ResearchService error handling should handle invalid project id","status":"passed","title":"should handle invalid project id","duration":0,"failureMessages":[]},{"ancestorTitles":["","ResearchService","error handling"],"fullName":" ResearchService error handling should handle pause on non-existent project","status":"passed","title":"should handle pause on non-existent project","duration":0,"failureMessages":[]}],"startTime":1750673607420,"endTime":1750673608138,"status":"passed","message":"","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/research.test.ts"},{"assertionResults":[{"ancestorTitles":["","Search Providers - Real Implementation Tests"],"fullName":" Search Providers - Real Implementation Tests should initialize Tavily provider","status":"passed","title":"should initialize Tavily provider","duration":0,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests"],"fullName":" Search Providers - Real Implementation Tests should initialize Serper provider","status":"passed","title":"should initialize Serper provider","duration":0,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests"],"fullName":" Search Providers - Real Implementation Tests should initialize Academic provider","status":"passed","title":"should initialize Academic provider","duration":0,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests"],"fullName":" Search Providers - Real Implementation Tests should initialize Exa provider","status":"passed","title":"should initialize Exa provider","duration":0,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests"],"fullName":" Search Providers - Real Implementation Tests should initialize SerpAPI provider","status":"passed","title":"should initialize SerpAPI provider","duration":0,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests"],"fullName":" Search Providers - Real Implementation Tests should handle missing API key gracefully","status":"passed","title":"should handle missing API key gracefully","duration":0,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests","NPM Search Provider"],"fullName":" Search Providers - Real Implementation Tests NPM Search Provider should initialize without API key (public access)","status":"passed","title":"should initialize without API key (public access)","duration":0,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests","NPM Search Provider"],"fullName":" Search Providers - Real Implementation Tests NPM Search Provider should have search method","status":"passed","title":"should have search method","duration":0,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests","NPM Search Provider"],"fullName":" Search Providers - Real Implementation Tests NPM Search Provider should handle empty query","status":"passed","title":"should handle empty query","duration":0,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests","NPM Search Provider"],"fullName":" Search Providers - Real Implementation Tests NPM Search Provider should search for real packages","status":"passed","title":"should search for real packages","duration":973,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests","PyPI Search Provider"],"fullName":" Search Providers - Real Implementation Tests PyPI Search Provider should initialize without API key (public access)","status":"passed","title":"should initialize without API key (public access)","duration":0,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests","PyPI Search Provider"],"fullName":" Search Providers - Real Implementation Tests PyPI Search Provider should have search method","status":"passed","title":"should have search method","duration":0,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests","PyPI Search Provider"],"fullName":" Search Providers - Real Implementation Tests PyPI Search Provider should handle empty query","status":"passed","title":"should handle empty query","duration":4,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests","PyPI Search Provider"],"fullName":" Search Providers - Real Implementation Tests PyPI Search Provider should search for real packages","status":"passed","title":"should search for real packages","duration":155,"failureMessages":[]},{"ancestorTitles":["","Search Providers - Real Implementation Tests","Search Provider Consistency"],"fullName":" Search Providers - Real Implementation Tests Search Provider Consistency should return consistent result format across providers","status":"passed","title":"should return consistent result format across providers","duration":735,"failureMessages":[]}],"startTime":1750673608155,"endTime":1750673610022,"status":"passed","message":"","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/search-providers.test.ts"},{"assertionResults":[{"ancestorTitles":["","API Verification"],"fullName":" API Verification should verify all APIs","status":"passed","title":"should verify all APIs","duration":5747,"failureMessages":[]}],"startTime":1750673610067,"endTime":1750673615814,"status":"passed","message":"","name":"/Users/shawwalters/eliza-self/packages/plugin-research/src/__tests__/verify-apis.test.ts"}]}
+error: "vitest" exited with code 1

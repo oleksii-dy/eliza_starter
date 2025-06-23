@@ -374,13 +374,82 @@ export class TrustService extends Service {
     changeRate: number;
     dataPoints: Array<{ timestamp: number; trust: number }>;
   }> {
-    // This is simplified - in production would query historical data
+    // Get historical evidence for the entity
+    const evidence = await this.trustDatabase.getTrustEvidence(entityId);
+    
+    // Filter evidence to requested time period
+    const cutoffTime = Date.now() - (days * 24 * 60 * 60 * 1000);
+    const relevantEvidence = evidence.filter(e => e.timestamp >= cutoffTime);
+    
+    // Get current trust score
     const currentScore = await this.getTrustScore(entityId);
     
+    // Calculate trust at different time points
+    const dataPoints: Array<{ timestamp: number; trust: number }> = [];
+    const intervals = Math.min(10, days); // Max 10 data points
+    const intervalMs = (days * 24 * 60 * 60 * 1000) / intervals;
+    
+    for (let i = 0; i <= intervals; i++) {
+      const pointTime = cutoffTime + (i * intervalMs);
+      const pointEvidence = relevantEvidence.filter(e => e.timestamp <= pointTime);
+      
+      // Calculate cumulative trust impact up to this point
+      let trustAtPoint = 50; // Start from default
+      for (const ev of pointEvidence) {
+        // Apply decay based on age
+        const age = pointTime - ev.timestamp;
+        const decayFactor = Math.exp(-age / (30 * 24 * 60 * 60 * 1000)); // 30-day half-life
+        trustAtPoint += ev.impact * ev.weight * decayFactor;
+      }
+      
+      // Clamp to valid range
+      trustAtPoint = Math.max(0, Math.min(100, trustAtPoint));
+      
+      dataPoints.push({
+        timestamp: Math.floor(pointTime),
+        trust: Math.round(trustAtPoint)
+      });
+    }
+    
+    // Add current score as final point
+    dataPoints.push({
+      timestamp: Date.now(),
+      trust: currentScore.overall
+    });
+    
+    // Calculate trend
+    if (dataPoints.length < 2) {
+      return {
+        trend: 'stable',
+        changeRate: 0,
+        dataPoints
+      };
+    }
+    
+    // Use linear regression to determine trend
+    const n = dataPoints.length;
+    const sumX = dataPoints.reduce((sum, p, i) => sum + i, 0);
+    const sumY = dataPoints.reduce((sum, p) => sum + p.trust, 0);
+    const sumXY = dataPoints.reduce((sum, p, i) => sum + i * p.trust, 0);
+    const sumX2 = dataPoints.reduce((sum, p, i) => sum + i * i, 0);
+    
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const changePerInterval = slope;
+    const changePerDay = changePerInterval * intervals / days;
+    
+    let trend: 'improving' | 'declining' | 'stable';
+    if (Math.abs(changePerDay) < 0.1) {
+      trend = 'stable';
+    } else if (changePerDay > 0) {
+      trend = 'improving';
+    } else {
+      trend = 'declining';
+    }
+    
     return {
-      trend: 'stable',
-      changeRate: 0,
-      dataPoints: [{ timestamp: Date.now(), trust: currentScore.overall }]
+      trend,
+      changeRate: Math.round(changePerDay * 10) / 10, // Round to 1 decimal
+      dataPoints
     };
   }
 

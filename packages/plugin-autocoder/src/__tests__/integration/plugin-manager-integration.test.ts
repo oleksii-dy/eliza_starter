@@ -36,8 +36,7 @@ describe('Plugin Manager Integration', () => {
         knowledge: [],
         messageExamples: [],
         postExamples: [],
-        topics: [],
-        clients: [],
+        topics: [],,
         plugins: [],
       },
     };

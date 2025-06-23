@@ -21,8 +21,6 @@
     "allowArbitraryExtensions": true
   },
   "include": [
-    "src/**/*.ts",
-    "../plugin-secrets-manager/src/actions/settings.ts",
-    "../plugin-secrets-manager/src/providers/settings.ts"
+    "src/**/*.ts"
   ]
 }

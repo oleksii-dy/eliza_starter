@@ -187,7 +187,7 @@ describe('evaluateTrustAction', () => {
     );
     const result = await evaluateTrustAction.handler(runtime, memory);
 
-    expect((result as any).text).toContain('Entity name resolution not yet implemented');
+    expect((result as any).text).toContain('Could not find entity with name "Alice"');
     expect((result as any).error).toBe(true);
   });
 });

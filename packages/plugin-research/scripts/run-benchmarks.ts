@@ -126,8 +126,7 @@ class BenchmarkRuntime {
     messageExamples: [],
     postExamples: [],
     topics: [],
-    knowledge: [],
-    clients: [],
+    knowledge: [],,
     plugins: [],
   };
 

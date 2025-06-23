@@ -36,7 +36,6 @@ async function createRealElizaRuntime(): Promise<AgentRuntime> {
       postExamples: [],
       topics: ['testing', 'validation'],
       knowledge: [],
-      clients: [],
       plugins: [], // Will be added after runtime creation
     };
 

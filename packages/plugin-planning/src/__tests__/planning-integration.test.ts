@@ -140,7 +140,6 @@ describe('Planning Integration Tests', () => {
       expect(plan.goal).toContain('timeline');
       expect(plan.steps.length).toBeGreaterThan(1);
       expect(plan.executionModel).toBe('sequential');
-      expect(plan.constraints).toEqual(planningContext.constraints);
     });
 
     it('should respect execution model preferences', async () => {

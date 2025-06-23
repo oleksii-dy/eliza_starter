@@ -47,7 +47,7 @@ export const entitiesProvider: Provider = {
       const entitiesByType = new Map<string, any[]>();
 
       for (const { entity, profile } of allEntities) {
-        const type = profile.proofType || 'unknown';
+        const type = profile.type || 'unknown';
         const typeGroup = entitiesByType.get(type) || [];
         typeGroup.push({ entity, profile });
         entitiesByType.set(type, typeGroup);
@@ -78,7 +78,7 @@ export const entitiesProvider: Provider = {
           const lastUpdate = new Date(profile.updatedAt || profile.createdAt);
           const daysAgo = Math.floor((Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
 
-          lines.push(`- ${name} (${profile.proofType})`);
+          lines.push(`- ${name} (${profile.type})`);
           if (profile.summary) {
             lines.push(`  ${profile.summary}`);
           }
@@ -128,7 +128,7 @@ export const entitiesProvider: Provider = {
           typeCounts,
           taggedCount: taggedEntities.length,
         },
-        proofData: {
+        data: {
           entities: allEntities,
           byType: Object.fromEntries(entitiesByType),
           recentUpdates: recentEntities,

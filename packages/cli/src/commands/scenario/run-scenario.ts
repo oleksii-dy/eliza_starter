@@ -1,8 +1,8 @@
-import { logger, type IAgentRuntime, type Plugin } from '@elizaos/core';
+import { logger, type IAgentRuntime, type Plugin, getTempDbPath } from '@elizaos/core';
 // Make ALL imports dynamic to avoid loading schema modules before setting database type
 import dotenv from 'dotenv';
 import { existsSync } from 'node:fs';
-import * as path from 'path';
+import path from 'path';
 
 export async function runScenarioWithAgents(
   scenario: any, // Use any to avoid static import of types
@@ -46,7 +46,7 @@ export async function runScenarioWithAgents(
   // Initialize server
   const server = new AgentServer();
   await server.initialize({
-    dataDir: path.join(process.cwd(), '.scenario-test-db'),
+    dataDir: getTempDbPath('scenario-test-db'),
   });
 
   logger.info('Server initialized successfully');

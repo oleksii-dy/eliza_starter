@@ -12,7 +12,7 @@ export interface MessageServer {
 
 export interface MessageChannel {
   id: UUID; // global channelId
-  messageServerId: UUID; // FK to MessageServer.id
+  serverId: UUID; // FK to MessageServer.id
   name: string;
   type: ChannelType; // Use the enum from @elizaos/core
   sourceType?: string;

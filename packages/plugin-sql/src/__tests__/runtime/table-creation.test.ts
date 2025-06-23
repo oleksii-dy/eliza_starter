@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, afterAll } from 'bun:test';
 import { AgentRuntime, Character, type UUID, stringToUuid, logger } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
 import plugin from '../../index';
@@ -7,16 +7,14 @@ import { PGliteClientManager } from '../../pglite/manager';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { connectionRegistry } from '../../connection-registry';
 import { schemaRegistry } from '../../schema-registry';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import * as os from 'os';
+import { TestDbManager } from '../test-db-utils';
 
 // Skip all runtime tests to prevent memory leaks
 describe.skip('SQL Plugin Runtime Table Creation Tests', () => {
   let runtime: AgentRuntime;
-  let testDir: string;
   let testAgentId: UUID;
   let activeManagers: PGliteClientManager[] = [];
+  let dbManager: TestDbManager;
 
   // Set test environment to allow mock entities
   process.env.ELIZA_TESTING_PLUGIN = 'true';
@@ -25,9 +23,8 @@ describe.skip('SQL Plugin Runtime Table Creation Tests', () => {
     // Reset schema registry state to ensure fresh table creation
     schemaRegistry.resetCreatedTables();
 
-    // Create unique test directory for each test
-    testDir = path.join(process.cwd(), '.test-eliza', `test-${Date.now()}`);
-    await fs.mkdir(testDir, { recursive: true });
+    // Create test database manager
+    dbManager = new TestDbManager();
 
     // Create a unique agent ID for each test to prevent adapter conflicts
     testAgentId = stringToUuid(`Test Agent ${Date.now()}-${Math.random()}`);
@@ -69,12 +66,8 @@ describe.skip('SQL Plugin Runtime Table Creation Tests', () => {
     // Reset schema registry state
     schemaRegistry.resetCreatedTables();
 
-    // Cleanup test directory
-    try {
-      await fs.rm(testDir, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
-    }
+    // Cleanup test databases
+    await dbManager.cleanupAll();
 
     // Force garbage collection if available (helps with memory cleanup)
     if (global.gc) {
@@ -89,8 +82,11 @@ describe.skip('SQL Plugin Runtime Table Creation Tests', () => {
 
   describe('Plugin Initialization', () => {
     it('should handle table creation errors gracefully', async () => {
+      // Create test database path
+      const testDbPath = await dbManager.createTestDb('table-creation');
+
       // Create a manager with valid configuration
-      const manager = new PGliteClientManager({ dataDir: path.join(testDir, 'test-db') });
+      const manager = new PGliteClientManager({ dataDir: testDbPath });
       activeManagers.push(manager);
 
       // Initialize the manager first

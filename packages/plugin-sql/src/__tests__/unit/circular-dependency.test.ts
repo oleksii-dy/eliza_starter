@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'bun:test';
 import { setDatabaseType } from '../../schema/factory';
 import * as schema from '../../schema/index';
 

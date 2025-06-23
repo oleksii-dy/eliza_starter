@@ -28,7 +28,7 @@ export const contactsProvider: Provider = {
         return {
           id: entity.id,
           name: entity.names[0] || 'Unknown',
-          proofType: (metadata.proofType as string) || 'unknown',
+          type: (metadata.type as string) || 'unknown',
           tags: Array.isArray(metadata.tags) ? metadata.tags : [],
           platforms: (metadata.platforms as Record<string, string>) || {},
           lastModified: metadata.updatedAt || metadata.createdAt,
@@ -38,7 +38,7 @@ export const contactsProvider: Provider = {
       // Group by type
       const grouped = contactDetails.reduce(
         (acc, contact) => {
-          const type = contact.proofType;
+          const type = contact.type;
           if (!acc[type]) acc[type] = [];
           acc[type].push(contact);
           return acc;
@@ -73,7 +73,7 @@ export const contactsProvider: Provider = {
             {} as Record<string, number>
           ),
         },
-        proofData: {
+        data: {
           grouped,
           fullEntities: entities,
         },

@@ -1,4 +1,4 @@
-import type { ConfigurationSource, PluginConfiguration } from '../types/plugin-config.js';
+import type { ConfigurationSource, PluginConfiguration } from '../types/plugin';
 import { elizaLogger } from '../logger.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';

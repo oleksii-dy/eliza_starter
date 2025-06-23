@@ -54,7 +54,6 @@ describe('Socket.IO End-to-End Message Flow', () => {
       name: 'Test Agent',
       bio: ['Test bio'],
       topics: [],
-      clients: [],
       plugins: [],
       settings: {
         secrets: {},

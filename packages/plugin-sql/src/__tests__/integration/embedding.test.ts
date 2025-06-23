@@ -8,11 +8,12 @@ import {
   type UUID,
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { embeddingTable, memoryTable } from '../../schema';
 import { createIsolatedTestDatabase } from '../test-helpers';
+import { sql } from 'drizzle-orm';
 
 describe('Embedding Integration Tests', () => {
   let adapter: PgliteDatabaseAdapter | PgDatabaseAdapter;
@@ -45,7 +46,7 @@ describe('Embedding Integration Tests', () => {
         type: ChannelType.GROUP,
       } as Room,
     ]);
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {
@@ -76,10 +77,25 @@ describe('Embedding Integration Tests', () => {
         },
       };
 
+      console.log('Creating memory with embedding length:', memory.embedding?.length);
       const memoryId = await adapter.createMemory(memory, 'embedding_test');
-      expect(memoryId).toBe(memory.id);
+      expect(memoryId).toBe(memory.id as UUID);
 
       const retrieved = await adapter.getMemoryById(memoryId);
+      console.log('Retrieved memory:', {
+        id: retrieved?.id,
+        hasEmbedding: !!retrieved?.embedding,
+        embeddingLength: retrieved?.embedding?.length,
+        content: retrieved?.content,
+      });
+      
+      // Check if embeddings table has the data
+      if (memoryId) {
+        const db = adapter.getDatabase();
+        const embeddingRows = await db.execute(sql.raw(`SELECT * FROM embeddings WHERE memory_id = '${memoryId}'`));
+        console.log('Embedding rows:', embeddingRows);
+      }
+      
       expect(retrieved).toBeDefined();
       expect(retrieved?.embedding).toBeDefined();
       expect(retrieved?.embedding?.length).toBe(384);

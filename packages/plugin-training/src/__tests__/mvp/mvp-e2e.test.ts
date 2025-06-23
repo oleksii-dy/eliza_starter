@@ -38,7 +38,6 @@ function createFullMockRuntime(): IAgentRuntime {
       postExamples: [],
       topics: [],
       knowledge: [],
-      clients: [],
       plugins: ['mvp-custom-reasoning'],
     },
 

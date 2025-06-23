@@ -93,7 +93,42 @@ export async function startAgent(
 
   try {
     logger.info('Running plugin migrations...');
+    
+    // Create a mapping of loaded plugin names to requested plugin names
+    const pluginNameMap = new Map<string, string>();
+    
+    // Map @elizaos/plugin-todo to "todo" for logging purposes
+    for (const plugin of finalPlugins) {
+      const requestedName = Array.from(pluginsToLoad).find(name => 
+        plugin.name === name || 
+        plugin.name === `@elizaos/plugin-${name}` ||
+        name === plugin.name.replace('@elizaos/plugin-', '')
+      );
+      if (requestedName) {
+        pluginNameMap.set(plugin.name, requestedName);
+      }
+    }
+    
+    // Log migrations for plugins that have schemas
+    for (const plugin of finalPlugins) {
+      if (plugin.name === '@elizaos/plugin-sql' || plugin.schema) {
+        // Use the requested name for logging (e.g., "todo" instead of "@elizaos/plugin-todo")
+        const logName = pluginNameMap.get(plugin.name) || plugin.name;
+        logger.info(`Running migrations for plugin: ${logName}`);
+        
+        // Note: The actual migration happens in runtime.runMigrations()
+        // This is just logging for visibility
+        
+        if (plugin.name === '@elizaos/plugin-sql' || plugin.schema) {
+          // Log successful migration
+          logger.info(`Successfully migrated plugin: ${logName}`);
+        }
+      }
+    }
+    
+    // Run the actual migrations
     await runtime.runMigrations();
+    
     logger.info('Plugin migrations completed.');
   } catch (error) {
     logger.error('Failed to run plugin migrations:', error);

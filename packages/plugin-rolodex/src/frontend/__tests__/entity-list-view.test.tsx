@@ -1,15 +1,18 @@
+/**
+ * @vitest-environment jsdom
+ */
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { EntityListView } from '../ui/entity-list-view';
-import { asUUID, Entity, Relationship } from '@elizaos/core';
+import { type Entity, type Relationship, type UUID, stringToUuid } from '@elizaos/core';
 
 describe('EntityListView', () => {
   const mockEntities: Entity[] = [
     {
-      id: asUUID('entity-1'),
-      agentId: asUUID('agent-1'),
+      id: stringToUuid('entity-1'),
+      agentId: stringToUuid('agent-1'),
       names: ['Alice Johnson', 'AJ', 'Alice J'],
       metadata: {
         type: 'person',
@@ -25,8 +28,8 @@ describe('EntityListView', () => {
       }
     },
     {
-      id: asUUID('entity-2'),
-      agentId: asUUID('agent-1'),
+      id: stringToUuid('entity-2'),
+      agentId: stringToUuid('agent-1'),
       names: ['Bob Smith', 'Bobby'],
       metadata: {
         type: 'person',
@@ -41,8 +44,8 @@ describe('EntityListView', () => {
       }
     },
     {
-      id: asUUID('entity-3'),
-      agentId: asUUID('agent-1'),
+      id: stringToUuid('entity-3'),
+      agentId: stringToUuid('agent-1'),
       names: ['Tech Startup Inc', 'TSI'],
       metadata: {
         type: 'organization',
@@ -58,10 +61,10 @@ describe('EntityListView', () => {
 
   const mockRelationships: Relationship[] = [
     {
-      id: asUUID('rel-1'),
-      sourceEntityId: asUUID('entity-1'),
-      targetEntityId: asUUID('entity-2'),
-      agentId: asUUID('agent-1'),
+      id: stringToUuid('rel-1'),
+      sourceEntityId: stringToUuid('entity-1'),
+      targetEntityId: stringToUuid('entity-2'),
+      agentId: stringToUuid('agent-1'),
       tags: ['works_with'],
       metadata: {
         relationshipType: 'colleague',
@@ -70,10 +73,10 @@ describe('EntityListView', () => {
       strength: 0.9
     },
     {
-      id: asUUID('rel-2'),
-      sourceEntityId: asUUID('entity-1'),
-      targetEntityId: asUUID('entity-3'),
-      agentId: asUUID('agent-1'),
+      id: stringToUuid('rel-2'),
+      sourceEntityId: stringToUuid('entity-1'),
+      targetEntityId: stringToUuid('entity-3'),
+      agentId: stringToUuid('agent-1'),
       tags: ['works_for'],
       metadata: {
         relationshipType: 'employment',
@@ -268,10 +271,10 @@ describe('EntityListView', () => {
     const bidirectionalRelationships: Relationship[] = [
       ...mockRelationships,
       {
-        id: asUUID('rel-3'),
-        sourceEntityId: asUUID('entity-2'),
-        targetEntityId: asUUID('entity-1'),
-        agentId: asUUID('agent-1'),
+        id: stringToUuid('rel-3'),
+        sourceEntityId: stringToUuid('entity-2'),
+        targetEntityId: stringToUuid('entity-1'),
+        agentId: stringToUuid('agent-1'),
         tags: ['works_with'],
         metadata: {
           relationshipType: 'colleague'

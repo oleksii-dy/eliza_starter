@@ -69,7 +69,7 @@ export const eventBridgeProvider: Provider = {
           },
           eventStatistics: stats,
         },
-        proofData: {
+        data: {
           eventBridge: {
             stats,
             subscribedPlugins,

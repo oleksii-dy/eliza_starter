@@ -1,4 +1,3 @@
-// Simple validation script to check plugin basics without vitest
 import { plugin, createDatabaseAdapter } from './src/index.ts';
 
 console.log('🔍 Testing plugin exports...');

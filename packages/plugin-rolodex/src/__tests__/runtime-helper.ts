@@ -60,6 +60,38 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
   // Initialize runtime
   await runtime.initialize();
 
+  // Wait for all services to be fully initialized
+  // This is important because some services might initialize asynchronously
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  // Verify that the rolodex service is available
+  const maxRetries = 10;
+  let retries = 0;
+  let rolodexService: any = null;
+  
+  while (retries < maxRetries) {
+    // Try both service name and type
+    rolodexService = runtime.getService('rolodex') || runtime.getService('RolodexService');
+    if (rolodexService) {
+      console.log('[runtime-helper] Rolodex service found after', retries, 'retries');
+      break;
+    }
+    retries++;
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  if (!rolodexService) {
+    // Debug: List all available services
+    console.error('[runtime-helper] Available services:', Array.from(runtime.services?.keys() || []));
+    
+    // Also check if it's available under a different name
+    for (const [key, service] of runtime.services || new Map()) {
+      console.error(`[runtime-helper] Service: ${key}, Type: ${service.constructor.name}`);
+    }
+    
+    throw new Error('Rolodex service not available after initialization');
+  }
+
   return runtime;
 }
 
@@ -115,8 +147,34 @@ export async function processMessageAndWait(
   message: Memory,
   waitTime: number = 2000
 ): Promise<void> {
-  // Cast to any to access processMessage which exists on AgentRuntime but not in interface
-  await (runtime as any).processMessage(message);
+  // In ElizaOS, messages are handled differently based on the runtime implementation
+  // For testing, we need to trigger the action/evaluator pipeline directly
+  
+  // First, compose the state
+  const state = await runtime.composeState(message);
+  
+  // Create a callback for responses
+  const responses: Memory[] = [];
+  const callback = async (content: any) => {
+    const response: Memory = {
+      id: stringToUuid(`response-${Date.now()}`),
+      entityId: runtime.agentId,
+      agentId: runtime.agentId,
+      roomId: message.roomId,
+      content,
+      createdAt: Date.now(),
+    };
+    responses.push(response);
+    return responses;
+  };
+  
+  // Process through the action pipeline
+  await runtime.processActions(message, responses, state, callback);
+  
+  // Also run evaluators
+  await runtime.evaluate(message, state, true, callback, responses);
+  
+  // Wait for async operations to complete
   await new Promise(resolve => setTimeout(resolve, waitTime));
 }
 
@@ -124,26 +182,56 @@ export async function processMessageAndWait(
  * Cleanup function to close database connections
  */
 export async function cleanupRuntime(runtime: IAgentRuntime): Promise<void> {
-  // Stop all services
-  const services = runtime.getAllServices();
-  for (const [name, service] of services) {
-    try {
-      await service.stop();
-    } catch (error) {
-      console.error(`Error stopping service ${name}:`, error);
-    }
+  if (!runtime) {
+    return;
   }
+  
+  try {
+    // Stop all services if available
+    if (runtime.services && runtime.services instanceof Map) {
+      for (const [name, service] of runtime.services) {
+        try {
+          if (service && typeof service.stop === 'function') {
+            await service.stop();
+          }
+        } catch (error) {
+          console.error(`Error stopping service ${name}:`, error);
+        }
+      }
+    }
 
-  // Close database connection
-  await runtime.stop();
+    // Close database connection if stop method exists
+    if (typeof runtime.stop === 'function') {
+      await runtime.stop();
+    }
+  } catch (error) {
+    console.error('Error during runtime cleanup:', error);
+  }
 }
 
 /**
  * Test helper to get service from runtime
  */
 export function getService<T>(runtime: IAgentRuntime, serviceName: string): T {
-  const service = runtime.getService(serviceName);
+  // Try multiple possible service names
+  let service = runtime.getService(serviceName) || 
+                runtime.getService('RolodexService') ||
+                runtime.getService('rolodexService');
+  
+  // If still not found, try to find by type
+  if (!service && runtime.services) {
+    for (const [key, svc] of runtime.services) {
+      if (svc.constructor.name === 'RolodexService' || (key as string) === 'rolodex') {
+        service = svc;
+        break;
+      }
+    }
+  }
+  
   if (!service) {
+    // Debug: List all available services
+    console.error(`[getService] Service ${serviceName} not found. Available services:`, 
+      Array.from(runtime.services?.keys() || []));
     throw new Error(`Service ${serviceName} not found`);
   }
   return service as T;

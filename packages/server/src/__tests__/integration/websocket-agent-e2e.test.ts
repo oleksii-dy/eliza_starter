@@ -38,7 +38,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
 
     // Initialize agent server
     agentServer = new AgentServer();
-    
+
     try {
       await agentServer.initialize({
         dataDir: testDbPath,
@@ -57,7 +57,6 @@ describe('WebSocket Agent End-to-End Tests', () => {
       name: 'WebSocket Test Agent',
       bio: ['An agent that responds through WebSocket'],
       topics: ['testing', 'websockets'],
-      clients: [],
       plugins: [],
       system: 'You are a helpful test agent. Always respond promptly to messages.',
       settings: {
@@ -67,12 +66,18 @@ describe('WebSocket Agent End-to-End Tests', () => {
       messageExamples: [
         [
           { name: 'user', content: { text: 'Hello' } as Content },
-          { name: 'WebSocket Test Agent', content: { text: 'Hello! I can hear you through WebSocket.' } as Content }
+          {
+            name: 'WebSocket Test Agent',
+            content: { text: 'Hello! I can hear you through WebSocket.' } as Content,
+          },
         ],
         [
           { name: 'user', content: { text: 'Are you connected?' } as Content },
-          { name: 'WebSocket Test Agent', content: { text: 'Yes, I am connected and ready to chat!' } as Content }
-        ]
+          {
+            name: 'WebSocket Test Agent',
+            content: { text: 'Yes, I am connected and ready to chat!' } as Content,
+          },
+        ],
       ],
     } as Character;
 
@@ -105,14 +110,14 @@ describe('WebSocket Agent End-to-End Tests', () => {
     const channel = await agentServer.createChannel({
       name: 'WebSocket Test Channel',
       type: ChannelType.GROUP,
-      messageServerId: serverId,
+      serverId: serverId,
       metadata: {},
     });
     channelId = channel.id;
 
     // Add agent to channel as a participant
     await agentServer.addAgentToChannel(channelId, agent.agentId);
-    
+
     // Also ensure the agent is following the channel
     await agent.setParticipantUserState(channelId, agent.agentId, 'FOLLOWED');
 
@@ -127,7 +132,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
   afterAll(async () => {
     // Cleanup
     if (client) client.close();
-    
+
     if (agentServer) {
       await agentServer.stop();
     }
@@ -252,7 +257,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
       });
 
       // Wait for first response
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       expect(responses).toHaveLength(1);
 
       // Send follow-up message
@@ -267,7 +272,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
       });
 
       // Wait for second response
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       expect(responses).toHaveLength(2);
 
       // Verify context was maintained
@@ -278,7 +283,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
     it('should handle multiple concurrent users through WebSocket', async () => {
       const user1Id = uuidv4() as UUID;
       const user2Id = uuidv4() as UUID;
-      
+
       // Create second client
       const client2 = ioClient(`http://localhost:${port}`, {
         autoConnect: false,
@@ -348,7 +353,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
         });
 
         // Wait for responses
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
 
         // Both users should see agent responses
         expect(user1Responses.length).toBeGreaterThan(0);
@@ -356,7 +361,6 @@ describe('WebSocket Agent End-to-End Tests', () => {
 
         // Responses should be broadcast to all channel participants
         expect(user1Responses.length).toBe(user2Responses.length);
-
       } finally {
         if (client2.connected) client2.disconnect();
       }
@@ -475,24 +479,23 @@ describe('WebSocket Agent End-to-End Tests', () => {
       });
 
       // Wait for processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
       // Verify response was received
       expect(agentResponseText).toBeTruthy();
 
       // Verify messages are persisted in database
       const messages = await agentServer.getMessagesForChannel(channelId);
-      
+
       // Find user message
-      const userMessage = messages.find(m => m.id === messageId);
+      const userMessage = messages.find((m) => m.id === messageId);
       expect(userMessage).toBeDefined();
       expect(userMessage?.content).toBe(messageText);
       expect(userMessage?.authorId).toBe(userId);
 
       // Find agent response
-      const agentMessage = messages.find(m => 
-        m.authorId === agent.agentId && 
-        m.inReplyToRootMessageId === messageId
+      const agentMessage = messages.find(
+        (m) => m.authorId === agent.agentId && m.inReplyToRootMessageId === messageId
       );
       expect(agentMessage).toBeDefined();
       expect(agentMessage?.content).toBe(agentResponseText);
@@ -567,11 +570,11 @@ describe('WebSocket Agent End-to-End Tests', () => {
       });
 
       // Wait for processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
       // Should receive disable/enable input control messages
-      const disableMsg = controlMessages.find(m => m.action === 'disable_input');
-      const enableMsg = controlMessages.find(m => m.action === 'enable_input');
+      const disableMsg = controlMessages.find((m) => m.action === 'disable_input');
+      const enableMsg = controlMessages.find((m) => m.action === 'enable_input');
 
       expect(disableMsg).toBeDefined();
       expect(enableMsg).toBeDefined();

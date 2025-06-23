@@ -7,6 +7,7 @@ export { relationshipBuildingScenario } from './relationship-building';
 export { trustEvolutionScenario } from './trust-evolution';
 export { complexNetworkScenario } from './complex-network';
 export { followUpManagementScenario } from './follow-up-management';
+export { secretsManagementScenario } from './secrets-management';
 
 // Export as array for easy iteration
 export const rolodexScenarios = [
@@ -14,7 +15,8 @@ export const rolodexScenarios = [
   'relationship-building', 
   'trust-evolution',
   'complex-network',
-  'follow-up-management'
+  'follow-up-management',
+  'secrets-management'
 ];
 
 // Export scenario metadata
@@ -48,5 +50,11 @@ export const scenarioMetadata = {
     description: 'Tests follow-up scheduling and tracking with 8 agents',
     agents: 8,
     duration: 20000,
+  },
+  'secrets-management': {
+    name: 'Secrets Management with Admin',
+    description: 'Tests admin providing API keys and agents using them for authenticated actions',
+    agents: 1,
+    duration: 30000,
   },
 }; 

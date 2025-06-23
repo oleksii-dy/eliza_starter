@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'bun:test';
 import { plugin } from '../../index';
 import type { AgentRuntime } from '@elizaos/core';
 import { tmpdir } from 'os';

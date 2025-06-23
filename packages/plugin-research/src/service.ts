@@ -3199,6 +3199,8 @@ Format as JSON array with at least one finding if the content is relevant:
       }
     }
     this.activeResearch.clear();
+    // Explicitly return void
+    return;
   }
 
   async getProject(projectId: string): Promise<ResearchProject | undefined> {

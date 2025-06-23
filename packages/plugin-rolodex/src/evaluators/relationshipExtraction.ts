@@ -59,7 +59,7 @@ export const relationshipExtractor: Evaluator = {
 
   handler: async (runtime: IAgentRuntime, message: Memory, state: any) => {
     try {
-      const relationshipService = runtime.getService('relationship') as RelationshipOntologyManager;
+      const relationshipService = runtime.getService('relationship') as unknown as RelationshipOntologyManager;
       if (!relationshipService) {
         logger.warn('RelationshipOntologyManager not available');
         return;
@@ -124,7 +124,7 @@ Return empty array [] if no clear relationships are found.`;
         if (rel.source && rel.target && rel.interaction && rel.confidence > 0.5) {
           try {
             // Get existing relationship if any
-            const existing = await relationshipService.getRelationship(rel.source, rel.target);
+            const existing = await relationshipService.getDimensionValues(rel.source, rel.target);
 
             // Analyze the interaction
             await relationshipService.analyzeInteraction(
@@ -648,7 +648,7 @@ async function createOrUpdateMentionedEntity(
       names: [person.name],
       metadata: {
         mentionedBy,
-        mentionContext: person.context,
+        mentionContext: person?.context,
         attributes: person.attributes,
         createdFrom: 'mention',
       },
@@ -659,7 +659,7 @@ async function createOrUpdateMentionedEntity(
     const mentions = (metadata.mentions || []) as any[];
     mentions.push({
       by: mentionedBy,
-      metadata: person.context,
+      metadata: person?.context,
       timestamp: Date.now(),
     });
     metadata.mentions = mentions;

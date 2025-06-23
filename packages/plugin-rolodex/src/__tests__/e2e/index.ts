@@ -99,7 +99,7 @@ export class RolodexComprehensiveTestSuite implements TestSuite {
           console.log('✓ Team entities created');
 
           // Step 2: Track entity profiles using EntityGraphManager
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+          const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
           if (entityGraphService) {
             for (const member of teamMembers) {
               await entityGraphService.trackEntity(
@@ -152,7 +152,7 @@ export class RolodexComprehensiveTestSuite implements TestSuite {
           }
 
           // Step 5: Test entity resolution with similar names
-          const resolutionService = runtime.getService('entity-resolution') as EntityResolutionManager;
+          const resolutionService = runtime.getService('entity-resolution') as unknown as EntityResolutionManager;
           if (resolutionService) {
             // Try to resolve "Bob" - should find "Bob Chen"
             const bobResolution = await resolutionService.resolveEntity(

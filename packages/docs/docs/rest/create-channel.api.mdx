@@ -45,7 +45,7 @@ Creates a new channel in a messaging server
         schema: {
           type: 'object',
           properties: {
-            messageServerId: {
+            serverId: {
               type: 'string',
               format: 'uuid',
               description: 'ID of the server where the channel will be created',
@@ -75,7 +75,7 @@ Creates a new channel in a messaging server
               description: 'Additional metadata for the channel (optional)',
             },
           },
-          required: ['messageServerId', 'name', 'type'],
+          required: ['serverId', 'name', 'type'],
         },
       },
     },
@@ -105,7 +105,7 @@ Creates a new channel in a messaging server
                         format: 'uuid',
                         description: 'ID of the created channel',
                       },
-                      messageServerId: {
+                      serverId: {
                         type: 'string',
                         format: 'uuid',
                         description: 'ID of the server this channel belongs to',

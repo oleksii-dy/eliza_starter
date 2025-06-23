@@ -5,36 +5,27 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    environmentMatchGlobs: [
-      ['src/frontend/**/*.test.{ts,tsx}', 'jsdom'],
-      ['src/**/*.test.{ts,tsx}', 'node']
-    ],
     setupFiles: ['./src/__tests__/setup.ts'],
-    testTimeout: 60000,
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true
-      }
+    includeSource: ['src/**/*.{js,ts}'],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'dist/',
+        'src/__tests__/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/mockData.ts',
+      ],
     },
-    deps: {
-      inline: ['force-graph']
-    },
-    exclude: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/cypress/**',
-      '**/.{idea,git,cache,output,temp}/**',
-      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-      '**/src/__tests__/e2e/**',
-      '**/src/__tests__/runtime/**'
-    ]
+    environmentMatchGlobs: [
+      // Use jsdom for frontend tests
+      ['src/frontend/**/*.test.{ts,tsx}', 'jsdom'],
+    ],
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@elizaos/core': path.resolve(__dirname, '../core/dist'),
-      'force-graph': path.resolve(__dirname, './src/__mocks__/force-graph.ts')
-    }
-  }
+    },
+  },
 });

@@ -296,7 +296,7 @@ describe('SocketIORouter', () => {
       expect(mockServerInstance.createChannel).toHaveBeenCalledWith(
         expect.objectContaining({
           id: payload.channelId,
-          messageServerId: payload.serverId,
+          serverId: payload.serverId,
         }),
         [payload.senderId]
       );

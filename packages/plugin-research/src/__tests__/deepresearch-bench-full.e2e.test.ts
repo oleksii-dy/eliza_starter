@@ -1,3 +1,4 @@
+import './test-setup'; // Load environment variables
 import { type TestSuite, IAgentRuntime, elizaLogger } from '@elizaos/core';
 import { ResearchService } from '../service';
 import { ResearchDepth, ResearchStatus } from '../types';

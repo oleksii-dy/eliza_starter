@@ -37,22 +37,23 @@ describe('Agent Message Handling Integration Tests', () => {
       name: 'Test Agent',
       bio: ['A test agent for message handling'],
       topics: [],
-      clients: [],
       plugins: [],
       system: 'You are a helpful assistant. Always respond to messages when asked.',
       settings: {
         secrets: {},
-        model: 'gpt-3.5-turbo',
       },
       messageExamples: [
         [
           { name: 'user', content: { text: 'Hello' } as Content },
-          { name: 'Test Agent', content: { text: 'Hello! How can I help you today?' } as Content }
+          { name: 'Test Agent', content: { text: 'Hello! How can I help you today?' } as Content },
         ],
         [
           { name: 'user', content: { text: 'Can you hear me?' } as Content },
-          { name: 'Test Agent', content: { text: 'Yes, I can hear you loud and clear!' } as Content }
-        ]
+          {
+            name: 'Test Agent',
+            content: { text: 'Yes, I can hear you loud and clear!' } as Content,
+          },
+        ],
       ],
     } as Character;
 
@@ -90,7 +91,7 @@ describe('Agent Message Handling Integration Tests', () => {
     const channel = await agentServer.createChannel({
       name: 'Test Channel',
       type: ChannelType.GROUP,
-      messageServerId: serverId,
+      serverId: serverId,
       metadata: {},
     });
     channelId = channel.id;
@@ -152,7 +153,7 @@ describe('Agent Message Handling Integration Tests', () => {
       let agentResponseText: string | null = null;
       const handleMessage = mock(async (response: Content) => {
         agentResponseText = response.text || null;
-        
+
         // Create agent's response message
         await agentServer.createMessage({
           channelId,
@@ -172,7 +173,7 @@ describe('Agent Message Handling Integration Tests', () => {
       await agent.processMessage(memory, handleMessage);
 
       // Wait for processing to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Verify agent responded
       expect(handleMessage).toHaveBeenCalled();
@@ -181,12 +182,12 @@ describe('Agent Message Handling Integration Tests', () => {
 
       // Retrieve messages to verify the response was saved
       const messages = await agentServer.getMessagesForChannel(channelId);
-      
+
       // Should have at least 2 messages (user message + agent response)
       expect(messages.length).toBeGreaterThanOrEqual(2);
-      
+
       // Find the agent's response
-      const agentResponse = messages.find(m => m.authorId === agent.agentId);
+      const agentResponse = messages.find((m) => m.authorId === agent.agentId);
       expect(agentResponse).toBeDefined();
       expect(agentResponse?.inReplyToRootMessageId).toBe(messageId);
     });
@@ -199,12 +200,12 @@ describe('Agent Message Handling Integration Tests', () => {
       const messageTexts = [
         'What is your name?',
         'Can you help me with something?',
-        'Thank you for your help!'
+        'Thank you for your help!',
       ];
 
       for (const text of messageTexts) {
         const messageId = uuidv4() as UUID;
-        
+
         // Create user message
         const userMessage = await agentServer.createMessage({
           id: messageId,
@@ -232,7 +233,7 @@ describe('Agent Message Handling Integration Tests', () => {
 
         await agent.processMessage(memory, async (response: Content) => {
           responses.push(response.text || '');
-          
+
           // Create agent's response
           await agentServer.createMessage({
             channelId,
@@ -249,19 +250,19 @@ describe('Agent Message Handling Integration Tests', () => {
         });
 
         // Wait between messages
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
       // Verify all messages were processed
       expect(responses).toHaveLength(3);
-      responses.forEach(response => {
+      responses.forEach((response) => {
         expect(response).toBeTruthy();
         expect(typeof response).toBe('string');
       });
 
       // Verify all messages are in the channel
       const allMessages = await agentServer.getMessagesForChannel(channelId);
-      
+
       // Should have at least 6 messages (3 user + 3 agent)
       expect(allMessages.length).toBeGreaterThanOrEqual(6);
     });
@@ -273,7 +274,7 @@ describe('Agent Message Handling Integration Tests', () => {
       // Create a conversation about a specific topic
       const conversation = [
         { id: uuidv4() as UUID, text: 'My favorite color is blue.' },
-        { id: uuidv4() as UUID, text: 'What color did I just mention?' }
+        { id: uuidv4() as UUID, text: 'What color did I just mention?' },
       ];
 
       for (const { id, text } of conversation) {
@@ -304,7 +305,7 @@ describe('Agent Message Handling Integration Tests', () => {
 
         await agent.processMessage(memory, async (response: Content) => {
           responses.push(response.text || '');
-          
+
           await agentServer.createMessage({
             channelId,
             authorId: agent.agentId,
@@ -319,7 +320,7 @@ describe('Agent Message Handling Integration Tests', () => {
           return [];
         });
 
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
       // The second response should reference "blue" from the context
@@ -361,7 +362,7 @@ describe('Agent Message Handling Integration Tests', () => {
 
       const actionHandler = mock(async (response: Content) => {
         responseContent = response;
-        
+
         // Check if REPLY action was included
         if (response.actions && response.actions.includes('REPLY')) {
           actionExecuted = true;
@@ -383,7 +384,7 @@ describe('Agent Message Handling Integration Tests', () => {
 
       await agent.processMessage(memory, actionHandler);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Verify response was generated
       expect(responseContent).toBeTruthy();
@@ -399,7 +400,7 @@ describe('Agent Message Handling Integration Tests', () => {
         id: messageId,
         channelId,
         authorId: userId,
-        content: '',  // Empty content
+        content: '', // Empty content
         rawMessage: '',
         sourceId: 'error-test-1',
         sourceType: 'test',
@@ -413,7 +414,7 @@ describe('Agent Message Handling Integration Tests', () => {
         agentId: agent.agentId,
         roomId: channelId,
         content: {
-          text: '',  // Empty text
+          text: '', // Empty text
           source: 'test',
         },
         createdAt: Date.now(),
@@ -452,9 +453,9 @@ describe('Agent Message Handling Integration Tests', () => {
       // Check that the agent has the necessary services
       const services = agent.services;
       expect(services).toBeDefined();
-      
+
       // The message handling plugin should provide various services
-      const hasMessageHandling = agent.plugins.some(p => p.name === 'message-handling');
+      const hasMessageHandling = agent.plugins.some((p) => p.name === 'message-handling');
       expect(hasMessageHandling).toBe(true);
     });
 
@@ -477,11 +478,11 @@ describe('Agent Message Handling Integration Tests', () => {
 
       // Compose state should include providers from message handling plugin
       const state = await agent.composeState(memory);
-      
+
       // Check that state includes various provider data
       expect(state).toBeDefined();
       expect(state.text).toBeTruthy();
-      
+
       // The state should include character info, time, recent messages, etc.
       expect(state.text).toContain(agent.character.name);
     });
@@ -494,7 +495,7 @@ describe('Agent Message Handling Integration Tests', () => {
         'Hello, are you there?',
         'What can you help me with?',
         'Tell me about yourself',
-        'Thanks for chatting!'
+        'Thanks for chatting!',
       ];
 
       const responses: string[] = [];
@@ -547,7 +548,7 @@ describe('Agent Message Handling Integration Tests', () => {
         });
 
         // Simulate realistic timing between messages
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise((resolve) => setTimeout(resolve, 800));
       }
 
       // Verify complete conversation
@@ -559,19 +560,19 @@ describe('Agent Message Handling Integration Tests', () => {
 
       // Get final conversation history
       const allMessages = await agentServer.getMessagesForChannel(channelId);
-      
+
       // Should have complete conversation (user + agent messages)
       expect(allMessages.length).toBeGreaterThanOrEqual(conversation.length * 2);
 
       // Verify conversation structure
-      const userMessages = allMessages.filter(m => m.authorId === userId);
-      const agentMessages = allMessages.filter(m => m.authorId === agent.agentId);
-      
+      const userMessages = allMessages.filter((m) => m.authorId === userId);
+      const agentMessages = allMessages.filter((m) => m.authorId === agent.agentId);
+
       expect(userMessages.length).toBeGreaterThanOrEqual(conversation.length);
       expect(agentMessages.length).toBeGreaterThanOrEqual(conversation.length);
 
       // Each agent message should be in reply to a user message
-      agentMessages.forEach(agentMsg => {
+      agentMessages.forEach((agentMsg) => {
         expect(agentMsg.inReplyToRootMessageId).toBeTruthy();
       });
     });

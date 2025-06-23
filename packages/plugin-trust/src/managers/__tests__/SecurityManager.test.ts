@@ -217,9 +217,10 @@ describe('SecurityManager', () => {
   describe('stop', () => {
     it('should clean up resources', async () => {
       await securityManager.initialize(mockRuntime, mockTrustEngine);
-      
+
       // Should not throw
-      await expect(securityManager.stop()).resolves.not.toThrow();
+      await securityManager.stop();
+      // Test passes if no error is thrown
     });
   });
 }); 

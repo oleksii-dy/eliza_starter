@@ -18,6 +18,7 @@ import { ResearchEnhancedOrchestrationManager } from '../orchestration/research-
 import { SWEBenchInstance } from '../swe-bench/types';
 import { AutoCodeService, type PluginProject } from '../services/autocode-service.js';
 import { DevelopmentPhase } from '../types/plugin-project';
+import path from 'path';
 
 /**
  * Test research integration action
@@ -100,7 +101,10 @@ export const testResearchAction: Action = {
 
       // Test 4: Orchestration Manager
       elizaLogger.info('[RESEARCH-TEST] Testing orchestration manager');
-      const manager = new ResearchEnhancedOrchestrationManager(runtime, '/tmp/test-workspace');
+      const manager = new ResearchEnhancedOrchestrationManager(
+        runtime,
+        path.join(process.cwd(), '.eliza-temp', 'research-workspace')
+      );
       const orchestratedPlugin = await manager.createPlugin(testSpec);
 
       elizaLogger.info(`[RESEARCH-TEST] Orchestrated plugin: ${orchestratedPlugin.name}`);

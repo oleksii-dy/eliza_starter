@@ -12,7 +12,13 @@ export default defineConfig({
   external: [
     '@elizaos/core',
     'fs-extra',
-    'zod'
+    'zod',
+    'bun:test'
   ],
   noExternal: [],
+  ignoreWatch: ['src/**/*.test.ts', 'src/**/*.test.js'],
+  // Exclude test files from build
+  onSuccess: async () => {
+    console.log('Build completed!');
+  }
 });

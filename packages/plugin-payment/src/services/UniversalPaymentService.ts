@@ -41,6 +41,8 @@ export class UniversalPaymentService extends Service implements IUniversalWallet
     public readonly serviceType = ServiceType.WALLET;
     public readonly capabilityDescription = 'Universal payment service with multi-chain wallet support';
     
+    protected runtime: IAgentRuntime;
+    
     readonly chainSupport = ['ethereum', 'polygon', 'arbitrum', 'optimism', 'base', 'bsc', 'avalanche', 'solana'];
     readonly capabilities: WalletCapability[] = [
         'transfer' as WalletCapability,
@@ -53,11 +55,12 @@ export class UniversalPaymentService extends Service implements IUniversalWallet
     private priceOracleService?: PriceOracleService;
 
     constructor(runtime: IAgentRuntime) {
-        super(runtime);
+        super();
+        this.runtime = runtime;
         
-        // Get payment services
-        this.paymentService = runtime.getService<PaymentService>('payment') || undefined;
-        this.priceOracleService = runtime.getService<PriceOracleService>('priceOracle') || undefined;
+        // Get payment services after runtime is set
+        this.paymentService = this.runtime.getService<PaymentService>('payment') || undefined;
+        this.priceOracleService = this.runtime.getService<PriceOracleService>('priceOracle') || undefined;
     }
 
     // Core required methods
@@ -188,32 +191,126 @@ export class UniversalPaymentService extends Service implements IUniversalWallet
 
     async processPayment(request: UniversalPaymentRequest): Promise<CorePaymentResult> {
         logger.info('UniversalPaymentService.processPayment called', request);
-        const result: CorePaymentResult = {
-            success: false,
-            paymentId: request.id,
-            transactionHash: undefined,
-            protocol: 'standard',
-            amount: request.amount,
-            currency: request.currency,
-            network: request.network,
-            fee: '0',
-            confirmations: 0,
-            error: 'Payment processing not implemented',
+        
+        if (!this.paymentService) {
+            return {
+                success: false,
+                paymentId: request.id,
+                transactionHash: undefined,
+                protocol: 'standard',
+                amount: request.amount,
+                currency: request.currency,
+                network: request.network,
+                fee: '0',
+                confirmations: 0,
+                error: 'Payment service not available',
+            };
+        }
+
+        try {
+            // Convert to PaymentService request format
+            const paymentRequest = {
+                id: request.id,
+                userId: (request as any).userId || (`00000000-0000-0000-0000-${Date.now().toString().padStart(12, '0')}` as UUID),
+                agentId: this.runtime.agentId,
+                actionName: 'universal-payment',
+                amount: BigInt(request.amount),
+                method: this.getPaymentMethod(request.currency, request.network),
+                recipientAddress: request.recipient,
+                metadata: {
+                    memo: request.memo,
+                    originalRequest: request,
+                },
+            };
+
+            const result = await this.paymentService.processPayment(paymentRequest, this.runtime);
+            
+            return {
+                success: result.status === PaymentStatus.COMPLETED,
+                paymentId: request.id,
+                transactionHash: result.transactionHash,
+                protocol: 'standard',
+                amount: request.amount,
+                currency: request.currency,
+                network: request.network,
+                fee: result.fee?.toString() || '0',
+                confirmations: result.confirmations || 0,
+                error: result.error,
+            };
+        } catch (error) {
+            logger.error('UniversalPaymentService.processPayment error', error);
+            return {
+                success: false,
+                paymentId: request.id,
+                transactionHash: undefined,
+                protocol: 'standard',
+                amount: request.amount,
+                currency: request.currency,
+                network: request.network,
+                fee: '0',
+                confirmations: 0,
+                error: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+
+    private getPaymentMethod(currency: string, network: string): PaymentMethod {
+        const mapping: Record<string, PaymentMethod> = {
+            'USDC-ethereum': PaymentMethod.USDC_ETH,
+            'USDC-solana': PaymentMethod.USDC_SOL,
+            'ETH-ethereum': PaymentMethod.ETH,
+            'SOL-solana': PaymentMethod.SOL,
+            'MATIC-polygon': PaymentMethod.MATIC,
+            'ETH-arbitrum': PaymentMethod.ARB,
+            'ETH-optimism': PaymentMethod.OP,
+            'ETH-base': PaymentMethod.BASE,
         };
-        return result;
+
+        const key = `${currency}-${network}`;
+        return mapping[key] || PaymentMethod.OTHER;
     }
 
     async verifyPayment(paymentId: string): Promise<PaymentVerification> {
         logger.info('UniversalPaymentService.verifyPayment called', { paymentId });
-        return {
-            valid: false,
-            paymentId: paymentId as UUID,
-            amount: '0',
-            currency: 'unknown',
-            network: 'unknown',
-            confirmations: 0,
-            error: 'Verification not implemented',
-        };
+        
+        if (!this.paymentService) {
+            return {
+                valid: false,
+                paymentId: paymentId as UUID,
+                amount: '0',
+                currency: 'unknown',
+                network: 'unknown',
+                confirmations: 0,
+                error: 'Payment service not available',
+            };
+        }
+
+        try {
+            const status = await this.paymentService.checkPaymentStatus(paymentId as UUID, this.runtime);
+            
+            // For now, return a basic verification
+            // In production, this would query the actual transaction details
+            return {
+                valid: status === PaymentStatus.COMPLETED,
+                paymentId: paymentId as UUID,
+                amount: '0', // Would need to query transaction details
+                currency: 'USDC',
+                network: 'ethereum',
+                confirmations: status === PaymentStatus.COMPLETED ? 12 : 0,
+                error: status === PaymentStatus.FAILED ? 'Payment failed' : undefined,
+            };
+        } catch (error) {
+            logger.error('UniversalPaymentService.verifyPayment error', error);
+            return {
+                valid: false,
+                paymentId: paymentId as UUID,
+                amount: '0',
+                currency: 'unknown',
+                network: 'unknown',
+                confirmations: 0,
+                error: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
     }
 
     async swap(params: SwapParams): Promise<any> {

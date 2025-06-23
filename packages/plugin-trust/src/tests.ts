@@ -11,6 +11,7 @@ import {
   type TrustServiceWrapper
 } from './index';
 import { SecurityEventType, type Action } from './types/security';
+import { trustRuntimeTests } from './__tests__/runtime/trust-runtime-tests';
 
 async function waitForTable(runtime: IAgentRuntime, tableName: string, timeout = 10000) {
   const start = Date.now();
@@ -106,7 +107,7 @@ function createTestMemory(
 
 let testsInitialized = false;
 
-export const tests: TestCase[] = [
+const e2eTests: TestCase[] = [
   // Scenario 1: New User Building Trust from Zero
   {
     name: 'New user trust building',
@@ -1279,6 +1280,9 @@ export const tests: TestCase[] = [
     }
   }
 ];
+
+// Combine E2E tests with runtime tests
+export const tests: TestCase[] = [...e2eTests, ...trustRuntimeTests.tests];
 
 // Helper function for assertions
 function expect<T>(actual: T) {

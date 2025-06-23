@@ -29,6 +29,9 @@ import {
   truncateToCompleteSentence,
   type UUID,
   type WorldPayload,
+  getWorldSettings,
+  initializeOnboarding,
+  type OnboardingConfig,
 } from '@elizaos/core';
 import { v4 } from 'uuid';
 
@@ -1115,6 +1118,24 @@ const syncSingleUser = async (
       logger.info(
         `[Message Handling] Created world check - ID: ${worldId}, metadata: ${JSON.stringify(createdWorld?.metadata)}`
       );
+
+      // For DM channels, initialize server settings if they don't exist
+      if (type === ChannelType.DM && createdWorld) {
+        const existingSettings = await getWorldSettings(runtime, serverId);
+        if (!existingSettings) {
+          logger.info(
+            `[Message Handling] Initializing default server settings for DM world ${worldId}`
+          );
+
+          // Create a basic onboarding config
+          const onboardingConfig: OnboardingConfig = {
+            settings: {}, // Empty settings config - plugins can add their own settings
+          };
+
+          await initializeOnboarding(runtime, createdWorld, onboardingConfig);
+          logger.info(`[Message Handling] Server settings initialized for world ${worldId}`);
+        }
+      }
     } catch (error) {
       logger.error(`[Message Handling] Failed to verify created world: ${error}`);
     }

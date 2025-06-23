@@ -1,24 +1,42 @@
 # ElizaOS AutoCoder Plugin
 
-A comprehensive AI-powered plugin development system for ElizaOS that enables autonomous creation of plugins and provides state-of-the-art evaluation capabilities using the Multi-SWE-bench benchmark system.
+A comprehensive AI-powered code generation system for ElizaOS that enables autonomous creation of plugins, n8n workflows, MCP servers, and provides state-of-the-art evaluation capabilities using the Multi-SWE-bench benchmark system.
 
 ## Overview
 
 The AutoCoder plugin transforms ElizaOS into a powerful autonomous code generation system capable of:
 - Creating complete ElizaOS plugins from natural language descriptions
+- Building n8n workflow automations with AI-generated configurations
+- Generating Model Context Protocol (MCP) servers for tool integration
 - Evaluating AI coding capabilities on real-world GitHub issues
 - Generating fixes for TypeScript/JavaScript repositories with industry-leading success rates
 - Providing comprehensive metrics and analysis of code generation performance
 
 ## Features
 
-### 🚀 Plugin Development
+### 🚀 Code Generation Capabilities
+
+#### ElizaOS Plugin Development
 - **AI-Powered Code Generation**: Uses Claude (Anthropic) for sophisticated TypeScript plugin generation
 - **Iterative Development**: Automatically refines code through up to 5 iterations with self-improvement
 - **Comprehensive Testing**: Built-in linting, testing with vitest, and validation
 - **Natural Language Support**: Create complex plugins from simple descriptions
 - **Job Management**: Track and control plugin creation jobs with real-time status
 - **Plugin Manager Integration**: Seamlessly integrates with ElizaOS Plugin Manager
+
+#### N8n Workflow Creation
+- **Natural Language to Workflow**: Generate complete n8n workflows from descriptions
+- **JSON Specification Support**: Create workflows from detailed JSON specs
+- **Integration Code Generation**: Automatically generates JavaScript for function nodes
+- **Credential Management**: Identifies and documents required credentials
+- **Documentation Generation**: Creates setup guides and README files
+- **Import-Ready Output**: Generates workflow.json files ready for n8n import
+
+#### MCP Server Generation
+- **Tool Creation**: Build custom tools for AI model integration
+- **Resource Management**: Generate resource endpoints for data access
+- **Type-Safe Implementation**: Full TypeScript support with proper typing
+- **Production Ready**: Complete with tests, documentation, and deployment configs
 
 ### 🧪 Multi-SWE-bench Evaluation System
 - **Real-World Testing**: Evaluate code generation capabilities on actual GitHub issues from top repositories
@@ -61,6 +79,29 @@ const agent = new Agent({
   plugins: [autocoderPlugin],
   // ... other configuration
 });
+```
+
+### Usage Examples
+
+#### Creating an ElizaOS Plugin
+```
+User: Create a plugin that tracks cryptocurrency prices and sends alerts
+
+Agent: I'll create a cryptocurrency price tracking plugin with alert capabilities for you.
+```
+
+#### Building N8n Workflows
+```
+User: Create an n8n workflow that monitors GitHub for new issues and posts them to Slack
+
+Agent: I'll create an n8n workflow that monitors GitHub for new issues and sends notifications to Slack.
+```
+
+#### Generating MCP Servers
+```
+User: Build an MCP server with tools for weather data and file operations
+
+Agent: I'll create an MCP server with weather data capabilities and file operation tools.
 ```
 
 # 🧪 SWE-bench Evaluation System

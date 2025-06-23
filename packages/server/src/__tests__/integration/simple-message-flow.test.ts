@@ -4,7 +4,14 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { AgentServer } from '../../index';
-import type { IAgentRuntime, UUID, Character, Content, Memory, HandlerCallback } from '@elizaos/core';
+import type {
+  IAgentRuntime,
+  UUID,
+  Character,
+  Content,
+  Memory,
+  HandlerCallback,
+} from '@elizaos/core';
 import { AgentRuntime, ChannelType } from '@elizaos/core';
 import { createDatabaseAdapter } from '@elizaos/plugin-sql';
 import path from 'node:path';
@@ -20,7 +27,7 @@ describe('Simple Message Flow Test', () => {
 
   beforeAll(async () => {
     console.log('Starting simple message flow test...');
-    
+
     // Use a test database
     testDbPath = path.join(__dirname, `test-db-simple-${Date.now()}`);
     process.env.PGLITE_DATA_DIR = testDbPath;
@@ -37,7 +44,6 @@ describe('Simple Message Flow Test', () => {
       name: 'Simple Agent',
       bio: ['A simple test agent'],
       topics: [],
-      clients: [],
       plugins: [],
       system: 'You are a helpful assistant. Always respond when asked.',
       settings: {
@@ -46,8 +52,8 @@ describe('Simple Message Flow Test', () => {
       messageExamples: [
         [
           { name: 'user', content: { text: 'Hello' } as Content },
-          { name: 'Simple Agent', content: { text: 'Hello! How are you?' } as Content }
-        ]
+          { name: 'Simple Agent', content: { text: 'Hello! How are you?' } as Content },
+        ],
       ],
     } as Character;
 
@@ -67,7 +73,7 @@ describe('Simple Message Flow Test', () => {
       token: 'test-token',
       serverUrl: 'http://localhost:3000',
     } as any);
-    
+
     // Register the message handling plugin
     const messageHandlingPlugin = await import('@elizaos/plugin-message-handling');
     await agent.registerPlugin(messageHandlingPlugin.messageHandlingPlugin);
@@ -77,13 +83,13 @@ describe('Simple Message Flow Test', () => {
 
     console.log('Registering agent with server...');
     await agentServer.registerAgent(agent);
-    
+
     // Wait for MessageBusService to initialize
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Create a test room (channel)
     channelId = uuidv4() as UUID;
-    
+
     // Create room in database
     await agent.createRoom({
       id: channelId,
@@ -92,21 +98,24 @@ describe('Simple Message Flow Test', () => {
       source: 'test',
       serverId: serverId,
     });
-    
+
     // Add agent as participant to the room
     await agent.addParticipant(agent.agentId, channelId);
     console.log('Created room and added agent as participant');
-    
+
     // Also create the channel in the server database for message handling
     if (agentServer.createChannel) {
       try {
-        await agentServer.createChannel({
-          id: channelId,
-          name: 'Simple Test Channel',
-          type: ChannelType.GROUP,
-          messageServerId: serverId,
-          metadata: {},
-        }, [agent.agentId]);
+        await agentServer.createChannel(
+          {
+            id: channelId,
+            name: 'Simple Test Channel',
+            type: ChannelType.GROUP,
+            serverId: serverId,
+            metadata: {},
+          },
+          [agent.agentId]
+        );
         console.log('Created channel in server database');
       } catch (error) {
         console.log('Could not create channel in server database:', error);
@@ -132,7 +141,7 @@ describe('Simple Message Flow Test', () => {
 
   it('should process a message through the agent', async () => {
     console.log('\n=== Testing message processing ===');
-    
+
     const userId = uuidv4() as UUID;
     const messageId = uuidv4() as UUID;
     const messageText = 'Hello agent, can you hear me?';
@@ -157,7 +166,7 @@ describe('Simple Message Flow Test', () => {
 
     // Now trigger the message through the message bus instead of directly
     console.log('Emitting message through internal message bus...');
-    
+
     // The MessageBusService should pick this up
     const internalBus = require('../../bus').default;
     internalBus.emit('new_message', {
@@ -174,7 +183,7 @@ describe('Simple Message Flow Test', () => {
     });
 
     // Wait for the agent to process the message through the event system
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // Check if the agent created a response message
     const messages = await agentServer.database.getMemories({
@@ -184,12 +193,10 @@ describe('Simple Message Flow Test', () => {
     });
 
     console.log(`Found ${messages.length} messages in channel`);
-    
+
     // Find agent's response
-    const agentResponse = messages.find(m => 
-      m.agentId === agent.agentId && 
-      m.entityId === agent.agentId &&
-      m.id !== messageId
+    const agentResponse = messages.find(
+      (m) => m.agentId === agent.agentId && m.entityId === agent.agentId && m.id !== messageId
     );
 
     if (agentResponse) {
@@ -197,18 +204,21 @@ describe('Simple Message Flow Test', () => {
       expect(agentResponse).toBeDefined();
       expect(agentResponse.content.text).toBeTruthy();
     } else {
-      console.log('No agent response found. All messages:', messages.map(m => ({
-        id: m.id,
-        agentId: m.agentId,
-        entityId: m.entityId,
-        text: m.content.text
-      })));
+      console.log(
+        'No agent response found. All messages:',
+        messages.map((m) => ({
+          id: m.id,
+          agentId: m.agentId,
+          entityId: m.entityId,
+          text: m.content.text,
+        }))
+      );
     }
   });
 
   it('should handle action execution', async () => {
     console.log('\n=== Testing action execution ===');
-    
+
     const userId = uuidv4() as UUID;
     const messageId = uuidv4() as UUID;
     const messageText = 'Please reply to this message';
@@ -226,10 +236,13 @@ describe('Simple Message Flow Test', () => {
     });
 
     console.log('Testing if agent has actions available...');
-    
+
     // Check if agent has any actions
     const availableActions = agent.actions || [];
-    console.log('Available actions:', availableActions.map(a => a.name));
+    console.log(
+      'Available actions:',
+      availableActions.map((a) => a.name)
+    );
 
     // Emit message through bus
     const internalBus = require('../../bus').default;
@@ -246,7 +259,7 @@ describe('Simple Message Flow Test', () => {
       metadata: {},
     });
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Check for agent response
     const messages = await agentServer.database.getMemories({
@@ -255,10 +268,7 @@ describe('Simple Message Flow Test', () => {
       tableName: 'messages',
     });
 
-    const agentResponse = messages.find(m => 
-      m.agentId === agent.agentId && 
-      m.id !== messageId
-    );
+    const agentResponse = messages.find((m) => m.agentId === agent.agentId && m.id !== messageId);
 
     expect(agentResponse).toBeTruthy();
     console.log('Action test complete');
@@ -266,7 +276,7 @@ describe('Simple Message Flow Test', () => {
 
   it('should test direct agent communication', async () => {
     console.log('\n=== Testing direct agent communication ===');
-    
+
     // Test if agent runtime is properly initialized
     expect(agent).toBeDefined();
     expect(agent.agentId).toBe('simple-agent');

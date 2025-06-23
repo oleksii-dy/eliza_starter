@@ -22,6 +22,37 @@ export function isValidPluginShape(obj: any): obj is Plugin {
 }
 
 /**
+ * Map of short plugin names to full package names
+ */
+const pluginNameMapping: Record<string, string> = {
+  'todo': '@elizaos/plugin-todo',
+  'trust': '@elizaos/plugin-trust',
+  'rolodex': '@elizaos/plugin-rolodex',
+  'bootstrap': '@elizaos/plugin-bootstrap',
+  'openai': '@elizaos/plugin-openai',
+  'anthropic': '@elizaos/plugin-anthropic',
+  'sql': '@elizaos/plugin-sql',
+  'message-handling': '@elizaos/plugin-message-handling',
+  'messageHandling': '@elizaos/plugin-message-handling',
+  'knowledge': '@elizaos/plugin-knowledge',
+  'research': '@elizaos/plugin-research',
+  'web-search': '@elizaos/plugin-web-search',
+  'planning': '@elizaos/plugin-planning',
+  'goals': '@elizaos/plugin-goals',
+  'stagehand': '@elizaos/plugin-stagehand',
+  'plugin-manager': '@elizaos/plugin-plugin-manager',
+  'github': '@elizaos/plugin-github',
+  'solana': '@elizaos/plugin-solana',
+  'evm': '@elizaos/plugin-evm',
+  'secrets-manager': '@elizaos/plugin-secrets-manager',
+  'shell': '@elizaos/plugin-shell',
+  'mcp': '@elizaos/plugin-mcp',
+  'ngrok': '@elizaos/plugin-ngrok',
+  'agentkit': '@elizaos/plugin-agentkit',
+  'autocoder': '@elizaos/plugin-autocoder',
+};
+
+/**
  * Load a plugin module with environment-aware import handling
  */
 async function loadPluginModuleWithEnvironment(pluginName: string): Promise<any> {
@@ -60,20 +91,24 @@ async function loadPluginModuleWithEnvironment(pluginName: string): Promise<any>
 export async function loadAndPreparePlugin(pluginName: string): Promise<Plugin | null> {
   const version = getCliInstallTag();
   let pluginModule: any;
-  const context = detectPluginContext(pluginName);
+  
+  // Map short plugin names to full package names
+  const resolvedPluginName = pluginNameMapping[pluginName] || pluginName;
+  
+  const context = detectPluginContext(resolvedPluginName);
   const envConfig = getEnvironmentConfig();
 
   if (context.isLocalDevelopment) {
     try {
-      pluginModule = await loadPluginModuleWithEnvironment(pluginName);
+      pluginModule = await loadPluginModuleWithEnvironment(resolvedPluginName);
       if (!pluginModule) {
-        logger.error(`Failed to load local plugin ${pluginName}.`);
-        provideLocalPluginGuidance(pluginName, context);
+        logger.error(`Failed to load local plugin ${resolvedPluginName}.`);
+        provideLocalPluginGuidance(resolvedPluginName, context);
         return null;
       }
     } catch (error) {
-      logger.error(`Error loading local plugin ${pluginName}: ${error}`);
-      provideLocalPluginGuidance(pluginName, context);
+      logger.error(`Error loading local plugin ${resolvedPluginName}: ${error}`);
+      provideLocalPluginGuidance(resolvedPluginName, context);
 
       // Provide additional guidance for common environment issues
       if (error instanceof Error && error.message.includes('Cannot find module')) {
@@ -91,24 +126,24 @@ export async function loadAndPreparePlugin(pluginName: string): Promise<Plugin |
     }
   } else {
     try {
-      pluginModule = await loadPluginModuleWithEnvironment(pluginName);
+      pluginModule = await loadPluginModuleWithEnvironment(resolvedPluginName);
       if (!pluginModule) {
-        logger.info(`Plugin ${pluginName} not available, installing...`);
-        await installPlugin(pluginName, process.cwd(), version);
-        pluginModule = await loadPluginModuleWithEnvironment(pluginName);
+        logger.info(`Plugin ${resolvedPluginName} not available, installing...`);
+        await installPlugin(resolvedPluginName, process.cwd(), version);
+        pluginModule = await loadPluginModuleWithEnvironment(resolvedPluginName);
       }
     } catch (error) {
-      logger.error(`Failed to process plugin ${pluginName}: ${error}`);
+      logger.error(`Failed to process plugin ${resolvedPluginName}: ${error}`);
       return null;
     }
   }
 
   if (!pluginModule) {
-    logger.error(`Failed to load module for plugin ${pluginName}.`);
+    logger.error(`Failed to load module for plugin ${resolvedPluginName}.`);
     return null;
   }
 
-  const expectedFunctionName = `${pluginName
+  const expectedFunctionName = `${resolvedPluginName
     .replace(/^@elizaos\/plugin-/, '')
     .replace(/^@elizaos\//, '')
     .replace(/-./g, (match) => match[1].toUpperCase())}Plugin`;
@@ -121,11 +156,15 @@ export async function loadAndPreparePlugin(pluginName: string): Promise<Plugin |
 
   for (const potentialPlugin of exportsToCheck) {
     if (isValidPluginShape(potentialPlugin)) {
+      // Set the name to match what was requested if using a short name
+      if (pluginNameMapping[pluginName]) {
+        potentialPlugin.name = resolvedPluginName;
+      }
       return potentialPlugin as Plugin;
     }
   }
 
-  logger.warn(`Could not find a valid plugin export in ${pluginName}.`);
+  logger.warn(`Could not find a valid plugin export in ${resolvedPluginName}.`);
 
   // Provide helpful debugging info
   if (envConfig.isMonorepo) {

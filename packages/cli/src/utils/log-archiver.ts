@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { logger } from '@elizaos/core';
+import { logger, getTempLogPath } from '@elizaos/core';
 
 /**
  * Archive result interface
@@ -102,8 +102,8 @@ export class LogArchiver {
     await fs.promises.mkdir(autonomyLogsDir, { recursive: true });
 
     // Archive OODA loop logs
-    const autonomyLogDir = process.env.AUTONOMOUS_LOG_DIR || './logs/autonomy';
-    
+    const autonomyLogDir = process.env.AUTONOMOUS_LOG_DIR || getTempLogPath('autonomy');
+
     if (fs.existsSync(autonomyLogDir)) {
       await this.copyLogs(autonomyLogDir, autonomyLogsDir, '*');
     }
@@ -120,11 +120,7 @@ export class LogArchiver {
     await fs.promises.mkdir(agentLogsDir, { recursive: true });
 
     // Archive agent conversation logs, memory dumps, etc.
-    const agentDataDirs = [
-      '.elizadb',
-      'agent-data',
-      'memory-dumps',
-    ];
+    const agentDataDirs = ['.elizadb', 'agent-data', 'memory-dumps'];
 
     for (const dir of agentDataDirs) {
       if (fs.existsSync(dir)) {
@@ -145,14 +141,14 @@ export class LogArchiver {
     if (!fs.existsSync(sourceDir)) return;
 
     const files = await fs.promises.readdir(sourceDir);
-    
+
     for (const file of files) {
       const sourcePath = path.join(sourceDir, file);
       const destPath = path.join(destDir, file);
-      
+
       try {
         const stat = await fs.promises.stat(sourcePath);
-        
+
         if (stat.isFile()) {
           // Simple pattern matching (could be enhanced with glob)
           if (pattern === '*' || file.match(pattern.replace('*', '.*'))) {
@@ -172,15 +168,15 @@ export class LogArchiver {
    */
   private async copyDirectory(sourceDir: string, destDir: string): Promise<void> {
     await fs.promises.mkdir(destDir, { recursive: true });
-    
+
     const files = await fs.promises.readdir(sourceDir);
-    
+
     for (const file of files) {
       const sourcePath = path.join(sourceDir, file);
       const destPath = path.join(destDir, file);
-      
+
       const stat = await fs.promises.stat(sourcePath);
-      
+
       if (stat.isFile()) {
         await fs.promises.copyFile(sourcePath, destPath);
       } else if (stat.isDirectory()) {
@@ -227,12 +223,16 @@ Metrics:
 - Errors: ${summary.errors}
 - Warnings: ${summary.warnings}
 
-${summary.autonomyMetrics ? `
+${
+  summary.autonomyMetrics
+    ? `
 Autonomy Metrics:
 - OODA Cycles: ${summary.autonomyMetrics.oodaCycles}
 - Actions Executed: ${summary.autonomyMetrics.actionsExecuted}
 - Decision Rate: ${summary.autonomyMetrics.decisionsRate.toFixed(2)} decisions/min
-` : ''}
+`
+    : ''
+}
 
 Archive Contents:
 - system/: System logs and application output

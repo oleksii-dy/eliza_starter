@@ -109,6 +109,7 @@
     "@sindresorhus/merge-streams": "^4.0.0",
     "@types/express": "^5.0.2",
     "@types/helmet": "^4.0.0",
+    "bootstrap": "^5.3.7",
     "bun": "^1.2.13",
     "chokidar": "^4.0.3",
     "drizzle-orm": "^0.44.2",
@@ -122,6 +123,8 @@
     "semver": "^7.7.2",
     "sharp": "^0.34.2",
     "socket.io": "^4.8.1",
+    "todo": "^1.1.0",
+    "trust": "^0.1.0",
     "zod": "3.24.2"
   }
 }

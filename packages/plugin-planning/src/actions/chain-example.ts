@@ -12,7 +12,6 @@ import { v4 as uuidv4 } from 'uuid';
 export const analyzeInputAction: Action = {
   name: 'ANALYZE_INPUT',
   description: 'Analyzes user input and extracts key information',
-  returnsData: true,
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     // This action can always run
@@ -37,30 +36,28 @@ export const analyzeInputAction: Action = {
     const text = message.content.text || '';
     const words = text.trim() ? text.split(/\s+/) : [];
     const hasNumbers = /\d/.test(text);
-    const sentiment = text.includes('good')
-      ? 'positive'
-      : text.includes('bad')
-        ? 'negative'
-        : 'neutral';
+    const lowerText = text.toLowerCase();
+    const sentiment = lowerText.includes('urgent') || lowerText.includes('emergency') || lowerText.includes('critical')
+      ? 'urgent'
+      : lowerText.includes('good')
+        ? 'positive'
+        : lowerText.includes('bad')
+          ? 'negative'
+          : 'neutral';
 
     const analysis = {
       wordCount: words.length,
       hasNumbers,
       sentiment,
-      topics: words.filter((w) => w.length > 5),
+      topics: words.filter((w) => w.length >= 5).map(w => w.toLowerCase()),
       timestamp: Date.now(),
     };
 
     console.log('[ChainExample] Analysis complete:', analysis);
 
     return {
-      success: true,
       data: analysis,
-      continueChain: true,
-      metadata: {
-        action: 'ANALYZE_INPUT',
-        duration: 100,
-      },
+      text: `Analyzed ${words.length} words with ${sentiment} sentiment`,
     };
   },
 };

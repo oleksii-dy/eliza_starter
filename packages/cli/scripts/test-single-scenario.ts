@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { logger } from '@elizaos/core';
+import { logger, getTempDbPath } from '@elizaos/core';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -12,7 +12,7 @@ async function testSingleScenario() {
 
   try {
     // Clean up any existing test database
-    const dbPath = path.join(process.cwd(), '.scenario-test-db');
+    const dbPath = getTempDbPath('scenario-test-db');
     if (fs.existsSync(dbPath)) {
       logger.info('🧹 Cleaning up existing test database...');
       fs.rmSync(dbPath, { recursive: true, force: true });

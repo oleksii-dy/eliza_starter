@@ -225,6 +225,7 @@ export class PluginCreationService extends Service {
       errors: [],
       outputPath: path.join(
         process.cwd(),
+        '.eliza-temp',
         'generated-plugins',
         this.sanitizePluginName(specification.name)
       ),

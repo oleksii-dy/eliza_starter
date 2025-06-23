@@ -1,11 +1,18 @@
 import type { Plugin, IAgentRuntime } from '@elizaos/core';
 import { orchestrationActions } from './actions/orchestration-actions.js';
 import { runSWEBenchAction, getSWEBenchStatsAction } from './actions/swe-bench-action.js';
+import { runDistributedSWEBenchAction } from './actions/distributed-swe-bench-action.js';
 import { createMCPAction } from './actions/mcp-creation-action.js';
+import { n8nWorkflowAction, checkN8nWorkflowStatusAction } from './actions/n8n-workflow-action.js';
 import { echoAction } from './actions/echo.js';
 import { containerActions } from './actions/container-actions.js';
 import { orchestrationProviders } from './providers/orchestration-providers.js';
 import { AutoCodeService } from './services/AutoCodeService.js';
+import { N8nWorkflowService } from './services/n8n-workflow-service.js';
+import { DockerService } from './services/DockerService.js';
+import { PluginCreationService } from './services/plugin-creation-service.js';
+import { MCPCreationService } from './services/mcp-creation-service.js';
+import { ResearchService } from './research/research-integration.js';
 import { wrapAutocoderActionsWithTrust } from './trust/autocoderTrustIntegration.js';
 import { elizaLogger } from '@elizaos/core';
 
@@ -15,19 +22,28 @@ export const autocoderPlugin: Plugin = {
   description:
     'Advanced auto-coding system with containerized sub-agents, task orchestration, and secure execution environments',
 
-  // Note: Optional dependencies removed for core functionality
-  // dependencies: ['plugin-env', 'plugin-manager', 'plugin-trust'],
+  dependencies: ['plugin-env', 'plugin-manager', 'plugin-trust'],
 
   actions: [
     ...orchestrationActions,
     ...containerActions,
     runSWEBenchAction,
     getSWEBenchStatsAction,
+    runDistributedSWEBenchAction,
     createMCPAction,
+    n8nWorkflowAction,
+    checkN8nWorkflowStatusAction,
     echoAction,
   ],
   providers: [...orchestrationProviders],
-  services: [AutoCodeService],
+  services: [
+    AutoCodeService, 
+    N8nWorkflowService, 
+    DockerService, 
+    PluginCreationService, 
+    MCPCreationService, 
+    ResearchService
+  ],
 
   async init(config: Record<string, string>, runtime: IAgentRuntime): Promise<void> {
     elizaLogger.info('\n┌════════════════════════════════════════┐');
@@ -62,6 +78,8 @@ export const autocoderPlugin: Plugin = {
         runSWEBenchAction,
         getSWEBenchStatsAction,
         createMCPAction,
+        n8nWorkflowAction,
+        checkN8nWorkflowStatusAction,
         echoAction,
       ]);
 
@@ -84,6 +102,7 @@ export const autocoderPlugin: Plugin = {
             'publishPlugin',
             'cancelProject',
             'createMCPServer',
+            'createN8nWorkflow',
             'SPAWN_SUB_AGENT',
             'TERMINATE_TASK',
           ]);
@@ -102,7 +121,7 @@ export const autocoderPlugin: Plugin = {
 
       // Actions are automatically registered by the plugin system from the actions array
       elizaLogger.info(
-        `✔ Registered ${orchestrationActions.length + containerActions.length + 4} autocoder actions without trust enhancement`
+        `✔ Registered ${orchestrationActions.length + containerActions.length + 6} autocoder actions without trust enhancement`
       );
     }
 

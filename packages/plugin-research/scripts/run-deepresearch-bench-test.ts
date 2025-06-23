@@ -23,6 +23,12 @@ const createMockRuntime = (): IAgentRuntime => {
         RESEARCH_ENABLE_CITATIONS: 'true',
         RESEARCH_LANGUAGE: 'en',
         RESEARCH_QUALITY_THRESHOLD: '0.7',
+        // Mock API keys
+        TAVILY_API_KEY: 'mock-tavily-key',
+        SERPER_API_KEY: 'mock-serper-key',
+        EXA_API_KEY: 'mock-exa-key',
+        SERPAPI_API_KEY: 'mock-serpapi-key',
+        OPENAI_API_KEY: 'mock-openai-key',
       };
       return settings[key] || null;
     },
@@ -30,12 +36,44 @@ const createMockRuntime = (): IAgentRuntime => {
       callCount++;
       const prompt = params.messages[params.messages.length - 1].content;
       
+      console.log(`\n🔍 Mock useModel called (${callCount}):`, prompt.substring(0, 100) + '...\n');
+      
       // Mock responses based on prompt content
+      if (prompt.includes('Generate sub-queries')) {
+        console.log('  → Returning: sub-queries');
+        return `PURPOSE: Analyze current elderly population statistics and projections
+QUERY: elderly population Japan 2020-2050 projections demographics
+TYPE: statistical
+PRIORITY: high
+---
+PURPOSE: Understand consumption patterns and market behavior
+QUERY: Japan aging society consumption patterns elderly spending
+TYPE: factual
+PRIORITY: high
+---
+PURPOSE: Analyze specific market sectors
+QUERY: elderly consumer behavior Japan clothing food housing transportation
+TYPE: practical
+PRIORITY: medium
+---
+PURPOSE: Estimate market size and growth potential
+QUERY: senior market size Japan forecast economic impact
+TYPE: statistical
+PRIORITY: high
+---
+PURPOSE: Identify future trends and changes
+QUERY: demographic transition Japan elderly spending habits future trends
+TYPE: predictive
+PRIORITY: medium`;
+      }
+      
       if (prompt.includes('task type')) {
+        console.log('  → Returning: analytical');
         return 'analytical';
       }
       
       if (prompt.includes('research plan')) {
+        console.log('  → Returning: research plan');
         return `Research plan for comprehensive analysis:
 1. Search for recent academic papers and industry reports
 2. Analyze key developments and trends
@@ -45,11 +83,13 @@ const createMockRuntime = (): IAgentRuntime => {
       }
       
       if (prompt.includes('search queries')) {
-        return `elderly population Japan 2020-2050 projections
-Japan aging society consumption patterns
-elderly consumer behavior Japan clothing food housing
-senior market size Japan forecast
-demographic transition Japan elderly spending`;
+        return JSON.stringify([
+          'elderly population Japan 2020-2050 projections',
+          'Japan aging society consumption patterns',
+          'elderly consumer behavior Japan clothing food housing',
+          'senior market size Japan forecast',
+          'demographic transition Japan elderly spending'
+        ]);
       }
       
       if (prompt.includes('relevance')) {
@@ -213,6 +253,16 @@ interface BenchmarkQuery {
 }
 
 async function runTestBenchmark() {
+  // Set up mock environment for testing BEFORE any service initialization
+  process.env.NODE_ENV = 'test';
+  process.env.VITEST = 'true';
+  
+  // Mock API keys to pass validation
+  process.env.TAVILY_API_KEY = 'mock-tavily-key';
+  process.env.SERPER_API_KEY = 'mock-serper-key';
+  process.env.EXA_API_KEY = 'mock-exa-key';
+  process.env.OPENAI_API_KEY = 'mock-openai-key';
+  
   console.log('🚀 Starting DeepResearch Bench Test (Mock Mode)');
   console.log('⚠️  Running without API keys - using mock data');
   console.log('=' .repeat(60));

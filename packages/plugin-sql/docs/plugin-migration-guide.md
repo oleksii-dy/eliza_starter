@@ -159,7 +159,7 @@ Consider both database types when designing your tables:
 Use the test pattern from the hello world plugin:
 
 ```typescript
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { schemaRegistry } from '@elizaos/plugin-sql';
 
 describe('My Plugin Tables', () => {

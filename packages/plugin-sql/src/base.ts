@@ -22,7 +22,6 @@ import { and, desc, eq, gte, inArray, lt, lte, or, sql } from 'drizzle-orm';
 import { v4 } from 'uuid';
 import { DIMENSION_MAP, type EmbeddingDimensionColumn } from './schema/embedding';
 
-import { getSchemaFactory } from './schema/factory';
 import {
   agentTable,
   channelParticipantsTable,
@@ -76,6 +75,8 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
   protected readonly jitterMax: number = 1000;
   protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[VECTOR_DIMS.SMALL];
   protected pluginSchemas?: Map<string, any>;
+  protected _vectorSupportChecked: boolean = false;
+  protected _hasVectorSupport: boolean = false;
 
   protected abstract withDatabase<T>(operation: () => Promise<T>): Promise<T>;
   public abstract init(): Promise<void>;
@@ -207,7 +208,26 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    */
   protected async checkVectorSupport(): Promise<boolean> {
     try {
-      // Try to create a temporary vector column to test support
+      // Check if we already know vector support is not available (cached result)
+      if (this._vectorSupportChecked) {
+        return this._hasVectorSupport;
+      }
+
+      // For PGLite, check if vector extension is loaded
+      if (this.isPGLiteAdapter()) {
+        try {
+          await this.db.execute(sql.raw("SELECT 1 FROM pg_extension WHERE extname = 'vector'"));
+          this._vectorSupportChecked = true;
+          this._hasVectorSupport = true;
+          return true;
+        } catch {
+          this._vectorSupportChecked = true;
+          this._hasVectorSupport = false;
+          return false;
+        }
+      }
+
+      // For PostgreSQL, try to create a temporary vector column to test support
       await this.withDatabase(async () => {
         return this.db.execute(
           sql.raw('CREATE TEMPORARY TABLE test_vector_support (id INT, vec vector(3))')
@@ -218,8 +238,12 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         return this.db.execute(sql.raw('DROP TABLE test_vector_support'));
       });
 
+      this._vectorSupportChecked = true;
+      this._hasVectorSupport = true;
       return true;
     } catch (error) {
+      this._vectorSupportChecked = true;
+      this._hasVectorSupport = false;
       return false;
     }
   }
@@ -453,6 +477,10 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         }
 
         this.embeddingDimension = DIMENSION_MAP[dimension as keyof typeof DIMENSION_MAP];
+        logger.debug('Set embedding dimension (early return):', {
+          dimension,
+          embeddingDimension: this.embeddingDimension,
+        });
         return;
       }
 
@@ -501,6 +529,10 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       }
 
       this.embeddingDimension = DIMENSION_MAP[dimension as keyof typeof DIMENSION_MAP];
+      logger.debug('Set embedding dimension (normal path):', {
+        dimension,
+        embeddingDimension: this.embeddingDimension,
+      });
     });
   }
 
@@ -1912,16 +1944,53 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         // Then, try to get the embedding separately if it exists
         let embedding: number[] | undefined;
         try {
-          const embeddingResult = await this.db
-            .select({
-              embedding: embeddingTable[this.embeddingDimension],
-            })
-            .from(embeddingTable)
-            .where(eq(embeddingTable.memoryId, id))
-            .limit(1);
+          logger.debug('Getting embedding with dimension column:', this.embeddingDimension);
 
-          if (embeddingResult.length > 0 && embeddingResult[0].embedding) {
-            embedding = Array.from(embeddingResult[0].embedding);
+          // For PGLite, use raw SQL to retrieve embeddings
+          if (this.isPGLiteAdapter()) {
+            const rawResult = await this.db.execute(
+              sql.raw(
+                `SELECT ${this.embeddingDimension} FROM embeddings WHERE memory_id = '${id}' LIMIT 1`
+              )
+            );
+
+            const rows = Array.isArray(rawResult) ? rawResult : rawResult.rows || [];
+            logger.debug('PGLite embedding raw query result:', {
+              rowCount: rows.length,
+              hasData: rows.length > 0 && !!rows[0][this.embeddingDimension],
+            });
+
+            if (rows.length > 0 && rows[0][this.embeddingDimension]) {
+              const rawEmbedding = rows[0][this.embeddingDimension];
+              if (Array.isArray(rawEmbedding)) {
+                embedding = rawEmbedding;
+              } else if (typeof rawEmbedding === 'string') {
+                try {
+                  embedding = JSON.parse(rawEmbedding);
+                } catch {
+                  embedding = undefined;
+                }
+              }
+            }
+          } else {
+            // For PostgreSQL, use Drizzle schema
+            const embeddingResult = await this.db
+              .select({
+                embedding: embeddingTable[this.embeddingDimension],
+              })
+              .from(embeddingTable)
+              .where(eq(embeddingTable.memoryId, id))
+              .limit(1);
+
+            logger.debug('Embedding query result:', {
+              length: embeddingResult.length,
+              hasEmbedding: embeddingResult.length > 0 && !!embeddingResult[0].embedding,
+              embeddingDimension: this.embeddingDimension,
+            });
+
+            if (embeddingResult.length > 0 && embeddingResult[0].embedding) {
+              embedding = Array.from(embeddingResult[0].embedding);
+            }
           }
         } catch (embeddingError) {
           // Log but don't fail if embedding retrieval fails
@@ -1991,17 +2060,43 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
 
       if (rows.length > 0) {
         try {
-          const embeddingRows = await this.db
-            .select({
-              memoryId: embeddingTable.memoryId,
-              embedding: embeddingTable[this.embeddingDimension],
-            })
-            .from(embeddingTable)
-            .where(inArray(embeddingTable.memoryId, memoryIds));
+          // For PGLite, use raw SQL to retrieve embeddings
+          if (this.isPGLiteAdapter()) {
+            const memoryIdList = memoryIds.map((id) => `'${id}'`).join(',');
+            const rawResult = await this.db.execute(
+              sql.raw(
+                `SELECT memory_id, ${this.embeddingDimension} FROM embeddings WHERE memory_id IN (${memoryIdList})`
+              )
+            );
 
-          for (const embRow of embeddingRows) {
-            if (embRow.embedding) {
-              embeddingsMap.set(embRow.memoryId, Array.from(embRow.embedding));
+            const embeddingRows = Array.isArray(rawResult) ? rawResult : rawResult.rows || [];
+
+            for (const embRow of embeddingRows) {
+              const rawEmbedding = embRow[this.embeddingDimension];
+              if (rawEmbedding) {
+                if (Array.isArray(rawEmbedding)) {
+                  embeddingsMap.set(embRow.memory_id, rawEmbedding);
+                } else if (typeof rawEmbedding === 'string') {
+                  try {
+                    embeddingsMap.set(embRow.memory_id, JSON.parse(rawEmbedding));
+                  } catch {}
+                }
+              }
+            }
+          } else {
+            // For PostgreSQL, use Drizzle schema
+            const embeddingRows = await this.db
+              .select({
+                memoryId: embeddingTable.memoryId,
+                embedding: embeddingTable[this.embeddingDimension],
+              })
+              .from(embeddingTable)
+              .where(inArray(embeddingTable.memoryId, memoryIds));
+
+            for (const embRow of embeddingRows) {
+              if (embRow.embedding) {
+                embeddingsMap.set(embRow.memoryId, Array.from(embRow.embedding));
+              }
             }
           }
         } catch (embeddingError) {
@@ -2337,6 +2432,20 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
     }
   ): Promise<Memory[]> {
     return this.withDatabase(async () => {
+      // Check if vector support is available
+      const hasVector = await this.checkVectorSupport();
+      if (!hasVector) {
+        logger.debug('Vector support not available, returning empty results for semantic search');
+        return [];
+      }
+
+      // For PGLite, we store embeddings as JSONB but can't do similarity search
+      // Return empty results to avoid errors
+      if (this.isPGLiteAdapter()) {
+        logger.debug('PGLite adapter detected, vector similarity search not supported');
+        return [];
+      }
+
       const {
         roomId,
         worldId,
@@ -2347,73 +2456,103 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         tableName,
       } = params;
 
-      // Both PGLite and PostgreSQL now support vector similarity search
-      const cleanVector = embedding.map((n) => (Number.isFinite(n) ? Number(n.toFixed(6)) : 0));
+      try {
+        // Both PGLite and PostgreSQL now support vector similarity search
+        const cleanVector = embedding.map((n) => (Number.isFinite(n) ? Number(n.toFixed(6)) : 0));
 
-      // Format the vector as a PostgreSQL array string for proper casting
-      const vectorString = `[${cleanVector.join(',')}]`;
+        // Format the vector as a PostgreSQL array string for proper casting
+        const vectorString = `[${cleanVector.join(',')}]`;
 
-      // Check if the embedding column exists
-      const embeddingColumn = embeddingTable[this.embeddingDimension];
-      if (!embeddingColumn) {
-        throw new Error(`Invalid embedding dimension: ${this.embeddingDimension}`);
-      }
-
-      // Use raw SQL with explicit vector casting to ensure compatibility
-      const similarity = sql<number>`1 - (${embeddingColumn} <=> ${vectorString}::vector)`;
-
-      const conditions = [
-        eq(memoryTable.type, tableName),
-        eq(memoryTable.agentId, this.agentId),
-        ...(roomId ? [eq(memoryTable.roomId, roomId)] : []),
-        ...(worldId ? [eq(memoryTable.worldId, worldId)] : []),
-        ...(entityId ? [eq(memoryTable.entityId, entityId)] : []),
-        ...(unique ? [eq(memoryTable.unique, unique)] : []),
-      ];
-
-      if (match_threshold) {
-        conditions.push(gte(similarity, match_threshold));
-      }
-
-      const joinCondition = this.isPGLiteAdapter()
-        ? sql`${memoryTable.id}::text = ${embeddingTable.memoryId}::text`
-        : eq(memoryTable.id, embeddingTable.memoryId);
-
-      const results = await this.db
-        .select({
-          memory: memoryTable,
-          similarity,
-          embedding: embeddingColumn,
-        })
-        .from(embeddingTable)
-        .innerJoin(memoryTable, joinCondition)
-        .where(and(...conditions))
-        .orderBy(desc(similarity))
-        .limit(count);
-
-      return results.map((row) => {
-        const metadata = row.memory.metadata || {};
-        if (row.memory.type && !metadata.type) {
-          metadata.type = row.memory.type;
+        // Check if the embedding column exists
+        const embeddingColumn = embeddingTable[this.embeddingDimension];
+        if (!embeddingColumn) {
+          throw new Error(`Invalid embedding dimension: ${this.embeddingDimension}`);
         }
 
-        return {
-          id: row.memory.id as UUID,
-          createdAt: row.memory.createdAt.getTime(),
-          content:
-            typeof row.memory.content === 'string'
-              ? JSON.parse(row.memory.content)
-              : row.memory.content,
-          entityId: row.memory.entityId as UUID,
-          agentId: row.memory.agentId as UUID,
-          roomId: row.memory.roomId as UUID,
-          worldId: row.memory.worldId as UUID | undefined,
-          unique: row.memory.unique,
-          metadata: metadata as MemoryMetadata,
-          embedding: row.embedding ?? undefined,
-          similarity: row.similarity,
-        };
-      });
+        // Use raw SQL with explicit vector casting to ensure compatibility
+        const similarity = sql<number>`1 - (${embeddingColumn} <=> ${vectorString}::vector)`;
+
+        const conditions = [
+          eq(memoryTable.type, tableName),
+          eq(memoryTable.agentId, this.agentId),
+          ...(roomId ? [eq(memoryTable.roomId, roomId)] : []),
+          ...(worldId ? [eq(memoryTable.worldId, worldId)] : []),
+          ...(entityId ? [eq(memoryTable.entityId, entityId)] : []),
+          ...(unique ? [eq(memoryTable.unique, unique)] : []),
+        ];
+
+        if (match_threshold) {
+          conditions.push(gte(similarity, match_threshold));
+        }
+
+        const joinCondition = this.isPGLiteAdapter()
+          ? sql`${memoryTable.id}::text = ${embeddingTable.memoryId}::text`
+          : eq(memoryTable.id, embeddingTable.memoryId);
+
+        const results = await this.db
+          .select({
+            memory: memoryTable,
+            similarity,
+            embedding: embeddingColumn,
+          })
+          .from(embeddingTable)
+          .innerJoin(memoryTable, joinCondition)
+          .where(and(...conditions))
+          .orderBy(desc(similarity))
+          .limit(count);
+
+        return results.map((row) => {
+          const metadata = row.memory.metadata || {};
+          if (row.memory.type && !metadata.type) {
+            metadata.type = row.memory.type;
+          }
+
+          return {
+            id: row.memory.id as UUID,
+            createdAt: row.memory.createdAt.getTime(),
+            content:
+              typeof row.memory.content === 'string'
+                ? JSON.parse(row.memory.content)
+                : row.memory.content,
+            entityId: row.memory.entityId as UUID,
+            agentId: row.memory.agentId as UUID,
+            roomId: row.memory.roomId as UUID,
+            worldId: row.memory.worldId as UUID | undefined,
+            unique: row.memory.unique,
+            metadata: metadata as MemoryMetadata,
+            embedding: row.embedding ?? undefined,
+            similarity: row.similarity,
+          };
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+
+        // Check if the error is due to missing vector support
+        if (errorMessage.includes('operator does not exist') && errorMessage.includes('<=>')) {
+          logger.warn('Vector similarity operator not available, returning empty results');
+          return [];
+        }
+
+        // Check if the error is due to JSONB columns being used instead of vector
+        if (errorMessage.includes('jsonb <=> vector')) {
+          logger.warn(
+            'Embeddings stored as JSONB, vector operations not supported, returning empty results'
+          );
+          return [];
+        }
+
+        // Check if embeddings table doesn't exist
+        if (
+          errorMessage.includes('relation "embeddings" does not exist') ||
+          errorMessage.includes('no such table: embeddings')
+        ) {
+          logger.warn('Embeddings table not available, returning empty results');
+          return [];
+        }
+
+        // Re-throw other errors
+        throw error;
+      }
     });
   }
 
@@ -2695,14 +2834,13 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    */
   private async getMemoryFragments(tx: any, documentId: UUID): Promise<{ id: UUID }[]> {
     try {
-      const factory = getSchemaFactory();
       const fragments = await tx
         .select({ id: memoryTable.id })
         .from(memoryTable)
         .where(
           and(
             eq(memoryTable.agentId, this.agentId),
-            eq(factory.jsonFieldAccess(memoryTable.metadata, 'documentId'), documentId)
+            sql`${memoryTable.metadata}->>'documentId' = ${documentId}`
           )
         );
 
@@ -2947,24 +3085,25 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
 
       if (isPGLite) {
         // For PGLite, use individual queries since it doesn't support array operations well
-        const results = [];
+        const results: Array<{ room_id: UUID }> = [];
         for (const entityId of entityIds) {
           const result = await this.db.execute(sql`
-            SELECT DISTINCT p.room_id 
-            FROM participants p
-            INNER JOIN rooms r ON p.room_id = r.id
-            WHERE p.entity_id = ${entityId} AND r.agent_id = ${this.agentId}
-          `);
+              SELECT DISTINCT p.room_id 
+              FROM participants p
+              INNER JOIN rooms r ON p.room_id = r.id
+              WHERE p.entity_id = ${entityId} AND r.agent_id = ${this.agentId}
+            `);
           const rows = Array.isArray(result) ? result : result.rows || [];
           results.push(...rows);
         }
 
         // Remove duplicates and return
-        const uniqueRoomIds = [...new Set(results.map((row: any) => row.room_id as UUID))];
+        const roomIds = results.map((row: any) => row.room_id as UUID);
+        const uniqueRoomIds = Array.from(new Set(roomIds));
         return uniqueRoomIds;
       } else {
         // For PostgreSQL, use the same approach as PGLite for simplicity and compatibility
-        const results = [];
+        const results: any[] = [];
         for (const entityId of entityIds) {
           const result = await this.db.execute(sql`
             SELECT DISTINCT p.room_id 
@@ -2977,8 +3116,9 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         }
 
         // Remove duplicates and return
-        const uniqueRoomIds = [...new Set(results.map((row: any) => row.room_id as UUID))];
-        return uniqueRoomIds;
+        const roomIds2 = results.map((row: any) => row.room_id as UUID);
+        const uniqueRoomIds2 = Array.from(new Set(roomIds2));
+        return uniqueRoomIds2;
       }
     });
   }
@@ -4173,7 +4313,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
   async createChannel(
     data: {
       id?: UUID; // Allow passing a specific ID
-      messageServerId: UUID;
+      serverId: UUID;
       name: string;
       type: string;
       sourceType?: string;
@@ -4184,7 +4324,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
     participantIds?: UUID[]
   ): Promise<{
     id: UUID;
-    messageServerId: UUID;
+    serverId: UUID;
     name: string;
     type: string;
     sourceType?: string;
@@ -4197,14 +4337,22 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
     return this.withDatabase(async () => {
       const newId = data.id || (v4() as UUID);
       const now = new Date();
+      // Ensure serverId is provided and valid
+      if (!data.serverId) {
+        throw new Error('serverId is required for channel creation');
+      }
+
       const channelToInsert = {
         id: newId,
-        agentId: this.agentId,
-        serverId: data.messageServerId, // messageServerId is actually the serverId
+        serverId: data.serverId,
         name: data.name,
         type: data.type,
-        metadata: data.metadata,
+        sourceType: data.sourceType || null,
+        sourceId: data.sourceId || null,
+        topic: data.topic || null,
+        metadata: data.metadata || {},
         createdAt: now,
+        updatedAt: now,
       };
 
       await this.db.transaction(async (tx) => {
@@ -4222,7 +4370,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       // Return the expected format
       return {
         id: newId,
-        messageServerId: data.messageServerId,
+        serverId: data.serverId,
         name: data.name,
         type: data.type,
         sourceType: data.sourceType,
@@ -4241,7 +4389,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
   async getChannelsForServer(serverId: UUID): Promise<
     Array<{
       id: UUID;
-      messageServerId: UUID;
+      serverId: UUID;
       name: string;
       type: string;
       sourceType?: string;
@@ -4256,10 +4404,10 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       const results = await this.db
         .select()
         .from(channelTable)
-        .where(eq(channelTable.serverId, serverId));
+        .where(eq((channelTable as any).serverId, serverId));
       return results.map((r) => ({
         id: r.id as UUID,
-        messageServerId: r.messageServerId as UUID,
+        serverId: r.serverId as UUID,
         name: r.name,
         type: r.type,
         sourceType: r.sourceType || undefined,
@@ -4277,7 +4425,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    */
   async getChannelDetails(channelId: UUID): Promise<{
     id: UUID;
-    messageServerId: UUID;
+    serverId: UUID;
     name: string;
     type: string;
     sourceType?: string;
@@ -4296,7 +4444,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       return results.length > 0
         ? {
             id: results[0].id as UUID,
-            messageServerId: results[0].messageServerId as UUID,
+            serverId: results[0].serverId as UUID,
             name: results[0].name,
             type: results[0].type,
             sourceType: results[0].sourceType || undefined,
@@ -4426,7 +4574,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
     updates: { name?: string; participantCentralUserIds?: UUID[]; metadata?: any }
   ): Promise<{
     id: UUID;
-    messageServerId: UUID;
+    serverId: UUID;
     name: string;
     type: string;
     sourceType?: string;
@@ -4613,10 +4761,10 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
   async findOrCreateDmChannel(
     user1Id: UUID,
     user2Id: UUID,
-    messageServerId: UUID
+    serverId: UUID
   ): Promise<{
     id: UUID;
-    messageServerId: UUID;
+    serverId: UUID;
     name: string;
     type: string;
     sourceType?: string;
@@ -4637,7 +4785,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           and(
             eq(channelTable.type, ChannelType.DM),
             eq(channelTable.name, dmChannelName),
-            eq(channelTable.serverId, messageServerId)
+            eq((channelTable as any).serverId, serverId)
           )
         )
         .limit(1);
@@ -4645,7 +4793,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       if (existingChannels.length > 0) {
         return {
           id: existingChannels[0].id as UUID,
-          messageServerId: existingChannels[0].messageServerId as UUID,
+          serverId: existingChannels[0].serverId as UUID,
           name: existingChannels[0].name,
           type: existingChannels[0].type,
           sourceType: existingChannels[0].sourceType || undefined,
@@ -4660,7 +4808,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       // Create new DM channel
       return this.createChannel(
         {
-          messageServerId,
+          serverId,
           name: dmChannelName,
           type: ChannelType.DM,
           metadata: { user1: ids[0], user2: ids[1] },

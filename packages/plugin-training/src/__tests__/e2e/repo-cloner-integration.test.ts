@@ -292,7 +292,6 @@ async function createTestRuntime(settings: Record<string, any> = {}): Promise<IA
       postExamples: [],
       topics: [],
       knowledge: [],
-      clients: [],
       plugins: [],
     },
 

@@ -18,8 +18,7 @@ const testCharacter = {
   messageExamples: [],
   postExamples: [],
   topics: [],
-  knowledge: [],
-  clients: [],
+  knowledge: [],,
   plugins: ['@elizaos/plugin-sql'],
   id: 'test-agent-startup',
 };

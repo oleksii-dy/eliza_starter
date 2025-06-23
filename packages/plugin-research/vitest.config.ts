@@ -7,6 +7,8 @@ export default defineConfig({
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
+      '**/*.e2e.test.ts',
+      '**/e2e.test.ts',
       '**/tests/research-e2e.test.ts',
       '**/tests/real-world-e2e.test.ts'
     ],

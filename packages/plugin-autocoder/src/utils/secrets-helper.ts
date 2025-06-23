@@ -39,7 +39,6 @@ export async function createMockRuntimeWithSecrets(
       messageExamples: [],
       postExamples: [],
       topics: [],
-      clients: [],
       plugins: [],
     },
   } as any; // Type assertion since we're only implementing a subset

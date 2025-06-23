@@ -33,7 +33,6 @@ describe('Agent-Server Interaction Integration Tests', () => {
       name: 'Agent One',
       bio: ['First test agent'],
       topics: [],
-      clients: [],
       plugins: [],
       settings: {
         secrets: {},
@@ -62,7 +61,6 @@ describe('Agent-Server Interaction Integration Tests', () => {
       name: 'Agent Two',
       bio: ['Second test agent'],
       topics: [],
-      clients: [],
       plugins: [],
       settings: {
         model: 'gpt-3.5-turbo',
@@ -210,14 +208,14 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Test Channel',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId: serverId,
         metadata: {},
       });
 
       expect(channel).toBeDefined();
       expect(channel.name).toBe('Test Channel');
       expect(channel.type).toBe(ChannelType.GROUP);
-      expect(channel.messageServerId).toBe(serverId);
+      expect(channel.serverId).toBe(serverId);
 
       // Verify channel was created
       const channelDetails = await agentServer.getChannelDetails(channel.id);
@@ -233,7 +231,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
         {
           name: 'Group Chat',
           type: ChannelType.GROUP,
-          messageServerId: serverId,
+          serverId: serverId,
           metadata: {},
         },
         [userId1, userId2]
@@ -249,7 +247,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Empty Channel',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId: serverId,
         metadata: {},
       });
 
@@ -264,7 +262,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Original Name',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId: serverId,
         metadata: { original: true },
       });
 
@@ -281,7 +279,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'To Be Deleted',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId: serverId,
         metadata: {},
       });
 
@@ -318,7 +316,7 @@ describe('Agent-Server Interaction Integration Tests', () => {
       const channel = await agentServer.createChannel({
         name: 'Message Test Channel',
         type: ChannelType.GROUP,
-        messageServerId: serverId,
+        serverId: serverId,
         metadata: {},
       });
       channelId = channel.id;

@@ -31,7 +31,6 @@ async function runSWEBenchReal() {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      clients: [],
       plugins: [],
     },
   } as any;

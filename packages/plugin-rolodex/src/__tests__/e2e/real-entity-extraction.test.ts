@@ -13,7 +13,7 @@ export const realEntityExtractionTests: TestSuite = {
         
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
@@ -131,7 +131,7 @@ export const realEntityExtractionTests: TestSuite = {
         
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');
@@ -195,7 +195,7 @@ export const realEntityExtractionTests: TestSuite = {
         
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+        const entityGraphService = runtime.getService('entityGraph') as unknown as EntityGraphManager;
         
         if (!entityGraphService) {
           throw new Error('EntityGraphManager not available');

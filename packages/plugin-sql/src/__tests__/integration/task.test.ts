@@ -8,7 +8,7 @@ import {
   type World,
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { tasksTable } from '../../schema';

@@ -236,12 +236,13 @@ describe('Plugin Migration Regression Tests', () => {
   describe('Runtime Migration Method', () => {
     it('should have runPluginMigrations method available', async () => {
       // This tests that the runtime has the migration method
-      const runtimePath = path.join(__dirname, '../../../../core/dist/runtime.js');
-      const runtimeModule = await import(runtimePath);
+      const coreModulePath = path.join(__dirname, '../../../core/dist/index.js');
+      const coreModule = await import(coreModulePath);
 
       // Check that the AgentRuntime class has the method
-      const runtime = runtimeModule.AgentRuntime;
-      expect(runtime.prototype.runPluginMigrations).toBeDefined();
+      const AgentRuntime = coreModule.AgentRuntime;
+      expect(AgentRuntime).toBeDefined();
+      expect(AgentRuntime.prototype.runPluginMigrations).toBeDefined();
     });
   });
 

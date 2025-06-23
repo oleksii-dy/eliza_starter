@@ -98,7 +98,9 @@ export class SyntaxValidator extends BaseValidator {
   ): Promise<void> {
     // Simple validation using tsc --noEmit
     // In production, use TypeScript Compiler API for detailed analysis
-    const tempDir = await fs.mkdtemp(path.join(process.cwd(), '.syntax-check-'));
+    const tempBase = path.join(process.cwd(), '.eliza-temp', 'syntax-check');
+    await fs.mkdir(tempBase, { recursive: true });
+    const tempDir = await fs.mkdtemp(path.join(tempBase, 'check-'));
     const tempFile = path.join(tempDir, path.basename(file.path));
 
     try {
@@ -175,7 +177,9 @@ export class TypeScriptValidator extends BaseValidator {
     }
 
     // Write files to temp directory
-    const tempDir = await fs.mkdtemp(path.join(process.cwd(), '.ts-check-'));
+    const tempBase = path.join(process.cwd(), '.eliza-temp', 'ts-check');
+    await fs.mkdir(tempBase, { recursive: true });
+    const tempDir = await fs.mkdtemp(path.join(tempBase, 'check-'));
 
     try {
       // Write all files
@@ -298,7 +302,9 @@ export class ESLintValidator extends BaseValidator {
     const startTime = Date.now();
     const findings: VerificationFinding[] = [];
 
-    const tempDir = await fs.mkdtemp(path.join(process.cwd(), '.eslint-check-'));
+    const tempBase2 = path.join(process.cwd(), '.eliza-temp', 'eslint-check');
+    await fs.mkdir(tempBase2, { recursive: true });
+    const tempDir = await fs.mkdtemp(path.join(tempBase2, 'check-'));
 
     try {
       // Write files
@@ -406,7 +412,9 @@ export class UnitTestValidator extends BaseValidator {
     const startTime = Date.now();
     const findings: VerificationFinding[] = [];
 
-    const tempDir = await fs.mkdtemp(path.join(process.cwd(), '.test-check-'));
+    const tempBase3 = path.join(process.cwd(), '.eliza-temp', 'test-check');
+    await fs.mkdir(tempBase3, { recursive: true });
+    const tempDir = await fs.mkdtemp(path.join(tempBase3, 'check-'));
 
     try {
       // Write all files

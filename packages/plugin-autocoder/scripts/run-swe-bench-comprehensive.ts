@@ -51,7 +51,6 @@ async function runComprehensiveBenchmark() {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      clients: [],
       plugins: [],
     },
   } as any;

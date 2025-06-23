@@ -334,63 +334,87 @@ export class CheckpointManager {
   async generateValidationReport(sessionId: string): Promise<string> {
     const session =
       this.activeSessions.get(sessionId) || (await this.loadSessionFromHistory(sessionId));
+    
+    // Throw error if session not found
     if (!session) {
       throw new Error(`Session not found: ${sessionId}`);
+    }
+    
+    const reportSession: ValidationSession = session;
+    
+    // Ensure session has checkpoints array
+    if (!reportSession.checkpoints) {
+      reportSession.checkpoints = [];
+    }
+    
+    // Ensure session has summary
+    if (!reportSession.summary) {
+      reportSession.summary = {
+        totalCheckpoints: 0,
+        passedCheckpoints: 0,
+        failedCheckpoints: 0,
+        averageScore: 0,
+        averageConfidence: 0,
+        totalExecutionTime: 0,
+        mostReliablePhase: '',
+        leastReliablePhase: '',
+        improvementTrend: 'stable',
+        recommendations: [],
+      };
     }
 
     const report = [
       `# Validation Report for Session: ${sessionId}`,
       ``,
       `## Session Overview`,
-      `- Instance ID: ${session.instanceId}`,
-      `- Start Time: ${this.formatTimestamp(session.startTime)}`,
-      `- End Time: ${this.formatTimestamp(session.endTime)}`,
-      `- Status: ${session.status}`,
-      `- Final Score: ${session.finalScore}`,
-      `- Final Passed: ${session.finalPassed}`,
+      `- Instance ID: ${reportSession.instanceId}`,
+      `- Start Time: ${this.formatTimestamp(reportSession.startTime)}`,
+      `- End Time: ${this.formatTimestamp(reportSession.endTime)}`,
+      `- Status: ${reportSession.status}`,
+      `- Final Score: ${reportSession.finalScore}`,
+      `- Final Passed: ${reportSession.finalPassed}`,
       ``,
       `## Summary Metrics`,
-      `- Total Checkpoints: ${session.summary.totalCheckpoints}`,
-      `- Passed Checkpoints: ${session.summary.passedCheckpoints}`,
-      `- Failed Checkpoints: ${session.summary.failedCheckpoints}`,
-      `- Average Score: ${session.summary.averageScore.toFixed(2)}`,
-      `- Average Confidence: ${session.summary.averageConfidence.toFixed(2)}`,
-      `- Total Execution Time: ${session.summary.totalExecutionTime}ms`,
-      `- Improvement Trend: ${session.summary.improvementTrend}`,
+      `- Total Checkpoints: ${reportSession.summary.totalCheckpoints}`,
+      `- Passed Checkpoints: ${reportSession.summary.passedCheckpoints}`,
+      `- Failed Checkpoints: ${reportSession.summary.failedCheckpoints}`,
+      `- Average Score: ${reportSession.summary.averageScore.toFixed(2)}`,
+      `- Average Confidence: ${reportSession.summary.averageConfidence.toFixed(2)}`,
+      `- Total Execution Time: ${reportSession.summary.totalExecutionTime}ms`,
+      `- Improvement Trend: ${reportSession.summary.improvementTrend}`,
       ``,
       `## Checkpoint Details`,
     ];
 
     // Add detailed checkpoint information
-    for (const checkpoint of session.checkpoints) {
-      report.push(`### Checkpoint: ${checkpoint.id}`);
-      report.push(`- Phase: ${checkpoint.phase}`);
-      report.push(`- Iteration: ${checkpoint.iteration || 'N/A'}`);
-      report.push(`- Passed: ${checkpoint.passed}`);
-      report.push(`- Score: ${checkpoint.score}`);
-      report.push(`- Confidence: ${checkpoint.confidence}`);
-      report.push(`- Execution Time: ${checkpoint.executionTime}ms`);
-      report.push(`- Framework: ${checkpoint.details.frameworkDetected}`);
-      report.push(`- Parsing Method: ${checkpoint.details.parsing.method}`);
-      report.push(
-        `- Test Results: ${checkpoint.testResults.passed}/${checkpoint.testResults.total} passed`
-      );
-
-      if (checkpoint.warnings.length > 0) {
-        report.push(`- Warnings: ${checkpoint.warnings.join(', ')}`);
+    if (reportSession.checkpoints.length > 0) {
+      for (const checkpoint of reportSession.checkpoints) {
+        report.push(`### ${checkpoint.phase} (${checkpoint.iteration ? `Iteration ${checkpoint.iteration}` : 'Initial'})`);
+        report.push(`- **Status**: ${checkpoint.passed ? '✅ PASSED' : '❌ FAILED'}`);
+        report.push(`- **Score**: ${checkpoint.score.toFixed(2)}`);
+        report.push(`- **Confidence**: ${checkpoint.confidence.toFixed(2)}`);
+        report.push(`- **Execution Time**: ${checkpoint.executionTime}ms`);
+        report.push(`- **Tests**: ${checkpoint.testResults.passed}/${checkpoint.testResults.total} passed`);
+        
+        if (checkpoint.errors?.length > 0) {
+          report.push(`- **Errors**: ${checkpoint.errors.join(', ')}`);
+        }
+        
+        if (checkpoint.warnings?.length > 0) {
+          report.push(`- **Warnings**: ${checkpoint.warnings.join(', ')}`);
+        }
+        
+        report.push('');
       }
-
-      if (checkpoint.errors.length > 0) {
-        report.push(`- Errors: ${checkpoint.errors.join(', ')}`);
-      }
-
+    } else {
+      report.push('No checkpoints executed');
       report.push('');
     }
 
     // Add recommendations
-    if (session.summary.recommendations.length > 0) {
+    if (reportSession.summary?.recommendations?.length > 0) {
       report.push(`## Recommendations`);
-      for (const recommendation of session.summary.recommendations) {
+      for (const recommendation of reportSession.summary.recommendations) {
         report.push(`- ${recommendation}`);
       }
       report.push('');

@@ -1,3 +1,15 @@
+// Mock composePromptFromState before importing actions
+vi.mock('@elizaos/core', async () => {
+  const actual = await vi.importActual('@elizaos/core');
+  return {
+    ...actual,
+    composePromptFromState: vi.fn((template, state) => {
+      // Simple mock - just return the template
+      return template || '';
+    }),
+  };
+});
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { stringToUuid, type Memory } from '@elizaos/core';
 import {
@@ -18,7 +30,6 @@ import {
 
 describe('Rolodex Actions', () => {
   let mockRuntime: any;
-  let mockRolodexService: any;
   let mockRolodexService: any;
   let mockFollowUpManager: any;
   let mockCallback: any;
@@ -51,6 +62,18 @@ describe('Rolodex Actions', () => {
     };
 
     mockRolodexService = {
+      upsertEntity: vi.fn().mockResolvedValue({
+        id: stringToUuid('john'),
+        agentId: stringToUuid('agent'),
+        names: ['John'],
+        metadata: {
+          type: 'person',
+          summary: 'A helpful person',
+          tags: [],
+          platforms: {},
+          bio: 'A helpful person',
+        },
+      }),
       trackEntity: vi.fn().mockResolvedValue({
         entityId: stringToUuid('john'),
         type: 'person',
@@ -101,6 +124,15 @@ describe('Rolodex Actions', () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }),
+      scheduleFollowUp: vi.fn().mockResolvedValue({
+        id: stringToUuid('followup-1'),
+        entityId: stringToUuid('sarah'),
+        message: 'project discussion',
+        scheduledFor: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        priority: 'medium',
+        completed: false,
+        metadata: {},
+      }),
     };
 
     mockFollowUpManager = {
@@ -150,6 +182,9 @@ describe('Rolodex Actions', () => {
         content: { text: 'Track John as a friend' },
       });
 
+      // Mock validation response
+      mockRuntime.useModel.mockResolvedValueOnce('yes');
+
       const isValid = await trackEntityAction.validate(mockRuntime, message, mockState);
       expect(isValid).toBe(true);
     });
@@ -158,6 +193,9 @@ describe('Rolodex Actions', () => {
       const message = createMockMemory({
         content: { text: 'What is the weather today?' },
       });
+
+      // Mock validation response
+      mockRuntime.useModel.mockResolvedValueOnce('no');
 
       const isValid = await trackEntityAction.validate(mockRuntime, message, mockState);
       expect(isValid).toBe(false);
@@ -169,15 +207,15 @@ describe('Rolodex Actions', () => {
       });
 
       // Mock useModel to return entity extraction response
-      mockRuntime.useModel.mockResolvedValue(`
-        <response>
-          <entityName>John</entityName>
-          <entityType>person</entityType>
-          <classification>ally</classification>
-          <trustScore>50</trustScore>
-          <bio>A helpful person</bio>
-        </response>
-      `);
+      mockRuntime.useModel.mockResolvedValue(JSON.stringify({
+        name: 'John',
+        type: 'person',
+        attributes: {
+          classification: 'ally',
+          trustScore: 50,
+          bio: 'A helpful person'
+        }
+      }));
 
       // Mock findEntityByName on runtime
       mockRuntime.findEntityByName = vi.fn().mockResolvedValue(null); // Entity doesn't exist yet
@@ -243,7 +281,7 @@ describe('Rolodex Actions', () => {
       expect(result).toEqual({ success: false });
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: expect.stringContaining('trouble tracking'),
+          text: expect.stringContaining("couldn't identify"),
           error: true,
         })
       );
@@ -436,6 +474,9 @@ describe('Rolodex Actions', () => {
         },
       });
 
+      // Mock validation response
+      mockRuntime.useModel.mockResolvedValueOnce('yes');
+
       const isValid = await scheduleFollowUpAction.validate(mockRuntime, message, mockState);
       expect(isValid).toBe(true);
     });
@@ -449,15 +490,13 @@ describe('Rolodex Actions', () => {
 
       const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-      // Mock useModel to return follow-up details
-      mockRuntime.useModel.mockResolvedValue(`
-        <response>
-          <contactName>Sarah</contactName>
-          <scheduledAt>${nextWeek.toISOString()}</scheduledAt>
-          <reason>project discussion</reason>
-          <priority>medium</priority>
-        </response>
-      `);
+      // Mock useModel to return follow-up details as JSON
+      mockRuntime.useModel.mockResolvedValue(JSON.stringify({
+        entityName: 'Sarah',
+        scheduledFor: nextWeek.toISOString(),
+        message: 'project discussion',
+        priority: 'medium'
+      }));
 
       // Mock entity exists in runtime
       mockRuntime.findEntityByName = vi.fn().mockResolvedValue({

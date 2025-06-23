@@ -5,20 +5,22 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { v4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 // Import unified system components
 import sqlPlugin, { connectionRegistry } from '../index';
 import { PgDatabaseAdapter } from '../pg/adapter';
 import { PgliteDatabaseAdapter } from '../pglite/adapter';
 import { mockCharacter } from './fixtures';
+import { PGliteClientManager } from '../pglite/manager';
+import { getTempDbPath } from '@elizaos/core';
 
 /**
  * Creates a fully initialized database adapter and a corresponding AgentRuntime instance
  * for testing purposes. Uses the unified migration system and connection registry to
  * set up the schema for the core SQL plugin and any additional plugins provided.
  *
- * Automatically detects PostgreSQL (if POSTGRES_URL is set) or falls back to PGLite.
- * This is the standard helper for all integration tests in `plugin-sql`.
+ * Uses the test schema for isolation from production data.
  *
  * @param testAgentId - The UUID to use for the agent runtime and adapter.
  * @param testPlugins - An array of additional plugins to load and migrate.
@@ -32,6 +34,10 @@ export async function createTestDatabase(
   runtime: AgentRuntime;
   cleanup: () => Promise<void>;
 }> {
+  // Force test environment
+  process.env.NODE_ENV = 'test';
+  process.env.VITEST = 'true';
+
   // Generate a unique agent name for this test
   const agentName = `${mockCharacter.name}_${testAgentId.substring(0, 8)}`;
 
@@ -41,17 +47,11 @@ export async function createTestDatabase(
   if (process.env.POSTGRES_URL) {
     try {
       // PostgreSQL testing using unified connection registry
-      console.log('[TEST] Attempting to use PostgreSQL for test database');
+      console.log('[TEST] Using PostgreSQL with test schema');
       const connectionManager = connectionRegistry.getPostgresManager(process.env.POSTGRES_URL);
       const adapter = new PgDatabaseAdapter(agentId, connectionManager, process.env.POSTGRES_URL);
 
-      const schemaName = `test_${agentId.replace(/-/g, '_')}`;
-      const db = connectionManager.getDatabase();
-
-      // Drop schema if it exists to ensure clean state
-      await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
-      await db.execute(sql.raw(`CREATE SCHEMA IF NOT EXISTS ${schemaName}`));
-      await db.execute(sql.raw(`SET search_path TO ${schemaName}, public`));
+      // The UnifiedMigrator will handle schema setup automatically
 
       // Create character with all required fields
       const testCharacter = {
@@ -72,7 +72,7 @@ export async function createTestDatabase(
         postExamples: [],
       };
 
-      // Initialize adapter with migrations
+      // Initialize adapter with migrations (will use test schema)
       await adapter.init();
 
       // Give the database a moment to fully settle after migrations
@@ -96,24 +96,22 @@ export async function createTestDatabase(
       await runtime.initialize();
 
       const cleanup = async () => {
-        await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
+        // Clean up test schema data
         await adapter.close();
-        // Don't call connectionRegistry.cleanup() here as it closes ALL connections
-        // Just remove this specific adapter from the registry
         connectionRegistry.removeAdapter(agentId);
       };
 
       return { adapter, runtime, cleanup };
     } catch (error) {
-      console.warn('[TEST] Failed to connect to PostgreSQL, falling back to PGlite:', error);
-      // Fall through to PGlite setup below
+      console.warn('[TEST] Failed to connect to PostgreSQL, falling back to PGLite:', error);
+      // Fall through to PGLite setup below
     }
   }
 
-  // PGlite testing (fallback or when POSTGRES_URL not set)
-  // Use unique memory database key to avoid sharing issues between tests
-  const dataDir = `:memory:${agentId}`;
-  console.log(`[TEST] Using PGlite database in memory: ${dataDir}`);
+  // PGLite testing (fallback or when POSTGRES_URL not set)
+  // Use shared test database
+  const dataDir = getTempDbPath('eliza-test-db');
+  console.log(`[TEST] Using PGLite database with test tables: ${dataDir}`);
 
   // Use connection registry to ensure unified migrator uses same instance
   const connectionManager = connectionRegistry.getPGLiteManager(dataDir);
@@ -137,7 +135,7 @@ export async function createTestDatabase(
     postExamples: [],
   };
 
-  // Initialize adapter with migrations
+  // Initialize adapter with migrations (will use test_ prefix for tables)
   await adapter.init();
 
   // Give the database a moment to fully settle after migrations
@@ -166,8 +164,8 @@ export async function createTestDatabase(
   await runtime.initialize();
 
   const cleanup = async () => {
+    // Clean up test tables
     await adapter.close();
-    // No need to remove temp directory for :memory: database
     connectionRegistry.removeAdapter(agentId);
   };
 
@@ -176,10 +174,7 @@ export async function createTestDatabase(
 
 /**
  * Creates a properly isolated test database with automatic cleanup using the unified system.
- * This function ensures each test has its own isolated database state, with separate
- * schemas for PostgreSQL or separate directories for PGLite.
- *
- * Uses the unified migration system and connection registry for consistency.
+ * This function ensures each test has clean test schema/tables.
  *
  * @param testName - A unique name for this test to ensure isolation
  * @param testPlugins - Additional plugins to load
@@ -196,6 +191,8 @@ export async function createIsolatedTestDatabase(
 }> {
   // Set test environment flag early
   process.env.ELIZA_TESTING_PLUGIN = 'true';
+  process.env.NODE_ENV = 'test';
+  process.env.VITEST = 'true';
 
   // Generate a unique test ID for this test
   const uniqueTestId = v4() as UUID;
@@ -209,9 +206,8 @@ export async function createIsolatedTestDatabase(
 
   if (process.env.POSTGRES_URL) {
     try {
-      // PostgreSQL - use unique schema per test
-      const schemaName = `test_${testId}_${Date.now()}`;
-      console.log(`[TEST] Creating isolated PostgreSQL schema: ${schemaName}`);
+      // PostgreSQL - use test schema
+      console.log(`[TEST] Creating isolated PostgreSQL test`);
 
       const connectionManager = connectionRegistry.getPostgresManager(process.env.POSTGRES_URL);
       const adapter = new PgDatabaseAdapter(
@@ -222,10 +218,7 @@ export async function createIsolatedTestDatabase(
 
       const db = connectionManager.getDatabase();
 
-      // Create isolated schema
-      await db.execute(sql.raw(`CREATE SCHEMA ${schemaName}`));
-      // Include public in search path so we can access the vector extension
-      await db.execute(sql.raw(`SET search_path TO ${schemaName}, public`));
+      // Clean up test schema before starting
 
       // Create character with all required fields
       const testCharacter = {
@@ -277,33 +270,33 @@ export async function createIsolatedTestDatabase(
       await runtime.initialize();
 
       const cleanup = async () => {
-        try {
-          await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
-        } catch (error) {
-          console.error(`[TEST] Failed to drop schema ${schemaName}:`, error);
-        }
         await adapter.close();
-        // Don't call connectionRegistry.cleanup() here as it closes ALL connections
-        // Just remove this specific adapter from the registry
         connectionRegistry.removeAdapter(testAgentId);
       };
 
       return { adapter, runtime, cleanup, testAgentId };
     } catch (error) {
-      console.warn('[TEST] Failed to connect to PostgreSQL, falling back to PGlite:', error);
-      // Fall through to PGlite setup below
+      console.warn('[TEST] Failed to connect to PostgreSQL, falling back to PGLite:', error);
+      // Fall through to PGLite setup below
     }
   }
 
   // PGLite fallback
-  // PGLite - use unique memory database for each test to ensure isolation
-  const dataDir = `:memory:${testId}_${Date.now()}`;
-  console.log(`[TEST] Creating isolated PGLite database in memory: ${dataDir}`);
+  // Use unique test database for each test
+  const testDbName = `eliza-test-db-${testId}-${Date.now()}`;
+  const dataDir = getTempDbPath(testDbName);
+  console.log(`[TEST] Creating isolated PGLite test database: ${dataDir}`);
 
   // Use connection registry to ensure unified migrator uses same instance
   const connectionManager = connectionRegistry.getPGLiteManager(dataDir);
   await connectionManager.initialize();
   const adapter = new PgliteDatabaseAdapter(testAgentId, connectionManager, dataDir);
+
+  // Initialize adapter first so we can use its database
+  await adapter.init();
+
+  // Clean up test tables before starting
+  const db = adapter.getDatabase();
 
   // Create character with all required fields
   const testCharacter = {
@@ -322,8 +315,9 @@ export async function createIsolatedTestDatabase(
     postExamples: [],
   };
 
-  // Initialize adapter with migrations
+  // Re-initialize adapter after cleanup to ensure fresh state
   await adapter.init();
+
   // Give the database a moment to fully settle after migrations
   await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -331,22 +325,6 @@ export async function createIsolatedTestDatabase(
   const isReady = await adapter.isReady();
   if (!isReady) {
     throw new Error('[TEST] Database adapter not ready after migrations');
-  }
-
-  // Verify critical tables exist and are accessible
-  try {
-    await adapter.getAgents(); // This will test if agents table is accessible
-    console.log('[DEBUG] Verified agents table is ready');
-  } catch (error) {
-    console.log('[DEBUG] Agents table verification failed:', error);
-  }
-
-  // Also verify entities table is ready
-  try {
-    await adapter.getEntitiesByIds(['test-id-that-does-not-exist']);
-    console.log('[DEBUG] Verified entities table is ready');
-  } catch (error) {
-    console.log('[DEBUG] Entities table verification failed:', error);
   }
 
   // Create runtime with the adapter directly to bypass plugin initialization issues
@@ -362,9 +340,28 @@ export async function createIsolatedTestDatabase(
 
   const cleanup = async () => {
     await adapter.close();
-    // No need to remove temp directory for :memory: database
     connectionRegistry.removeAdapter(testAgentId);
   };
 
   return { adapter, runtime, cleanup, testAgentId };
+}
+
+export async function createTestAdapter(testSuffix?: string): Promise<{
+  adapter: PgliteDatabaseAdapter;
+  agentId: UUID;
+  dataDir: string;
+}> {
+  // Force test environment
+  process.env.NODE_ENV = 'test';
+  process.env.VITEST = 'true';
+
+  const agentId = uuidv4() as UUID;
+  const dataDir = getTempDbPath('eliza-test-db');
+
+  const manager = new PGliteClientManager({ dataDir });
+  const adapter = new PgliteDatabaseAdapter(agentId, manager, dataDir);
+
+  await adapter.init();
+
+  return { adapter, agentId, dataDir };
 }

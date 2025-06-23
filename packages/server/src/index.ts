@@ -181,13 +181,13 @@ export class AgentServer {
       const postgresUrl = process.env.POSTGRES_URL || options?.postgresUrl;
       const dataDir = agentDataDir;
 
-      this.database = await createDatabaseAdapter(
+      this.database = (await createDatabaseAdapter(
         {
           dataDir,
           postgresUrl,
         },
         migrationAgentId
-      ) as DatabaseAdapter;
+      )) as DatabaseAdapter;
 
       // Initialize the adapter
       await this.database.init();
@@ -1104,9 +1104,9 @@ export class AgentServer {
   async findOrCreateCentralDmChannel(
     user1Id: UUID,
     user2Id: UUID,
-    messageServerId: UUID
+    serverId: UUID
   ): Promise<MessageChannel> {
-    return (this.database as any).findOrCreateDmChannel(user1Id, user2Id, messageServerId);
+    return (this.database as any).findOrCreateDmChannel(user1Id, user2Id, serverId);
   }
 
   async createMessage(
@@ -1121,7 +1121,7 @@ export class AgentServer {
       const messageForBus: MessageServiceStructure = {
         id: createdMessage.id,
         channel_id: createdMessage.channelId,
-        server_id: channel.messageServerId,
+        server_id: channel.serverId,
         author_id: createdMessage.authorId,
         content: createdMessage.content,
         raw_message: createdMessage.rawMessage,

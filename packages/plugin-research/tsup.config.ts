@@ -8,5 +8,5 @@ export default defineConfig({
   shims: true,
   splitting: false,
   sourcemap: true,
-  external: ['@elizaos/core', 'uuid'],
+  external: ['@elizaos/core', 'uuid', 'fs', 'path'],
 });

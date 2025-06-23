@@ -45,8 +45,7 @@ async function runCaptureLogTest() {
         id: agentId,
         name: 'Vision Test Agent',
         bio: ['An agent designed to test vision capabilities'],
-        system: 'You have visual perception capabilities. Describe what you see accurately.',
-        clients: [],
+        system: 'You have visual perception capabilities. Describe what you see accurately.',,
         plugins: ['vision'],
         settings: {
           VISION_PIXEL_CHANGE_THRESHOLD: '25', // Lower threshold for more sensitive detection

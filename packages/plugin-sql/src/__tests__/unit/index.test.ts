@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 
 // Import the plugin exports
 import { plugin, createDatabaseAdapter } from '../../index';

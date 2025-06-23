@@ -459,9 +459,10 @@ describe('TrustDatabase', () => {
   describe('stop', () => {
     it('should clean up resources', async () => {
       await trustDatabase.initialize(mockRuntime);
-      
+
       // Should not throw
-      await expect(trustDatabase.stop()).resolves.not.toThrow();
+      await trustDatabase.stop();
+      // Test passes if no error is thrown
     });
   });
 }); 

@@ -3,14 +3,14 @@
  * This runs at the very beginning to prevent dependency loading issues
  */
 
-import { mock } from 'bun:test';
+import { vi } from 'vitest';
 
 // Set up global environment variables for testing
 process.env.NODE_ENV = 'test';
 process.env.ELIZA_NONINTERACTIVE = 'true';
 
 // Mock problematic Node.js modules first
-mock.module('multer', () => {
+vi.mock('multer', () => {
   console.log('Mocking multer module...');
   const mockMulter = () => ({
     single: () => (req: any, res: any, next: any) => next(),
@@ -31,7 +31,7 @@ mock.module('multer', () => {
 });
 
 // Alternative approach: Mock the entire server module to prevent multer loading
-mock.module('@elizaos/server', () => {
+vi.mock('@elizaos/server', () => {
   console.log('Mocking @elizaos/server module...');
   return {
     AgentServer: class MockAgentServer {

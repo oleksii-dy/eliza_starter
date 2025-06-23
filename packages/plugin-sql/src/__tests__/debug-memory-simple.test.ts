@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { PgliteDatabaseAdapter } from '../pglite/adapter';
 import { PGliteClientManager } from '../pglite/manager';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,10 +6,7 @@ import { ChannelType, type UUID } from '@elizaos/core';
 import { setDatabaseType } from '../schema/factory';
 import { eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { TestDbManager } from './test-db-utils';
 
 // Set database type BEFORE importing schema to ensure proper lazy loading
 setDatabaseType('pglite');
@@ -18,36 +15,31 @@ setDatabaseType('pglite');
 import * as schema from '../schema';
 import { memoryTable } from '../schema/memory';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 describe('Debug Memory Simple Operations', () => {
   let adapter: PgliteDatabaseAdapter;
   let manager: PGliteClientManager;
   let agentId: UUID;
-  let testDbPath: string;
+  let dbManager: TestDbManager;
 
   beforeEach(async () => {
     agentId = uuidv4() as UUID;
-    
-    // Create a unique temporary database directory for this test
-    testDbPath = path.join(__dirname, '.test-db', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-    
-    // Ensure the directory exists
-    if (!fs.existsSync(path.dirname(testDbPath))) {
-      fs.mkdirSync(path.dirname(testDbPath), { recursive: true });
-    }
-    
+
+    // Create a TestDbManager for this test suite
+    dbManager = new TestDbManager();
+
+    // Get a test database path
+    const testDbPath = await dbManager.createTestDb('debug-memory-simple');
+
     // Create and initialize the manager with file-based database
     manager = new PGliteClientManager({ dataDir: testDbPath });
     await manager.initialize();
-    
+
     // Then create the adapter with the initialized manager
     adapter = new PgliteDatabaseAdapter(agentId, manager);
 
     // Initialize the adapter (this will run unified migrations automatically)
     await adapter.init();
-    
+
     // Get database instance for queries
     const db = adapter.getDatabase();
 
@@ -70,15 +62,9 @@ describe('Debug Memory Simple Operations', () => {
     if (adapter) {
       await adapter.close();
     }
-    
-    // Clean up the test database directory
-    if (testDbPath && fs.existsSync(testDbPath)) {
-      try {
-        fs.rmSync(testDbPath, { recursive: true, force: true });
-      } catch (error) {
-        console.error('Failed to clean up test database:', error);
-      }
-    }
+
+    // Clean up all test databases created by this manager
+    await dbManager.cleanupAll();
   });
 
   it('should access memory table without error', async () => {
