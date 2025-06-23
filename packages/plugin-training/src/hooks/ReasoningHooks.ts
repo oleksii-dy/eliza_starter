@@ -85,7 +85,7 @@ export class ReasoningHooks {
     runtime: IAgentRuntime,
     message: Memory,
     state: State,
-    actionNames: string[],
+    actionNames: string[]
     originalPlanning: () => Promise<Content>
   ): Promise<Content> {
     const reasoningService = runtime.getService<CustomReasoningService>('together-reasoning');
@@ -212,7 +212,7 @@ export class ReasoningHooks {
     if (!service) {
       return {
         available: false,
-        enabledModels: [],
+        enabledModels: []
       };
     }
 
@@ -241,7 +241,7 @@ export class ReasoningHooks {
       elizaLogger.error('Error getting custom reasoning status:', error);
       return {
         available: true,
-        enabledModels: [],
+        enabledModels: []
       };
     }
   }
@@ -291,7 +291,7 @@ export class ReasoningHooks {
       return {
         thought: responseObject?.thought || '',
         actions: responseObject?.actions ? responseObject.actions.split(',').map((a: string) => a.trim()) : ['IGNORE'],
-        providers: responseObject?.providers ? responseObject.providers.split(',').map((p: string) => p.trim()) : [],
+        providers: responseObject?.providers ? responseObject.providers.split(',').map((p: string) => p.trim()) : []
         text: responseObject?.text || '',
       };
     };

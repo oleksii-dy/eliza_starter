@@ -97,7 +97,7 @@ describe('Custodial Wallet Actions', () => {
                 network: 'base-sepolia',
                 name: 'Test Wallet',
                 ownerId: 'test-user-id' as UUID,
-                permissions: [],
+                permissions: []
                 status: 'active',
                 createdAt: Date.now(),
                 requiredTrustLevel: 50,
@@ -168,7 +168,7 @@ describe('Custodial Wallet Actions', () => {
                     name: 'Wallet 1',
                     ownerId: 'test-entity-id' as UUID,
                     network: 'base-sepolia',
-                    permissions: [],
+                    permissions: []
                     status: 'active',
                     createdAt: Date.now(),
                     requiredTrustLevel: 50,
@@ -184,7 +184,7 @@ describe('Custodial Wallet Actions', () => {
                     name: 'Wallet 2',
                     ownerId: 'test-entity-id' as UUID,
                     network: 'base-sepolia',
-                    permissions: [],
+                    permissions: []
                     status: 'active',
                     createdAt: Date.now(),
                     requiredTrustLevel: 50,

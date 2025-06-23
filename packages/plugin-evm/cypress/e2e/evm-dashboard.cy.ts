@@ -69,7 +69,7 @@ describe('EVM Dashboard', () => {
               balance: '2000000000000000000',
               uiAmount: 2.0,
             },
-            tokens: [],
+            tokens: []
           },
         },
       }).as('getBalance');
@@ -93,7 +93,7 @@ describe('EVM Dashboard', () => {
               balance: '0',
               uiAmount: 0,
             },
-            tokens: [],
+            tokens: []
           },
         },
       }).as('getBalance');
@@ -184,7 +184,7 @@ describe('EVM Dashboard', () => {
     it('should display empty state when no actions', () => {
       cy.intercept('GET', '**/api/agent/recent-actions', {
         statusCode: 200,
-        body: [],
+        body: []
       }).as('getRecentActions');
 
       cy.wait('@getRecentActions');
@@ -248,7 +248,7 @@ describe('EVM Dashboard', () => {
 
       cy.intercept('GET', '**/api/agent/recent-actions', {
         statusCode: 200,
-        body: [],
+        body: []
       }).as('getRecentActions');
 
       cy.wait(['@getBalance', '@getRecentActions']);

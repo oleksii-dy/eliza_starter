@@ -28,7 +28,7 @@ export const trustChangeEvaluator: Evaluator = {
         // Analyze behavior using LLM
         const analysis = await (llmEvaluator as any).analyzeBehavior(
           [content],
-          [],
+          []
           entityId
         );
 

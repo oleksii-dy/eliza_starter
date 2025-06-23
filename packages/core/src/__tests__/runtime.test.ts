@@ -123,7 +123,7 @@ const createMockAction = (name: string): Action => ({
   name,
   description: `Test action ${name}`,
   similes: [`like ${name}`],
-  examples: [],
+  examples: []
   handler: vi.fn().mockResolvedValue(undefined),
   validate: vi.fn().mockImplementation(async () => true),
 });
@@ -159,13 +159,13 @@ const mockCharacter: Character = {
   plugins: ['@elizaos/plugin-sql'],
   username: 'test',
   bio: ['Test bio'],
-  messageExamples: [], // Ensure required fields are present
-  postExamples: [],
-  topics: [],
+  messageExamples: [] // Ensure required fields are present
+  postExamples: []
+  topics: []
   style: {
-    all: [],
-    chat: [],
-    post: [],
+    all: []
+    chat: []
+    post: []
   },
   // Add other fields if your runtime logic depends on them
 };

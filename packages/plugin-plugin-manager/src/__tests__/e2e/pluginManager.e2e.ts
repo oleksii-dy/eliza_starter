@@ -55,10 +55,10 @@ describe('Plugin Manager E2E Tests', () => {
     // Create a mock runtime with minimal required properties
     runtime = {
       agentId: '00000000-0000-0000-0000-000000000000' as UUID,
-      plugins: [],
-      actions: [],
-      providers: [],
-      evaluators: [],
+      plugins: []
+      actions: []
+      providers: []
+      evaluators: []
       services: new Map(),
       events: new Map(),
 
@@ -95,7 +95,7 @@ describe('Plugin Manager E2E Tests', () => {
 
       // Other required properties
       databaseAdapter: new MockDatabaseAdapter() as any,
-      memory: [] as Memory[],
+      memory: [] as Memory[]
       messageManager: {} as any,
       descriptionManager: {} as any,
       loreManager: {} as any,
@@ -107,7 +107,7 @@ describe('Plugin Manager E2E Tests', () => {
         },
       } as any,
       state: {} as any,
-      goals: [] as any[],
+      goals: [] as any[]
     } as unknown as IAgentRuntime;
 
     // Initialize plugin manager
@@ -204,7 +204,7 @@ describe('Plugin Manager E2E Tests', () => {
                 data: { extractedText: text },
               };
             },
-            examples: [],
+            examples: []
           },
         ],
       };
@@ -280,10 +280,10 @@ describe('Plugin Manager E2E Tests', () => {
           {
             name: 'ACTION_1',
             description: 'Action from plugin 1',
-            similes: [],
+            similes: []
             validate: async () => true,
             handler: async () => ({ text: 'Plugin 1 action' }),
-            examples: [],
+            examples: []
           },
         ],
         providers: [
@@ -302,10 +302,10 @@ describe('Plugin Manager E2E Tests', () => {
           {
             name: 'ACTION_2',
             description: 'Action from plugin 2',
-            similes: [],
+            similes: []
             validate: async () => true,
             handler: async () => ({ text: 'Plugin 2 action' }),
-            examples: [],
+            examples: []
           },
         ],
         providers: [
@@ -353,7 +353,7 @@ describe('Plugin Manager E2E Tests', () => {
         version: '1.0.0',
         main: 'index.js',
         elizaos: {
-          requiredEnvVars: [],
+          requiredEnvVars: []
         },
       });
 
@@ -479,12 +479,12 @@ module.exports = {
           {
             name: 'ERROR_ACTION',
             description: 'Action that throws errors',
-            similes: [],
+            similes: []
             validate: async () => true,
             handler: async () => {
               throw new Error('Action execution failed');
             },
-            examples: [],
+            examples: []
           },
         ],
       };

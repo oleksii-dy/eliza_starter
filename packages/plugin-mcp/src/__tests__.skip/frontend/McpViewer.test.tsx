@@ -33,7 +33,7 @@ const mockServersResponse = {
         error: 'Connection failed',
         toolCount: 0,
         resourceCount: 0,
-        tools: [],
+        tools: []
         resources: []
       }
     ],
@@ -276,7 +276,7 @@ describe('McpViewer', () => {
       json: async () => ({
         success: true,
         data: {
-          servers: [],
+          servers: []
           totalServers: 0,
           connectedServers: 0
         }

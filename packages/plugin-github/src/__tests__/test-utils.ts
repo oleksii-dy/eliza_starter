@@ -28,23 +28,23 @@ function baseMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime 
   const defaultCharacter: Character = {
     name: 'TestAgent',
     bio: ['A test agent'],
-    messageExamples: [],
-    postExamples: [],
-    topics: [],
-    knowledge: [],
-    plugins: [],
+    messageExamples: []
+    postExamples: []
+    topics: []
+    knowledge: []
+    plugins: []
   };
 
   const baseRuntime = {
     agentId: 'test-agent-id' as UUID,
     character: overrides.character || defaultCharacter,
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [],
+    providers: []
+    actions: []
+    evaluators: []
+    plugins: []
     services: new Map(),
     events: new Map(),
-    routes: [],
+    routes: []
 
     // Core methods
     getSetting: vi.fn().mockReturnValue('test-value'),

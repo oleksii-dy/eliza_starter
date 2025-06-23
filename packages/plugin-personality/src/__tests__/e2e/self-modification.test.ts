@@ -18,9 +18,9 @@ describe('Self Modification E2E Tests', () => {
         topics: ['topic1', 'topic2'],
         system: 'Original system prompt'
       },
-      actions: [],
-      evaluators: [],
-      providers: [],
+      actions: []
+      evaluators: []
+      providers: []
       services: new Map(),
       getService: (name: string) => {
         if (name === 'character-file-manager') {
@@ -33,7 +33,7 @@ describe('Self Modification E2E Tests', () => {
         return null;
       },
       createMemory: async () => ({ id: asUUID(uuidv4()) }),
-      getMemories: async () => [],
+      getMemories: async () => []
       getSetting: () => 'admin-user-id',
       getCache: async () => null,
       setCache: async () => {},

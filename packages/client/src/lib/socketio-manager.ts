@@ -523,7 +523,7 @@ export class SocketIOManager extends EventAdapter {
     channelId: string,
     serverId: string,
     source: string,
-    attachments?: any[],
+    attachments?: any[]
     messageId?: string,
     metadata?: Record<string, any>
   ): Promise<void> {

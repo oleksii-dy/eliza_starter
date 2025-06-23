@@ -40,21 +40,21 @@ const SIMPLE_GOVERNOR_ABI = [
     type: 'function',
   },
   {
-    inputs: [],
+    inputs: []
     name: 'proposalCount',
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [],
+    inputs: []
     name: 'votingDelay',
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [],
+    inputs: []
     name: 'votingPeriod',
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
@@ -64,7 +64,7 @@ const SIMPLE_GOVERNOR_ABI = [
 
 const VOTE_TOKEN_ABI = [
   {
-    inputs: [],
+    inputs: []
     stateMutability: 'nonpayable',
     type: 'constructor',
   },
@@ -85,7 +85,7 @@ const VOTE_TOKEN_ABI = [
   {
     inputs: [{ name: 'delegatee', type: 'address' }],
     name: 'delegate',
-    outputs: [],
+    outputs: []
     stateMutability: 'nonpayable',
     type: 'function',
   },
@@ -95,7 +95,7 @@ const VOTE_TOKEN_ABI = [
       { name: 'amount', type: 'uint256' },
     ],
     name: 'mint',
-    outputs: [],
+    outputs: []
     stateMutability: 'nonpayable',
     type: 'function',
   },

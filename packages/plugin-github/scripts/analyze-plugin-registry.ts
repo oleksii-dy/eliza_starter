@@ -196,7 +196,7 @@ class PluginRegistryAnalyzer {
         packageJson,
         lastUpdated: repoData.updated_at,
         stars: repoData.stargazers_count,
-        topics: repoData.topics || [],
+        topics: repoData.topics || []
       };
       
       // Save plugin data to JSON file
@@ -225,7 +225,7 @@ class PluginRegistryAnalyzer {
     return missingPlugins;
   }
 
-  async createPullRequest(missingPlugins: string[], pluginData: Map<string, PluginInfo>) {
+  async createPullRequest(missingPlugins: string[] pluginData: Map<string, PluginInfo>) {
     if (missingPlugins.length === 0) {
       console.log('\n✅ No missing plugins to add');
       return;

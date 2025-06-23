@@ -198,7 +198,7 @@ describe('Basic Server Functionality', () => {
       const createServerConfig = (options: ServerOptions = {}) => {
         return {
           dataDir: options.dataDir || './default-data',
-          middlewares: options.middlewares || [],
+          middlewares: options.middlewares || []
           postgresUrl: options.postgresUrl || null,
           hasCustomDataDir: !!options.dataDir,
           hasCustomDb: !!options.postgresUrl,

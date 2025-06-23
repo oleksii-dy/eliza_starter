@@ -37,8 +37,8 @@ const finalBenchmarkCases: FinalBenchmarkCase[] = [
       minSteps: 0,
       maxSteps: 0,
       expectedStakeholders: ['user'],
-      expectedConstraints: [],
-      expectedActions: [],
+      expectedConstraints: []
+      expectedActions: []
       successCriteria: ['classification_accurate']
     }
   },
@@ -53,7 +53,7 @@ const finalBenchmarkCases: FinalBenchmarkCase[] = [
       minSteps: 2,
       maxSteps: 5,
       expectedStakeholders: ['user'],
-      expectedConstraints: [],
+      expectedConstraints: []
       expectedActions: ['CREATE_ENHANCED_PLAN', 'EXECUTE_ENHANCED_PLAN'],
       successCriteria: ['plan_created', 'research_completed', 'analysis_performed', 'document_created']
     }

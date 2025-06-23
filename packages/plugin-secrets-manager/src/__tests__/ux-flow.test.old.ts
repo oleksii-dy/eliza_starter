@@ -39,7 +39,7 @@ const createMockRuntime = (): IAgentRuntime => {
       services.set(ServiceClass.serviceType || ServiceClass.serviceName, instance);
       return instance;
     }),
-    plugins: [],
+    plugins: []
     db: {
       getComponents: vi.fn().mockResolvedValue([]),
       createComponent: vi.fn().mockResolvedValue(true),

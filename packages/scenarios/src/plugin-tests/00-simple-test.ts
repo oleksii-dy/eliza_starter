@@ -15,7 +15,7 @@ export const simpleTestScenario: Scenario = {
       role: 'subject',
       bio: 'A simple test agent',
       system: 'You are a helpful test agent. When someone greets you, respond politely.',
-      plugins: [],
+      plugins: []
       script: { steps: [] },
     },
     {

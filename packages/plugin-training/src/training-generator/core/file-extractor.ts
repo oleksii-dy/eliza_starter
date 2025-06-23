@@ -385,7 +385,7 @@ export class FileExtractor {
   /**
    * Filter files by criteria
    */
-  filterFiles(files: ExtractedFile[], criteria: {
+  filterFiles(files: ExtractedFile[] criteria: {
     language?: string;
     purpose?: string;
     complexity?: 'simple' | 'medium' | 'complex';

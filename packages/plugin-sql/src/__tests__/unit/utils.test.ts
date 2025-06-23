@@ -68,18 +68,17 @@ describe('Utils', () => {
       expect(result).toBe('/env/pglite/dir');
     });
 
-    it('should use fallback dir if no dir or env var', () => {
-      // Skip this test since the function loads .env files and we can't prevent that
-      // in the current environment. The behavior is correct but the test environment
-      // has PGLITE_DATA_DIR=:memory: which overrides the fallback.
-      expect(true).toBe(true);
+    it('should handle memory directive from environment', () => {
+      // Test the actual behavior in test environment with :memory:
+      process.env.PGLITE_DATA_DIR = ':memory:';
+      const result = resolvePgliteDir();
+      expect(result).toBe(':memory:');
     });
 
-    it('should use default path if no arguments or env var', () => {
-      // Skip this test since the function loads .env files and we can't prevent that
-      // in the current environment. The behavior is correct but the test environment
-      // has PGLITE_DATA_DIR=:memory: which overrides the default.
-      expect(true).toBe(true);
+    it('should handle absolute paths correctly', () => {
+      const testPath = '/absolute/test/path';
+      const result = resolvePgliteDir(testPath);
+      expect(result).toBe(testPath);
     });
 
     it('should expand tilde paths', () => {

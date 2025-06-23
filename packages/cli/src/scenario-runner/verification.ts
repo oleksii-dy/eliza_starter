@@ -58,7 +58,7 @@ export class ScenarioVerifier {
             passed: false,
             score: 0,
             reason: `LLM verification unavailable: ${error instanceof Error ? error.message : String(error)}`,
-            evidence: [],
+            evidence: []
           });
         }
       }

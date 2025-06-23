@@ -81,8 +81,8 @@ Always provide clear explanations, proactive guidance, and optimal user experien
       'workflow optimization expert',
       'integration specialist',
     ],
-    messageExamples: [],
-    postExamples: [],
+    messageExamples: []
+    postExamples: []
     topics: [
       'plugin development',
       'security management',
@@ -96,7 +96,7 @@ Always provide clear explanations, proactive guidance, and optimal user experien
       chat: ['clear', 'educational', 'supportive', 'efficient'],
       post: ['informative', 'structured', 'actionable'],
     },
-    plugins: [],
+    plugins: []
   };
 }
 

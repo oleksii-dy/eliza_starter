@@ -35,7 +35,7 @@ export class DatasetProcessor {
    * Process conversations into training dataset
    */
   async processConversations(
-    conversations: TrainingConversation[],
+    conversations: TrainingConversation[]
     config: TrainingConfig
   ): Promise<string> {
     elizaLogger.info(`Processing ${conversations.length} conversations into dataset`);
@@ -65,7 +65,7 @@ export class DatasetProcessor {
   }
 
   private async prepareConversations(
-    conversations: TrainingConversation[],
+    conversations: TrainingConversation[]
     config: TrainingConfig
   ): Promise<TrainingConversation[]> {
     let prepared = [...conversations];
@@ -119,7 +119,7 @@ export class DatasetProcessor {
   }
 
   private async generateTrajectories(
-    conversations: TrainingConversation[],
+    conversations: TrainingConversation[]
     config: TrainingConfig
   ): Promise<TrainingTrajectory[]> {
     elizaLogger.info('Generating RLAIF trajectories');
@@ -186,7 +186,7 @@ export class DatasetProcessor {
         id: `traj-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         prompt: pair.user,
         responses,
-        scores: [], // Will be filled by RLAIF judging
+        scores: [] // Will be filled by RLAIF judging
         metadata: {
           domain: this.inferDomain(pair.user),
           difficulty: this.estimateDifficulty(pair.user),
@@ -304,7 +304,7 @@ export class DatasetProcessor {
   }
 
   private splitDataset(
-    trajectories: TrainingTrajectory[],
+    trajectories: TrainingTrajectory[]
     splitRatio: { train: number; validation: number; test: number }
   ) {
     // Shuffle trajectories
@@ -359,12 +359,12 @@ export class DatasetProcessor {
     return datasetDir;
   }
 
-  private async saveAsJSONL(data: TrainingTrajectory[], filepath: string): Promise<void> {
+  private async saveAsJSONL(data: TrainingTrajectory[] filepath: string): Promise<void> {
     const lines = data.map(item => JSON.stringify(item)).join('\\n');
     await fs.writeFile(filepath, lines, 'utf-8');
   }
 
-  private async saveAsCSV(data: TrainingTrajectory[], filepath: string): Promise<void> {
+  private async saveAsCSV(data: TrainingTrajectory[] filepath: string): Promise<void> {
     // Convert to flat structure for CSV
     const csvData = data.map(trajectory => ({
       id: trajectory.id,
@@ -388,7 +388,7 @@ export class DatasetProcessor {
     await fs.writeFile(filepath, header + rows, 'utf-8');
   }
 
-  private async saveAsParquet(data: TrainingTrajectory[], filepath: string): Promise<void> {
+  private async saveAsParquet(data: TrainingTrajectory[] filepath: string): Promise<void> {
     // For now, save as JSON and note that parquet conversion would need additional library
     elizaLogger.warn('Parquet format not yet implemented, saving as JSON');
     const jsonPath = filepath.replace('.parquet', '.json');

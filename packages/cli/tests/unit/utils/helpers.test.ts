@@ -151,7 +151,7 @@ describe('helpers', () => {
     it('should handle empty sections gracefully', () => {
       const agent: Partial<Agent> = {
         name: 'Test Agent',
-        bio: [],
+        bio: []
         topics: undefined,
       };
 

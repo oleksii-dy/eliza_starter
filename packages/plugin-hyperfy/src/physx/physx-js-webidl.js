@@ -1366,7 +1366,7 @@ var ASM_CONSTS = {
     ;
   }
 
-  var printCharBuffers = [null,[],[]];
+  var printCharBuffers = [null,[][]];
   
   var printChar = (stream, curr) => {
       var buffer = printCharBuffers[stream];
@@ -5733,7 +5733,7 @@ var ensureCache = {
   buffer: 0,  // the main buffer of temporary storage
   size: 0,   // the size of buffer
   pos: 0,    // the next free offset in buffer
-  temps: [], // extra allocations
+  temps: [] // extra allocations
   needed: 0, // the total size we need next time
 
   prepare() {

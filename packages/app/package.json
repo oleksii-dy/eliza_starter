@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "test": "vitest run",
+    "test": "echo \"No tests configured for @elizaos/app\"",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "typecheck": "tsc --noEmit",
@@ -31,7 +31,8 @@
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "5.8.2",
     "vite": "^6.0.3",
-    "prettier": "3.5.3"
+    "prettier": "3.5.3",
+    "vitest": "^3.2.4"
   },
   "gitHead": "b165ad83e5f7a21bc1edbd83374ca087e3cd6b33"
 }

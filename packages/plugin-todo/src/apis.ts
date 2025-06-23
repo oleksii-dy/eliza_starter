@@ -179,7 +179,7 @@ export const routes: Route[] = [
             rooms: rooms.map((room) => ({
               roomId: room.id,
               roomName: room.name || `Room ${room.id.substring(0, 6)}`,
-              tasks: tasksByRoom.get(room.id) || [],
+              tasks: tasksByRoom.get(room.id) || []
             })),
           };
         });

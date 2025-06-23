@@ -5,7 +5,7 @@ import { DIMENSION_MAP, type EmbeddingDimensionColumn } from '../schema/embeddin
 import type { PGliteClientManager } from './manager';
 import { sql } from 'drizzle-orm';
 import { connectionRegistry } from '../connection-registry';
-import { UnifiedMigrator, createMigrator } from '../unified-migrator';
+import { UnifiedMigrator } from '../unified-migrator';
 import { setDatabaseType } from '../schema/factory';
 import * as schema from '../schema';
 
@@ -74,16 +74,23 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
   async runMigrations(): Promise<void> {
     logger.info(`[PgliteDatabaseAdapter] Starting unified migration process`);
 
+    // Ensure db instance is properly initialized before creating migrator
+    if (!this.db) {
+      this.db = drizzle(this.manager.getConnection() as any, { schema });
+    }
+
     if (!this.migrator) {
-      this.migrator = await createMigrator(this.agentId, 'pglite', this.dataDir);
+      // Create migrator directly with the database instance
+      this.migrator = new UnifiedMigrator(this.db, 'pglite', this.agentId);
     }
 
     await this.migrator.initialize();
 
     // Verify tables were actually created before marking complete
     try {
-      await this.db.execute(sql`SELECT 1 FROM agents WHERE 1=0`);
-      await this.db.execute(sql`SELECT 1 FROM entities WHERE 1=0`);
+      // Use raw SQL queries for verification to avoid any schema-related issues
+      await this.db.execute(sql.raw(`SELECT 1 FROM agents WHERE 1=0`));
+      await this.db.execute(sql.raw(`SELECT 1 FROM entities WHERE 1=0`));
       this.migrationsComplete = true;
       logger.info(`[PgliteDatabaseAdapter] Unified migration completed and verified`);
     } catch (error) {
@@ -104,13 +111,13 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
     if (this.isClosed) {
       throw new Error('Adapter is closed');
     }
-    
+
     if (this.manager.isShuttingDown()) {
       logger.warn('Database is shutting down, operation may fail');
       // Still execute the operation to maintain type contract
       // The operation itself should handle any errors appropriately
     }
-    
+
     // Ensure db is initialized
     if (!this.db) {
       try {
@@ -120,7 +127,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
         // Manager not initialized yet, operation will fail appropriately
       }
     }
-    
+
     return operation();
   }
 
@@ -143,7 +150,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
 
     // Always ensure the manager is properly initialized first
     await this.manager.initialize();
-    
+
     // Now create the drizzle instance with the schema after manager is initialized
     if (!this.db) {
       this.db = drizzle(this.manager.getConnection() as any, { schema });
@@ -229,7 +236,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
       if (this.isClosed) {
         return false;
       }
-      
+
       if (this.manager.isShuttingDown()) {
         return false;
       }

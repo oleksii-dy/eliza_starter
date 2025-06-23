@@ -872,8 +872,8 @@ export class VisionService extends Service {
       ...(this.lastSceneDescription || {
         timestamp: Date.now(),
         description: '',
-        objects: [],
-        people: [],
+        objects: []
+        people: []
         sceneChanged: false,
         changePercentage: 0,
       }),
@@ -883,7 +883,7 @@ export class VisionService extends Service {
         activeTile: this.screenCapture.getActiveTile()?.analysis,
         gridSummary: '',
         focusedApp: '',
-        uiElements: [],
+        uiElements: []
       },
     };
     

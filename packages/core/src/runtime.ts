@@ -1081,7 +1081,7 @@ export class AgentRuntime implements IAgentRuntime {
 
   async processActions(
     message: Memory,
-    responses: Memory[],
+    responses: Memory[]
     state?: State,
     callback?: HandlerCallback
   ): Promise<void> {
@@ -1159,7 +1159,7 @@ export class AgentRuntime implements IAgentRuntime {
           this.currentActionContext = {
             actionName: action.name,
             actionId: actionId,
-            prompts: [],
+            prompts: []
           };
 
           // Create action context
@@ -1248,7 +1248,7 @@ export class AgentRuntime implements IAgentRuntime {
               responses,
               result: isLegacyReturn ? { legacy: result } : actionResult,
               isLegacyReturn,
-              prompts: this.currentActionContext?.prompts || [],
+              prompts: this.currentActionContext?.prompts || []
               promptCount: this.currentActionContext?.prompts.length || 0,
             },
           });
@@ -1376,8 +1376,8 @@ export class AgentRuntime implements IAgentRuntime {
 
   // highly SQL optimized queries
   async ensureConnections(
-    entities: any[],
-    rooms: any[],
+    entities: any[]
+    rooms: any[]
     source: string,
     world: any
   ): Promise<void> {
@@ -1399,8 +1399,8 @@ export class AgentRuntime implements IAgentRuntime {
     const firstRoom = rooms[0];
 
     // Helper function for chunking arrays
-    const chunkArray = (arr: any[], size: number) =>
-      arr.reduce((chunks: any[][], item: any, i: number) => {
+    const chunkArray = (arr: any[] size: number) =>
+      arr.reduce((chunks: any[][] item: any, i: number) => {
         if (i % size === 0) chunks.push([]);
         chunks[chunks.length - 1].push(item);
         return chunks;
@@ -1662,7 +1662,7 @@ export class AgentRuntime implements IAgentRuntime {
     return await this.adapter.addParticipantsRoom([entityId], roomId);
   }
 
-  async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
+  async addParticipantsRoom(entityIds: UUID[] roomId: UUID): Promise<boolean> {
     return await this.adapter.addParticipantsRoom(entityIds, roomId);
   }
 
@@ -2156,7 +2156,7 @@ export class AgentRuntime implements IAgentRuntime {
     return this.events.get(event);
   }
 
-  async emitEvent(event: string | string[], params: any) {
+  async emitEvent(event: string | string[] params: any) {
     const events = Array.isArray(event) ? event : [event];
     for (const eventName of events) {
       const eventHandlers = this.events.get(eventName);
@@ -2453,7 +2453,7 @@ export class AgentRuntime implements IAgentRuntime {
   async getMemoryById(id: UUID): Promise<Memory | null> {
     return await this.adapter.getMemoryById(id);
   }
-  async getMemoriesByIds(ids: UUID[], tableName?: string): Promise<Memory[]> {
+  async getMemoriesByIds(ids: UUID[] tableName?: string): Promise<Memory[]> {
     return await this.adapter.getMemoriesByIds(ids, tableName);
   }
   async getMemoriesByRoomIds(params: {

@@ -57,7 +57,7 @@ describe('WebSocket Agent End-to-End Tests', () => {
       name: 'WebSocket Test Agent',
       bio: ['An agent that responds through WebSocket'],
       topics: ['testing', 'websockets'],
-      plugins: [],
+      plugins: []
       system: 'You are a helpful test agent. Always respond promptly to messages.',
       settings: {
         secrets: {},

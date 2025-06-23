@@ -33,7 +33,7 @@ export const runDistributedSWEBenchAction: Action = {
       {
         name: 'assistant',
         content: {
-          text: 'Starting distributed SWE-bench evaluation across all languages with 10 instances. This will spin up Docker containers for TypeScript, JavaScript, Java, Go, Rust, C, and C++. I\'ll monitor the progress...',
+          text: "Starting distributed SWE-bench evaluation across all languages with 10 instances. This will spin up Docker containers for TypeScript, JavaScript, Java, Go, Rust, C, and C++. I'll monitor the progress...",
           source: 'assistant',
         },
       },
@@ -58,7 +58,7 @@ export const runDistributedSWEBenchAction: Action = {
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const text = message.content.text?.toLowerCase() || '';
-    
+
     // Check for distributed/docker/multi-language keywords
     const distributedKeywords = [
       'distributed',
@@ -71,10 +71,10 @@ export const runDistributedSWEBenchAction: Action = {
       'rust',
       'c++',
     ];
-    
+
     const hasSWEBench = text.includes('swe-bench') || text.includes('swe bench');
-    const hasDistributed = distributedKeywords.some(keyword => text.includes(keyword));
-    
+    const hasDistributed = distributedKeywords.some((keyword) => text.includes(keyword));
+
     return hasSWEBench && hasDistributed;
   },
 
@@ -132,7 +132,7 @@ export const runDistributedSWEBenchAction: Action = {
       // Start infrastructure if needed
       if (!text.includes('skip-infra')) {
         elizaLogger.info('[DISTRIBUTED-SWE-BENCH] Starting infrastructure...');
-        
+
         if (callback) {
           await callback({
             text: '🐳 Starting Docker infrastructure for distributed SWE-bench evaluation...\n\nThis will:\n- Build base Docker image with all language toolchains\n- Start 10 containers (2 Node.js, 4 Compiled, 2 JVM, 2 spare)\n- Launch Redis queue and bridge server\n- Set up monitoring with Prometheus/Grafana\n\nPlease wait, this may take a few minutes...',
@@ -168,7 +168,7 @@ export const runDistributedSWEBenchAction: Action = {
       return { text: responseText };
     } catch (error) {
       elizaLogger.error('[DISTRIBUTED-SWE-BENCH] Error:', error);
-      
+
       const errorMessage = `Failed to run distributed SWE-bench: ${
         error instanceof Error ? error.message : String(error)
       }`;
@@ -196,7 +196,7 @@ function parseDistributedOptions(text: string): BenchmarkOptions {
 
   // Parse language filter
   const languages: string[] = [];
-  
+
   if (text.includes('all language')) {
     // Don't set filter to run all languages
   } else {
@@ -207,7 +207,7 @@ function parseDistributedOptions(text: string): BenchmarkOptions {
     if (text.includes('rust')) languages.push('Rust');
     if (text.includes('c++') || text.includes('cpp')) languages.push('C++');
     if (text.includes(' c ') || text.includes(' c,')) languages.push('C');
-    
+
     if (languages.length > 0) {
       options.language_filter = languages as any;
     }
@@ -216,7 +216,7 @@ function parseDistributedOptions(text: string): BenchmarkOptions {
   // Parse repository filter
   const repoMatch = text.match(/repo(?:sitory)?:\s*([^\s,]+(?:,\s*[^\s,]+)*)/i);
   if (repoMatch) {
-    options.repo_filter = repoMatch[1].split(',').map(r => r.trim());
+    options.repo_filter = repoMatch[1].split(',').map((r) => r.trim());
   }
 
   // Other options
@@ -232,7 +232,7 @@ function formatDistributedReport(report: any): string {
 
   let response = `✅ **Distributed SWE-bench Evaluation Complete**\n\n`;
   response += `**Duration**: ${duration} minutes\n\n`;
-  
+
   response += `**Overall Results**:\n`;
   response += `- Total Instances: ${results.total_instances}\n`;
   response += `- Resolved: ${results.resolved_instances}\n`;
@@ -270,7 +270,7 @@ function formatStatsResponse(stats: any): string {
   }
 
   let response = `📊 **Distributed SWE-bench Status**\n\n`;
-  
+
   if (stats.bridge_status) {
     response += `**Bridge Server**:\n`;
     response += `- Status: ${stats.bridge_status.status}\n`;
@@ -280,17 +280,21 @@ function formatStatsResponse(stats: any): string {
 
   if (stats.containers && Array.isArray(stats.containers)) {
     response += `**Containers** (${stats.containers.length} total):\n`;
-    
+
     const byType: Record<string, number> = {};
     const byStatus: Record<string, number> = {};
-    
+
     for (const container of stats.containers) {
       byType[container.languageType] = (byType[container.languageType] || 0) + 1;
       byStatus[container.status] = (byStatus[container.status] || 0) + 1;
     }
 
-    response += `By Type: ${Object.entries(byType).map(([type, count]) => `${type}:${count}`).join(', ')}\n`;
-    response += `By Status: ${Object.entries(byStatus).map(([status, count]) => `${status}:${count}`).join(', ')}\n\n`;
+    response += `By Type: ${Object.entries(byType)
+      .map(([type, count]) => `${type}:${count}`)
+      .join(', ')}\n`;
+    response += `By Status: ${Object.entries(byStatus)
+      .map(([status, count]) => `${status}:${count}`)
+      .join(', ')}\n\n`;
 
     // Show individual containers
     for (const container of stats.containers.slice(0, 5)) {
@@ -300,11 +304,11 @@ function formatStatsResponse(stats: any): string {
       }
       response += '\n';
     }
-    
+
     if (stats.containers.length > 5) {
       response += `... and ${stats.containers.length - 5} more\n`;
     }
   }
 
   return response;
-} 
+}

@@ -20,7 +20,7 @@ import { GoalDataServiceWrapper } from './services/goalDataService.js';
 import { goalSchema } from './schema.js';
 
 // Import tests
-import { GoalsPluginE2ETestSuite } from './tests.js';
+import { GoalsPluginE2ETestSuite } from './tests';
 
 /**
  * The GoalsPlugin provides goal management functionality,

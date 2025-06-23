@@ -29,7 +29,7 @@ describe('TestRunner Plugin Isolation', () => {
     mockRuntime = {
       agentId: 'test-agent-id',
       character: { name: 'Test Agent', bio: 'Test bio' } as Character,
-      plugins: [],
+      plugins: []
     } as unknown as IAgentRuntime;
   });
 
@@ -335,7 +335,7 @@ describe('TestRunner Plugin Isolation', () => {
 
       const projectAgent: ProjectAgent = {
         character: { name: 'Eliza', bio: 'Test bio' } as Character,
-        plugins: [],
+        plugins: []
       };
 
       const testRunner = new TestRunner(mockRuntime, projectAgent);

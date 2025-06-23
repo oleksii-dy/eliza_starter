@@ -27,11 +27,11 @@ async function runSWEBenchTest() {
     character: {
       name: 'SWEBenchAgent',
       bio: ['Agent for SWE-bench evaluation'],
-      knowledge: [],
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      plugins: [],
+      knowledge: []
+      messageExamples: []
+      postExamples: []
+      topics: []
+      plugins: []
     },
     logger: {
       info: console.log,

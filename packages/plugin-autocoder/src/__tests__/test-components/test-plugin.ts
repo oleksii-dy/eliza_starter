@@ -7,8 +7,8 @@ export const testPlugin: Plugin = {
   description: 'Test plugin for dynamic loading',
   actions: [TEST_ACTION],
   providers: [testProvider],
-  evaluators: [],
-  services: [],
+  evaluators: []
+  services: []
 };
 
 export default testPlugin;

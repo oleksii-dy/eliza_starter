@@ -42,7 +42,7 @@ describe('Scenario Command Module', () => {
         id: 'test-scenario',
         name: 'Test Scenario',
         description: 'Test',
-        actors: [],
+        actors: []
         setup: {},
         execution: {},
         verification: { rules: [] },
@@ -79,7 +79,7 @@ describe('Scenario Command Module', () => {
           id: 'ts-scenario',
           name: 'TS Scenario',
           description: 'TypeScript scenario',
-          actors: [],
+          actors: []
           setup: {},
           execution: {},
           verification: { rules: [] },
@@ -167,7 +167,7 @@ describe('Scenario Command Module', () => {
           return JSON.stringify({
             id: 'scenario1',
             name: 'Scenario 1',
-            actors: [],
+            actors: []
             setup: {},
             execution: {},
             verification: { rules: [] },
@@ -181,7 +181,7 @@ describe('Scenario Command Module', () => {
         default: {
           id: 'scenario2',
           name: 'Scenario 2',
-          actors: [],
+          actors: []
           setup: {},
           execution: {},
           verification: { rules: [] },
@@ -207,7 +207,7 @@ describe('Scenario Command Module', () => {
                 scenarios.push({
                   id: 'scenario2',
                   name: 'Scenario 2',
-                  actors: [],
+                  actors: []
                   setup: {},
                   execution: {},
                   verification: { rules: [] },
@@ -254,7 +254,7 @@ describe('Scenario Command Module', () => {
         JSON.stringify({
           id: 'single-scenario',
           name: 'Single Scenario',
-          actors: [],
+          actors: []
           setup: {},
           execution: {},
           verification: { rules: [] },
@@ -293,7 +293,7 @@ describe('Scenario Command Module', () => {
             id: 'auth-test',
             name: 'Authentication Test',
             tags: ['auth'],
-            actors: [],
+            actors: []
             setup: {},
             execution: {},
             verification: { rules: [] },
@@ -303,7 +303,7 @@ describe('Scenario Command Module', () => {
           id: 'other-test',
           name: 'Other Test',
           tags: ['other'],
-          actors: [],
+          actors: []
           setup: {},
           execution: {},
           verification: { rules: [] },
@@ -316,7 +316,7 @@ describe('Scenario Command Module', () => {
             id: 'auth-test',
             name: 'Authentication Test',
             tags: ['auth'],
-            actors: [],
+            actors: []
             setup: {},
             execution: {},
             verification: { rules: [] },
@@ -325,7 +325,7 @@ describe('Scenario Command Module', () => {
             id: 'other-test',
             name: 'Other Test',
             tags: ['other'],
-            actors: [],
+            actors: []
             setup: {},
             execution: {},
             verification: { rules: [] },
@@ -363,7 +363,7 @@ describe('Scenario Command Module', () => {
         JSON.stringify({
           id: 'default-scenario',
           name: 'Default Scenario',
-          actors: [],
+          actors: []
           setup: {},
           execution: {},
           verification: { rules: [] },
@@ -376,7 +376,7 @@ describe('Scenario Command Module', () => {
           return [{
             id: 'default-scenario',
             name: 'Default Scenario',
-            actors: [],
+            actors: []
             setup: {},
             execution: {},
             verification: { rules: [] },

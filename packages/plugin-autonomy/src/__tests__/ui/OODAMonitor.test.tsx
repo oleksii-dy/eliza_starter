@@ -80,12 +80,12 @@ describe('OODAMonitor Component', () => {
         phase: OODAPhase.ACTING,
         startTime: Date.now() - 10000,
         endTime: null,
-        observations: [],
-        orientation: { currentGoals: [], strategies: [], worldModel: {} },
-        decisions: [],
-        actions: [],
-        reflections: [],
-        errors: [],
+        observations: []
+        orientation: { currentGoals: [] strategies: [] worldModel: {} },
+        decisions: []
+        actions: []
+        reflections: []
+        errors: []
       });
     });
 
@@ -256,16 +256,16 @@ describe('OODAMonitor Component', () => {
       phase: OODAPhase.ORIENTING,
       startTime: Date.now() - 10000,
       endTime: null,
-      observations: [],
+      observations: []
       orientation: {
-        currentGoals: [],
-        strategies: [],
+        currentGoals: []
+        strategies: []
         worldModel: {},
       },
-      decisions: [],
-      actions: [],
-      reflections: [],
-      errors: [],
+      decisions: []
+      actions: []
+      reflections: []
+      errors: []
     };
 
     it('should display run ID when context received', async () => {
@@ -312,12 +312,12 @@ describe('OODAMonitor Component', () => {
           phase,
           startTime: Date.now(),
           endTime: null,
-          observations: [],
-          orientation: { currentGoals: [], strategies: [], worldModel: {} },
-          decisions: [],
-          actions: [],
-          reflections: [],
-          errors: [],
+          observations: []
+          orientation: { currentGoals: [] strategies: [] worldModel: {} },
+          decisions: []
+          actions: []
+          reflections: []
+          errors: []
         };
 
         render(<OODAMonitor />);
@@ -383,7 +383,7 @@ describe('OODAMonitor Component', () => {
       phase: OODAPhase.ORIENTING,
       startTime: Date.now() - 10000,
       endTime: null,
-      observations: [],
+      observations: []
       orientation: {
         currentGoals: [
           {
@@ -405,13 +405,13 @@ describe('OODAMonitor Component', () => {
             createdAt: Date.now() - 5000,
           },
         ],
-        strategies: [],
+        strategies: []
         worldModel: {},
       },
-      decisions: [],
-      actions: [],
-      reflections: [],
-      errors: [],
+      decisions: []
+      actions: []
+      reflections: []
+      errors: []
     };
 
     it('should display goals with descriptions and priorities', async () => {
@@ -445,14 +445,14 @@ describe('OODAMonitor Component', () => {
         },
       ],
       orientation: {
-        currentGoals: [],
-        strategies: [],
+        currentGoals: []
+        strategies: []
         worldModel: {},
       },
-      decisions: [],
-      actions: [],
-      reflections: [],
-      errors: [],
+      decisions: []
+      actions: []
+      reflections: []
+      errors: []
     };
 
     it('should display recent observations', async () => {
@@ -474,13 +474,13 @@ describe('OODAMonitor Component', () => {
       phase: OODAPhase.ACTING,
       startTime: Date.now() - 10000,
       endTime: null,
-      observations: [],
+      observations: []
       orientation: {
-        currentGoals: [],
-        strategies: [],
+        currentGoals: []
+        strategies: []
         worldModel: {},
       },
-      decisions: [],
+      decisions: []
       actions: [
         {
           id: 'action-1',
@@ -492,8 +492,8 @@ describe('OODAMonitor Component', () => {
           result: { success: true },
         },
       ],
-      reflections: [],
-      errors: [],
+      reflections: []
+      errors: []
     };
 
     it('should display recent actions with status', async () => {
@@ -515,15 +515,15 @@ describe('OODAMonitor Component', () => {
       phase: OODAPhase.ACTING,
       startTime: Date.now() - 10000,
       endTime: null,
-      observations: [],
+      observations: []
       orientation: {
-        currentGoals: [],
-        strategies: [],
+        currentGoals: []
+        strategies: []
         worldModel: {},
       },
-      decisions: [],
-      actions: [],
-      reflections: [],
+      decisions: []
+      actions: []
+      reflections: []
       errors: [
         {
           message: 'Test error occurred',
@@ -550,12 +550,12 @@ describe('OODAMonitor Component', () => {
         phase: OODAPhase.ACTING,
         startTime: Date.now() - 10000,
         endTime: null,
-        observations: [],
-        orientation: { currentGoals: [], strategies: [], worldModel: {} },
-        decisions: [],
-        actions: [],
-        reflections: [],
-        errors: [],
+        observations: []
+        orientation: { currentGoals: [] strategies: [] worldModel: {} },
+        decisions: []
+        actions: []
+        reflections: []
+        errors: []
       };
 
       render(<OODAMonitor />);
@@ -580,12 +580,12 @@ describe('OODAMonitor Component', () => {
         ...ctx,
         startTime: Date.now(),
         endTime: null,
-        observations: [],
-        orientation: { currentGoals: [], strategies: [], worldModel: {} },
-        decisions: [],
-        actions: [],
-        reflections: [],
-        errors: [],
+        observations: []
+        orientation: { currentGoals: [] strategies: [] worldModel: {} },
+        decisions: []
+        actions: []
+        reflections: []
+        errors: []
       }));
 
       // Connect first

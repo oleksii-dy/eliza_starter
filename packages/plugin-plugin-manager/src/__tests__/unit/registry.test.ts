@@ -16,10 +16,10 @@ describe('RegistryService', () => {
       getSetting: (key: string) => process.env[key],
       getService: (name: string) => null,
       services: new Map(),
-      plugins: [],
-      actions: [],
-      providers: [],
-      evaluators: [],
+      plugins: []
+      actions: []
+      providers: []
+      evaluators: []
     } as any;
 
     pluginManagerService = await PluginManagerService.start(mockRuntime);

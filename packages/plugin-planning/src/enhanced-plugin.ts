@@ -334,7 +334,7 @@ export const enhancedExecutePlanAction: Action = {
     };
   },
 
-  examples: [],
+  examples: []
 };
 
 // Helper functions
@@ -356,7 +356,7 @@ function getAvailableProviders(runtime: any): string[] {
   }));
 }
 
-function createPlanningPrompt(userRequest: string, analysis: any, availableActions: any[], availableProviders: any[]): string {
+function createPlanningPrompt(userRequest: string, analysis: any, availableActions: any[] availableProviders: any[]): string {
   return `You are an intelligent planning assistant. Create a comprehensive strategic plan for the following request:
 
 USER REQUEST: "${userRequest}"
@@ -419,10 +419,10 @@ function parsePlanFromLLMResponse(response: string, userRequest: string): any {
           { number: 1, action: 'ANALYZE_REQUEST', description: 'Analyze the request' },
           { number: 2, action: 'EXECUTE_ACTION', description: 'Execute the required actions' }
         ],
-        stakeholders: planData.stakeholders || [],
-        constraints: planData.constraints || [],
-        risks: planData.risks || [],
-        success_criteria: planData.success_criteria || [],
+        stakeholders: planData.stakeholders || []
+        constraints: planData.constraints || []
+        risks: planData.risks || []
+        success_criteria: planData.success_criteria || []
         estimated_duration: planData.estimated_duration || 'Unknown',
         resources_needed: planData.resources_needed || []
       };
@@ -441,8 +441,8 @@ function parsePlanFromLLMResponse(response: string, userRequest: string): any {
       { number: 3, action: 'PROVIDE_RESPONSE', description: 'Provide results to user' }
     ],
     stakeholders: ['user'],
-    constraints: [],
-    risks: [],
+    constraints: []
+    risks: []
     success_criteria: ['request completed'],
     estimated_duration: '15 minutes',
     resources_needed: ['system access']
@@ -511,7 +511,7 @@ function fallbackPlanning(userRequest: string, analysis: any, callback: any): an
     complexity: analysis.complexity || 'medium',
     steps: steps,
     stakeholders: ['user'],
-    constraints: [],
+    constraints: []
     risks: []
   };
 
@@ -539,9 +539,9 @@ export const enhancedPlanningPlugin: Plugin = {
 
   actions: [enhancedCreatePlanAction, enhancedExecutePlanAction],
 
-  services: [],
+  services: []
   
-  evaluators: [],
+  evaluators: []
 };
 
 export default enhancedPlanningPlugin;

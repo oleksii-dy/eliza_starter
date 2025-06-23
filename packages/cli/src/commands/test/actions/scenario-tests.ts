@@ -36,7 +36,7 @@ export async function runScenarioTests(
   const result: ScenarioTestResult = {
     success: false,
     failed: false,
-    results: [],
+    results: []
     environmentValidations: new Map(),
     skippedScenarios: []
   };
@@ -171,7 +171,7 @@ export async function runScenarioTests(
  */
 async function executePluginScenarios(
   pluginName: string,
-  scenarios: PluginScenario[],
+  scenarios: PluginScenario[]
   runtime: any, // IAgentRuntime
   options: TestCommandOptions
 ): Promise<PluginTestResults> {
@@ -214,8 +214,8 @@ async function executePluginScenarios(
           responseLatency: { min: 0, max: 0, average: 0, p95: 0 },
           memoryUsage: { peak: 0, average: 0, operations: 0 }
         },
-        verificationResults: [],
-        transcript: [],
+        verificationResults: []
+        transcript: []
         errors: [error instanceof Error ? error.message : String(error)]
       });
     }
@@ -226,9 +226,9 @@ async function executePluginScenarios(
 
   return {
     pluginName,
-    testSuites: [], // Scenarios are separate from test suites
+    testSuites: [] // Scenarios are separate from test suites
     scenarios: results,
-    environmentValidation: [], // This would be populated by the caller
+    environmentValidation: [] // This would be populated by the caller
     summary: {
       totalTests: 0,
       passedTests: 0,
@@ -430,7 +430,7 @@ async function executeScenario(
         score: 0,
         reason: 'Verification rule not executed due to errors'
       };
-    }) || [],
+    }) || []
     transcript,
     errors
   };

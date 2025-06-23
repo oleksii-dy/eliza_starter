@@ -183,10 +183,10 @@ describe('useAgentUpdate hook', () => {
       name: 'Initial',
       username: 'initial',
       system: 'Initial',
-      bio: [],
-      topics: [],
-      plugins: [],
-      style: { all: [], chat: [], post: [] },
+      bio: []
+      topics: []
+      plugins: []
+      style: { all: [] chat: [] post: [] },
       settings: {
         complexObject: {
           level1: {
@@ -200,10 +200,10 @@ describe('useAgentUpdate hook', () => {
       name: 'Template',
       username: 'template',
       system: 'Template',
-      bio: [],
-      topics: [],
-      plugins: [],
-      style: { all: [], chat: [], post: [] },
+      bio: []
+      topics: []
+      plugins: []
+      style: { all: [] chat: [] post: [] },
       settings: {
         complexObject: {
           level1: {

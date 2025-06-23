@@ -24,8 +24,15 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@elizaos/core': path.resolve(__dirname, '../../core/src'),
+      '@elizaos/core': path.resolve(__dirname, '../core/dist'),
+      'node:fs': 'node-stdlib-browser/mock/empty',
+      'node:path': 'node-stdlib-browser/mock/path',
+      'node:os': 'node-stdlib-browser/mock/os',
+      'node:crypto': 'node-stdlib-browser/mock/crypto',
     },
+  },
+  define: {
+    'process.env': {},
   },
   server: {
     port: 5173,

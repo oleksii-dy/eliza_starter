@@ -49,7 +49,7 @@ export class Florence2WorkerModel {
     return {
       caption,
       objects,
-      regions: [],
+      regions: []
       tags: ['screen', 'ui'],
     };
   }

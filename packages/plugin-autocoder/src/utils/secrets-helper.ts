@@ -35,11 +35,11 @@ export async function createMockRuntimeWithSecrets(
     character: {
       name: 'ScriptAgent',
       bio: ['Agent for script execution'],
-      knowledge: [],
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      plugins: [],
+      knowledge: []
+      messageExamples: []
+      postExamples: []
+      topics: []
+      plugins: []
     },
   } as any; // Type assertion since we're only implementing a subset
 }

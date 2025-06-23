@@ -515,7 +515,7 @@ export class JsDocAnalyzer {
    */
   public findTodoComments(
     ast: TSESTree.Program,
-    comments: TSESTree.Comment[],
+    comments: TSESTree.Comment[]
     sourceCode: string
   ): void {
     this.todoItems = [];

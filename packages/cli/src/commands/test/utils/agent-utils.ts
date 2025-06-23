@@ -6,7 +6,7 @@ import { logger } from '@elizaos/core';
  * Creates a test agent runtime with specified plugins for testing scenarios
  */
 export async function createTestAgent(
-  plugins: Plugin[],
+  plugins: Plugin[]
   serverPort: number
 ): Promise<IAgentRuntime> {
   logger.debug(`Creating test agent runtime with ${plugins.length} plugins...`);
@@ -50,9 +50,9 @@ export async function createTestAgent(
         },
       ],
     ],
-    postExamples: [],
+    postExamples: []
     topics: ['testing', 'scenarios'],
-    knowledge: [],
+    knowledge: []
     settings: {
       TEST_MODE: true,
       SERVER_PORT: serverPort,
@@ -121,9 +121,9 @@ export async function createScenarioCharacters(
           },
         ],
       ],
-      postExamples: [],
+      postExamples: []
       topics: ['scenario-testing'],
-      knowledge: [],
+      knowledge: []
       settings: {
         ...scenarioChar.settings,
         SCENARIO_ROLE: scenarioChar.role,

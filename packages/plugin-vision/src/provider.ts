@@ -241,17 +241,17 @@ export const visionProvider: Provider = {
         hasScreenCapture: !!screenCapture,
         screenResolution: screenCapture ? `${screenCapture.width}x${screenCapture.height}` : null,
         // Entity tracking values
-        activeEntities: entityData?.activeEntities || [],
-        recentlyLeft: entityData?.recentlyLeft || [],
+        activeEntities: entityData?.activeEntities || []
+        recentlyLeft: entityData?.recentlyLeft || []
         entityStatistics: entityData?.statistics || null,
       };
 
       data = {
-        objects: sceneDescription?.objects || [],
-        people: sceneDescription?.people || [],
+        objects: sceneDescription?.objects || []
+        people: sceneDescription?.people || []
         screenCapture: screenCapture || null,
         enhancedData: (sceneDescription as any)?.screenAnalysis || null,
-        trackedEntities: entityData?.activeEntities || [],
+        trackedEntities: entityData?.activeEntities || []
         worldState: entityData || null,
       };
     }

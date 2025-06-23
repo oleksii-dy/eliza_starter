@@ -266,7 +266,7 @@ export class EntityResolutionManager {
   async createEntityWithIdentity(
     name: string,
     context: ResolutionContext,
-    platformIdentities: PlatformIdentity[] = [],
+    platformIdentities: PlatformIdentity[] = []
     metadata: Record<string, any> = {}
   ): Promise<UUID> {
     const entityId = stringToUuid(`entity-${name}-${Date.now()}`);
@@ -297,14 +297,14 @@ export class EntityResolutionManager {
         platformIdentities: new Map(
           platformIdentities.map((identity) => [identity.platform, identity])
         ),
-        crossReferences: [],
-        trustNetwork: [],
+        crossReferences: []
+        trustNetwork: []
         behaviorFingerprint: {
-          communicationStyle: [],
-          activityPatterns: [],
-          responseTimeProfile: [],
-          sentimentProfile: [],
-          topicAffinities: [],
+          communicationStyle: []
+          activityPatterns: []
+          responseTimeProfile: []
+          sentimentProfile: []
+          topicAffinities: []
         },
       };
 
@@ -466,7 +466,7 @@ export class EntityResolutionManager {
             timestamp: Date.now(),
             entityId: proposal.primaryEntityId,
             entity: mergedEntity,
-            mergedEntities: candidateEntities.filter((e) => e) as Entity[],
+            mergedEntities: candidateEntities.filter((e) => e) as Entity[]
             source: 'entity-resolution',
             confidence: proposal.confidence,
             metadata: {
@@ -493,7 +493,7 @@ export class EntityResolutionManager {
    */
   async mergeEntities(
     primaryId: UUID,
-    candidateIds: UUID[],
+    candidateIds: UUID[]
     options: {
       strategy?: string;
       preserveHistory?: boolean;
@@ -507,8 +507,8 @@ export class EntityResolutionManager {
         candidateEntityIds: candidateIds,
         confidence: 1, // High confidence since this is a direct call
         mergeStrategy: options.strategy === 'automatic' ? 'absorb' : 'merge',
-        conflictResolution: [],
-        preservedData: [],
+        conflictResolution: []
+        preservedData: []
         riskAssessment: {
           dataLossRisk: 0.2,
           trustImpactRisk: 0.2,
@@ -553,9 +553,9 @@ export class EntityResolutionManager {
           entityId: entity.id as UUID,
           entity,
           confidence: 0, // Will be calculated in scoreCandidate
-          matchFactors: [],
-          riskFactors: [],
-          crossPlatformIndicators: [],
+          matchFactors: []
+          riskFactors: []
+          crossPlatformIndicators: []
         });
       }
 
@@ -568,9 +568,9 @@ export class EntityResolutionManager {
               entityId: entity.id as UUID,
               entity,
               confidence: 0,
-              matchFactors: [],
-              riskFactors: [],
-              crossPlatformIndicators: [],
+              matchFactors: []
+              riskFactors: []
+              crossPlatformIndicators: []
             });
           }
         }
@@ -749,7 +749,7 @@ export class EntityResolutionManager {
   }
 
   private async applyContextualDisambiguation(
-    candidates: EntityResolutionCandidate[],
+    candidates: EntityResolutionCandidate[]
     context: ResolutionContext
   ): Promise<EntityResolutionCandidate[]> {
     // Apply context-based scoring adjustments
@@ -778,7 +778,7 @@ export class EntityResolutionManager {
   }
 
   private async detectAndHandleConflicts(
-    candidates: EntityResolutionCandidate[],
+    candidates: EntityResolutionCandidate[]
     context: ResolutionContext
   ): Promise<EntityResolutionCandidate[]> {
     // Group candidates by confidence level
@@ -905,7 +905,7 @@ export class EntityResolutionManager {
     return entities;
   }
 
-  private async calculateNameSimilarity(names: string[], identifier: string): Promise<number> {
+  private async calculateNameSimilarity(names: string[] identifier: string): Promise<number> {
     try {
       const prompt = `Compare these names and determine similarity to "${identifier}":
 Names: ${names.join(', ')}
@@ -1281,7 +1281,7 @@ Respond with only the numeric score (e.g., "0.65")`;
         confidence,
         mergeStrategy: confidence > 0.9 ? 'absorb' : 'merge',
         conflictResolution,
-        preservedData: [],
+        preservedData: []
         riskAssessment,
       };
 
@@ -1434,7 +1434,7 @@ Respond with only the numeric score (e.g., "0.65")`;
     }
   }
 
-  private async redirectRelationships(candidateIds: UUID[], primaryId: UUID): Promise<void> {
+  private async redirectRelationships(candidateIds: UUID[] primaryId: UUID): Promise<void> {
     try {
       // This would integrate with the relationship service to redirect relationships
       // For now, we'll log the intention since we don't have direct access to relationships

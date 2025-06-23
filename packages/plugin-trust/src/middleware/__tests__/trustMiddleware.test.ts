@@ -254,7 +254,7 @@ describe('TrustMiddleware', () => {
             description: 'Another test action',
             validate: vi.fn().mockResolvedValue(true),
             handler: vi.fn().mockResolvedValue({ values: {}, data: {}, text: 'Done' }),
-            similes: [],
+            similes: []
             examples: []
           }
         ]
@@ -301,9 +301,9 @@ describe('TrustMiddleware', () => {
         name: 'test-plugin',
         description: 'Test plugin',
         actions: [
-          { name: 'READ_DATA', description: 'Read data', validate: vi.fn(), handler: vi.fn(), similes: [], examples: [] },
-          { name: 'WRITE_DATA', description: 'Write data', validate: vi.fn(), handler: vi.fn(), similes: [], examples: [] },
-          { name: 'DELETE_DATA', description: 'Delete data', validate: vi.fn(), handler: vi.fn(), similes: [], examples: [] }
+          { name: 'READ_DATA', description: 'Read data', validate: vi.fn(), handler: vi.fn(), similes: [] examples: [] },
+          { name: 'WRITE_DATA', description: 'Write data', validate: vi.fn(), handler: vi.fn(), similes: [] examples: [] },
+          { name: 'DELETE_DATA', description: 'Delete data', validate: vi.fn(), handler: vi.fn(), similes: [] examples: [] }
         ]
       };
 

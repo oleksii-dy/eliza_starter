@@ -190,7 +190,7 @@ export class ApiBankAdapter {
           parameterAccuracy: 0,
           responseQuality: 0,
           planGenerated: null,
-          actualApiCalls: [],
+          actualApiCalls: []
           actualResponse: '',
           error: error.message,
           metrics: {
@@ -641,8 +641,8 @@ export class ApiBankAdapter {
    */
   private buildDialogContext(dialogHistory: ApiBankDialogEntry[]): Record<string, any> {
     const context: Record<string, any> = {
-      previousInteractions: [],
-      apiCallHistory: [],
+      previousInteractions: []
+      apiCallHistory: []
     };
 
     for (const entry of dialogHistory) {

@@ -142,8 +142,8 @@ PRIORITY: medium`;
         domain,
         taskType,
         depth,
-        findings: [],
-        sources: [],
+        findings: []
+        sources: []
         subQueries: ['sub-query-1', 'sub-query-2'],
         createdAt: Date.now(),
         updatedAt: Date.now()
@@ -156,8 +156,8 @@ PRIORITY: medium`;
       domain: 'general',
       taskType: 'analytical',
       depth: 'phd-level',
-      findings: [],
-      sources: [],
+      findings: []
+      sources: []
       subQueries: ['sub-query-1', 'sub-query-2'],
       createdAt: Date.now(),
       updatedAt: Date.now()
@@ -404,13 +404,13 @@ describe('Realistic Research Scenarios', () => {
               heading: 'Introduction',
               level: 1,
               content: 'Quantum computing poses significant threats...',
-              findings: [],
-              citations: [],
+              findings: []
+              citations: []
               metadata: { wordCount: 500, citationDensity: 2.5, readabilityScore: 0.8, keyTerms: [] }
             }
           ],
-          citations: [],
-          bibliography: [],
+          citations: []
+          bibliography: []
           generatedAt: Date.now(),
           wordCount: 5000,
           readingTime: 25,
@@ -507,9 +507,9 @@ describe('Realistic Research Scenarios', () => {
             title: `Climate Policy Analysis: ${project.query.split(' ').pop()}`,
             abstract: 'Analysis of climate mitigation strategies...',
             summary: 'This research examines climate policies...',
-            sections: [],
-            citations: [],
-            bibliography: [],
+            sections: []
+            citations: []
+            bibliography: []
             generatedAt: Date.now(),
             wordCount: 3500,
             readingTime: 18,
@@ -640,9 +640,9 @@ describe('Realistic Research Scenarios', () => {
           confidence: 0.8 + Math.random() * 0.2,
           timestamp: Date.now(),
           category: ['fact', 'data', 'theory'][i % 3],
-          citations: [],
-          factualClaims: [],
-          relatedFindings: [],
+          citations: []
+          factualClaims: []
+          relatedFindings: []
           verificationStatus: 'verified' as any,
           extractionMethod: 'llm-extraction'
         }));
@@ -671,7 +671,7 @@ describe('Realistic Research Scenarios', () => {
               level: 1,
               content: 'CRISPR-Cas9 is a revolutionary gene-editing tool...',
               findings: project.findings.slice(0, 5).map(f => f.id),
-              citations: [],
+              citations: []
               metadata: { wordCount: 800, citationDensity: 3.2, readabilityScore: 0.85, keyTerms: ['CRISPR', 'Cas9', 'gene editing'] }
             },
             {
@@ -680,7 +680,7 @@ describe('Realistic Research Scenarios', () => {
               level: 1,
               content: 'Current clinical trials demonstrate...',
               findings: project.findings.slice(5, 15).map(f => f.id),
-              citations: [],
+              citations: []
               metadata: { wordCount: 1200, citationDensity: 4.5, readabilityScore: 0.82, keyTerms: ['clinical trials', 'therapy'] }
             },
             {
@@ -689,7 +689,7 @@ describe('Realistic Research Scenarios', () => {
               level: 1,
               content: 'Despite promising results, several challenges remain...',
               findings: project.findings.slice(15, 20).map(f => f.id),
-              citations: [],
+              citations: []
               metadata: { wordCount: 600, citationDensity: 2.8, readabilityScore: 0.88, keyTerms: ['challenges', 'ethics', 'safety'] }
             },
             {
@@ -698,11 +698,11 @@ describe('Realistic Research Scenarios', () => {
               level: 1,
               content: 'The future of CRISPR technology...',
               findings: project.findings.slice(20).map(f => f.id),
-              citations: [],
+              citations: []
               metadata: { wordCount: 500, citationDensity: 2.2, readabilityScore: 0.9, keyTerms: ['future', 'innovation'] }
             }
           ],
-          citations: [],
+          citations: []
           bibliography: project.sources.map(s => ({
             id: s.id,
             citation: `Author et al. (2024). ${s.title}. Retrieved from ${s.url}`,
@@ -818,8 +818,8 @@ describe('Realistic Research Scenarios', () => {
               heading: 'Renaissance Art Overview',
               level: 1,
               content: 'The Renaissance period in Italy...',
-              findings: [],
-              citations: [],
+              findings: []
+              citations: []
               metadata: { wordCount: 800, citationDensity: 1.5, readabilityScore: 0.9, keyTerms: ['Renaissance', 'Italy', 'art'] }
             },
             {
@@ -827,13 +827,13 @@ describe('Realistic Research Scenarios', () => {
               heading: 'Major Art Movements',
               level: 1,
               content: 'Key movements included...',
-              findings: [],
-              citations: [],
+              findings: []
+              citations: []
               metadata: { wordCount: 600, citationDensity: 1.2, readabilityScore: 0.88, keyTerms: ['movements', 'artists'] }
             }
           ],
-          citations: [],
-          bibliography: [],
+          citations: []
+          bibliography: []
           generatedAt: Date.now(),
           wordCount: 1500,
           readingTime: 8,
@@ -948,9 +948,9 @@ describe('Realistic Research Scenarios', () => {
           title: 'Quantum Entanglement in Computing',
           abstract: 'Research on quantum entanglement...',
           summary: 'This research explores...',
-          sections: [],
-          citations: [],
-          bibliography: [],
+          sections: []
+          citations: []
+          bibliography: []
           generatedAt: Date.now(),
           wordCount: 4000,
           readingTime: 20,

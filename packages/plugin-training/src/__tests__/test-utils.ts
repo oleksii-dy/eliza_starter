@@ -39,7 +39,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     exportTrainingData: vi.fn().mockResolvedValue({
       modelType: 'should_respond',
       format: 'jsonl',
-      samples: [],
+      samples: []
       metadata: {
         exportedAt: Date.now(),
         agentId: 'test-agent-id' as UUID,
@@ -50,7 +50,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       totalCost: 0.05,
       budgetUsed: 0.05,
       budgetLimit: 10.0,
-      recentCosts: [],
+      recentCosts: []
     }),
     setBudgetLimit: vi.fn().mockResolvedValue(undefined),
     enableAutoShutdown: vi.fn().mockResolvedValue(undefined),
@@ -65,10 +65,10 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       name: 'TestAgent',
       bio: ['Test agent for custom reasoning'],
       system: 'Test system prompt',
-      messageExamples: [],
-      postExamples: [],
+      messageExamples: []
+      postExamples: []
       topics: ['training', 'machine learning'],
-      knowledge: [],
+      knowledge: []
       plugins: ['@elizaos/plugin-training'],
     },
 
@@ -156,9 +156,9 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     updateState: vi.fn().mockResolvedValue(true),
 
     // Actions & Providers
-    actions: [],
-    providers: [],
-    evaluators: [],
+    actions: []
+    providers: []
+    evaluators: []
 
     // Components
     createComponent: vi.fn().mockResolvedValue(true),
@@ -285,7 +285,7 @@ export function createMockTrainingDataPoint(
     input: {
       prompt: 'Test prompt',
       messageText: 'Test message',
-      conversationContext: [],
+      conversationContext: []
     },
     output: {
       decision: 'RESPOND',
@@ -504,10 +504,10 @@ export async function createTestRuntime(config: any = {}): Promise<IAgentRuntime
     name: 'TestAgent',
     bio: ['Test agent for integration testing'],
     system: 'You are a test agent for integration testing.',
-    messageExamples: [],
-    postExamples: [],
+    messageExamples: []
+    postExamples: []
     topics: ['testing', 'ai'],
-    knowledge: [],,
+    knowledge: [],
     plugins: ['@elizaos/plugin-sql'],
     settings: {},
     secrets: {},

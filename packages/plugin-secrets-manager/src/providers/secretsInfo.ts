@@ -113,9 +113,9 @@ export const secretsInfoProvider: Provider = {
           globalSecretCount: results.global?.count || 0,
           worldSecretCount: results.world?.count || 0,
           userSecretCount: results.user?.count || 0,
-          globalSecretKeys: results.global?.keys || [],
-          worldSecretKeys: results.world?.keys || [],
-          userSecretKeys: results.user?.keys || [],
+          globalSecretKeys: results.global?.keys || []
+          worldSecretKeys: results.world?.keys || []
+          userSecretKeys: results.user?.keys || []
         },
         data: results,
       };

@@ -74,10 +74,10 @@ export const getGitHubActivityAction: Action = {
           text: responseContent.text,
           values: {
             activityCount: 0,
-            activity: [],
+            activity: []
           },
           data: {
-            activity: [],
+            activity: []
             github: state?.github || {},
           },
         };
@@ -167,7 +167,7 @@ export const getGitHubActivityAction: Action = {
         data: {
           github: {
             ...state?.github,
-            lastActivityLog: [],
+            lastActivityLog: []
             activityStats: {
               total: 0,
               success: 0,
@@ -262,7 +262,7 @@ export const clearGitHubActivityAction: Action = {
         data: {
           github: {
             ...state?.github,
-            lastActivityLog: [],
+            lastActivityLog: []
             activityStats: {
               total: 0,
               success: 0,
@@ -291,7 +291,7 @@ export const clearGitHubActivityAction: Action = {
         data: {
           github: {
             ...state?.github,
-            lastActivityLog: [],
+            lastActivityLog: []
             activityStats: {
               total: 0,
               success: 0,

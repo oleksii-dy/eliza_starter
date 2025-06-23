@@ -355,7 +355,7 @@ const useKnowledgeDocuments = (
   enabled: boolean = true,
   includeEmbedding: boolean = false
 ) => {
-  return useQuery<Memory[], Error>({
+  return useQuery<Memory[] Error>({
     queryKey: ['agents', agentId, 'knowledge', 'documents', { includeEmbedding }],
     queryFn: async () => {
       const response = await apiClient.getKnowledgeDocuments(agentId, { includeEmbedding });
@@ -366,7 +366,7 @@ const useKnowledgeDocuments = (
 };
 
 const useEntities = (agentId: UUID, enabled: boolean = true) => {
-  return useQuery<Entity[], Error>({
+  return useQuery<Entity[] Error>({
     queryKey: ['agents', agentId, 'entities'],
     queryFn: async () => {
       const response = await apiClient.getEntities(agentId);
@@ -377,7 +377,7 @@ const useEntities = (agentId: UUID, enabled: boolean = true) => {
 };
 
 const useRelationships = (agentId: UUID, enabled: boolean = true) => {
-  return useQuery<Relationship[], Error>({
+  return useQuery<Relationship[] Error>({
     queryKey: ['agents', agentId, 'relationships'],
     queryFn: async () => {
       const response = await apiClient.getRelationships(agentId);
@@ -390,10 +390,10 @@ const useRelationships = (agentId: UUID, enabled: boolean = true) => {
 const useKnowledgeChunks = (agentId: UUID, enabled: boolean = true, documentIdFilter?: UUID) => {
   // Query to get fragments (chunks)
   const {
-    data: chunks = [],
+    data: chunks = []
     isLoading: chunksLoading,
     error: chunksError,
-  } = useQuery<Memory[], Error>({
+  } = useQuery<Memory[] Error>({
     queryKey: ['agents', agentId, 'knowledge', 'chunks', { documentIdFilter }],
     queryFn: async () => {
       const response = await apiClient.getKnowledgeChunks(agentId, {
@@ -406,10 +406,10 @@ const useKnowledgeChunks = (agentId: UUID, enabled: boolean = true, documentIdFi
 
   // Query to get documents
   const {
-    data: documents = [],
+    data: documents = []
     isLoading: documentsLoading,
     error: documentsError,
-  } = useQuery<Memory[], Error>({
+  } = useQuery<Memory[] Error>({
     queryKey: ['agents', agentId, 'knowledge', 'documents-for-graph'],
     queryFn: async () => {
       const response = await apiClient.getKnowledgeDocuments(agentId, { includeEmbedding: false });
@@ -474,27 +474,27 @@ export function RolodexTab({ agentId }: { agentId: UUID }) {
 
   // List mode: use useKnowledgeDocuments to get only documents
   const {
-    data: documentsOnly = [],
+    data: documentsOnly = []
     isLoading: documentsLoading,
     error: documentsError,
   } = useKnowledgeDocuments(agentId, viewMode === 'list', false);
 
   // Graph mode: use useKnowledgeChunks to get documents and fragments
   const {
-    data: graphMemories = [],
+    data: graphMemories = []
     isLoading: graphLoading,
     error: graphError,
   } = useKnowledgeChunks(agentId, viewMode === 'graph', documentIdFilter);
 
   // Entity mode: get entities and relationships
   const {
-    data: entities = [],
+    data: entities = []
     isLoading: entitiesLoading,
     error: entitiesError,
   } = useEntities(agentId, viewMode === 'entities');
 
   const {
-    data: relationships = [],
+    data: relationships = []
     isLoading: relationshipsLoading,
     error: relationshipsError,
   } = useRelationships(agentId, viewMode === 'entities');

@@ -1,5 +1,4 @@
 import './test-setup'; // Load environment variables
-import './test-setup'; // Load environment variables
 import { IAgentRuntime, UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { ResearchService } from '../service';
@@ -218,11 +217,11 @@ export class DeepResearchBenchSimplifiedTestSuite {
                 subsections: []
               }
             ],
-            citations: [],
-            bibliography: [],
+            citations: []
+            bibliography: []
             methodology: "Test methodology",
-            limitations: [],
-            futureWork: [],
+            limitations: []
+            futureWork: []
             keywords: ["test", "export"],
             generatedAt: Date.now(),
             wordCount: 100,

@@ -9,6 +9,47 @@ const paymentMultiAgentScenario: Scenario = {
   category: 'payment',
   tags: ['payment', 'multi-agent', 'collaboration', 'transfer', 'revenue-sharing'],
 
+  // Add examples array for compatibility with test framework
+  examples: [
+    [
+      {
+        user: 'research_agent',
+        content: 'I need to pay the data analysis agent 5 USDC for processing this dataset.',
+      },
+      {
+        user: 'payment_agent',
+        content: 'Processing agent-to-agent transfer of 5 USDC to the data analysis agent. Transfer completed successfully.',
+      },
+    ],
+    [
+      {
+        user: 'customer',
+        content: 'Can multiple agents collaborate on my project and handle payments between themselves?',
+      },
+      {
+        user: 'coordinator_agent',
+        content: 'Yes! I can coordinate multiple specialized agents. They handle payments automatically - you only pay once, and I distribute funds as needed.',
+      },
+    ],
+  ],
+
+  // Add evaluator function for test compatibility
+  evaluator: (response: string) => {
+    const hasAgentMention = 
+      response.toLowerCase().includes('agent') ||
+      response.toLowerCase().includes('ai') ||
+      response.toLowerCase().includes('collaborate') ||
+      response.toLowerCase().includes('coordinate');
+    
+    const hasPaymentMention = 
+      response.toLowerCase().includes('payment') ||
+      response.toLowerCase().includes('transfer') ||
+      response.toLowerCase().includes('distribute') ||
+      response.toLowerCase().includes('usdc');
+    
+    return hasAgentMention && hasPaymentMention;
+  },
+
   actors: [
     {
       id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567895',

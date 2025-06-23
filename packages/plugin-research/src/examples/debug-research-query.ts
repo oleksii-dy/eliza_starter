@@ -14,10 +14,10 @@ const createTestRuntime = (): IAgentRuntime => {
     name: 'TestResearcher',
     bio: ['A test researcher for debugging'],
     system: 'You are a research assistant focused on technical topics.',
-    messageExamples: [],
-    postExamples: [],
+    messageExamples: []
+    postExamples: []
     topics: ['technology', 'science', 'research'],
-    knowledge: [],
+    knowledge: []
     plugins: ['research'],
   };
 
@@ -33,45 +33,45 @@ const createTestRuntime = (): IAgentRuntime => {
     getService: (name: string) => {
       return null;
     },
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [],
+    providers: []
+    actions: []
+    evaluators: []
+    plugins: []
     services: new Map(),
     messageManager: {
       createMemory: async () => true,
-      getMemories: async () => [],
-      getMemoriesByRoomIds: async () => [],
-      getCachedEmbeddings: async () => [],
-      searchMemoriesByEmbedding: async () => [],
+      getMemories: async () => []
+      getMemoriesByRoomIds: async () => []
+      getCachedEmbeddings: async () => []
+      searchMemoriesByEmbedding: async () => []
     },
     descriptionManager: {
       createMemory: async () => true,
-      getMemories: async () => [],
-      getMemoriesByRoomIds: async () => [],
-      getCachedEmbeddings: async () => [],
-      searchMemoriesByEmbedding: async () => [],
+      getMemories: async () => []
+      getMemoriesByRoomIds: async () => []
+      getCachedEmbeddings: async () => []
+      searchMemoriesByEmbedding: async () => []
     },
     documentsManager: {
       createMemory: async () => true,
-      getMemories: async () => [],
-      getMemoriesByRoomIds: async () => [],
-      getCachedEmbeddings: async () => [],
-      searchMemoriesByEmbedding: async () => [],
+      getMemories: async () => []
+      getMemoriesByRoomIds: async () => []
+      getCachedEmbeddings: async () => []
+      searchMemoriesByEmbedding: async () => []
     },
     knowledgeManager: {
       createMemory: async () => true,
-      getMemories: async () => [],
-      getMemoriesByRoomIds: async () => [],
-      getCachedEmbeddings: async () => [],
-      searchMemoriesByEmbedding: async () => [],
+      getMemories: async () => []
+      getMemoriesByRoomIds: async () => []
+      getCachedEmbeddings: async () => []
+      searchMemoriesByEmbedding: async () => []
     },
     loreManager: {
       createMemory: async () => true,
-      getMemories: async () => [],
-      getMemoriesByRoomIds: async () => [],
-      getCachedEmbeddings: async () => [],
-      searchMemoriesByEmbedding: async () => [],
+      getMemories: async () => []
+      getMemoriesByRoomIds: async () => []
+      getCachedEmbeddings: async () => []
+      searchMemoriesByEmbedding: async () => []
     },
     useModel: async (modelType: any, params: any) => {
       // Log model calls to see what's happening

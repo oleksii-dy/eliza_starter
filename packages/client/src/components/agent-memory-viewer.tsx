@@ -75,12 +75,12 @@ export function AgentMemoryViewer({ agentId, agentName, channelId }: AgentMemory
     selectedType === MemoryType.currentChat && channelId ? channelId : undefined;
 
   const {
-    data: messagesData = [],
+    data: messagesData = []
     isLoading: isLoadingMessages,
     error: messagesError,
   } = useAgentMemories(agentId, messagesTableName, channelIdToUse);
   const {
-    data: factsData = [],
+    data: factsData = []
     isLoading: isLoadingFacts,
     error: factsError,
   } = useAgentMemories(agentId, factsTableName, channelIdToUse);
@@ -159,12 +159,12 @@ export function AgentMemoryViewer({ agentId, agentName, channelId }: AgentMemory
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
     if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([] { hour: '2-digit', minute: '2-digit' });
     } else if (diffInHours < 168) {
       // 7 days
-      return date.toLocaleDateString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleDateString([] { weekday: 'short', hour: '2-digit', minute: '2-digit' });
     } else {
-      return date.toLocaleDateString([], {
+      return date.toLocaleDateString([] {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',

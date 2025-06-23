@@ -52,8 +52,8 @@ describe('Research Providers', () => {
         phase: ResearchPhase.SEARCHING,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        findings: [],
-        sources: [],
+        findings: []
+        sources: []
         metadata: {
           domain: ResearchDomain.PHYSICS,
           taskType: TaskType.EXPLORATORY,

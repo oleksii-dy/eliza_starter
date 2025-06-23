@@ -116,11 +116,11 @@ function formatJointSummary(joints: any[]): string {
   
   // Group joints by body part
   const groups: { [key: string]: any[] } = {
-    head: [],
-    leftArm: [],
-    rightArm: [],
-    leftLeg: [],
-    rightLeg: [],
+    head: []
+    leftArm: []
+    rightArm: []
+    leftLeg: []
+    rightLeg: []
   };
   
   for (const joint of joints) {

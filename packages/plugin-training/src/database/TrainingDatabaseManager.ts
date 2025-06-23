@@ -249,7 +249,7 @@ export class TrainingDatabaseManager {
         conversation_context: row.conversation_context ? JSON.parse(row.conversation_context) : null,
         state_data: row.state_data ? JSON.parse(row.state_data) : null,
         metadata: row.metadata ? JSON.parse(row.metadata) : null,
-        tags: row.tags ? JSON.parse(row.tags) : [],
+        tags: row.tags ? JSON.parse(row.tags) : []
       }));
     } catch (error) {
       elizaLogger.error('Failed to get training data:', error);

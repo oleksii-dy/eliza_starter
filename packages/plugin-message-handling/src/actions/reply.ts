@@ -180,5 +180,5 @@ export const replyAction = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 } as Action;

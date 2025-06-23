@@ -177,7 +177,7 @@ ${summary}
       state?: State,
       options?: Record<string, any>,
       callback?: HandlerCallback,
-      responses?: Memory[],
+      responses?: Memory[]
     ) => {
       const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
       const world = service?.getWorld();

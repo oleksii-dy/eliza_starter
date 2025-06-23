@@ -15,11 +15,11 @@ function createMockRuntime(): IAgentRuntime {
       name: 'Test Agent',
       bio: ['Test bio'],
       system: 'Test system',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
-      plugins: [],
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
+      plugins: []
     },
 
     getSetting: vi.fn((key: string) => {
@@ -74,7 +74,7 @@ function createMockRuntime(): IAgentRuntime {
     },
     composeState: vi.fn(),
     updateState: vi.fn(),
-    evaluators: [],
+    evaluators: []
     createComponent: vi.fn(),
     getComponents: vi.fn(),
     updateComponent: vi.fn(),

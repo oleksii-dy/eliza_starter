@@ -309,7 +309,7 @@ function extractSearchQuery(text: string): string | null {
   return null;
 }
 
-function formatEntityDetails(entity: any, components: any[], relationships: any[]): string {
+function formatEntityDetails(entity: any, components: any[] relationships: any[]): string {
   let details = `**${entity.names[0]}**\n`;
   details += `- ID: ${entity.id}\n`;
   details += `- Names: ${entity.names.join(', ')}\n`;
@@ -348,7 +348,7 @@ interface SearchResult {
   score: number;
 }
 
-function searchEntitiesFuzzy(entities: any[], query: string): SearchResult[] {
+function searchEntitiesFuzzy(entities: any[] query: string): SearchResult[] {
   const queryLower = query.toLowerCase();
   const results: SearchResult[] = [];
 

@@ -25,7 +25,7 @@ export const participantTestEntity: Entity = {
   id: participantTestEntityId,
   names: ['Participant Test Entity'],
   agentId: participantTestAgentId,
-  components: [],
+  components: []
   metadata: {
     type: 'user',
     worldId: participantTestWorldId,

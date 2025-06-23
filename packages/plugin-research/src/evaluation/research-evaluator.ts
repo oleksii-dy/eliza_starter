@@ -57,7 +57,7 @@ export class RACEEvaluator {
       depth: scores.depth,
       instructionFollowing: scores.instructionFollowing,
       readability: scores.readability,
-      breakdown: [],
+      breakdown: []
     };
   }
 
@@ -198,7 +198,7 @@ export class FACTEvaluator {
       disputedCitations: 0,
       citationCoverage: totalCitations > 0 ? effectiveCitations / totalCitations : 0,
       sourceCredibility: 0.8, // Default credibility score
-      breakdown: [],
+      breakdown: []
     };
   }
 
@@ -282,10 +282,10 @@ Extract 3-5 key claims maximum.`;
           supportingEvidence: [item.supportingEvidence || ''],
           sourceUrls: citations[item.citationIndex - 1]
             ? [citations[item.citationIndex - 1].source.url]
-            : [],
+            : []
           verificationStatus: VerificationStatus.UNVERIFIED,
           confidenceScore: 0.8,
-          relatedClaims: [],
+          relatedClaims: []
         }));
       }
     } catch (e) {

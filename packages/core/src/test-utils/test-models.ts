@@ -420,7 +420,7 @@ export class TestModelProvider {
  * Create a test model provider with specific scenarios
  */
 export function createTestModelProvider(
-  scenarios: Array<{ prompt: RegExp | string; response: string }> = [],
+  scenarios: Array<{ prompt: RegExp | string; response: string }> = []
   defaultResponse?: string
 ): TestModelProvider {
   const provider = new TestModelProvider(defaultResponse);

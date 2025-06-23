@@ -158,8 +158,8 @@ export const visionProvider: Provider = {
       };
 
       data = {
-        objects: sceneDescription?.objects || [],
-        people: sceneDescription?.people || [],
+        objects: sceneDescription?.objects || []
+        people: sceneDescription?.people || []
         screenCapture: screenCapture || null,
         enhancedData: (sceneDescription as any)?.screenAnalysis || null,
       };

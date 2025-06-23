@@ -1,0 +1,1 @@
+{"name":"TestAgent","bio":["Test agent for migration testing"],"plugins":["@elizaos/plugin-sql","todo","trust"]}

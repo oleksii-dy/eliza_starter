@@ -27,12 +27,12 @@ const createMockRuntime = (): IAgentRuntime => {
     character: {
       name: 'TestAgent',
       bio: ['Test bio'],
-      knowledge: [],
+      knowledge: []
     },
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [],
+    providers: []
+    actions: []
+    evaluators: []
+    plugins: []
     services: new Map(),
     
     // Core methods

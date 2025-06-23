@@ -36,8 +36,8 @@ const createRealLLMRuntime = (): IAgentRuntime => {
     ],
     system:
       'You are an expert research assistant specializing in renewable energy, environmental science, and grid-scale energy storage technologies. You provide detailed, accurate, and well-cited analysis.',
-    messageExamples: [],
-    postExamples: [],
+    messageExamples: []
+    postExamples: []
     topics: [
       'renewable energy',
       'energy storage',
@@ -45,7 +45,7 @@ const createRealLLMRuntime = (): IAgentRuntime => {
       'grid technology',
       'sustainability',
     ],
-    knowledge: [],
+    knowledge: []
     plugins: ['research'],
   };
 
@@ -60,10 +60,10 @@ const createRealLLMRuntime = (): IAgentRuntime => {
       return value || null;
     },
     getService: () => null,
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [],
+    providers: []
+    actions: []
+    evaluators: []
+    plugins: []
     services: new Map(),
 
     // Real LLM implementation
@@ -117,38 +117,38 @@ const createRealLLMRuntime = (): IAgentRuntime => {
     // Memory managers
     messageManager: {
       createMemory: async () => asUUID('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
-      getMemories: async () => [],
-      getMemoriesByRoomIds: async () => [],
-      getCachedEmbeddings: async () => [],
-      searchMemoriesByEmbedding: async () => [],
+      getMemories: async () => []
+      getMemoriesByRoomIds: async () => []
+      getCachedEmbeddings: async () => []
+      searchMemoriesByEmbedding: async () => []
     },
     descriptionManager: {
       createMemory: async () => asUUID('cccccccc-cccc-cccc-cccc-cccccccccccc'),
-      getMemories: async () => [],
-      getMemoriesByRoomIds: async () => [],
-      getCachedEmbeddings: async () => [],
-      searchMemoriesByEmbedding: async () => [],
+      getMemories: async () => []
+      getMemoriesByRoomIds: async () => []
+      getCachedEmbeddings: async () => []
+      searchMemoriesByEmbedding: async () => []
     },
     documentsManager: {
       createMemory: async () => asUUID('dddddddd-dddd-dddd-dddd-dddddddddddd'),
-      getMemories: async () => [],
-      getMemoriesByRoomIds: async () => [],
-      getCachedEmbeddings: async () => [],
-      searchMemoriesByEmbedding: async () => [],
+      getMemories: async () => []
+      getMemoriesByRoomIds: async () => []
+      getCachedEmbeddings: async () => []
+      searchMemoriesByEmbedding: async () => []
     },
     knowledgeManager: {
       createMemory: async () => asUUID('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'),
-      getMemories: async () => [],
-      getMemoriesByRoomIds: async () => [],
-      getCachedEmbeddings: async () => [],
-      searchMemoriesByEmbedding: async () => [],
+      getMemories: async () => []
+      getMemoriesByRoomIds: async () => []
+      getCachedEmbeddings: async () => []
+      searchMemoriesByEmbedding: async () => []
     },
     loreManager: {
       createMemory: async () => asUUID('ffffffff-ffff-ffff-ffff-ffffffffffff'),
-      getMemories: async () => [],
-      getMemoriesByRoomIds: async () => [],
-      getCachedEmbeddings: async () => [],
-      searchMemoriesByEmbedding: async () => [],
+      getMemories: async () => []
+      getMemoriesByRoomIds: async () => []
+      getCachedEmbeddings: async () => []
+      searchMemoriesByEmbedding: async () => []
     },
 
     stop: async () => {},

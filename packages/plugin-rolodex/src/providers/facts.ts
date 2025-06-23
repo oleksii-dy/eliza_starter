@@ -109,7 +109,7 @@ const factsProvider: Provider = {
           facts: '',
         },
         data: {
-          facts: [],
+          facts: []
         },
         text: 'Error retrieving facts.',
       };

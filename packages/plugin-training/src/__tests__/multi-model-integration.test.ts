@@ -44,10 +44,10 @@ const testCharacter: Character = {
       { name: 'MultiModelTestAgent', content: { text: 'testing multi-model response' } },
     ],
   ],
-  postExamples: [],
+  postExamples: []
   topics: ['testing', 'ai', 'training', 'multi-model', 'integration'],
-  knowledge: [],
-  plugins: [],
+  knowledge: []
+  plugins: []
   settings: {
     REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',
     TOGETHER_AI_API_KEY: 'test-api-key',
@@ -502,7 +502,7 @@ describe('Real Runtime Multi-Model Training Integration Tests', () => {
             reasoning: 'User is greeting the agent',
             confidence: 0.9,
           },
-          conversationContext: [],
+          conversationContext: []
           stateData: {},
           metadata: {
             agentId: runtime.agentId,

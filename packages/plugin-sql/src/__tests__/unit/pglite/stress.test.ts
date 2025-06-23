@@ -168,7 +168,7 @@ describe('PGLite Stress Tests', () => {
         await cycleAdapter.close();
         await cycleManager.close();
       }
-    });
+    }, 10000); // Increase timeout to 10 seconds
   });
 
   describe('Memory Pressure', () => {

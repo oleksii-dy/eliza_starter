@@ -1,4 +1,5 @@
-import { logger, type IAgentRuntime, type Plugin, getTempDbPath } from '@elizaos/core';
+import { logger, type IAgentRuntime, type Plugin } from '@elizaos/core';
+import { getTempDbPath } from '../../utils/temp';
 // Make ALL imports dynamic to avoid loading schema modules before setting database type
 import dotenv from 'dotenv';
 import { existsSync } from 'node:fs';
@@ -311,8 +312,8 @@ export async function runScenarioWithAgents(
         actionCounts: {},
         responseLatency: { min: 0, max: 0, average: 0, p95: 0 },
       },
-      verificationResults: [],
-      transcript: [],
+      verificationResults: []
+      transcript: []
       errors: [error instanceof Error ? error.message : String(error)],
     };
   } finally {

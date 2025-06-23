@@ -271,7 +271,7 @@ describe('Display Functions', () => {
             reason: 'Test passed successfully',
           },
         ],
-        transcript: [],
+        transcript: []
       },
       {
         scenarioId: 'test-2',
@@ -299,7 +299,7 @@ describe('Display Functions', () => {
             reason: 'Test failed due to timeout',
           },
         ],
-        transcript: [],
+        transcript: []
         errors: ['Timeout error'],
       },
     ];

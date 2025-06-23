@@ -67,7 +67,7 @@ export const analyzeInputAction: Action = {
     };
   },
 
-  examples: [],
+  examples: []
 };
 
 export const processAnalysisAction: Action = {
@@ -101,7 +101,7 @@ export const processAnalysisAction: Action = {
     };
   },
 
-  examples: [],
+  examples: []
 };
 
 export const executeFinalAction: Action = {
@@ -128,7 +128,7 @@ export const executeFinalAction: Action = {
     };
   },
 
-  examples: [],
+  examples: []
 };
 
 export const createPlanAction: Action = {
@@ -161,7 +161,7 @@ export const createPlanAction: Action = {
     };
   },
 
-  examples: [],
+  examples: []
 };
 
 // Simple planning service stub
@@ -190,7 +190,7 @@ export const planningPlugin: Plugin = {
 
   services: [SimplePlanningService],
   
-  evaluators: [],
+  evaluators: []
 };
 
 // Maintain backwards compatibility

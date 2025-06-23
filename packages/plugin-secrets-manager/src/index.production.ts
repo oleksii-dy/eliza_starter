@@ -31,7 +31,7 @@ export const envPlugin: Plugin = {
 
   services: [EnhancedSecretManager, ActionChainService, SecretFormService],
 
-  dependencies: [],
+  dependencies: []
 
   providers: [envStatusProvider, secretsInfoProvider, uxGuidanceProvider],
 
@@ -43,7 +43,7 @@ export const envPlugin: Plugin = {
     runWorkflowAction,
   ],
 
-  tests: [], // No tests in production build
+  tests: [] // No tests in production build
 
   init: async (config, runtime) => {
     // Initialize the enhanced secret manager service

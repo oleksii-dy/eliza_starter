@@ -78,7 +78,7 @@ Format as JSON:
     return {
       queryIntent: query,
       keyTopics: this.extractKeywordsFromQuery(query),
-      requiredElements: [],
+      requiredElements: []
       exclusionCriteria: []
     };
   }
@@ -264,7 +264,7 @@ Format as JSON:
    * Verify that extracted findings actually answer the research query
    */
   async verifyQueryAnswering(
-    findings: ResearchFinding[],
+    findings: ResearchFinding[]
     originalQuery: string
   ): Promise<{
     coverage: number;

@@ -198,7 +198,7 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
         success: false,
         gasUsed: '0',
         gasPrice: '0',
-        changes: [],
+        changes: []
         warnings: [`Unsupported chain: ${chain}`],
         error: `Chain ${chain} is not supported by CrossMint`,
       };
@@ -210,8 +210,8 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
         success: false,
         gasUsed: '0',
         gasPrice: '0',
-        changes: [],
-        warnings: [],
+        changes: []
+        warnings: []
         error: 'Missing recipient address',
       };
     }
@@ -223,7 +223,7 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
       success: true,
       gasUsed: estimatedGas.toString(),
       gasPrice: '0', // CrossMint abstracts away gas pricing
-      changes: [],
+      changes: []
       warnings: ['Simulation is estimated - CrossMint handles gas internally'],
     };
   }

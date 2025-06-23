@@ -37,7 +37,7 @@ export class ABIFetcher {
                 await this.dbService.saveContractAbi(
                     contractAddress,
                     chainId,
-                    abi as any[],
+                    abi as any[]
                     {
                         source: 'etherscan'
                     }

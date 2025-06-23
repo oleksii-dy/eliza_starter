@@ -15,5 +15,12 @@ export default defineConfig({
     'https',
     'http',
     'zod',
+    'crypto',
+    'os',
+    'path',
+    'fs',
+    'http',
+    'https',
+    'net',
   ],
 });

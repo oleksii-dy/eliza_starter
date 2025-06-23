@@ -102,7 +102,7 @@ export async function ingestGitHubRepository(
       totalFiles: files.length,
       processedFiles: 0,
       skippedFiles: 0,
-      errors: [],
+      errors: []
       documents: []
     };
 
@@ -316,7 +316,7 @@ async function fetchGitHubRepositoryContents(
 /**
  * Filters GitHub files based on criteria
  */
-function filterGitHubFiles(files: any[], options: {
+function filterGitHubFiles(files: any[] options: {
   maxFileSize: number;
   allowedExtensions: string[];
   excludePatterns: string[];

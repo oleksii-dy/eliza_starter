@@ -506,8 +506,8 @@ describe('Governance Actions', () => {
         Active: ['Succeeded', 'Defeated'],
         Succeeded: ['Queued'],
         Queued: ['Executed'],
-        Defeated: [],
-        Executed: [],
+        Defeated: []
+        Executed: []
       };
 
       Object.entries(validTransitions).forEach(([state, nextStates]) => {

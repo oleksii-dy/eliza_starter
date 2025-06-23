@@ -320,7 +320,7 @@ export default function Chat({
     : undefined;
 
   // Use the new hooks for DM channel management
-  const { data: agentDmChannels = [], isLoading: isLoadingAgentDmChannels } = useDmChannelsForAgent(
+  const { data: agentDmChannels = [] isLoading: isLoadingAgentDmChannels } = useDmChannelsForAgent(
     chatType === ChannelType.DM ? contextId : undefined
   );
 
@@ -623,7 +623,7 @@ export default function Chat({
   }, [chatType, serverId]);
 
   const {
-    data: messages = [],
+    data: messages = []
     isLoading: isLoadingMessages,
     addMessage,
     updateMessage,

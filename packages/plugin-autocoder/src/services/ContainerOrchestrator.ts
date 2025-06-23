@@ -469,7 +469,7 @@ export class ContainerOrchestrator extends Service {
       readOnlyRootfs: false, // Agents need to write files
       noNewPrivileges: true,
       capDrop: ['ALL'],
-      capAdd: [], // Add specific capabilities as needed
+      capAdd: [] // Add specific capabilities as needed
       securityOpts: ['no-new-privileges:true'],
     };
 

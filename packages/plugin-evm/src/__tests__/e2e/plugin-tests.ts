@@ -283,7 +283,7 @@ export class EVMPluginTestSuite implements TestSuite {
                         roomId,
                         5000 // Wait longer for processing
                     );
-                    
+
                     // Check response mentions transfer
                     if (!response.content.text) {
                         throw new Error('No response text');
@@ -297,8 +297,8 @@ export class EVMPluginTestSuite implements TestSuite {
                     // Check if it mentions the need for a wallet or funds
                     if (responseText.includes('wallet') || responseText.includes('fund') || responseText.includes('balance')) {
                         console.log('✓ Agent correctly identified wallet/funding requirement');
-                    }
-                    
+                }
+
                     console.log('✅ Transfer action message processing test PASSED');
                 } catch (error) {
                     console.error('Transfer test error:', error);
@@ -432,8 +432,8 @@ export class EVMPluginTestSuite implements TestSuite {
                     // Should mention wallet or balance
                     if (!responseText.includes('wallet') && !responseText.includes('balance')) {
                         throw new Error(`Response doesn't mention wallet or balance: ${response.content.text}`);
-                    }
-                    
+                }
+                
                     console.log('✅ Balance query test PASSED');
                 } catch (error) {
                     console.error('Balance query test error:', error);

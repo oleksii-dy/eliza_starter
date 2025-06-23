@@ -168,10 +168,10 @@ function generateConversation(channelId, topic, users, startTime, messageIdCount
       bot: false
     },
     timestamp: new Date(startTime).toISOString(),
-    attachments: [],
-    embeds: [],
-    mentions: [],
-    mention_roles: [],
+    attachments: []
+    embeds: []
+    mentions: []
+    mention_roles: []
     pinned: false,
     mention_everyone: false,
     tts: false
@@ -209,10 +209,10 @@ function generateConversation(channelId, topic, users, startTime, messageIdCount
         bot: false
       },
       timestamp: new Date(currentTime).toISOString(),
-      attachments: [],
-      embeds: [],
-      mentions: [],
-      mention_roles: [],
+      attachments: []
+      embeds: []
+      mentions: []
+      mention_roles: []
       pinned: false,
       mention_everyone: false,
       tts: false

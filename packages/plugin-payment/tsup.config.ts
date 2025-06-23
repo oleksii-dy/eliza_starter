@@ -18,7 +18,7 @@ export default defineConfig({
     '@elizaos/plugin-trust',
     '@elizaos/plugin-tasks',
   ],
-  noExternal: [],
+  noExternal: []
   platform: 'node',
   target: 'node18',
   esbuildOptions(options) {

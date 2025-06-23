@@ -183,7 +183,7 @@ const handler: Handler = async (
     if (callback) {
       await callback({
         text: 'Robot control service is not available.',
-        actions: [],
+        actions: []
       });
     }
     return;
@@ -194,7 +194,7 @@ const handler: Handler = async (
     if (callback) {
       await callback({
         text: 'Robot is not connected. Please check the connection.',
-        actions: [],
+        actions: []
       });
     }
     return;

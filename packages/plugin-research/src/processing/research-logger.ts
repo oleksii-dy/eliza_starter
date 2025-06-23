@@ -96,9 +96,9 @@ export class ResearchLogger {
       originalQuery,
       startTime: Date.now(),
       queryAnalysis,
-      searchLogs: [],
-      extractionLogs: [],
-      findingLogs: [],
+      searchLogs: []
+      extractionLogs: []
+      findingLogs: []
       summary: {
         totalSearches: 0,
         totalResults: 0,
@@ -108,7 +108,7 @@ export class ResearchLogger {
         totalFindings: 0,
         relevantFindings: 0,
         overallRelevance: 0,
-        gaps: [],
+        gaps: []
         recommendations: []
       }
     };
@@ -123,7 +123,7 @@ export class ResearchLogger {
     projectId: string,
     query: string,
     provider: string,
-    results: SearchResult[],
+    results: SearchResult[]
     relevanceScores?: Map<string, RelevanceScore>
   ): Promise<void> {
     const session = this.sessions.get(projectId);
@@ -261,7 +261,7 @@ export class ResearchLogger {
 
   async finalizeSession(
     projectId: string,
-    gaps: string[],
+    gaps: string[]
     recommendations: string[]
   ): Promise<ResearchSession> {
     const session = this.sessions.get(projectId);

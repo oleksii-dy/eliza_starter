@@ -38,7 +38,7 @@ export const secretsManagementScenario: Scenario = {
     },
     {
       role: 'assistant',
-      expectedActions: [],
+      expectedActions: []
       expectedContent: ['API key', 'not available', 'finance', 'cannot access'],
     },
     {

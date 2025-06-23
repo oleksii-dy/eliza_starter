@@ -268,7 +268,7 @@ export class Florence2Model {
     return {
       caption: scenario.caption,
       objects: scenario.objects,
-      regions: [],
+      regions: []
       tags: scenario.tags,
     };
   }

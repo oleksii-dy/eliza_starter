@@ -28,8 +28,8 @@ const createMockPlugin = (name: string, requiredKeys: Record<string, any>) => {
     name,
     declaredEnvVars: requiredKeys,
     description: `Mock ${name} plugin for testing`,
-    actions: [],
-    providers: [],
+    actions: []
+    providers: []
   };
 };
 

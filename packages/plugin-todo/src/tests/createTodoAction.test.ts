@@ -23,8 +23,8 @@ describe('createTodoAction', () => {
       values: {},
       text: '',
       data: {
-        messages: [],
-        entities: [],
+        messages: []
+        entities: []
         room: { id: 'room-1', name: 'Test Room', worldId: 'world-1' },
       },
     };

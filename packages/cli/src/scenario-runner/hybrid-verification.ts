@@ -87,7 +87,7 @@ export class HybridVerificationEngine {
           passed: false,
           score: 0,
           reason: `Unknown deterministic verification type: ${rule.config.deterministicType}`,
-          evidence: [],
+          evidence: []
         };
     }
 

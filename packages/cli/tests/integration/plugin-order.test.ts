@@ -91,10 +91,10 @@ describe('Plugin Registration Order', () => {
         await new Promise((resolve) => setTimeout(resolve, delay));
         initializationOrder.push(name);
       }),
-      actions: [],
-      providers: [],
-      evaluators: [],
-      services: [],
+      actions: []
+      providers: []
+      evaluators: []
+      services: []
     });
 
     // Create plugins with different delays to ensure sequential execution
@@ -108,7 +108,7 @@ describe('Plugin Registration Order', () => {
       character: {
         name: 'Test Agent',
         bio: 'A test agent for plugin order verification',
-        plugins: [],
+        plugins: []
       },
       plugins: [mockSqlPlugin, plugin1, plugin2, plugin3],
       adapter: mockSqlPlugin.adapter,
@@ -186,7 +186,7 @@ describe('Plugin Registration Order', () => {
       character: {
         name: 'Test Agent',
         bio: 'A test agent for plugin order verification',
-        plugins: [],
+        plugins: []
       },
       plugins: [mockSqlPlugin, pluginWithServices],
       adapter: mockSqlPlugin.adapter,
@@ -261,7 +261,7 @@ describe('Plugin Registration Order', () => {
       character: {
         name: 'Test Agent',
         bio: 'A test agent for plugin order verification',
-        plugins: [],
+        plugins: []
       },
       plugins: [mockSqlPlugin, pluginWithServices],
       adapter: mockSqlPlugin.adapter,
@@ -291,8 +291,8 @@ describe('Plugin Registration Order', () => {
         {
           name: 'test-action',
           description: 'Test action',
-          similes: [],
-          examples: [],
+          similes: []
+          examples: []
           handler: async () => {
             componentOrder.push('action-handler');
             return true;
@@ -314,15 +314,15 @@ describe('Plugin Registration Order', () => {
         {
           name: 'test-evaluator',
           description: 'Test evaluator',
-          similes: [],
-          examples: [],
+          similes: []
+          examples: []
           handler: async () => {
             componentOrder.push('evaluator-handler');
           },
           validate: async () => true,
         },
       ],
-      services: [],
+      services: []
     };
 
     runtime = new AgentRuntime({
@@ -330,7 +330,7 @@ describe('Plugin Registration Order', () => {
       character: {
         name: 'Test Agent',
         bio: 'A test agent for plugin order verification',
-        plugins: [],
+        plugins: []
       },
       plugins: [mockSqlPlugin, testPlugin],
       adapter: mockSqlPlugin.adapter,
@@ -368,7 +368,7 @@ describe('Plugin Registration Order', () => {
       character: {
         name: 'Test Agent',
         bio: 'A test agent for plugin order verification',
-        plugins: [],
+        plugins: []
       },
       plugins: [mockSqlPlugin, ...plugins],
       adapter: mockSqlPlugin.adapter,

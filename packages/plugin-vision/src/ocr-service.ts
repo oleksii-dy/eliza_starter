@@ -53,7 +53,7 @@ export class OCRService {
     if (!tile.data) {
       return {
         text: '',
-        blocks: [],
+        blocks: []
         fullText: '',
       };
     }
@@ -119,9 +119,9 @@ export class OCRService {
     
     // Fallback: return empty structured data
     return {
-      tables: [],
-      forms: [],
-      lists: [],
+      tables: []
+      forms: []
+      lists: []
     };
   }
 

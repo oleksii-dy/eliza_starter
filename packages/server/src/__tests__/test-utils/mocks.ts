@@ -33,14 +33,14 @@ export function createMockAgentRuntime(overrides?: Partial<IAgentRuntime>): IAge
       system: 'Test system',
       settings: {},
     } as Character,
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [],
+    providers: []
+    actions: []
+    evaluators: []
+    plugins: []
     services: new Map(),
     events: new Map(),
     fetch: null,
-    routes: [],
+    routes: []
 
     // IAgentRuntime methods
     registerPlugin: jest.fn(() => Promise.resolve()),

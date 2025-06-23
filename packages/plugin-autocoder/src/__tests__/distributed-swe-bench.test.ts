@@ -18,7 +18,7 @@ describe('Distributed SWE-bench', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockRuntime = {
       agentId: 'test-agent',
       character: {
@@ -27,7 +27,7 @@ describe('Distributed SWE-bench', () => {
         knowledge: [],
         messageExamples: [],
         postExamples: [],
-        topics: [],,
+        topics: [],
         plugins: [],
       },
       getSetting: vi.fn(),
@@ -188,7 +188,7 @@ describe('Distributed SWE-bench', () => {
 
         // Mock to prevent actual infrastructure start
         const mockCallback = vi.fn();
-        
+
         // We'll test the option parsing by checking what gets passed
         // This would require exposing the parseDistributedOptions function
         // or mocking the manager's runDistributedBenchmark method
@@ -212,7 +212,7 @@ describe('Distributed SWE-bench', () => {
       };
 
       const response = await axios.post('http://localhost:8080/task', taskData);
-      
+
       expect(response.data.taskId).toBe(mockTaskId);
       expect(axios.post).toHaveBeenCalledWith('http://localhost:8080/task', taskData);
     });
@@ -231,10 +231,10 @@ describe('Distributed SWE-bench', () => {
       const containers = response.data;
 
       expect(containers).toHaveLength(4);
-      
+
       const idleCount = containers.filter((c: any) => c.status === 'idle').length;
       const busyCount = containers.filter((c: any) => c.status === 'busy').length;
-      
+
       expect(idleCount).toBe(3);
       expect(busyCount).toBe(1);
     });
@@ -242,15 +242,7 @@ describe('Distributed SWE-bench', () => {
 
   describe('Language Support', () => {
     it('should support all SWE-bench languages', () => {
-      const supportedLanguages = [
-        'typescript',
-        'javascript', 
-        'java',
-        'go',
-        'rust',
-        'c',
-        'cpp',
-      ];
+      const supportedLanguages = ['typescript', 'javascript', 'java', 'go', 'rust', 'c', 'cpp'];
 
       // This would be tested by checking the language configuration
       expect(supportedLanguages).toHaveLength(7);
@@ -272,4 +264,4 @@ describe('Distributed SWE-bench', () => {
       }
     });
   });
-}); 
+});

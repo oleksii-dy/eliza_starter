@@ -71,7 +71,7 @@ export function cacheMiddleware(runtime: ExtendedRuntime) {
   const originalProcessAction = runtime.processActions;
 
   // Wrap composeState with caching
-  runtime.composeState = async (message: Memory, includeList?: string[], onlyInclude?: boolean) => {
+  runtime.composeState = async (message: Memory, includeList?: string[] onlyInclude?: boolean) => {
     if (!runtime.cacheManager) {
       return originalComposeState.call(runtime, message, includeList, onlyInclude);
     }
@@ -114,7 +114,7 @@ export function cacheMiddleware(runtime: ExtendedRuntime) {
   // Wrap processActions with cache invalidation
   runtime.processActions = async (
     message: Memory,
-    responses: Memory[],
+    responses: Memory[]
     state?: State,
     callback?: any
   ) => {

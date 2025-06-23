@@ -166,7 +166,7 @@ export class SecretFormService extends Service {
         request,
         createdAt: Date.now(),
         expiresAt: schema.expiresAt!,
-        submissions: [],
+        submissions: []
         status: 'active',
         callback,
       };

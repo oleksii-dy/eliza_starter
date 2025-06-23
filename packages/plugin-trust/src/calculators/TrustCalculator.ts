@@ -331,7 +331,7 @@ export class TrustCalculator {
             overallTrust: 50,
             confidence: 0,
             interactionCount: 0,
-            evidence: [],
+            evidence: []
             lastCalculated: Date.now(),
             calculationMethod: 'default',
             trend: {

@@ -44,9 +44,9 @@ describe('ScenarioRunner', () => {
         bio: ['Test bio'],
         system: 'Test system prompt',
       },
-      actions: [],
-      providers: [],
-      evaluators: [],
+      actions: []
+      providers: []
+      evaluators: []
       services: new Map(),
       getSetting: vi.fn(),
       composeState: vi.fn().mockResolvedValue({
@@ -190,7 +190,7 @@ describe('ScenarioRunner', () => {
             personality: {
               traits: ['test'],
               systemPrompt: 'Test prompt',
-              interests: [],
+              interests: []
             },
             script: {
               steps: [
@@ -205,7 +205,7 @@ describe('ScenarioRunner', () => {
         setup: {},
         execution: {},
         verification: {
-          rules: [],
+          rules: []
         },
       };
 
@@ -257,7 +257,7 @@ describe('ScenarioRunner', () => {
         setup: {},
         execution: {},
         verification: {
-          rules: [],
+          rules: []
         },
       };
 
@@ -286,7 +286,7 @@ describe('ScenarioRunner', () => {
             personality: {
               traits: ['error-prone'],
               systemPrompt: 'You will cause errors',
-              interests: [],
+              interests: []
             },
             script: {
               steps: [
@@ -301,7 +301,7 @@ describe('ScenarioRunner', () => {
         setup: {},
         execution: {},
         verification: {
-          rules: [],
+          rules: []
         },
       };
 
@@ -325,7 +325,7 @@ describe('ScenarioRunner', () => {
         personality: {
           traits: ['test'],
           systemPrompt: 'Test',
-          interests: [],
+          interests: []
         },
       };
 
@@ -337,7 +337,7 @@ describe('ScenarioRunner', () => {
         setup: {},
         execution: {},
         verification: {
-          rules: [],
+          rules: []
         },
       };
 

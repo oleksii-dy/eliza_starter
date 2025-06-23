@@ -102,12 +102,12 @@ function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRuntime {
     character: {
       name: 'Test Agent',
       bio: ['Test bio'],
-      knowledge: [],
+      knowledge: []
     },
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [],
+    providers: []
+    actions: []
+    evaluators: []
+    plugins: []
     services,
     events: new Map(),
 

@@ -39,9 +39,9 @@ const testCharacter: Character = {
       { name: 'CustomReasoningTestAgent', content: { text: 'testing reasoning response' } },
     ],
   ],
-  postExamples: [],
+  postExamples: []
   topics: ['testing', 'reasoning', 'actions', 'service-validation'],
-  plugins: [],
+  plugins: []
   settings: {
     REASONING_SERVICE_ENABLED: 'true',
     TOGETHER_AI_API_KEY: 'test-api-key-actions',
@@ -441,7 +441,7 @@ describe('Real Runtime Custom Reasoning Actions Integration Tests', () => {
             modelType: 'should_respond',
             inputData: { messageText: `Test message ${i}` },
             outputData: { decision: 'RESPOND', confidence: 0.8 + i * 0.01 },
-            conversationContext: [],
+            conversationContext: []
             stateData: {},
             metadata: { test: true },
             tags: ['test'],
@@ -551,7 +551,7 @@ describe('Real Runtime Custom Reasoning Actions Integration Tests', () => {
             modelType: 'should_respond',
             inputData: { messageText: `Training message ${i}` },
             outputData: { decision: 'RESPOND', confidence: 0.8 + i * 0.001 },
-            conversationContext: [],
+            conversationContext: []
             stateData: {},
             metadata: { test: true, sample: i },
             tags: ['training', 'test'],
@@ -625,7 +625,7 @@ describe('Real Runtime Custom Reasoning Actions Integration Tests', () => {
           modelType: 'should_respond',
           inputData: { messageText: `Message ${i}` },
           outputData: { decision: 'RESPOND' },
-          conversationContext: [],
+          conversationContext: []
           stateData: {},
           metadata: {},
           tags: ['minimal'],

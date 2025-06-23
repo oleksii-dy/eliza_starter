@@ -490,8 +490,8 @@ export class PluginManagerService extends Service implements PluginRegistry {
         name: plugin.name,
         status: PluginStatus.LOADED,
         plugin,
-        missingEnvVars: [],
-        buildLog: [],
+        missingEnvVars: []
+        buildLog: []
         createdAt: Date.now(),
         loadedAt: Date.now(),
         components: {
@@ -736,8 +736,8 @@ export class PluginManagerService extends Service implements PluginRegistry {
       name: plugin.name,
       status: PluginStatus.READY,
       plugin,
-      missingEnvVars: [],
-      buildLog: [],
+      missingEnvVars: []
+      buildLog: []
       createdAt: Date.now(),
       components: {
         actions: new Set(),
@@ -1320,7 +1320,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
     try {
       const rankedPlugins = await this._rankPluginsByContext(
         allPlugins,
-        context.currentCapabilities || [],
+        context.currentCapabilities || []
         context.recentActions || []
       );
       return rankedPlugins.slice(0, 5).map((rp) => ({
@@ -1352,10 +1352,10 @@ export class PluginManagerService extends Service implements PluginRegistry {
       logger.info('[PluginManagerService:Capability] Analyzing current capabilities');
     }
     const profile: CapabilityProfile = {
-      core: [],
+      core: []
       plugins: new Map(),
       coverage: {},
-      limitations: [],
+      limitations: []
     };
 
     // In a real implementation, this would be a much more sophisticated analysis
@@ -1391,7 +1391,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
   // --- Merged Private/Helper Functions ---
 
   private async _evaluatePluginRelevance(
-    plugins: PluginSearchResult[],
+    plugins: PluginSearchResult[]
     context: AgentContext,
     userQuery?: string
   ): Promise<RankedPlugin[]> {
@@ -1416,8 +1416,8 @@ export class PluginManagerService extends Service implements PluginRegistry {
   }
 
   private async _rankPluginsByContext(
-    plugins: PluginSearchResult[],
-    agentCapabilities: string[],
+    plugins: PluginSearchResult[]
+    agentCapabilities: string[]
     recentTasks: string[]
   ): Promise<RankedPlugin[]> {
     const prompt = `You are an expert at analyzing plugin ecosystems...`; // full prompt
@@ -1430,7 +1430,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
   }
 
   private _buildEvaluationPrompt(
-    plugins: PluginSearchResult[],
+    plugins: PluginSearchResult[]
     context: AgentContext,
     userQuery?: string
   ): string {
@@ -1452,7 +1452,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
         plugin: p,
         relevanceScore: 1 - i * 0.1,
         reasoning: 'Basic ranking',
-        capabilities: [],
+        capabilities: []
       }));
     }
   }
@@ -1744,7 +1744,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
   /**
    * Check plugin dependencies
    */
-  async checkPluginDependencies(pluginNames: string[], options?: any): Promise<any> {
+  async checkPluginDependencies(pluginNames: string[] options?: any): Promise<any> {
     return this.dependencyResolver.resolveDependencies(pluginNames, options);
   }
 

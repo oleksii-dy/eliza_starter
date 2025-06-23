@@ -71,7 +71,7 @@ export const unmuteRoomAction: Action = {
       const response = await runtime.useModel(ModelType.TEXT_SMALL, {
         runtime,
         prompt: shouldUnmutePrompt,
-        stopSequences: [],
+        stopSequences: []
       });
 
       const cleanedResponse = response.trim().toLowerCase();
@@ -269,5 +269,5 @@ export const unmuteRoomAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 } as Action;

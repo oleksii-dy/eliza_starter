@@ -84,7 +84,7 @@ export class FragmentRepository {
    * Search fragments by embedding similarity
    */
   async searchByEmbedding(
-    embedding: number[],
+    embedding: number[]
     options: SearchOptions = {}
   ): Promise<SearchResult[]> {
     const { agentId, roomId, worldId, entityId, limit = 20, threshold = 0.7 } = options;
@@ -125,7 +125,7 @@ export class FragmentRepository {
   /**
    * Calculate cosine similarity between two embeddings
    */
-  private calculateCosineSimilarity(a: number[], b: number[]): number {
+  private calculateCosineSimilarity(a: number[] b: number[]): number {
     if (a.length !== b.length) return 0;
 
     let dotProduct = 0;

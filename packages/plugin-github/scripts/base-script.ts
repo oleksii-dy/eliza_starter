@@ -201,7 +201,7 @@ export abstract class BaseScript {
    * Execute tasks in parallel with concurrency control
    */
   protected async executeParallel<T, R>(
-    items: T[],
+    items: T[]
     task: (item: T, index: number) => Promise<R>,
     options: { maxConcurrency?: number; onProgress?: (completed: number) => void } = {}
   ): Promise<R[]> {

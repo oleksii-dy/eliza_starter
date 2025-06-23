@@ -50,7 +50,7 @@ export class DataExtractor {
   }
 
   private async filterRoomsByDateRange(
-    rooms: Room[],
+    rooms: Room[]
     config: TrainingConfig['extractionConfig']
   ): Promise<Room[]> {
     const filteredRooms: Room[] = [];

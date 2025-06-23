@@ -6,7 +6,7 @@ import crypto from 'crypto';
 export interface CacheConfig {
   ttlMinutes?: number;
   maxSize?: number;
-  sizeCalculation?: (value: SearchResult[], key: string) => number;
+  sizeCalculation?: (value: SearchResult[] key: string) => number;
 }
 
 // Built-in LRU cache implementation

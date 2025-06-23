@@ -10,7 +10,7 @@ import { type Evaluator, logger, type ActionResult } from '@elizaos/core';
 export const debugEvaluator: Evaluator = {
   name: 'DEBUG_EVALUATOR',
   description: 'Debug evaluator to test if evaluators are running',
-  examples: [],
+  examples: []
   validate: async (runtime, message, state) => {
     logger.info('[DEBUG_EVALUATOR] Validate called', {
       messageId: message.id,

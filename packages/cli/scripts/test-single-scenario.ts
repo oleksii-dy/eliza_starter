@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
-import { logger, getTempDbPath } from '@elizaos/core';
+import { logger } from '@elizaos/core';
+import { getTempDbPath } from '../src/utils/temp';
 import * as path from 'path';
 import * as fs from 'fs';
 

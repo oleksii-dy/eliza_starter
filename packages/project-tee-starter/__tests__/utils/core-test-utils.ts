@@ -99,19 +99,19 @@ export const createMockRuntime = (): IAgentRuntime => {
       get: async () => null,
       set: async () => true,
       delete: async () => true,
-      getKeys: async () => [],
+      getKeys: async () => []
     },
     // Add real memory functionality
     memory: {
       add: async () => {},
       get: async () => null,
-      getByEntityId: async () => [],
+      getByEntityId: async () => []
       getLatest: async () => null,
-      getRecentMessages: async () => [],
-      search: async () => [],
+      getRecentMessages: async () => []
+      search: async () => []
     },
-    actions: [],
-    providers: [],
+    actions: []
+    providers: []
     getService: mock(),
     processActions: mock(),
   } as any as IAgentRuntime;

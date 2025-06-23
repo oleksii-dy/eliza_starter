@@ -80,7 +80,8 @@ describe('Real Payment Integration', () => {
       
       // Private key should be encrypted (not plain text)
       expect(wallet.encryptedPrivateKey).toBeDefined();
-      expect(wallet.encryptedPrivateKey).not.toContain('0x');
+      // Should be base64 encoded encrypted data
+      expect(wallet.encryptedPrivateKey).toMatch(/^[A-Za-z0-9+/]+=*$/);
       expect(wallet.encryptedPrivateKey.length).toBeGreaterThan(64); // Base64 encoded
     });
   });

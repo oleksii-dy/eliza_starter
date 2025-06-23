@@ -135,7 +135,7 @@ describe('DummyTokenDataService', () => {
     });
 
     it('should handle empty addresses array', async () => {
-      const tokens = await service.getTokensByAddresses([], 'solana');
+      const tokens = await service.getTokensByAddresses([] 'solana');
       expect(tokens).toHaveLength(0);
     });
 

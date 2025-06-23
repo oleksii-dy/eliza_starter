@@ -15,10 +15,10 @@ export default {
         bio: [
           'A test agent for running scenarios',
         ],
-        messageExamples: [],
-        postExamples: [],
-        topics: [],
-        knowledge: [],
+        messageExamples: []
+        postExamples: []
+        topics: []
+        knowledge: []
         settings: {
           model: 'gpt-4',
           OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'test-key',

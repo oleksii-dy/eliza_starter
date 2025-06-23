@@ -53,8 +53,8 @@ async function analyzeResearchFlow(): Promise<void> {
   console.log('\n--- PHASE 1: Planning ---');
   const planningAnalysis: FlowAnalysis = {
     phase: ResearchPhase.PLANNING,
-    issues: [],
-    recommendations: [],
+    issues: []
+    recommendations: []
     benchmarkGaps: []
   };
   
@@ -85,8 +85,8 @@ async function analyzeResearchFlow(): Promise<void> {
   console.log('\n--- PHASE 2: Searching ---');
   const searchingAnalysis: FlowAnalysis = {
     phase: ResearchPhase.SEARCHING,
-    issues: [],
-    recommendations: [],
+    issues: []
+    recommendations: []
     benchmarkGaps: []
   };
   
@@ -119,8 +119,8 @@ async function analyzeResearchFlow(): Promise<void> {
   console.log('\n--- PHASE 3: Analyzing ---');
   const analyzingAnalysis: FlowAnalysis = {
     phase: ResearchPhase.ANALYZING,
-    issues: [],
-    recommendations: [],
+    issues: []
+    recommendations: []
     benchmarkGaps: []
   };
   
@@ -153,8 +153,8 @@ async function analyzeResearchFlow(): Promise<void> {
   console.log('\n--- PHASE 4: Synthesizing ---');
   const synthesizingAnalysis: FlowAnalysis = {
     phase: ResearchPhase.SYNTHESIZING,
-    issues: [],
-    recommendations: [],
+    issues: []
+    recommendations: []
     benchmarkGaps: []
   };
   
@@ -187,8 +187,8 @@ async function analyzeResearchFlow(): Promise<void> {
   console.log('\n--- PHASE 5: Reporting ---');
   const reportingAnalysis: FlowAnalysis = {
     phase: ResearchPhase.REPORTING,
-    issues: [],
-    recommendations: [],
+    issues: []
+    recommendations: []
     benchmarkGaps: []
   };
   

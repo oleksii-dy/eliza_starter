@@ -84,7 +84,7 @@ describe('entities', () => {
           roles: {},
         },
         createdAt: Date.now(),
-        entities: [],
+        entities: []
       };
 
       const mockEntity: Entity = {
@@ -92,7 +92,7 @@ describe('entities', () => {
         names: ['Alice', 'Alice Smith'],
         agentId: 'agent-id-123' as UUID,
         metadata: {},
-        components: [],
+        components: []
       };
 
       mockRuntime.getRoom = vi.fn().mockResolvedValue(mockRoom);
@@ -147,7 +147,7 @@ describe('entities', () => {
           },
         },
         createdAt: Date.now(),
-        entities: [],
+        entities: []
       };
 
       const mockEntity: Entity = {
@@ -249,7 +249,7 @@ describe('entities', () => {
           },
         },
         createdAt: Date.now(),
-        entities: [],
+        entities: []
       };
 
       const mockEntityWithComponents: Entity = {
@@ -508,7 +508,7 @@ describe('entities', () => {
           names: ['Bob'],
           agentId: 'agent-id-123' as UUID,
           metadata: {},
-          components: [],
+          components: []
         },
       ];
 
@@ -546,7 +546,7 @@ describe('entities', () => {
         names: ['Alice'],
         agentId: 'agent-id-123' as UUID,
         metadata: {},
-        components: [],
+        components: []
       };
 
       mockRuntime.getRoom = vi.fn().mockResolvedValue(mockRoom);

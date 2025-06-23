@@ -276,27 +276,33 @@ export class ScenarioRunner {
       // Find the runtime for this actor from the agents map
       const runtime = this.agents.get(actor.name);
       if (!runtime) {
-        logger.warn(`No runtime found for actor ${actor.name}, using primary runtime`);
-        actor.runtime = primaryRuntime as IAgentRuntime;
-      } else {
-        actor.runtime = runtime as IAgentRuntime;
-        logger.info(`Assigned runtime ${runtime.agentId} to actor ${actor.name}`);
+        // Don't fall back to primary runtime - this masks test issues
+        throw new Error(
+          `No runtime found for actor ${actor.name}. Ensure all actors have properly initialized agents.`
+        );
+      }
+      
+      actor.runtime = runtime as IAgentRuntime;
+      logger.info(`Assigned runtime ${runtime.agentId} to actor ${actor.name}`);
 
-        // Ensure the agent joins the room
-        try {
-          await runtime.ensureRoomExists({
-            id: roomId,
-            name: scenario.setup.roomName || `${scenario.name} Room`,
-            source: 'scenario-runner',
-            type: roomType,
-            channelId: `scenario-${scenario.id}`,
-            serverId: `scenario-${scenario.id}`,
-            worldId,
-          });
-          logger.info(`Agent ${actor.name} joined room ${roomId}`);
-        } catch (error) {
-          logger.warn(`Failed to add agent ${actor.name} to room:`, error);
-        }
+      // Ensure the agent joins the room
+      try {
+        await runtime.ensureRoomExists({
+          id: roomId,
+          name: scenario.setup.roomName || `${scenario.name} Room`,
+          source: 'scenario-runner',
+          type: roomType,
+          channelId: `scenario-${scenario.id}`,
+          serverId: `scenario-${scenario.id}`,
+          worldId,
+        });
+        logger.info(`Agent ${actor.name} joined room ${roomId}`);
+      } catch (error) {
+        // Don't just warn - this is a critical error
+        logger.error(`Failed to add agent ${actor.name} to room:`, error);
+        throw new Error(
+          `Failed to setup actor ${actor.name} in room: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       actorMap.set(actor.id, actor);
     }
@@ -690,7 +696,7 @@ Consider the context and provide the most suitable channel type. Respond with ju
     return totalScore / verificationResults.length;
   }
 
-  private validateScenario(scenario: Scenario): void {
+  public validateScenario(scenario: Scenario): void {
     if (!scenario.id) {
       throw new Error('Scenario must have an ID');
     }
@@ -725,7 +731,7 @@ Consider the context and provide the most suitable channel type. Respond with ju
     }
   }
 
-  private chunkArray<T>(array: T[], chunkSize: number): T[][] {
+  public chunkArray<T>(array: T[], chunkSize: number): T[][] {
     const chunks: T[][] = [];
     for (let i = 0; i < array.length; i += chunkSize) {
       chunks.push(array.slice(i, i + chunkSize));
@@ -783,7 +789,7 @@ Consider the context and provide the most suitable channel type. Respond with ju
       passed: 0,
       failed: 0,
       total: 0,
-      messages: [],
+      messages: []
     };
 
     // Initialize action tracker

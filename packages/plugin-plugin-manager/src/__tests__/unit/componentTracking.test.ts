@@ -24,10 +24,10 @@ class TestService extends Service {
 const createMockRuntime = (): IAgentRuntime => {
   const runtime: any = {
     agentId: uuidv4() as any,
-    plugins: [],
-    actions: [],
-    providers: [],
-    evaluators: [],
+    plugins: []
+    actions: []
+    providers: []
+    evaluators: []
     services: new Map(),
     registerAction: vi.fn((action: Action) => {
       runtime.actions.push(action);

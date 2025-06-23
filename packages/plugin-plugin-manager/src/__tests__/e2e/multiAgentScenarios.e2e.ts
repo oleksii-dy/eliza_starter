@@ -23,10 +23,10 @@ export const multiAgentScenariosTests: TestCase[] = [
           {
             name: `ACTION_${i}`,
             description: `Action from plugin ${i}`,
-            similes: [],
+            similes: []
             validate: async () => true,
             handler: async () => ({ text: `Response from plugin ${i}` }),
-            examples: [],
+            examples: []
           },
         ],
       }));
@@ -64,14 +64,14 @@ export const multiAgentScenariosTests: TestCase[] = [
           {
             name: 'STATEFUL_ACTION',
             description: 'Action with shared state',
-            similes: [],
+            similes: []
             validate: async () => true,
             handler: async () => {
               // Simulate state modification
               await new Promise((resolve) => setTimeout(resolve, Math.random() * 100));
               return { text: 'State modified' };
             },
-            examples: [],
+            examples: []
           },
         ],
       };
@@ -140,10 +140,10 @@ export const multiAgentScenariosTests: TestCase[] = [
           {
             name: `SCALE_ACTION_${i}`,
             description: `Action ${i}`,
-            similes: [],
+            similes: []
             validate: async () => true,
             handler: async () => ({ text: `Scale response ${i}` }),
-            examples: [],
+            examples: []
           },
         ],
       }));
@@ -208,13 +208,13 @@ export const multiAgentScenariosTests: TestCase[] = [
           {
             name: 'USE_SHARED_DATA',
             description: 'Uses shared data from base',
-            similes: [],
+            similes: []
             validate: async () => true,
             handler: async (runtime: IAgentRuntime) => {
               // In real implementation, would access SHARED_DATA_PROVIDER
               return { text: 'Using shared data across agents' };
             },
-            examples: [],
+            examples: []
           },
         ],
       };

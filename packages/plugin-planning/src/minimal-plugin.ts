@@ -281,7 +281,7 @@ export const executePlanAction: Action = {
     };
   },
 
-  examples: [],
+  examples: []
 };
 
 // Reply action for simple responses
@@ -325,7 +325,7 @@ export const planningReplyAction: Action = {
     };
   },
 
-  examples: [],
+  examples: []
 };
 
 // Main plugin definition
@@ -337,9 +337,9 @@ export const planningPlugin: Plugin = {
 
   actions: [createPlanAction, executePlanAction, planningReplyAction],
 
-  services: [], // No services for now to avoid import issues
+  services: [] // No services for now to avoid import issues
 
-  evaluators: [],
+  evaluators: []
 };
 
 // Export for testing

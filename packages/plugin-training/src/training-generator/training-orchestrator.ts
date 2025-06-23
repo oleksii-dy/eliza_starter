@@ -254,7 +254,7 @@ export class TrainingOrchestrator {
     } catch (error) {
       elizaLogger.warn('⚠️  No docs folder found, creating empty result');
       docsResult = {
-        files: [],
+        files: []
         totalFiles: 0,
         totalSize: 0,
         languages: {},
@@ -375,7 +375,7 @@ export class TrainingOrchestrator {
       userQuery,
       context: {
         fileTree: docFile.relativePath,
-        relatedFiles: [],
+        relatedFiles: []
         targetFile: docFile,
         repositoryContext: 'ElizaOS Documentation'
       },

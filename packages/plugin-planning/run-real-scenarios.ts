@@ -450,7 +450,7 @@ async function runRealScenarios() {
         }
         return { text };
       },
-      examples: [],
+      examples: []
     });
 
     console.log(
@@ -507,7 +507,7 @@ async function runRealScenarios() {
                 type: 'custom' as const,
                 value: c,
                 description: c,
-              })) || [],
+              })) || []
             availableActions: runtime.actions.map((a: any) => a.name),
             availableProviders: runtime.providers.map((p: any) => p.name),
             preferences: {
@@ -571,7 +571,7 @@ async function runRealScenarios() {
                 runtime as any,
                 comprehensivePlan,
                 1, // Error at step 1
-                [],
+                []
                 new Error('Simulated execution error')
               );
               console.log(`   🔄 Adapted Plan ID: ${adaptedPlan.id}`);

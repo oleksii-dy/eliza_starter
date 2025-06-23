@@ -26,7 +26,7 @@ export const personalityResistanceScenario: PluginScenario = {
       id: uuidv4() as any,
       name: 'Problematic User',
       role: 'assistant',
-      plugins: [],
+      plugins: []
     },
   ],
 

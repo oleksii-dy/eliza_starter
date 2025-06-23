@@ -197,7 +197,7 @@ export class ValidationError extends TrainingError {
 export class DataValidationError extends ValidationError {
   readonly code = 'VALIDATION_ERROR';
 
-  constructor(dataType: string, issues: string[], context: Record<string, any> = {}) {
+  constructor(dataType: string, issues: string[] context: Record<string, any> = {}) {
     super(
       'data',
       dataType,
@@ -548,7 +548,7 @@ export function withErrorHandling(operation: string) {
       } catch (error) {
         return ErrorHandler.handleError(error, `${target.constructor.name}.${propertyKey}`, {
           operation,
-          args: args.length > 0 ? args.slice(0, 2) : [], // Limit args to avoid circular refs
+          args: args.length > 0 ? args.slice(0, 2) : [] // Limit args to avoid circular refs
         });
       }
     };

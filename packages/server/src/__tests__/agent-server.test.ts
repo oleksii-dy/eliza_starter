@@ -164,10 +164,10 @@ vi.mock('@elizaos/plugin-sql', () => ({
   plugin: {
     name: '@elizaos/plugin-sql',
     description: 'SQL database plugin',
-    actions: [],
-    providers: [],
-    evaluators: [],
-    services: [],
+    actions: []
+    providers: []
+    evaluators: []
+    services: []
     schema: {},
   },
 }));
@@ -280,7 +280,7 @@ describe('AgentServer Integration Tests', () => {
     it('should initialize server with custom options', async () => {
       const options: ServerOptions = {
         dataDir: './test-data',
-        middlewares: [],
+        middlewares: []
         postgresUrl: 'postgresql://test:test@localhost:5432/test',
       };
 
@@ -346,7 +346,7 @@ describe('AgentServer Integration Tests', () => {
         character: { name: 'TestAgent' },
         registerPlugin: vi.fn().mockResolvedValue(undefined),
         stop: vi.fn().mockResolvedValue(undefined),
-        plugins: [],
+        plugins: []
         registerProvider: vi.fn(),
         registerAction: vi.fn(),
       };

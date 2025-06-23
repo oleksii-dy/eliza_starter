@@ -409,7 +409,7 @@ export class AutonomousRelationshipManager {
               relationshipId: event.relationshipId,
               currentStatus: event.currentStatus,
               healthScore: event.healthScore,
-              recommendations: event.recommendations || [],
+              recommendations: event.recommendations || []
               metadata: {
                 lastInteractionDays: event.lastInteractionDays,
                 trustScore: event.trustScore,
@@ -697,7 +697,7 @@ export class AutonomousRelationshipManager {
     // Get all relationships that need attention
     const stats = await this.rolodexService.getNetworkStats();
     const insights = {
-      needsAttention: [] as any[], // We'll need to implement this logic differently
+      needsAttention: [] as any[] // We'll need to implement this logic differently
     };
 
     // Create suggestions for entities needing attention
@@ -1804,7 +1804,7 @@ export class AutonomousRelationshipManager {
   }
 
   private mergeLearningInsights(
-    existing: LearningInsight[],
+    existing: LearningInsight[]
     newInsights: LearningInsight[]
   ): LearningInsight[] {
     const merged = [...existing];

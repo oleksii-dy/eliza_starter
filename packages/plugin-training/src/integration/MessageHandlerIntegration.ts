@@ -167,7 +167,7 @@ export class MessageHandlerIntegration {
           : ['IGNORE'],
         providers: responseObject?.providers
           ? responseObject.providers.split(',').map((p: string) => p.trim())
-          : [],
+          : []
         text: responseObject?.text || '',
       };
     } catch (error) {
@@ -175,7 +175,7 @@ export class MessageHandlerIntegration {
       return {
         thought: 'Error occurred during response generation',
         actions: ['IGNORE'],
-        providers: [],
+        providers: []
         text: 'I encountered an error while processing your message.',
       };
     }

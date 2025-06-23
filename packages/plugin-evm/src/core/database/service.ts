@@ -441,7 +441,7 @@ export class WalletDatabaseService {
 
     async getTransactionHistory(
         walletAddress: Address,
-        chains?: Chain[],
+        chains?: Chain[]
         limit = 100,
         offset = 0
     ): Promise<(TransactionHistory & {chainId: number})[]> {
@@ -491,7 +491,7 @@ export class WalletDatabaseService {
                     status: tx.status as 'success' | 'failed' | 'pending',
                     method: tx.method || undefined,
                     decodedInput: tx.decodedInput,
-                    logs: (tx.logs as any) || [],
+                    logs: (tx.logs as any) || []
                     chainId: tx.chainId,
                     nonce: tx.nonce || undefined
                 }));
@@ -518,7 +518,7 @@ export class WalletDatabaseService {
                 status: tx.status as 'success' | 'failed' | 'pending',
                 method: tx.method || undefined,
                 decodedInput: tx.decodedInput,
-                logs: (tx.logs || []) as any[],
+                logs: (tx.logs || []) as any[]
                 chainId: tx.chainId,
                 nonce: tx.nonce || undefined
             }));
@@ -799,7 +799,7 @@ export class WalletDatabaseService {
     async saveContractAbi(
         address: string,
         chainId: number,
-        abi: any[],
+        abi: any[]
         metadata: {
             contractName?: string;
             isVerified?: boolean;
@@ -953,7 +953,7 @@ export class WalletDatabaseService {
         return {
             id: session.id as UUID,
             publicKey: session.publicKey as Hex,
-            permissions: session.permissions as SessionPermission[],
+            permissions: session.permissions as SessionPermission[]
             expiresAt: session.expiresAt.getTime(),
             createdAt: session.createdAt.getTime(),
             isActive: session.isActive,

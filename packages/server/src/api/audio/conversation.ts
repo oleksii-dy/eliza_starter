@@ -56,7 +56,7 @@ export function createConversationRouter(agents: Map<UUID, IAgentRuntime>): expr
       const messageId = createUniqueUuid(runtime, Date.now().toString());
       const content: Content = {
         text,
-        attachments: [],
+        attachments: []
         source: 'direct',
         inReplyTo: undefined,
         channelType: ChannelType.API,

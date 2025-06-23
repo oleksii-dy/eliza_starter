@@ -193,7 +193,7 @@ export class BenchmarkE2ETestSuite implements TestSuite {
           name: 'Test Scenario',
           description: 'Test',
           requirements: ['Must have TypeScript files', 'Must have package.json'],
-          constraints: [],
+          constraints: []
           expectedDuration: 60000,
           successCriteria: {
             mustCompile: false, // Don't actually compile in test

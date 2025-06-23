@@ -105,8 +105,8 @@ export class IngestionActionsTestSuite implements TestSuite {
               totalFiles: 5,
               processedFiles: 5,
               skippedFiles: 0,
-              errors: [],
-              documents: [],
+              errors: []
+              documents: []
             };
           },
         };

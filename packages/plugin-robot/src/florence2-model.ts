@@ -189,7 +189,7 @@ export class Florence2Model {
           confidence: 0.85,
         },
       ],
-      regions: [],
+      regions: []
       tags: ['ui', 'interface', 'application'],
     };
   }

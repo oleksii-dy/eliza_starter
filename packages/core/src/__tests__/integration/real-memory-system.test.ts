@@ -219,7 +219,7 @@ describe('Real Memory System Integration', () => {
             );
           }
         },
-        examples: [],
+        examples: []
       };
 
       runtime.registerEvaluator(factExtractor);

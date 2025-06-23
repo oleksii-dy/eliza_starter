@@ -33,13 +33,13 @@ export function createMockRuntime(overrides: Partial<MockRuntime> = {}): MockRun
       name: 'Test Agent',
       bio: 'This is a test agent for unit tests',
     } as Character,
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [],
+    providers: []
+    actions: []
+    evaluators: []
+    plugins: []
     services: new Map(),
     events: new Map(),
-    routes: [],
+    routes: []
 
     // Core methods
     registerPlugin: vi.fn().mockResolvedValue(undefined),

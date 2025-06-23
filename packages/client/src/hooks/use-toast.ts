@@ -160,7 +160,7 @@ export const reducer = (state: State, action: Action): State => {
       if (action.toastId === undefined) {
         return {
           ...state,
-          toasts: [],
+          toasts: []
         };
       }
       return {

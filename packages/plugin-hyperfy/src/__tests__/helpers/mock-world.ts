@@ -110,8 +110,8 @@ export function createMockWorld(overrides: any = {}) {
 
     // Chat system
     chat: {
-      msgs: [],
-      listeners: [],
+      msgs: []
+      listeners: []
       add: vi.fn((msg, broadcast) => {
         mockWorld.chat.msgs.push(msg);
         mockWorld.chat.listeners.forEach(cb => cb(mockWorld.chat.msgs));
@@ -214,7 +214,7 @@ export function createMockWorld(overrides: any = {}) {
     },
 
     // Systems array
-    systems: [],
+    systems: []
 
     // World lifecycle
     init: vi.fn().mockResolvedValue(true),

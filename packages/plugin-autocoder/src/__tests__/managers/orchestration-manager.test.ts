@@ -25,14 +25,14 @@ describe('OrchestrationManager', () => {
               id: 'research-123',
               status: 'completed',
               report: 'Research findings...',
-              findings: [],
+              findings: []
             }),
           };
         }
         if (name === 'knowledge') {
           return {
             storeDocument: async () => ({ id: 'doc-123' }),
-            getKnowledge: async () => [],
+            getKnowledge: async () => []
           };
         }
         if (name === 'env-manager') {
@@ -150,9 +150,9 @@ describe('OrchestrationManager', () => {
         userId: 'user-123' as UUID,
         status: 'awaiting-secrets' as const,
         requiredSecrets: ['API_KEY'],
-        providedSecrets: [],
-        logs: [],
-        errors: [],
+        providedSecrets: []
+        logs: []
+        errors: []
         currentPhase: 0,
         currentIteration: 0,
         maxIterations: 5,
@@ -284,15 +284,15 @@ describe('OrchestrationManager - Unit Tests', () => {
         userId: 'user-123' as UUID,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        logs: [], // Add missing logs property
+        logs: [] // Add missing logs property
         type: 'create' as const,
         totalPhases: 18,
-        errors: [],
-        userNotifications: [],
-        knowledgeIds: [],
-        requiredSecrets: [],
-        providedSecrets: [],
-        customInstructions: [],
+        errors: []
+        userNotifications: []
+        knowledgeIds: []
+        requiredSecrets: []
+        providedSecrets: []
+        customInstructions: []
         errorAnalysis: new Map(),
       };
 

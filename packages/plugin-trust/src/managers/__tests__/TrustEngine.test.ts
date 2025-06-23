@@ -74,7 +74,7 @@ describe('TrustEngine', () => {
         },
         confidence: expect.any(Number),
         interactionCount: 0,
-        evidence: [],
+        evidence: []
         lastCalculated: expect.any(Number),
         calculationMethod: 'default',
         trend: {
@@ -108,7 +108,7 @@ describe('TrustEngine', () => {
         },
         confidence: 0.7,
         interactionCount: 5,
-        evidence: [],
+        evidence: []
         lastCalculated: Date.now() - 3600000,
         calculationMethod: 'weighted_average',
         trend: {
@@ -325,7 +325,7 @@ describe('TrustEngine', () => {
           benevolence: 70,
           transparency: 70
         },
-        evidence: [],
+        evidence: []
         lastCalculated: Date.now() - 86400000, // 1 day ago
         trend: {
           direction: 'stable',

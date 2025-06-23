@@ -32,10 +32,10 @@ const testCharacterWithToken: Character = {
       { name: 'HuggingFaceTestAgent', content: { text: 'testing huggingface response' } },
     ],
   ],
-  postExamples: [],
+  postExamples: []
   topics: ['testing', 'huggingface', 'integration', 'datasets'],
-  knowledge: [],
-  plugins: [],
+  knowledge: []
+  plugins: []
   settings: {
     HUGGING_FACE_TOKEN: 'hf_test_token_placeholder', // Using placeholder for testing
   },

@@ -12,11 +12,11 @@ export async function createMockRuntime(): Promise<Partial<IAgentRuntime>> {
       name: 'Training Data Extractor',
       bio: ['Extracts training data from ElizaOS'],
       system: 'Extract high-quality training examples',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
-      plugins: [],
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
+      plugins: []
     },
 
     // Mock database operations
@@ -63,13 +63,13 @@ export async function createMockRuntime(): Promise<Partial<IAgentRuntime>> {
     },
 
     // Minimal mock implementations
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [],
+    providers: []
+    actions: []
+    evaluators: []
+    plugins: []
     services: new Map(),
     events: new Map(),
-    routes: [],
+    routes: []
 
     // Mock methods
     registerPlugin: async () => {},

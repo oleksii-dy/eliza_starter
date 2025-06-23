@@ -27,7 +27,7 @@ const GroupCard: React.FC<GroupCardProps> = ({ group /*, onEdit */ }) => {
     );
   }
 
-  const groupName = generateGroupName(group, group.participants || [], currentClientId);
+  const groupName = generateGroupName(group, group.participants || [] currentClientId);
   // Assuming participant count might come from metadata or a separate query in the parent component
   const participantCount =
     group.metadata?.participantCount ||

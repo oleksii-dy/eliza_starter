@@ -313,7 +313,7 @@ describe('requestSecretFormAction', () => {
     it('should handle no secrets specified', async () => {
       const parseJSON = await import('@elizaos/core').then((m) => m.parseJSONObjectFromText);
       parseJSONSpy.mockReturnValue({
-        secrets: [],
+        secrets: []
       });
 
       const message: Memory = {

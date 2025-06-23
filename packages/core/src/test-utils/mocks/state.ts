@@ -67,7 +67,7 @@ export function createMockState(overrides: MockStateOverrides = {}): State {
         CHARACTER: { agentName: 'Test Agent', bio: 'A helpful test assistant' },
         RECENT_MESSAGES: { messageCount: 5, lastSpeaker: 'user' },
       },
-      actionResults: [],
+      actionResults: []
       workingMemory: {},
       context: 'test conversation',
       ...overrides.data,
@@ -198,7 +198,7 @@ export function createMockStateWithProvider(
  * @returns State with action history
  */
 export function createMockStateWithActions(
-  actionResults: ActionResult[],
+  actionResults: ActionResult[]
   overrides: MockStateOverrides = {}
 ): State {
   return createMockState({

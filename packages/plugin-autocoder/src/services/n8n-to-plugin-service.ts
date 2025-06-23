@@ -63,7 +63,8 @@ export interface PluginGenerationJob {
 
 export class N8nToPluginService extends Service {
   static serviceName = 'n8n-to-plugin';
-  capabilityDescription = 'Converts n8n workflows into ElizaOS plugin components with state management and caching';
+  capabilityDescription =
+    'Converts n8n workflows into ElizaOS plugin components with state management and caching';
 
   private jobs: Map<string, PluginGenerationJob> = new Map();
   private anthropic: Anthropic | null = null;
@@ -78,7 +79,7 @@ export class N8nToPluginService extends Service {
 
   async start(): Promise<void> {
     elizaLogger.info('[N8nToPlugin] Service started');
-    
+
     // Initialize Anthropic if API key is available
     const apiKey = this.runtime?.getSetting('ANTHROPIC_API_KEY');
     if (apiKey) {
@@ -94,7 +95,7 @@ export class N8nToPluginService extends Service {
 
   async stop(): Promise<void> {
     elizaLogger.info('[N8nToPlugin] Service stopped');
-    
+
     // Mark any running jobs as failed
     for (const job of this.jobs.values()) {
       if (job.status !== 'completed' && job.status !== 'failed') {
@@ -115,14 +116,14 @@ export class N8nToPluginService extends Service {
       spec,
       status: 'pending',
       progress: 0,
-      mappings: [],
+      mappings: []
       startedAt: new Date(),
     };
 
     this.jobs.set(jobId, job);
 
     // Start conversion process
-    this.processConversionJob(job).catch(error => {
+    this.processConversionJob(job).catch((error) => {
       elizaLogger.error('[N8nToPlugin] Failed to process conversion job:', error);
       job.status = 'failed';
       job.error = error instanceof Error ? error.message : String(error);
@@ -140,12 +141,13 @@ export class N8nToPluginService extends Service {
 
     for (const workflow of workflows) {
       // Analyze workflow characteristics
-      const hasWebhookTrigger = workflow.triggers?.some(t => t.type.includes('webhook'));
-      const hasScheduleTrigger = workflow.triggers?.some(t => t.type.includes('schedule') || t.type.includes('cron'));
-      const hasDataFetching = workflow.nodes?.some(n => 
-        n.type.includes('httpRequest') || 
-        n.type.includes('database') ||
-        n.type.includes('api')
+      const hasWebhookTrigger = workflow.triggers?.some((t) => t.type.includes('webhook'));
+      const hasScheduleTrigger = workflow.triggers?.some(
+        (t) => t.type.includes('schedule') || t.type.includes('cron')
+      );
+      const hasDataFetching = workflow.nodes?.some(
+        (n) =>
+          n.type.includes('httpRequest') || n.type.includes('database') || n.type.includes('api')
       );
       const isLongRunning = hasScheduleTrigger || (workflow.nodes?.length ?? 0) > 5;
 
@@ -157,7 +159,7 @@ export class N8nToPluginService extends Service {
           workflowName: workflow.name,
           componentType: 'action',
           componentName: this.generateComponentName(workflow.name, 'action'),
-          triggers: workflow.triggers?.map(t => t.type),
+          triggers: workflow.triggers?.map((t) => t.type),
           cacheConfig: {
             enabled: false, // Actions typically don't cache
           },
@@ -190,7 +192,7 @@ export class N8nToPluginService extends Service {
           workflowName: workflow.name,
           componentType: 'service',
           componentName: this.generateComponentName(workflow.name, 'service'),
-          triggers: workflow.triggers?.map(t => t.type),
+          triggers: workflow.triggers?.map((t) => t.type),
           cacheConfig: {
             enabled: true,
             ttl: 3600, // 1 hour for services
@@ -287,14 +289,14 @@ export class N8nToPluginService extends Service {
       job.status = 'analyzing';
       job.progress = 10;
       elizaLogger.info(`[N8nToPlugin] Analyzing workflows for job ${job.id}`);
-      
-      job.mappings = job.spec.mappings || await this.analyzeWorkflows(job.spec.workflows);
+
+      job.mappings = job.spec.mappings || (await this.analyzeWorkflows(job.spec.workflows));
       job.progress = 20;
 
       // Step 2: Generate plugin code (60% progress)
       job.status = 'generating';
       elizaLogger.info(`[N8nToPlugin] Generating plugin code for job ${job.id}`);
-      
+
       job.generatedCode = {
         actions: new Map(),
         providers: new Map(),
@@ -306,7 +308,7 @@ export class N8nToPluginService extends Service {
 
       // Generate components based on mappings
       for (const mapping of job.mappings) {
-        const workflow = job.spec.workflows.find(w => w.name === mapping.workflowName);
+        const workflow = job.spec.workflows.find((w) => w.name === mapping.workflowName);
         if (!workflow) continue;
 
         switch (mapping.componentType) {
@@ -318,7 +320,7 @@ export class N8nToPluginService extends Service {
               job.generatedCode.tests.set(`${mapping.componentName}.test.ts`, testCode);
             }
             break;
-          
+
           case 'provider':
             const providerCode = await this.generateProviderComponent(workflow, mapping);
             job.generatedCode.providers.set(mapping.componentName, providerCode);
@@ -327,7 +329,7 @@ export class N8nToPluginService extends Service {
               job.generatedCode.tests.set(`${mapping.componentName}.test.ts`, testCode);
             }
             break;
-          
+
           case 'service':
             const serviceCode = await this.generateServiceComponent(workflow, mapping);
             job.generatedCode.services.set(mapping.componentName, serviceCode);
@@ -337,22 +339,22 @@ export class N8nToPluginService extends Service {
             }
             break;
         }
-        
-        job.progress = 20 + (40 * (job.mappings.indexOf(mapping) + 1) / job.mappings.length);
+
+        job.progress = 20 + (40 * (job.mappings.indexOf(mapping) + 1)) / job.mappings.length;
       }
 
       // Generate index.ts
       job.generatedCode.index = await this.generateIndexFile(job);
-      
+
       // Generate package.json
       job.generatedCode.packageJson = await this.generatePackageJson(job.spec);
-      
+
       job.progress = 60;
 
       // Step 3: Build plugin (80% progress)
       job.status = 'building';
       elizaLogger.info(`[N8nToPlugin] Building plugin for job ${job.id}`);
-      
+
       job.outputPath = await this.saveGeneratedPlugin(job);
       job.progress = 80;
 
@@ -360,7 +362,7 @@ export class N8nToPluginService extends Service {
       if (job.spec.config?.generateTests) {
         job.status = 'testing';
         elizaLogger.info(`[N8nToPlugin] Testing plugin for job ${job.id}`);
-        
+
         await this.testGeneratedPlugin(job);
         job.progress = 95;
       }
@@ -369,8 +371,10 @@ export class N8nToPluginService extends Service {
       job.status = 'completed';
       job.progress = 100;
       job.completedAt = new Date();
-      
-      elizaLogger.info(`[N8nToPlugin] Plugin generation completed for job ${job.id}. Output: ${job.outputPath}`);
+
+      elizaLogger.info(
+        `[N8nToPlugin] Plugin generation completed for job ${job.id}. Output: ${job.outputPath}`
+      );
     } catch (error) {
       job.status = 'failed';
       job.error = error instanceof Error ? error.message : String(error);
@@ -388,7 +392,7 @@ export class N8nToPluginService extends Service {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
-    
+
     return `${sanitized}-${type}`;
   }
 
@@ -400,7 +404,7 @@ export class N8nToPluginService extends Service {
     mapping: N8nPluginMapping
   ): Promise<string> {
     const componentName = this.toPascalCase(mapping.componentName);
-    
+
     return `import type { Action, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 
@@ -438,11 +442,15 @@ export const ${componentName}: Action = {
       // Get n8n service for workflow execution
       const n8nService = runtime.getService('n8n-to-plugin');
       
-      ${mapping.stateManagement?.persistState ? `
+      ${
+        mapping.stateManagement?.persistState
+          ? `
       // Load persisted state
       const stateKey = '${mapping.stateManagement.stateKey}';
       const persistedState = n8nService?.getWorkflowState(stateKey) || {};
-      ` : ''}
+      `
+          : ''
+      }
       
       // Extract parameters from message
       const params = {
@@ -452,10 +460,14 @@ export const ${componentName}: Action = {
       // Execute workflow logic
       ${await this.generateWorkflowExecutionLogic(workflow, mapping)}
       
-      ${mapping.stateManagement?.persistState ? `
+      ${
+        mapping.stateManagement?.persistState
+          ? `
       // Persist updated state
       n8nService?.setWorkflowState(stateKey, { ...persistedState, lastExecution: Date.now(), ...result });
-      ` : ''}
+      `
+          : ''
+      }
       
       // Send response
       if (callback) {
@@ -491,7 +503,7 @@ export const ${componentName}: Action = {
     mapping: N8nPluginMapping
   ): Promise<string> {
     const componentName = this.toPascalCase(mapping.componentName);
-    
+
     return `import type { Provider, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 
@@ -512,7 +524,9 @@ export const ${componentName}: Provider = {
       // Get n8n service for caching
       const n8nService = runtime.getService('n8n-to-plugin');
       
-      ${mapping.cacheConfig?.enabled ? `
+      ${
+        mapping.cacheConfig?.enabled
+          ? `
       // Check cache first
       const cacheKey = '${mapping.cacheConfig.key}';
       const cachedData = n8nService?.getCachedResult(cacheKey);
@@ -521,15 +535,21 @@ export const ${componentName}: Provider = {
         elizaLogger.info('[${componentName}] Returning cached data');
         return this.formatProviderData(cachedData);
       }
-      ` : ''}
+      `
+          : ''
+      }
       
       // Execute workflow to fetch data
       ${await this.generateDataFetchingLogic(workflow)}
       
-      ${mapping.cacheConfig?.enabled ? `
+      ${
+        mapping.cacheConfig?.enabled
+          ? `
       // Cache the result
       n8nService?.setCachedResult(cacheKey, data, ${mapping.cacheConfig.ttl || 300});
-      ` : ''}
+      `
+          : ''
+      }
       
       return this.formatProviderData(data);
       
@@ -554,8 +574,8 @@ export const ${componentName}: Provider = {
     mapping: N8nPluginMapping
   ): Promise<string> {
     const componentName = this.toPascalCase(mapping.componentName);
-    const hasSchedule = mapping.triggers?.some(t => t.includes('schedule') || t.includes('cron'));
-    
+    const hasSchedule = mapping.triggers?.some((t) => t.includes('schedule') || t.includes('cron'));
+
     return `import type { Service, IAgentRuntime } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 
@@ -572,34 +592,50 @@ export class ${componentName} extends Service {
   private interval?: NodeJS.Timeout;
   private isRunning: boolean = false;
   
-  ${mapping.stateManagement?.persistState ? `
+  ${
+    mapping.stateManagement?.persistState
+      ? `
   private stateKey = '${mapping.stateManagement.stateKey}';
   private state: any = {};
-  ` : ''}
+  `
+      : ''
+  }
   
-  ${mapping.cacheConfig?.enabled ? `
+  ${
+    mapping.cacheConfig?.enabled
+      ? `
   private cacheKey = '${mapping.cacheConfig.key}';
   private cacheTTL = ${mapping.cacheConfig.ttl || 3600};
-  ` : ''}
+  `
+      : ''
+  }
   
   async start(runtime: IAgentRuntime): Promise<void> {
     this.runtime = runtime;
     elizaLogger.info('[${componentName}] Service started');
     
-    ${mapping.stateManagement?.persistState ? `
+    ${
+      mapping.stateManagement?.persistState
+        ? `
     // Load persisted state
     const n8nService = runtime.getService('n8n-to-plugin');
     this.state = n8nService?.getWorkflowState(this.stateKey) || {};
-    ` : ''}
+    `
+        : ''
+    }
     
-    ${hasSchedule ? `
+    ${
+      hasSchedule
+        ? `
     // Start scheduled execution
     this.startScheduledExecution();
-    ` : `
+    `
+        : `
     // Start service loop
     this.isRunning = true;
     this.runServiceLoop();
-    `}
+    `
+    }
   }
   
   async stop(): Promise<void> {
@@ -607,21 +643,31 @@ export class ${componentName} extends Service {
     
     this.isRunning = false;
     
-    ${hasSchedule ? `
+    ${
+      hasSchedule
+        ? `
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = undefined;
     }
-    ` : ''}
+    `
+        : ''
+    }
     
-    ${mapping.stateManagement?.persistState ? `
+    ${
+      mapping.stateManagement?.persistState
+        ? `
     // Save state before stopping
     const n8nService = this.runtime.getService('n8n-to-plugin');
     n8nService?.setWorkflowState(this.stateKey, this.state);
-    ` : ''}
+    `
+        : ''
+    }
   }
   
-  ${hasSchedule ? `
+  ${
+    hasSchedule
+      ? `
   private startScheduledExecution(): void {
     // Execute based on schedule trigger configuration
     const scheduleInterval = ${this.extractScheduleInterval(workflow)} * 1000; // Convert to ms
@@ -633,7 +679,8 @@ export class ${componentName} extends Service {
     // Execute immediately on start
     this.executeWorkflow();
   }
-  ` : `
+  `
+      : `
   private async runServiceLoop(): Promise<void> {
     while (this.isRunning) {
       try {
@@ -647,13 +694,16 @@ export class ${componentName} extends Service {
       }
     }
   }
-  `}
+  `
+  }
   
   private async executeWorkflow(): Promise<void> {
     try {
       elizaLogger.info('[${componentName}] Executing workflow');
       
-      ${mapping.cacheConfig?.enabled ? `
+      ${
+        mapping.cacheConfig?.enabled
+          ? `
       // Check if we should use cached results
       const n8nService = this.runtime.getService('n8n-to-plugin');
       const cachedResult = n8nService?.getCachedResult(this.cacheKey);
@@ -662,34 +712,48 @@ export class ${componentName} extends Service {
         elizaLogger.info('[${componentName}] Using cached workflow result');
         return;
       }
-      ` : ''}
+      `
+          : ''
+      }
       
       // Execute workflow logic
       ${await this.generateServiceExecutionLogic(workflow, mapping)}
       
-      ${mapping.cacheConfig?.enabled ? `
+      ${
+        mapping.cacheConfig?.enabled
+          ? `
       // Cache the result
       n8nService?.setCachedResult(this.cacheKey, result, this.cacheTTL);
-      ` : ''}
+      `
+          : ''
+      }
       
-      ${mapping.stateManagement?.persistState ? `
+      ${
+        mapping.stateManagement?.persistState
+          ? `
       // Update state
       this.state = { ...this.state, lastExecution: Date.now(), ...result };
       n8nService?.setWorkflowState(this.stateKey, this.state);
-      ` : ''}
+      `
+          : ''
+      }
       
     } catch (error) {
       elizaLogger.error('[${componentName}] Workflow execution error:', error);
     }
   }
   
-  ${mapping.cacheConfig?.enabled ? `
+  ${
+    mapping.cacheConfig?.enabled
+      ? `
   private shouldRefreshCache(): boolean {
     // Add logic to determine if cache should be refreshed
     // For example, based on certain conditions or time
     return false;
   }
-  ` : ''}
+  `
+      : ''
+  }
   
   // Public methods for external access
   public getState(): any {
@@ -706,24 +770,24 @@ export default ${componentName};`;
 
   /**
    * Helper method implementations would go here...
-   * Including: generateValidationLogic, generateParameterExtraction, 
+   * Including: generateValidationLogic, generateParameterExtraction,
    * generateWorkflowExecutionLogic, etc.
    */
-  
+
   private toPascalCase(str: string): string {
     return str
       .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join('');
   }
 
   private generateSimiles(name: string, description: string): string {
     const words = [...name.split(/[\s-_]+/), ...description.split(/\s+/)];
     const similes = words
-      .filter(w => w.length > 3)
+      .filter((w) => w.length > 3)
       .slice(0, 5)
-      .map(w => `'${w.toLowerCase()}'`);
-    
+      .map((w) => `'${w.toLowerCase()}'`);
+
     return similes.join(',\n    ');
   }
 
@@ -810,13 +874,19 @@ export const plugin: Plugin = {
   name: '${job.spec.name}',
   description: '${job.spec.description}',
   actions: [
-    ${Array.from(job.generatedCode!.actions.keys()).map(n => this.toPascalCase(n)).join(',\n    ')}
+    ${Array.from(job.generatedCode!.actions.keys())
+      .map((n) => this.toPascalCase(n))
+      .join(',\n    ')}
   ],
   providers: [
-    ${Array.from(job.generatedCode!.providers.keys()).map(n => this.toPascalCase(n)).join(',\n    ')}
+    ${Array.from(job.generatedCode!.providers.keys())
+      .map((n) => this.toPascalCase(n))
+      .join(',\n    ')}
   ],
   services: [
-    ${Array.from(job.generatedCode!.services.keys()).map(n => this.toPascalCase(n)).join(',\n    ')}
+    ${Array.from(job.generatedCode!.services.keys())
+      .map((n) => this.toPascalCase(n))
+      .join(',\n    ')}
   ],
 };
 
@@ -832,28 +902,32 @@ ${exports.join('\n')}
    * Generate package.json for the plugin
    */
   private async generatePackageJson(spec: PluginGenerationSpec): Promise<string> {
-    return JSON.stringify({
-      name: spec.name,
-      version: '0.1.0',
-      description: spec.description,
-      type: 'module',
-      main: 'dist/index.js',
-      types: 'dist/index.d.ts',
-      scripts: {
-        build: 'tsc',
-        test: 'vitest',
-        lint: 'eslint src',
+    return JSON.stringify(
+      {
+        name: spec.name,
+        version: '0.1.0',
+        description: spec.description,
+        type: 'module',
+        main: 'dist/index.js',
+        types: 'dist/index.d.ts',
+        scripts: {
+          build: 'tsc',
+          test: 'vitest',
+          lint: 'eslint src',
+        },
+        dependencies: {
+          '@elizaos/core': '^0.1.0',
+        },
+        devDependencies: {
+          '@types/node': '^20.0.0',
+          typescript: '^5.0.0',
+          vitest: '^1.0.0',
+          eslint: '^8.0.0',
+        },
       },
-      dependencies: {
-        '@elizaos/core': '^0.1.0',
-      },
-      devDependencies: {
-        '@types/node': '^20.0.0',
-        'typescript': '^5.0.0',
-        'vitest': '^1.0.0',
-        'eslint': '^8.0.0',
-      },
-    }, null, 2);
+      null,
+      2
+    );
   }
 
   /**
@@ -861,12 +935,12 @@ ${exports.join('\n')}
    */
   private async saveGeneratedPlugin(job: PluginGenerationJob): Promise<string> {
     const pluginPath = path.join(this.outputDir, job.id, job.spec.name);
-    
+
     // Create directory structure
     await fs.mkdir(path.join(pluginPath, 'src', 'actions'), { recursive: true });
     await fs.mkdir(path.join(pluginPath, 'src', 'providers'), { recursive: true });
     await fs.mkdir(path.join(pluginPath, 'src', 'services'), { recursive: true });
-    
+
     if (job.spec.config?.generateTests) {
       await fs.mkdir(path.join(pluginPath, 'src', '__tests__'), { recursive: true });
     }
@@ -950,10 +1024,10 @@ Add this plugin to your ElizaOS agent configuration.
     try {
       // Run npm install
       await execAsync('npm install', { cwd: job.outputPath });
-      
+
       // Run build
       await execAsync('npm run build', { cwd: job.outputPath });
-      
+
       // Run tests if available
       if (job.spec.config?.generateTests) {
         await execAsync('npm test', { cwd: job.outputPath });
@@ -1049,4 +1123,4 @@ describe('${mapping.componentName}', () => {
   }
 }
 
-export default N8nToPluginService; 
+export default N8nToPluginService;

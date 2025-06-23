@@ -75,9 +75,9 @@ export class ResultParser {
         confidence: 0,
         method: 'unknown',
         dataQuality: 'low',
-        frameworks: [],
-        warnings: [],
-        errors: [],
+        frameworks: []
+        warnings: []
+        errors: []
         executionTime: 0,
       };
 
@@ -1152,7 +1152,7 @@ export class ResultParser {
       failed: 0,
       skipped: 0,
       duration: 0,
-      failures: [],
+      failures: []
       noTestsFound: false,
       frameworkDetected: 'unknown',
       executionReliable: false,

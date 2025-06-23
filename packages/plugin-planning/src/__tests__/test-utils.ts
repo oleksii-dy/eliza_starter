@@ -12,10 +12,10 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       name: 'TestAgent',
       bio: ['Test bio for planning tests'],
       system: 'You are a test agent for planning system validation',
-      messageExamples: [],
-      postExamples: [],
+      messageExamples: []
+      postExamples: []
       topics: ['planning', 'testing'],
-      knowledge: [],
+      knowledge: []
       plugins: ['@elizaos/plugin-planning'],
     } as Character,
 
@@ -189,7 +189,7 @@ ${steps}
         description: 'Send a text response',
         handler: vi.fn().mockResolvedValue({ text: 'Mock reply response' }),
         validate: vi.fn().mockResolvedValue(true),
-        examples: [],
+        examples: []
       },
       {
         name: 'THINK',
@@ -197,7 +197,7 @@ ${steps}
         description: 'Internal thinking process',
         handler: vi.fn().mockResolvedValue({ thought: 'Mock thinking process' }),
         validate: vi.fn().mockResolvedValue(true),
-        examples: [],
+        examples: []
       },
       {
         name: 'SEND_EMAIL',
@@ -205,7 +205,7 @@ ${steps}
         description: 'Send an email message',
         handler: vi.fn().mockResolvedValue({ text: 'Email sent successfully' }),
         validate: vi.fn().mockResolvedValue(true),
-        examples: [],
+        examples: []
       },
       {
         name: 'SEARCH',
@@ -213,7 +213,7 @@ ${steps}
         description: 'Search for information',
         handler: vi.fn().mockResolvedValue({ text: 'Search results found' }),
         validate: vi.fn().mockResolvedValue(true),
-        examples: [],
+        examples: []
       },
     ],
 
@@ -242,7 +242,7 @@ ${steps}
         userName: 'TestUser',
       },
       data: {
-        conversationHistory: [],
+        conversationHistory: []
         providers: {},
       },
       text: 'Current state context',
@@ -370,7 +370,7 @@ export function createMockActionPlan(overrides: any = {}): any {
       },
     ],
     executionModel: 'sequential',
-    constraints: [],
+    constraints: []
     createdAt: Date.now(),
     estimatedDuration: 5000,
     ...overrides,

@@ -38,7 +38,7 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
       relationships: new Map(),
       rooms: new Map(),
       participants: new Map(),
-      logs: [],
+      logs: []
       cache: new Map(),
       tasks: new Map(),
       worlds: new Map(),
@@ -255,7 +255,7 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     return participants.filter((p) => p.roomId === roomId);
   }
 
-  async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
+  async addParticipantsRoom(entityIds: UUID[] roomId: UUID): Promise<boolean> {
     for (const entityId of entityIds) {
       const key = `${entityId}-${roomId}`;
       this.data.participants.set(key, { entityId, roomId });
@@ -479,7 +479,7 @@ export async function createRealTestRuntime(
   options: RealRuntimeOptions = {}
 ): Promise<IAgentRuntime> {
   const {
-    plugins = [],
+    plugins = []
     enableLLM = false,
     databaseType = 'memory',
     logLevel = 'error',
@@ -563,7 +563,7 @@ export async function createRealTestRuntime(
     ],
     postExamples: ['Working on real runtime testing'],
     topics: ['testing', 'integration', 'runtime'],
-    knowledge: [],
+    knowledge: []
     plugins: plugins.map((p) => p.name),
     settings: {
       enablePlanning,
@@ -764,7 +764,7 @@ export async function createRealTestRuntime(
         return JSON.stringify({
           text: 'I understand your request and will help you accordingly.',
           thought: 'Responding to user message.',
-          actions: [],
+          actions: []
         });
       }
 
@@ -857,7 +857,7 @@ export async function processMessageWithActions(
     responseContent = {
       text: llmResponse,
       thought: 'Generated response',
-      actions: [],
+      actions: []
     };
 
     // Try to extract actions from text patterns

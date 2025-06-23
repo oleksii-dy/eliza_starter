@@ -125,7 +125,7 @@ async function getEvolutionSuggestions(runtime: IAgentRuntime, roomId: string, l
  */
 function formatEvolutionContext(
   characterInfo: any,
-  recentModifications: any[],
+  recentModifications: any[]
   evolutionSuggestions: any[]
 ): string {
   const sections: string[] = ['[CHARACTER EVOLUTION CONTEXT]'];

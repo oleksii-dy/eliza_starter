@@ -23,11 +23,11 @@ describe.skipIf(!RUN_SWE_BENCH)('SWE-bench Integration', () => {
       character: {
         name: 'TestAgent',
         bio: ['Test agent for SWE-bench'],
-        knowledge: [],
-        messageExamples: [],
-        postExamples: [],
-        topics: [],,
-        plugins: [],
+        knowledge: []
+        messageExamples: []
+        postExamples: []
+        topics: []
+        plugins: []
       },
     } as unknown as IAgentRuntime;
 
@@ -123,10 +123,10 @@ describe.skipIf(!RUN_SWE_BENCH || !process.env.SWE_BENCH_FULL)('SWE-bench Full B
       character: {
         name: 'BenchmarkAgent',
         bio: ['Benchmark agent for SWE-bench'],
-        knowledge: [],
-        messageExamples: [],
-        postExamples: [],
-        topics: [],,
+        knowledge: []
+        messageExamples: []
+        postExamples: []
+        topics: []
         plugins: ['@elizaos/plugin-sql'],
       },
     } as unknown as IAgentRuntime;

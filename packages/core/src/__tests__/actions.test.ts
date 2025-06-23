@@ -94,7 +94,7 @@ describe('Actions', () => {
     });
 
     it('should handle empty actions array', () => {
-      const examples = composeActionExamples([], 5);
+      const examples = composeActionExamples([] 5);
       expect(examples).toBe('');
     });
 
@@ -108,8 +108,8 @@ describe('Actions', () => {
         {
           name: 'test',
           description: 'Test action without examples',
-          examples: [], // Empty examples array
-          similes: [],
+          examples: [] // Empty examples array
+          similes: []
           handler: async () => {
             throw new Error('Not implemented');
           },
@@ -121,7 +121,7 @@ describe('Actions', () => {
           name: 'test2',
           description: 'Test action with no examples property',
           // examples property not defined
-          similes: [],
+          similes: []
           handler: async () => {
             throw new Error('Not implemented');
           },

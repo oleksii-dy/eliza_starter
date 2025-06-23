@@ -20,10 +20,10 @@ describe('AutoCoder Plugin - Real Docker Integration Tests', () => {
       name: 'Docker Test Agent',
       bio: ['I am a test agent for Docker integration testing'],
       system: 'You are a test agent for Docker container management.',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
       plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-autocoder'],
       settings: {
         TEST_MODE: true,
@@ -484,7 +484,7 @@ describe('AutoCoder Plugin - Real Docker Integration Tests', () => {
               containerId: '',
               agentName: 'test',
               role: 'coder',
-              capabilities: [],
+              capabilities: []
               communicationPort: 9999,
               healthPort: 9998,
               environment: {},

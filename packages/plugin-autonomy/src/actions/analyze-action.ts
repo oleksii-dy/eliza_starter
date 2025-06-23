@@ -69,12 +69,12 @@ export const analyzeDataAction: Action = {
       const analysis = {
         path: targetPath,
         type: 'unknown',
-        files: [] as string[],
+        files: [] as string[]
         languages: new Set<string>(),
         frameworks: new Set<string>(),
         dependencies: {} as Record<string, any>,
         structure: {} as Record<string, number>,
-        insights: [] as string[],
+        insights: [] as string[]
       };
 
       // Read directory structure
@@ -219,5 +219,5 @@ This analysis has been stored for future reference.`;
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };

@@ -555,7 +555,7 @@ async function generateSuccessResponse(
   runtime: IAgentRuntime,
   worldSettings: WorldSettings,
   state: State,
-  messages: string[],
+  messages: string[]
   callback: HandlerCallback
 ): Promise<void> {
   try {
@@ -1033,5 +1033,5 @@ export const updateSettingsAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };

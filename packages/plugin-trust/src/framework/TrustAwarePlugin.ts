@@ -188,7 +188,7 @@ export const exampleTrustAwarePlugin: Plugin = {
     {
       name: 'sensitive-action',
       description: 'A sensitive action requiring trust',
-      examples: [],
+      examples: []
       validate: async (runtime, message) => {
         return true; // Simple validation
       },

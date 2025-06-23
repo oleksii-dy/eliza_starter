@@ -89,7 +89,7 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
             names: ['Test Entity'],
             type: 'person',
             summary: 'Test entity',
-            tags: [],
+            tags: []
             platforms: {},
             metadata: {},
             createdAt: new Date().toISOString(),
@@ -105,7 +105,7 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
             names: ['Test Entity'],
             type: 'person',
             summary: 'Test entity',
-            tags: [],
+            tags: []
             platforms: {},
             metadata: {},
             createdAt: new Date().toISOString(),
@@ -200,13 +200,13 @@ export function createMockState(overrides?: Partial<State>): State {
     agentId: stringToUuid('test-agent'),
     roomId: stringToUuid('test-room'),
     userId: stringToUuid('test-user'),
-    messages: [],
-    memories: [],
-    goals: [],
-    facts: [],
-    knowledge: [],
-    recentMessages: [],
-    recentMessagesData: [],
+    messages: []
+    memories: []
+    goals: []
+    facts: []
+    knowledge: []
+    recentMessages: []
+    recentMessagesData: []
     bio: 'Test agent bio',
     senderName: 'Test User',
     ...overrides,

@@ -9,12 +9,9 @@ export { scheduleFollowUpAction } from './scheduleFollowUp';
 export { createEntityAction } from './createEntity';
 export { findEntityAction } from './findEntity';
 
-// OAuth identity verification actions - temporarily disabled
+// OAuth identity verification actions - removed as they depend on non-existent services
 // export { verifyOAuthIdentityAction } from './verifyOAuthIdentityAction';
 // export { checkIdentityStatusAction } from './checkIdentityStatusAction';
 
-// Secrets management and API actions
+// Secrets management action
 export { storeSecretAction } from './storeSecretAction';
-export { checkWeatherAction } from './checkWeatherAction';
-export { getNewsAction } from './getNewsAction';
-export { getStockPriceAction } from './getStockPriceAction';

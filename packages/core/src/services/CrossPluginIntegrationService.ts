@@ -405,8 +405,8 @@ export class CrossPluginIntegrationService {
         verificationLevel: 'unknown',
         requiredActions: ['Contact support'],
         metadata: {
-          trustFactors: [],
-          identityFactors: [],
+          trustFactors: []
+          identityFactors: []
           riskFactors: [
             {
               type: 'assessment-error',
@@ -575,8 +575,8 @@ export class CrossPluginIntegrationService {
       return {
         success: false,
         primaryEntityId: '' as UUID,
-        consolidatedPlatforms: [],
-        mergedEntities: [],
+        consolidatedPlatforms: []
+        mergedEntities: []
         finalTrustScore: 0,
         verificationLevel: 'error',
         conflicts: [

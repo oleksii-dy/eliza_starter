@@ -21,11 +21,11 @@ describe('Simple Real Runtime Test', () => {
         name: 'SimpleTestAgent',
         system: 'You are a simple test agent.',
         bio: ['I am used for basic testing.'],
-        messageExamples: [],
-        postExamples: [],
-        topics: [],
-        knowledge: [],
-        plugins: [],
+        messageExamples: []
+        postExamples: []
+        topics: []
+        knowledge: []
+        plugins: []
       },
     });
 
@@ -70,13 +70,13 @@ describe('Simple Real Runtime Test', () => {
         name: 'HealthCheckAgent',
         system: 'Health test agent',
         bio: ['Testing health'],
-        messageExamples: [],
-        postExamples: [],
-        topics: [],
-        knowledge: [],
-        plugins: [],
+        messageExamples: []
+        postExamples: []
+        topics: []
+        knowledge: []
+        plugins: []
       },
-      plugins: [],
+      plugins: []
       apiKeys: { TEST_KEY: 'test-value' },
     });
 

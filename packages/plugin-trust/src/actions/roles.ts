@@ -356,5 +356,5 @@ export const updateRoleAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };

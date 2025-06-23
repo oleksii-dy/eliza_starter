@@ -98,7 +98,7 @@ const relationshipsProvider: Provider = {
     if (!relationships || relationships.length === 0) {
       return {
         data: {
-          relationships: [],
+          relationships: []
         },
         values: {
           relationships: 'No relationships found.',
@@ -112,7 +112,7 @@ const relationshipsProvider: Provider = {
     if (!formattedRelationships) {
       return {
         data: {
-          relationships: [],
+          relationships: []
         },
         values: {
           relationships: 'No relationships found.',

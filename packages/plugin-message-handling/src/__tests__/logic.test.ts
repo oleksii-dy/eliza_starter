@@ -197,7 +197,7 @@ describe('Message Handler Logic', () => {
       }
       // Provide a default successful response for other useModel calls
       if (modelType === ModelType.TEXT_SMALL) {
-        return Promise.resolve(JSON.stringify({ action: 'RESPOND', providers: [], reasoning: '' }));
+        return Promise.resolve(JSON.stringify({ action: 'RESPOND', providers: [] reasoning: '' }));
       }
       if (modelType === ModelType.TEXT_LARGE) {
         return Promise.resolve(

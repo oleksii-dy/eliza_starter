@@ -10,8 +10,8 @@ export const rolodexPlugin: Plugin = {
   description: 'Advanced entity and relationship management with trust integration',
   services: [RolodexService as any],
   actions: Object.values(actions),
-  providers: Object.values(providers) as any[],
-  evaluators: Object.values(evaluators) as any[],
+  providers: Object.values(providers) as any[]
+  evaluators: Object.values(evaluators) as any[]
   tests: [tests],
   // Schema will be added when the plugin properly implements database functionality
   // For now, the plugin uses the runtime's existing entity/relationship storage

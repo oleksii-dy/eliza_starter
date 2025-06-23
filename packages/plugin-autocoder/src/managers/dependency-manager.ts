@@ -107,17 +107,17 @@ export class DependencyManager {
    * Analyze dependencies based on requirements
    */
   async analyzeDependencies(
-    requirements: string[],
-    existingPlugins: string[],
+    requirements: string[]
+    existingPlugins: string[]
     options: DependencyAnalysisOptions = {}
   ): Promise<DependencyManifest> {
     logger.info('[DependencyManager] Analyzing dependencies for requirements:', requirements);
 
     const manifest: DependencyManifest = {
-      required: [],
-      optional: [],
+      required: []
+      optional: []
       serviceInterfaces: new Map(),
-      typeImports: [],
+      typeImports: []
     };
 
     // Search for relevant plugins
@@ -157,7 +157,7 @@ export class DependencyManager {
    * Find plugins relevant to the requirements
    */
   private async findRelevantPlugins(
-    requirements: string[],
+    requirements: string[]
     existingPlugins: string[]
   ): Promise<Array<{ name: string; path?: string; relevance: number }>> {
     const plugins: Array<{ name: string; path?: string; relevance: number }> = [];
@@ -245,7 +245,7 @@ export class DependencyManager {
         // For registry plugins without local path, make a best guess
         return {
           name: plugin.name,
-          services: [],
+          services: []
           reason: 'May provide useful functionality based on description',
           optional: true,
         };
@@ -311,7 +311,7 @@ export class DependencyManager {
       for (const service of analysis.services) {
         const serviceInterface: ServiceInterface = {
           name: service.name,
-          methods: [], // ServiceInfo doesn't have methods, so we leave it empty
+          methods: [] // ServiceInfo doesn't have methods, so we leave it empty
           interface: `interface ${service.name} extends Service`, // Generate a basic interface
         };
 
@@ -366,7 +366,7 @@ export class DependencyManager {
               const transitiveDep: PluginDependency = {
                 name: dep.name,
                 version: dep.version,
-                services: [], // Will be populated later
+                services: [] // Will be populated later
                 reason: `Transitive dependency of ${pluginName}`,
                 optional: true,
               };
@@ -501,8 +501,8 @@ export class DependencyManager {
     const context: GenerationContext = {
       dependencies: manifest,
       serviceUsageExamples: new Map(),
-      bestPractices: [],
-      warnings: [],
+      bestPractices: []
+      warnings: []
     };
 
     // Add service usage examples
@@ -588,8 +588,8 @@ export class DependencyManager {
   }> {
     const result = {
       valid: true,
-      errors: [] as string[],
-      warnings: [] as string[],
+      errors: [] as string[]
+      warnings: [] as string[]
     };
 
     // Check for missing required dependencies

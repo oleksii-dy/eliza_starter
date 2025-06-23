@@ -170,7 +170,7 @@ const testSystemProvider: Provider = {
 const testMetricsEvaluator: Evaluator = {
   name: 'TEST_METRICS',
   description: 'Evaluates test metrics and performance',
-  examples: [],
+  examples: []
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     // Run on every 3rd message
@@ -248,9 +248,9 @@ const testPluginNoEnv: Plugin = {
   actions: [
     {
       name: 'TEST_SIMPLE',
-      similes: [],
+      similes: []
       description: 'Simple test action',
-      examples: [],
+      examples: []
       validate: async () => true,
       handler: async (runtime, message, state, options, callback) => {
         if (callback) {
@@ -285,11 +285,11 @@ describe('Plugin Lifecycle Integration Tests', () => {
     name: 'IntegrationTestAgent',
     bio: ['Integration test agent for plugin lifecycle testing'],
     system: 'You are an integration test agent',
-    messageExamples: [],
-    postExamples: [],
-    topics: [],
-    knowledge: [],
-    plugins: [],
+    messageExamples: []
+    postExamples: []
+    topics: []
+    knowledge: []
+    plugins: []
     settings: {
       TEST_DB_API_KEY: 'test-api-key-123',
       // Intentionally missing TEST_OPTIONAL_KEY to test error handling
@@ -722,9 +722,9 @@ describe('Plugin Lifecycle Integration Tests', () => {
         actions: [
           {
             name: 'FAILING_ACTION',
-            similes: [],
+            similes: []
             description: 'Action that depends on failing service',
-            examples: [],
+            examples: []
             validate: async () => true,
             handler: async () => ({ text: 'Should not execute' }),
           },
@@ -778,7 +778,7 @@ describe('Plugin Lifecycle Integration Tests', () => {
           'NON_EXISTENT_ACTION',
           'action',
           { enabled: true },
-          [],
+          []
           configManager.getEnabledComponentsMap()
         );
 
@@ -794,7 +794,7 @@ describe('Plugin Lifecycle Integration Tests', () => {
         'NON_EXISTENT_ACTION',
         'action',
         { enabled: true },
-        [],
+        []
         configManager.getEnabledComponentsMap()
       );
 

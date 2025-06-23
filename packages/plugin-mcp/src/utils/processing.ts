@@ -148,7 +148,7 @@ export async function handleToolResponse(
   toolArgs: Record<string, unknown>,
   toolOutput: string,
   hasAttachments: boolean,
-  attachments: Media[],
+  attachments: Media[]
   state: State,
   mcpProvider: {
     values: { mcp: unknown };

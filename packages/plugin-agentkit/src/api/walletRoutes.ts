@@ -531,7 +531,7 @@ export const custodialWalletRoutes: Route[] = [
                 
                 res.json({
                     success: true,
-                    transactions: transactions || [],
+                    transactions: transactions || []
                     pagination: {
                         total: totalCount?.[0]?.count || 0,
                         limit: parseInt(limit as string),

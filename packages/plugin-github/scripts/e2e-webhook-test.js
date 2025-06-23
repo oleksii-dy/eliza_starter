@@ -45,7 +45,7 @@ const testResults = {
   passed: 0,
   failed: 0,
   skipped: 0,
-  tests: [],
+  tests: []
 };
 
 // Utility functions

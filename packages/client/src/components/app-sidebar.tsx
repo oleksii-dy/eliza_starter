@@ -41,7 +41,7 @@ import { useMemo, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'; // Added useNavigate
 
 /* ---------- helpers ---------- */
-const partition = <T,>(src: T[], pred: (v: T) => boolean): [T[], T[]] => {
+const partition = <T,>(src: T[] pred: (v: T) => boolean): [T[] T[]] => {
   const pass: T[] = [];
   const fail: T[] = [];
   src.forEach((v) => (pred(v) ? pass : fail).push(v));
@@ -137,7 +137,7 @@ const GroupRow = ({
             <Hash className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm truncate max-w-32">
               {channel.name ||
-                generateGroupName(channel, (channel as any).participants || [], currentClientId)}
+                generateGroupName(channel, (channel as any).participants || [] currentClientId)}
             </span>
           </div>
         </SidebarMenuButton>
@@ -284,7 +284,7 @@ const ChannelsForServer = ({
   const { confirm, isOpen, onOpenChange, onConfirm, options } = useConfirmation();
 
   const groupChannels = useMemo(
-    () => channelsData?.data?.channels?.filter((ch) => ch.type === CoreChannelType.GROUP) || [],
+    () => channelsData?.data?.channels?.filter((ch) => ch.type === CoreChannelType.GROUP) || []
     [channelsData]
   );
 
@@ -338,7 +338,7 @@ const ChannelsForServer = ({
                         {/* Use generateGroupName - assumes channel.participants exists or will be added */}
                         {generateGroupName(
                           channel,
-                          (channel as any).participants || [],
+                          (channel as any).participants || []
                           currentClientId
                         )}
                       </span>
@@ -385,7 +385,7 @@ const GroupChannelsForServer = ({
   const { data: channelsData, isLoading: isLoadingChannels } = useChannels(serverId);
 
   const groupChannels = useMemo(
-    () => channelsData?.data?.channels?.filter((ch) => ch.type === CoreChannelType.GROUP) || [],
+    () => channelsData?.data?.channels?.filter((ch) => ch.type === CoreChannelType.GROUP) || []
     [channelsData]
   );
 
@@ -450,8 +450,8 @@ export function AppSidebar({
   } = useAgentsWithDetails();
   const { data: serversData, isLoading: isLoadingServers } = useServers();
 
-  const agents = useMemo(() => agentsData?.agents || [], [agentsData]);
-  const servers = useMemo(() => serversData?.data?.servers || [], [serversData]);
+  const agents = useMemo(() => agentsData?.agents || [] [agentsData]);
+  const servers = useMemo(() => serversData?.data?.servers || [] [serversData]);
 
   const [onlineAgents, offlineAgents] = useMemo(
     () => partition(agents, (a) => a.status === CoreAgentStatus.ACTIVE),

@@ -13,7 +13,7 @@ import { PgDatabaseAdapter } from '../pg/adapter';
 import { PgliteDatabaseAdapter } from '../pglite/adapter';
 import { mockCharacter } from './fixtures';
 import { PGliteClientManager } from '../pglite/manager';
-import { getTempDbPath } from '@elizaos/core';
+import { getTempDbPath } from '../utils/temp';
 
 /**
  * Creates a fully initialized database adapter and a corresponding AgentRuntime instance
@@ -69,7 +69,7 @@ export async function createTestDatabase(
         knowledge: [],
         topics: [],
         messageExamples: [],
-        postExamples: [],
+        postExamples: []
       };
 
       // Initialize adapter with migrations (will use test schema)
@@ -99,6 +99,8 @@ export async function createTestDatabase(
         // Clean up test schema data
         await adapter.close();
         connectionRegistry.removeAdapter(agentId);
+        // Wait for cleanup to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
       };
 
       return { adapter, runtime, cleanup };
@@ -132,14 +134,14 @@ export async function createTestDatabase(
     knowledge: [],
     topics: [],
     messageExamples: [],
-    postExamples: [],
+    postExamples: []
   };
 
   // Initialize adapter with migrations (will use test_ prefix for tables)
   await adapter.init();
 
   // Give the database a moment to fully settle after migrations
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   // Verify database is ready
   const isReady = await adapter.isReady();
@@ -167,6 +169,8 @@ export async function createTestDatabase(
     // Clean up test tables
     await adapter.close();
     connectionRegistry.removeAdapter(agentId);
+    // Wait for cleanup to complete
+    await new Promise(resolve => setTimeout(resolve, 1000));
   };
 
   return { adapter, runtime, cleanup };
@@ -236,7 +240,7 @@ export async function createIsolatedTestDatabase(
         knowledge: [],
         topics: [],
         messageExamples: [],
-        postExamples: [],
+        postExamples: []
       };
 
       // Initialize adapter with migrations
@@ -272,6 +276,8 @@ export async function createIsolatedTestDatabase(
       const cleanup = async () => {
         await adapter.close();
         connectionRegistry.removeAdapter(testAgentId);
+        // Wait for cleanup to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
       };
 
       return { adapter, runtime, cleanup, testAgentId };
@@ -312,14 +318,14 @@ export async function createIsolatedTestDatabase(
     knowledge: [],
     topics: [],
     messageExamples: [],
-    postExamples: [],
+    postExamples: []
   };
 
   // Re-initialize adapter after cleanup to ensure fresh state
   await adapter.init();
 
   // Give the database a moment to fully settle after migrations
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   // Verify database is ready
   const isReady = await adapter.isReady();
@@ -341,6 +347,8 @@ export async function createIsolatedTestDatabase(
   const cleanup = async () => {
     await adapter.close();
     connectionRegistry.removeAdapter(testAgentId);
+    // Wait for cleanup to complete
+    await new Promise(resolve => setTimeout(resolve, 1000));
   };
 
   return { adapter, runtime, cleanup, testAgentId };

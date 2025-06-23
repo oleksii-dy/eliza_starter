@@ -41,7 +41,7 @@ export class VisionCaptureLogTestSuite implements TestSuite {
             characterName: runtime.character.name,
           },
           camera: visionService.getCameraInfo(),
-          captures: [] as any[],
+          captures: [] as any[]
           statistics: {
             totalFrames: 0,
             totalSceneChanges: 0,

@@ -22,7 +22,7 @@ describe('processAttachments', () => {
   });
 
   it('should return empty array for no attachments', async () => {
-    const result = await processAttachments([], mockRuntime as IAgentRuntime);
+    const result = await processAttachments([] mockRuntime as IAgentRuntime);
     expect(result).toEqual([]);
   });
 

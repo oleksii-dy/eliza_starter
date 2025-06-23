@@ -76,7 +76,7 @@ const getContextFromUrl = () => {
 // --- API Interaction Hooks ---
 
 const useTodos = () => {
-  return useQuery<WorldWithRooms[], Error>({
+  return useQuery<WorldWithRooms[] Error>({
     queryKey: ['todosStructured'],
     queryFn: async () => {
       const response = await fetch('/api/todos');
@@ -90,7 +90,7 @@ const useTodos = () => {
 
 // --- Hook to fetch tags ---
 const useTags = () => {
-  return useQuery<string[], Error>({
+  return useQuery<string[] Error>({
     queryKey: ['taskTags'],
     queryFn: async () => {
       const response = await fetch('/api/tags');
@@ -105,7 +105,7 @@ const useTags = () => {
 
 // --- Hook to fetch ALL tasks (for debugging) ---
 const useAllTasks = () => {
-  return useQuery<TaskIdentifier[], Error>({
+  return useQuery<TaskIdentifier[] Error>({
     queryKey: ['allTasks'],
     queryFn: async () => {
       const response = await fetch('/api/all-tasks'); // Use new endpoint

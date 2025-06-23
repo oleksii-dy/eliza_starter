@@ -244,13 +244,13 @@ async function ensureCoreTablesExist(database: any): Promise<void> {
     // Use schema registry to create tables in proper dependency order
     if (
       database.constructor.name === 'PgliteDatabaseAdapter' &&
-      typeof database.getConnection === 'function'
+      typeof database.getDatabase === 'function'
     ) {
-      console.log('   Using PGLite adapter, getting raw connection...');
-      const rawPglite = await database.getConnection();
+      console.log('   Using PGLite adapter, getting drizzle db...');
+      const drizzleDb = await database.getDatabase();
       
       // Use schema registry to create all tables
-      await schemaRegistry.createTables(rawPglite, dbType);
+      await schemaRegistry.createTables(drizzleDb, dbType);
       
       console.log('   ✅ Core tables created successfully using schema registry');
     } else if (database.db) {
@@ -381,7 +381,7 @@ export class RealScenarioTestRunner {
           scenario: scenario.id,
           status: 'failed',
           duration: 0,
-          transcript: [],
+          transcript: []
           errors: [error instanceof Error ? error.message : String(error)],
         });
 
@@ -450,7 +450,7 @@ export class RealScenarioTestRunner {
       testWorldId: stringToUuid(`test-world-${scenario.id}`),
       testRoomId: stringToUuid(`test-room-${scenario.id}`),
       startTime,
-      transcript: [],
+      transcript: []
       metrics: {
         messageCount: 0,
         stepCount: 0,
@@ -460,7 +460,7 @@ export class RealScenarioTestRunner {
       server: null!,
       agentRuntimes: new Map(),
       dbPath,
-      realMessages: [],
+      realMessages: []
       messagePromises: new Map(),
       database: null!,
     };
@@ -529,14 +529,18 @@ export class RealScenarioTestRunner {
     try {
       // Create database adapter directly
       console.log(`   📦 Creating database adapter...`);
-      const database = createDatabaseAdapter(
+      const database = await createDatabaseAdapter(
         {
           dataDir: context.dbPath,
         },
         stringToUuid('test-scenario-agent')
       );
 
-      // Initialize database
+      console.log(`   📦 Database adapter created, type: ${database?.constructor?.name}`);
+      console.log(`   📦 Database adapter methods:`, Object.getOwnPropertyNames(Object.getPrototypeOf(database || {})));
+
+      // Initialize the database adapter
+      console.log(`   📦 Initializing database adapter...`);
       await database.init();
 
       // Ensure core tables exist
@@ -624,11 +628,11 @@ export class RealScenarioTestRunner {
         name: actor.name,
         bio: [actor.bio || `Test actor for ${context.scenario.name}`],
         system: actor.system || 'You are a helpful test agent.',
-        messageExamples: [],
-        postExamples: [],
-        topics: [],
-        knowledge: [],
-        plugins: actor.plugins || [],
+        messageExamples: []
+        postExamples: []
+        topics: []
+        knowledge: []
+        plugins: actor.plugins || []
         settings: actor.settings || {},
         secrets: {},
       };
@@ -834,7 +838,7 @@ export class RealScenarioTestRunner {
       if (agentId !== actorId) {
         // Process message in the receiving agent
         const state = await agentRuntime.composeState(message);
-        await agentRuntime.processActions(message, [], state);
+        await agentRuntime.processActions(message, [] state);
       }
     }
 
@@ -1028,7 +1032,7 @@ export class RealScenarioTestRunner {
     }
   }
 
-  private filterScenarios(scenarios: Scenario[], options: TestRunnerOptions): Scenario[] {
+  private filterScenarios(scenarios: Scenario[] options: TestRunnerOptions): Scenario[] {
     let filtered = [...scenarios];
 
     if (options.filter) {

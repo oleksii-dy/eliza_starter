@@ -221,7 +221,7 @@ class OCRWorker {
     return pngBuffer;
   }
 
-  private async writeResultsToBuffer(results: OCRResult[], frameId: number): Promise<void> {
+  private async writeResultsToBuffer(results: OCRResult[] frameId: number): Promise<void> {
     // Combine all results
     const combinedResult = {
       frameId,

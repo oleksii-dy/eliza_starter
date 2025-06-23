@@ -39,7 +39,7 @@ export const choiceProvider: Provider = {
       if (!pendingTasks || pendingTasks.length === 0) {
         return {
           data: {
-            tasks: [],
+            tasks: []
           },
           values: {
             tasks: 'No pending choices for the moment.',
@@ -54,7 +54,7 @@ export const choiceProvider: Provider = {
       if (tasksWithOptions.length === 0) {
         return {
           data: {
-            tasks: [],
+            tasks: []
           },
           values: {
             tasks: 'No pending choices for the moment.',
@@ -109,7 +109,7 @@ export const choiceProvider: Provider = {
       logger.error('Error in options provider:', error);
       return {
         data: {
-          tasks: [],
+          tasks: []
         },
         values: {
           tasks: 'There was an error retrieving pending tasks with options.',

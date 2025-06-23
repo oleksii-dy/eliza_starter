@@ -128,8 +128,8 @@ export function extractDiscordCommand(program: Command) {
  */
 async function generateReport(
   stats: any,
-  users: any[],
-  conversations: any[],
+  users: any[]
+  conversations: any[]
   reportPath: string
 ): Promise<void> {
   const report = `# Discord Conversation Extraction Report

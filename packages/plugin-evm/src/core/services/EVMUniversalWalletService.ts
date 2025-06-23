@@ -76,21 +76,21 @@ const ERC20_ABI = [
     {
         name: 'decimals',
         type: 'function',
-        inputs: [],
+        inputs: []
         outputs: [{ name: '', type: 'uint8' }],
         stateMutability: 'view',
     },
     {
         name: 'symbol',
         type: 'function',
-        inputs: [],
+        inputs: []
         outputs: [{ name: '', type: 'string' }],
         stateMutability: 'view',
     },
     {
         name: 'name',
         type: 'function',
-        inputs: [],
+        inputs: []
         outputs: [{ name: '', type: 'string' }],
         stateMutability: 'view',
     },
@@ -331,14 +331,14 @@ export class EVMChainAdapter implements ChainAdapter {
                 success: !!result.data,
                 gasUsed: '21000', // Default estimation
                 gasPrice: (await this.publicClient.getGasPrice()).toString(),
-                changes: [], // Would need more sophisticated state tracking
+                changes: [] // Would need more sophisticated state tracking
             };
         } catch (error) {
             return {
                 success: false,
                 gasUsed: '0',
                 gasPrice: '0',
-                changes: [],
+                changes: []
                 error: error instanceof Error ? error.message : 'Simulation failed',
             };
         }
@@ -350,15 +350,75 @@ export class EVMChainAdapter implements ChainAdapter {
         }
 
         try {
-            // This would integrate with DEX aggregators like 1inch, 0x, etc.
-            // For now, return a placeholder
-            throw new Error('Swap functionality not yet implemented');
+            // Get the adapter for the chain
+            const adapter = this.getAdapterForChain(params.chain);
+            
+            // Get wallet address
+            const walletAddress = await this.getDefaultAddress();
+            
+            // Use the SwapAction to execute the swap
+            const { SwapAction } = await import('../../actions/swap');
+            const { initWalletProvider } = await import('../../providers/wallet');
+            
+            const walletProvider = await initWalletProvider(this.runtime);
+            const swapAction = new SwapAction(walletProvider);
+            
+            // Get quotes for the swap
+            const quotes = await swapAction.getQuotes({
+                fromChain: params.chain,
+                toChain: params.chain,
+                fromToken: params.tokenIn,
+                toToken: params.tokenOut,
+                amount: params.amountIn.toString(),
+                fromAddress: walletAddress,
+                toAddress: walletAddress,
+            });
+            
+            if (!quotes || quotes.length === 0) {
+                throw new Error('No swap routes available');
+            }
+            
+            // Select best quote (first one is usually optimal)
+            const selectedQuote = quotes[0];
+            
+            // Build transaction
+            const tx = await swapAction.buildTransaction(selectedQuote, {
+                fromChain: params.chain,
+                toChain: params.chain,
+                fromToken: params.tokenIn,
+                toToken: params.tokenOut,
+                amount: params.amountIn.toString(),
+                fromAddress: walletAddress,
+                toAddress: walletAddress,
+            });
+            
+            // Execute transaction through the adapter
+            const result = await adapter.sendTransaction({
+                chain: params.chain,
+                to: tx.to,
+                data: tx.data,
+                value: tx.value || '0',
+                gasLimit: tx.gasLimit,
+                gasPrice: tx.gasPrice,
+            });
+            
+            // Add swap details to the result
+            return {
+                ...result,
+                details: {
+                    tokenIn: params.tokenIn,
+                    tokenOut: params.tokenOut,
+                    amountIn: params.amountIn.toString(),
+                    expectedAmountOut: selectedQuote.toAmount,
+                    route: selectedQuote.tool,
+                },
+            };
         } catch (error) {
-            logger.error(`Error executing swap on ${this.chainId}:`, error);
+            logger.error(`Error executing swap on ${params.chain}:`, error);
             return {
                 hash: '',
                 status: 'failed',
-                chain: this.chainId,
+                chain: params.chain,
                 error: error instanceof Error ? error.message : 'Swap failed',
             };
         }
@@ -769,7 +829,7 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
                     decimals: chain?.nativeCurrency?.decimals || 18,
                 },
                 rpcUrls: [this.getRpcUrl(chainId)],
-                blockExplorerUrls: [], // TODO: Add explorer URLs
+                blockExplorerUrls: [] // TODO: Add explorer URLs
                 isTestnet: false, // TODO: Determine based on chainId
                 bridgeSupport: ['lifi', 'across', 'wormhole'],
             };

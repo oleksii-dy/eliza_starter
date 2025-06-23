@@ -259,7 +259,7 @@ export class EventBridge {
   // Cross-Plugin Event Management
   subscribePlugin(
     pluginName: string,
-    eventTypes: string[],
+    eventTypes: string[]
     filter?: (event: any) => boolean
   ): void {
     logger.info(

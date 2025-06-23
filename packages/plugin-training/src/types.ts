@@ -299,7 +299,7 @@ export interface CloudInstance {
  */
 export interface TrainingServiceInterface extends Service {
   extractTrainingData(config: TrainingConfig): Promise<TrainingConversation[]>;
-  prepareDataset(conversations: TrainingConversation[], config: TrainingConfig): Promise<string>;
+  prepareDataset(conversations: TrainingConversation[] config: TrainingConfig): Promise<string>;
   uploadToHuggingFace(datasetPath: string, config: TrainingConfig): Promise<string>;
   startTraining(config: TrainingConfig): Promise<TrainingJob>;
   monitorTraining(jobId: string): Promise<TrainingJob>;

@@ -510,6 +510,39 @@ describe('Base Adapter Comprehensive Tests', () => {
       expect(memoryWithEntity?.entityId).toBe(testEntityId);
     });
 
+    it('should handle error conditions gracefully', async () => {
+      // Test invalid entity retrieval
+      const nonExistentEntityId = uuidv4() as UUID;
+      const entities = await adapter.getEntitiesByIds([nonExistentEntityId]);
+      expect(entities).toEqual([]);
+
+      // Test invalid memory retrieval
+      const nonExistentMemoryId = uuidv4() as UUID;
+      const memory = await adapter.getMemoryById(nonExistentMemoryId);
+      expect(memory).toBeNull();
+
+      // Test invalid room retrieval
+      const nonExistentRoomId = uuidv4() as UUID;
+      const rooms = await adapter.getRoomsByIds([nonExistentRoomId]);
+      expect(rooms).toEqual([]);
+    });
+
+    it('should handle malformed UUIDs safely', async () => {
+      // Test various invalid UUID formats
+      const invalidUUIDs = ['invalid-uuid', '', '123'];
+      
+      for (const invalidUUID of invalidUUIDs) {
+        try {
+          // This should either reject gracefully or handle the invalid UUID
+          const entities = await adapter.getEntitiesByIds([invalidUUID as UUID]);
+          expect(entities).toEqual([]);
+        } catch (error) {
+          // If it throws, that's also acceptable for malformed UUIDs
+          expect(error).toBeDefined();
+        }
+      }
+    });
+
     it('should handle batch operations correctly', async () => {
       const batchSize = 5;
       const entities: Entity[] = [];

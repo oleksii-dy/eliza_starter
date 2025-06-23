@@ -20,14 +20,14 @@ export class EntityTracker {
       worldId,
       entities: new Map(),
       lastUpdate: Date.now(),
-      activeEntities: [],
-      recentlyLeft: [],
+      activeEntities: []
+      recentlyLeft: []
     };
   }
 
   async updateEntities(
-    detectedObjects: DetectedObject[],
-    people: PersonInfo[],
+    detectedObjects: DetectedObject[]
+    people: PersonInfo[]
     faceProfiles?: Map<string, string>, // Maps person ID to face profile ID
     runtime?: IAgentRuntime
   ): Promise<TrackedEntity[]> {

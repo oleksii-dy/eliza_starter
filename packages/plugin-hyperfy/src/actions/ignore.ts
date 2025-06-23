@@ -262,5 +262,5 @@ export const ignoreAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 } as Action;

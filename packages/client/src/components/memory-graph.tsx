@@ -43,7 +43,7 @@ export default function MemoryGraph({
     console.log('Memories with embeddings:', memoriesWithEmbeddings.length);
 
     if (memoriesWithEmbeddings.length === 0) {
-      return { nodes: [], links: [], hasEmbeddings: false };
+      return { nodes: [] links: [] hasEmbeddings: false };
     }
 
     const embeddings = memoriesWithEmbeddings.map((m) => m.embedding as number[]);

@@ -318,8 +318,8 @@ class WebBrowser {
             title: title.trim(),
             content: snippet.trim(),
             url: url.trim(),
-            links: [],
-            images: [],
+            links: []
+            images: []
             metadata: {},
           };
         }).filter(result => result.url && result.title);
@@ -601,7 +601,7 @@ This information has been saved to my knowledge base for future reference.`;
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 // Cleanup function to close browser when shutting down

@@ -72,7 +72,7 @@ describe('WalletRepository', () => {
                 network: 'base-sepolia',
                 name: 'Test Wallet',
                 ownerId: 'user-123' as UUID,
-                permissions: [],
+                permissions: []
                 status: 'active',
                 createdAt: Date.now(),
                 requiredTrustLevel: 50,
@@ -104,7 +104,7 @@ describe('WalletRepository', () => {
                 network: 'ethereum',
                 name: 'Test Wallet',
                 ownerId: 'entity-123' as UUID,
-                permissions: [],
+                permissions: []
                 status: 'active',
                 createdAt: Date.now(),
                 requiredTrustLevel: 50,

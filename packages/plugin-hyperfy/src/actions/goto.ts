@@ -83,7 +83,7 @@ export const hyperfyGotoEntityAction: Action = {
       _state?: State,
       options?: { entityId?: string },
       callback?: HandlerCallback,
-      responses?: Memory[],
+      responses?: Memory[]
     ) => {
       const thoughtSnippets =
         responses

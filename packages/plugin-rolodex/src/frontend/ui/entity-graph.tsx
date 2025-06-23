@@ -56,7 +56,7 @@ interface EntityGraphProps {
 }
 
 // Process graph data
-const processGraphData = (entities: Entity[], relationships: Relationship[]) => {
+const processGraphData = (entities: Entity[] relationships: Relationship[]) => {
   const nodes: EntityNode[] = entities.map((entity) => {
     const metadata = entity.metadata || {};
     const trustMetrics = (metadata.trustMetrics as any) || {};
@@ -100,8 +100,8 @@ export function EntityGraph({
   const graphRef = useRef<any>(undefined);
   const [initialized, setInitialized] = useState(false);
   const [graphData, setGraphData] = useState<{ nodes: EntityNode[]; links: RelationshipLink[] }>({
-    nodes: [],
-    links: [],
+    nodes: []
+    links: []
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });

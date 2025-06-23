@@ -7,9 +7,9 @@ describe('coreExtensions (Consolidated)', () => {
 
   beforeEach(() => {
     mockRuntime = {
-      actions: [],
-      providers: [],
-      evaluators: [],
+      actions: []
+      providers: []
+      evaluators: []
       services: new Map(),
     } as any;
     // Apply extensions to the mock runtime for each test

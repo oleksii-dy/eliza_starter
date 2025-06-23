@@ -718,7 +718,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           messageExamples: agent.messageExamples || [],
           postExamples: agent.postExamples || [],
           style: agent.style || {},
-          plugins: agent.plugins || [],
+          plugins: agent.plugins || []
         };
 
         logger.debug(`[BaseDrizzleAdapter] Creating agent using Drizzle:`, agentData.name);
@@ -818,6 +818,14 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           // Convert numeric timestamps to Date objects for database storage
           // The Agent interface uses numbers, but the database schema expects Date objects
           const updateData: any = { ...agent };
+
+          // Convert bio array to string if necessary (matches createAgent behavior)
+          if (updateData.bio !== undefined) {
+            if (Array.isArray(updateData.bio)) {
+              updateData.bio = updateData.bio.join('\n');
+            }
+          }
+
           if (updateData.createdAt) {
             if (typeof updateData.createdAt === 'number') {
               updateData.createdAt = new Date(updateData.createdAt);
@@ -1274,7 +1282,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           names: typeof row.names === 'string' ? JSON.parse(row.names) : row.names || [],
           metadata:
             typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata || {},
-          components: [],
+          components: []
         };
         entityComponents[entityId] = [];
       }

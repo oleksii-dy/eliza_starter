@@ -98,13 +98,13 @@ export function createMockContent(overrides: MockContentOverrides = {}): Content
   const baseContent: Content = {
     text: 'Mock content text',
     thought: 'Mock internal thought',
-    actions: [],
-    providers: [],
+    actions: []
+    providers: []
     source: 'test',
     target: undefined,
     url: undefined,
     inReplyTo: undefined,
-    attachments: [],
+    attachments: []
     channelType: 'DM' as ChannelType,
     ...overrides,
   };
@@ -145,7 +145,7 @@ export function createMockUserMessage(text: string, overrides: MockMemoryOverrid
 export function createMockAgentResponse(
   text: string,
   thought?: string,
-  actions: string[] = [],
+  actions: string[] = []
   overrides: MockMemoryOverrides = {}
 ): Memory {
   return createMockMemory({
@@ -228,7 +228,7 @@ export function createMockConversation(count: number = 5, roomId?: UUID): Memory
     const isUserMessage = i % 2 === 0;
     const memory = isUserMessage
       ? createMockUserMessage(`User message ${i + 1}`, { roomId: actualRoomId })
-      : createMockAgentResponse(`Agent response ${i + 1}`, `Thinking about response ${i + 1}`, [], { roomId: actualRoomId });
+      : createMockAgentResponse(`Agent response ${i + 1}`, `Thinking about response ${i + 1}`, [] { roomId: actualRoomId });
     
     // Make timestamps sequential
     memory.createdAt = Date.now() - (count - i) * 1000;

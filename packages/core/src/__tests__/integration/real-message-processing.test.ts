@@ -248,7 +248,7 @@ describe('Real Message Processing Integration', () => {
         handler: async () => {
           throw new Error('Intentional test failure');
         },
-        similes: [],
+        similes: []
       };
 
       runtime.registerAction(failingAction);
@@ -266,7 +266,7 @@ describe('Real Message Processing Integration', () => {
       const responses: any[] = [];
 
       try {
-        await runtime.processActions(message, [], undefined, async (content) => {
+        await runtime.processActions(message, [] undefined, async (content) => {
           responses.push(content);
           return [];
         });
@@ -422,7 +422,7 @@ describe('Real Message Processing Integration', () => {
             timestamp: Date.now(),
           });
         },
-        examples: [],
+        examples: []
       };
 
       runtime.registerEvaluator(testEvaluator);
@@ -434,7 +434,7 @@ describe('Real Message Processing Integration', () => {
       });
 
       // Process message and run evaluators
-      await runtime.processActions(message, [], undefined, async () => []);
+      await runtime.processActions(message, [] undefined, async () => []);
       const state = await runtime.composeState(message);
       await runtime.evaluate(message, state, true);
 

@@ -323,7 +323,7 @@ export class AccountAbstractionProvider {
                     { name: 'func', type: 'bytes' },
                 ],
                 name: 'execute',
-                outputs: [],
+                outputs: []
                 stateMutability: 'nonpayable',
                 type: 'function',
             }],
@@ -352,7 +352,7 @@ export class AccountAbstractionProvider {
                     { name: 'func', type: 'bytes[]' },
                 ],
                 name: 'executeBatch',
-                outputs: [],
+                outputs: []
                 stateMutability: 'nonpayable',
                 type: 'function',
             }],
@@ -376,7 +376,7 @@ export class AccountAbstractionProvider {
                     jsonrpc: '2.0',
                     id: 1,
                     method: 'eth_gasPrice',
-                    params: [],
+                    params: []
                 }),
             });
 

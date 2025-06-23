@@ -734,7 +734,7 @@ export class KnowledgeService extends Service {
     logger.debug('KnowledgeService: Advanced search called with options:', options);
 
     if (!options.query || options.query.trim().length === 0) {
-      return { results: [], totalCount: 0, hasMore: false };
+      return { results: [] totalCount: 0, hasMore: false };
     }
 
     // Generate embedding for the query
@@ -836,7 +836,7 @@ export class KnowledgeService extends Service {
     const results: BatchOperationResult = {
       successful: 0,
       failed: 0,
-      results: [],
+      results: []
     };
 
     // Process items in parallel with concurrency control

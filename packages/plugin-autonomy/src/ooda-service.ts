@@ -224,23 +224,23 @@ export class OODALoopService extends Service {
       runId,
       startTime,
       phase: OODAPhase.OBSERVING,
-      observations: [],
+      observations: []
       orientation: {
         currentGoals: this.goals,
-        activeProjects: [],
+        activeProjects: []
         resourceStatus: await this.getResourceStatus(),
-        environmentalFactors: [],
+        environmentalFactors: []
         historicalContext: {
-          recentActions: [],
-          recentErrors: [],
-          successPatterns: [],
-          failurePatterns: [],
-          learnings: [],
+          recentActions: []
+          recentErrors: []
+          successPatterns: []
+          failurePatterns: []
+          learnings: []
         },
       },
-      decisions: [],
-      actions: [],
-      errors: [],
+      decisions: []
+      actions: []
+      errors: []
       metrics: {
         cycleTime: 0,
         decisionsPerCycle: 0,
@@ -778,7 +778,7 @@ export class OODALoopService extends Service {
           ...parsedXml,
           thought: parsedXml.thought || '',
           actions: parsedXml.actions || ['IGNORE'],
-          providers: parsedXml.providers || [],
+          providers: parsedXml.providers || []
           text: parsedXml.text || '',
           simple: parsedXml.simple || false,
           source: 'autonomous',
@@ -844,7 +844,7 @@ export class OODALoopService extends Service {
     return { responseContent, responseMessages };
   }
 
-  private async act(message: Memory, responseMessages: Memory[], state: State): Promise<void> {
+  private async act(message: Memory, responseMessages: Memory[] state: State): Promise<void> {
     this.currentContext!.phase = OODAPhase.ACTING;
     this.logger.acting('Starting action phase - using processActions');
 
@@ -1391,7 +1391,7 @@ export class OODALoopService extends Service {
   }
 
   // NEW: Identify opportunities for specific action types
-  private identifyActionOpportunities(observations: Observation[], state: State) {
+  private identifyActionOpportunities(observations: Observation[] state: State) {
     const opportunities: string[] = [];
 
     // Check for web research opportunities

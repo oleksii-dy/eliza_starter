@@ -18,10 +18,10 @@ const createMockPlugin = (name: string): Plugin => ({
 const createMockRuntime = (): IAgentRuntime =>
   ({
     agentId: uuidv4() as any,
-    plugins: [],
-    actions: [],
-    providers: [],
-    evaluators: [],
+    plugins: []
+    actions: []
+    providers: []
+    evaluators: []
     services: new Map(),
     registerAction: vi.fn(),
     registerProvider: vi.fn(),

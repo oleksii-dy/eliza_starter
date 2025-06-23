@@ -62,7 +62,7 @@ function createSimpleMockRuntime(): IAgentRuntime {
         validate: async () => true,
       },
     ],
-    providers: [],
+    providers: []
     logger: {
       info: (...args: any[]) => console.log('[INFO]', ...args),
       warn: (...args: any[]) => console.log('[WARN]', ...args),
@@ -128,7 +128,7 @@ Return a JSON response with this structure:
         expectedOutput: step.expectedOutput,
       })),
       executionModel: planData.executionModel || 'sequential',
-      constraints: [],
+      constraints: []
       createdAt: Date.now(),
       estimatedDuration: planData.steps.length * 2000, // 2 seconds per step
     };
@@ -231,7 +231,7 @@ async function runPlanningTest() {
         userName: 'TestUser',
       },
       data: {
-        conversationHistory: [],
+        conversationHistory: []
       },
       text: 'Test conversation context',
     };

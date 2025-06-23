@@ -144,8 +144,8 @@ describe('ResearchIntegration', () => {
       const mockProject = {
         id: 'project-123',
         status: 'completed', // Change to completed to avoid timeout
-        findings: [],
-        sources: [],
+        findings: []
+        sources: []
       };
 
       mockResearchService.createResearchProject.mockResolvedValue(mockProject);
@@ -183,7 +183,7 @@ describe('ResearchIntegration', () => {
             category: 'performance',
           },
         ],
-        sources: [],
+        sources: []
       };
 
       mockResearchService.createResearchProject.mockResolvedValue(mockProject);
@@ -292,14 +292,14 @@ describe('ResearchIntegration', () => {
       mockResearchService.createResearchProject.mockResolvedValue({
         id: 'test',
         status: 'completed',
-        findings: [],
-        sources: [],
+        findings: []
+        sources: []
       });
       mockResearchService.getProject.mockResolvedValue({
         id: 'test',
         status: 'completed',
-        findings: [],
-        sources: [],
+        findings: []
+        sources: []
       });
 
       const context = await researchIntegration.researchIssue(securityInstance);
@@ -319,14 +319,14 @@ describe('ResearchIntegration', () => {
       mockResearchService.createResearchProject.mockResolvedValue({
         id: 'test',
         status: 'completed',
-        findings: [],
-        sources: [],
+        findings: []
+        sources: []
       });
       mockResearchService.getProject.mockResolvedValue({
         id: 'test',
         status: 'completed',
-        findings: [],
-        sources: [],
+        findings: []
+        sources: []
       });
 
       const context = await researchIntegration.researchIssue(complexInstance);
@@ -388,13 +388,13 @@ describe('ResearchIntegration', () => {
         id: 'test',
         status: 'completed',
         findings: [{ content: 'performance optimization', source: 'test' }],
-        sources: [],
+        sources: []
       });
       mockResearchService.getProject.mockResolvedValue({
         id: 'test',
         status: 'completed',
         findings: [{ content: 'performance optimization', source: 'test' }],
-        sources: [],
+        sources: []
       });
 
       const context = await researchIntegration.researchIssue(perfInstance);
@@ -412,14 +412,14 @@ describe('ResearchIntegration', () => {
       mockResearchService.createResearchProject.mockResolvedValue({
         id: 'test',
         status: 'completed',
-        findings: [],
-        sources: [],
+        findings: []
+        sources: []
       });
       mockResearchService.getProject.mockResolvedValue({
         id: 'test',
         status: 'completed',
-        findings: [],
-        sources: [],
+        findings: []
+        sources: []
       });
 
       const context = await researchIntegration.researchIssue(breakingInstance);
@@ -439,7 +439,7 @@ describe('ResearchIntegration', () => {
             source: 'TypeScript Best Practices',
           },
         ],
-        sources: [],
+        sources: []
       });
       mockResearchService.getProject.mockResolvedValue({
         id: 'test',
@@ -450,7 +450,7 @@ describe('ResearchIntegration', () => {
             source: 'TypeScript Best Practices',
           },
         ],
-        sources: [],
+        sources: []
       });
 
       const context = await researchIntegration.researchIssue(mockInstance);
@@ -473,14 +473,14 @@ describe('ResearchIntegration', () => {
       mockResearchService.createResearchProject.mockResolvedValue({
         id: 'test',
         status: 'completed',
-        findings: [],
-        sources: [],
+        findings: []
+        sources: []
       });
       mockResearchService.getProject.mockResolvedValue({
         id: 'test',
         status: 'completed',
-        findings: [],
-        sources: [],
+        findings: []
+        sources: []
       });
 
       const context = await researchIntegration.researchIssue(securityInstance);

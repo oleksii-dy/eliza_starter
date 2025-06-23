@@ -332,7 +332,7 @@ export class AutocoderIntegration {
       start_time: Date.now(),
       user_request: userRequest,
       project_type: projectType,
-      tools_available: context.available_tools || [],
+      tools_available: context.available_tools || []
       status: 'active',
     };
 
@@ -346,7 +346,7 @@ export class AutocoderIntegration {
         requirements: this.extractRequirements(userRequest),
         constraints: this.extractConstraints(context),
         success_criteria: this.extractSuccessCriteria(userRequest, projectType),
-        available_tools: context.available_tools || [],
+        available_tools: context.available_tools || []
         knowledge_base: this.getKnowledgeBase(),
       }
     );
@@ -450,15 +450,15 @@ export class AutocoderIntegration {
       reasoning: {
         thinking: options?.thinking || 'Processing step...',
         approach: this.extractApproach(text),
-        alternatives_considered: options?.alternatives || [],
-        decisions_made: options?.decisions || [],
-        risks_identified: options?.risks || [],
+        alternatives_considered: options?.alternatives || []
+        decisions_made: options?.decisions || []
+        risks_identified: options?.risks || []
       },
       action: {
         action_type: step_type,
         description: this.extractDescription(text),
         code_generated: options?.code_generated,
-        files_created: options?.files_created || [],
+        files_created: options?.files_created || []
         tests_written: options?.tests_written,
         documentation_added: options?.documentation_added,
       },
@@ -467,7 +467,7 @@ export class AutocoderIntegration {
         code_diff: options?.code_diff,
         test_results: options?.test_results,
         success: options?.success ?? true,
-        error_messages: options?.error_messages || [],
+        error_messages: options?.error_messages || []
       },
       metadata: {
         complexity_level: this.estimateComplexity(text, options),
@@ -489,7 +489,7 @@ export class AutocoderIntegration {
     return {
       success,
       final_code: options?.final_code || '',
-      files_created: options?.files_created || [],
+      files_created: options?.files_created || []
       tests_passing: options?.tests_passing || false,
       documentation_complete: options?.documentation_complete || false,
       user_satisfaction: this.estimateUserSatisfaction(text, success),
@@ -546,7 +546,7 @@ export class AutocoderIntegration {
         { 
           thinking: 'Error occurred during implementation',
           approach: 'error_handling',
-          alternatives_considered: [],
+          alternatives_considered: []
           decisions_made: ['handle_error'],
           risks_identified: [payload.error_type],
         },
@@ -563,7 +563,7 @@ export class AutocoderIntegration {
           complexity_level: 5,
           confidence: 0.1,
           requires_human_review: true,
-          tools_used: payload.tools_used || [],
+          tools_used: payload.tools_used || []
           knowledge_domains: ['error_handling'],
         }
       );
@@ -737,7 +737,7 @@ export class AutocoderIntegration {
       reasoning: payload.reasoning || { thinking: 'Processing...', approach: 'standard' },
       action: payload.action || { action_type: 'process', description: 'Processing step' },
       output: payload.output || { result: {}, success: true },
-      metadata: payload.metadata || { complexity_level: 3, confidence: 0.8, tools_used: [], knowledge_domains: [] },
+      metadata: payload.metadata || { complexity_level: 3, confidence: 0.8, tools_used: [] knowledge_domains: [] },
     };
   }
 
@@ -745,7 +745,7 @@ export class AutocoderIntegration {
     return {
       success: payload.success ?? true,
       final_code: payload.final_code || '',
-      files_created: payload.files_created || [],
+      files_created: payload.files_created || []
       tests_passing: payload.tests_passing ?? false,
       documentation_complete: payload.documentation_complete ?? false,
       user_satisfaction: payload.user_satisfaction || 0.8,

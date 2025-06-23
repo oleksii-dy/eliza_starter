@@ -78,19 +78,19 @@ const SAFE_SINGLETON_ABI = [
       { name: 'paymentReceiver', type: 'address' },
     ],
     name: 'setup',
-    outputs: [],
+    outputs: []
     stateMutability: 'nonpayable',
     type: 'function',
   },
   {
-    inputs: [],
+    inputs: []
     name: 'getOwners',
     outputs: [{ name: '', type: 'address[]' }],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [],
+    inputs: []
     name: 'getThreshold',
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',
@@ -103,7 +103,7 @@ const SAFE_SINGLETON_ABI = [
       { name: 'threshold', type: 'uint256' },
     ],
     name: 'addOwnerWithThreshold',
-    outputs: [],
+    outputs: []
     stateMutability: 'nonpayable',
     type: 'function',
   },
@@ -114,14 +114,14 @@ const SAFE_SINGLETON_ABI = [
       { name: 'threshold', type: 'uint256' },
     ],
     name: 'removeOwner',
-    outputs: [],
+    outputs: []
     stateMutability: 'nonpayable',
     type: 'function',
   },
   {
     inputs: [{ name: '_threshold', type: 'uint256' }],
     name: 'changeThreshold',
-    outputs: [],
+    outputs: []
     stateMutability: 'nonpayable',
     type: 'function',
   },
@@ -146,7 +146,7 @@ const SAFE_SINGLETON_ABI = [
   {
     inputs: [{ name: 'hash', type: 'bytes32' }],
     name: 'approveHash',
-    outputs: [],
+    outputs: []
     stateMutability: 'nonpayable',
     type: 'function'
   },
@@ -169,7 +169,7 @@ const SAFE_SINGLETON_ABI = [
     type: 'function'
   },
   {
-    inputs: [],
+    inputs: []
     name: 'nonce',
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view',

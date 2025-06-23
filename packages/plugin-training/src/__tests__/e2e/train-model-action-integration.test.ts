@@ -421,11 +421,11 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
       name: 'TrainModelTestAgent',
       bio: ['Test agent for train model action integration testing'],
       system: 'You are a test agent for train model action integration testing',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
-      plugins: [],
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
+      plugins: []
     },
 
     getSetting: (key: string) => {

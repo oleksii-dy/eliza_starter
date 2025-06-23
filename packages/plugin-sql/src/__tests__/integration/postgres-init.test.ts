@@ -26,11 +26,11 @@ describe('PostgreSQL Initialization Tests', () => {
         name: 'Test Agent',
         bio: ['Test bio'],
         system: 'Test system',
-        messageExamples: [],
-        postExamples: [],
-        topics: [],
-        knowledge: [],
-        plugins: [],
+        messageExamples: []
+        postExamples: []
+        topics: []
+        knowledge: []
+        plugins: []
       },
       getSetting: vi.fn(),
       registerDatabaseAdapter: vi.fn(),

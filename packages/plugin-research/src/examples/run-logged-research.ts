@@ -192,7 +192,7 @@ async function runLoggedResearch() {
           confidence: 0.85,
           category: 'primary',
           timestamp: Date.now(),
-          citations: [],
+          citations: []
           factualClaims: [{
             id: `claim-${i}-1`,
             statement: 'Recent developments show positive trends',
@@ -200,9 +200,9 @@ async function runLoggedResearch() {
             sourceUrls: [mockSources[0].url],
             verificationStatus: VerificationStatus.VERIFIED,
             confidenceScore: 0.9,
-            relatedClaims: [],
+            relatedClaims: []
           }],
-          relatedFindings: [],
+          relatedFindings: []
           verificationStatus: VerificationStatus.VERIFIED,
           extractionMethod: 'automated',
         },
@@ -214,7 +214,7 @@ async function runLoggedResearch() {
           confidence: 0.8,
           category: 'analysis',
           timestamp: Date.now(),
-          citations: [],
+          citations: []
           factualClaims: [{
             id: `claim-${i}-2`,
             statement: 'Expert consensus supports these findings',
@@ -222,9 +222,9 @@ async function runLoggedResearch() {
             sourceUrls: [mockSources[1].url],
             verificationStatus: VerificationStatus.VERIFIED,
             confidenceScore: 0.85,
-            relatedClaims: [],
+            relatedClaims: []
           }],
-          relatedFindings: [],
+          relatedFindings: []
           verificationStatus: VerificationStatus.VERIFIED,
           extractionMethod: 'automated',
         },

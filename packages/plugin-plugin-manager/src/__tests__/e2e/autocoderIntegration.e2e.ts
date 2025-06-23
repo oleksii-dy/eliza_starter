@@ -55,7 +55,7 @@ export const autocoderIntegrationTests: TestCase[] = [
       const searchQuery = 'database operations';
       const searchResults = await pluginManager.searchPlugins(searchQuery, {
         recentActions: ['store-data', 'query-data'],
-        currentCapabilities: [],
+        currentCapabilities: []
         failedActions: ['database-write'],
         userIntent: 'Need to store and query user data',
       });
@@ -161,7 +161,7 @@ export const autocoderIntegrationTests: TestCase[] = [
             similes: ['custom', 'autocoded'],
             validate: async () => true,
             handler: async () => ({ text: 'Autocoder-generated response' }),
-            examples: [],
+            examples: []
           },
         ],
       };

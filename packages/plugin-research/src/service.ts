@@ -177,8 +177,8 @@ export class ResearchService extends Service {
       phase: ResearchPhase.INITIALIZATION,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      findings: [],
-      sources: [],
+      findings: []
+      sources: []
       metadata,
     };
 
@@ -244,7 +244,7 @@ export class ResearchService extends Service {
       depth: config.researchDepth,
       queryPlan,
       evaluationCriteria,
-      iterationHistory: [],
+      iterationHistory: []
       performanceMetrics,
     };
   }
@@ -315,7 +315,7 @@ export class ResearchService extends Service {
 
               // Calculate cosine similarity
               const similarity = this.calculateCosineSimilarity(
-                queryEmbedding as number[],
+                queryEmbedding as number[]
                 exampleEmbedding as number[]
               );
 
@@ -451,7 +451,7 @@ Respond with ONLY the domain name from the list above. Be precise.`;
     return ResearchDomain.GENERAL;
   }
 
-  private calculateCosineSimilarity(a: number[], b: number[]): number {
+  private calculateCosineSimilarity(a: number[] b: number[]): number {
     if (a.length !== b.length) return 0;
 
     let dotProduct = 0;
@@ -930,7 +930,7 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
         endTime: 0,
         duration: 0,
         retries: 0,
-        errors: [],
+        errors: []
       };
     }
 
@@ -1233,11 +1233,11 @@ Respond with ONLY the task type (e.g., "analytical"). Be precise.`;
           confidence: finding.confidence,
           timestamp: Date.now(),
           category: finding.category,
-          citations: [],
+          citations: []
           factualClaims: claims.filter((c) =>
             finding.content.toLowerCase().includes(c.statement.substring(0, 30).toLowerCase())
           ),
-          relatedFindings: [],
+          relatedFindings: []
           verificationStatus: VerificationStatus.PENDING,
           extractionMethod: source.fullContent ? 'llm-extraction' : 'snippet-extraction',
         };
@@ -1425,11 +1425,11 @@ Format as JSON array:
             .map((claim: any) => ({
               id: uuidv4(),
               statement: claim.statement,
-              supportingEvidence: Array.isArray(claim.evidence) ? claim.evidence : [],
+              supportingEvidence: Array.isArray(claim.evidence) ? claim.evidence : []
               sourceUrls: [source.url],
               verificationStatus: VerificationStatus.UNVERIFIED,
               confidenceScore: typeof claim.confidence === 'number' ? claim.confidence : 0.5,
-              relatedClaims: [],
+              relatedClaims: []
             }));
         }
       }
@@ -1600,7 +1600,7 @@ Create a comprehensive synthesis that:
             depth: 0,
             instructionFollowing: 0,
             readability: 0,
-            breakdown: [],
+            breakdown: []
           },
           factScore: {
             citationAccuracy: 0,
@@ -1610,7 +1610,7 @@ Create a comprehensive synthesis that:
             disputedCitations: 0,
             citationCoverage: 0,
             sourceCredibility: 0,
-            breakdown: [],
+            breakdown: []
           },
           timestamp: Date.now(),
           evaluatorVersion: '1.0',
@@ -1649,12 +1649,12 @@ Create a comprehensive synthesis that:
       const content = typeof response === 'string' ? response : response.content || '';
       return JSON.parse(content);
     } catch {
-      return { query: project.query, concepts: [], dimensions: [] };
+      return { query: project.query, concepts: [] dimensions: [] };
     }
   }
 
   private async extractClaimsFromReport(
-    sections: ReportSection[],
+    sections: ReportSection[]
     project: ResearchProject
   ): Promise<FactualClaim[]> {
     const claims: FactualClaim[] = [];
@@ -1693,8 +1693,8 @@ Create a comprehensive synthesis that:
       return extractedClaims.map((claim: any) => ({
         statement: claim.statement,
         confidence: claim.confidence || 0.5,
-        sourceUrls: claim.sources || [],
-        supportingEvidence: claim.evidence || [],
+        sourceUrls: claim.sources || []
+        supportingEvidence: claim.evidence || []
         category: claim.category || 'general',
       }));
     } catch {
@@ -1703,7 +1703,7 @@ Create a comprehensive synthesis that:
   }
 
   private async verifyClaimsWithSources(
-    claims: FactualClaim[],
+    claims: FactualClaim[]
     project: ResearchProject
   ): Promise<Map<string, any>> {
     const verificationResults = new Map();
@@ -1741,7 +1741,7 @@ Create a comprehensive synthesis that:
 
   private buildFinalReport(
     executiveSummary: string,
-    sections: ReportSection[],
+    sections: ReportSection[]
     project: ResearchProject
   ): string {
     const reportParts = [
@@ -1859,13 +1859,13 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
       heading: 'Executive Summary',
       level: 0,
       content: executiveSummary,
-      findings: [],
-      citations: [],
+      findings: []
+      citations: []
       metadata: {
         wordCount: executiveSummary.split(' ').length,
         citationDensity: 0,
         readabilityScore: 0,
-        keyTerms: [],
+        keyTerms: []
       },
     });
 
@@ -1892,7 +1892,7 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
           wordCount: categoryAnalysis.split(' ').length,
           citationDensity: findings.length / (categoryAnalysis.split(' ').length / 100),
           readabilityScore: 0,
-          keyTerms: [],
+          keyTerms: []
         },
       });
     }
@@ -1904,13 +1904,13 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
       heading: 'Research Methodology',
       level: 1,
       content: methodology,
-      findings: [],
-      citations: [],
+      findings: []
+      citations: []
       metadata: {
         wordCount: methodology.split(' ').length,
         citationDensity: 0,
         readabilityScore: 0,
-        keyTerms: [],
+        keyTerms: []
       },
     });
 
@@ -1921,13 +1921,13 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
       heading: 'Implications and Future Directions',
       level: 1,
       content: implications,
-      findings: [],
-      citations: [],
+      findings: []
+      citations: []
       metadata: {
         wordCount: implications.split(' ').length,
         citationDensity: 0,
         readabilityScore: 0,
-        keyTerms: [],
+        keyTerms: []
       },
     });
 
@@ -1945,7 +1945,7 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
    */
   private async enhanceReportWithDetailedAnalysis(
     project: ResearchProject,
-    initialSections: ReportSection[],
+    initialSections: ReportSection[]
     verificationResults: Map<string, any>
   ): Promise<ReportSection[]> {
     elizaLogger.info(`[ResearchService] PASS 2: Beginning detailed source analysis enhancement`);
@@ -1993,13 +1993,13 @@ ${project.sources.map((s, i) => `${i + 1}. [${s.title}](${s.url})`).join('\n')}
       heading: 'Detailed Source Analysis',
       level: 1,
       content: detailedAnalysis,
-      findings: [],
-      citations: [],
+      findings: []
+      citations: []
       metadata: {
         wordCount: detailedAnalysis.split(' ').length,
         citationDensity: 0,
         readabilityScore: 0,
-        keyTerms: [],
+        keyTerms: []
       },
     });
 
@@ -2055,7 +2055,7 @@ Focus on being comprehensive yet accessible, suitable for both technical and non
 
   private async generateDetailedCategoryAnalysis(
     category: string,
-    findings: ResearchFinding[],
+    findings: ResearchFinding[]
     originalQuery: string
   ): Promise<string> {
     const findingTexts = findings.map((f) => f.content).join('\n\n');
@@ -2433,7 +2433,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
       projectId: project.id,
       raceEvaluation: {
         scores: evaluationMetrics.raceScore,
-        detailedFeedback: [],
+        detailedFeedback: []
       },
       factEvaluation: {
         scores: evaluationMetrics.factScore,
@@ -2442,7 +2442,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
           sources: new Map(),
           verification: new Map(),
         },
-        verificationDetails: [],
+        verificationDetails: []
       },
       overallScore: evaluationMetrics.raceScore.overall,
       recommendations: this.generateRecommendations(evaluationMetrics),
@@ -2560,7 +2560,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
                 depth: 0,
                 instructionFollowing: 0,
                 readability: 0,
-                breakdown: [],
+                breakdown: []
               },
               fact: {
                 citationAccuracy: 0,
@@ -2570,7 +2570,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
                 disputedCitations: 0,
                 citationCoverage: 0,
                 sourceCredibility: 0,
-                breakdown: [],
+                breakdown: []
               },
             },
       },
@@ -2731,7 +2731,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
   }
 
   private async generateComparisonRecommendation(
-    projects: ResearchProject[],
+    projects: ResearchProject[]
     similarity: number,
     differences: string[]
   ): Promise<string> {
@@ -2754,7 +2754,7 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
       query,
       purpose: 'Refined based on initial findings',
       priority: 2,
-      dependsOn: [],
+      dependsOn: []
       searchProviders: ['web'],
       expectedResultType:
         project.metadata.taskType === TaskType.ANALYTICAL
@@ -2884,9 +2884,9 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
             confidence: finding.confidence,
             timestamp: Date.now(),
             category: finding.category,
-            citations: [],
-            factualClaims: [],
-            relatedFindings: [],
+            citations: []
+            factualClaims: []
+            relatedFindings: []
             verificationStatus: VerificationStatus.PENDING,
             extractionMethod: 'llm-extraction',
           },
@@ -2934,11 +2934,11 @@ Based on the detailed analysis above, the sources demonstrate varying levels of 
           confidence: finding.confidence,
           timestamp: Date.now(),
           category: finding.category,
-          citations: [],
+          citations: []
           factualClaims: claims.filter((c) =>
             finding.content.toLowerCase().includes(c.statement.substring(0, 30).toLowerCase())
           ),
-          relatedFindings: [],
+          relatedFindings: []
           verificationStatus: VerificationStatus.PENDING,
           extractionMethod: source.fullContent
             ? 'llm-extraction-with-relevance'

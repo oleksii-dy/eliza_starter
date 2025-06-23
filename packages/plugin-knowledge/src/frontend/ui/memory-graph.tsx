@@ -91,8 +91,8 @@ export function MemoryGraph({ memories, onNodeClick, selectedMemoryId }: MemoryG
   const [initialized, setInitialized] = useState(false);
   const [shouldRender, setShouldRender] = useState(true);
   const [graphData, setGraphData] = useState<{ nodes: MemoryNode[]; links: MemoryLink[] }>({
-    nodes: [],
-    links: [],
+    nodes: []
+    links: []
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });

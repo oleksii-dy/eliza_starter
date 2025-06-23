@@ -43,11 +43,11 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
     name: agentName,
     username: agent.username || agentName,
     bio: agent.bio || '',
-    messageExamples: agent.messageExamples || [],
-    postExamples: agent.postExamples || [],
-    topics: agent.topics || [],
-    knowledge: agent.knowledge || [],
-    plugins: agent.plugins || [],
+    messageExamples: agent.messageExamples || []
+    postExamples: agent.postExamples || []
+    topics: agent.topics || []
+    knowledge: agent.knowledge || []
+    plugins: agent.plugins || []
     settings: agent.settings || {},
     secrets: agent.secrets || {},
     style: agent.style || {},

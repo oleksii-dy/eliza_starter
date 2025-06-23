@@ -74,7 +74,7 @@ export const ignoreAction: Action = {
   },
   effects: {
     provides: ['conversation_end'],
-    requires: [],
+    requires: []
     modifies: ['conversation_state'],
   },
   examples: [
@@ -285,5 +285,5 @@ export const ignoreAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 } as Action;

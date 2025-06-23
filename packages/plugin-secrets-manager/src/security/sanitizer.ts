@@ -24,7 +24,7 @@ interface SanitizationOptions {
 }
 
 const DEFAULT_OPTIONS: SanitizationOptions = {
-    allowedTags: [],  // No HTML tags by default
+    allowedTags: []  // No HTML tags by default
     allowedAttributes: {},
     stripUnknown: true
 };

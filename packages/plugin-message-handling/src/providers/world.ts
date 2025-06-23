@@ -89,12 +89,12 @@ export const worldProvider: Provider = {
       };
 
       const channelsByType: Record<string, RoomInfo[]> = {
-        text: [],
-        voice: [],
-        dm: [],
-        feed: [],
-        thread: [],
-        other: [],
+        text: []
+        voice: []
+        dm: []
+        feed: []
+        thread: []
+        other: []
       };
 
       // Categorize rooms by type

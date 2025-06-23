@@ -41,12 +41,12 @@ export class DocumentOrganizer {
         return acc;
       },
       {
-        classes: [],
-        methods: [],
-        interfaces: [],
-        types: [],
-        functions: [],
-        variables: [],
+        classes: []
+        methods: []
+        interfaces: []
+        types: []
+        functions: []
+        variables: []
       }
     );
   }

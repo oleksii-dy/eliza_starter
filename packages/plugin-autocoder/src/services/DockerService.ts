@@ -160,8 +160,8 @@ export class DockerService extends Service implements IDockerService {
         ],
         // Security settings
         ReadonlyRootfs: securityConfig?.readOnlyRootfs || false,
-        SecurityOpt: securityConfig?.securityOpts || [],
-        CapAdd: securityConfig?.capAdd || [],
+        SecurityOpt: securityConfig?.securityOpts || []
+        CapAdd: securityConfig?.capAdd || []
         CapDrop: securityConfig?.capDrop || ['ALL'],
       },
       NetworkingConfig: networkConfig

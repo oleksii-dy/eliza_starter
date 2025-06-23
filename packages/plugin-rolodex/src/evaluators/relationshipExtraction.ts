@@ -304,7 +304,7 @@ async function handleDispute(runtime: IAgentRuntime, dispute: DisputeInfo, messa
 
 async function analyzeRelationships(
   runtime: IAgentRuntime,
-  messages: Memory[],
+  messages: Memory[]
   rolodexService: RolodexService
 ) {
   // Group messages by sender
@@ -334,7 +334,7 @@ async function analyzeRelationships(
   }
 }
 
-function analyzeInteraction(messagesA: Memory[], messagesB: Memory[]): RelationshipIndicator[] {
+function analyzeInteraction(messagesA: Memory[] messagesB: Memory[]): RelationshipIndicator[] {
   const indicators: RelationshipIndicator[] = [];
 
   logger.info('[RelationshipExtraction] analyzeInteraction called', {

@@ -82,7 +82,7 @@ Return format:
         type: entityData.type || 'person',
         names: [entityData.name, ...(entityData.alternateNames || [])].filter(Boolean),
         summary: `${entityData.type} entity created via manual action`,
-        tags: [],
+        tags: []
         platforms: entityData.platforms || {},
         metadata: {
           ...entityData.metadata,

@@ -371,7 +371,7 @@ describe('DockerService - Real Docker Unit Tests', () => {
             containerId: '',
             agentName: 'test',
             role: 'coder',
-            capabilities: [],
+            capabilities: []
             communicationPort: 9999,
             healthPort: 9998,
             environment: {},

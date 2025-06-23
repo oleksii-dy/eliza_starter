@@ -25,9 +25,11 @@ export class TestDatabaseManager {
         // Try to use PGLite for in-memory PostgreSQL
         logger.debug(`Attempting to load PGLite adapter for ${testId}`);
 
-        // For unit tests, always use mock database to avoid complex setup issues
-        if (process.env.NODE_ENV === 'test') {
-          throw new Error('Using mock database for unit tests');
+        // ALWAYS use real database for proper testing
+        // Remove the fallback to mock database
+        if (process.env.FORCE_MOCK_DB === 'true') {
+          logger.warn('FORCE_MOCK_DB is set - this should only be used for debugging');
+          throw new Error('Forced to use mock database');
         }
 
         // Check if SQL plugin is available in the build
@@ -55,12 +57,14 @@ export class TestDatabaseManager {
           );
         }
       } catch (pgliteError) {
-        logger.info(
-          `PGLite unavailable, using functional mock database: ${pgliteError instanceof Error ? pgliteError.message : String(pgliteError)}`
+        logger.error(
+          `Failed to create PGLite database: ${pgliteError instanceof Error ? pgliteError.message : String(pgliteError)}`
         );
 
-        // Fallback to functional mock database if PGLite not available
-        adapter = this.createMockDatabase(testId);
+        // Don't fall back to mock - throw error to ensure tests use real database
+        throw new Error(
+          `Test database requires PGLite. Install @elizaos/plugin-sql to run tests. Error: ${pgliteError instanceof Error ? pgliteError.message : String(pgliteError)}`
+        );
       }
 
       // Initialize the database
@@ -765,7 +769,7 @@ export class TestDatabaseManager {
         return;
       },
 
-      async addParticipantsRoom(entityIds: any[], roomId: any) {
+      async addParticipantsRoom(entityIds: any[] roomId: any) {
         for (const entityId of entityIds) {
           const participantId = `${entityId}-${roomId}`;
           storage.participants.set(participantId, { entityId, roomId });

@@ -174,7 +174,7 @@ export class FaceRecognition {
     return Array.from(this.faceLibrary.faces.values());
   }
 
-  private euclideanDistance(a: Float32Array | number[], b: number[]): number {
+  private euclideanDistance(a: Float32Array | number[] b: number[]): number {
     let sum = 0;
     const aArray = Array.from(a);
     for (let i = 0; i < aArray.length; i++) {

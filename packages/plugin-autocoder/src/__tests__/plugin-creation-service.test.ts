@@ -380,7 +380,7 @@ describe('PluginCreationService', () => {
         content: [
           {
             type: 'text',
-            text: `File: src/index.ts\n\`\`\`typescript\nexport const plugin = { name: "test", actions: [], providers: [] };\nexport default plugin;\n\`\`\`\n\nFile: __tests__/plugin.test.ts\n\`\`\`typescript\ndescribe('test', () => {\n  it('works', () => {\n    expect(true).toBe(true);\n  });\n});\n\`\`\``,
+            text: `File: src/index.ts\n\`\`\`typescript\nexport const plugin = { name: "test", actions: [] providers: [] };\nexport default plugin;\n\`\`\`\n\nFile: __tests__/plugin.test.ts\n\`\`\`typescript\ndescribe('test', () => {\n  it('works', () => {\n    expect(true).toBe(true);\n  });\n});\n\`\`\``,
           },
         ],
       });

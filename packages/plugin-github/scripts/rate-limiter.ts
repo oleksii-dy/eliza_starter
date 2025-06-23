@@ -32,7 +32,7 @@ export class RateLimiter {
     };
 
     this.state = {
-      requests: [],
+      requests: []
       retryCount: new Map(),
       lastError: new Map(),
     };

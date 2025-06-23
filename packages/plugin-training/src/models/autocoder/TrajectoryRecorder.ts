@@ -182,20 +182,20 @@ export class TrajectoryRecorder {
       user_request: userRequest,
       project_type: projectType,
       context,
-      trajectory: [],
+      trajectory: []
       final_result: {
         success: false,
         final_code: '',
-        files_created: [],
+        files_created: []
         tests_passing: false,
         documentation_complete: false,
         user_satisfaction: 0,
       },
       back_reasoning: {
-        optimal_path: [],
-        inefficiencies_removed: [],
-        improvements_made: [],
-        lessons_learned: [],
+        optimal_path: []
+        inefficiencies_removed: []
+        improvements_made: []
+        lessons_learned: []
       },
       metadata: {
         total_duration_ms: 0,
@@ -616,7 +616,7 @@ export class TrajectoryRecorder {
             ...example.input,
           },
           output: example.output,
-          conversationContext: [], // No conversation context for code generation
+          conversationContext: [] // No conversation context for code generation
           stateData: {
             trajectory_id: trajectory.trajectory_id,
             session_id: trajectory.session_id,
@@ -766,9 +766,9 @@ export class TrajectoryRecorder {
         reasoning: {
           thinking: step.output || 'Processing step',
           approach: step.type,
-          alternatives_considered: [],
-          decisions_made: [],
-          risks_identified: [],
+          alternatives_considered: []
+          decisions_made: []
+          risks_identified: []
         },
         
         action: {
@@ -801,10 +801,10 @@ export class TrajectoryRecorder {
       },
       
       back_reasoning: {
-        optimal_path: [],
-        inefficiencies_removed: [],
-        improvements_made: [],
-        lessons_learned: [],
+        optimal_path: []
+        inefficiencies_removed: []
+        improvements_made: []
+        lessons_learned: []
       },
       
       metadata: {

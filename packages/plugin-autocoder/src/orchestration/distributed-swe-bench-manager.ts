@@ -1,9 +1,4 @@
-import {
-  elizaLogger,
-  type IAgentRuntime,
-  type Memory,
-  type State,
-} from '@elizaos/core';
+import { elizaLogger, type IAgentRuntime, type Memory, type State } from '@elizaos/core';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { SWEBenchDataLoader } from '../swe-bench/data-loader';
@@ -48,15 +43,19 @@ export class DistributedSWEBenchManager {
   private isRunning: boolean = false;
   private dockerComposeFile: string;
 
-  constructor(runtime: IAgentRuntime, config?: {
-    bridgeServerUrl?: string;
-    dockerComposeFile?: string;
-  }) {
+  constructor(
+    runtime: IAgentRuntime,
+    config?: {
+      bridgeServerUrl?: string;
+      dockerComposeFile?: string;
+    }
+  ) {
     this.runtime = runtime;
     this.bridgeServerUrl = config?.bridgeServerUrl || 'http://localhost:8080';
-    this.dockerComposeFile = config?.dockerComposeFile || 
+    this.dockerComposeFile =
+      config?.dockerComposeFile ||
       path.join(process.cwd(), 'docker/compose/docker-compose.swe-bench.yml');
-    
+
     const cacheDir = path.join(process.cwd(), '.eliza-temp', 'swe-bench-cache');
     this.dataLoader = new SWEBenchDataLoader(cacheDir);
   }
@@ -77,10 +76,7 @@ export class DistributedSWEBenchManager {
 
       // Start docker-compose
       elizaLogger.info('[DISTRIBUTED] Starting Docker Compose services...');
-      await execAsync(
-        `docker-compose -f ${this.dockerComposeFile} up -d`,
-        { cwd: process.cwd() }
-      );
+      await execAsync(`docker-compose -f ${this.dockerComposeFile} up -d`, { cwd: process.cwd() });
 
       // Wait for services to be ready
       await this.waitForServices();
@@ -99,10 +95,7 @@ export class DistributedSWEBenchManager {
     elizaLogger.info('[DISTRIBUTED] Stopping infrastructure...');
 
     try {
-      await execAsync(
-        `docker-compose -f ${this.dockerComposeFile} down`,
-        { cwd: process.cwd() }
-      );
+      await execAsync(`docker-compose -f ${this.dockerComposeFile} down`, { cwd: process.cwd() });
       elizaLogger.info('[DISTRIBUTED] Infrastructure stopped');
     } catch (error) {
       elizaLogger.error('[DISTRIBUTED] Failed to stop infrastructure:', error);
@@ -122,14 +115,15 @@ export class DistributedSWEBenchManager {
         const response = await axios.get(`${this.bridgeServerUrl}/health`);
         if (response.data.status === 'healthy') {
           elizaLogger.info('[DISTRIBUTED] Bridge server is ready');
-          
+
           // Wait for containers to register
-          await new Promise(resolve => setTimeout(resolve, 5000));
-          
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+
           const containerResponse = await axios.get(`${this.bridgeServerUrl}/containers`);
           const containerCount = containerResponse.data.length;
-          
-          if (containerCount >= 8) { // Expecting at least 8 containers
+
+          if (containerCount >= 8) {
+            // Expecting at least 8 containers
             elizaLogger.info(`[DISTRIBUTED] ${containerCount} containers registered`);
             return;
           }
@@ -139,7 +133,7 @@ export class DistributedSWEBenchManager {
       }
 
       elizaLogger.info(`[DISTRIBUTED] Waiting for services... (attempt ${attempt}/${maxAttempts})`);
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
 
     throw new Error('Services failed to start within timeout');
@@ -166,7 +160,7 @@ export class DistributedSWEBenchManager {
       elizaLogger.info(`[DISTRIBUTED] Loaded ${instances.length} instances for evaluation`);
 
       // Create tasks
-      const tasks = instances.map(instance => ({
+      const tasks = instances.map((instance) => ({
         id: uuidv4(),
         instanceId: instance.instance_id,
         instance,
@@ -176,7 +170,7 @@ export class DistributedSWEBenchManager {
 
       // Submit tasks to bridge server
       const submittedTasks = await this.submitTasks(tasks);
-      
+
       // Monitor progress
       const results = await this.monitorTasks(submittedTasks);
 
@@ -188,8 +182,21 @@ export class DistributedSWEBenchManager {
         duration: endTime.getTime() - startTime.getTime(),
         config: options,
         results: this.aggregateResults(results),
-        artifacts_dir: path.join(process.cwd(), '.eliza-temp', 'swe-bench-work', 'distributed', runId),
-        logs_dir: path.join(process.cwd(), '.eliza-temp', 'swe-bench-work', 'distributed', runId, 'logs'),
+        artifacts_dir: path.join(
+          process.cwd(),
+          '.eliza-temp',
+          'swe-bench-work',
+          'distributed',
+          runId
+        ),
+        logs_dir: path.join(
+          process.cwd(),
+          '.eliza-temp',
+          'swe-bench-work',
+          'distributed',
+          runId,
+          'logs'
+        ),
       };
 
       // Save report
@@ -209,20 +216,18 @@ export class DistributedSWEBenchManager {
 
     // Apply filters
     if (options.instance_ids && options.instance_ids.length > 0) {
-      instances = instances.filter(i => options.instance_ids!.includes(i.instance_id));
+      instances = instances.filter((i) => options.instance_ids!.includes(i.instance_id));
     }
 
     if (options.language_filter && options.language_filter.length > 0) {
       // For distributed, we support all languages
       const expandedFilter = this.expandLanguageFilter(options.language_filter);
-      instances = instances.filter(i => 
-        expandedFilter.includes(i.language as any)
-      );
+      instances = instances.filter((i) => expandedFilter.includes(i.language as any));
     }
 
     if (options.repo_filter && options.repo_filter.length > 0) {
-      instances = instances.filter(i => 
-        options.repo_filter!.some(repo => i.repo.includes(repo))
+      instances = instances.filter((i) =>
+        options.repo_filter!.some((repo) => i.repo.includes(repo))
       );
     }
 
@@ -238,15 +243,13 @@ export class DistributedSWEBenchManager {
    */
   private expandLanguageFilter(filter: string[]): string[] {
     const allLanguages = ['typescript', 'javascript', 'java', 'go', 'rust', 'c', 'cpp'];
-    
+
     // If filter only has TS/JS, expand to all languages for distributed mode
-    if (filter.length === 2 && 
-        filter.includes('TypeScript') && 
-        filter.includes('JavaScript')) {
+    if (filter.length === 2 && filter.includes('TypeScript') && filter.includes('JavaScript')) {
       return allLanguages;
     }
 
-    return filter.map(lang => lang.toLowerCase());
+    return filter.map((lang) => lang.toLowerCase());
   }
 
   /**
@@ -271,7 +274,7 @@ export class DistributedSWEBenchManager {
             config: {
               timeout: 300000,
               saveArtifacts: true,
-            }
+            },
           },
           language: task.language,
           priority: this.calculatePriority(task.instance),
@@ -325,13 +328,13 @@ Generate a unified diff patch that fixes this issue.`;
 
     // Prioritize by language (balance workload)
     const languagePriorities: Record<string, number> = {
-      'typescript': 10,
-      'javascript': 10,
-      'java': 8,
-      'go': 7,
-      'rust': 6,
-      'c': 5,
-      'cpp': 5,
+      typescript: 10,
+      javascript: 10,
+      java: 8,
+      go: 7,
+      rust: 6,
+      c: 5,
+      cpp: 5,
     };
 
     priority += languagePriorities[instance.language.toLowerCase()] || 0;
@@ -355,7 +358,7 @@ Generate a unified diff patch that fixes this issue.`;
     const timeout = 3600000; // 1 hour total timeout
     const startTime = Date.now();
 
-    while (tasks.some(t => t.status === 'queued' || t.status === 'running')) {
+    while (tasks.some((t) => t.status === 'queued' || t.status === 'running')) {
       // Check timeout
       if (Date.now() - startTime > timeout) {
         elizaLogger.warn('[DISTRIBUTED] Timeout reached, canceling remaining tasks');
@@ -382,11 +385,15 @@ Generate a unified diff patch that fixes this issue.`;
           } else if (serverTask.status === 'failed') {
             task.endTime = new Date(serverTask.completedAt);
             task.error = serverTask.error;
-            elizaLogger.error(`[DISTRIBUTED] Task ${task.id} failed for ${task.instanceId}: ${task.error}`);
+            elizaLogger.error(
+              `[DISTRIBUTED] Task ${task.id} failed for ${task.instanceId}: ${task.error}`
+            );
           } else if (serverTask.status === 'running' && !task.startTime) {
             task.startTime = new Date(serverTask.startedAt);
             task.containerId = serverTask.containerId;
-            elizaLogger.info(`[DISTRIBUTED] Task ${task.id} started on container ${task.containerId}`);
+            elizaLogger.info(
+              `[DISTRIBUTED] Task ${task.id} started on container ${task.containerId}`
+            );
           }
         } catch (error) {
           elizaLogger.error(`[DISTRIBUTED] Failed to check task ${task.id}:`, error);
@@ -394,14 +401,14 @@ Generate a unified diff patch that fixes this issue.`;
       }
 
       // Log progress
-      const completed = tasks.filter(t => t.status === 'completed').length;
-      const failed = tasks.filter(t => t.status === 'failed').length;
-      const running = tasks.filter(t => t.status === 'running').length;
-      const queued = tasks.filter(t => t.status === 'queued').length;
+      const completed = tasks.filter((t) => t.status === 'completed').length;
+      const failed = tasks.filter((t) => t.status === 'failed').length;
+      const running = tasks.filter((t) => t.status === 'running').length;
+      const queued = tasks.filter((t) => t.status === 'queued').length;
 
       elizaLogger.info(
         `[DISTRIBUTED] Progress: ${completed} completed, ${failed} failed, ` +
-        `${running} running, ${queued} queued`
+          `${running} running, ${queued} queued`
       );
 
       // Get container pool status
@@ -414,7 +421,7 @@ Generate a unified diff patch that fixes this issue.`;
         // Ignore errors getting pool status
       }
 
-      await new Promise(resolve => setTimeout(resolve, checkInterval));
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
     }
 
     return results;
@@ -423,10 +430,7 @@ Generate a unified diff patch that fixes this issue.`;
   /**
    * Convert server result to SWEBenchResult
    */
-  private convertToSWEBenchResult(
-    serverResult: any,
-    task: DistributedTask
-  ): SWEBenchResult {
+  private convertToSWEBenchResult(serverResult: any, task: DistributedTask): SWEBenchResult {
     return {
       instance_id: task.instanceId,
       success: serverResult.success,
@@ -469,8 +473,7 @@ Generate a unified diff patch that fixes this issue.`;
           busy++;
         }
 
-        languageCounts[container.languageType] = 
-          (languageCounts[container.languageType] || 0) + 1;
+        languageCounts[container.languageType] = (languageCounts[container.languageType] || 0) + 1;
       }
 
       return {
@@ -494,17 +497,17 @@ Generate a unified diff patch that fixes this issue.`;
    */
   private aggregateResults(results: SWEBenchResult[]): any {
     const total = results.length;
-    const successful = results.filter(r => r.success).length;
-    
+    const successful = results.filter((r) => r.success).length;
+
     const byLanguage: Record<string, { total: number; successful: number }> = {};
-    
+
     for (const task of this.tasks.values()) {
       const lang = task.language;
       if (!byLanguage[lang]) {
         byLanguage[lang] = { total: 0, successful: 0 };
       }
       byLanguage[lang].total++;
-      
+
       if (task.result?.success) {
         byLanguage[lang].successful++;
       }
@@ -517,8 +520,7 @@ Generate a unified diff patch that fixes this issue.`;
       by_language: byLanguage,
       execution_time: {
         total: results.reduce((sum, r) => sum + r.execution_time, 0),
-        average: total > 0 ? 
-          results.reduce((sum, r) => sum + r.execution_time, 0) / total : 0,
+        average: total > 0 ? results.reduce((sum, r) => sum + r.execution_time, 0) / total : 0,
       },
       per_instance_results: results,
     };
@@ -528,7 +530,13 @@ Generate a unified diff patch that fixes this issue.`;
    * Save benchmark report
    */
   private async saveReport(report: BenchmarkReport, runId: string): Promise<void> {
-    const reportDir = path.join(process.cwd(), '.eliza-temp', 'swe-bench-work', 'distributed', runId);
+    const reportDir = path.join(
+      process.cwd(),
+      '.eliza-temp',
+      'swe-bench-work',
+      'distributed',
+      runId
+    );
     await fs.mkdir(reportDir, { recursive: true });
 
     const reportPath = path.join(reportDir, 'report.json');
@@ -547,7 +555,7 @@ Generate a unified diff patch that fixes this issue.`;
    */
   private generateSummary(report: BenchmarkReport): string {
     const results = report.results as any; // TODO: Fix type mismatch
-    
+
     return `# Distributed SWE-bench Evaluation Report
 
 ## Overview
@@ -561,13 +569,18 @@ Generate a unified diff patch that fixes this issue.`;
 - **Resolution Rate**: ${(results.resolution_rate * 100).toFixed(2)}%
 
 ## By Language
-${results.by_language ? Object.entries(results.by_language as Record<string, any>)
-  .map(([lang, stats]: [string, any]) => 
-    `- **${lang}**: ${stats.successful}/${stats.total} (${
-      stats.total > 0 ? ((stats.successful / stats.total) * 100).toFixed(2) : 0
-    }%)`
-  )
-  .join('\n') : 'No language breakdown available'}
+${
+  results.by_language
+    ? Object.entries(results.by_language as Record<string, any>)
+        .map(
+          ([lang, stats]: [string, any]) =>
+            `- **${lang}**: ${stats.successful}/${stats.total} (${
+              stats.total > 0 ? ((stats.successful / stats.total) * 100).toFixed(2) : 0
+            }%)`
+        )
+        .join('\n')
+    : 'No language breakdown available'
+}
 
 ## Performance
 - **Total Execution Time**: ${results.execution_time ? (results.execution_time.total / 1000 / 60).toFixed(2) : '0'} minutes
@@ -591,12 +604,9 @@ ${JSON.stringify(report.config, null, 2)}
       return {
         bridge_status: healthResponse.data,
         containers: containersResponse.data,
-        active_tasks: Array.from(this.tasks.values()).filter(
-          t => t.status === 'running'
-        ).length,
-        completed_tasks: Array.from(this.tasks.values()).filter(
-          t => t.status === 'completed'
-        ).length,
+        active_tasks: Array.from(this.tasks.values()).filter((t) => t.status === 'running').length,
+        completed_tasks: Array.from(this.tasks.values()).filter((t) => t.status === 'completed')
+          .length,
       };
     } catch (error) {
       return {
@@ -605,4 +615,4 @@ ${JSON.stringify(report.config, null, 2)}
       };
     }
   }
-} 
+}

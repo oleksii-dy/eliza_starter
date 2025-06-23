@@ -368,7 +368,7 @@ export class ContinuousVerificationManager {
   /**
    * Analyze verification results
    */
-  private analyzeResults(stages: VerificationStageResult[], code: Code): VerificationResult {
+  private analyzeResults(stages: VerificationStageResult[] code: Code): VerificationResult {
     // Extract all findings
     const allFindings = stages.flatMap((s) => s.findings);
 
@@ -409,7 +409,7 @@ export class ContinuousVerificationManager {
    */
   private evaluatePass(
     score: number,
-    criticalErrors: VerificationError[],
+    criticalErrors: VerificationError[]
     stages: VerificationStageResult[]
   ): boolean {
     // Must have no critical errors

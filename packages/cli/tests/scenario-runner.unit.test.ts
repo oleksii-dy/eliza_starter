@@ -81,11 +81,11 @@ describe('ScenarioRunner Unit Tests', () => {
       id: '',
       name: '',
       description: '',
-      actors: [],
+      actors: []
       setup: {},
       execution: {},
       verification: {
-        rules: [],
+        rules: []
       },
     };
 
@@ -196,7 +196,7 @@ describe('MetricsCollector Unit Tests', () => {
           },
         ],
         benchmarks: {
-          customMetrics: [],
+          customMetrics: []
         },
       },
       transcript: [

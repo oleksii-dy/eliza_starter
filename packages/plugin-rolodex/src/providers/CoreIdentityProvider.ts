@@ -381,7 +381,7 @@ export class CoreIdentityProvider implements IIdentityManager {
         entityIds,
         confidence: mergeAnalysis.confidence,
         reason: mergeAnalysis.reason,
-        conflicts: mergeAnalysis.conflicts || [],
+        conflicts: mergeAnalysis.conflicts || []
         primaryEntityId: mergeAnalysis.primaryEntityId || entityIds[0],
         strategy: mergeAnalysis.strategy || 'conservative',
         estimatedRisk: mergeAnalysis.risk || 'medium',
@@ -426,8 +426,8 @@ export class CoreIdentityProvider implements IIdentityManager {
         return {
           success: false,
           primaryEntityId: proposal.primaryEntityId,
-          mergedEntityIds: [],
-          conflicts: mergeResult.conflicts || [],
+          mergedEntityIds: []
+          conflicts: mergeResult.conflicts || []
           rollbackData: null,
           metadata: { error: mergeResult.error },
         };
@@ -449,7 +449,7 @@ export class CoreIdentityProvider implements IIdentityManager {
         confidence: 1.0,
         primaryEntityId: proposal.primaryEntityId,
         mergedEntityIds: proposal.entityIds.filter(id => id !== proposal.primaryEntityId),
-        conflicts: [],
+        conflicts: []
         rollbackData: mergeResult.rollbackData,
         metadata: {
           proposal,
@@ -659,7 +659,7 @@ export class CoreIdentityProvider implements IIdentityManager {
       return {
         valid: false,
         errors: [`Validation failed: ${error.message}`],
-        warnings: [],
+        warnings: []
       };
     }
   }

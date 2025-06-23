@@ -178,10 +178,10 @@ class PluginDocumentationEnhancer {
 
   analyzeCodeStructure(pluginDir: string): any {
     const structure = {
-      actions: [] as string[],
-      providers: [] as string[],
-      services: [] as string[],
-      evaluators: [] as string[],
+      actions: [] as string[]
+      providers: [] as string[]
+      services: [] as string[]
+      evaluators: [] as string[]
       totalFiles: 0,
       totalLines: 0,
     };
@@ -360,7 +360,7 @@ Generate a response in JSON format with "description" and "readme" fields.
       totalPlugins: enhancedPlugins.length,
       totalEnvVars: 0,
       commonEnvVars: {} as Record<string, number>,
-      pluginComplexity: [] as any[],
+      pluginComplexity: [] as any[]
       enhancedPlugins: enhancedPlugins.map(p => ({
         name: p.name,
         version: p.version,

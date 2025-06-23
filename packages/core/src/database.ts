@@ -171,7 +171,7 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
    * @param tableName Optional table name to filter memories by type
    * @returns Promise resolving to array of Memory objects
    */
-  abstract getMemoriesByIds(memoryIds: UUID[], tableName?: string): Promise<Memory[]>;
+  abstract getMemoriesByIds(memoryIds: UUID[] tableName?: string): Promise<Memory[]>;
 
   /**
    * Retrieves cached embeddings based on the specified query parameters.
@@ -402,7 +402,7 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
    * @param roomId The UUID of the room to which the user will be added.
    * @returns A Promise that resolves to a boolean indicating success or failure.
    */
-  abstract addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean>;
+  abstract addParticipantsRoom(entityIds: UUID[] roomId: UUID): Promise<boolean>;
 
   /**
    * Removes a user as a participant from a specific room.

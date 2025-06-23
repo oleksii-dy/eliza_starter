@@ -156,7 +156,7 @@ export class Kinematics {
   async inverseKinematics(
     chainName: string,
     targetTransform: Transform,
-    initialGuess?: number[],
+    initialGuess?: number[]
     maxIterations: number = 100,
     tolerance: number = 0.001
   ): Promise<number[] | null> {
@@ -289,7 +289,7 @@ export class Kinematics {
    * Solve Jacobian equation using pseudo-inverse
    */
   private solveJacobian(
-    jacobian: number[][],
+    jacobian: number[][]
     positionError: Vector3,
     orientationError: Vector3
   ): number[] {
@@ -446,7 +446,7 @@ export class Kinematics {
     return transposed;
   }
   
-  private multiplyMatrices(a: number[][], b: number[][]): number[][] {
+  private multiplyMatrices(a: number[][] b: number[][]): number[][] {
     const result: number[][] = [];
     const rows = a.length;
     const cols = b[0].length;

@@ -130,10 +130,10 @@ vi.mock('@elizaos/plugin-sql', () => ({
   plugin: {
     name: '@elizaos/plugin-sql',
     description: 'SQL database plugin',
-    actions: [],
-    providers: [],
-    evaluators: [],
-    services: [],
+    actions: []
+    providers: []
+    evaluators: []
+    services: []
   },
 }));
 
@@ -256,7 +256,7 @@ describe('CLI Compatibility Tests', () => {
       // Test that we can call initialize with ServerOptions-compatible object
       const options = {
         dataDir: './test-data',
-        middlewares: [],
+        middlewares: []
         postgresUrl: 'postgresql://test:test@localhost:5432/test',
       };
 
@@ -332,7 +332,7 @@ describe('CLI Compatibility Tests', () => {
         agentId: '123e4567-e89b-12d3-a456-426614174000' as any,
         character: { name: 'TestAgent' },
         registerPlugin: vi.fn().mockResolvedValue(undefined),
-        plugins: [],
+        plugins: []
         registerProvider: vi.fn(),
         registerAction: vi.fn(),
       } as any;

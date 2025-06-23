@@ -117,7 +117,7 @@ describe('Advanced Knowledge Features', () => {
 
     it('should handle empty search results', async () => {
       vi.mocked(mockKnowledgeService.advancedSearch).mockResolvedValue({
-        results: [],
+        results: []
         totalCount: 0,
         hasMore: false,
       });
@@ -178,7 +178,7 @@ describe('Advanced Knowledge Features', () => {
             { query: 'machine learning', count: 18 },
           ],
         },
-        usageByDate: [],
+        usageByDate: []
       };
 
       vi.mocked(mockKnowledgeService.getAnalytics).mockResolvedValue(mockAnalytics);

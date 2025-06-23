@@ -169,7 +169,7 @@ export class CorePaymentProvider implements IPaymentProvider {
       return {
         entityId,
         preferredMethod: 'usdc_eth' as any,
-        verifiedMethods: [],
+        verifiedMethods: []
         riskLevel: 'medium' as any,
         limits: {
           dailyLimit: 1000,
@@ -565,7 +565,7 @@ export class CorePaymentProvider implements IPaymentProvider {
         totalVolume: 0,
         successRate: 0,
         averageAmount: 0,
-        topMethods: [],
+        topMethods: []
         hourlyDistribution: Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 })),
       } as any;
     }

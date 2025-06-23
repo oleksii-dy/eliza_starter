@@ -20,19 +20,19 @@ export function createMockRuntime(overrides: any = {}): IAgentRuntime {
     character: overrides.character || {
       name: 'TestAgent',
       bio: ['A test agent'],
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
-      plugins: [],
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
+      plugins: []
     },
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [],
+    providers: []
+    actions: []
+    evaluators: []
+    plugins: []
     services: new Map(),
     events: new Map(),
-    routes: [],
+    routes: []
     
     // Database
     db: mockDb,
@@ -121,7 +121,7 @@ export function createMockWallet(overrides: Partial<CustodialWallet> = {}): Cust
     network: 'base-sepolia',
     name: 'Test Wallet',
     ownerId: 'user-123' as UUID,
-    permissions: [],
+    permissions: []
     status: 'active',
     createdAt: Date.now(),
     requiredTrustLevel: 50,

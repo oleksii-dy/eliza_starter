@@ -4,9 +4,9 @@ import { ServiceType } from '@elizaos/core';
 // Mock plugin components for testing
 const mockAction: Action = {
   name: 'TEST_CONFIG_ACTION',
-  similes: [],
+  similes: []
   description: 'Test action for configuration system scenario',
-  examples: [],
+  examples: []
   validate: async (runtime, message, state) => {
     return true;
   },
@@ -38,7 +38,7 @@ const mockProvider: Provider = {
 const mockEvaluator: Evaluator = {
   name: 'TEST_CONFIG_EVALUATOR',
   description: 'Test evaluator for configuration system scenario',
-  examples: [],
+  examples: []
   validate: async (runtime, message, state) => {
     return true;
   },
@@ -444,7 +444,7 @@ export default {
         'NON_EXISTENT_COMPONENT',
         'action',
         { enabled: true },
-        [],
+        []
         enabledComponents
       );
       

@@ -40,7 +40,7 @@ const mockActions: Map<string, Action> = new Map([
           text: shouldSucceed ? 'Room muted' : 'Failed to mute room',
         };
       },
-      similes: [],
+      similes: []
     },
   ],
   [
@@ -64,7 +64,7 @@ const mockActions: Map<string, Action> = new Map([
           text: shouldSucceed ? 'Room followed' : 'Failed to follow room',
         };
       },
-      similes: [],
+      similes: []
     },
   ],
   [
@@ -95,7 +95,7 @@ const mockActions: Map<string, Action> = new Map([
           text: replyText,
         };
       },
-      similes: [],
+      similes: []
     },
   ],
   [
@@ -120,7 +120,7 @@ const mockActions: Map<string, Action> = new Map([
           text: `Updated ${settingKey} to ${settingValue}`,
         };
       },
-      similes: [],
+      similes: []
     },
   ],
 ]);
@@ -207,9 +207,9 @@ describe('Planning System', () => {
 
       const context: PlanningContext = {
         goal: 'Mute the current room and inform the user',
-        constraints: [],
+        constraints: []
         availableActions: ['MUTE_ROOM', 'REPLY'],
-        availableProviders: [],
+        availableProviders: []
       };
 
       const plan = await (runtime as any).generatePlan(message, context);
@@ -239,7 +239,7 @@ describe('Planning System', () => {
         ],
         executionModel: 'sequential',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [], tags: [] },
+        metadata: { createdAt: Date.now(), constraints: [] tags: [] },
       };
 
       const validation = await (runtime as any).validatePlan(plan);
@@ -278,7 +278,7 @@ describe('Planning System', () => {
         ],
         executionModel: 'sequential',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [], tags: [] },
+        metadata: { createdAt: Date.now(), constraints: [] tags: [] },
       };
 
       const result = await (runtime as any).executePlan(plan, message);
@@ -319,7 +319,7 @@ describe('Planning System', () => {
         ],
         executionModel: 'sequential',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [], tags: [] },
+        metadata: { createdAt: Date.now(), constraints: [] tags: [] },
       };
 
       const result = await (runtime as any).executePlan(plan, message);
@@ -362,7 +362,7 @@ describe('Planning System', () => {
         ],
         executionModel: 'sequential',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [], tags: [] },
+        metadata: { createdAt: Date.now(), constraints: [] tags: [] },
       };
 
       const result = await (runtime as any).executePlan(plan, message);
@@ -386,7 +386,7 @@ describe('Planning System', () => {
         ],
         executionModel: 'sequential',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [], tags: [] },
+        metadata: { createdAt: Date.now(), constraints: [] tags: [] },
       };
 
       const order = getExecutionOrder(plan);
@@ -412,7 +412,7 @@ describe('Planning System', () => {
         ],
         executionModel: 'parallel',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [], tags: [] },
+        metadata: { createdAt: Date.now(), constraints: [] tags: [] },
       };
 
       const order = getExecutionOrder(plan);
@@ -464,9 +464,9 @@ Average Duration: ${avgDuration.toFixed(2)}ms
 
           const context: PlanningContext = {
             goal: scenario.goal,
-            constraints: [],
+            constraints: []
             availableActions: scenario.expectedActions,
-            availableProviders: [],
+            availableProviders: []
           };
 
           const plan = await (runtime as any).generatePlan(message, context);

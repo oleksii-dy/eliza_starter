@@ -573,7 +573,7 @@ export const searchIssuesAction: Action = {
         actions: ['SEARCH_GITHUB_ISSUES'],
         source: message.content.source,
         // Include data for callbacks
-        issues: searchResult.items || [],
+        issues: searchResult.items || []
         totalCount: searchResult.total_count || 0,
         query,
       };

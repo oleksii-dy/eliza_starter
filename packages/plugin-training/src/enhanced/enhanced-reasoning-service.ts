@@ -462,7 +462,7 @@ export class EnhancedReasoningService {
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
         )`,
-        args: [],
+        args: []
       });
 
       // Create training_sessions table
@@ -482,26 +482,26 @@ export class EnhancedReasoningService {
           updated_at TEXT NOT NULL,
           UNIQUE(agent_id, session_id)
         )`,
-        args: [],
+        args: []
       });
 
       // Create indexes for better performance
       await db.execute({
         sql: `CREATE INDEX IF NOT EXISTS idx_training_data_agent_session 
               ON training_data(agent_id, session_id)`,
-        args: [],
+        args: []
       });
 
       await db.execute({
         sql: `CREATE INDEX IF NOT EXISTS idx_training_data_model_type 
               ON training_data(model_type)`,
-        args: [],
+        args: []
       });
 
       await db.execute({
         sql: `CREATE INDEX IF NOT EXISTS idx_training_sessions_agent 
               ON training_sessions(agent_id)`,
-        args: [],
+        args: []
       });
 
       logger.info('✅ Training tables ensured in database');

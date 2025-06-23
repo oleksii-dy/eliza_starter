@@ -599,7 +599,7 @@ export class ResearchIntegration {
     // Enhanced static analysis based on issue content
     const findings = this.analyzeIssueStatically(instance, language, framework);
     const guidance = this.createEnhancedGuidance(instance, language, framework);
-    const risks = this.assessRisks(instance, { findings: [], sources: [] } as any);
+    const risks = this.assessRisks(instance, { findings: [] sources: [] } as any);
 
     return {
       issue: instance,

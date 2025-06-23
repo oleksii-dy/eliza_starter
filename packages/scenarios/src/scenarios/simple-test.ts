@@ -60,7 +60,7 @@ export const simpleTestScenario: Scenario = {
         config: {
           successCriteria: 'Agent responds politely to greeting',
           minMessages: 1,
-          requiredKeywords: [],
+          requiredKeywords: []
           forbiddenKeywords: ['error', 'failed']
         },
         weight: 1

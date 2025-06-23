@@ -14,11 +14,11 @@ describe('KnowledgeService Ingestion Methods', () => {
         name: 'TestAgent',
         bio: ['Test bio'],
         system: 'Test system',
-        messageExamples: [],
-        postExamples: [],
-        topics: [],
-        knowledge: [],
-        plugins: [],
+        messageExamples: []
+        postExamples: []
+        topics: []
+        knowledge: []
+        plugins: []
       },
       getSetting: vi.fn(() => 'test-value'),
     };

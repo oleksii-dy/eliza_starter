@@ -104,11 +104,11 @@ export const uxGuidanceProvider: Provider = {
               priority: 'high',
               dismissible: false,
             }],
-            quickActions: [],
+            quickActions: []
             contextualHelp: {
               currentContext: 'service-error',
-              relevantDocs: [],
-              commonTasks: [],
+              relevantDocs: []
+              commonTasks: []
               troubleshooting: [{
                 issue: 'Service unavailable',
                 solution: 'Contact support for assistance'
@@ -132,11 +132,11 @@ export const uxGuidanceProvider: Provider = {
               priority: 'high',
               dismissible: false,
             }],
-            quickActions: [],
+            quickActions: []
             contextualHelp: {
               currentContext: 'service-error',
-              relevantDocs: [],
-              commonTasks: [],
+              relevantDocs: []
+              commonTasks: []
               troubleshooting: [{
                 issue: 'Service unavailable',
                 solution: 'Contact support for assistance'
@@ -213,8 +213,8 @@ export const uxGuidanceProvider: Provider = {
         ],
         contextualHelp: {
           currentContext: 'error',
-          relevantDocs: [],
-          commonTasks: [],
+          relevantDocs: []
+          commonTasks: []
           troubleshooting: [
             {
               issue: 'Service unavailable',
@@ -280,8 +280,8 @@ function generateStatusSummary(
 
 function generateSuggestions(
   userSecrets: Record<string, any>,
-  missingSecrets: any[],
-  workflows: any[],
+  missingSecrets: any[]
+  workflows: any[]
   statusSummary: StatusSummary
 ): UXSuggestion[] {
   const suggestions: UXSuggestion[] = [];
@@ -356,7 +356,7 @@ function generateSuggestions(
 
 function generateQuickActions(
   userSecrets: Record<string, any>,
-  missingSecrets: any[],
+  missingSecrets: any[]
   workflows: any[]
 ): QuickAction[] {
   const actions: QuickAction[] = [

@@ -205,7 +205,7 @@ const DOMAIN_CONFIGS: Record<ResearchDomain, DomainConfig> = {
     preferredSources: [SourceType.GOVERNMENT, SourceType.TECHNICAL, SourceType.ORGANIZATION],
   },
   [ResearchDomain.GENERAL]: {
-    keyTerms: [],
+    keyTerms: []
     authoritySource: ['wikipedia.org', 'britannica.com', 'scholar.google.com'],
     methodology: 'mixed-methods',
     evaluationFocus: ['accuracy', 'comprehensiveness', 'clarity', 'source diversity'],
@@ -605,7 +605,7 @@ Separate each sub-query with ---`;
 
   async refineQuery(
     originalQuery: string,
-    currentFindings: string[],
+    currentFindings: string[]
     iteration: number
   ): Promise<string[]> {
     const prompt = `Based on the current research findings, generate refined search queries for iteration ${iteration + 1}.

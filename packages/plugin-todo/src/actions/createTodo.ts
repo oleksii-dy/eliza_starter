@@ -86,15 +86,15 @@ async function extractTodoInfo(
 ): Promise<TodoTaskInput | null> {
   try {
     const messageHistory = formatMessages({
-      messages: state.data.messages || [],
-      entities: state.data.entities || [],
+      messages: state.data.messages || []
+      entities: state.data.entities || []
     });
 
     const prompt = extractTodoTemplate(message.content.text || '', messageHistory);
 
     const result = await runtime.useModel(ModelType.TEXT_LARGE, {
       prompt,
-      stopSequences: [],
+      stopSequences: []
     });
 
     logger.debug('Extract todo result:', result);
@@ -402,7 +402,7 @@ export const createTodoAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 export default createTodoAction;

@@ -21,9 +21,10 @@ describe('Payment Plugin E2E', () => {
 
   it('should have research action', () => {
     expect(paymentPlugin.actions).toBeDefined();
-    expect(paymentPlugin.actions!).toHaveLength(1);
-    const action = paymentPlugin.actions![0];
-    expect(action.name).toBe('RESEARCH');
+    expect(paymentPlugin.actions!).toHaveLength(2);
+    const researchAction = paymentPlugin.actions!.find(a => a.name === 'RESEARCH');
+    expect(researchAction).toBeDefined();
+    expect(researchAction!.name).toBe('RESEARCH');
   });
 
   it('should have init function', () => {

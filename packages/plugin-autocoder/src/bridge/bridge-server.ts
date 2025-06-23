@@ -45,26 +45,22 @@ export class BridgeServer {
   private centralServerUrl: string;
   private metricsPort: number = 8081;
 
-  constructor(config: {
-    port?: number;
-    redisUrl?: string;
-    centralServerUrl?: string;
-  }) {
+  constructor(config: { port?: number; redisUrl?: string; centralServerUrl?: string }) {
     this.app = express();
     this.app.use(express.json());
-    
+
     this.server = createServer(this.app);
     this.wss = new WebSocketServer({ server: this.server });
-    
+
     this.redis = new Redis(config.redisUrl || 'redis://localhost:6379');
     this.centralServerUrl = config.centralServerUrl || 'http://localhost:3000';
-    
+
     this.setupRoutes();
     this.setupWebSocket();
     this.setupRedis();
     this.startHeartbeatChecker();
     this.startMetricsServer();
-    
+
     const port = config.port || 8080;
     this.server.listen(port, () => {
       elizaLogger.info(`Bridge server listening on port ${port}`);
@@ -77,8 +73,8 @@ export class BridgeServer {
       res.json({
         status: 'healthy',
         containers: this.containers.size,
-        activeTasks: Array.from(this.tasks.values()).filter(t => t.status === 'running').length,
-        pendingTasks: Array.from(this.tasks.values()).filter(t => t.status === 'pending').length
+        activeTasks: Array.from(this.tasks.values()).filter((t) => t.status === 'running').length,
+        pendingTasks: Array.from(this.tasks.values()).filter((t) => t.status === 'pending').length,
       });
     });
 
@@ -91,7 +87,7 @@ export class BridgeServer {
         language: req.body.language,
         priority: req.body.priority || 0,
         createdAt: new Date(),
-        status: 'pending'
+        status: 'pending',
       };
 
       await this.addTask(task);
@@ -110,13 +106,13 @@ export class BridgeServer {
 
     // Get all containers
     this.app.get('/containers', (req, res) => {
-      const containers = Array.from(this.containers.values()).map(c => ({
+      const containers = Array.from(this.containers.values()).map((c) => ({
         id: c.id,
         languageType: c.languageType,
         capabilities: c.capabilities,
         status: c.status,
         currentTask: c.currentTask,
-        lastHeartbeat: c.lastHeartbeat
+        lastHeartbeat: c.lastHeartbeat,
       }));
       res.json(containers);
     });
@@ -130,7 +126,7 @@ export class BridgeServer {
       }
 
       this.sendToContainer(container, {
-        type: 'shutdown'
+        type: 'shutdown',
       });
 
       res.json({ message: 'Shutdown command sent' });
@@ -156,7 +152,7 @@ export class BridgeServer {
           if (container.ws === ws) {
             elizaLogger.info(`Container ${id} disconnected`);
             this.containers.delete(id);
-            
+
             // Requeue any running task
             if (container.currentTask) {
               const task = this.tasks.get(container.currentTask);
@@ -182,23 +178,23 @@ export class BridgeServer {
       case 'register':
         await this.handleRegister(ws, message);
         break;
-      
+
       case 'heartbeat':
         await this.handleHeartbeat(message);
         break;
-      
+
       case 'task_started':
         await this.handleTaskStarted(message);
         break;
-      
+
       case 'task_completed':
         await this.handleTaskCompleted(message);
         break;
-      
+
       case 'task_failed':
         await this.handleTaskFailed(message);
         break;
-      
+
       case 'status_report':
         await this.handleStatusReport(message);
         break;
@@ -213,18 +209,21 @@ export class BridgeServer {
       status: 'idle',
       currentTask: null,
       lastHeartbeat: new Date(),
-      ws
+      ws,
     };
 
     this.containers.set(container.id, container);
-    elizaLogger.info(`Container ${container.id} registered with capabilities:`, container.capabilities);
+    elizaLogger.info(
+      `Container ${container.id} registered with capabilities:`,
+      container.capabilities
+    );
 
     // Notify central server
     try {
       await axios.post(`${this.centralServerUrl}/containers/registered`, {
         containerId: container.id,
         languageType: container.languageType,
-        capabilities: container.capabilities
+        capabilities: container.capabilities,
       });
     } catch (error) {
       elizaLogger.error('Failed to notify central server:', error);
@@ -260,7 +259,7 @@ export class BridgeServer {
       try {
         await axios.post(`${this.centralServerUrl}/tasks/started`, {
           taskId: task.id,
-          containerId: message.containerId
+          containerId: message.containerId,
         });
       } catch (error) {
         elizaLogger.error('Failed to notify central server:', error);
@@ -286,7 +285,7 @@ export class BridgeServer {
       try {
         await axios.post(`${this.centralServerUrl}/tasks/completed`, {
           taskId: task.id,
-          result: task.result
+          result: task.result,
         });
       } catch (error) {
         elizaLogger.error('Failed to notify central server:', error);
@@ -320,7 +319,7 @@ export class BridgeServer {
       try {
         await axios.post(`${this.centralServerUrl}/tasks/failed`, {
           taskId: task.id,
-          error: task.error
+          error: task.error,
         });
       } catch (error) {
         elizaLogger.error('Failed to notify central server:', error);
@@ -342,30 +341,39 @@ export class BridgeServer {
 
   private async addTask(task: Task) {
     this.tasks.set(task.id, task);
-    
+
     // Add to Redis queue
-    await this.redis.zadd('task_queue', task.priority, JSON.stringify({
-      id: task.id,
-      language: task.language
-    }));
+    await this.redis.zadd(
+      'task_queue',
+      task.priority,
+      JSON.stringify({
+        id: task.id,
+        language: task.language,
+      })
+    );
 
     elizaLogger.info(`Task ${task.id} added to queue`);
-    
+
     // Try to assign immediately
     this.assignPendingTasks();
   }
 
   private async assignPendingTasks() {
     // Get available containers
-    const availableContainers = Array.from(this.containers.values())
-      .filter(c => c.status === 'idle');
+    const availableContainers = Array.from(this.containers.values()).filter(
+      (c) => c.status === 'idle'
+    );
 
     if (availableContainers.length === 0) {
       return;
     }
 
     // Get pending tasks from Redis
-    const pendingTaskData = await this.redis.zrevrange('task_queue', 0, availableContainers.length - 1);
+    const pendingTaskData = await this.redis.zrevrange(
+      'task_queue',
+      0,
+      availableContainers.length - 1
+    );
 
     for (const taskData of pendingTaskData) {
       const { id, language } = JSON.parse(taskData);
@@ -377,14 +385,17 @@ export class BridgeServer {
       }
 
       // Find suitable container
-      const container = availableContainers.find(c => {
+      const container = availableContainers.find((c) => {
         if (c.status !== 'idle') return false;
-        
+
         // Check if container supports the language
         if (language === 'typescript' || language === 'javascript') {
-          return c.capabilities.languages.includes('typescript') || c.capabilities.languages.includes('javascript');
+          return (
+            c.capabilities.languages.includes('typescript') ||
+            c.capabilities.languages.includes('javascript')
+          );
         }
-        
+
         return c.capabilities.languages.includes(language);
       });
 
@@ -400,8 +411,8 @@ export class BridgeServer {
           task: {
             id: task.id,
             type: task.type,
-            data: task.data
-          }
+            data: task.data,
+          },
         });
 
         // Remove from queue
@@ -521,11 +532,11 @@ if (require.main === module) {
   const server = new BridgeServer({
     port: parseInt(process.env.PORT || '8080'),
     redisUrl: process.env.REDIS_URL,
-    centralServerUrl: process.env.CENTRAL_SERVER_URL
+    centralServerUrl: process.env.CENTRAL_SERVER_URL,
   });
 
   process.on('SIGINT', async () => {
     await server.shutdown();
     process.exit(0);
   });
-} 
+}

@@ -210,7 +210,7 @@ class MockDatabaseAdapter extends DatabaseAdapter {
    * @param {string} [_tableName] - Optional table name parameter.
    * @returns {Promise<Memory[]>} - A Promise that resolves to an array of Memory objects.
    */
-  async getMemoriesByIds(memoryIds: UUID[], _tableName?: string): Promise<Memory[]> {
+  async getMemoriesByIds(memoryIds: UUID[] _tableName?: string): Promise<Memory[]> {
     return memoryIds.map((id) => ({
       id: id,
       content: { text: 'Test Memory' },
@@ -403,7 +403,7 @@ class MockDatabaseAdapter extends DatabaseAdapter {
   }
 
   searchMemoriesByEmbedding(
-    _embedding: number[],
+    _embedding: number[]
     _params?: {
       tableName?: string;
       roomId?: UUID;
@@ -431,7 +431,7 @@ class MockDatabaseAdapter extends DatabaseAdapter {
     throw new Error('Method not implemented.');
   }
 
-  addParticipantsRoom(_entityIds: UUID[], _roomId: UUID): Promise<boolean> {
+  addParticipantsRoom(_entityIds: UUID[] _roomId: UUID): Promise<boolean> {
     throw new Error('Method not implemented.');
   }
 
@@ -562,7 +562,7 @@ class MockDatabaseAdapter extends DatabaseAdapter {
    * @param {string} _params.query_field_name - The name of the field used in the query.
    * @param {string} _params.query_field_sub_name - The subfield name used in the query.
    * @param {number} _params.query_match_count - The number of matches for the query.
-   * @return {Promise<{embedding: number[], levenshtein_score: number}[]>} The cached embeddings with their Levenshtein scores.
+   * @return {Promise<{embedding: number[] levenshtein_score: number}[]>} The cached embeddings with their Levenshtein scores.
    */
 
   async getCachedEmbeddings(_params: {

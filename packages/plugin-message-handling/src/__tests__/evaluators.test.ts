@@ -224,7 +224,7 @@ describe.skip('Reflection Evaluator', () => {
         { claim: 'From bio', type: 'fact', in_bio: true, already_known: false }, // From bio
         null, // null fact
       ],
-      relationships: [],
+      relationships: []
     });
 
     // Act

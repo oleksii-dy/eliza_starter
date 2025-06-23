@@ -13,7 +13,7 @@ export function createDebugRouter(serverInstance: AgentServer): express.Router {
       const servers = await serverInstance?.getServers();
       res.json({
         success: true,
-        servers: servers || [],
+        servers: servers || []
         count: servers?.length || 0,
       });
     } catch (error) {

@@ -24,5 +24,5 @@ export default defineConfig({
     'canvas',
     'face-api.js',
   ], // Keep native modules and problematic dependencies external
-  noExternal: [], // Don't force bundling of everything
+  noExternal: [] // Don't force bundling of everything
 }); 

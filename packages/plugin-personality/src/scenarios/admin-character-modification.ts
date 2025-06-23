@@ -24,7 +24,7 @@ export const adminCharacterModificationScenario: PluginScenario = {
       id: uuidv4() as any,
       name: 'Admin User',
       role: 'assistant',
-      plugins: [], // Admin user doesn't need special plugins
+      plugins: [] // Admin user doesn't need special plugins
     },
   ],
 

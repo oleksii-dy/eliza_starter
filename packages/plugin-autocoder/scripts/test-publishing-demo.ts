@@ -35,14 +35,14 @@ const createMockRuntime = (settings: Record<string, string>): IAgentRuntime => {
     knowledgeManager: {} as any,
     cacheManager: {} as any,
     services: services,
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [],
+    providers: []
+    actions: []
+    evaluators: []
+    plugins: []
     getMemoryManager: () => ({}) as any,
     getConversationLength: () => 0,
     processActions: async () => {},
-    evaluate: async () => [],
+    evaluate: async () => []
     ensureParticipantExists: async () => {},
     ensureUserExists: async () => {},
     ensureParticipantInRoom: async () => {},

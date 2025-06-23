@@ -3,9 +3,10 @@ import { PaymentService } from './services/PaymentService';
 import { PriceOracleService } from './services/PriceOracleService';
 import { UniversalPaymentService } from './services/UniversalPaymentService';
 import { researchAction } from './actions/researchAction';
+import { sendPaymentAction } from './actions/sendPaymentAction';
 
 // Import scenarios
-import { scenarios } from './scenarios';
+import scenarios from './scenarios';
 
 // Export types
 export * from './types';
@@ -49,6 +50,7 @@ export { createPaymentMiddleware, requiresPayment } from './middleware/paymentMi
 
 // Export actions
 export { researchAction } from './actions/researchAction';
+export { sendPaymentAction } from './actions/sendPaymentAction';
 
 /**
  * Payment plugin for ElizaOS
@@ -60,9 +62,11 @@ export const paymentPlugin: Plugin = {
 
   services: [PaymentService, PriceOracleService, UniversalPaymentService],
 
-  actions: [researchAction],
+  actions: [researchAction, sendPaymentAction],
 
-  providers: [],
+  evaluators: []
+
+  providers: []
 
   scenarios: scenarios,
 
@@ -71,6 +75,7 @@ export const paymentPlugin: Plugin = {
 
     // Register actions
     runtime.registerAction(researchAction);
+    runtime.registerAction(sendPaymentAction);
 
     logger.info('[Payment Plugin] Initialization complete');
   },

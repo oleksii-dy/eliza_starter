@@ -47,7 +47,7 @@ describe('TrustCalculator', () => {
         },
         confidence: 0,
         interactionCount: 0,
-        evidence: [],
+        evidence: []
         evaluatorId: 'system',
         calculationMethod: 'default',
         trend: {

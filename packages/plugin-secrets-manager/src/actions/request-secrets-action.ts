@@ -36,7 +36,7 @@ import type {
  */
 export const requestSecretsAction: Action = {
   name: 'REQUEST_SECRETS_DISABLED',
-  similes: [],
+  similes: []
   description: 'DISABLED: Request secrets functionality is temporarily unavailable',
   
   validate: async (runtime: IAgentRuntime, message: Memory) => {
@@ -104,7 +104,7 @@ Respond in JSON format:
 
     const analysis = JSON.parse(response.trim());
     return {
-      secrets: analysis.secrets || [],
+      secrets: analysis.secrets || []
       requireVerification: analysis.requireVerification || false,
       verificationMethods: analysis.verificationMethods || ['oauth'],
       level: analysis.level || 'user',
@@ -197,7 +197,7 @@ function generateRequestConfirmation(analysis: SecretAnalysis, request: SecretRe
 async function handleSecretSuccess(
   runtime: IAgentRuntime,
   originalMessage: Memory,
-  secretKeys: string[],
+  secretKeys: string[]
   data: Record<string, any>
 ): Promise<void> {
   try {

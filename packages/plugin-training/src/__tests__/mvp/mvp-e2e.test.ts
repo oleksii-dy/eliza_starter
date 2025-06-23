@@ -34,10 +34,10 @@ function createFullMockRuntime(): IAgentRuntime {
       name: 'E2ETestAgent',
       bio: ['End-to-end test agent'],
       system: 'E2E test system prompt',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
       plugins: ['mvp-custom-reasoning'],
     },
 

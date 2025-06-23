@@ -8,6 +8,46 @@ const paymentInsufficientFundsScenario: Scenario = {
   category: 'payment',
   tags: ['payment', 'insufficient-funds', 'error-handling', 'recovery'],
 
+  // Add examples array for compatibility with test framework
+  examples: [
+    [
+      {
+        user: 'customer',
+        content: 'I want to purchase the premium AI model access for 100 USDC',
+      },
+      {
+        user: 'agent',
+        content: 'I\'m checking your balance... You have insufficient funds. Your current balance is 25 USDC, but you need 100 USDC for this purchase.',
+      },
+    ],
+    [
+      {
+        user: 'customer',
+        content: 'What\'s my current balance?',
+      },
+      {
+        user: 'agent',
+        content: 'Your current balance is 25 USDC. You would need to add 75 USDC more to purchase the premium AI model access.',
+      },
+    ],
+  ],
+
+  // Add evaluator function for test compatibility
+  evaluator: (response: string) => {
+    const hasInsufficientFunds = 
+      response.toLowerCase().includes('insufficient') ||
+      response.toLowerCase().includes('not enough') ||
+      response.toLowerCase().includes('need more') ||
+      response.toLowerCase().includes('balance');
+    
+    const hasAmount = 
+      response.toLowerCase().includes('usdc') ||
+      response.toLowerCase().includes('funds') ||
+      /\d+/.test(response);
+    
+    return hasInsufficientFunds || hasAmount;
+  },
+
   actors: [
     {
       id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567893',

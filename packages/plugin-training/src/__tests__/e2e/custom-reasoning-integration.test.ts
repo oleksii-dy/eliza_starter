@@ -42,9 +42,9 @@ const testCharacter: Character = {
       },
     ],
   ],
-  postExamples: [],
+  postExamples: []
   topics: ['testing', 'custom-reasoning', 'e2e', 'integration'],
-  plugins: [],
+  plugins: []
   settings: {
     REASONING_SERVICE_ENABLED: 'true',
     TOGETHER_AI_API_KEY: 'test-api-key',
@@ -339,7 +339,7 @@ describe('Real Runtime Custom Reasoning Service E2E Integration Tests', () => {
         modelType: 'should_respond' as const,
         input: {
           messageText: 'Hello, how are you?',
-          conversationContext: [],
+          conversationContext: []
           state: createTestState(),
           prompt: 'Should the agent respond to this message?',
         },
@@ -348,7 +348,7 @@ describe('Real Runtime Custom Reasoning Service E2E Integration Tests', () => {
           reasoning: 'This is a friendly greeting that deserves a response',
           confidence: 0.95,
         },
-        conversationContext: [],
+        conversationContext: []
         stateData: {},
         metadata: {
           agentId: runtime.agentId,
@@ -395,7 +395,7 @@ describe('Real Runtime Custom Reasoning Service E2E Integration Tests', () => {
         modelType: 'planning' as const,
         input: {
           messageText: 'Plan a software project',
-          conversationContext: [],
+          conversationContext: []
           state: createTestState(),
         },
         output: {
@@ -403,7 +403,7 @@ describe('Real Runtime Custom Reasoning Service E2E Integration Tests', () => {
           actions: ['PLAN_PROJECT'],
           confidence: 0.87,
         },
-        conversationContext: [],
+        conversationContext: []
         stateData: {},
         metadata: {
           agentId: runtime.agentId,
@@ -563,7 +563,7 @@ describe('Real Runtime Custom Reasoning Service E2E Integration Tests', () => {
         modelType: 'should_respond' as const,
         input: { messageText: 'test' },
         output: { decision: 'RESPOND' },
-        conversationContext: [],
+        conversationContext: []
         stateData: {},
         metadata: {
           agentId: runtime.agentId,
@@ -595,7 +595,7 @@ describe('Real Runtime Custom Reasoning Service E2E Integration Tests', () => {
         modelType: 'planning' as const,
         input: { messageText: 'test' },
         output: { thought: 'test' },
-        conversationContext: [],
+        conversationContext: []
         stateData: {},
         metadata: {
           agentId: runtime.agentId,

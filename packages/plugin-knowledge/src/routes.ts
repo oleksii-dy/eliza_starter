@@ -1,5 +1,6 @@
 import type { IAgentRuntime, Route, UUID, Memory, KnowledgeItem } from '@elizaos/core';
-import { MemoryType, createUniqueUuid, logger, ModelType, getTempPath } from '@elizaos/core';
+import { MemoryType, createUniqueUuid, logger, ModelType } from '@elizaos/core';
+import { getTempPath } from './utils/temp';
 import { KnowledgeService } from './service';
 import fs from 'node:fs'; // For file operations in upload
 import path from 'node:path'; // For path operations

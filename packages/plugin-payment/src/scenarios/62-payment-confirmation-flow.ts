@@ -3,10 +3,51 @@ type Scenario = any;
 
 const paymentConfirmationFlowScenario: Scenario = {
   id: 'payment-confirmation-flow-001',
-  name: 'Payment Confirmation Task Flow Test',
-  description: 'Tests payment confirmation using AWAITING_CHOICE tasks and CHOOSE_OPTION action',
+  name: 'Payment Confirmation Flow Test',
+  description:
+    'Tests payment confirmation flow with verification codes for large transactions and suspicious activity',
   category: 'payment',
-  tags: ['payment', 'confirmation', 'tasks', 'choice', 'approval'],
+  tags: ['payment', 'confirmation', 'verification', 'security'],
+
+  // Add examples array for compatibility with test framework
+  examples: [
+    [
+      {
+        user: 'customer',
+        content: 'I need to send 1500 USDC to address 0x742d35Cc6634C0532925a3b844Bc9e7595f2bd4e',
+      },
+      {
+        user: 'agent',
+        content: 'This is a large transaction (1500 USDC). For security, I\'ve sent you a verification code. Please provide it to confirm.',
+      },
+    ],
+    [
+      {
+        user: 'customer',
+        content: 'The verification code is 123456',
+      },
+      {
+        user: 'agent',
+        content: 'Verification successful! Processing your payment of 1500 USDC to 0x742d35Cc6634C0532925a3b844Bc9e7595f2bd4e...',
+      },
+    ],
+  ],
+
+  // Add evaluator function for test compatibility
+  evaluator: (response: string) => {
+    const hasVerificationMention = 
+      response.toLowerCase().includes('verification') ||
+      response.toLowerCase().includes('confirm') ||
+      response.toLowerCase().includes('code') ||
+      response.toLowerCase().includes('security');
+    
+    const hasPaymentMention = 
+      response.toLowerCase().includes('payment') ||
+      response.toLowerCase().includes('transaction') ||
+      response.toLowerCase().includes('usdc');
+    
+    return hasVerificationMention || hasPaymentMention;
+  },
 
   actors: [
     {

@@ -57,7 +57,7 @@ export const basicConversationScenario: Scenario = {
     roomName: 'Basic Conversation',
     context: 'Simple conversation test environment',
     environment: {
-      plugins: [],
+      plugins: []
     },
   },
 

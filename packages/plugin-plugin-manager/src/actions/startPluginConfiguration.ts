@@ -106,9 +106,9 @@ export const startPluginConfigurationAction: Action = {
       // Create configuration dialog
       const configRequest: PluginConfigurationRequest = {
         pluginName: pluginState.name,
-        requiredVars: pluginState.requiredConfiguration || [],
-        missingVars: pluginState.missingEnvVars || [],
-        optionalVars: [],
+        requiredVars: pluginState.requiredConfiguration || []
+        missingVars: pluginState.missingEnvVars || []
+        optionalVars: []
       };
 
       // Update plugin status

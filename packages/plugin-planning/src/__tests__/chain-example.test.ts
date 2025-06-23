@@ -4,7 +4,7 @@ import {
   processAnalysisAction,
   executeFinalAction,
 } from '../actions/chain-example';
-import { ActionOptions, ActionResult } from '@elizaos/core';
+import { ActionResult } from '@elizaos/core';
 
 describe('Action Chaining', () => {
   const mockRuntime = {
@@ -37,13 +37,12 @@ describe('Action Chaining', () => {
     );
 
     expect(result1).toBeDefined();
-    expect((result1 as ActionResult)?.success).toBe(true);
     expect((result1 as ActionResult)?.data).toBeDefined();
     expect((result1 as ActionResult)?.data.sentiment).toBe('positive');
-    expect((result1 as ActionResult)?.continueChain).toBe(true);
+    expect((result1 as ActionResult)?.text).toContain('positive sentiment');
 
     // Execute second action with previous results
-    const options2: ActionOptions = {
+    const options2 = {
       previousResults: [result1 as ActionResult],
     };
 
@@ -54,14 +53,14 @@ describe('Action Chaining', () => {
       options2
     );
 
-    expect((result2 as ActionResult)?.success).toBe(true);
+    expect((result2 as ActionResult)?.data).toBeDefined();
     expect((result2 as ActionResult)?.data?.analysis).toEqual((result1 as ActionResult)?.data);
     expect((result2 as ActionResult)?.data?.decisions.suggestedResponse).toBe(
       'Thank you for the positive feedback!'
     );
 
     // Execute final action with all previous results
-    const options3: ActionOptions = {
+    const options3 = {
       previousResults: [result1 as ActionResult, result2 as ActionResult],
       chainContext: {
         chainId: 'test-chain',
@@ -79,8 +78,8 @@ describe('Action Chaining', () => {
       mockCallback
     );
 
-    expect(result3?.success).toBe(true);
-    expect(result3?.continueChain).toBe(false); // End of chain
+    expect(result3).toBeDefined();
+    expect((result3 as ActionResult)?.data).toBeDefined();
     expect(mockCallback).toHaveBeenCalledWith({
       text: 'Thank you for the positive feedback!',
       source: 'chain_example',

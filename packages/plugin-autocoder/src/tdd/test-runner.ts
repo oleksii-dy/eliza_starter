@@ -252,7 +252,7 @@ ${testSuite.teardownCode || ''}
         branches: { total: 0, covered: 0, percentage: 0 },
         functions: { total: 0, covered: 0, percentage: 0 },
         lines: { total: 0, covered: 0, percentage: 0 },
-        uncoveredLines: [],
+        uncoveredLines: []
       };
     }
   }
@@ -364,7 +364,7 @@ ${testSuite.teardownCode || ''}
         branches: { total: 0, covered: 0, percentage: 0 },
         functions: { total: 0, covered: 0, percentage: 0 },
         lines: { total: 0, covered: 0, percentage: 0 },
-        uncoveredLines: [],
+        uncoveredLines: []
       },
       summary: this.generateSummary(results),
     };

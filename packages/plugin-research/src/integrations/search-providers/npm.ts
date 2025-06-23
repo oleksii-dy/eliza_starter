@@ -247,7 +247,7 @@ export class NPMSearchProvider {
       provider: 'npm',
       metadata: {
         language: 'javascript',
-        author: author ? [author] : [],
+        author: author ? [author] : []
         type: 'package',
         domain: 'npmjs.com',
       },
@@ -311,7 +311,7 @@ export class NPMSearchProvider {
   /**
    * Search for packages with specific keywords
    */
-  async searchByKeywords(keywords: string[], maxResults?: number): Promise<SearchResult[]> {
+  async searchByKeywords(keywords: string[] maxResults?: number): Promise<SearchResult[]> {
     const query = `keywords:${keywords.join(',')}`;
     return this.search(query, maxResults);
   }

@@ -33,9 +33,9 @@ const testCharacter: Character = {
       { name: 'TrainingDatabaseTestAgent', content: { text: 'testing database response' } },
     ],
   ],
-  postExamples: [],
+  postExamples: []
   topics: ['testing', 'database', 'training', 'sql-operations'],
-  plugins: [],
+  plugins: []
   settings: {
     REASONING_SERVICE_ENABLED: 'true',
     REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',
@@ -51,7 +51,7 @@ function createTestTrainingDataPoint(overrides: any = {}) {
     inputData: {
       messageText: 'Test message',
       prompt: 'Test prompt for database storage',
-      conversationContext: [],
+      conversationContext: []
       state: {},
     },
     outputData: {
@@ -59,7 +59,7 @@ function createTestTrainingDataPoint(overrides: any = {}) {
       reasoning: 'Test reasoning',
       confidence: 0.95,
     },
-    conversationContext: [],
+    conversationContext: []
     stateData: {},
     metadata: {
       roomId: uuidv4() as UUID,
@@ -265,7 +265,7 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
           inputData: {
             messageText: `Batch message ${i}`,
             prompt: `Batch prompt ${i}`,
-            conversationContext: [],
+            conversationContext: []
             state: {},
           },
           outputData: {
@@ -305,7 +305,7 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
           inputData: {
             messageText: 'Hello',
             prompt: 'Test prompt 1',
-            conversationContext: [],
+            conversationContext: []
             state: {},
           },
           outputData: { decision: 'RESPOND', reasoning: 'Greeting response', confidence: 0.9 },
@@ -318,7 +318,7 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
           inputData: {
             messageText: 'Plan my day',
             prompt: 'Test prompt 2',
-            conversationContext: [],
+            conversationContext: []
             state: {},
           },
           outputData: { decision: 'PLAN', reasoning: 'Planning request', confidence: 0.85 },
@@ -331,7 +331,7 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
           inputData: {
             messageText: 'Write a function',
             prompt: 'Test prompt 3',
-            conversationContext: [],
+            conversationContext: []
             state: {},
           },
           outputData: { decision: 'CODE', reasoning: 'Code generation request', confidence: 0.95 },
@@ -721,7 +721,7 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
         inputData: {
           messageText: 'Integration test message',
           prompt: 'Integration test prompt',
-          conversationContext: [],
+          conversationContext: []
           state: {},
         },
         outputData: {

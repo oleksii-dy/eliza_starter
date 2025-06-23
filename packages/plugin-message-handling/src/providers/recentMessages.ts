@@ -123,8 +123,8 @@ export const recentMessagesProvider: Provider = {
       ) {
         return {
           data: {
-            recentMessages: [],
-            recentInteractions: [],
+            recentMessages: []
+            recentInteractions: []
           },
           values: {
             recentPosts: '',
@@ -226,7 +226,7 @@ export const recentMessagesProvider: Provider = {
 
       // Format recent post interactions
       const getRecentPostInteractions = async (
-        recentInteractionsData: Memory[],
+        recentInteractionsData: Memory[]
         entities: Entity[]
       ): Promise<string> => {
         // Combine pre-loaded entities with any other entities
@@ -288,8 +288,8 @@ export const recentMessagesProvider: Provider = {
       // Return a default state in case of error, similar to the empty message list
       return {
         data: {
-          recentMessages: [],
-          recentInteractions: [],
+          recentMessages: []
+          recentInteractions: []
         },
         values: {
           recentPosts: '',

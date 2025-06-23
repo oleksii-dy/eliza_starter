@@ -7,6 +7,46 @@ const paymentBasicFlowScenario: any = {
   category: 'payment',
   tags: ['payment', 'basic-flow', 'research', 'usdc'],
 
+  // Add examples array for compatibility with test framework
+  examples: [
+    [
+      {
+        user: 'customer',
+        content: 'Hi! I need help researching the latest developments in quantum computing.',
+      },
+      {
+        user: 'agent',
+        content: 'I can help you research quantum computing developments. This research service costs 1 USDC. Would you like to proceed?',
+      },
+    ],
+    [
+      {
+        user: 'customer',
+        content: 'Yes, I understand it costs 1 USDC. Please proceed with the research.',
+      },
+      {
+        user: 'agent',
+        content: 'Processing payment of 1 USDC... Payment confirmed! Now conducting research on quantum computing developments...',
+      },
+    ],
+  ],
+
+  // Add evaluator function for test compatibility
+  evaluator: (response: string) => {
+    const hasPaymentMention = 
+      response.toLowerCase().includes('payment') ||
+      response.toLowerCase().includes('cost') ||
+      response.toLowerCase().includes('usdc') ||
+      response.toLowerCase().includes('price');
+    
+    const hasServiceMention = 
+      response.toLowerCase().includes('research') ||
+      response.toLowerCase().includes('analysis') ||
+      response.toLowerCase().includes('service');
+    
+    return hasPaymentMention || hasServiceMention;
+  },
+
   actors: [
     {
       id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',

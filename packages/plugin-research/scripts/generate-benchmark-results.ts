@@ -14,11 +14,11 @@ class MockRuntime implements IAgentRuntime {
     bio: ['Advanced research agent for academic and business inquiries'],
     system:
       'You are an expert research assistant capable of conducting comprehensive, multi-source research.',
-    messageExamples: [],
-    postExamples: [],
-    topics: [],
-    knowledge: [],,
-    plugins: [],
+    messageExamples: []
+    postExamples: []
+    topics: []
+    knowledge: []
+    plugins: []
   };
 
   providers: any[] = [];
@@ -70,7 +70,7 @@ class MockRuntime implements IAgentRuntime {
   // Implement required interface methods with basic implementations
   async processActions(
     message: Memory,
-    responses: Memory[],
+    responses: Memory[]
     state?: State,
     callback?: any
   ): Promise<void> {}
@@ -85,7 +85,7 @@ class MockRuntime implements IAgentRuntime {
   }
   async composeState(
     message: Memory,
-    includeList?: string[],
+    includeList?: string[]
     onlyInclude?: boolean,
     skipCache?: boolean
   ): Promise<State> {
@@ -161,38 +161,38 @@ class MockRuntime implements IAgentRuntime {
 
   messageManager = {
     createMemory: async (memory: Memory) => memory,
-    getMemories: async (params: any) => [],
-    getMemoriesByRoomIds: async (params: any) => [],
+    getMemories: async (params: any) => []
+    getMemoriesByRoomIds: async (params: any) => []
     updateMemory: async (memory: Memory) => {},
     countMemories: async (roomId: string) => 0,
     removeMemory: async (id: string) => {},
     removeAllMemories: async (roomId: string) => {},
-    searchMemoriesByEmbedding: async (params: any) => [],
+    searchMemoriesByEmbedding: async (params: any) => []
   };
 
   descriptionManager = {
-    getMemories: async (params: any) => [],
+    getMemories: async (params: any) => []
     createMemory: async (memory: Memory) => memory,
     removeMemory: async (id: string) => {},
   };
 
   documentsManager = {
     createMemory: async (memory: Memory) => memory,
-    getMemories: async (params: any) => [],
+    getMemories: async (params: any) => []
     removeMemory: async (id: string) => {},
   };
 
   knowledgeManager = {
     createMemory: async (memory: Memory) => memory,
-    getMemories: async (params: any) => [],
-    searchMemories: async (params: any) => [],
+    getMemories: async (params: any) => []
+    searchMemories: async (params: any) => []
     removeMemory: async (id: string) => {},
   };
 
   loreManager = {
     createMemory: async (memory: Memory) => memory,
-    getMemories: async (params: any) => [],
-    searchMemories: async (params: any) => [],
+    getMemories: async (params: any) => []
+    searchMemories: async (params: any) => []
     removeMemory: async (id: string) => {},
   };
 

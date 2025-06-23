@@ -32,7 +32,7 @@ const getServersRoute: Route = {
           name: tool.name,
           description: tool.description,
           inputSchema: tool.inputSchema
-        })) || [],
+        })) || []
         resources: server.resources?.map(resource => ({
           uri: resource.uri,
           name: resource.name,

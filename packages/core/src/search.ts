@@ -144,7 +144,7 @@ const isDouble = (char: number): boolean => {
  * @param len - The current effective length of the word being considered.
  * @returns True if the word ends in a short syllable, false otherwise.
  */
-const isShortV = (w: number[], len: number): boolean => {
+const isShortV = (w: number[] len: number): boolean => {
   // backwardmode: ( non-v_WXY v non-v ) or ( non-v v atlimit )
   return (
     len >= 2 &&
@@ -799,7 +799,7 @@ class Tokenizer {
     stopWords: /* @__PURE__ */ new Set<string>(),
     minLength: 2,
     stemming: false,
-    stemmingRules: [],
+    stemmingRules: []
   };
 
   /**
@@ -1068,7 +1068,7 @@ export class BM25 {
    * @param docs - Optional array of initial documents (objects with string fields) to index.
    * @param options - Configuration options for BM25 parameters (k1, b), tokenizer (stopWords, stemming, minLength), and field boosts.
    */
-  constructor(docs?: any[], options: BM25Options = {}) {
+  constructor(docs?: any[] options: BM25Options = {}) {
     const opts = { ...DEFAULT_OPTIONS, ...options };
     this.termFrequencySaturation = opts.k1!; // Non-null assertion as DEFAULT_OPTIONS provides it
     this.lengthNormalizationFactor = opts.b!; // Non-null assertion
@@ -1346,7 +1346,7 @@ export class BM25 {
    * @returns The calculated phrase score for the document.
    * @internal
    */
-  private calculatePhraseScore(phraseTokens: string[], docIndex: number): number {
+  private calculatePhraseScore(phraseTokens: string[] docIndex: number): number {
     return phraseTokens.reduce((currentScore, term) => {
       const termIndex = this.termToIndex.get(term);
       // Ignore terms not in index (shouldn't happen if candidate selection worked)

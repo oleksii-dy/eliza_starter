@@ -154,7 +154,7 @@ export class DeepResearchBenchmark {
             depth: 0,
             instructionFollowing: 0,
             readability: 0,
-            breakdown: [],
+            breakdown: []
           },
           fact: {
             citationAccuracy: 0,
@@ -164,7 +164,7 @@ export class DeepResearchBenchmark {
             disputedCitations: 0,
             citationCoverage: 0,
             sourceCredibility: 0,
-            breakdown: [],
+            breakdown: []
           },
         },
       },
@@ -296,7 +296,7 @@ export class DeepResearchBenchmark {
    * Run benchmark on multiple projects
    */
   async evaluateProjects(
-    projects: ResearchProject[], 
+    projects: ResearchProject[] 
     modelName: string = 'elizaos-research-agent'
   ): Promise<BenchmarkResult[]> {
     const results: BenchmarkResult[] = [];

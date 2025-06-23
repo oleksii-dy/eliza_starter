@@ -214,7 +214,7 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
           await callback?.({
             text: responseText,
             thought: `Rejected modification due to safety concerns: ${safetyEvaluation.concerns.join(', ')}`,
-            actions: [], // Explicitly no actions to show rejection
+            actions: [] // Explicitly no actions to show rejection
           });
 
           logger.warn('Modification completely rejected by safety evaluation', {

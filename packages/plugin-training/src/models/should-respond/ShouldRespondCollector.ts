@@ -225,7 +225,7 @@ Context: ${JSON.stringify(inputContext.conversationContext)}`,
     return 'statement';
   }
 
-  private findLastAgentMessage(messages: any[], agentId: string) {
+  private findLastAgentMessage(messages: any[] agentId: string) {
     for (let i = messages.length - 1; i >= 0; i--) {
       if (messages[i].entityId === agentId) {
         return {
@@ -239,7 +239,7 @@ Context: ${JSON.stringify(inputContext.conversationContext)}`,
   }
 
   private getTimeSinceLastResponse(state: State, agentId: string): number {
-    const lastResponse = this.findLastAgentMessage(state.data?.recentMessages || [], agentId);
+    const lastResponse = this.findLastAgentMessage(state.data?.recentMessages || [] agentId);
     return lastResponse ? Date.now() - lastResponse.timestamp : Infinity;
   }
 

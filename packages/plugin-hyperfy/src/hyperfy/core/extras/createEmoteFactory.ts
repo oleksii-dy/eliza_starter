@@ -165,7 +165,7 @@ function extractBoneName(trackName: string): string {
  * @param name - Name to search for
  * @returns Found bone or null
  */
-function findBoneByName(bones: THREE.Bone[], name: string): THREE.Bone | null {
+function findBoneByName(bones: THREE.Bone[] name: string): THREE.Bone | null {
   // First try exact match
   let found = bones.find(bone => bone.name === name);
   if (found) return found;

@@ -127,7 +127,7 @@ describe('Task Integration Tests', () => {
         entityId: testEntityId,
         name: 'Deletable Task',
         description: 'This task will be deleted',
-        tags: [],
+        tags: []
         metadata: {},
       };
       await adapter.createTask(task);

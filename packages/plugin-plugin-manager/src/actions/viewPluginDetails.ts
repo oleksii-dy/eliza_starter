@@ -179,7 +179,7 @@ const viewPluginDetailsAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 export { viewPluginDetailsAction };

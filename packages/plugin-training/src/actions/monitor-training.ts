@@ -353,10 +353,10 @@ function formatMetrics(metrics?: any): string {
   if (!metrics) return '';
   
   const {
-    trainingLoss = [],
-    validationLoss = [],
-    accuracy = [],
-    rewardScore = [],
+    trainingLoss = []
+    validationLoss = []
+    accuracy = []
+    rewardScore = []
   } = metrics;
 
   let text = '**Metrics:**\\n';

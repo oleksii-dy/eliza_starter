@@ -18,8 +18,8 @@ const mockRuntime = {
   character: {
     name: 'Eliza'
   },
-  actions: starterPlugin.actions || [],
-  providers: starterPlugin.providers || [],
+  actions: starterPlugin.actions || []
+  providers: starterPlugin.providers || []
   services: new Map(),
   getService: function(name) {
     if (name === 'starter' && starterPlugin.services) {

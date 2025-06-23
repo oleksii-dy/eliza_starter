@@ -91,7 +91,7 @@ describe('Integration: Runtime Initialization', () => {
     // Create a custom mock runtime for this test
     const customMockRuntime = {
       character: { ...character },
-      plugins: [],
+      plugins: []
       registerPlugin: () => Promise.resolve(),
       initialize: () => {},
       getService: () => null,

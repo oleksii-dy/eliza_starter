@@ -32,8 +32,8 @@ describe('Agent-Server Interaction Integration Tests', () => {
       id: 'char-1' as UUID,
       name: 'Agent One',
       bio: ['First test agent'],
-      topics: [],
-      plugins: [],
+      topics: []
+      plugins: []
       settings: {
         secrets: {},
       },
@@ -60,8 +60,8 @@ describe('Agent-Server Interaction Integration Tests', () => {
       id: 'char-2' as UUID,
       name: 'Agent Two',
       bio: ['Second test agent'],
-      topics: [],
-      plugins: [],
+      topics: []
+      plugins: []
       settings: {
         model: 'gpt-3.5-turbo',
         secrets: {},

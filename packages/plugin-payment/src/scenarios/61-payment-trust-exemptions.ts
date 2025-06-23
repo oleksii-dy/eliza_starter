@@ -8,6 +8,46 @@ const paymentTrustExemptionsScenario: Scenario = {
   category: 'payment',
   tags: ['payment', 'trust', 'roles', 'exemptions', 'admin', 'owner'],
 
+  // Add examples array for compatibility with test framework
+  examples: [
+    [
+      {
+        user: 'trusted_user',
+        content: 'I need urgent access to the premium analytics service.',
+      },
+      {
+        user: 'agent',
+        content: 'As a trusted user, I\'m granting you immediate access to the premium analytics service. Payment will be processed later.',
+      },
+    ],
+    [
+      {
+        user: 'new_user',
+        content: 'Can I get access to premium features without paying first?',
+      },
+      {
+        user: 'agent',
+        content: 'Premium features require payment upfront. The analytics service costs 5 USDC. Would you like to proceed with payment?',
+      },
+    ],
+  ],
+
+  // Add evaluator function for test compatibility
+  evaluator: (response: string) => {
+    const hasTrustMention = 
+      response.toLowerCase().includes('trust') ||
+      response.toLowerCase().includes('exemption') ||
+      response.toLowerCase().includes('whitelist') ||
+      response.toLowerCase().includes('verified');
+    
+    const hasPaymentMention = 
+      response.toLowerCase().includes('payment') ||
+      response.toLowerCase().includes('access') ||
+      response.toLowerCase().includes('service');
+    
+    return hasTrustMention || hasPaymentMention;
+  },
+
   actors: [
     {
       id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567891',

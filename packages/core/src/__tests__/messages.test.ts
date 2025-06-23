@@ -180,7 +180,7 @@ describe('Messages', () => {
 
     it('should handle empty messages array', () => {
       const formatted = formatMessages({
-        messages: [],
+        messages: []
         entities: mockEntities,
       });
       expect(formatted).toBe('');

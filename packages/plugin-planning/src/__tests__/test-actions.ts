@@ -29,7 +29,7 @@ export const capabilityRequiredAction: Action = {
   effects: {
     requires: ['advanced_analysis_capability'],
     provides: ['advanced_analysis_result'],
-    modifies: [],
+    modifies: []
   },
 };
 

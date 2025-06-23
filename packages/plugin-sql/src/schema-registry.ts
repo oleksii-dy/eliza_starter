@@ -111,14 +111,15 @@ class SchemaRegistry {
 
     try {
       // Try to create a temporary table with vector column
-      await db.execute(sql.raw('CREATE TEMPORARY TABLE test_vector_check (id INT, vec vector(3))'));
-      await db.execute(sql.raw('DROP TABLE test_vector_check'));
+      const testTableName = `test_vector_check_${Date.now()}`;
+      await db.execute(sql.raw(`CREATE TEMPORARY TABLE ${testTableName} (id INT, vec vector(3))`));
+      await db.execute(sql.raw(`DROP TABLE ${testTableName}`));
       this.vectorAvailable = true;
       logger.info('[SchemaRegistry] Vector extension is available');
       return true;
     } catch (error) {
       this.vectorAvailable = false;
-      logger.warn('[SchemaRegistry] Vector extension is not available');
+      logger.warn('[SchemaRegistry] Vector extension is not available:', error);
       return false;
     }
   }

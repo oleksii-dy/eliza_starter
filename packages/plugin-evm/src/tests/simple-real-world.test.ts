@@ -283,7 +283,7 @@ describe('🌍 Real-World EVM Plugin Validation', () => {
           name: 'proposalCount',
           type: 'function',
           stateMutability: 'view',
-          inputs: [],
+          inputs: []
           outputs: [{ type: 'uint256' }]
         }
       ] as const;

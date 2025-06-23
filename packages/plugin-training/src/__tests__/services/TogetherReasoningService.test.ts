@@ -33,9 +33,9 @@ const testCharacter: Character = {
       { name: 'TogetherReasoningTestAgent', content: { text: 'testing reasoning response' } },
     ],
   ],
-  postExamples: [],
+  postExamples: []
   topics: ['testing', 'reasoning', 'together-ai', 'service-validation'],
-  plugins: [],
+  plugins: []
   settings: {
     REASONING_SERVICE_ENABLED: 'true',
     TOGETHER_AI_API_KEY: 'test-api-key-together',
@@ -209,7 +209,7 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
             content: { text: 'Hello, how are you today?' },
             createdAt: Date.now(),
           },
-          conversationHistory: [],
+          conversationHistory: []
         };
 
         const result = await service.shouldRespond(context);
@@ -490,7 +490,7 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
           input: {
             prompt: 'Test reasoning prompt for training data collection',
             messageText: 'Hello, should I respond to this message?',
-            conversationContext: [],
+            conversationContext: []
           },
           output: {
             decision: 'RESPOND',

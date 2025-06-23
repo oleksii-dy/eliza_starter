@@ -355,19 +355,19 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
 
       const governorAbi = [
         {
-          inputs: [],
+          inputs: []
           name: 'proposalCount',
           outputs: [{ name: '', type: 'uint256' }],
           type: 'function',
         },
         {
-          inputs: [],
+          inputs: []
           name: 'votingDelay',
           outputs: [{ name: '', type: 'uint256' }],
           type: 'function',
         },
         {
-          inputs: [],
+          inputs: []
           name: 'votingPeriod',
           outputs: [{ name: '', type: 'uint256' }],
           type: 'function',

@@ -32,7 +32,7 @@ export class AITestGenerator {
    * Generate comprehensive test suite from requirements
    */
   async generateFromRequirements(
-    requirements: Requirement[],
+    requirements: Requirement[]
     context: ProjectContext,
     options: TestGenerationOptions
   ): Promise<TestSuite> {
@@ -84,7 +84,7 @@ export class AITestGenerator {
    * Build prompt for test generation
    */
   private buildTestGenerationPrompt(
-    requirements: Requirement[],
+    requirements: Requirement[]
     context: ProjectContext,
     options: TestGenerationOptions
   ): string {
@@ -170,7 +170,7 @@ Format the response as a JSON object with this structure:
    */
   private parseTestSuite(
     response: string,
-    requirements: Requirement[],
+    requirements: Requirement[]
     context: ProjectContext
   ): TestSuite {
     try {
@@ -192,7 +192,7 @@ Format the response as a JSON object with this structure:
         code: test.code,
         expectedBehavior: test.expectedBehavior,
         priority: test.priority || 'medium',
-        tags: test.tags || [],
+        tags: test.tags || []
       }));
 
       return {
@@ -489,7 +489,7 @@ Return as JSON with file paths and contents.`;
       const parsed = JSON.parse(jsonMatch[0]);
 
       return {
-        files: parsed.files || [],
+        files: parsed.files || []
         entryPoint: parsed.entryPoint || 'index.ts',
         dependencies: parsed.dependencies || {},
         devDependencies: parsed.devDependencies || {},
@@ -595,7 +595,7 @@ Return fixes as JSON array.`;
    * Analyze root cause of failures
    */
   async analyzeRootCause(
-    patterns: FailurePattern[],
+    patterns: FailurePattern[]
     failures: TestRunResult[]
   ): Promise<{ rootCause?: string }> {
     const prompt = `Analyze the following test failure patterns and identify the root cause:

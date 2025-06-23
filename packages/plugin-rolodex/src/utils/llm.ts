@@ -132,7 +132,7 @@ Respond ONLY with the JSON object, no additional text, no markdown formatting, n
   /**
    * Batch generate text for multiple prompts
    */
-  async batchGenerateText(prompts: string[], modelType = ModelType.TEXT_LARGE): Promise<string[]> {
+  async batchGenerateText(prompts: string[] modelType = ModelType.TEXT_LARGE): Promise<string[]> {
     // Process in parallel with concurrency limit
     const BATCH_SIZE = 5;
     const results: string[] = [];

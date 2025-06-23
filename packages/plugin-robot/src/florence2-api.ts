@@ -137,7 +137,7 @@ export class Florence2API {
         },
         confidence: obj.confidence,
       })),
-      regions: [],
+      regions: []
       tags: (data.tags || []).map((tag: any) => tag.name),
     };
   }
@@ -168,17 +168,17 @@ export class Florence2API {
     if (Array.isArray(data) && data[0]?.generated_text) {
       return {
         caption: data[0].generated_text,
-        objects: [],
-        regions: [],
-        tags: [],
+        objects: []
+        regions: []
+        tags: []
       };
     }
     
     return {
       caption: data.generated_text || data.caption || '',
-      objects: [],
-      regions: [],
-      tags: [],
+      objects: []
+      regions: []
+      tags: []
     };
   }
   
@@ -229,9 +229,9 @@ export class Florence2API {
     
     return {
       caption: result.output?.caption || '',
-      objects: [],
-      regions: [],
-      tags: [],
+      objects: []
+      regions: []
+      tags: []
     };
   }
   

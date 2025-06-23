@@ -218,9 +218,9 @@ const testConfigPluginNoEnv: Plugin = {
   name: 'test-config-plugin-no-env',
   description: 'Test config plugin without environment variables',
   services: [TestConfigAuthService],
-  actions: [],
-  providers: [],
-  evaluators: [],
+  actions: []
+  providers: []
+  evaluators: []
   
   init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
     console.log('test-config-plugin-no-env: Initializing (no env vars required)');

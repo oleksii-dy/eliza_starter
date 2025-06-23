@@ -394,7 +394,7 @@ function Component() {
    * Filter instances by various criteria
    */
   async filterInstances(
-    instances: SWEBenchInstance[],
+    instances: SWEBenchInstance[]
     criteria: {
       repos?: string[];
       complexity?: string;
@@ -462,7 +462,7 @@ function Component() {
   /**
    * Export instances to JSONL format for evaluation
    */
-  async exportToJSONL(instances: SWEBenchInstance[], outputPath: string): Promise<void> {
+  async exportToJSONL(instances: SWEBenchInstance[] outputPath: string): Promise<void> {
     const lines = instances.map((inst) => JSON.stringify(inst));
     await fs.writeFile(outputPath, lines.join('\n'));
     elizaLogger.info(`[SWE-BENCH] Exported ${instances.length} instances to ${outputPath}`);

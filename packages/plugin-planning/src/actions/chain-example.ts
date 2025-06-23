@@ -66,9 +66,6 @@ export const analyzeInputAction: Action = {
 export const processAnalysisAction: Action = {
   name: 'PROCESS_ANALYSIS',
   description: 'Processes the analysis results and makes decisions',
-  returnsData: true,
-  acceptsInput: true,
-  requiresPreviousResult: true,
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     return true;
@@ -115,17 +112,13 @@ export const processAnalysisAction: Action = {
     console.log('[ChainExample] Processing complete:', decisions);
 
     return {
-      success: true,
       data: {
         analysis,
         decisions,
         processedAt: Date.now(),
       },
-      continueChain: !decisions.needsMoreInfo, // Stop if we need more info
-      metadata: {
-        action: 'PROCESS_ANALYSIS',
-        duration: 200,
-      },
+      text: decisions.suggestedResponse,
+      continueChain: !decisions.needsMoreInfo,
     };
   },
 };
@@ -134,7 +127,6 @@ export const processAnalysisAction: Action = {
 export const executeFinalAction: Action = {
   name: 'EXECUTE_FINAL',
   description: 'Executes the final action based on processing results',
-  acceptsInput: true,
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     return true;
@@ -151,10 +143,10 @@ export const executeFinalAction: Action = {
 
     // Get all previous results
     const analysisResult = options?.previousResults?.find(
-      (r) => r.metadata?.action === 'ANALYZE_INPUT'
+      (r: any) => r.data?.wordCount !== undefined
     );
     const processingResult = options?.previousResults?.find(
-      (r) => r.metadata?.action === 'PROCESS_ANALYSIS'
+      (r: any) => r.data?.decisions !== undefined
     );
 
     if (!processingResult?.data?.decisions) {
@@ -188,20 +180,17 @@ export const executeFinalAction: Action = {
     }
 
     return {
-      success: true,
       data: execution,
-      continueChain: false, // End of chain
-      metadata: {
-        action: 'EXECUTE_FINAL',
-        duration: 100,
-      },
+      text: execution.message,
       cleanup: async () => {
         console.log('[ChainExample] Cleaning up resources...');
-        // Cleanup any resources if needed
+        // Perform any cleanup operations here
       },
     };
   },
 };
+
+// The rest of the actions would follow the same pattern...
 
 export const chainExampleAction: Action = {
   name: 'CHAIN_EXAMPLE',
@@ -269,33 +258,31 @@ export const chainExampleAction: Action = {
       const initialState = {
         chainStartTime: Date.now(),
         originalMessage: message.content.text,
-        steps: [],
+        steps: []
       };
 
       // In a real implementation, this would be handled by the ActionExecutorService
       // For now, we'll just return the plan and initial state
-      await callback({
-        text: `I've prepared a ${actionPlan.steps.length}-step action chain to demonstrate our capabilities. The chain will: analyze context, generate a strategy, and execute it.`,
-        actions: ['CHAIN_EXAMPLE'],
-        actionPlan: actionPlan,
-      });
+      if (callback) {
+        await callback({
+          text: `I've prepared a ${actionPlan.steps.length}-step action chain to demonstrate our capabilities. The chain will: analyze context, generate a strategy, and execute it.`,
+          actions: ['CHAIN_EXAMPLE'],
+          actionPlan: actionPlan,
+        });
+      }
 
       return {
-        success: true,
         data: {
           actionName: 'CHAIN_EXAMPLE',
           plan: actionPlan,
           stepsToExecute: actionPlan.steps.length,
-        },
-        state: {
           chainExampleState: initialState,
           planId: actionPlan.id,
         },
-        nextActions: ['ANALYZE_CONTEXT', 'GENERATE_STRATEGY', 'EXECUTE_STRATEGY'],
+        text: `Created ${actionPlan.steps.length}-step action chain`,
       };
     } catch (error) {
       return {
-        success: false,
         error: error as Error,
         data: { actionName: 'CHAIN_EXAMPLE' },
       };
@@ -321,21 +308,6 @@ export const chainExampleAction: Action = {
         content: {
           text: "I've prepared a 4-step action chain to demonstrate our capabilities.",
           actions: ['CHAIN_EXAMPLE'],
-        },
-      },
-    ],
-    [
-      {
-        name: '{{user}}',
-        content: {
-          text: 'Show me a chain example with multiple steps',
-        },
-      },
-      {
-        name: '{{agent}}',
-        content: {
-          text: "I'll demonstrate a multi-step action chain that analyzes, strategizes, and executes.",
-          actions: ['CHAIN_EXAMPLE', 'ANALYZE_CONTEXT', 'GENERATE_STRATEGY', 'EXECUTE_STRATEGY'],
         },
       },
     ],
@@ -372,26 +344,25 @@ export const analyzeContextAction: Action = {
         suggestedApproach: 'step_by_step_explanation',
       };
 
-      await callback({
-        text: 'Context analyzed. Proceeding to strategy generation...',
-        actions: ['ANALYZE_CONTEXT'],
-      });
+      if (callback) {
+        await callback({
+          text: 'Context analyzed. Proceeding to strategy generation...',
+          actions: ['ANALYZE_CONTEXT'],
+        });
+      }
 
       return {
-        success: true,
         data: {
           actionName: 'ANALYZE_CONTEXT',
           analysis: analysis,
           contextLength: message.content.text?.length || 0,
-        },
-        state: {
           analysisComplete: true,
           analysisResults: analysis,
         },
+        text: 'Context analysis completed',
       };
     } catch (error) {
       return {
-        success: false,
         error: error as Error,
         data: { actionName: 'ANALYZE_CONTEXT' },
       };
@@ -443,27 +414,25 @@ export const generateStrategyAction: Action = {
         resources: ['documentation', 'examples'],
       };
 
-      await callback({
-        text: `Strategy generated based on ${analysisResults.intent} intent. Ready to execute.`,
-        actions: ['GENERATE_STRATEGY'],
-      });
+      if (callback) {
+        await callback({
+          text: `Strategy generated based on ${analysisResults.intent} intent. Ready to execute.`,
+          actions: ['GENERATE_STRATEGY'],
+        });
+      }
 
       return {
-        success: true,
         data: {
           actionName: 'GENERATE_STRATEGY',
           strategy: strategy,
           basedOn: analysisResults,
-        },
-        state: {
           strategyGenerated: true,
-          strategy: strategy,
           readyToExecute: true,
         },
+        text: 'Strategy generated successfully',
       };
     } catch (error) {
       return {
-        success: false,
         error: error as Error,
         data: { actionName: 'GENERATE_STRATEGY' },
       };
@@ -508,24 +477,6 @@ export const createPlanAction: Action = {
       // Extract project requirements from the message
       const text = message.content.text || '';
       
-      // Use LLM to extract planning details
-      const planningPrompt = `Extract project planning details from this request: "${text}"
-
-      Please identify:
-      1. Project type/goal
-      2. Required components/phases
-      3. Key deliverables
-      4. Success criteria
-      5. Dependencies between tasks
-
-      Return a structured plan with phases, tasks, and execution order.`;
-
-      const planningResponse = await runtime.useModel('TEXT_LARGE', {
-        prompt: planningPrompt,
-        temperature: 0.7,
-        maxTokens: 1000,
-      });
-
       // Create a comprehensive plan structure
       const plan = {
         id: uuidv4(),
@@ -543,7 +494,7 @@ export const createPlanAction: Action = {
                 name: 'Repository Setup',
                 description: 'Create GitHub repository with proper documentation',
                 action: 'CREATE_GITHUB_REPO',
-                dependencies: [],
+                dependencies: []
                 estimatedDuration: '30 minutes',
               },
             ],
@@ -601,7 +552,7 @@ export const createPlanAction: Action = {
       const planState = {
         planId: plan.id,
         currentPhase: 0,
-        completedTasks: [],
+        completedTasks: []
         plan: plan,
       };
 
@@ -630,19 +581,15 @@ Ready to begin execution when you are!`,
       console.log('[CREATE_PLAN] Plan created successfully:', plan.name);
 
       return {
-        success: true,
         data: {
           actionName: 'CREATE_PLAN',
           plan: plan,
-          nextActions: ['CREATE_GITHUB_REPO', 'start_research', 'PROCESS_KNOWLEDGE', 'CREATE_TODO'],
-        },
-        state: planState,
-        metadata: {
-          action: 'CREATE_PLAN',
           planId: plan.id,
           phaseCount: plan.phases.length,
           taskCount: plan.phases.reduce((total, phase) => total + phase.tasks.length, 0),
+          ...planState,
         },
+        text: `Created ${plan.phases.length}-phase plan with ${plan.phases.reduce((total, phase) => total + phase.tasks.length, 0)} tasks`,
       };
     } catch (error) {
       console.error('[CREATE_PLAN] Error creating plan:', error);
@@ -656,7 +603,6 @@ Ready to begin execution when you are!`,
       }
 
       return {
-        success: false,
         error: error as Error,
         data: { actionName: 'CREATE_PLAN' },
       };
@@ -685,20 +631,5 @@ Ready to begin execution when you are!`,
         },
       },
     ],
-    [
-      {
-        name: '{{user}}',
-        content: {
-          text: 'Create a plan for setting up GitHub, doing research, and organizing tasks.',
-        },
-      },
-      {
-        name: '{{agent}}',
-        content: {
-          text: "I'll create a structured plan that coordinates GitHub setup, research, and task management.",
-          actions: ['CREATE_PLAN'],
-        },
-      },
-    ],
   ],
-};
+}; 

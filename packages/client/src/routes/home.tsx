@@ -149,7 +149,7 @@ export default function Home() {
 const ServerChannels = ({ serverId }: { serverId: UUID }) => {
   const { data: channelsData, isLoading: isLoadingChannels } = useChannels(serverId);
   const groupChannels = useMemo(
-    () => channelsData?.data?.channels?.filter((ch) => ch.type === CoreChannelType.GROUP) || [],
+    () => channelsData?.data?.channels?.filter((ch) => ch.type === CoreChannelType.GROUP) || []
     [channelsData]
   );
 

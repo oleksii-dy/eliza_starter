@@ -79,7 +79,7 @@ const createMockRuntime = (): IAgentRuntime => {
         components.set(component.entityId, userComponents);
       }),
     },
-    plugins: [],
+    plugins: []
     // ... other runtime properties
   } as any;
   
@@ -472,7 +472,7 @@ describe('Secrets Manager Plugin Integration', () => {
       // Set a secret with specific permissions
       await secretsManager.set('RESTRICTED_KEY', 'restricted-value', userContext, {
         type: 'api_key',
-        permissions: [], // Initialize as empty array
+        permissions: [] // Initialize as empty array
       });
 
       // Grant access to a specific action

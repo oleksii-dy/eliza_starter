@@ -15,11 +15,11 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       name: 'TestAgent',
       bio: ['Test bio'],
       system: 'Test system prompt',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
-      plugins: [],
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
+      plugins: []
       ...overrides.character,
     },
 
@@ -91,9 +91,9 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     updateState: vi.fn().mockResolvedValue(true),
 
     // Actions & Providers
-    actions: [],
-    providers: [],
-    evaluators: [],
+    actions: []
+    providers: []
+    evaluators: []
 
     // Components
     createComponent: vi.fn().mockResolvedValue(true),
@@ -112,7 +112,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     getEntityById: vi.fn().mockResolvedValue(null),
     getRoom: vi.fn().mockResolvedValue({
       id: 'test-room-id',
-      entities: [],
+      entities: []
     }),
     getEntitiesForRoom: vi.fn().mockResolvedValue([]),
 
@@ -349,7 +349,7 @@ export function createMockWorld(): any {
     },
     chat: {
       add: vi.fn(),
-      msgs: [],
+      msgs: []
     },
     controls: {
       goto: vi.fn(),
@@ -385,7 +385,7 @@ export function createMockHyperfyService(): any {
       getRecentMessages: vi.fn().mockResolvedValue({
         formattedHistory: 'No messages yet',
         lastResponseText: '',
-        lastActions: [],
+        lastActions: []
       }),
     }),
     getEmoteManager: vi.fn().mockReturnValue({

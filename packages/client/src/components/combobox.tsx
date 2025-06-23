@@ -18,10 +18,10 @@ interface MultiSelectComboboxProps {
 }
 
 export default function MultiSelectCombobox({
-  options = [],
+  options = []
   className = '',
   onSelect,
-  initialSelected = [],
+  initialSelected = []
 }: MultiSelectComboboxProps) {
   const [selected, setSelected] = useState<Option[]>(initialSelected);
   const [isOpen, setIsOpen] = useState(false);

@@ -153,8 +153,8 @@ describe('Real-World EVM Plugin Validation', () => {
         postDirections: '',
         recentMessages: '',
         actors: '',
-        actorsData: [],
-        recentMessagesData: [],
+        actorsData: []
+        recentMessagesData: []
         actionNames: '',
         actions: '',
         providers: '',

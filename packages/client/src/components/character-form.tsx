@@ -125,7 +125,7 @@ export default function CharacterForm({
   onStopAgent,
   isDeleting = false,
   isStopping = false,
-  customComponents = [],
+  customComponents = []
 }: CharacterFormProps) {
   const { toast } = useToast();
   const { data: elevenlabsVoices, isLoading: isLoadingVoices } = useElevenLabsVoices();
@@ -236,7 +236,7 @@ export default function CharacterForm({
             })),
             tooltip: "Select a voice that aligns with the agent's intended persona.",
           },
-        ] as InputField[],
+        ] as InputField[]
       },
       {
         sectionTitle: 'Content',
@@ -254,10 +254,10 @@ export default function CharacterForm({
             title: 'Topics',
             description: 'Topics this agent can talk about',
             path: 'topics',
-            getData: (char) => char.topics || [],
+            getData: (char) => char.topics || []
             tooltip: 'Subject domains the agent can discuss with confidence.',
           },
-        ] as ArrayField[],
+        ] as ArrayField[]
       },
       {
         sectionTitle: 'Style',
@@ -268,24 +268,24 @@ export default function CharacterForm({
             title: 'All Styles',
             description: 'Writing style for all content types',
             path: 'style.all',
-            getData: (char) => char.style?.all || [],
+            getData: (char) => char.style?.all || []
             tooltip: 'Core writing style guidelines applied across all content formats.',
           },
           {
             title: 'Chat Style',
             description: 'Style specific to chat interactions',
             path: 'style.chat',
-            getData: (char) => char.style?.chat || [],
+            getData: (char) => char.style?.chat || []
             tooltip: 'Writing style specific to conversational exchanges.',
           },
           {
             title: 'Post Style',
             description: 'Style for long-form content',
             path: 'style.post',
-            getData: (char) => char.style?.post || [],
+            getData: (char) => char.style?.post || []
             tooltip: 'Writing style for structured content such as articles or posts.',
           },
-        ] as ArrayField[],
+        ] as ArrayField[]
       },
     ],
     [allVoiceModels]

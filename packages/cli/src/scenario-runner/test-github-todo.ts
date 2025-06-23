@@ -52,15 +52,15 @@ When asked to create a pull request, use the CREATE_GITHUB_PULL_REQUEST action.
 
 Always be clear about what actions you're taking and provide helpful summaries.`,
     bio: ['project management assistant', 'github integration expert', 'task tracking specialist'],
-    messageExamples: [],
-    postExamples: [],
+    messageExamples: []
+    postExamples: []
     topics: ['project management', 'github', 'todo tracking', 'software development'],
     style: {
       all: ['helpful', 'organized', 'clear', 'proactive'],
       chat: ['friendly', 'informative', 'action-oriented'],
       post: ['concise', 'structured', 'informative'],
     },
-    plugins: [],
+    plugins: []
   };
 }
 
@@ -136,7 +136,7 @@ async function runGitHubTodoTest() {
     const originalProcessAction = runtime.processActions.bind(runtime);
     runtime.processActions = async (
       message: Memory,
-      responses: Memory[],
+      responses: Memory[]
       state?: any,
       callback?: any
     ) => {

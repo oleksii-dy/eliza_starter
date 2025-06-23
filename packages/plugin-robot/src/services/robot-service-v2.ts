@@ -232,7 +232,7 @@ export class RobotServiceV2 extends Service {
     if (!this.adapter) {
       return {
         timestamp: Date.now(),
-        joints: [],
+        joints: []
         isEmergencyStopped: false,
         mode: RobotMode.IDLE,
         status: RobotStatus.DISCONNECTED,

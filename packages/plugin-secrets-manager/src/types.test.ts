@@ -172,7 +172,7 @@ describe('types', () => {
         variableName: 'API_KEY',
         pluginName: 'test-plugin',
         script: 'console.log("api key");',
-        dependencies: [],
+        dependencies: []
         attempts: 2,
         status: 'failed',
         createdAt: Date.now(),
@@ -192,7 +192,7 @@ describe('types', () => {
           variableName: 'TEST_VAR',
           pluginName: 'test',
           script: 'console.log("test");',
-          dependencies: [],
+          dependencies: []
           attempts: 0,
           status,
           createdAt: Date.now(),
@@ -209,7 +209,7 @@ describe('types', () => {
           variableName: 'SECRET_KEY',
           pluginName: 'plugin1',
           script: 'crypto.randomBytes(32).toString("hex")',
-          dependencies: [],
+          dependencies: []
           attempts: 0,
           status: 'pending',
           createdAt: Date.now(),

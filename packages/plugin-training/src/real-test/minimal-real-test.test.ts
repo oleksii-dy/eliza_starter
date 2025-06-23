@@ -37,11 +37,11 @@ describe('Minimal Real Integration - ZERO LARP', () => {
       name: 'Minimal Test Agent',
       bio: ['Testing minimal integration'],
       system: 'You are a minimal test agent.',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
-      plugins: [], // No plugins to avoid dependency issues
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
+      plugins: [] // No plugins to avoid dependency issues
     };
 
     // REAL: Create actual AgentRuntime instance

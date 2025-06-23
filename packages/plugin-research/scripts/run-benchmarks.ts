@@ -96,7 +96,7 @@ class BatchBenchmarkRunner {
     }
   }
 
-  async runBatch(queries: any[], config: any): Promise<any[]> {
+  async runBatch(queries: any[] config: any): Promise<any[]> {
     console.log(
       `🚀 Starting batch execution with ${queries.length} queries (max ${this.semaphore.permits} concurrent)`
     );
@@ -123,11 +123,11 @@ class BenchmarkRuntime {
     name: 'Benchmark Runner',
     bio: ['Automated benchmark execution agent'],
     system: 'You are an automated research benchmark runner',
-    messageExamples: [],
-    postExamples: [],
-    topics: [],
-    knowledge: [],,
-    plugins: [],
+    messageExamples: []
+    postExamples: []
+    topics: []
+    knowledge: []
+    plugins: []
   };
 
   providers = [];

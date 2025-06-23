@@ -111,7 +111,7 @@ export class PlanningModelTrainer {
    * Create dataset files in various formats
    */
   private async createDatasetFiles(
-    examples: PlanningTrainingExample[],
+    examples: PlanningTrainingExample[]
     outputDir: string
   ): Promise<string> {
     const datasetsDir = path.join(outputDir, 'datasets');
@@ -241,7 +241,7 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
   /**
    * Create complexity-specific dataset subsets
    */
-  private async createComplexitySubsets(examples: PlanningTrainingExample[], outputDir: string): Promise<void> {
+  private async createComplexitySubsets(examples: PlanningTrainingExample[] outputDir: string): Promise<void> {
     const complexities = ['simple', 'medium', 'complex', 'expert'];
 
     for (const complexity of complexities) {
@@ -259,7 +259,7 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
   /**
    * Create domain-specific dataset subsets
    */
-  private async createDomainSubsets(examples: PlanningTrainingExample[], outputDir: string): Promise<void> {
+  private async createDomainSubsets(examples: PlanningTrainingExample[] outputDir: string): Promise<void> {
     const domains = ['software_development', 'business_strategy', 'ai_research', 'project_management'];
 
     for (const domain of domains) {
@@ -293,7 +293,7 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
             ...example.input,
           },
           output: example.output,
-          conversationContext: [],
+          conversationContext: []
           stateData: {
             scenario_context: example.input.context,
             complexity: example.metadata.complexity,

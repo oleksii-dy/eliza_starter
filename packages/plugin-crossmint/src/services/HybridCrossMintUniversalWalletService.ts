@@ -183,7 +183,7 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
       success: true,
       gasUsed: '21000',
       gasPrice: '0',
-      changes: [],
+      changes: []
       warnings: ['Simulation not available for CrossMint transactions'],
     };
   }
@@ -227,10 +227,10 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
         name: this.getNativeName(chainId),
         decimals: chainId === 'solana' ? 9 : 18,
       },
-      rpcUrls: [],
-      blockExplorerUrls: [],
+      rpcUrls: []
+      blockExplorerUrls: []
       isTestnet: false,
-      bridgeSupport: [],
+      bridgeSupport: []
     }));
   }
 

@@ -266,7 +266,7 @@ export class TestExecutor {
         failed: 0,
         skipped: 0,
         duration: 0,
-        failures: [],
+        failures: []
         noTestsFound: false,
         frameworkDetected: framework,
         executionReliable: true,
@@ -340,7 +340,7 @@ export class TestExecutor {
         failed: 0,
         skipped: 0,
         duration: 0,
-        failures: [],
+        failures: []
         noTestsFound: true,
         frameworkDetected: framework,
         executionReliable: false,
@@ -362,7 +362,7 @@ export class TestExecutor {
       failed: 0,
       skipped: 0,
       duration: 0,
-      failures: [],
+      failures: []
       noTestsFound: false,
       frameworkDetected: framework,
       executionReliable: true,

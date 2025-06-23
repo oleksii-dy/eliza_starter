@@ -26,14 +26,14 @@ const createMockRuntime = (): IAgentRuntime => {
       bio: 'Test bio',
       settings: { secrets: {} },
     } as Character,
-    providers: [],
-    actions: [],
-    evaluators: [],
-    plugins: [] as Plugin[],
+    providers: []
+    actions: []
+    evaluators: []
+    plugins: [] as Plugin[]
     services,
     events: new Map(),
     fetch: vi.fn(),
-    routes: [],
+    routes: []
 
     // Methods from IAgentRuntime
     registerPlugin: vi.fn(),
@@ -591,9 +591,9 @@ describe('Plugin Scanning', () => {
       {
         name: 'test-plugin',
         description: 'Test plugin',
-        actions: [],
-        providers: [],
-        evaluators: [],
+        actions: []
+        providers: []
+        evaluators: []
         declaredEnvVars: {
           PLUGIN_API_KEY: {
             type: 'api_key',
@@ -679,9 +679,9 @@ describe('Plugin Scanning', () => {
       {
         name: 'plugin-env',
         description: 'Environment plugin',
-        actions: [],
-        providers: [],
-        evaluators: [],
+        actions: []
+        providers: []
+        evaluators: []
         declaredEnvVars: {
           SHOULD_NOT_SCAN: {
             type: 'config',
@@ -702,9 +702,9 @@ describe('Plugin Scanning', () => {
       {
         name: 'test-plugin',
         description: 'Test plugin without env vars',
-        actions: [],
-        providers: [],
-        evaluators: [],
+        actions: []
+        providers: []
+        evaluators: []
         // No declaredEnvVars
       },
     ];
@@ -768,7 +768,7 @@ describe('EnvManagerService Additional Coverage', () => {
       getSetting: vi.fn(),
       setSetting: vi.fn(),
       getService: vi.fn(),
-      plugins: [],
+      plugins: []
     } as any;
   });
 

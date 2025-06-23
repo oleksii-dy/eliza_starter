@@ -108,7 +108,7 @@ export function sanitizeEnv(env: Record<string, string>): Record<string, string>
  */
 export function createSafeCommand(
   command: string,
-  args: string[],
+  args: string[]
   options?: { env?: Record<string, string> }
 ): { command: string; args: string[]; env?: Record<string, string> } | null {
   // Validate command

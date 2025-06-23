@@ -132,9 +132,9 @@ export class ConversationDatasetBuilder {
           },
           content:
             "Hey everyone! I've been working on improving the conversation parsing for our training pipeline. Has anyone else looked into the Discord message format?",
-          attachments: [],
-          embeds: [],
-          mentions: [],
+          attachments: []
+          embeds: []
+          mentions: []
           reference: null,
           reactions: [{ emoji: '👍', count: 2 }],
           url: 'https://discord.com/channels/123456789012345678/987654321098765432/1001',
@@ -150,11 +150,11 @@ export class ConversationDatasetBuilder {
           },
           content:
             'Yes! I was just looking at that yesterday. The structure is pretty complex with all the embeds and references. Are you thinking of using it for training the conversation model?',
-          attachments: [],
-          embeds: [],
+          attachments: []
+          embeds: []
           mentions: [{ id: 'user1', username: 'developer_alice' }],
           reference: { messageId: '1001' },
-          reactions: [],
+          reactions: []
           url: 'https://discord.com/channels/123456789012345678/987654321098765432/1002',
         },
         {
@@ -168,8 +168,8 @@ export class ConversationDatasetBuilder {
           },
           content:
             "Exactly! I'm thinking we can extract conversation patterns and create training data that mimics our current prompt structure. The key is handling the <thinking> blocks correctly so the model can reason through responses.",
-          attachments: [],
-          embeds: [],
+          attachments: []
+          embeds: []
           mentions: [{ id: 'user2', username: 'coder_bob' }],
           reference: { messageId: '1002' },
           reactions: [{ emoji: '🧠', count: 1 }],
@@ -186,9 +186,9 @@ export class ConversationDatasetBuilder {
           },
           content:
             "This is fascinating work! I've been researching similar approaches. Have you considered using different model sizes for different types of conversations? Maybe 8B for casual chat and 32B for technical discussions?",
-          attachments: [],
-          embeds: [],
-          mentions: [],
+          attachments: []
+          embeds: []
+          mentions: []
           reference: null,
           reactions: [{ emoji: '🔬', count: 3 }],
           url: 'https://discord.com/channels/123456789012345678/987654321098765432/1004',
@@ -204,11 +204,11 @@ export class ConversationDatasetBuilder {
           },
           content:
             "That's a great point, Dr. Chen! We could definitely optimize model selection based on conversation complexity. I think the 8B model would handle most Discord interactions, while the 32B could be reserved for detailed technical explanations.",
-          attachments: [],
-          embeds: [],
+          attachments: []
+          embeds: []
           mentions: [{ id: 'user3', username: 'ai_researcher' }],
           reference: { messageId: '1004' },
-          reactions: [],
+          reactions: []
           url: 'https://discord.com/channels/123456789012345678/987654321098765432/1005',
         },
         {
@@ -222,9 +222,9 @@ export class ConversationDatasetBuilder {
           },
           content:
             "I love seeing all this technical discussion! 🚀 From a community perspective, I think it's important that we maintain the natural conversational flow that makes Discord special. Users should feel like they're talking to real people, not just getting generated responses.",
-          attachments: [],
-          embeds: [],
-          mentions: [],
+          attachments: []
+          embeds: []
+          mentions: []
           reference: null,
           reactions: [
             { emoji: '❤️', count: 4 },
@@ -243,8 +243,8 @@ export class ConversationDatasetBuilder {
           },
           content:
             "Absolutely, Sam! That's why I'm focusing on preserving the authentic communication patterns. Each user gets their own character profile based on their actual messaging style, topics of interest, and response patterns. The model should learn to respond AS that person, not just generate generic responses.",
-          attachments: [],
-          embeds: [],
+          attachments: []
+          embeds: []
           mentions: [{ id: 'user4', username: 'community_manager' }],
           reference: { messageId: '1006' },
           reactions: [{ emoji: '💯', count: 3 }],
@@ -261,9 +261,9 @@ export class ConversationDatasetBuilder {
           },
           content:
             "This all sounds really advanced! I'm still learning about LLMs and training data. Could someone explain how the <thinking> blocks work? I see them mentioned but I'm not sure what they're for.",
-          attachments: [],
-          embeds: [],
-          mentions: [],
+          attachments: []
+          embeds: []
+          mentions: []
           reference: null,
           reactions: [{ emoji: '🤔', count: 1 }],
           url: 'https://discord.com/channels/123456789012345678/987654321098765432/1008',
@@ -279,8 +279,8 @@ export class ConversationDatasetBuilder {
           },
           content:
             '<thinking>\nJordan is asking about thinking blocks, which is a great question. I should explain this clearly since they\'re new to LLMs. Thinking blocks allow the model to reason through a problem step by step before generating the final response. It\'s similar to chain-of-thought reasoning.\n</thinking>\n\nGreat question, Jordan! <thinking> blocks are a way for the model to "think out loud" before responding. Inside these blocks, the model can reason through the problem, consider different approaches, and plan its response. Think of it like showing your work in math class - the model can work through its reasoning process step by step, which leads to better and more thoughtful responses.',
-          attachments: [],
-          embeds: [],
+          attachments: []
+          embeds: []
           mentions: [{ id: 'user5', username: 'newbie_dev' }],
           reference: { messageId: '1008' },
           reactions: [
@@ -300,8 +300,8 @@ export class ConversationDatasetBuilder {
           },
           content:
             "Oh wow, that makes so much sense! So it's like the model can have an internal monologue before responding. That's really cool! Does that mean the responses are more accurate when using thinking blocks?",
-          attachments: [],
-          embeds: [],
+          attachments: []
+          embeds: []
           mentions: [{ id: 'user3', username: 'ai_researcher' }],
           reference: { messageId: '1009' },
           reactions: [{ emoji: '💡', count: 2 }],
@@ -358,7 +358,7 @@ export class ConversationDatasetBuilder {
    * Create model-specific datasets (8B and 32B)
    */
   private async createModelDatasets(
-    examples: ConversationTrainingExample[],
+    examples: ConversationTrainingExample[]
     outputDir: string
   ): Promise<{ '8B': number; '32B': number }> {
     const datasetsDir = path.join(outputDir, 'datasets');

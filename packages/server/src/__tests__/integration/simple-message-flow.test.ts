@@ -43,8 +43,8 @@ describe('Simple Message Flow Test', () => {
       id: 'simple-agent' as UUID,
       name: 'Simple Agent',
       bio: ['A simple test agent'],
-      topics: [],
-      plugins: [],
+      topics: []
+      plugins: []
       system: 'You are a helpful assistant. Always respond when asked.',
       settings: {
         secrets: {},

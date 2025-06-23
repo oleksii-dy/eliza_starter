@@ -313,7 +313,7 @@ describe('Real Action Chaining Integration', () => {
         handler: async () => {
           throw new Error('Simulated chain failure');
         },
-        similes: [],
+        similes: []
       };
 
       runtime.registerAction(failingAction);

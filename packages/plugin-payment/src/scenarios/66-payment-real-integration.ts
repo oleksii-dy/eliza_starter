@@ -1,10 +1,53 @@
 // Real payment integration scenario
 const paymentRealIntegrationScenario: any = {
   id: 'payment-real-integration-001',
-  name: 'Real Payment Integration Test',
-  description: 'Tests actual payment functionality with wallet persistence and database integration',
+  name: 'Payment Real Integration Test',
+  description:
+    'Tests real blockchain payment integration including wallet connections, gas estimation, and transaction monitoring',
   category: 'payment',
-  tags: ['payment', 'integration', 'wallet', 'database', 'real'],
+  tags: ['payment', 'blockchain', 'integration', 'wallet', 'transaction'],
+
+  // Add examples array for compatibility with test framework
+  examples: [
+    [
+      {
+        user: 'customer',
+        content: 'I want to connect my MetaMask wallet to make a payment.',
+      },
+      {
+        user: 'agent',
+        content: 'I\'ll help you connect your MetaMask wallet. Please approve the connection request in your wallet. Once connected, you can make secure blockchain payments.',
+      },
+    ],
+    [
+      {
+        user: 'customer',
+        content: 'How much will the gas fees be for this transaction?',
+      },
+      {
+        user: 'agent',
+        content: 'Current gas fees on Ethereum are approximately 25 gwei, which would cost about $3.50 for a USDC transfer. Would you like to proceed or wait for lower fees?',
+      },
+    ],
+  ],
+
+  // Add evaluator function for test compatibility
+  evaluator: (response: string) => {
+    const hasBlockchainMention = 
+      response.toLowerCase().includes('blockchain') ||
+      response.toLowerCase().includes('wallet') ||
+      response.toLowerCase().includes('metamask') ||
+      response.toLowerCase().includes('transaction') ||
+      response.toLowerCase().includes('gas');
+    
+    const hasIntegrationMention = 
+      response.toLowerCase().includes('connect') ||
+      response.toLowerCase().includes('approve') ||
+      response.toLowerCase().includes('fees') ||
+      response.toLowerCase().includes('gwei');
+    
+    return hasBlockchainMention || hasIntegrationMention;
+  },
 
   actors: [
     {

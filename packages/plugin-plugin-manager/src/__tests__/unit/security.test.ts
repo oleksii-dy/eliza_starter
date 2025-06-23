@@ -12,10 +12,10 @@ describe('Security Tests', () => {
       getSetting: vi.fn(),
       getService: vi.fn(),
       services: new Map(),
-      plugins: [],
-      actions: [],
-      providers: [],
-      evaluators: [],
+      plugins: []
+      actions: []
+      providers: []
+      evaluators: []
     } as any;
     vi.clearAllMocks();
     
@@ -251,7 +251,7 @@ describe('Security Tests', () => {
       const malformedInputs = [
         null,
         undefined,
-        [],
+        []
         'string',
         123,
         { __proto__: { isAdmin: true } }, // Prototype pollution attempt

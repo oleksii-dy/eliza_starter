@@ -177,7 +177,7 @@ async function runFocusedEvaluation() {
       classification: null,
       planCreated: false,
       actualExecutionAttempted: false,
-      actionCallLog: [],
+      actionCallLog: []
       success: false,
       reasoning: ''
     };
@@ -224,7 +224,7 @@ async function runFocusedEvaluation() {
         
         const planningContext = {
           goal: scenario.userRequest,
-          constraints: [],
+          constraints: []
           availableActions: runtime.actions.map((a: any) => a.name),
           availableProviders: runtime.providers.map((p: any) => p.name),
           preferences: {

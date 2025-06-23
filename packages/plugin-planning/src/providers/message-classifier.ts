@@ -15,7 +15,7 @@ export const messageClassifierProvider: Provider = {
           confidence: 0.1,
           complexity: 'simple',
           planningRequired: false,
-          stakeholders: [],
+          stakeholders: []
           constraints: []
         },
       };
@@ -154,8 +154,8 @@ CONFIDENCE: [0.0-1.0]`;
           originalText: text,
           complexity: 'simple',
           planningRequired: false,
-          stakeholders: [],
-          constraints: [],
+          stakeholders: []
+          constraints: []
           error: error.message,
           fallback: true
         },

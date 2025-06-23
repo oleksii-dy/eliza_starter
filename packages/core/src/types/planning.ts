@@ -221,7 +221,7 @@ export interface IPlanningService {
     runtime: import('./runtime').IAgentRuntime,
     plan: ActionPlan,
     currentStepIndex: number,
-    results: ActionResult[],
+    results: ActionResult[]
     error?: Error
   ): Promise<ActionPlan>;
 

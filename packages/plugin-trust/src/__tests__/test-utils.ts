@@ -17,7 +17,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       benevolence: 78,
       transparency: 72,
     },
-    evidence: [],
+    evidence: []
     lastCalculated: Date.now(),
     calculationMethod: 'weighted_average',
     trend: {
@@ -35,11 +35,11 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       name: 'TestAgent',
       bio: ['Test bio'],
       system: 'Test system prompt',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
-      plugins: [],
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
+      plugins: []
     },
 
     // Settings
@@ -125,11 +125,11 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     updateState: vi.fn().mockResolvedValue(true),
 
     // Actions & Providers
-    actions: [],
-    providers: [],
-    evaluators: [],
-    plugins: [],
-    routes: [],
+    actions: []
+    providers: []
+    evaluators: []
+    plugins: []
+    routes: []
 
     // Components
     createComponent: vi.fn().mockResolvedValue(true),

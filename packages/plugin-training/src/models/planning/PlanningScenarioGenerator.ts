@@ -253,14 +253,14 @@ export class PlanningScenarioGenerator {
     // Generate scenario details
     const scenarioId = uuidv4();
     const title = this.generateScenarioTitle(baseScenario as string, domain);
-    const description = this.generateScenarioDescription(baseScenario as string, constraints as string[], complexity as string);
+    const description = this.generateScenarioDescription(baseScenario as string, constraints as string[] complexity as string);
     const objective = this.generateObjective(baseScenario as string);
     
     // Generate context
     const context = await this.generateScenarioContext(domain, complexity, resources as string[]);
     
     // Generate expected solution
-    const expectedPlan = await this.generateExpectedPlan(baseScenario as string, constraints as string[], resources as string[], complexity as string);
+    const expectedPlan = await this.generateExpectedPlan(baseScenario as string, constraints as string[] resources as string[] complexity as string);
 
     const scenario: PlanningScenario = {
       id: scenarioId,
@@ -468,7 +468,7 @@ export class PlanningScenarioGenerator {
     return items[Math.floor(Math.random() * items.length)];
   }
 
-  private selectRandomSubset<T>(items: T[], count: number): T[] {
+  private selectRandomSubset<T>(items: T[] count: number): T[] {
     const shuffled = [...items].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, Math.min(count, items.length));
   }
@@ -497,7 +497,7 @@ export class PlanningScenarioGenerator {
     return `${domain.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}: ${baseScenario}`;
   }
 
-  private generateScenarioDescription(baseScenario: string, constraints: string[], complexity: string): string {
+  private generateScenarioDescription(baseScenario: string, constraints: string[] complexity: string): string {
     const complexityPrefix = {
       simple: 'You have been asked to',
       medium: 'Your team needs to',
@@ -557,7 +557,7 @@ export class PlanningScenarioGenerator {
     return baseCriteria;
   }
 
-  private async generateExpectedPlan(baseScenario: string, constraints: string[], resources: string[], complexity: string): Promise<any> {
+  private async generateExpectedPlan(baseScenario: string, constraints: string[] resources: string[] complexity: string): Promise<any> {
     const stepCount = this.getStepCount(complexity);
     const steps = [];
 
@@ -566,7 +566,7 @@ export class PlanningScenarioGenerator {
         id: i,
         title: `Step ${i}: ${this.generateStepTitle(baseScenario, i, stepCount)}`,
         description: `Detailed implementation of step ${i}`,
-        dependencies: i > 1 ? [i - 1] : [],
+        dependencies: i > 1 ? [i - 1] : []
         estimated_time: this.generateStepTime(complexity),
         resources_needed: this.selectRandomSubset(resources, 2),
         success_metrics: [`Step ${i} completion criteria met`],
@@ -681,7 +681,7 @@ Let me break this down into a strategic plan with clear steps, dependencies, and
     return {
       overview: `${originalPlan.reasoning} Adapted for additional constraints: ${newConstraints.slice(-1)[0]}`,
       steps: originalPlan.steps,
-      success_criteria: originalPlan.steps[0]?.success_metrics || [],
+      success_criteria: originalPlan.steps[0]?.success_metrics || []
       risk_assessment: `Increased risk due to: ${newConstraints.slice(-1)[0]}`,
       contingencies: [`Address constraint: ${newConstraints.slice(-1)[0]}`],
     };

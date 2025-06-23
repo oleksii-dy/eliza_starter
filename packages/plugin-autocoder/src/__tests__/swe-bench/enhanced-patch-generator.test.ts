@@ -161,7 +161,7 @@ index 1234567..abcdefg 100644
         failed: 0,
         skipped: 0,
         duration: 1000,
-        failures: [],
+        failures: []
       }),
     };
 

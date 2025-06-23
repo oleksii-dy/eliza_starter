@@ -384,7 +384,7 @@ export const githubPluginTestSuite = {
               },
               { values: {}, data: {}, text: '' },
               {},
-              async () => [],
+              async () => []
               []
             );
 
@@ -431,7 +431,7 @@ export const githubPluginTestSuite = {
             },
             { values: {}, data: {}, text: '' },
             { limit: 10 },
-            async () => [],
+            async () => []
             []
           );
 
@@ -456,7 +456,7 @@ export const githubPluginTestSuite = {
             },
             { values: {}, data: {}, text: '' },
             { type: 'all', sort: 'updated', per_page: 5 },
-            async () => [],
+            async () => []
             []
           );
 
@@ -478,7 +478,7 @@ export const githubPluginTestSuite = {
               },
               { values: {}, data: {}, text: '' },
               {},
-              async () => [],
+              async () => []
               []
             );
             rateLimitChecks.push(check);
@@ -575,7 +575,7 @@ export const githubPluginTestSuite = {
             },
             { values: {}, data: {}, text: '' },
             {},
-            async () => [],
+            async () => []
             []
           );
 
@@ -627,7 +627,7 @@ export const githubPluginTestSuite = {
             },
             state,
             { owner: 'octocat', repo: 'Hello-World' },
-            async () => [],
+            async () => []
             []
           );
 
@@ -691,7 +691,7 @@ export const githubPluginTestSuite = {
               },
               state,
               {},
-              async () => [],
+              async () => []
               []
             );
 

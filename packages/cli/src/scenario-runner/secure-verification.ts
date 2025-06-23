@@ -280,7 +280,7 @@ No additional text.`;
       score,
       reason: reasoning,
       ruleName: ruleId,
-      evidence: [],
+      evidence: []
     };
   }
 

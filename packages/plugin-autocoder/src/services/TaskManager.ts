@@ -209,8 +209,8 @@ export class TaskManager extends Service {
           this.generateDefaultAcceptanceCriteria(request.requirements),
         priority: request.priority || 'medium',
         status: 'pending',
-        assignedAgents: [],
-        assignedContainers: [],
+        assignedAgents: []
+        assignedContainers: []
         context: this.completeTaskContext(request.context),
         timeline: [
           {
@@ -582,8 +582,8 @@ export class TaskManager extends Service {
       repositoryPath: partial.repositoryPath || '/workspace',
       branchName: partial.branchName || `task-${Date.now()}`,
       baseBranch: partial.baseBranch || 'main',
-      files: partial.files || [],
-      dependencies: partial.dependencies || [],
+      files: partial.files || []
+      dependencies: partial.dependencies || []
       testSuites: partial.testSuites || ['test', 'spec'],
       environment: partial.environment || {},
       constraints: {

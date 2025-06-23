@@ -1,4 +1,4 @@
-export function computePca(data: number[][], dims = 2): number[][] {
+export function computePca(data: number[][] dims = 2): number[][] {
   if (data.length === 0) return [];
   const dim = data[0].length;
   const mean = Array(dim).fill(0);
@@ -43,10 +43,10 @@ export function computePca(data: number[][], dims = 2): number[][] {
   return centered.map((vec) => eigenvectors.map((ev) => dot(vec, ev)));
 }
 
-function multiplyMatrixVector(mat: number[][], vec: number[]): number[] {
+function multiplyMatrixVector(mat: number[][] vec: number[]): number[] {
   return mat.map((row) => row.reduce((sum, val, i) => sum + val * vec[i], 0));
 }
 
-function dot(a: number[], b: number[]): number {
+function dot(a: number[] b: number[]): number {
   return a.reduce((sum, val, i) => sum + val * b[i], 0);
 }

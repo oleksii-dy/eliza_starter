@@ -367,7 +367,7 @@ export class SecurityModule {
     this.actionHistory.set(entityId, actions);
   }
 
-  async detectMultiAccountPattern(entities: UUID[], timeWindow: number = 3600000): Promise<any> {
+  async detectMultiAccountPattern(entities: UUID[] timeWindow: number = 3600000): Promise<any> {
     const patterns: any[] = [];
     
     for (let i = 0; i < entities.length; i++) {
@@ -425,7 +425,7 @@ export class SecurityModule {
     };
   }
 
-  async detectPhishing(messages: any[], entityId: UUID): Promise<any> {
+  async detectPhishing(messages: any[] entityId: UUID): Promise<any> {
     const phishingIndicators: any[] = [];
     
     for (const message of messages) {
@@ -523,7 +523,7 @@ export class SecurityModule {
     return {
       riskScore,
       threatLevel: assessment.severity,
-      activeThreats: [],
+      activeThreats: []
       recommendations: assessment.recommendation ? [assessment.recommendation] : []
     };
   }
@@ -568,8 +568,8 @@ export class SecurityModule {
         vocabularyComplexity: 0,
         messageLengthMean: 0,
         messageLengthStdDev: 0,
-        activeHours: [],
-        commonPhrases: [],
+        activeHours: []
+        commonPhrases: []
         interactionPatterns: {},
         updatedAt: new Date()
       };
@@ -635,7 +635,7 @@ export class SecurityModule {
     return { detected: false, confidence: 0 };
   }
 
-  private async detectCredentialTheftPrivate(messages: Memory[], entityId: UUID): Promise<{ detected: boolean; confidence: number }> {
+  private async detectCredentialTheftPrivate(messages: Memory[] entityId: UUID): Promise<{ detected: boolean; confidence: number }> {
     for (const message of messages) {
       // The content field in the stored message is already a string (we store it as such in storeMemory)
       const content = (message as any).content || '';

@@ -56,7 +56,7 @@ export class ScenarioGenerator {
    * Generate training scenarios for file creation
    */
   async generateFileCreationScenarios(
-    files: ExtractedFile[], 
+    files: ExtractedFile[] 
     repositoryType: 'core' | 'plugin' = 'core',
     options: Partial<ScenarioGenerationOptions> = {}
   ): Promise<TrainingScenario[]> {
@@ -102,7 +102,7 @@ export class ScenarioGenerator {
    */
   private async createFileScenario(
     targetFile: ExtractedFile, 
-    allFiles: ExtractedFile[], 
+    allFiles: ExtractedFile[] 
     repositoryType: 'core' | 'plugin',
     options: ScenarioGenerationOptions
   ): Promise<TrainingScenario> {
@@ -195,7 +195,7 @@ Generate only the user request, nothing else.`;
    */
   private async generateThinkingProcess(
     targetFile: ExtractedFile, 
-    relatedFiles: ExtractedFile[], 
+    relatedFiles: ExtractedFile[] 
     userQuery: string,
     repositoryType: 'core' | 'plugin'
   ): Promise<string> {
@@ -355,7 +355,7 @@ Format as natural thinking, not as a numbered list.`;
   /**
    * Generate repository context description
    */
-  private generateRepositoryContext(files: ExtractedFile[], repositoryType: 'core' | 'plugin'): string {
+  private generateRepositoryContext(files: ExtractedFile[] repositoryType: 'core' | 'plugin'): string {
     const stats = this.getFileStatistics(files);
     
     if (repositoryType === 'core') {
@@ -377,7 +377,7 @@ ${file.content}
   /**
    * Filter files for scenario generation
    */
-  private filterFilesForScenarios(files: ExtractedFile[], options: ScenarioGenerationOptions): ExtractedFile[] {
+  private filterFilesForScenarios(files: ExtractedFile[] options: ScenarioGenerationOptions): ExtractedFile[] {
     return files.filter(file => {
       // Skip test files if not included
       if (!options.includeTestFiles && file.isTestFile) return false;

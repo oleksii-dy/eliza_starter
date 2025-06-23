@@ -119,7 +119,7 @@ export function useFileUpload({ agentId, channelId, chatType }: UseFileUploadPro
       failed: Array<{ file: UploadingFile; error: string }>;
       blobUrls: string[];
     }> => {
-      if (!files.length) return { uploaded: [], failed: [], blobUrls: [] };
+      if (!files.length) return { uploaded: [] failed: [] blobUrls: [] };
 
       const uploadPromises = files.map(async (fileData) => {
         try {

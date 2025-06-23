@@ -19,7 +19,7 @@ import { logger } from '../logger';
 import { v4 as uuidv4 } from 'uuid';
 import { stringToUuid } from '../utils';
 
-export interface RealRuntimeConfig {
+export interface RuntimeConfig {
   character: Character;
   plugins: Array<Plugin | string>;
   databaseUrl?: string;
@@ -39,10 +39,10 @@ export interface TestResult {
 }
 
 /**
- * Real Runtime Test Harness - Creates actual AgentRuntime instances for testing
- * Replaces mock-based testing with real runtime validation
+ * Runtime Test Harness - Creates actual AgentRuntime instances for testing
+ * Uses the standard AgentRuntime without any mocks or proxies
  */
-export class RealRuntimeTestHarness {
+export class RuntimeTestHarness {
   private runtimes: Map<string, IAgentRuntime> = new Map();
   private databaseManager: TestDatabaseManager;
   private testId: string;
@@ -53,10 +53,10 @@ export class RealRuntimeTestHarness {
   }
 
   /**
-   * Creates a real AgentRuntime instance for testing
-   * This is a REAL runtime, not a mock - it will actually execute all functionality
+   * Creates an AgentRuntime instance for testing
+   * This uses the standard AgentRuntime - it will actually execute all functionality
    */
-  async createTestRuntime(config: RealRuntimeConfig): Promise<IAgentRuntime> {
+  async createTestRuntime(config: RuntimeConfig): Promise<IAgentRuntime> {
     try {
       logger.info(`Creating real test runtime for ${this.testId}`);
 
@@ -133,21 +133,14 @@ export class RealRuntimeTestHarness {
       logger.info(`Successfully loaded plugin: ${pluginName}`);
       return plugin as Plugin;
     } catch (error) {
-      logger.warn(
-        `Failed to load plugin ${pluginName}, creating minimal test plugin: ${error instanceof Error ? error.message : String(error)}`
+      logger.error(
+        `Failed to load plugin ${pluginName}: ${error instanceof Error ? error.message : String(error)}`
       );
 
-      // Return minimal plugin for testing if real plugin unavailable
-      return {
-        name: pluginName,
-        description: `Test plugin for ${pluginName} (minimal implementation)`,
-        actions: [],
-        providers: [],
-        evaluators: [],
-        init: async () => {
-          logger.debug(`Initialized minimal test plugin: ${pluginName}`);
-        },
-      };
+      // Don't return a fake plugin - throw error to ensure tests use real plugins
+      throw new Error(
+        `Plugin ${pluginName} must be available for testing. Install it before running tests. Error: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -215,7 +208,7 @@ export class RealRuntimeTestHarness {
       const messageId = await runtime.createMemory(memory, 'messages');
 
       // Process message with real runtime - this executes actual logic
-      const responses = await runtime.processActions(memory, [], undefined, undefined);
+      const responses = await runtime.processActions(memory, [] undefined, undefined);
 
       const responseTime = Date.now() - startTime;
 
@@ -223,8 +216,8 @@ export class RealRuntimeTestHarness {
       const result: TestResult = {
         scenarioName: `Process: "${messageText}"`,
         passed: true,
-        errors: [],
-        executedActions: [],
+        errors: []
+        executedActions: []
         createdMemories: Array.isArray(responses) ? responses.length : 0,
         responseTime,
       };
@@ -258,7 +251,7 @@ export class RealRuntimeTestHarness {
         scenarioName: `Process: "${messageText}"`,
         passed: false,
         errors: [`Runtime error: ${error instanceof Error ? error.message : String(error)}`],
-        executedActions: [],
+        executedActions: []
         createdMemories: 0,
         responseTime: Date.now() - startTime,
       };
@@ -422,16 +415,16 @@ export async function createTestRuntime(config: Partial<RealRuntimeConfig> = {})
     name: 'TestAgent',
     system: 'You are a helpful test agent.',
     bio: ['I am a test agent used for integration testing.'],
-    messageExamples: [],
-    postExamples: [],
+    messageExamples: []
+    postExamples: []
     topics: ['testing'],
-    knowledge: [],
-    plugins: [],
+    knowledge: []
+    plugins: []
   };
 
   const runtime = await harness.createTestRuntime({
     character: defaultCharacter,
-    plugins: [],
+    plugins: []
     apiKeys: { OPENAI_API_KEY: 'test-key' },
     ...config,
   });
@@ -459,8 +452,8 @@ export async function runIntegrationTest(
     return {
       scenarioName: testName,
       passed: true,
-      errors: [],
-      executedActions: [],
+      errors: []
+      executedActions: []
       createdMemories: 0,
       responseTime: Date.now() - startTime,
     };
@@ -469,7 +462,7 @@ export async function runIntegrationTest(
       scenarioName: testName,
       passed: false,
       errors: [error instanceof Error ? error.message : String(error)],
-      executedActions: [],
+      executedActions: []
       createdMemories: 0,
       responseTime: Date.now() - startTime,
     };

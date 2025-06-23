@@ -131,7 +131,7 @@ describe('autonomousFeedProvider', () => {
 
     it('should handle empty message history', async () => {
       const emptyRuntime = createMockRuntime({
-        memoryResults: [],
+        memoryResults: []
       });
       
       const result = await autonomousFeedProvider.get(emptyRuntime, mockMessage, mockState);

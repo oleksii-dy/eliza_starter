@@ -126,7 +126,22 @@ export class UnifiedMigrator {
    * Register a plugin's table schemas
    */
   async registerPluginTables(tables: TableSchema[]): Promise<void> {
+    if (!tables || tables.length === 0) {
+      logger.debug('[UnifiedMigrator] No plugin tables to register');
+      return;
+    }
+
     logger.info(`[UnifiedMigrator] Registering ${tables.length} plugin tables`);
+    
+    // Validate each table schema before registration
+    for (const table of tables) {
+      if (!table.name || !table.sql || !table.pluginName) {
+        throw new Error(
+          `Invalid table schema from plugin: missing required fields (name: ${table.name}, sql: ${!!table.sql}, pluginName: ${table.pluginName})`
+        );
+      }
+    }
+
     schemaRegistry.registerTables(tables);
   }
 

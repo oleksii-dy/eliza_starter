@@ -30,11 +30,11 @@ async function runSelectiveSWEBench() {
     character: {
       name: 'SWEBenchSelectiveAgent',
       bio: ['Agent for selective SWE-bench evaluation'],
-      knowledge: [],
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      plugins: [],
+      knowledge: []
+      messageExamples: []
+      postExamples: []
+      topics: []
+      plugins: []
     },
     logger: {
       info: console.log,

@@ -83,7 +83,7 @@ export class AutomatedDataCollector {
         type: 'plugin-creation',
         request: event.originalRequest,
         solution: event.outcome.implementation || '',
-        files: event.outcome.files || [],
+        files: event.outcome.files || []
         quality: this.assessQuality(event),
         metadata: {
           complexity: 0.7,
@@ -156,7 +156,7 @@ export class AutomatedDataCollector {
         type: 'mcp-creation',
         request: event.originalRequest,
         solution: event.outcome.implementation || '',
-        files: event.outcome.files || [],
+        files: event.outcome.files || []
         quality: this.assessQuality(event),
         metadata: {
           complexity: 0.7,
@@ -422,7 +422,7 @@ export class AutomatedDataCollector {
     };
   }
 
-  private splitDataset(data: any[], splitRatio: { train: number; validation: number; test: number }): {
+  private splitDataset(data: any[] splitRatio: { train: number; validation: number; test: number }): {
     train: any[];
     validation: any[];
     test: any[];
@@ -474,7 +474,7 @@ export class AutomatedDataCollector {
     await fs.writeFile(filename, JSON.stringify(data, null, 2));
   }
 
-  private async saveJSONL(data: any[], filename: string): Promise<void> {
+  private async saveJSONL(data: any[] filename: string): Promise<void> {
     const fs = await import('fs/promises');
     const content = data.map(item => JSON.stringify(item)).join('\n');
     await fs.writeFile(filename, content);

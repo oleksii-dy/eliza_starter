@@ -17,18 +17,18 @@ export const cacheTestAgentSettings = {
   status: AgentStatus.ACTIVE,
   createdAt: new Date().getTime(),
   updatedAt: new Date().getTime(),
-  messageExamples: [],
-  postExamples: [],
-  topics: [],
-  knowledge: [],
-  plugins: [],
+  messageExamples: []
+  postExamples: []
+  topics: []
+  knowledge: []
+  plugins: []
   settings: {
     cacheTestSetting: 'cache test value',
   },
   style: {
-    all: [],
-    chat: [],
-    post: [],
+    all: []
+    chat: []
+    post: []
   },
 } as Agent;
 

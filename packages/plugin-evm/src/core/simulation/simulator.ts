@@ -220,8 +220,8 @@ export class TransactionSimulator {
                 success: true,
                 gasUsed: gasLimit,
                 gasPrice,
-                logs: [], // eth_call doesn't provide logs
-                stateChanges: [], // eth_call doesn't provide state changes
+                logs: [] // eth_call doesn't provide logs
+                stateChanges: [] // eth_call doesn't provide state changes
                 warnings: []
             };
         } catch (error: any) {
@@ -241,8 +241,8 @@ export class TransactionSimulator {
                 gasUsed: 0n,
                 gasPrice: 0n,
                 error: errorMessage,
-                logs: [],
-                stateChanges: [],
+                logs: []
+                stateChanges: []
                 warnings: []
             };
         }
@@ -350,7 +350,7 @@ export class TransactionSimulator {
     }
 
     async simulateBatch(
-        transactions: TransactionRequest[],
+        transactions: TransactionRequest[]
         options: SimulatorOptions = {}
     ): Promise<SimulationResult[]> {
         // Simulate transactions in sequence to account for state changes
@@ -371,8 +371,8 @@ export class TransactionSimulator {
                     gasUsed: 0n,
                     gasPrice: 0n,
                     error: `Simulation failed: ${error}`,
-                    logs: [],
-                    stateChanges: [],
+                    logs: []
+                    stateChanges: []
                     warnings: []
                 });
                 

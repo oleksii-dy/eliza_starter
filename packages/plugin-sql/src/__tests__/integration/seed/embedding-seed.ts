@@ -33,18 +33,18 @@ export const embeddingTestAgent = {
   status: AgentStatus.ACTIVE,
   createdAt: new Date().getTime(),
   updatedAt: new Date().getTime(),
-  messageExamples: [],
-  postExamples: [],
-  topics: [],
-  knowledge: [],
-  plugins: [],
+  messageExamples: []
+  postExamples: []
+  topics: []
+  knowledge: []
+  plugins: []
   settings: {
     dummySetting: 'dummy value',
   },
   style: {
-    all: [],
-    chat: [],
-    post: [],
+    all: []
+    chat: []
+    post: []
   },
 } as Agent;
 

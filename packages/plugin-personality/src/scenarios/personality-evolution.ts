@@ -27,7 +27,7 @@ export const personalityEvolutionScenario: PluginScenario = {
       id: uuidv4() as any,
       name: 'Enthusiastic User',
       role: 'assistant',
-      plugins: [],
+      plugins: []
     },
   ],
 

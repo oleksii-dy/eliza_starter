@@ -48,8 +48,8 @@ export class PluginDependencyManager extends Service {
    */
   registerPlugin(
     pluginName: string,
-    dependencies: PluginDependency[],
-    capabilities: WalletCapability[],
+    dependencies: PluginDependency[]
+    capabilities: WalletCapability[]
     configuration: PluginConfiguration
   ): void {
     this.dependencyGraph.set(pluginName, dependencies);

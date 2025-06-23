@@ -108,7 +108,7 @@ async function generateCoverageReport(): Promise<CoverageReport> {
   const report: CoverageReport = {
     totalFiles: sourceFiles.length,
     testedFiles: 0,
-    untestedFiles: [],
+    untestedFiles: []
     coverage: 0,
     byCategory: {
       commands: { total: 0, tested: 0, untested: [] },

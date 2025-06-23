@@ -89,9 +89,9 @@ class UltimateBenchmarkRuntime {
     riskFactorsIdentified: string[];
     implementationPhases: string[];
   } = {
-    stakeholdersCovered: [],
-    constraintsAddressed: [],
-    riskFactorsIdentified: [],
+    stakeholdersCovered: []
+    constraintsAddressed: []
+    riskFactorsIdentified: []
     implementationPhases: []
   };
   

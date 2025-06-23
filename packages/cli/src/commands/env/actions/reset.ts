@@ -130,10 +130,10 @@ export async function resetEnv(options: ResetEnvOptions): Promise<void> {
 
   // Track reset results
   const actions: ResetActionRecord = {
-    reset: [],
-    deleted: [],
-    skipped: [],
-    warning: [],
+    reset: []
+    deleted: []
+    skipped: []
+    warning: []
   };
 
   // Process each selected item

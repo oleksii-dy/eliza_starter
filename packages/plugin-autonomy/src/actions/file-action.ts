@@ -247,5 +247,5 @@ The file has been initialized with appropriate content structure. You can now ad
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };

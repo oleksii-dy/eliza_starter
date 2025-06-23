@@ -145,7 +145,7 @@ export class CheckpointManager {
       sessionId,
       instanceId,
       startTime: Date.now(),
-      checkpoints: [],
+      checkpoints: []
       status: 'active',
       finalScore: 0,
       finalPassed: false,
@@ -159,7 +159,7 @@ export class CheckpointManager {
         mostReliablePhase: '',
         leastReliablePhase: '',
         improvementTrend: 'stable',
-        recommendations: [],
+        recommendations: []
       },
     };
 
@@ -256,7 +256,7 @@ export class CheckpointManager {
         details: this.createFailureDetails(
           error instanceof Error ? error : new Error(String(error))
         ),
-        warnings: [],
+        warnings: []
         errors: [
           error instanceof Error
             ? error.message
@@ -334,19 +334,19 @@ export class CheckpointManager {
   async generateValidationReport(sessionId: string): Promise<string> {
     const session =
       this.activeSessions.get(sessionId) || (await this.loadSessionFromHistory(sessionId));
-    
+
     // Throw error if session not found
     if (!session) {
       throw new Error(`Session not found: ${sessionId}`);
     }
-    
+
     const reportSession: ValidationSession = session;
-    
+
     // Ensure session has checkpoints array
     if (!reportSession.checkpoints) {
       reportSession.checkpoints = [];
     }
-    
+
     // Ensure session has summary
     if (!reportSession.summary) {
       reportSession.summary = {
@@ -359,7 +359,7 @@ export class CheckpointManager {
         mostReliablePhase: '',
         leastReliablePhase: '',
         improvementTrend: 'stable',
-        recommendations: [],
+        recommendations: []
       };
     }
 
@@ -389,21 +389,25 @@ export class CheckpointManager {
     // Add detailed checkpoint information
     if (reportSession.checkpoints.length > 0) {
       for (const checkpoint of reportSession.checkpoints) {
-        report.push(`### ${checkpoint.phase} (${checkpoint.iteration ? `Iteration ${checkpoint.iteration}` : 'Initial'})`);
+        report.push(
+          `### ${checkpoint.phase} (${checkpoint.iteration ? `Iteration ${checkpoint.iteration}` : 'Initial'})`
+        );
         report.push(`- **Status**: ${checkpoint.passed ? '✅ PASSED' : '❌ FAILED'}`);
         report.push(`- **Score**: ${checkpoint.score.toFixed(2)}`);
         report.push(`- **Confidence**: ${checkpoint.confidence.toFixed(2)}`);
         report.push(`- **Execution Time**: ${checkpoint.executionTime}ms`);
-        report.push(`- **Tests**: ${checkpoint.testResults.passed}/${checkpoint.testResults.total} passed`);
-        
+        report.push(
+          `- **Tests**: ${checkpoint.testResults.passed}/${checkpoint.testResults.total} passed`
+        );
+
         if (checkpoint.errors?.length > 0) {
           report.push(`- **Errors**: ${checkpoint.errors.join(', ')}`);
         }
-        
+
         if (checkpoint.warnings?.length > 0) {
           report.push(`- **Warnings**: ${checkpoint.warnings.join(', ')}`);
         }
-        
+
         report.push('');
       }
     } else {
@@ -535,8 +539,8 @@ export class CheckpointManager {
       noTestsFound: testResults.noTestsFound || false,
       compilation: {
         success: true, // Assume compilation succeeded if tests ran
-        errors: [],
-        warnings: [],
+        errors: []
+        warnings: []
       },
       execution: {
         reliable: testResults.executionReliable || false,
@@ -548,7 +552,7 @@ export class CheckpointManager {
         successful: testResults.parsingSuccessful || false,
         confidence: testResults.validationScore ? testResults.validationScore / 100 : 0.5,
         method: 'enhanced',
-        warnings: [],
+        warnings: []
       },
       metadata: {
         validationScore: testResults.validationScore,
@@ -651,7 +655,7 @@ export class CheckpointManager {
   /**
    * Determine if final session passed
    */
-  private determineFinalPassed(checkpoints: ValidationCheckpoint[], finalScore: number): boolean {
+  private determineFinalPassed(checkpoints: ValidationCheckpoint[] finalScore: number): boolean {
     if (checkpoints.length === 0) return false;
 
     // Check if minimum score requirement is met
@@ -687,7 +691,7 @@ export class CheckpointManager {
       mostReliablePhase: '',
       leastReliablePhase: '',
       improvementTrend: 'stable',
-      recommendations: [],
+      recommendations: []
     };
 
     // Find most and least reliable phases
@@ -820,7 +824,7 @@ export class CheckpointManager {
       compilation: {
         success: false,
         errors: [error.message],
-        warnings: [],
+        warnings: []
       },
       execution: {
         reliable: false,
@@ -832,7 +836,7 @@ export class CheckpointManager {
         successful: false,
         confidence: 0,
         method: 'failure',
-        warnings: [],
+        warnings: []
       },
       metadata: {
         error: error.message,

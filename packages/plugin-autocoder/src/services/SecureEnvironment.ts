@@ -151,7 +151,7 @@ export class SecureEnvironment extends Service {
         agentCredentials: new Map(),
         secrets: new Map(),
         sandboxConfig,
-        auditLog: [],
+        auditLog: []
         trustPolicies: new Map(),
       };
 
@@ -580,8 +580,8 @@ export class SecureEnvironment extends Service {
   }
 
   private checkPermissions(
-    agentPermissions: Permission[],
-    requiredPermissions: Permission[],
+    agentPermissions: Permission[]
+    requiredPermissions: Permission[]
     resource: string
   ): boolean {
     for (const required of requiredPermissions) {

@@ -54,7 +54,7 @@ async function runMinimalTest() {
   try {
     // 1. Create database
     console.log('📦 Creating database adapter...');
-    const db = createDatabaseAdapter({ dataDir: dbPath }, stringToUuid('test-agent'));
+    const db = await createDatabaseAdapter({ dataDir: dbPath }, stringToUuid('test-agent'));
 
     await db.init();
 

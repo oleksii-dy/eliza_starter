@@ -114,7 +114,7 @@ describe('TogetherReasoningService Runtime Integration', () => {
       input: {
         prompt: 'Test prompt',
         messageText: 'Hello',
-        conversationContext: [],
+        conversationContext: []
       },
       output: {
         decision: 'RESPOND',
@@ -312,7 +312,7 @@ describe('TogetherReasoningService Runtime Integration', () => {
     const mockClient = {
       validateApiKey: async () => true,
       deployModel: async () => ({ id: 'test-deployment', endpoint: 'test-endpoint' }),
-      listDeployments: async () => [],
+      listDeployments: async () => []
       testModel: async () => ({ available: true }),
       undeployModel: async () => {},
       getUsageMetrics: async () => ({ hoursActive: 1, requests: 0, totalTokens: 0, cost: 0 }),
@@ -338,11 +338,11 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
       name: 'TestAgent',
       bio: ['Test agent for reasoning service testing'],
       system: 'You are a test agent for reasoning service testing',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
-      plugins: [],
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
+      plugins: []
     },
 
     getSetting: (key: string) => {

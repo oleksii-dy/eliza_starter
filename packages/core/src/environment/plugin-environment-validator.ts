@@ -20,8 +20,8 @@ export class PluginEnvironmentValidator {
   ): Promise<PluginEnvironmentValidation> {
     const result: PluginEnvironmentValidation = {
       isValid: true,
-      missingVars: [],
-      warnings: [],
+      missingVars: []
+      warnings: []
       pluginName
     };
 

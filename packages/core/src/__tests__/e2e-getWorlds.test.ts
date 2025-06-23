@@ -202,13 +202,13 @@ describe('End-to-End getWorlds API test', () => {
     const mockCharacter: Character = {
       id: 'agent-1' as UUID,
       name: 'Test Agent',
-      plugins: [],
-      bio: [],
-      knowledge: [],
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      style: { all: [], chat: [], post: [] },
+      plugins: []
+      bio: []
+      knowledge: []
+      messageExamples: []
+      postExamples: []
+      topics: []
+      style: { all: [] chat: [] post: [] },
     };
 
     runtime = new AgentRuntime({

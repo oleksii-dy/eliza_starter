@@ -32,14 +32,14 @@ async function runSWEBenchReal() {
     character: {
       name: 'SWEBenchAgent',
       bio: ['Agent for SWE-bench evaluation'],
-      knowledge: [],
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      plugins: [],
+      knowledge: []
+      messageExamples: []
+      postExamples: []
+      topics: []
+      plugins: []
     },
     // Add action processing capability
-    processActions: async (message: any, responses: any[], state: any, callback: any) => {
+    processActions: async (message: any, responses: any[] state: any, callback: any) => {
       // Find the SWE-bench action
       const action = autocoderPlugin.actions?.find((a) => a.name === 'RUN_SWE_BENCH');
       if (action) {

@@ -70,7 +70,7 @@ export class N8nWorkflowService extends Service {
 
   async start(): Promise<void> {
     elizaLogger.info('[N8n] N8n Workflow Service started');
-    
+
     // Initialize Anthropic if API key is available
     const apiKey = this.runtime?.getSetting('ANTHROPIC_API_KEY');
     if (apiKey) {
@@ -83,7 +83,7 @@ export class N8nWorkflowService extends Service {
 
   async stop(): Promise<void> {
     elizaLogger.info('[N8n] N8n Workflow Service stopped');
-    
+
     // Mark any running jobs as failed
     for (const job of this.jobs.values()) {
       if (job.status === 'pending' || job.status === 'generating' || job.status === 'validating') {
@@ -110,7 +110,7 @@ export class N8nWorkflowService extends Service {
     this.jobs.set(jobId, job);
 
     // Start workflow creation process
-    this.processWorkflowJob(job).catch(error => {
+    this.processWorkflowJob(job).catch((error) => {
       elizaLogger.error('[N8n] Failed to process workflow job:', error);
       job.status = 'failed';
       job.error = error instanceof Error ? error.message : String(error);
@@ -171,7 +171,7 @@ Return ONLY valid JSON, no explanations.`;
       }
 
       const spec = JSON.parse(jsonMatch[0]) as N8nWorkflowSpecification;
-      
+
       // Validate required fields
       if (!spec.name || !spec.description) {
         throw new Error('Invalid specification: missing required fields');
@@ -196,7 +196,8 @@ Return ONLY valid JSON, no explanations.`;
    */
   getActiveJobs(): N8nWorkflowJob[] {
     return Array.from(this.jobs.values()).filter(
-      job => job.status === 'pending' || job.status === 'generating' || job.status === 'validating'
+      (job) =>
+        job.status === 'pending' || job.status === 'generating' || job.status === 'validating'
     );
   }
 
@@ -216,7 +217,7 @@ Return ONLY valid JSON, no explanations.`;
       job.status = 'generating';
       job.progress = 20;
       elizaLogger.info(`[N8n] Generating workflow JSON for job ${job.id}`);
-      
+
       const workflowJson = await this.generateWorkflowJson(job.specification);
       job.progress = 40;
 
@@ -231,7 +232,7 @@ Return ONLY valid JSON, no explanations.`;
       // Step 3: Validate workflow (80% progress)
       job.status = 'validating';
       elizaLogger.info(`[N8n] Validating workflow for job ${job.id}`);
-      
+
       const validationResult = await this.validateWorkflow(workflowJson);
       if (!validationResult.valid) {
         throw new Error(`Workflow validation failed: ${validationResult.errors?.join(', ')}`);
@@ -259,7 +260,9 @@ Return ONLY valid JSON, no explanations.`;
       };
       job.completedAt = new Date();
 
-      elizaLogger.info(`[N8n] Workflow job ${job.id} completed successfully. Saved to: ${savedPath}`);
+      elizaLogger.info(
+        `[N8n] Workflow job ${job.id} completed successfully. Saved to: ${savedPath}`
+      );
     } catch (error) {
       job.status = 'failed';
       job.error = error instanceof Error ? error.message : String(error);
@@ -275,7 +278,7 @@ Return ONLY valid JSON, no explanations.`;
   private async generateWorkflowJson(spec: N8nWorkflowSpecification): Promise<any> {
     const workflow: any = {
       name: spec.name,
-      nodes: [],
+      nodes: []
       connections: {},
       active: false,
       settings: spec.settings || {},
@@ -312,7 +315,7 @@ Return ONLY valid JSON, no explanations.`;
     for (let i = 0; i < (spec.nodes || []).length; i++) {
       const node = spec.nodes![i];
       const nodeId = uuidv4();
-      
+
       workflow.nodes.push({
         parameters: node.parameters || {},
         id: nodeId,
@@ -322,7 +325,7 @@ Return ONLY valid JSON, no explanations.`;
         position: [xPosition, 300],
         credentials: node.credentials ? this.mapCredentials(node.credentials) : undefined,
       });
-      
+
       xPosition += 200;
     }
 
@@ -331,17 +334,17 @@ Return ONLY valid JSON, no explanations.`;
       for (const conn of spec.connections) {
         const fromNode = workflow.nodes.find((n: any) => n.name === conn.from.node);
         const toNode = workflow.nodes.find((n: any) => n.name === conn.to.node);
-        
+
         if (fromNode && toNode) {
           if (!workflow.connections[fromNode.name]) {
             workflow.connections[fromNode.name] = {};
           }
-          
+
           const outputKey = conn.from.output || 'main';
           if (!workflow.connections[fromNode.name][outputKey]) {
             workflow.connections[fromNode.name][outputKey] = [];
           }
-          
+
           workflow.connections[fromNode.name][outputKey].push([
             {
               node: toNode.name,
@@ -357,11 +360,11 @@ Return ONLY valid JSON, no explanations.`;
       for (let i = 0; i < connectableNodes.length - 1; i++) {
         const fromNode = connectableNodes[i];
         const toNode = connectableNodes[i + 1];
-        
+
         if (!workflow.connections[fromNode.name]) {
           workflow.connections[fromNode.name] = { main: [[]] };
         }
-        
+
         workflow.connections[fromNode.name].main[0].push({
           node: toNode.name,
           type: 'main',
@@ -383,10 +386,11 @@ Return ONLY valid JSON, no explanations.`;
    */
   private requiresIntegrationCode(spec: N8nWorkflowSpecification): boolean {
     // Check if any nodes are custom functions or require complex logic
-    return (spec.nodes || []).some(node => 
-      node.type === 'n8n-nodes-base.function' ||
-      node.type === 'n8n-nodes-base.functionItem' ||
-      node.parameters?.code
+    return (spec.nodes || []).some(
+      (node) =>
+        node.type === 'n8n-nodes-base.function' ||
+        node.type === 'n8n-nodes-base.functionItem' ||
+        node.parameters?.code
     );
   }
 
@@ -394,7 +398,7 @@ Return ONLY valid JSON, no explanations.`;
    * Generate integration code for complex workflows
    */
   private async generateIntegrationCode(
-    spec: N8nWorkflowSpecification, 
+    spec: N8nWorkflowSpecification,
     workflowJson: any
   ): Promise<string> {
     if (!this.anthropic) {
@@ -408,8 +412,8 @@ Description: ${spec.description}
 
 Nodes that need code:
 ${(spec.nodes || [])
-  .filter(n => n.type.includes('function'))
-  .map(n => `- ${n.name}: ${n.parameters?.description || 'Custom logic'}`)
+  .filter((n) => n.type.includes('function'))
+  .map((n) => `- ${n.name}: ${n.parameters?.description || 'Custom logic'}`)
   .join('\n')}
 
 Generate clean, well-commented JavaScript code for each function node.
@@ -437,7 +441,9 @@ Include error handling and logging.`;
   /**
    * Validate workflow structure
    */
-  private async validateWorkflow(workflowJson: any): Promise<{ valid: boolean; errors?: string[] }> {
+  private async validateWorkflow(
+    workflowJson: any
+  ): Promise<{ valid: boolean; errors?: string[] }> {
     const errors: string[] = [];
 
     // Basic validation
@@ -562,7 +568,7 @@ Include error handling and logging.`;
   ): Promise<string> {
     const safeName = workflowName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
     const workflowDir = path.join(this.outputDir, `${safeName}-${jobId}`);
-    
+
     await fs.mkdir(workflowDir, { recursive: true });
 
     // Save workflow JSON
@@ -573,18 +579,12 @@ Include error handling and logging.`;
 
     // Save integration code if present
     if (content.integrationCode) {
-      await fs.writeFile(
-        path.join(workflowDir, 'integration.js'),
-        content.integrationCode
-      );
+      await fs.writeFile(path.join(workflowDir, 'integration.js'), content.integrationCode);
     }
 
     // Save documentation
     if (content.documentation) {
-      await fs.writeFile(
-        path.join(workflowDir, 'README.md'),
-        content.documentation
-      );
+      await fs.writeFile(path.join(workflowDir, 'README.md'), content.documentation);
     }
 
     // Create import instructions
@@ -597,10 +597,7 @@ Include error handling and logging.`;
 5. Test and activate the workflow
 `;
 
-    await fs.writeFile(
-      path.join(workflowDir, 'IMPORT.md'),
-      importInstructions
-    );
+    await fs.writeFile(path.join(workflowDir, 'IMPORT.md'), importInstructions);
 
     return workflowDir;
   }
@@ -613,14 +610,14 @@ Include error handling and logging.`;
 
     // From explicit credentials
     if (spec.credentials) {
-      spec.credentials.forEach(cred => credentials.add(cred.name));
+      spec.credentials.forEach((cred) => credentials.add(cred.name));
     }
 
     // From nodes
     if (spec.nodes) {
-      spec.nodes.forEach(node => {
+      spec.nodes.forEach((node) => {
         if (node.credentials) {
-          node.credentials.forEach(cred => credentials.add(cred));
+          node.credentials.forEach((cred) => credentials.add(cred));
         }
       });
     }
@@ -633,7 +630,7 @@ Include error handling and logging.`;
    */
   private mapCredentials(credentials: string[]): Record<string, any> {
     const mapped: Record<string, any> = {};
-    
+
     for (const cred of credentials) {
       // Map common credential types
       if (cred.includes('api') || cred.includes('key')) {
@@ -645,4 +642,4 @@ Include error handling and logging.`;
 
     return mapped;
   }
-} 
+}

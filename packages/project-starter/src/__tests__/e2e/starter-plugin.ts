@@ -160,7 +160,7 @@ export class StarterTestSuite implements TestSuite {
 
         // Test the hello world action
         try {
-          await runtime.processActions(message, [], state, async (content: Content) => {
+          await runtime.processActions(message, [] state, async (content: Content) => {
             if (content.text === 'hello world!' && content.actions?.includes('HELLO_WORLD')) {
               responseReceived = true;
             }
@@ -249,7 +249,7 @@ export class StarterTestSuite implements TestSuite {
           };
 
           // Process the message - this simulates a real conversation
-          await runtime.processMessage(userMessage, [], responseCallback);
+          await runtime.processMessage(userMessage, [] responseCallback);
 
           // Alternative approach if processMessage isn't available
           if (!agentResponse) {

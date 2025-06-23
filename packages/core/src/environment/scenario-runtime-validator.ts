@@ -27,8 +27,8 @@ export class ScenarioRuntimeValidator {
     const result = {
       canRun: true,
       skipReason: undefined as string | undefined,
-      environmentValidations: [] as PluginEnvironmentValidation[],
-      missingPlugins: [] as string[],
+      environmentValidations: [] as PluginEnvironmentValidation[]
+      missingPlugins: [] as string[]
       warnings: [] as string[]
     };
 
@@ -93,7 +93,7 @@ export class ScenarioRuntimeValidator {
    * Validates multiple scenarios and returns execution plan
    */
   static async validateScenarios(
-    scenarios: PluginScenario[],
+    scenarios: PluginScenario[]
     runtime: IAgentRuntime
   ): Promise<{
     executable: PluginScenario[];
@@ -210,7 +210,7 @@ export class ScenarioRuntimeValidator {
    * Creates a summary report of scenario validation results
    */
   static createValidationReport(
-    scenarios: PluginScenario[],
+    scenarios: PluginScenario[]
     validationResults: {
       executable: PluginScenario[];
       skipped: Array<{ scenario: PluginScenario; reason: string }>;

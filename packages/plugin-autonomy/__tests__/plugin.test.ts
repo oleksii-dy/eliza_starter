@@ -146,9 +146,9 @@ describe('Auto Plugin Functional Integration', () => {
           serviceType: 'autonomous',
           getContext: vi.fn().mockReturnValue({
             phase: 'DECIDING',
-            goals: [],
-            observations: [],
-            decisions: [],
+            goals: []
+            observations: []
+            decisions: []
           }),
           getCurrentPhase: vi.fn().mockReturnValue('DECIDING'),
           isRunning: vi.fn().mockReturnValue(true),
@@ -307,8 +307,8 @@ describe('Auto Plugin Functional Integration', () => {
               startTime: Date.now() - 10000,
               goals: [{ id: '1', description: 'Test goal', priority: 1 }],
               observations: [{ type: 'system', data: 'test observation' }],
-              actions: [],
-              errors: [],
+              actions: []
+              errors: []
             },
           },
         },

@@ -152,8 +152,8 @@ export class BehaviorManager {
       content: {
         thought: parsedXml?.thought || '',
         text: parsedXml?.text || '',
-        actions: parsedXml?.actions || [],
-        providers: parsedXml?.providers || [],
+        actions: parsedXml?.actions || []
+        providers: parsedXml?.providers || []
         emote: parsedXml?.emote || '',
       },
       entityId: createUniqueUuid(this.runtime, this.runtime.agentId),

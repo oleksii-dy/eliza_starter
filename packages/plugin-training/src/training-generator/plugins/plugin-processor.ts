@@ -467,7 +467,7 @@ Be detailed about the implementation approach for each component.`;
   /**
    * Concatenate all plugin files with detailed markup
    */
-  private concatenatePluginFiles(files: ExtractedFile[], analysis: PluginAnalysis): string {
+  private concatenatePluginFiles(files: ExtractedFile[] analysis: PluginAnalysis): string {
     let output = '';
     
     // Add plugin overview
@@ -602,7 +602,7 @@ For this action, I need to:
       userQuery,
       context: {
         fileTree: `src/actions/${path.basename(action.file)}`,
-        relatedFiles: [],
+        relatedFiles: []
         targetFile: file,
         repositoryContext: `ElizaOS Plugin: ${analysis.name}`
       },
@@ -649,7 +649,7 @@ For this service, I need to:
       userQuery,
       context: {
         fileTree: `src/services/${path.basename(service.file)}`,
-        relatedFiles: [],
+        relatedFiles: []
         targetFile: file,
         repositoryContext: `ElizaOS Plugin: ${analysis.name}`
       },
@@ -716,7 +716,7 @@ ${file.content}
     return Array.from(dependencies);
   }
 
-  private determineFunctionality(actions: ActionInfo[], providers: ProviderInfo[], evaluators: EvaluatorInfo[], services: ServiceInfo[], routes: RouteInfo[]): string[] {
+  private determineFunctionality(actions: ActionInfo[] providers: ProviderInfo[] evaluators: EvaluatorInfo[] services: ServiceInfo[] routes: RouteInfo[]): string[] {
     const functionality: string[] = [];
     
     if (actions.length > 0) functionality.push('actions');
@@ -752,7 +752,7 @@ ${file.content}
     return 'utility';
   }
 
-  private async generateAnalysisDescription(name: string, actions: ActionInfo[], providers: ProviderInfo[], services: ServiceInfo[], content: string): Promise<string> {
+  private async generateAnalysisDescription(name: string, actions: ActionInfo[] providers: ProviderInfo[] services: ServiceInfo[] content: string): Promise<string> {
     const prompt = `
 Analyze this ElizaOS plugin and provide a concise description:
 

@@ -8,6 +8,48 @@ const paymentMultiCurrencyScenario: Scenario = {
   category: 'payment',
   tags: ['payment', 'multi-currency', 'liquidation', 'eth', 'sol', 'usdc'],
 
+  // Add examples array for compatibility with test framework
+  examples: [
+    [
+      {
+        user: 'customer',
+        content: 'I want to pay for the service. Can I pay in ETH instead of USDC?',
+      },
+      {
+        user: 'agent',
+        content: 'Yes, I accept multiple currencies. The service costs 10 USDC, which is approximately 0.004 ETH at current rates. Would you like to pay in ETH?',
+      },
+    ],
+    [
+      {
+        user: 'customer',
+        content: 'What currencies do you accept?',
+      },
+      {
+        user: 'agent',
+        content: 'I accept ETH, USDC, USDT, DAI on Ethereum, and MATIC on Polygon. I can show you the equivalent amounts in any of these currencies.',
+      },
+    ],
+  ],
+
+  // Add evaluator function for test compatibility
+  evaluator: (response: string) => {
+    const hasCurrency = 
+      response.toLowerCase().includes('eth') ||
+      response.toLowerCase().includes('usdc') ||
+      response.toLowerCase().includes('matic') ||
+      response.toLowerCase().includes('dai') ||
+      response.toLowerCase().includes('usdt');
+    
+    const hasConversion = 
+      response.toLowerCase().includes('convert') ||
+      response.toLowerCase().includes('rate') ||
+      response.toLowerCase().includes('equivalent') ||
+      response.toLowerCase().includes('approximately');
+    
+    return hasCurrency || hasConversion;
+  },
+
   actors: [
     {
       id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567894',

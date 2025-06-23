@@ -97,7 +97,7 @@ export class RegistryManager {
           name: obj.package.name,
           description: obj.package.description || '',
           version: obj.package.version,
-          keywords: obj.package.keywords || [],
+          keywords: obj.package.keywords || []
           repository: obj.package.links?.repository,
         } as PluginSearchResult,
         score: obj.score.final,
@@ -226,7 +226,7 @@ export class RegistryManager {
         errors: [
           `Failed to validate package: ${error instanceof Error ? error.message : String(error)}`,
         ],
-        warnings: [],
+        warnings: []
         suggestions: ['Ensure package.json exists and is valid JSON'],
       };
     }

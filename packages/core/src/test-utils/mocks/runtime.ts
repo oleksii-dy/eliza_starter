@@ -64,11 +64,11 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
     username: 'test_character',
     system: 'You are a helpful test assistant.',
     bio: ['A character designed for testing purposes'],
-    messageExamples: [],
-    postExamples: [],
+    messageExamples: []
+    postExamples: []
     topics: ['testing', 'development'],
-    knowledge: [],
-    plugins: [],
+    knowledge: []
+    plugins: []
     settings: {
       model: 'gpt-4',
       secrets: {},
@@ -94,14 +94,14 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
     // Core Properties
     agentId: 'test-agent-id' as UUID,
     character: overrides.character || defaultCharacter,
-    providers: overrides.providers || [],
-    actions: overrides.actions || [],
-    evaluators: overrides.evaluators || [],
-    plugins: overrides.plugins || [],
+    providers: overrides.providers || []
+    actions: overrides.actions || []
+    evaluators: overrides.evaluators || []
+    plugins: overrides.plugins || []
     services: overrides.services || new Map(),
     events: overrides.events || new Map(),
     fetch: overrides.fetch || null,
-    routes: overrides.routes || [],
+    routes: overrides.routes || []
 
     // Database Properties
     db: overrides.db || mockDb,
@@ -283,8 +283,8 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
     generatePlan: vi.fn().mockResolvedValue({
       id: 'test-plan-id' as UUID,
       status: 'pending',
-      steps: [],
-      results: [],
+      steps: []
+      results: []
       completedAt: null,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -293,18 +293,18 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
       plan: {
         id: 'test-plan-id' as UUID,
         status: 'completed',
-        steps: [],
-        results: [],
+        steps: []
+        results: []
         completedAt: Date.now(),
         createdAt: Date.now(),
         updatedAt: Date.now(),
       },
       success: true,
-      responses: [],
+      responses: []
     }),
     validatePlan: vi.fn().mockResolvedValue({
       valid: true,
-      issues: [],
+      issues: []
     }),
 
     // Configuration Manager

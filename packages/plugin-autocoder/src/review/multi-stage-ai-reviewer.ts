@@ -133,7 +133,7 @@ export class MultiStageAIReviewer {
             mustFix: true,
           },
         ],
-        recommendations: [],
+        recommendations: []
         rawResponse: '',
       };
     }

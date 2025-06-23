@@ -112,7 +112,7 @@ async function main() {
             head: targetBranch,
             base: configuration.branch,
             labels: ['documentation', 'automated-pr'],
-            reviewers: configuration.pullRequestReviewers || [],
+            reviewers: configuration.pullRequestReviewers || []
           });
         }
       }

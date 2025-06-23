@@ -56,7 +56,7 @@ export function createTestEnvironment(
     characterName = 'TestAgent',
     conversationLength = 5,
     roomId = 'test-room-id' as UUID,
-    plugins = [],
+    plugins = []
     runtimeOverrides = {},
     characterOverrides = {},
   } = options;
@@ -112,7 +112,7 @@ export function createTestAction(
     description = `Test action: ${name}`,
     validateResult = true,
     handlerResult = { text: `${name} executed successfully` },
-    examples = [],
+    examples = []
   } = options;
 
   return {
@@ -215,7 +215,7 @@ export function createTestEvaluator(
     name,
     description,
     alwaysRun,
-    examples: [],
+    examples: []
 
     validate: vi.fn().mockResolvedValue(validateResult),
 

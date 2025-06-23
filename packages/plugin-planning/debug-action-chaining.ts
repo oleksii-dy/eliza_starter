@@ -109,7 +109,7 @@ async function debugActionChaining() {
   // Create a simple plan
   const planningContext = {
     goal: 'Debug action chaining',
-    constraints: [],
+    constraints: []
     availableActions: runtime.actions.map((a: any) => a.name),
     availableProviders: runtime.providers.map((p: any) => p.name),
     preferences: {
@@ -141,7 +141,7 @@ async function debugActionChaining() {
   if (analyzeAction) {
     const step1Options = {
       ...plan.steps[0].parameters,
-      previousResults: [],
+      previousResults: []
       workingMemory: new Map(),
       abortSignal: null
     };

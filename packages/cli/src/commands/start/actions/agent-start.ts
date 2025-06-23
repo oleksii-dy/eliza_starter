@@ -23,7 +23,7 @@ export async function startAgent(
   character: Character,
   server: AgentServer,
   init?: (runtime: IAgentRuntime) => Promise<void>,
-  plugins: (Plugin | string)[] = [],
+  plugins: (Plugin | string)[] = []
   options: AgentStartOptions = {}
 ): Promise<IAgentRuntime> {
   character.id ??= stringToUuid(character.name);

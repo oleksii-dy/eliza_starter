@@ -17,10 +17,10 @@ describe('AutoCoder Plugin - Real Runtime Integration', () => {
       name: 'AutoCoder Test Agent',
       bio: ['I am a test agent for the AutoCoder plugin'],
       system: 'You are a test agent for auto-coding functionality.',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
       plugins: [
         '@elizaos/plugin-sql', // Required for database operations
         '@elizaos/plugin-autocoder', // Our plugin under test
@@ -345,7 +345,7 @@ describe('AutoCoder Plugin - Real Runtime Integration', () => {
           repositoryPath: '/workspace',
           branchName: 'test-branch',
           baseBranch: 'main',
-          files: [],
+          files: []
           environment: {},
         },
       });

@@ -199,7 +199,7 @@ export class ServiceDiscoveryManager {
               services,
               actions,
               providers,
-              dependencies: plugin.dependencies || [],
+              dependencies: plugin.dependencies || []
             };
 
             allPlugins.push(pluginInfo);
@@ -323,7 +323,7 @@ export class ServiceDiscoveryManager {
           signature: action.signature || 'handler(runtime, message, state, options, callback)',
           validateSignature: 'validate(runtime, message, state)',
           handlerSignature: 'handler(runtime, message, state, options, callback)',
-          parameters: [], // Could be enhanced to parse actual parameters
+          parameters: [] // Could be enhanced to parse actual parameters
           returnType: 'Promise<any>',
           sourceFile: 'plugin',
         };
@@ -347,7 +347,7 @@ export class ServiceDiscoveryManager {
           description: provider.description || '',
           signature: provider.signature || 'get(runtime, message, state)',
           getSignature: 'get(runtime, message, state)',
-          parameters: [], // Could be enhanced to parse actual parameters
+          parameters: [] // Could be enhanced to parse actual parameters
           returnType: 'Promise<ProviderResult>',
           sourceFile: 'plugin',
         };
@@ -370,11 +370,11 @@ export class ServiceDiscoveryManager {
     const result: ServiceDiscoveryResult = {
       pluginName: path.basename(pluginPath),
       pluginPath,
-      services: [],
-      actions: [],
-      providers: [],
-      dependencies: [],
-      errors: [],
+      services: []
+      actions: []
+      providers: []
+      dependencies: []
+      errors: []
     };
 
     try {
@@ -627,7 +627,7 @@ export class ServiceDiscoveryManager {
     const methodInfo: MethodInfo = {
       name: node.name.text,
       signature: this.checker.signatureToString(signature),
-      parameters: [],
+      parameters: []
       returnType: this.checker.typeToString(signature.getReturnType()),
     };
 
@@ -851,10 +851,10 @@ export class ServiceDiscoveryManager {
     const result: PluginSearchResult = {
       name: path.basename(pluginPath),
       path: pluginPath,
-      actions: [],
-      providers: [],
-      services: [],
-      evaluators: [],
+      actions: []
+      providers: []
+      services: []
+      evaluators: []
     };
 
     try {

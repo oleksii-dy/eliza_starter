@@ -21,7 +21,7 @@ export const planningPlugin: Plugin = {
   actions: [analyzeInputAction, processAnalysisAction, executeFinalAction, createPlanAction],
 
   services: [PlanningService],
-  evaluators: [],
+  evaluators: []
   tests: testSuites,
 };
 

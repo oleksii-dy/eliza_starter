@@ -194,7 +194,7 @@ const plugin: Plugin = {
       _runtime,
       {
         prompt,
-        stopSequences = [],
+        stopSequences = []
         maxTokens = 8192,
         temperature = 0.7,
         frequencyPenalty = 0.7,

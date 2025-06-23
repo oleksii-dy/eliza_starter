@@ -40,7 +40,7 @@ const apiClient = {
 };
 
 const useEntities = (agentId: UUID) => {
-  return useQuery<Entity[], Error>({
+  return useQuery<Entity[] Error>({
     queryKey: ['agents', agentId, 'entities'],
     queryFn: async () => {
       const response = await apiClient.getEntities(agentId);
@@ -50,7 +50,7 @@ const useEntities = (agentId: UUID) => {
 };
 
 const useRelationships = (agentId: UUID) => {
-  return useQuery<Relationship[], Error>({
+  return useQuery<Relationship[] Error>({
     queryKey: ['agents', agentId, 'relationships'],
     queryFn: async () => {
       const response = await apiClient.getRelationships(agentId);
@@ -64,13 +64,13 @@ export function EntityTab({ agentId }: { agentId: UUID }) {
   const [filterTrust, setFilterTrust] = useState<'all' | 'trusted' | 'suspicious'>('all');
 
   const {
-    data: entities = [],
+    data: entities = []
     isLoading: entitiesLoading,
     error: entitiesError,
   } = useEntities(agentId);
 
   const {
-    data: relationships = [],
+    data: relationships = []
     isLoading: relationshipsLoading,
     error: relationshipsError,
   } = useRelationships(agentId);

@@ -38,8 +38,8 @@ export class RLService extends Service {
   private onnxSession: onnxruntime.InferenceSession | null = null;
   private rlConfig: RLConfig;
   private trainingMetrics: TrainingMetrics = {
-    episodeRewards: [],
-    episodeLengths: [],
+    episodeRewards: []
+    episodeLengths: []
     averageReward: 0,
     totalSteps: 0,
     successRate: 0,

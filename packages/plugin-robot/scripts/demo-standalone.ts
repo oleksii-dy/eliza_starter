@@ -126,9 +126,9 @@ const runtime = {
   logger,
   
   // Plugin management
-  plugins: [] as any[],
-  providers: [] as any[],
-  actions: [] as any[],
+  plugins: [] as any[]
+  providers: [] as any[]
+  actions: [] as any[]
   services: new Map(),
   
   registerPlugin: async function(plugin: any) {

@@ -267,7 +267,7 @@ export class PlanningBenchmarks {
     };
 
     const complexityRisks: Record<string, string[]> = {
-      simple: [],
+      simple: []
       medium: ['coordination_challenges'],
       complex: ['coordination_challenges', 'system_integration_risks'],
       expert: ['coordination_challenges', 'system_integration_risks', 'unknown_unknowns', 'cascade_failures'],
@@ -391,11 +391,11 @@ export class PlanningBenchmarks {
     if (typeof response === 'string') {
       // Simple extraction - in real implementation, this would be more sophisticated
       return { 
-        steps: [],
+        steps: []
         overview: response,
-        success_criteria: [],
+        success_criteria: []
         risk_assessment: '',
-        contingencies: [],
+        contingencies: []
       };
     }
 
@@ -684,7 +684,7 @@ export class PlanningBenchmarks {
           action: `Step ${i + 1}: Implementation phase`,
           reasoning: `This step addresses key requirements`,
           expected_outcome: `Phase ${i + 1} completion`,
-          dependencies: i > 0 ? [`Step ${i}`] : [],
+          dependencies: i > 0 ? [`Step ${i}`] : []
           timeline: '2-3 weeks',
           resources_needed: ['team', 'budget'],
         })),

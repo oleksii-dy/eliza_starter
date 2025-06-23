@@ -151,7 +151,7 @@ export class DatasetBuilder {
   /**
    * Export dataset for Together.ai training (JSONL format)
    */
-  async exportForTogetherAI(examples: TrainingExample[], outputPath: string): Promise<void> {
+  async exportForTogetherAI(examples: TrainingExample[] outputPath: string): Promise<void> {
     elizaLogger.info(`📤 Exporting ${examples.length} examples for Together.ai training...`);
     
     // Ensure output directory exists
@@ -193,7 +193,7 @@ export class DatasetBuilder {
   /**
    * Export dataset as structured JSON
    */
-  async exportAsJSON(examples: TrainingExample[], outputPath: string): Promise<void> {
+  async exportAsJSON(examples: TrainingExample[] outputPath: string): Promise<void> {
     elizaLogger.info(`📤 Exporting dataset as JSON...`);
     
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
@@ -215,7 +215,7 @@ export class DatasetBuilder {
   /**
    * Export examples by category
    */
-  async exportByCategoryTogetherAI(examples: TrainingExample[], outputDir: string): Promise<string[]> {
+  async exportByCategoryTogetherAI(examples: TrainingExample[] outputDir: string): Promise<string[]> {
     elizaLogger.info(`📂 Exporting datasets by category...`);
     
     await fs.mkdir(outputDir, { recursive: true });
@@ -248,7 +248,7 @@ export class DatasetBuilder {
   /**
    * Export examples by complexity
    */
-  async exportByComplexityTogetherAI(examples: TrainingExample[], outputDir: string): Promise<string[]> {
+  async exportByComplexityTogetherAI(examples: TrainingExample[] outputDir: string): Promise<string[]> {
     elizaLogger.info(`📊 Exporting datasets by complexity...`);
     
     await fs.mkdir(outputDir, { recursive: true });
@@ -315,7 +315,7 @@ export class DatasetBuilder {
   /**
    * Export comprehensive metrics report
    */
-  async exportMetrics(examples: TrainingExample[], outputPath: string): Promise<void> {
+  async exportMetrics(examples: TrainingExample[] outputPath: string): Promise<void> {
     const metrics = this.calculateMetrics(examples);
     
     const report = {

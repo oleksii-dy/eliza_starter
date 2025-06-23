@@ -18,7 +18,7 @@ export class JSONLDatasetProcessor {
    * Convert training data to Together.ai JSONL format
    */
   async convertToTogetherFormat(
-    dataPoints: TrainingDataPoint[],
+    dataPoints: TrainingDataPoint[]
     options?: {
       includeThinking?: boolean;
       maxTokens?: number;
@@ -116,7 +116,7 @@ export class JSONLDatasetProcessor {
    * Create specialized datasets for different model sizes
    */
   async createModelSpecificDatasets(
-    dataPoints: TrainingDataPoint[],
+    dataPoints: TrainingDataPoint[]
     configs: {
       small: TogetherAIConfig;
       large: TogetherAIConfig;
@@ -153,7 +153,7 @@ export class JSONLDatasetProcessor {
    * Filter dataset by quality and complexity
    */
   filterDataset(
-    dataPoints: TrainingDataPoint[],
+    dataPoints: TrainingDataPoint[]
     criteria: {
       minQuality?: number;
       maxComplexity?: string;

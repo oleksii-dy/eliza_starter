@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS entities (
     names TEXT[] NOT NULL,
     summary TEXT,
     trust_score DECIMAL(3,2) DEFAULT 0.50 CHECK (trust_score >= 0 AND trust_score <= 1),
-    tags TEXT[],
+    tags TEXT[]
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()

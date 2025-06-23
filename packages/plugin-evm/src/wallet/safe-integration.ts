@@ -177,8 +177,8 @@ export class SafeIntegration {
                 id: proposalId,
                 safe: this.safeAddress,
                 transaction: txData,
-                confirmations: [],
-                rejections: [],
+                confirmations: []
+                rejections: []
                 executed: false,
                 createdAt: Date.now(),
                 threshold: this.threshold,
@@ -327,9 +327,9 @@ export class SafeIntegration {
     }
 
     private encodeSetupCall(
-        owners: Address[],
+        owners: Address[]
         threshold: number,
-        modules?: Address[],
+        modules?: Address[]
         fallbackHandler?: Address
     ): Hex {
         return encodeFunctionData({
@@ -345,7 +345,7 @@ export class SafeIntegration {
                     { name: 'paymentReceiver', type: 'address' }
                 ],
                 name: 'setup',
-                outputs: [],
+                outputs: []
                 stateMutability: 'nonpayable',
                 type: 'function'
             }],

@@ -29,7 +29,7 @@ export const contactsProvider: Provider = {
           id: entity.id,
           name: entity.names[0] || 'Unknown',
           type: (metadata.type as string) || 'unknown',
-          tags: Array.isArray(metadata.tags) ? metadata.tags : [],
+          tags: Array.isArray(metadata.tags) ? metadata.tags : []
           platforms: (metadata.platforms as Record<string, string>) || {},
           lastModified: metadata.updatedAt || metadata.createdAt,
         };

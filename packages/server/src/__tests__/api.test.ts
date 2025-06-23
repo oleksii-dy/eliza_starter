@@ -110,10 +110,10 @@ vi.mock('@elizaos/plugin-sql', () => ({
   plugin: {
     name: '@elizaos/plugin-sql',
     description: 'SQL database plugin',
-    actions: [],
-    providers: [],
-    evaluators: [],
-    services: [],
+    actions: []
+    providers: []
+    evaluators: []
+    services: []
   },
 }));
 

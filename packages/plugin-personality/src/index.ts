@@ -42,7 +42,7 @@ export const selfModificationPlugin: Plugin = {
   services: [CharacterFileManager],
 
   // Test suites removed - now using bun:test format
-  tests: [],
+  tests: []
 
   // Scenario tests for comprehensive workflow validation (temporarily disabled for build)
   scenarios: [

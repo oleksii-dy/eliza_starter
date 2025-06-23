@@ -36,7 +36,7 @@ export class DependencyResolverManager {
    * Resolve dependencies for a set of plugins
    */
   async resolveDependencies(
-    pluginNames: string[],
+    pluginNames: string[]
     options: {
       includeOptional?: boolean;
       checkCircular?: boolean;
@@ -113,7 +113,7 @@ export class DependencyResolverManager {
     graph: Map<string, DependencyNode>,
     visited: Set<string>,
     visiting: Set<string>,
-    conflicts: DependencyConflict[],
+    conflicts: DependencyConflict[]
     depth: number
   ): Promise<void> {
     if (visited.has(pluginName)) {

@@ -492,19 +492,24 @@ export interface PluginDependency {
  */
 export const DEFAULT_BLOCKCHAIN_PLUGIN_CONFIG: Partial<PluginConfiguration> = {
   enabled: true,
-  components: {
-    actions: {},
-    providers: {},
-    services: {},
-  },
-  metadata: {
-    displayName: 'Blockchain Plugin',
-    description: 'Default blockchain plugin configuration',
-    category: 'blockchain',
-    capabilities: [WalletCapability.TRANSFER],
-    requiresPrivateKey: true,
-    keyManagementType: 'self',
-  },
+  // TODO: Fix type mismatch - components and metadata don't exist in PluginConfiguration
+  // components: {
+  //   actions: {},
+  //   providers: {},
+  //   services: {},
+  // },
+  // metadata: {
+  //   displayName: 'Blockchain Plugin',
+  //   description: 'Default blockchain plugin configuration',
+  //   category: 'blockchain',
+  //   capabilities: [WalletCapability.TRANSFER],
+  //   requiresPrivateKey: true,
+  //   keyManagementType: 'self',
+  // },
+  actions: {},
+  providers: {},
+  services: {},
+  settings: {},
 };
 
 /**
@@ -521,7 +526,7 @@ export const ACTION_CONFIG_PRESETS = {
   BALANCE_READ: {
     defaultEnabled: true,
     userConfigurable: true,
-    requiredCapabilities: [],
+    requiredCapabilities: []
     requiresPrivateKey: false,
     category: 'other' as const,
   },

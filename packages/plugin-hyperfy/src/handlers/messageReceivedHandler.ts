@@ -182,7 +182,7 @@ export const messageReceivedHandler = async ({
                 ...parsedXml,
                 thought: parsedXml.thought || '',
                 actions,
-                providers: parsedXml.providers || [],
+                providers: parsedXml.providers || []
                 text: parsedXml.text || '',
                 simple: parsedXml.simple || false,
               };

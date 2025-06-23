@@ -447,7 +447,7 @@ export const ${evaluatorName}: Evaluator = {
       
       // Store insights or trigger actions based on evaluation
       if (analysis.shouldTakeAction) {
-        await runtime.processActions(message, [], state);
+        await runtime.processActions(message, [] state);
       }
       
       return {
@@ -480,7 +480,7 @@ async function analyze${this.toPascalCase(options.name)}(
   // TODO: Implement analysis logic
   return {
     shouldTakeAction: false,
-    insights: [],
+    insights: []
     confidence: 0.8,
   };
 }

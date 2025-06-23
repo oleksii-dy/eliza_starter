@@ -60,8 +60,8 @@ class MockPlanningService extends Service implements IPlanningService {
       state: { status: 'pending' },
       metadata: {
         createdAt: Date.now(),
-        constraints: [],
-        tags: [],
+        constraints: []
+        tags: []
       },
     };
   }
@@ -75,9 +75,9 @@ class MockPlanningService extends Service implements IPlanningService {
     if (!this.enabled) return null;
     return this.generatePlan(message, {
       goal: 'Simple plan',
-      constraints: [],
-      availableActions: [],
-      availableProviders: [],
+      constraints: []
+      availableActions: []
+      availableProviders: []
     });
   }
 
@@ -97,7 +97,7 @@ class MockPlanningService extends Service implements IPlanningService {
     runtime: IAgentRuntime,
     plan: ActionPlan,
     currentStepIndex: number,
-    results: any[],
+    results: any[]
     error?: Error
   ): Promise<ActionPlan> {
     return { ...plan, goal: `ADAPTED: ${plan.goal}` };
@@ -133,7 +133,7 @@ class MockPlanningService extends Service implements IPlanningService {
     // Always valid for mock service, but add marker
     return {
       valid: true,
-      issues: plan.goal?.includes('INVALID') ? ['Mock validation error'] : [],
+      issues: plan.goal?.includes('INVALID') ? ['Mock validation error'] : []
     };
   }
 
@@ -279,7 +279,7 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   async addParticipant(entityId: UUID, roomId: UUID): Promise<boolean> {
     return true;
   }
-  async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
+  async addParticipantsRoom(entityIds: UUID[] roomId: UUID): Promise<boolean> {
     return true;
   }
   async removeParticipant(entityId: UUID, roomId: UUID): Promise<boolean> {
@@ -377,11 +377,11 @@ const createTestCharacter = (): Character => ({
   name: 'TestAgent',
   bio: ['Test agent for planning service integration'],
   system: 'You are a test agent for planning service integration tests.',
-  messageExamples: [],
-  postExamples: [],
-  topics: [],
-  knowledge: [],
-  plugins: [],
+  messageExamples: []
+  postExamples: []
+  topics: []
+  knowledge: []
+  plugins: []
   settings: { enablePlanning: true },
   secrets: {},
 });
@@ -426,7 +426,7 @@ describe('Planning Service Integration', () => {
       description: 'Reply to a message',
       validate: async () => true,
       handler: async () => ({ text: 'Mock reply' }),
-      examples: [],
+      examples: []
     });
 
     // Register the planning service class, not instance
@@ -452,9 +452,9 @@ describe('Planning Service Integration', () => {
 
       const context: PlanningContext = {
         goal: 'Test goal',
-        constraints: [],
+        constraints: []
         availableActions: ['REPLY'],
-        availableProviders: [],
+        availableProviders: []
       };
 
       const plan = await runtime.generatePlan(message, context);
@@ -485,8 +485,8 @@ describe('Planning Service Integration', () => {
           state: { status: 'pending' },
           metadata: {
             createdAt: Date.now(),
-            constraints: [],
-            tags: [],
+            constraints: []
+            tags: []
           },
         };
       };
@@ -501,9 +501,9 @@ describe('Planning Service Integration', () => {
 
       const context: PlanningContext = {
         goal: 'Test goal',
-        constraints: [],
+        constraints: []
         availableActions: ['REPLY'],
-        availableProviders: [],
+        availableProviders: []
       };
 
       const plan = await runtime.generatePlan(message, context);
@@ -528,7 +528,7 @@ describe('Planning Service Integration', () => {
         ],
         executionModel: 'sequential',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [], tags: [] },
+        metadata: { createdAt: Date.now(), constraints: [] tags: [] },
       };
 
       const message: Memory = {
@@ -559,7 +559,7 @@ describe('Planning Service Integration', () => {
         ],
         executionModel: 'sequential',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [], tags: [] },
+        metadata: { createdAt: Date.now(), constraints: [] tags: [] },
       };
 
       const validation = await runtime.validatePlan(plan);
@@ -583,9 +583,9 @@ describe('Planning Service Integration', () => {
 
       const context: PlanningContext = {
         goal: 'Test goal',
-        constraints: [],
+        constraints: []
         availableActions: ['REPLY'],
-        availableProviders: [],
+        availableProviders: []
       };
 
       // Mock built-in planning to test fallback

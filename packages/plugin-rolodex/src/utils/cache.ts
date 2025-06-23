@@ -125,7 +125,7 @@ export class CacheManager {
 
   // Cache warming
   async warm<T>(
-    keys: string[],
+    keys: string[]
     fetcher: (keys: string[]) => Promise<Map<string, T>>,
     ttl?: number
   ): Promise<void> {

@@ -47,7 +47,7 @@ Parse the user\'s message to identify which task they\'re marking as completed.\
 async function extractTaskCompletion(
   runtime: IAgentRuntime,
   message: Memory,
-  availableTasks: TodoData[],
+  availableTasks: TodoData[]
   state: State
 ): Promise<TaskCompletion> {
   try {
@@ -59,8 +59,8 @@ async function extractTaskCompletion(
       .join('\n---\n');
 
     const messageHistory = formatMessages({
-      messages: state.data?.messages || [],
-      entities: state.data?.entities || [],
+      messages: state.data?.messages || []
+      entities: state.data?.entities || []
     });
 
     const prompt = composePrompt({
@@ -74,7 +74,7 @@ async function extractTaskCompletion(
 
     const result = await runtime.useModel(ModelType.TEXT_SMALL, {
       prompt,
-      stopSequences: [],
+      stopSequences: []
     });
 
     // Parse XML from the text results
@@ -298,7 +298,7 @@ export const completeTodoAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 export default completeTodoAction;

@@ -6,30 +6,6 @@ import { type IAgentRuntime, type Character, UUID } from '@elizaos/core';
 // Import from scenarios package instead of local scenarios
 // import { truthVsLieScenario } from '../scenarios/truth-vs-lie.js';
 
-// Mock logger to avoid noise in tests
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
-  return {
-    ...actual,
-    logger: {
-      debug: vi.fn(),
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      success: vi.fn(),
-    },
-  };
-});
-
-// Mock AgentServer to avoid database initialization
-vi.mock('@elizaos/server', () => ({
-  AgentServer: vi.fn().mockImplementation(() => ({
-    initialize: vi.fn().mockResolvedValue(undefined),
-    stop: vi.fn().mockResolvedValue(undefined),
-    agents: new Map(),
-  })),
-}));
-
 describe('ScenarioRunner Integration Tests', () => {
   let server: AgentServer;
   let mockRuntime: IAgentRuntime;
@@ -43,16 +19,16 @@ describe('ScenarioRunner Integration Tests', () => {
     settings: {
       secrets: {},
     },
-    plugins: [],
-    bio: [],
-    messageExamples: [],
-    postExamples: [],
-    topics: [],
-    knowledge: [],
+    plugins: []
+    bio: []
+    messageExamples: []
+    postExamples: []
+    topics: []
+    knowledge: []
     style: {
-      all: [],
-      chat: [],
-      post: [],
+      all: []
+      chat: []
+      post: []
     },
   };
 
@@ -65,8 +41,8 @@ describe('ScenarioRunner Integration Tests', () => {
         db: ':memory:',
       } as any,
       token: 'test-token',
-      actions: [],
-      providers: [],
+      actions: []
+      providers: []
 
       // Mock core methods
       initialize: vi.fn().mockResolvedValue(undefined),
@@ -218,11 +194,11 @@ describe('ScenarioRunner Integration Tests', () => {
       id: '',
       name: 'Invalid Scenario',
       description: 'Missing required fields',
-      actors: [], // No actors
+      actors: [] // No actors
       setup: {},
       execution: {},
       verification: {
-        rules: [], // No verification rules
+        rules: [] // No verification rules
       },
     };
 

@@ -1,21 +1,21 @@
 import './test-setup'; // Load environment variables
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { elizaLogger, IAgentRuntime, ModelType } from '@elizaos/core';
+import { elizaLogger, IAgentRuntime, ModelType, stringToUuid } from '@elizaos/core';
 import { ResearchService } from '../service';
 import { ResearchDepth, ResearchDomain, ResearchStatus } from '../types';
 
 // Mock runtime that implements actual IAgentRuntime interface
 class ProductionTestRuntime implements IAgentRuntime {
-  agentId = 'test-agent-production';
+  agentId = stringToUuid('test-agent-production');
   character = {
     name: 'Production Test Agent',
     bio: ['Test agent for production E2E testing'],
     system: 'You are a test agent for production research testing',
-    messageExamples: [],
-    postExamples: [],
-    topics: [],
-    knowledge: [],,
-    plugins: [],
+    messageExamples: []
+    postExamples: []
+    topics: []
+    knowledge: []
+    plugins: []
   };
 
   providers = [];

@@ -84,7 +84,7 @@ export const checkPluginConfigurationAction: Action = {
 
       const statusData: any = {
         available: true,
-        plugins: [],
+        plugins: []
         totalPlugins: 0,
         configuredPlugins: 0,
         needsConfiguration: 0,

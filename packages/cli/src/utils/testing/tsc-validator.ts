@@ -19,7 +19,7 @@ export async function runTypeCheck(
     return {
       success: false,
       errors: [`No tsconfig.json found at ${tsconfigPath}`],
-      warnings: [],
+      warnings: []
     };
   }
 
@@ -38,15 +38,15 @@ export async function runTypeCheck(
 
     return {
       success: !hasErrors,
-      errors: hasErrors ? [stderr || stdout] : [],
-      warnings: stderr.includes('warning') ? [stderr] : [],
+      errors: hasErrors ? [stderr || stdout] : []
+      warnings: stderr.includes('warning') ? [stderr] : []
     };
   } catch (error: any) {
     logger.error('TypeScript validation failed:', error);
     return {
       success: false,
       errors: [`TypeScript validation error: ${error.message}`],
-      warnings: [],
+      warnings: []
     };
   }
 }

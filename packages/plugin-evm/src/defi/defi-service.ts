@@ -7,9 +7,14 @@ import {
     type WalletClient,
     formatUnits,
     parseUnits,
-    type Hex
+    type Hex,
+    getContract,
+    erc20ABI,
+    waitForTransactionReceipt
 } from 'viem';
 import { mainnet, polygon, arbitrum, optimism, base } from 'viem/chains';
+import { aaveV3PoolABI } from '../abi/aaveV3Pool';
+import { getChainById } from '../core/chains/config';
 import { elizaLogger as logger } from '@elizaos/core';
 
 interface TransactionResult {
@@ -137,7 +142,7 @@ const AAVE_POOL_ABI = [
             { name: 'referralCode', type: 'uint16' }
         ],
         name: 'supply',
-        outputs: [],
+        outputs: []
         stateMutability: 'nonpayable',
         type: 'function'
     },
@@ -161,7 +166,7 @@ const AAVE_POOL_ABI = [
             { name: 'onBehalfOf', type: 'address' }
         ],
         name: 'borrow',
-        outputs: [],
+        outputs: []
         stateMutability: 'nonpayable',
         type: 'function'
     },
@@ -223,7 +228,7 @@ const COMPOUND_V3_ABI = [
             { name: 'amount', type: 'uint256' }
         ],
         name: 'supply',
-        outputs: [],
+        outputs: []
         stateMutability: 'nonpayable',
         type: 'function'
     },
@@ -233,7 +238,7 @@ const COMPOUND_V3_ABI = [
             { name: 'amount', type: 'uint256' }
         ],
         name: 'withdraw',
-        outputs: [],
+        outputs: []
         stateMutability: 'nonpayable',
         type: 'function'
     },
@@ -686,14 +691,77 @@ export class DeFiService {
             throw new Error('Invalid parameters for Aave position');
         }
 
-        // In production, this would create and return a transaction hash
-        // For now, return a placeholder
-        console.log(`Preparing Aave ${action} transaction`, params);
-        return {
-            success: true,
-            transactionHash: ('0x' + '0'.repeat(64)) as `0x${string}`,
-            chainId: params.chainId
-        };
+        // Create actual transaction
+        const walletClient = createWalletClient({
+            account: params.walletAddress,
+            chain: getChainById(params.chainId),
+            transport: http()
+        });
+
+        try {
+            // Build transaction based on action
+            let txHash: `0x${string}`;
+            
+            if (action === 'supply') {
+                // Approve token spending if needed
+                const tokenContract = getContract({
+                    address: params.asset!,
+                    abi: erc20ABI,
+                    client: walletClient
+                });
+
+                const allowance = await tokenContract.read.allowance([
+                    params.walletAddress,
+                    protocol.address
+                ]);
+
+                if (allowance < params.amount) {
+                    const approveTx = await tokenContract.write.approve([
+                        protocol.address,
+                        params.amount
+                    ]);
+                    await waitForTransactionReceipt(walletClient, { hash: approveTx });
+                }
+
+                // Supply to Aave
+                const aaveContract = getContract({
+                    address: protocol.address,
+                    abi: aaveV3PoolABI,
+                    client: walletClient
+                });
+
+                txHash = await aaveContract.write.supply([
+                    params.asset!,
+                    params.amount,
+                    params.walletAddress,
+                    0 // referral code
+                ]);
+            } else {
+                // Borrow from Aave
+                const aaveContract = getContract({
+                    address: protocol.address,
+                    abi: aaveV3PoolABI,
+                    client: walletClient
+                });
+
+                txHash = await aaveContract.write.borrow([
+                    params.asset!,
+                    params.amount,
+                    2, // variable rate mode
+                    0, // referral code
+                    params.walletAddress
+                ]);
+            }
+
+            return {
+                success: true,
+                transactionHash: txHash,
+                chainId: params.chainId
+            };
+        } catch (error) {
+            console.error(`Aave ${action} transaction failed:`, error);
+            throw new Error(`Failed to ${action} on Aave: ${error instanceof Error ? error.message : String(error)}`);
+        }
     }
 
     private async enterCompoundPosition(
@@ -799,7 +867,7 @@ export class DeFiService {
             const symbol = await client.readContract({
                 address,
                 abi: [{
-                    inputs: [],
+                    inputs: []
                     name: 'symbol',
                     outputs: [{ type: 'string' }],
                     stateMutability: 'view',

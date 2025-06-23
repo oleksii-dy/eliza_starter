@@ -75,9 +75,9 @@ export const searchPluginAction: Action = {
 
       // Build agent context for contextual search
       const context: AgentContext = {
-        recentActions: state?.recentActions || [],
+        recentActions: state?.recentActions || []
         currentCapabilities: getCurrentCapabilities(runtime),
-        failedActions: state?.failedActions || [],
+        failedActions: state?.failedActions || []
         userIntent: searchQuery,
       };
 
@@ -212,7 +212,7 @@ function getCurrentCapabilities(runtime: IAgentRuntime): string[] {
   return capabilities;
 }
 
-function formatSearchResults(results: SearchResult[], query: string): string {
+function formatSearchResults(results: SearchResult[] query: string): string {
   const topResults = results.slice(0, 5); // Show top 5 results
 
   let response = `I found ${results.length} plugin${results.length !== 1 ? 's' : ''} related to "${query}":\n\n`;

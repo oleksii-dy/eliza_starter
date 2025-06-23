@@ -21,7 +21,7 @@ import { BenchmarkRunner } from '@elizaos/plugin-planning';
 
 const config = {
   character: { name: 'BenchmarkAgent' },
-  plugins: [],
+  plugins: []
   runRealmBench: true,
   runApiBank: false,
   outputDir: './benchmark-results',

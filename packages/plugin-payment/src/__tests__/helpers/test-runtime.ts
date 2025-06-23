@@ -136,63 +136,12 @@ export const createTestDatabase = () => {
     }),
     
     insert: (table: any) => ({
-      values: async (values: any) => {
-        // Handle table name extraction same as select
-        let tableName = 'unknown';
-        
-        if (typeof table === 'string') {
-          tableName = table;
-        } else if (table.name) {
-          tableName = table.name;
-        } else if (table.tableName) {
-          tableName = table.tableName;
-        } else if (table.constructor.name === 'PgTable') {
-          // Identify table by its columns
-          const keys = Object.keys(table);
-          if (keys.includes('transactionId') && keys.includes('requiresConfirmation')) {
-            tableName = 'paymentRequests';
-          } else if (keys.includes('payerId') && keys.includes('recipientId')) {
-            tableName = 'paymentTransactions';
-          } else if (keys.includes('address') && keys.includes('encryptedPrivateKey')) {
-            tableName = 'userWallets';
-          } else if (keys.includes('totalSpentUsd') && keys.includes('date')) {
-            tableName = 'dailySpending';
-          } else if (keys.includes('priceUsd') && keys.includes('tokenAddress')) {
-            tableName = 'priceCache';
-          } else if (keys.includes('paymentId') && keys.includes('url')) {
-            tableName = 'paymentWebhooks';
-          } else if (keys.includes('autoApprovalEnabled') && keys.includes('defaultCurrency')) {
-            tableName = 'paymentSettings';
-          }
-        } else {
-          // Try to extract from the table object structure
-          const tableStr = table.toString();
-          if (tableStr.includes('payment_requests')) {
-            tableName = 'paymentRequests';
-          } else if (tableStr.includes('user_wallets')) {
-            tableName = 'userWallets';
-          } else if (tableStr.includes('payment_transactions')) {
-            tableName = 'paymentTransactions';
-          } else if (tableStr.includes('daily_spending')) {
-            tableName = 'dailySpending';
-          }
-        }
-        
-        const records = data.get(tableName) || [];
-        const record = Array.isArray(values) ? values[0] : values;
-        records.push({
-          ...record,
-          id: record.id || stringToUuid(`${tableName}-${Date.now()}`),
-          createdAt: record.createdAt || new Date(),
-          updatedAt: record.updatedAt || new Date(),
-        });
-        data.set(tableName, records);
-        return { insertedId: record.id };
-      },
-      onConflictDoUpdate: (config: any) => ({
-        values: async (values: any) => {
-          // Extract table name same way as above
+      values: (values: any) => {
+        // Make values() return a thenable object that can be awaited directly
+        const insertFunc = async () => {
+          // Direct insert without conflict handling
           let tableName = 'unknown';
+          
           if (typeof table === 'string') {
             tableName = table;
           } else if (table.name) {
@@ -210,8 +159,15 @@ export const createTestDatabase = () => {
               tableName = 'userWallets';
             } else if (keys.includes('totalSpentUsd') && keys.includes('date')) {
               tableName = 'dailySpending';
+            } else if (keys.includes('priceUsd') && keys.includes('tokenAddress')) {
+              tableName = 'priceCache';
+            } else if (keys.includes('paymentId') && keys.includes('url')) {
+              tableName = 'paymentWebhooks';
+            } else if (keys.includes('autoApprovalEnabled') && keys.includes('defaultCurrency')) {
+              tableName = 'paymentSettings';
             }
           } else {
+            // Try to extract from the table object structure
             const tableStr = table.toString();
             if (tableStr.includes('payment_requests')) {
               tableName = 'paymentRequests';
@@ -226,39 +182,98 @@ export const createTestDatabase = () => {
           
           const records = data.get(tableName) || [];
           const record = Array.isArray(values) ? values[0] : values;
-          
-          // Find existing record
-          const index = records.findIndex((r: any) => {
-            // Check conflict targets
-            if (config.target) {
-              return config.target.every((field: any) => 
-                r[field.name] === record[field.name]
-              );
-            }
-            return false;
+          records.push({
+            ...record,
+            id: record.id || stringToUuid(`${tableName}-${Date.now()}`),
+            createdAt: record.createdAt || new Date(),
+            updatedAt: record.updatedAt || new Date(),
           });
-          
-          if (index >= 0) {
-            // Update existing
-            records[index] = {
-              ...records[index],
-              ...record,
-              updatedAt: new Date(),
-            };
-          } else {
-            // Insert new
-            records.push({
-              ...record,
-              id: record.id || stringToUuid(`${tableName}-${Date.now()}`),
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            });
-          }
-          
           data.set(tableName, records);
           return { insertedId: record.id };
-        }
-      })
+        };
+        
+        // Return an object that can be awaited directly or chained
+        return {
+          then: (resolve: any, reject: any) => insertFunc().then(resolve, reject),
+          catch: (reject: any) => insertFunc().catch(reject),
+          onConflictDoUpdate: (config: any) => ({
+            set: async (setValues: any) => {
+              // Extract table name same way as above
+              let tableName = 'unknown';
+              if (typeof table === 'string') {
+                tableName = table;
+              } else if (table.name) {
+                tableName = table.name;
+              } else if (table.tableName) {
+                tableName = table.tableName;
+              } else if (table.constructor && table.constructor.name === 'PgTable') {
+                // Identify table by its columns
+                const keys = Object.keys(table);
+                if (keys.includes('transactionId') && keys.includes('requiresConfirmation')) {
+                  tableName = 'paymentRequests';
+                } else if (keys.includes('payerId') && keys.includes('recipientId')) {
+                  tableName = 'paymentTransactions';
+                } else if (keys.includes('address') && keys.includes('encryptedPrivateKey')) {
+                  tableName = 'userWallets';
+                } else if (keys.includes('totalSpentUsd') && keys.includes('date')) {
+                  tableName = 'dailySpending';
+                } else if (keys.includes('priceUsd') && keys.includes('tokenAddress')) {
+                  tableName = 'priceCache';
+                }
+              } else {
+                const tableStr = table.toString();
+                if (tableStr.includes('payment_requests')) {
+                  tableName = 'paymentRequests';
+                } else if (tableStr.includes('user_wallets')) {
+                  tableName = 'userWallets';
+                } else if (tableStr.includes('payment_transactions')) {
+                  tableName = 'paymentTransactions';
+                } else if (tableStr.includes('daily_spending')) {
+                  tableName = 'dailySpending';
+                } else if (tableStr.includes('price_cache')) {
+                  tableName = 'priceCache';
+                }
+              }
+              
+              const records = data.get(tableName) || [];
+              const record = Array.isArray(values) ? values[0] : values;
+              
+              // Find existing record
+              const index = records.findIndex((r: any) => {
+                // Check conflict targets
+                if (config.target) {
+                  return config.target.every((field: any) => {
+                    const fieldName = field.name || field;
+                    return r[fieldName] === record[fieldName];
+                  });
+                }
+                return false;
+              });
+              
+              if (index >= 0) {
+                // Update existing
+                records[index] = {
+                  ...records[index],
+                  ...setValues,
+                  updatedAt: new Date(),
+                };
+              } else {
+                // Insert new
+                records.push({
+                  ...record,
+                  id: record.id || stringToUuid(`${tableName}-${Date.now()}`),
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                });
+              }
+              
+              data.set(tableName, records);
+              return { insertedId: record.id };
+            }
+          }),
+          execute: insertFunc
+        };
+      }
     }),
     
     update: (table: any) => ({
@@ -373,7 +388,7 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
       model: 'gpt-3.5-turbo',
       embeddingModel: 'text-embedding-3-small',
     },
-    plugins: [],
+    plugins: []
     ...options.character,
   };
 
@@ -426,23 +441,23 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
     },
     ensureParticipantInRoom: async () => {},
     ensureConnection: async () => {},
-    getMemories: async () => [],
+    getMemories: async () => []
     messageManager: {
       createMemory: async () => ({} as Memory),
-      getMemories: async () => [],
-      searchMemoriesByEmbedding: async () => [],
+      getMemories: async () => []
+      searchMemoriesByEmbedding: async () => []
     },
     descriptionManager: {
       getDescription: async () => '',
     },
     loreManager: {
-      getLore: async () => [],
+      getLore: async () => []
     },
     documentsManager: {
-      getDocuments: async () => [],
+      getDocuments: async () => []
     },
     knowledgeManager: {
-      getKnowledge: async () => [],
+      getKnowledge: async () => []
     },
     services,
   } as any;

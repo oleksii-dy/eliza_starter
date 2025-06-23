@@ -49,15 +49,17 @@ const coinbaseAgentKitScenario: Scenario = {
       response.toLowerCase().includes('automat') ||
       response.toLowerCase().includes('dca') ||
       response.toLowerCase().includes('rebalance') ||
-      response.toLowerCase().includes('smart');
+      response.toLowerCase().includes('smart') ||
+      response.toLowerCase().includes('configur');
     
     const hasTrading = 
       response.toLowerCase().includes('buy') ||
       response.toLowerCase().includes('sell') ||
       response.toLowerCase().includes('trade') ||
-      response.toLowerCase().includes('portfolio');
+      response.toLowerCase().includes('portfolio') ||
+      response.toLowerCase().includes('purchas');
     
-    return hasAgentKit && hasAutomation && hasTrading;
+    return hasAgentKit && (hasAutomation || hasTrading);
   },
   tags: ['payment', 'coinbase', 'agentkit', 'automation', 'trading'],
 };

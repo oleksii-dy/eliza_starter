@@ -59,11 +59,11 @@ async function runIndividualBenchmark() {
     character: {
       name: 'SWEBenchIndividualAgent',
       bio: ['Agent for individual SWE-bench evaluation with failure analysis'],
-      knowledge: [],
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      plugins: [],
+      knowledge: []
+      messageExamples: []
+      postExamples: []
+      topics: []
+      plugins: []
     },
   } as any;
 
@@ -608,7 +608,7 @@ async function createComprehensiveAnalysis(results: IndividualAnalysis[]) {
 }
 
 async function createDetailedMarkdownReport(
-  results: IndividualAnalysis[],
+  results: IndividualAnalysis[]
   analysis: any
 ): Promise<string> {
   let markdown = `# SWE-bench Individual Instance Analysis Report\n\n`;

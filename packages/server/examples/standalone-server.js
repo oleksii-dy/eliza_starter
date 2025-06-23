@@ -36,8 +36,8 @@ const exampleCharacter = {
       },
     ],
   ],
-  postExamples: [],
-  people: [],
+  postExamples: []
+  people: []
   topics: ['general assistance', 'questions', 'help'],
       style: {
         all: [
@@ -62,7 +62,7 @@ async function main() {
     console.log('⚙️  Initializing server with database and services...');
     await server.initialize({
       dataDir: './data', // Optional custom data directory
-      middlewares: [], // Optional custom middlewares
+      middlewares: [] // Optional custom middlewares
       // postgresUrl: process.env.DATABASE_URL // Optional PostgreSQL connection
     });
 

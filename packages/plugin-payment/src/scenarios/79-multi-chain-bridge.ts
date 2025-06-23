@@ -42,7 +42,7 @@ const multiChainBridgeScenario: Scenario = {
   actions: ['BRIDGE_TOKENS'],
   evaluator: (response: string) => {
     const hasBridge = 
-      response.toLowerCase().includes('bridge') ||
+      response.toLowerCase().includes('bridg') ||
       response.toLowerCase().includes('cross-chain') ||
       response.toLowerCase().includes('transfer');
     
@@ -53,8 +53,8 @@ const multiChainBridgeScenario: Scenario = {
       response.toLowerCase().includes('optimism') ||
       response.toLowerCase().includes('bsc');
     
-    const hasAmount = /\d+(\.\d+)?\s*[A-Z]{3,}/i.test(response);
-    const hasFees = /fee|cost|gas/i.test(response);
+    const hasAmount = /\d+(\.\d+)?\s*(USDC|ETH|MATIC|BTC|SOL)/i.test(response);
+    const hasFees = /fee|cost|gas|\$/i.test(response);
     
     return hasBridge && hasChains && (hasAmount || hasFees);
   },

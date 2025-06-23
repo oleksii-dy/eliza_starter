@@ -205,7 +205,7 @@ export class TrainingService extends Service implements TrainingServiceInterface
           roomId,
           worldId: (room as any)?.worldId,
           agentId: this.runtime.agentId,
-          participants: Array.isArray(participants) ? participants.map((p: any) => p.id) : [],
+          participants: Array.isArray(participants) ? participants.map((p: any) => p.id) : []
           messages,
           metadata: {
             startTime: Math.min(...messages.map(m => m.timestamp)),
@@ -292,7 +292,7 @@ export class TrainingService extends Service implements TrainingServiceInterface
           entityId: memory.entityId,
           metadata: {
             thought: memory.content.thought,
-            actions: memory.content.actions || [],
+            actions: memory.content.actions || []
           },
         };
 
@@ -483,9 +483,9 @@ export class TrainingService extends Service implements TrainingServiceInterface
             evaluatorName,
             success: true,
             duration: 0,
-            insights: [],
-            facts: [],
-            relationships: [],
+            insights: []
+            facts: []
+            relationships: []
             error: undefined,
             metadata: {}
           };
@@ -546,8 +546,8 @@ export class TrainingService extends Service implements TrainingServiceInterface
               success: true,
               duration: 0,
               facts: factMemories.map((m: any) => m.content.text).filter(Boolean),
-              insights: [],
-              relationships: [],
+              insights: []
+              relationships: []
               metadata: { source: 'fact_memories', count: factMemories.length }
             };
             results.push(factEvaluation);
@@ -729,7 +729,7 @@ export class TrainingService extends Service implements TrainingServiceInterface
   /**
    * Prepare dataset from extracted conversations
    */
-  async prepareDataset(conversations: TrainingConversation[], config: TrainingConfig): Promise<string> {
+  async prepareDataset(conversations: TrainingConversation[] config: TrainingConfig): Promise<string> {
     elizaLogger.info(`Preparing dataset from ${conversations.length} conversations`);
     
     return await this.datasetProcessor.processConversations(conversations, config);

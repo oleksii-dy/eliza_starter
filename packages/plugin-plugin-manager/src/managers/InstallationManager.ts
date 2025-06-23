@@ -10,7 +10,7 @@ import crypto from 'crypto';
 // Safe command execution
 async function safeExecute(
   command: string,
-  args: string[],
+  args: string[]
   options: { cwd?: string; env?: NodeJS.ProcessEnv; timeout?: number } = {}
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
@@ -250,8 +250,8 @@ export class InstallationManager {
         name: packageJson.name,
         version: packageJson.version,
         status: PluginStatus.READY,
-        missingEnvVars: [],
-        buildLog: [],
+        missingEnvVars: []
+        buildLog: []
         packageJson,
         createdAt: Date.now(),
         dependencies: packageJson.dependencies || {},
@@ -331,8 +331,8 @@ export class InstallationManager {
       name: packageJson.name,
       version: packageJson.version,
       status: PluginStatus.READY,
-      missingEnvVars: [],
-      buildLog: [],
+      missingEnvVars: []
+      buildLog: []
       packageJson,
       createdAt: Date.now(),
       dependencies: packageJson.dependencies || {},

@@ -103,7 +103,7 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning p
       },
     ],
   ],
-  postExamples: [],
+  postExamples: []
   topics: [
     'strategic planning',
     'project management',

@@ -212,7 +212,7 @@ export class ClaimVerifier {
    */
   private findRelatedSources(
     claim: FactualClaim,
-    allSources: ResearchSource[],
+    allSources: ResearchSource[]
     excludeSource: ResearchSource
   ): ResearchSource[] {
     // Extract key entities and concepts from claim
@@ -296,7 +296,7 @@ export class ClaimVerifier {
   private aggregateVerificationResults(
     claim: FactualClaim,
     primaryEvidence: VerificationEvidence,
-    corroboratingEvidence: VerificationEvidence[],
+    corroboratingEvidence: VerificationEvidence[]
     contradictingEvidence: VerificationEvidence[]
   ): CrossReferenceResult {
     // Calculate aggregate confidence

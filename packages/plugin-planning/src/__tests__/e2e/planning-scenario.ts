@@ -313,7 +313,7 @@ export const planningScenariosSuite: TestSuite = {
           runtime,
           problematicPlan,
           0, // Current step index
-          [], // No previous results
+          [] // No previous results
           new Error('Action not found')
         );
         

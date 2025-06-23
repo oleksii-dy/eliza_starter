@@ -168,7 +168,7 @@ describe('Benchmarking System', () => {
     });
 
     it('should generate decision summary', async () => {
-      await logger.logDesignDecision('mvp_planning', 1, 'reason', [], 'path', 80, []);
+      await logger.logDesignDecision('mvp_planning', 1, 'reason', [] 'path', 80, []);
       await logger.logFixDecision(
         'full_development',
         2,
@@ -180,7 +180,7 @@ describe('Benchmarking System', () => {
         },
         'fix',
         'reason',
-        [],
+        []
         70
       );
 
@@ -205,19 +205,19 @@ describe('Benchmarking System', () => {
       status: 'completed',
       createdAt: new Date(),
       updatedAt: new Date(),
-      logs: [],
+      logs: []
       userId: 'test-user-id' as UUID,
-      userNotifications: [],
+      userNotifications: []
       phaseHistory: ['completed'],
       currentIteration: 1,
       maxIterations: 10,
       infiniteMode: false,
-      requiredSecrets: [],
-      providedSecrets: [],
-      errors: [],
+      requiredSecrets: []
+      providedSecrets: []
+      errors: []
       errorAnalysis: new Map(),
-      customInstructions: [],
-      knowledgeIds: [],
+      customInstructions: []
+      knowledgeIds: []
       totalPhases: 10,
       phase: 10,
       localPath: '/tmp/test-plugin',
@@ -234,8 +234,8 @@ describe('Benchmarking System', () => {
         id: 'test',
         name: 'Test',
         description: 'Test scenario',
-        requirements: [],
-        constraints: [],
+        requirements: []
+        constraints: []
         expectedDuration: 60000,
         successCriteria: {
           mustCompile: true,
@@ -259,7 +259,7 @@ describe('Benchmarking System', () => {
           'Include unit tests',
           'Export plugin structure',
         ],
-        constraints: [],
+        constraints: []
         expectedDuration: 60000,
         successCriteria: {
           mustCompile: true,
@@ -285,21 +285,21 @@ describe('Benchmarking System', () => {
         status: 'completed',
         localPath: '/tmp/test-project',
         // Remove path property - use localPath instead
-        logs: [],
+        logs: []
         createdAt: new Date(),
         updatedAt: new Date(),
         userId: 'test-user-id' as UUID,
-        userNotifications: [],
+        userNotifications: []
         phaseHistory: ['completed'],
         currentIteration: 1,
         maxIterations: 1,
         infiniteMode: false,
-        requiredSecrets: [],
-        providedSecrets: [],
-        errors: [],
+        requiredSecrets: []
+        providedSecrets: []
+        errors: []
         errorAnalysis: new Map(),
-        customInstructions: [],
-        knowledgeIds: [],
+        customInstructions: []
+        knowledgeIds: []
         totalPhases: 10,
         phase: 10,
       };

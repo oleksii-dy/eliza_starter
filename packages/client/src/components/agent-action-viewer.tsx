@@ -124,9 +124,9 @@ function formatDate(timestamp: number | undefined) {
   } else if (diffInHours < 24) {
     return `${Math.floor(diffInHours)}h ago`;
   } else if (diffInHours < 168) {
-    return date.toLocaleDateString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleDateString([] { weekday: 'short', hour: '2-digit', minute: '2-digit' });
   } else {
-    return date.toLocaleDateString([], {
+    return date.toLocaleDateString([] {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -612,7 +612,7 @@ export function AgentActionViewer({ agentId, roomId }: AgentActionViewerProps) {
   // Exclude embedding operations by default
   const excludeTypes = ['embedding', 'text_embedding'];
 
-  const { data: actions = [], isLoading, error } = useAgentActions(agentId, roomId, excludeTypes);
+  const { data: actions = [] isLoading, error } = useAgentActions(agentId, roomId, excludeTypes);
   const { mutate: deleteLog } = useDeleteLog();
 
   // Filter and search actions

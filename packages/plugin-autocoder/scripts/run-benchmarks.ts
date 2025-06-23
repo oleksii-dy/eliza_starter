@@ -25,10 +25,10 @@ function createMockRuntime(): IAgentRuntime {
       name: 'BenchmarkAgent',
       bio: ['A benchmark testing agent'],
       system: 'You are a benchmark testing agent.',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
+      messageExamples: []
+      postExamples: []
+      topics: []
+      knowledge: []
       plugins: [autocoderPlugin.name],
     },
 
@@ -72,7 +72,7 @@ function createMockRuntime(): IAgentRuntime {
             id,
             status: 'completed',
             report: 'Mock research report',
-            findings: [],
+            findings: []
           }),
         };
       }
@@ -80,8 +80,8 @@ function createMockRuntime(): IAgentRuntime {
         // Mock knowledge service
         return {
           storeDocument: async (doc: any) => ({ id: `doc-${Date.now()}` }),
-          getKnowledge: async () => [],
-          searchKnowledge: async () => [],
+          getKnowledge: async () => []
+          searchKnowledge: async () => []
         };
       }
       if (name === 'env-manager') {
@@ -95,7 +95,7 @@ function createMockRuntime(): IAgentRuntime {
         // Mock plugin manager
         return {
           clonePlugin: async () => ({ path: '/tmp/mock-plugin' }),
-          listPlugins: async () => [],
+          listPlugins: async () => []
           loadPlugin: async () => {},
         };
       }
@@ -119,13 +119,13 @@ function createMockRuntime(): IAgentRuntime {
     },
 
     // Empty collections for benchmark
-    actions: [],
-    providers: [],
-    evaluators: [],
+    actions: []
+    providers: []
+    evaluators: []
     plugins: [autocoderPlugin],
     services: new Map(),
     events: new Map(),
-    routes: [],
+    routes: []
 
     // Stub methods that shouldn't be called during benchmarks
     initialize: async () => {
@@ -156,18 +156,18 @@ function createMockRuntime(): IAgentRuntime {
 
     // Database stubs (not used in benchmarks)
     db: {
-      query: async () => [],
+      query: async () => []
       execute: async () => ({ changes: 0 }),
     } as any,
 
     // Memory stubs (not used in benchmarks)
     messageManager: {
       createMemory: async () => {},
-      getMemories: async () => [],
+      getMemories: async () => []
       updateMemory: async () => {},
       deleteMemory: async () => {},
-      searchMemories: async () => [],
-      getLastMessages: async () => [],
+      searchMemories: async () => []
+      getLastMessages: async () => []
     } as any,
   } as unknown as IAgentRuntime;
 

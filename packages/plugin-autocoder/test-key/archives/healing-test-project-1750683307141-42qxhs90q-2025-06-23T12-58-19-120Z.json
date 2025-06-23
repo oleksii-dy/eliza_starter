@@ -1,0 +1,69 @@
+{
+  "id": "project-1750683307141-42qxhs90q",
+  "name": "healing-test",
+  "description": "A plugin that needs healing",
+  "type": "create",
+  "status": "failed",
+  "phaseHistory": [
+    "idle",
+    "researching",
+    "mvp_planning",
+    "failed",
+    "failed"
+  ],
+  "totalPhases": 18,
+  "phase": 4,
+  "createdAt": "2025-06-23T12:55:07.141Z",
+  "updatedAt": "2025-06-23T12:58:02.503Z",
+  "userId": "6ba2617d-b7a6-4197-8a3e-84c6215646a8",
+  "logs": [
+    "[2025-06-23T12:55:07.141Z] Project created for user 6ba2617d-b7a6-4197-8a3e-84c6215646a8.",
+    "[2025-06-23T12:55:07.141Z] 🚀 Starting 18-step plugin creation workflow...",
+    "[2025-06-23T12:55:07.141Z] 📚 STEP 1: Starting research phase...",
+    "[2025-06-23T12:55:07.141Z] Transitioned to researching",
+    "[2025-06-23T12:55:07.141Z] Starting research for \"healing-test\"...",
+    "[2025-06-23T12:55:07.141Z] Stored 1 knowledge documents.",
+    "[2025-06-23T12:55:07.141Z] Discovering existing services and plugins...",
+    "[2025-06-23T12:58:02.502Z] ⚠️ Plugin Manager service not available for discovery",
+    "[2025-06-23T12:58:02.503Z] Found 0 relevant plugins, 0 services, 0 actions, and 0 providers.",
+    "[2025-06-23T12:58:02.503Z] Research phase completed.",
+    "[2025-06-23T12:58:02.503Z] 📝 STEP 2: Planning MVP proof of concept...",
+    "[2025-06-23T12:58:02.503Z] Transitioned to mvp_planning",
+    "[2025-06-23T12:58:02.503Z] Starting MVP planning phase...",
+    "[2025-06-23T12:58:02.503Z] MVP planning phase failed: this.getKnowledgeService().getKnowledge is not a function. (In 'this.getKnowledgeService().getKnowledge(projectId, { limit: 10 })', 'this.getKnowledgeService().getKnowledge' is undefined)",
+    "[2025-06-23T12:58:02.503Z] Transitioned to failed",
+    "[2025-06-23T12:58:02.503Z] ❌ Workflow failed: this.getKnowledgeService().getKnowledge is not a function. (In 'this.getKnowledgeService().getKnowledge(projectId, { limit: 10 })', 'this.getKnowledgeService().getKnowledge' is undefined)",
+    "[2025-06-23T12:58:02.503Z] Transitioned to failed"
+  ],
+  "errors": [
+    {
+      "iteration": 0,
+      "phase": "failed",
+      "error": "MVP planning failed: this.getKnowledgeService().getKnowledge is not a function. (In 'this.getKnowledgeService().getKnowledge(projectId, { limit: 10 })', 'this.getKnowledgeService().getKnowledge' is undefined)",
+      "timestamp": "2025-06-23T12:58:02.503Z"
+    },
+    {
+      "iteration": 0,
+      "phase": "failed",
+      "error": "this.getKnowledgeService().getKnowledge is not a function. (In 'this.getKnowledgeService().getKnowledge(projectId, { limit: 10 })', 'this.getKnowledgeService().getKnowledge' is undefined)",
+      "timestamp": "2025-06-23T12:58:02.503Z"
+    }
+  ],
+  "userNotifications": [],
+  "knowledgeIds": [
+    "doc-1"
+  ],
+  "requiredSecrets": [],
+  "providedSecrets": [],
+  "currentIteration": 0,
+  "maxIterations": 100,
+  "infiniteMode": false,
+  "customInstructions": [],
+  "errorAnalysis": {},
+  "researchJobId": "research-1",
+  "researchReport": "Mock report",
+  "discoveredPlugins": [],
+  "error": "this.getKnowledgeService().getKnowledge is not a function. (In 'this.getKnowledgeService().getKnowledge(projectId, { limit: 10 })', 'this.getKnowledgeService().getKnowledge' is undefined)",
+  "completedAt": "2025-06-23T12:58:02.503Z",
+  "archivedAt": "2025-06-23T12:58:19.120Z"
+}

@@ -7,6 +7,9 @@ import {
   asUUID,
   stringToUuid,
   type Character,
+  ServiceType,
+  AgentRuntime,
+  type Plugin,
 } from '@elizaos/core';
 import { PaymentService } from '../services/PaymentService';
 import { researchAction } from '../actions/researchAction';
@@ -18,6 +21,9 @@ import {
   userWallets,
   dailySpending,
 } from '../database/schema';
+import { PriceOracleService } from '../services/PriceOracleService';
+import { UniversalPaymentService } from '../services/UniversalPaymentService';
+import { CrossmintAdapter } from '../adapters/CrossmintAdapter';
 
 // Mock database that simulates Drizzle ORM behavior
 const createMockDatabase = () => {
@@ -114,10 +120,156 @@ const createMockDatabase = () => {
   };
 };
 
+// Mock database service
+class MockDatabaseService {
+  private data = new Map<string, any>();
+
+  getDatabase() {
+    const self = this;
+    return {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([]),
+      insert: vi.fn().mockReturnThis(),
+      values: vi.fn().mockResolvedValue({}),
+      update: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      execute: vi.fn().mockResolvedValue([]),
+    };
+  }
+
+  async get(key: string) {
+    return this.data.get(key);
+  }
+
+  async set(key: string, value: any) {
+    this.data.set(key, value);
+  }
+
+  async delete(key: string) {
+    this.data.delete(key);
+  }
+
+  async query(sql: string, params?: any[]) {
+    return [];
+  }
+}
+
+// Mock Crossmint services for testing
+class MockCrossmintService {
+  async listWallets() {
+    return [{
+      address: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
+      type: 'evm-mpc-wallet',
+      linkedUser: 'test-user',
+      createdAt: new Date().toISOString(),
+    }];
+  }
+
+  async createWallet(params: any) {
+    return {
+      address: `0x${Math.random().toString(16).substring(2, 42)}`,
+      type: params.type,
+      linkedUser: params.linkedUser,
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  async createTransfer(params: any) {
+    return {
+      id: `tx_${Date.now()}`,
+      hash: `0x${Math.random().toString(16).substring(2, 66)}`,
+      status: 'pending',
+      chain: 'ethereum',
+      gas: '21000',
+      gasPrice: '20000000000',
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  async getTransaction(hash: string) {
+    return {
+      hash,
+      status: 'success',
+      chain: 'ethereum',
+      gas: '21000',
+      gasPrice: '20000000000',
+      createdAt: new Date().toISOString(),
+    };
+  }
+}
+
+class MockCrossmintWalletService {
+  async getBalances(owner?: string) {
+    return [{
+      address: 'native',
+      symbol: 'ETH',
+      name: 'Ethereum',
+      decimals: 18,
+      balance: '1.5',
+      balanceFormatted: '1.500000',
+      valueUsd: 3750,
+      priceUsd: 2500,
+      chain: 'ethereum',
+      isNative: true,
+    }];
+  }
+
+  async transfer(params: any) {
+    return {
+      hash: `0x${Math.random().toString(16).substring(2, 66)}`,
+      status: 'pending',
+      chain: params.chain || 'ethereum',
+      gasUsed: '21000',
+      gasPrice: '20000000000',
+      confirmations: 0,
+      timestamp: Date.now(),
+    };
+  }
+
+  async getTransaction(hash: string) {
+    return {
+      hash,
+      status: 'confirmed',
+      chain: 'ethereum',
+      gasUsed: '21000',
+      gasPrice: '20000000000',
+      confirmations: 1,
+      timestamp: Date.now(),
+    };
+  }
+
+  async createWallet(params: any) {
+    return {
+      id: `wallet-${Date.now()}`,
+      address: `0x${Math.random().toString(16).substring(2, 42)}`,
+      type: params.type || 'mpc',
+      name: params.name,
+      chain: 'ethereum',
+      metadata: params.metadata,
+      isActive: true,
+      createdAt: Date.now(),
+    };
+  }
+}
+
+// Mock Crossmint plugin
+const mockCrossmintPlugin: Plugin = {
+  name: '@elizaos/plugin-crossmint',
+  description: 'Mock Crossmint plugin for testing',
+  services: [MockCrossmintService as any, MockCrossmintWalletService as any],
+  actions: []
+  providers: []
+  evaluators: []
+};
+
 describe('Payment Plugin Runtime Integration', () => {
   let runtime: IAgentRuntime;
   let paymentService: PaymentService;
   let mockDb: ReturnType<typeof createMockDatabase>;
+  let mockDbService: MockDatabaseService;
 
   beforeAll(async () => {
     elizaLogger.info('Setting up runtime integration test');
@@ -138,6 +290,9 @@ describe('Payment Plugin Runtime Integration', () => {
 
     // Create mock database
     mockDb = createMockDatabase();
+    
+    // Create mock database service
+    mockDbService = new MockDatabaseService();
     
     // Create mock runtime
     runtime = {
@@ -162,7 +317,7 @@ describe('Payment Plugin Runtime Integration', () => {
       getService: (name: string) => {
         if (name === 'payment') return paymentService;
         if (name === 'database') return {
-          getDatabase: () => mockDb
+          getDatabase: () => mockDbService
         };
         return null;
       },
@@ -310,6 +465,237 @@ describe('Payment Plugin Runtime Integration', () => {
       // Should mention payment or funds issue
       const text = response.text?.toLowerCase() || '';
       expect(text).toMatch(/payment|insufficient|funds|wallet|error/);
+    });
+  });
+
+  describe('CrossmintAdapter Integration', () => {
+    it('should load CrossmintAdapter when Crossmint services are available', async () => {
+      const paymentService = runtime.getService('payment') as PaymentService;
+      const capabilities = await paymentService.getCapabilities();
+      
+      // Check if Crossmint payment methods are supported
+      expect(capabilities.supportedMethods).toContain(PaymentMethod.ETH);
+      expect(capabilities.supportedMethods).toContain(PaymentMethod.USDC_ETH);
+      expect(capabilities.supportedMethods).toContain(PaymentMethod.SOL);
+    });
+
+    it('should process payment with CrossmintAdapter', async () => {
+      const paymentService = runtime.getService('payment') as PaymentService;
+      
+      const paymentRequest = {
+        id: asUUID('00000000-0000-0000-0000-000000000001'),
+        userId: asUUID('00000000-0000-0000-0000-000000000002'),
+        agentId: runtime.agentId,
+        actionName: 'test-payment',
+        amount: BigInt(1000000), // 1 USDC
+        method: PaymentMethod.USDC_ETH,
+        recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
+        metadata: { 
+          test: true,
+          adapter: 'crossmint',
+        },
+      };
+
+      const result = await paymentService.processPayment(paymentRequest, runtime);
+      
+      expect(result).toBeDefined();
+      expect(result.id).toBe(paymentRequest.id);
+      expect(result.status).toBeDefined();
+      
+      // Check if it attempted to use Crossmint (would fail due to missing wallet)
+      if (result.status === PaymentStatus.FAILED) {
+        expect(result.error).toBeDefined();
+      }
+    });
+
+    it('should get user balance through CrossmintAdapter', async () => {
+      const paymentService = runtime.getService('payment') as PaymentService;
+      
+      const userId = asUUID('00000000-0000-0000-0000-000000000002');
+      const balances = await paymentService.getUserBalance(userId, runtime);
+      
+      expect(balances).toBeDefined();
+      expect(balances).toBeInstanceOf(Map);
+    });
+  });
+
+  describe('Service Interactions', () => {
+    it('should use price oracle for currency conversion', async () => {
+      const priceOracleService = runtime.getService('priceOracle') as PriceOracleService;
+      
+      // Test ETH to USD conversion
+      const ethAmount = BigInt('1000000000000000000'); // 1 ETH
+      const usdValue = await priceOracleService.convertToUSD(ethAmount, PaymentMethod.ETH);
+      
+      expect(usdValue).toBeGreaterThan(0);
+    });
+
+    it('should handle payment with auto-approval', async () => {
+      const paymentService = runtime.getService('payment') as PaymentService;
+      
+      // Small payment under auto-approval threshold
+      const paymentRequest = {
+        id: asUUID('00000000-0000-0000-0000-000000000003'),
+        userId: asUUID('00000000-0000-0000-0000-000000000002'),
+        agentId: runtime.agentId,
+        actionName: 'small-payment',
+        amount: BigInt(5000000), // 5 USDC (under $10 threshold)
+        method: PaymentMethod.USDC_ETH,
+        recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
+      };
+
+      const result = await paymentService.processPayment(paymentRequest, runtime);
+      
+      expect(result).toBeDefined();
+      // Should not require confirmation due to auto-approval
+      expect(result.metadata?.pendingReason).not.toBe('USER_CONFIRMATION_REQUIRED');
+    });
+
+    it('should require confirmation for large payments', async () => {
+      const paymentService = runtime.getService('payment') as PaymentService;
+      
+      // Large payment over auto-approval threshold
+      const paymentRequest = {
+        id: asUUID('00000000-0000-0000-0000-000000000004'),
+        userId: asUUID('00000000-0000-0000-0000-000000000002'),
+        agentId: runtime.agentId,
+        actionName: 'large-payment',
+        amount: BigInt(50000000), // 50 USDC (over $10 threshold)
+        method: PaymentMethod.USDC_ETH,
+        recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
+        requiresConfirmation: true,
+      };
+
+      const result = await paymentService.processPayment(paymentRequest, runtime);
+      
+      expect(result).toBeDefined();
+      expect(result.status).toBe(PaymentStatus.PENDING);
+      expect(result.metadata?.pendingReason).toBe('USER_CONFIRMATION_REQUIRED');
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle missing wallet adapter gracefully', async () => {
+      const paymentService = runtime.getService('payment') as PaymentService;
+      
+      // Try unsupported payment method
+      const paymentRequest = {
+        id: asUUID('00000000-0000-0000-0000-000000000005'),
+        userId: asUUID('00000000-0000-0000-0000-000000000002'),
+        agentId: runtime.agentId,
+        actionName: 'unsupported-payment',
+        amount: BigInt(1000000),
+        method: PaymentMethod.BTC, // Not supported by any adapter
+        recipientAddress: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+      };
+
+      const result = await paymentService.processPayment(paymentRequest, runtime);
+      
+      expect(result).toBeDefined();
+      expect(result.status).toBe(PaymentStatus.FAILED);
+      expect(result.error).toContain('not supported');
+    });
+
+    it('should handle database errors', async () => {
+      // Mock database error
+      const db = mockDbService.getDatabase();
+      db.insert = vi.fn().mockReturnThis();
+      db.values = vi.fn().mockRejectedValue(new Error('Database error'));
+
+      const paymentService = runtime.getService('payment') as PaymentService;
+      
+      const paymentRequest = {
+        id: asUUID('00000000-0000-0000-0000-000000000006'),
+        userId: asUUID('00000000-0000-0000-0000-000000000002'),
+        agentId: runtime.agentId,
+        actionName: 'db-error-payment',
+        amount: BigInt(1000000),
+        method: PaymentMethod.USDC_ETH,
+        recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
+      };
+
+      const result = await paymentService.processPayment(paymentRequest, runtime);
+      
+      expect(result).toBeDefined();
+      expect(result.status).toBe(PaymentStatus.FAILED);
+    });
+  });
+
+  describe('Multi-Adapter Support', () => {
+    it('should support multiple payment methods across adapters', async () => {
+      const paymentService = runtime.getService('payment') as PaymentService;
+      const capabilities = await paymentService.getCapabilities();
+      
+      // Should support methods from multiple adapters
+      const expectedMethods = [
+        PaymentMethod.USDC_ETH,
+        PaymentMethod.ETH,
+        PaymentMethod.SOL,
+        PaymentMethod.USDC_SOL,
+      ];
+      
+      expectedMethods.forEach(method => {
+        expect(capabilities.supportedMethods).toContain(method);
+      });
+    });
+
+    it('should select correct adapter for payment method', async () => {
+      const paymentService = runtime.getService('payment') as PaymentService;
+      
+      // Test Ethereum payment (should use Crossmint or EVM adapter)
+      const ethPayment = {
+        id: asUUID('00000000-0000-0000-0000-000000000007'),
+        userId: asUUID('00000000-0000-0000-0000-000000000002'),
+        agentId: runtime.agentId,
+        actionName: 'eth-payment',
+        amount: BigInt('1000000000000000000'), // 1 ETH
+        method: PaymentMethod.ETH,
+        recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
+      };
+
+      const ethResult = await paymentService.processPayment(ethPayment, runtime);
+      expect(ethResult).toBeDefined();
+      
+      // Test Solana payment (should use Crossmint or Solana adapter)
+      const solPayment = {
+        id: asUUID('00000000-0000-0000-0000-000000000008'),
+        userId: asUUID('00000000-0000-0000-0000-000000000002'),
+        agentId: runtime.agentId,
+        actionName: 'sol-payment',
+        amount: BigInt('1000000000'), // 1 SOL
+        method: PaymentMethod.SOL,
+        recipientAddress: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZjDpNqYV4N',
+      };
+
+      const solResult = await paymentService.processPayment(solPayment, runtime);
+      expect(solResult).toBeDefined();
+    });
+  });
+
+  describe('Settings Management', () => {
+    it('should update payment settings', async () => {
+      const paymentService = runtime.getService('payment') as PaymentService;
+      
+      // Update settings
+      await paymentService.updateSettings({
+        autoApprovalThreshold: 25,
+        maxDailySpend: 2000,
+      });
+      
+      const settings = paymentService.getSettings();
+      expect(settings.autoApprovalThreshold).toBe(25);
+      expect(settings.maxDailySpend).toBe(2000);
+    });
+
+    it('should persist settings to runtime', async () => {
+      const paymentService = runtime.getService('payment') as PaymentService;
+      
+      await paymentService.updateSettings({
+        requireConfirmation: true,
+      });
+      
+      const runtimeSetting = runtime.getSetting('PAYMENT_REQUIRE_CONFIRMATION');
+      expect(runtimeSetting).toBe('true');
     });
   });
 }); 

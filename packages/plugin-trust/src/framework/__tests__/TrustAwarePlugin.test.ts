@@ -41,7 +41,7 @@ class TestTrustAwarePlugin extends TrustAwarePlugin {
       description: 'Test action',
       validate: vi.fn().mockResolvedValue(true),
       handler: vi.fn().mockResolvedValue({ values: {}, data: {}, text: 'Done' }),
-      similes: [],
+      similes: []
       examples: []
     },
     {
@@ -49,7 +49,7 @@ class TestTrustAwarePlugin extends TrustAwarePlugin {
       description: 'High risk action',
       validate: vi.fn().mockResolvedValue(true),
       handler: vi.fn().mockResolvedValue({ values: {}, data: {}, text: 'Done' }),
-      similes: [],
+      similes: []
       examples: []
     }
   ];
@@ -68,7 +68,7 @@ class TestTrustAwarePlugin extends TrustAwarePlugin {
       description: 'Test evaluator',
       validate: vi.fn().mockResolvedValue(true),
       handler: vi.fn().mockResolvedValue(true),
-      similes: [],
+      similes: []
       examples: []
     }
   ];

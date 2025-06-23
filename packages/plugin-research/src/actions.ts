@@ -251,7 +251,7 @@ The research will follow DeepResearch Bench standards for quality. I'll notify y
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 /**
@@ -387,7 +387,7 @@ export const checkResearchStatusAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 /**
@@ -517,7 +517,7 @@ The research will now explore these refined aspects while maintaining the origin
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 /**
@@ -653,7 +653,7 @@ export const getResearchReportAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 /**
@@ -796,7 +796,7 @@ ${evaluation.recommendations.map((r: string, i: number) => `${i + 1}. ${r}`).joi
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 /**
@@ -914,7 +914,7 @@ export const exportResearchAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 /**
@@ -1029,7 +1029,7 @@ ${comparison.recommendation}`,
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 /**
@@ -1119,7 +1119,7 @@ You can resume this research at any time.`,
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 /**
@@ -1211,7 +1211,7 @@ The research will continue from where it left off.`,
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 /**
@@ -1357,7 +1357,7 @@ The project has been permanently cancelled and cannot be resumed.`,
         },
       },
     ],
-  ] as ActionExample[][],
+  ] as ActionExample[][]
 };
 
 // Export all actions

@@ -138,8 +138,8 @@ async function testFindingExtraction() {
   const project = {
     id: 'test-project',
     query: 'space situational awareness data extraction',
-    sources: [],
-    findings: [],
+    sources: []
+    findings: []
     status: 'active' as const,
     phase: 'analysis' as const,
     metadata: {

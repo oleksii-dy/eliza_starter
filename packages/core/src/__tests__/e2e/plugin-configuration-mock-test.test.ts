@@ -73,7 +73,7 @@ class MockDatabaseAdapter implements IDatabaseAdapter {
     return this.data.get(`memory:${id}`) || null;
   }
 
-  async getMemoriesByIds(memoryIds: UUID[], tableName?: string): Promise<Memory[]> {
+  async getMemoriesByIds(memoryIds: UUID[] tableName?: string): Promise<Memory[]> {
     const memories: Memory[] = [];
     for (const id of memoryIds) {
       const memory = this.data.get(`memory:${id}`);
@@ -288,7 +288,7 @@ class MockDatabaseAdapter implements IDatabaseAdapter {
     this.data.set(key, { entityId, roomId });
   }
 
-  async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
+  async addParticipantsRoom(entityIds: UUID[] roomId: UUID): Promise<boolean> {
     for (const entityId of entityIds) {
       await this.addParticipant(entityId, roomId);
     }
@@ -971,9 +971,9 @@ const testPluginNoEnvVars: Plugin = {
   name: 'test-plugin-no-env-vars',
   description: 'Test plugin that works without special environment variables',
   services: [TestAuthService],
-  actions: [],
-  providers: [],
-  evaluators: [],
+  actions: []
+  providers: []
+  evaluators: []
 
   init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
     console.log('test-plugin-no-env-vars: Initializing (no env vars required)');
@@ -1008,9 +1008,9 @@ describe('Plugin Configuration System Mock Tests', () => {
           },
         ],
       ],
-      postExamples: [],
+      postExamples: []
       topics: ['testing', 'configuration', 'plugins'],
-      knowledge: [],
+      knowledge: []
       plugins: ['test-plugin-with-env-vars', 'test-plugin-no-env-vars'],
       settings: {
         DATABASE_URL: 'postgresql://test:test@localhost:5432/testdb',
@@ -1153,7 +1153,7 @@ describe('Plugin Configuration System Mock Tests', () => {
     const pluginWithMissingEnvVars: Plugin = {
       name: 'test-plugin-missing-env-vars',
       description: 'Test plugin that requires missing environment variables',
-      services: [],
+      services: []
 
       init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
         const missingVar = runtime.getSetting('MISSING_ENV_VAR');

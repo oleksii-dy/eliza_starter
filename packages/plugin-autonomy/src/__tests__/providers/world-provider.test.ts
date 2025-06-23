@@ -503,7 +503,7 @@ describe('worldProvider (AUTONOMOUS_WORLD_CONTEXT)', () => {
           runId: 'minimal-run',
           startTime: Date.now() - 30000,
         },
-        goals: [],
+        goals: []
       });
 
       const minimalRuntime = createMockRuntime({
@@ -540,7 +540,7 @@ describe('worldProvider (AUTONOMOUS_WORLD_CONTEXT)', () => {
             runId: 'time-test',
             startTime: testCase.startTime,
           },
-          goals: [],
+          goals: []
         });
 
         const runtimeWithTime = createMockRuntime({
@@ -569,7 +569,7 @@ describe('worldProvider (AUTONOMOUS_WORLD_CONTEXT)', () => {
             },
           },
         },
-        goals: [],
+        goals: []
       });
 
       const noMetricsRuntime = createMockRuntime({
@@ -600,7 +600,7 @@ describe('worldProvider (AUTONOMOUS_WORLD_CONTEXT)', () => {
             timestamp: Date.now() - (10000 * (10 - i)),
           })),
         },
-        goals: [],
+        goals: []
       });
 
       const manyObsRuntime = createMockRuntime({

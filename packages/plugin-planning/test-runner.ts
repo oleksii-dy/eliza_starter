@@ -38,7 +38,7 @@ async function runSimplePlanningTest() {
         userName: 'TestUser',
       },
       data: {
-        conversationHistory: [],
+        conversationHistory: []
       },
       text: 'Test conversation context',
     };
@@ -119,7 +119,7 @@ async function runComprehensivePlanningTest() {
         userName: 'TestUser',
       },
       data: {
-        conversationHistory: [],
+        conversationHistory: []
       },
       text: 'Test conversation context for complex task',
     };

@@ -491,7 +491,7 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
     componentName: string,
     componentType: 'action' | 'provider' | 'evaluator' | 'service',
     config: Partial<ComponentConfigState>,
-    dependencies: ComponentDependency[] = [],
+    dependencies: ComponentDependency[] = []
     enabledComponents?: Map<string, Set<string>>
   ): Promise<ValidationResult> {
     // First, validate that the component exists in the plugin configuration
@@ -500,7 +500,7 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
       return {
         valid: false,
         errors: [`Plugin ${pluginName} not found`],
-        warnings: [],
+        warnings: []
       };
     }
 
@@ -520,7 +520,7 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
       return {
         valid: false,
         errors: [`Component ${componentName} not found in plugin ${pluginName}`],
-        warnings: [],
+        warnings: []
       };
     }
 
@@ -578,8 +578,8 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
 
     return {
       valid: true,
-      errors: [],
-      warnings: [],
+      errors: []
+      warnings: []
     };
   }
 
@@ -588,7 +588,7 @@ export class ConfigurationManager extends EventEmitter implements IConfiguration
    */
   initializeUnifiedPluginConfiguration(
     pluginName: string,
-    components: any[], // ComponentDefinition[] but avoiding circular import
+    components: any[] // ComponentDefinition[] but avoiding circular import
     defaultEnabled: boolean = true
   ): PluginConfiguration {
     const config: PluginConfiguration = {
