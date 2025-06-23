@@ -192,6 +192,7 @@ async function main() {
         created++;
       } else {
         console.error(`❌ Test failed to run for ${relative(process.cwd(), file.testPath)}`);
+        await unlink(file.testPath).catch(() => {}); // Clean up failed test file
         failed++;
       }
     } catch (error) {
