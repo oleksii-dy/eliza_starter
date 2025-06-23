@@ -3,6 +3,7 @@
 import { readdir, readFile, writeFile, stat, mkdir } from 'fs/promises';
 import { join, relative, dirname, basename } from 'path';
 import { existsSync } from 'fs';
+import { spawnSync } from 'node:child_process';
 
 interface FileToTest {
   sourcePath: string;
@@ -58,10 +59,9 @@ function getTestPath(sourcePath: string, category: string): string {
   }
 }
 
-async function generateTestContent(sourcePath: string): Promise<string> {
+async function generateTestContent(sourcePath: string, testPath: string): Promise<string> {
   const sourceContent = await readFile(sourcePath, 'utf-8');
-  const relativePath = relative(process.cwd(), sourcePath);
-  const importPath = relativePath.replace('src/', '../../../src/').replace('.ts', '');
+  const importPath = relative(dirname(testPath), sourcePath).replace(/\.ts$/, '');
 
   // Extract exported functions and classes
   const exportMatches = sourceContent.matchAll(/export\s+(async\s+)?function\s+(\w+)/g);
@@ -72,12 +72,15 @@ async function generateTestContent(sourcePath: string): Promise<string> {
   const classes = Array.from(classMatches).map((m) => m[1]);
   const constants = Array.from(constMatches).map((m) => m[1]);
 
-  let testContent = `import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
+  const imports = [...functions, ...classes, ...constants];
 
-// TODO: Import the functions/classes to test
-// import { ${[...functions, ...classes, ...constants].join(', ')} } from '${importPath}';
+  let testContent = `import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';\n`;
 
-describe('${basename(sourcePath).replace('.ts', '')}', () => {
+  if (imports.length > 0) {
+    testContent += `import { ${imports.join(', ')} } from '${importPath}';\n`;
+  }
+
+  testContent += `\ndescribe('${basename(sourcePath).replace('.ts', '')}', () => {\n  beforeEach(() => {\n    mock.restore();\n  });\n\n  afterEach(() => {\n    mock.restore();\n  });\n`;
   beforeEach(() => {
     mock.restore();
   });
@@ -181,13 +184,19 @@ async function main() {
       await mkdir(testDir, { recursive: true });
 
       // Generate test content
-      const testContent = await generateTestContent(file.sourcePath);
+      const testContent = await generateTestContent(file.sourcePath, file.testPath);
 
       // Write test file
       await writeFile(file.testPath, testContent);
 
-      console.log(`✅ Created: ${relative(process.cwd(), file.testPath)}`);
-      created++;
+      const result = spawnSync('bun', ['test', file.testPath], { stdio: 'inherit' });
+      if (result.status === 0) {
+        console.log(`✅ Created: ${relative(process.cwd(), file.testPath)}`);
+        created++;
+      } else {
+        console.error(`❌ Test failed to run for ${relative(process.cwd(), file.testPath)}`);
+        failed++;
+      }
     } catch (error) {
       console.error(`❌ Failed: ${relative(process.cwd(), file.testPath)}`);
       console.error(`   Error: ${error.message}`);
