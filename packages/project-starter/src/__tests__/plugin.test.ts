@@ -328,37 +328,17 @@ describe('StarterService', () => {
     );
   });
 
-  it('should throw an error when stopping a non-existent service', async () => {
+  it('should handle stopping a non-existent service gracefully', async () => {
     const runtime = createRealRuntime();
-    // Don't register a service, so getService will return null
 
-    let error: Error | null = null;
+    const originalGetService = runtime.getService;
+    runtime.getService = () => null;
 
-    try {
-      // We'll patch the getService function to ensure it returns null
-      const originalGetService = runtime.getService;
-      runtime.getService = () => null;
+    await expect(StarterService.stop(runtime as any)).resolves.toBeUndefined();
 
-      await StarterService.stop(runtime as any);
-      // Should not reach here
-      expect(true).toBe(false);
-    } catch (e) {
-      error = e as Error;
-      // This is expected - verify it's the right error
-      expect(error).toBeTruthy();
-      if (error instanceof Error) {
-        expect(error.message).toContain('Starter service not found');
-      }
-    }
+    documentTestResult('StarterService non-existent stop', { success: true });
 
-    documentTestResult(
-      'StarterService non-existent stop',
-      {
-        errorThrown: !!error,
-        errorMessage: error?.message || 'No error message',
-      },
-      error
-    );
+    runtime.getService = originalGetService;
   });
 
   it('should stop a registered service', async () => {

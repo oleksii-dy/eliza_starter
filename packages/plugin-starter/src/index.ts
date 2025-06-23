@@ -142,18 +142,12 @@ export class StarterService extends Service {
 
   static async start(runtime: IAgentRuntime) {
     logger.info(`*** Starting starter service - MODIFIED: ${new Date().toISOString()} ***`);
-    const service = new StarterService(runtime);
-    return service;
+    return (await super.start(runtime)) as StarterService;
   }
 
   static async stop(runtime: IAgentRuntime) {
     logger.info('*** TESTING DEV MODE - STOP MESSAGE CHANGED! ***');
-    // get the service from the runtime
-    const service = runtime.getService(StarterService.serviceType);
-    if (!service) {
-      throw new Error('Starter service not found');
-    }
-    service.stop();
+    await super.stop(runtime);
   }
 
   async stop() {

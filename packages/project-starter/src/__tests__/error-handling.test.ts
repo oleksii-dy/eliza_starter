@@ -78,20 +78,13 @@ describe('Error Handling', () => {
   });
 
   describe('Service Error Handling', () => {
-    it('should throw an error when stopping non-existent service', async () => {
+    it('should handle stopping non-existent service gracefully', async () => {
       const mockRuntime = {
         getService: spyOnfn().mockReturnValue(null),
       } as unknown as IAgentRuntime;
 
-      let caughtError = null;
-      try {
-        await StarterService.stop(mockRuntime);
-      } catch (error: any) {
-        caughtError = error;
-        expect(error.message).toBe('Starter service not found');
-      }
+      await expect(StarterService.stop(mockRuntime)).resolves.toBeUndefined();
 
-      expect(caughtError).not.toBeNull();
       expect(mockRuntime.getService).toHaveBeenCalledWith('starter');
     });
 

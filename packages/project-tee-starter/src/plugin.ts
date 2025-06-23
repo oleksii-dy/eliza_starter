@@ -41,7 +41,7 @@ export class StarterService extends Service {
 
   static async start(runtime: IAgentRuntime) {
     logger.info("*** Starting Mr. TEE's custom service (StarterService) ***");
-    const service = new StarterService(runtime);
+    const service = (await super.start(runtime)) as StarterService;
     try {
       const deriveKeyResponse: DeriveKeyResponse = await service.teeClient.deriveKey(
         service.secretSalt
@@ -79,11 +79,7 @@ export class StarterService extends Service {
 
   static async stop(runtime: IAgentRuntime) {
     logger.info("*** Stopping Mr. TEE's custom service (StarterService) ***");
-    const service = runtime.getService(StarterService.serviceType);
-    if (!service) {
-      throw new Error('Mr. TEE custom service (StarterService) not found');
-    }
-    service.stop();
+    await super.stop(runtime);
   }
 
   async stop() {
