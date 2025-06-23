@@ -87,7 +87,8 @@ export class MessageBusService extends Service {
         return [];
       }
       const response = await fetch(
-        `${serverApiUrl}/api/messaging/central-channels/${channelId}/participants`
+        `${serverApiUrl}/api/messaging/central-channels/${channelId}/participants`,
+        { headers: this.getAuthHeaders() }
       );
 
       if (response.ok) {
@@ -110,7 +111,8 @@ export class MessageBusService extends Service {
     try {
       const serverApiUrl = this.getCentralMessageServerUrl();
       const response = await fetch(
-        `${serverApiUrl}/api/messaging/agents/${this.runtime.agentId}/servers`
+        `${serverApiUrl}/api/messaging/agents/${this.runtime.agentId}/servers`,
+        { headers: this.getAuthHeaders() }
       );
 
       if (response.ok) {
@@ -522,7 +524,7 @@ export class MessageBusService extends Service {
       const serverApiUrl = `${baseUrl}/api/messaging/submit`;
       const response = await fetch(serverApiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' /* TODO: Add Auth if needed */ },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify(payloadToServer),
       });
 
@@ -537,6 +539,19 @@ export class MessageBusService extends Service {
         error
       );
     }
+  }
+
+  private getAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+    const token =
+      (this.runtime.getSetting?.('ELIZA_SERVER_AUTH_TOKEN') as string | undefined) ??
+      process.env.ELIZA_SERVER_AUTH_TOKEN;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return headers;
   }
 
   getCentralMessageServerUrl(): string {
