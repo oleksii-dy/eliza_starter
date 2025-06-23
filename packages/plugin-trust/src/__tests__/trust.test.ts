@@ -16,8 +16,7 @@ describe('TrustService', () => {
     };
 
     const score = calculateTrustScore(metrics);
-    expect(score).toBeGreaterThan(0);
-    expect(score).toBeLessThanOrEqual(100);
+    expect(score).toBeCloseTo(73);
   });
 
   it('enforces minimum trust', () => {
