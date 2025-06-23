@@ -1,6 +1,6 @@
 import { Service, ServiceType, IAgentRuntime } from '../types/index';
 import {
-  PluginConfiguration,
+  UnifiedPluginConfiguration,
   PluginConfigurationState,
   PluginDependency,
   ConfigurationValidationResult,
@@ -22,7 +22,7 @@ export class PluginDependencyManager extends Service {
 
   private dependencyGraph: Map<string, PluginDependency[]> = new Map();
   private loadOrder: string[] = [];
-  private pluginConfigurations: PluginConfigurationState = {};
+  private pluginConfigurations: Record<string, UnifiedPluginConfiguration> = {};
   private capabilities: Map<string, WalletCapability[]> = new Map();
 
   constructor(runtime?: IAgentRuntime) {
@@ -48,9 +48,9 @@ export class PluginDependencyManager extends Service {
    */
   registerPlugin(
     pluginName: string,
-    dependencies: PluginDependency[]
-    capabilities: WalletCapability[]
-    configuration: PluginConfiguration
+    dependencies: PluginDependency[],
+    capabilities: WalletCapability[],
+    configuration: UnifiedPluginConfiguration
   ): void {
     this.dependencyGraph.set(pluginName, dependencies);
     this.capabilities.set(pluginName, capabilities);
@@ -109,7 +109,9 @@ export class PluginDependencyManager extends Service {
   /**
    * Validate plugin configuration and dependencies
    */
-  validateConfiguration(config: PluginConfigurationState): ConfigurationValidationResult {
+  validateConfiguration(
+    config: Record<string, UnifiedPluginConfiguration>
+  ): ConfigurationValidationResult {
     const errors: ConfigurationError[] = [];
     const warnings: ConfigurationWarning[] = [];
 
@@ -280,8 +282,8 @@ export class PluginDependencyManager extends Service {
     priorityChains?: string[];
     riskTolerance?: 'low' | 'medium' | 'high';
     features?: WalletCapability[];
-  }): PluginConfigurationState {
-    const recommended: PluginConfigurationState = {};
+  }): Record<string, UnifiedPluginConfiguration> {
+    const recommended: Record<string, UnifiedPluginConfiguration> = {};
 
     // Start with all registered plugins
     for (const [pluginName, config] of Object.entries(this.pluginConfigurations)) {

@@ -21,7 +21,7 @@ export const hyperfyWalkRandomlyAction: Action = {
     similes: ['WANDER', 'PACE_AROUND', 'WALK_AROUND', 'MOVE_RANDOMLY'], // Reverted similes/desc
     description: 'Makes your character wander to random points nearby; use for idle behavior or ambient movement.',
     validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-      const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
+      const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
       // Keep validation simple: Check if controls exist
       return !!service && service.isConnected() && !!service.getWorld()?.controls;
     },
@@ -32,7 +32,7 @@ export const hyperfyWalkRandomlyAction: Action = {
       options?: { interval?: number, distance?: number, command?: 'start' | 'stop' }, // Reverted options
       callback?: HandlerCallback,
     ) => {
-      const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
+      const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
       const world = service?.getWorld();
       const controls = world?.controls as unknown as AgentControls | undefined;
 

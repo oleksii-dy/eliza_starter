@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['src/index.ts', 'src/test-utils/index.ts'],
   outDir: 'dist',
   clean: true,
   format: ['esm'],
@@ -30,6 +30,7 @@ export default defineConfig({
     '@solana/web3.js',
     'zod',
     '@hapi/shot',
+    '@elizaos/core',
   ],
   sourcemap: false,
 });

@@ -96,7 +96,7 @@ describe('Actions', () => {
     it('should return true from validate function', async () => {
       if (helloWorldAction) {
         const runtime = createMockRuntime();
-        const mockMessage = createMockMessage('Hello!');
+        const mockMessage = createMockMessage('Hello!', {});
         const mockState = createMockState();
 
         let result = false;
@@ -117,7 +117,7 @@ describe('Actions', () => {
     it('should call back with hello world response from handler', async () => {
       if (helloWorldAction) {
         const runtime = createMockRuntime();
-        const mockMessage = createMockMessage('Hello!');
+        const mockMessage = createMockMessage('Hello!', {});
         const mockState = createMockState();
 
         let callbackResponse: any = {};

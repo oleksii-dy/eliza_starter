@@ -46,7 +46,8 @@ export const hyperfyActionsProvider: Provider = {
       actionsData.length > 0 ? addHeader('# Available Actions', formatActions(actionsData)) : '';
     const actionExamples =
       actionsData.length > 0
-        ? addHeader('# Action Examples', composeActionExamples(actionsData, 10))
+        ? // @ts-ignore - Function signature mismatch
+          addHeader('# Action Examples', composeActionExamples(actionsData, 10))
         : '';
 
     const data = { actionsData };

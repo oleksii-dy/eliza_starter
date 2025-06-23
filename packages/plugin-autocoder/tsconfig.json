@@ -5,7 +5,7 @@
     "target": "ESNext",
     "module": "Preserve",
     "moduleResolution": "Bundler",
-    "strict": false,
+    "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": false,
@@ -22,10 +22,5 @@
     "baseUrl": "."
   },
   "include": ["src/**/*.ts", "src/e2e/**/*.ts", "__tests__/**/*.ts"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/__tests__/test-scenarios/**/*.ts",
-    "src/__tests__/test-data/**/*.ts"
-  ]
+  "exclude": ["node_modules", "dist"]
 }

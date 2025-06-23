@@ -13,13 +13,8 @@
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "paths": {
-      "@elizaos/core": ["../core/src/index.ts"],
-      "@elizaos/core/test-utils": ["../core/src/test-utils/index.ts"],
-      "@elizaos/core/*": ["../core/src/*"]
-    }
+    "resolveJsonModule": true
   },
   "include": ["src/**/*", "tests/**/*", "src/**/*.d.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "tests/**/*"]
+  "exclude": ["node_modules", "dist"]
 }

@@ -580,8 +580,8 @@ export class SecureEnvironment extends Service {
   }
 
   private checkPermissions(
-    agentPermissions: Permission[]
-    requiredPermissions: Permission[]
+    agentPermissions: Permission[],
+    requiredPermissions: Permission[],
     resource: string
   ): boolean {
     for (const required of requiredPermissions) {

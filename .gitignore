@@ -186,3 +186,5 @@ test-benchmrak.env.backup
 packages/plugin-training/elizaos-knowledge
 packages/**/.cursor
 packages/**/*/.cursor
+
+docs/

@@ -137,6 +137,6 @@ export class EmoteManager {
   }
 
   private getService() {
-    return this.runtime.getService<HyperfyService>(HyperfyService.serviceType);
+    return this.runtime.getService<HyperfyService>(HyperfyService.serviceName);
   }
 }

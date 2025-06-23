@@ -7,12 +7,5 @@
     "declaration": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "src/__tests__/test-scenarios/**/*.ts",
-    "src/__tests__/test-data/**/*.ts"
-  ]
+  "exclude": ["node_modules", "dist"]
 }

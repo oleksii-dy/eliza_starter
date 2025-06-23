@@ -85,9 +85,28 @@ export const runCoreActionTests = (actions: Action[]) => {
 // Re-export from core test-utils
 export {
   createMockRuntime,
-  createMockMemory as createMockMessage,
   createMockState,
 } from '@elizaos/core/test-utils';
+
+// Import the base function and create a proper wrapper
+import { createMockMemory } from '@elizaos/core/test-utils';
+
+/**
+ * Creates a mock Message object for testing
+ *
+ * @param text - The message text
+ * @param overrides - Optional overrides for the default memory properties
+ * @returns A mock memory object
+ */
+export function createMockMessage(text: string, overrides: Partial<Memory> = {}): Memory {
+  return createMockMemory({
+    content: {
+      text,
+      source: 'project-starter-test',
+    },
+    ...overrides,
+  });
+}
 
 /**
  * Documents test results for logging and debugging

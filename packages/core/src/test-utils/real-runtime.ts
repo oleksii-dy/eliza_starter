@@ -405,11 +405,11 @@ export class RuntimeTestHarness {
 /**
  * Convenience function to create and configure a test runtime
  */
-export async function createTestRuntime(config: Partial<RealRuntimeConfig> = {}): Promise<{
+export async function createTestRuntime(config: Partial<RuntimeConfig> = {}): Promise<{
   runtime: IAgentRuntime;
-  harness: RealRuntimeTestHarness;
+  harness: RuntimeTestHarness;
 }> {
-  const harness = new RealRuntimeTestHarness();
+  const harness = new RuntimeTestHarness();
 
   const defaultCharacter: Character = {
     name: 'TestAgent',
@@ -438,10 +438,10 @@ export async function createTestRuntime(config: Partial<RealRuntimeConfig> = {})
 export async function runIntegrationTest(
   testName: string,
   testFn: (runtime: IAgentRuntime) => Promise<void>,
-  config?: Partial<RealRuntimeConfig>
+  config?: Partial<RuntimeConfig>
 ): Promise<TestResult> {
   const startTime = Date.now();
-  let harness: RealRuntimeTestHarness | undefined;
+  let harness: RuntimeTestHarness | undefined;
 
   try {
     const { runtime, harness: testHarness } = await createTestRuntime(config);

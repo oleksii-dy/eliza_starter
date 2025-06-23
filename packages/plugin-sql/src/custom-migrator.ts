@@ -514,7 +514,7 @@ export class DrizzleSchemaIntrospector {
       );
       for (const [indexName, index] of Object.entries(tableConfig.indexes)) {
         const idx = index as any;
-        indexes.push({ name: indexName, columns: idx.columns || [] unique: idx.unique || false });
+        indexes.push({ name: indexName, columns: idx.columns || [], unique: idx.unique || false });
       }
     }
 

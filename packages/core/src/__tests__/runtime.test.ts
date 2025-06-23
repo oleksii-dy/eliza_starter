@@ -159,7 +159,7 @@ const mockCharacter: Character = {
   plugins: ['@elizaos/plugin-sql'],
   username: 'test',
   bio: ['Test bio'],
-  messageExamples: [] // Ensure required fields are present
+  messageExamples: [], // Ensure required fields are present
   postExamples: [],
   topics: [],
   style: {

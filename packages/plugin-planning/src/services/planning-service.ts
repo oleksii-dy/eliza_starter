@@ -70,12 +70,15 @@ export class PlanningService extends Service implements IPlanningService {
   capabilityDescription = 'Provides comprehensive planning and action coordination capabilities';
 
   private activePlans = new Map<UUID, ActionPlan>();
-  private planExecutions = new Map<UUID, {
-    state: PlanState;
-    workingMemory: WorkingMemory;
-    results: ActionResult[];
-    abortController?: AbortController;
-  }>();
+  private planExecutions = new Map<
+    UUID,
+    {
+      state: PlanState;
+      workingMemory: WorkingMemory;
+      results: ActionResult[];
+      abortController?: AbortController;
+    }
+  >();
 
   constructor(runtime?: IAgentRuntime) {
     super(runtime);
@@ -108,7 +111,10 @@ export class PlanningService extends Service implements IPlanningService {
         const text = message.content.text?.toLowerCase() || '';
         if (text.includes('email')) {
           actions = ['SEND_EMAIL'];
-        } else if (text.includes('research') && (text.includes('send') || text.includes('summary'))) {
+        } else if (
+          text.includes('research') &&
+          (text.includes('send') || text.includes('summary'))
+        ) {
           actions = ['SEARCH', 'REPLY'];
         } else if (text.includes('search') || text.includes('find') || text.includes('research')) {
           actions = ['SEARCH'];
@@ -185,7 +191,7 @@ export class PlanningService extends Service implements IPlanningService {
       if (!context.preferences || typeof context.preferences !== 'object') {
         throw new Error('Planning context preferences must be an object');
       }
-      
+
       logger.info(`[PlanningService] Creating comprehensive plan for goal: ${context.goal}`);
 
       // Construct planning prompt with full context
@@ -207,10 +213,12 @@ export class PlanningService extends Service implements IPlanningService {
       // Store the active plan
       this.activePlans.set(enhancedPlan.id, enhancedPlan);
 
-      logger.info(`[PlanningService] Created comprehensive plan ${enhancedPlan.id} with ${enhancedPlan.steps.length} steps`);
+      logger.info(
+        `[PlanningService] Created comprehensive plan ${enhancedPlan.id} with ${enhancedPlan.steps.length} steps`
+      );
 
       return enhancedPlan;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('[PlanningService] Error creating comprehensive plan:', error);
       throw new Error(`Failed to create comprehensive plan: ${error.message}`);
     }
@@ -250,11 +258,38 @@ export class PlanningService extends Service implements IPlanningService {
 
       // Execute steps based on execution model
       if (plan.executionModel === 'sequential') {
-        await this.executeSequential(runtime, plan, message, workingMemory, results, errors, callback, abortController.signal);
+        await this.executeSequential(
+          runtime,
+          plan,
+          message,
+          workingMemory,
+          results,
+          errors,
+          callback,
+          abortController.signal
+        );
       } else if (plan.executionModel === 'parallel') {
-        await this.executeParallel(runtime, plan, message, workingMemory, results, errors, callback, abortController.signal);
+        await this.executeParallel(
+          runtime,
+          plan,
+          message,
+          workingMemory,
+          results,
+          errors,
+          callback,
+          abortController.signal
+        );
       } else if (plan.executionModel === 'dag') {
-        await this.executeDAG(runtime, plan, message, workingMemory, results, errors, callback, abortController.signal);
+        await this.executeDAG(
+          runtime,
+          plan,
+          message,
+          workingMemory,
+          results,
+          errors,
+          callback,
+          abortController.signal
+        );
       } else {
         throw new Error(`Unsupported execution model: ${plan.executionModel}`);
       }
@@ -273,12 +308,14 @@ export class PlanningService extends Service implements IPlanningService {
         duration: Date.now() - startTime,
       };
 
-      logger.info(`[PlanningService] Plan ${plan.id} execution completed. Success: ${result.success}, Duration: ${result.duration}ms`);
+      logger.info(
+        `[PlanningService] Plan ${plan.id} execution completed. Success: ${result.success}, Duration: ${result.duration}ms`
+      );
 
       return result;
     } catch (error) {
       logger.error(`[PlanningService] Plan ${plan.id} execution failed:`, error);
-      
+
       executionState.status = 'failed';
       executionState.endTime = Date.now();
       executionState.error = error as Error;
@@ -325,14 +362,14 @@ export class PlanningService extends Service implements IPlanningService {
         }
 
         // Check if action exists in runtime
-        const action = runtime.actions.find(a => a.name === step.actionName);
+        const action = runtime.actions.find((a) => a.name === step.actionName);
         if (!action) {
           issues.push(`Action '${step.actionName}' not found in runtime`);
         }
       }
 
       // Validate dependencies
-      const stepIds = new Set(plan.steps.map(s => s.id));
+      const stepIds = new Set(plan.steps.map((s) => s.id));
       for (const step of plan.steps) {
         if (step.dependencies) {
           for (const depId of step.dependencies) {
@@ -355,7 +392,7 @@ export class PlanningService extends Service implements IPlanningService {
         valid: issues.length === 0,
         issues: issues.length > 0 ? issues : undefined,
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('[PlanningService] Error validating plan:', error);
       return {
         valid: false,
@@ -388,7 +425,11 @@ export class PlanningService extends Service implements IPlanningService {
       });
 
       // Parse adaptation response
-      const adaptedPlan = this.parseAdaptationResponse(adaptationResponse as string, plan, currentStepIndex);
+      const adaptedPlan = this.parseAdaptationResponse(
+        adaptationResponse as string,
+        plan,
+        currentStepIndex
+      );
 
       // Update active plan
       this.activePlans.set(plan.id, adaptedPlan);
@@ -396,7 +437,7 @@ export class PlanningService extends Service implements IPlanningService {
       logger.info(`[PlanningService] Plan ${plan.id} adapted successfully`);
 
       return adaptedPlan;
-    } catch (error) {
+    } catch (error: any) {
       logger.error(`[PlanningService] Error adapting plan ${plan.id}:`, error);
       throw new Error(`Failed to adapt plan: ${error.message}`);
     }
@@ -454,7 +495,9 @@ export class PlanningService extends Service implements IPlanningService {
   ): string {
     const availableActions = (context.availableActions || []).join(', ');
     const availableProviders = (context.availableProviders || []).join(', ');
-    const constraints = (context.constraints || []).map(c => `${c.type}: ${c.description || c.value}`).join(', ');
+    const constraints = (context.constraints || [])
+      .map((c) => `${c.type}: ${c.description || c.value}`)
+      .join(', ');
 
     return `You are an expert AI planning system. Create a comprehensive action plan to achieve the following goal.
 
@@ -498,21 +541,22 @@ Focus on:
     try {
       // First try to parse using parseKeyValueXml
       const parsedXml = parseKeyValueXml(response);
-      
+
       const planId = asUUID(uuidv4());
       const steps: ActionStep[] = [];
 
       // Enhanced step parsing - try multiple approaches
       let goal = parsedXml?.goal || context.goal;
-      let executionModel = parsedXml?.execution_model || context.preferences?.executionModel || 'sequential';
+      let executionModel =
+        parsedXml?.execution_model || context.preferences?.executionModel || 'sequential';
       let estimatedDuration = parseInt(parsedXml?.estimated_duration) || 30000;
 
       // Parse steps using regex if XML parsing failed
       const stepMatches = response.match(/<step>(.*?)<\/step>/gs) || [];
-      
+
       // Map to track step relationships
       const stepIdMap = new Map<string, UUID>();
-      
+
       for (const stepMatch of stepMatches) {
         try {
           // Extract individual step fields using regex
@@ -520,12 +564,12 @@ Focus on:
           const actionMatch = stepMatch.match(/<action>(.*?)<\/action>/);
           const parametersMatch = stepMatch.match(/<parameters>(.*?)<\/parameters>/);
           const dependenciesMatch = stepMatch.match(/<dependencies>(.*?)<\/dependencies>/);
-          
+
           if (actionMatch && idMatch) {
             const originalId = idMatch[1].trim();
             const actualId = asUUID(uuidv4());
             stepIdMap.set(originalId, actualId);
-            
+
             // Parse dependencies and resolve them later
             let dependencyStrings: string[] = [];
             if (dependenciesMatch?.[1]) {
@@ -536,7 +580,7 @@ Focus on:
                 dependencyStrings = [];
               }
             }
-            
+
             steps.push({
               id: actualId,
               actionName: actionMatch[1].trim(),
@@ -555,14 +599,14 @@ Focus on:
       for (const step of steps) {
         const dependencyStrings = (step as any)._dependencyStrings || [];
         const dependencies: UUID[] = [];
-        
+
         for (const depString of dependencyStrings) {
           const resolvedId = stepIdMap.get(depString);
           if (resolvedId) {
             dependencies.push(resolvedId);
           }
         }
-        
+
         step.dependencies = dependencies;
         // Clean up temporary properties
         delete (step as any)._originalId;
@@ -579,7 +623,7 @@ Focus on:
           parameters: { goal: context.goal },
           dependencies: [],
         });
-        
+
         if (context.goal.includes('plan') || context.goal.includes('strategy')) {
           steps.push({
             id: asUUID(uuidv4()),
@@ -587,7 +631,7 @@ Focus on:
             parameters: { type: 'strategic_planning' },
             dependencies: [steps[0].id],
           });
-          
+
           steps.push({
             id: asUUID(uuidv4()),
             actionName: 'EXECUTE_FINAL',
@@ -612,18 +656,20 @@ Focus on:
       };
     } catch (error) {
       logger.error('Failed to parse planning response:', error);
-      
+
       // Create emergency fallback plan
       const planId = asUUID(uuidv4());
       return {
         id: planId,
         goal: context.goal,
-        steps: [{
-          id: asUUID(uuidv4()),
-          actionName: 'REPLY',
-          parameters: { text: 'I will help you with this request step by step.' },
-          dependencies: [],
-        }],
+        steps: [
+          {
+            id: asUUID(uuidv4()),
+            actionName: 'REPLY',
+            parameters: { text: 'I will help you with this request step by step.' },
+            dependencies: [],
+          },
+        ],
         executionModel: 'sequential',
         state: { status: 'pending' },
         metadata: {
@@ -643,9 +689,11 @@ Focus on:
   ): Promise<ActionPlan> {
     // Validate actions exist
     for (const step of plan.steps) {
-      const action = runtime.actions.find(a => a.name === step.actionName);
+      const action = runtime.actions.find((a) => a.name === step.actionName);
       if (!action) {
-        logger.warn(`[PlanningService] Action '${step.actionName}' not found, replacing with REPLY`);
+        logger.warn(
+          `[PlanningService] Action '${step.actionName}' not found, replacing with REPLY`
+        );
         step.actionName = 'REPLY';
         step.parameters = { text: `Unable to find action: ${step.actionName}` };
       }
@@ -682,11 +730,19 @@ Focus on:
       }
 
       const step = plan.steps[i];
-      
+
       try {
-        const result = await this.executeStep(runtime, step, message, workingMemory, results, callback, abortSignal);
+        const result = await this.executeStep(
+          runtime,
+          step,
+          message,
+          workingMemory,
+          results,
+          callback,
+          abortSignal
+        );
         results.push(result);
-        
+
         // Update execution state
         const execution = this.planExecutions.get(plan.id);
         if (execution) {
@@ -695,7 +751,7 @@ Focus on:
       } catch (error) {
         logger.error(`[PlanningService] Step ${step.id} failed:`, error);
         errors.push(error as Error);
-        
+
         if (step.onError === 'abort' || step.retryPolicy?.onError === 'abort') {
           throw error;
         }
@@ -715,7 +771,15 @@ Focus on:
   ): Promise<void> {
     const promises = plan.steps.map(async (step, index) => {
       try {
-        const result = await this.executeStep(runtime, step, message, workingMemory, results, callback, abortSignal);
+        const result = await this.executeStep(
+          runtime,
+          step,
+          message,
+          workingMemory,
+          results,
+          callback,
+          abortSignal
+        );
         return { index, result, error: null };
       } catch (error) {
         return { index, result: null, error: error as Error };
@@ -723,7 +787,7 @@ Focus on:
     });
 
     const stepResults = await Promise.all(promises);
-    
+
     for (const { index, result, error } of stepResults) {
       if (error) {
         errors.push(error);
@@ -744,12 +808,12 @@ Focus on:
     abortSignal?: AbortSignal
   ): Promise<void> {
     const completed = new Set<UUID>();
-    const pending = new Set(plan.steps.map(s => s.id));
+    const pending = new Set(plan.steps.map((s) => s.id));
 
     while (pending.size > 0 && !abortSignal?.aborted) {
-      const readySteps = plan.steps.filter(step => 
-        pending.has(step.id) && 
-        (step.dependencies || []).every(depId => completed.has(depId))
+      const readySteps = plan.steps.filter(
+        (step) =>
+          pending.has(step.id) && (step.dependencies || []).every((depId) => completed.has(depId))
       );
 
       if (readySteps.length === 0) {
@@ -759,7 +823,15 @@ Focus on:
       // Execute ready steps in parallel
       const promises = readySteps.map(async (step) => {
         try {
-          const result = await this.executeStep(runtime, step, message, workingMemory, results, callback, abortSignal);
+          const result = await this.executeStep(
+            runtime,
+            step,
+            message,
+            workingMemory,
+            results,
+            callback,
+            abortSignal
+          );
           return { stepId: step.id, result, error: null };
         } catch (error) {
           return { stepId: step.id, result: null, error: error as Error };
@@ -767,11 +839,11 @@ Focus on:
       });
 
       const stepResults = await Promise.all(promises);
-      
+
       for (const { stepId, result, error } of stepResults) {
         pending.delete(stepId);
         completed.add(stepId);
-        
+
         if (error) {
           errors.push(error);
         } else if (result) {
@@ -790,7 +862,7 @@ Focus on:
     callback?: HandlerCallback,
     abortSignal?: AbortSignal
   ): Promise<ActionResult> {
-    const action = runtime.actions.find(a => a.name === step.actionName);
+    const action = runtime.actions.find((a) => a.name === step.actionName);
     if (!action) {
       throw new Error(`Action '${step.actionName}' not found`);
     }
@@ -804,25 +876,25 @@ Focus on:
       abortSignal,
       updateMemory: (key: string, value: any) => workingMemory.set(key, value),
       getMemory: (key: string) => workingMemory.get(key),
-      getPreviousResult: (stepId: UUID) => previousResults.find(r => r.data?.stepId === stepId),
+      getPreviousResult: (stepId: UUID) => previousResults.find((r) => r.data?.stepId === stepId),
     };
 
     // Execute action with retry logic
     let retries = 0;
     const maxRetries = step.retryPolicy?.maxRetries || 0;
-    
+
     while (retries <= maxRetries) {
       try {
         const result = await action.handler(
           runtime,
           message,
           { values: {}, data: {}, text: '' },
-          { 
-            ...step.parameters, 
+          {
+            ...step.parameters,
             context: actionContext,
             previousResults: previousResults,
             workingMemory: workingMemory,
-            abortSignal: abortSignal
+            abortSignal: abortSignal,
           },
           callback
         );
@@ -834,7 +906,7 @@ Focus on:
         } else {
           actionResult = { text: String(result) };
         }
-        
+
         // Add step tracking information to the result
         if (!actionResult.data) {
           actionResult.data = {};
@@ -842,7 +914,7 @@ Focus on:
         actionResult.data.stepId = step.id;
         actionResult.data.actionName = step.actionName;
         actionResult.data.executedAt = Date.now();
-        
+
         return actionResult;
       } catch (error) {
         retries++;
@@ -851,9 +923,10 @@ Focus on:
         }
 
         // Apply backoff
-        const backoffMs = (step.retryPolicy?.backoffMs || 1000) * 
+        const backoffMs =
+          (step.retryPolicy?.backoffMs || 1000) *
           Math.pow(step.retryPolicy?.backoffMultiplier || 2, retries - 1);
-        await new Promise(resolve => setTimeout(resolve, backoffMs));
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
       }
     }
 
@@ -875,7 +948,7 @@ Focus on:
       visited.add(stepId);
       recursionStack.add(stepId);
 
-      const step = steps.find(s => s.id === stepId);
+      const step = steps.find((s) => s.id === stepId);
       if (step?.dependencies) {
         for (const depId of step.dependencies) {
           if (dfs(depId)) {
@@ -928,10 +1001,10 @@ Return the adapted plan in the same XML format as the original planning response
       // Parse adapted steps using the same approach as planning response
       const adaptedSteps: ActionStep[] = [];
       const stepMatches = response.match(/<step>(.*?)<\/step>/gs) || [];
-      
+
       // Map to track step relationships
       const stepIdMap = new Map<string, UUID>();
-      
+
       for (const stepMatch of stepMatches) {
         try {
           // Extract individual step fields using regex
@@ -939,12 +1012,12 @@ Return the adapted plan in the same XML format as the original planning response
           const actionMatch = stepMatch.match(/<action>(.*?)<\/action>/);
           const parametersMatch = stepMatch.match(/<parameters>(.*?)<\/parameters>/);
           const dependenciesMatch = stepMatch.match(/<dependencies>(.*?)<\/dependencies>/);
-          
+
           if (actionMatch && idMatch) {
             const originalId = idMatch[1].trim();
             const actualId = asUUID(uuidv4());
             stepIdMap.set(originalId, actualId);
-            
+
             // Parse dependencies and resolve them later
             let dependencyStrings: string[] = [];
             if (dependenciesMatch?.[1]) {
@@ -955,7 +1028,7 @@ Return the adapted plan in the same XML format as the original planning response
                 dependencyStrings = [];
               }
             }
-            
+
             adaptedSteps.push({
               id: actualId,
               actionName: actionMatch[1].trim(),
@@ -974,14 +1047,14 @@ Return the adapted plan in the same XML format as the original planning response
       for (const step of adaptedSteps) {
         const dependencyStrings = (step as any)._dependencyStrings || [];
         const dependencies: UUID[] = [];
-        
+
         for (const depString of dependencyStrings) {
           const resolvedId = stepIdMap.get(depString);
           if (resolvedId) {
             dependencies.push(resolvedId);
           }
         }
-        
+
         step.dependencies = dependencies;
         // Clean up temporary properties
         delete (step as any)._originalId;
@@ -1003,7 +1076,10 @@ Return the adapted plan in the same XML format as the original planning response
           steps: [...originalPlan.steps.slice(0, currentStepIndex), fallbackStep],
           metadata: {
             ...(originalPlan.metadata || {}),
-            adaptations: [...(((originalPlan.metadata as any)?.adaptations) || []), 'Fallback adaptation'],
+            adaptations: [
+              ...((originalPlan.metadata as any)?.adaptations || []),
+              'Fallback adaptation',
+            ],
           } as any,
         };
       }
@@ -1014,12 +1090,15 @@ Return the adapted plan in the same XML format as the original planning response
         steps: [...originalPlan.steps.slice(0, currentStepIndex), ...adaptedSteps],
         metadata: {
           ...(originalPlan.metadata || {}),
-          adaptations: [...(((originalPlan.metadata as any)?.adaptations) || []), `Adapted at step ${currentStepIndex}`],
+          adaptations: [
+            ...((originalPlan.metadata as any)?.adaptations || []),
+            `Adapted at step ${currentStepIndex}`,
+          ],
         } as any,
       };
     } catch (error) {
       logger.error('Failed to parse adaptation response:', error);
-      
+
       // Create emergency fallback adaptation
       const fallbackStep: ActionStep = {
         id: asUUID(uuidv4()),
@@ -1034,7 +1113,10 @@ Return the adapted plan in the same XML format as the original planning response
         steps: [...originalPlan.steps.slice(0, currentStepIndex), fallbackStep],
         metadata: {
           ...(originalPlan.metadata || {}),
-          adaptations: [...(((originalPlan.metadata as any)?.adaptations) || []), 'Emergency fallback adaptation'],
+          adaptations: [
+            ...((originalPlan.metadata as any)?.adaptations || []),
+            'Emergency fallback adaptation',
+          ],
         } as any,
       };
     }

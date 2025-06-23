@@ -246,8 +246,10 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
 
           // Try to execute an emote action
           console.log('Executing wave emote...');
-          if (world.actions) {
+          if (world.actions?.execute) {
             world.actions.execute('emote', 'wave');
+          } else {
+            console.log('⚠️  Actions system not available');
           }
 
           // Wait for action to process

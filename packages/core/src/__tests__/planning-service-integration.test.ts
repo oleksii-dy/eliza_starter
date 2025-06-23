@@ -77,7 +77,7 @@ class MockPlanningService extends Service implements IPlanningService {
       goal: 'Simple plan',
       constraints: [],
       availableActions: [],
-      availableproviders: [],
+      availableProviders: [],
     });
   }
 

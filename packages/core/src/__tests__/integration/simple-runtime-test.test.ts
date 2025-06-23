@@ -1,12 +1,12 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { createTestRuntime, RealRuntimeTestHarness } from '../../test-utils';
+import { createTestRuntime, RuntimeTestHarness } from '../../test-utils';
 import { stringToUuid } from '../../utils';
 
 /**
  * Simple Real Runtime Test - validates the core test infrastructure works
  */
 describe('Simple Real Runtime Test', () => {
-  let harness: RealRuntimeTestHarness | undefined;
+  let harness: RuntimeTestHarness | undefined;
 
   afterEach(async () => {
     if (harness) {
@@ -63,7 +63,7 @@ describe('Simple Real Runtime Test', () => {
   });
 
   it('should validate runtime health', async () => {
-    harness = new RealRuntimeTestHarness();
+    harness = new RuntimeTestHarness();
 
     const runtime = await harness.createTestRuntime({
       character: {

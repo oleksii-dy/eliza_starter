@@ -168,7 +168,7 @@ ${summary}
     similes: ['EDIT_ENTITY_IN_WORLD', 'MODIFY_SCENE', 'BUILD_STRUCTURE'],
     description: `Performs scene edits in Hyperfy, including duplicating, moving, rotating, scaling, deleting, or importing entities. Use when the user asks to modify or add something in the 3D world.`,
     validate: async (runtime: IAgentRuntime): Promise<boolean> => {
-      const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
+      const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
       return !!service && service.isConnected() && !!service.getWorld()?.controls;
     },
     handler: async (
@@ -179,7 +179,7 @@ ${summary}
       callback?: HandlerCallback,
       responses?: Memory[],
     ) => {
-      const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
+      const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
       const world = service?.getWorld();
       const buildManager = service?.getBuildManager();
     

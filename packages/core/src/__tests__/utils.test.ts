@@ -92,7 +92,7 @@ describe('Utils Comprehensive Tests', () => {
           if (args.length === 0) {
             super(fixedTime.toISOString());
           } else {
-            super(...args);
+            super(...(args as [any]));
           }
         }
         static now() {

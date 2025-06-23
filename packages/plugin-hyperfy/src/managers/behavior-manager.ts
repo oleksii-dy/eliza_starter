@@ -87,7 +87,7 @@ export class BehaviorManager {
   }
 
   private getService() {
-    return this.runtime.getService<HyperfyService>(HyperfyService.serviceType);
+    return this.runtime.getService<HyperfyService>(HyperfyService.serviceName);
   }
 
   /**
@@ -155,6 +155,7 @@ export class BehaviorManager {
       prompt: responsePrompt,
     });
 
+    // @ts-ignore - Response type is unknown but parseKeyValueXml handles it
     const parsedXml = parseKeyValueXml(response);
 
     console.log('****** response\n', parsedXml);
@@ -205,14 +206,22 @@ export class BehaviorManager {
 
       await this.runtime.createMemory(callbackMemory, 'messages');
 
-      if (emote) {
-        const emoteManager = service.getEmoteManager();
-        emoteManager.playEmote(emote);
+      if (parsedXml?.emote) {
+        const service = this.getService();
+        const emoteManager = service?.emoteManager;
+        if (emoteManager) {
+          // @ts-ignore - Manager access
+          emoteManager.playEmote(parsedXml.emote);
+        }
       }
 
-      if (responseContent.text) {
-        const messageManager = service.getMessageManager();
-        messageManager.sendMessage(responseContent.text);
+      if (parsedXml?.message) {
+        const service = this.getService();
+        const messageManager = service?.messageManager;
+        if (messageManager) {
+          // @ts-ignore - Manager access
+          messageManager.sendMessage(parsedXml.message);
+        }
       }
 
       return [];

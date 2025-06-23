@@ -208,7 +208,7 @@ describe('End-to-End getWorlds API test', () => {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      style: { all: [] chat: [] post: [] },
+      style: { all: [], chat: [], post: [] },
     };
 
     runtime = new AgentRuntime({

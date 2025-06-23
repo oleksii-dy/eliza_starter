@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
-  RealRuntimeTestHarness,
+  RuntimeTestHarness,
   createTestRuntime,
   runIntegrationTest,
   TestModelProvider,
@@ -24,7 +24,7 @@ import type { IAgentRuntime, Character, Plugin, Memory, UUID, ActionResult } fro
  */
 
 describe('Real Runtime Integration Testing Examples', () => {
-  let harness: RealRuntimeTestHarness;
+  let harness: RuntimeTestHarness;
 
   afterEach(async () => {
     // Always cleanup real runtime resources
@@ -83,7 +83,7 @@ describe('Real Runtime Integration Testing Examples', () => {
     });
 
     it('should validate runtime health comprehensively', async () => {
-      harness = new RealRuntimeTestHarness();
+      harness = new RuntimeTestHarness();
 
       const runtime = await harness.createTestRuntime({
         character: {
@@ -110,7 +110,7 @@ describe('Real Runtime Integration Testing Examples', () => {
 
   describe('Message Processing with Real Models', () => {
     it('should process messages with realistic AI responses', async () => {
-      harness = new RealRuntimeTestHarness();
+      harness = new RuntimeTestHarness();
 
       const runtime = await harness.createTestRuntime({
         character: {
@@ -349,7 +349,7 @@ describe('Real Runtime Integration Testing Examples', () => {
 
   describe('Error Handling and Edge Cases', () => {
     it('should handle runtime errors gracefully', async () => {
-      harness = new RealRuntimeTestHarness();
+      harness = new RuntimeTestHarness();
 
       try {
         // Test with invalid configuration
@@ -451,7 +451,7 @@ describe('Real Runtime Integration Testing Examples', () => {
     it('should manage resources efficiently', async () => {
       const startMemory = process.memoryUsage().heapUsed;
 
-      harness = new RealRuntimeTestHarness();
+      harness = new RuntimeTestHarness();
 
       // Create and test multiple runtimes
       for (let i = 0; i < 3; i++) {
@@ -523,7 +523,7 @@ describe('Real Runtime Integration Testing Examples', () => {
       const results = await Promise.all(promises);
 
       // All should complete successfully
-      results.forEach((result, index) => {
+      results.forEach((result: any, index: number) => {
         expect(result.passed).toBe(true);
         expect(result.scenarioName).toContain(`Concurrent message ${index}`);
       });

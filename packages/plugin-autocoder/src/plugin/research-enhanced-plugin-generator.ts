@@ -613,7 +613,7 @@ export class ${this.toPascalCase(spec.name)}Error extends Error {
     "noUncheckedIndexedAccess": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist"]
 }`;
 
     return {

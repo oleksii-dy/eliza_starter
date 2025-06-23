@@ -25,7 +25,7 @@ function createRealRuntime() {
 
   // Create a real service instance if needed
   const createService = (serviceType: string) => {
-    if (serviceType === HyperfyService.serviceType) {
+    if (serviceType === HyperfyService.serviceName) {
       return new HyperfyService({
         character: {
           name: 'Test Character',
@@ -145,7 +145,7 @@ describe('HyperfyService', () => {
 
     // Register a real service first
     const service = new HyperfyService(runtime as any);
-    runtime.registerService(HyperfyService.serviceType, service);
+    runtime.registerService(HyperfyService.serviceName, service);
 
     // Spy on the real service's stop method
     const stopSpy = vi.spyOn(service, 'stop');

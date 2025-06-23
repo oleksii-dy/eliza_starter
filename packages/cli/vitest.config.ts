@@ -17,6 +17,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@': path.resolve(__dirname, '.'),
       '@elizaos/core': path.resolve(__dirname, '../core/dist/index.js'),
       '@elizaos/plugin-sql': path.resolve(__dirname, '../plugin-sql/dist/index.js'),
       '@elizaos/plugin-todo': path.resolve(__dirname, '../plugin-todo/dist/index.js'),

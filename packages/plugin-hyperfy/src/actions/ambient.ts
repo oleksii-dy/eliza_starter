@@ -51,7 +51,8 @@ function extractAmbientContent(response: Memory, fieldKeys: string[]): Content |
 export const hyperfyAmbientSpeechAction = {
   name: 'HYPERFY_AMBIENT_SPEECH',
   similes: ['MONOLOGUE', 'OBSERVE', 'SELF_TALK', 'ENVIRONMENTAL_REMARK'],
-  description: 'Says something aloud without addressing anyone; use for idle thoughts, atmosphere, or commentary when not in conversation.',
+  description:
+    'Says something aloud without addressing anyone; use for idle thoughts, atmosphere, or commentary when not in conversation.',
   validate: async (_runtime: IAgentRuntime) => true,
   handler: async (
     runtime: IAgentRuntime,
@@ -85,11 +86,16 @@ export const hyperfyAmbientSpeechAction = {
 
     const response = await runtime.useModel(ModelType.OBJECT_LARGE, { prompt });
 
-    await callback({
+    const responseContent = {
+      // @ts-ignore - Response type is unknown
       thought: response.thought,
+      // @ts-ignore - Response type is unknown
       text: (response.message as string) || '',
-      actions: ['HYPERFY_AMBIENT_SPEECH'],
-    });
+      actions: ['HYPERFY_AMBIENT'],
+      source: 'hyperfy',
+    };
+
+    await callback(responseContent);
   },
   examples: [
     [

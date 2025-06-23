@@ -214,9 +214,6 @@ export class BridgeServer {
 
     this.containers.set(container.id, container);
     elizaLogger.info(`Container ${container.id} registered with capabilities:`, container.capabilities);
-      `Container ${container.id} registered with capabilities:`,
-      container.capabilities
-    );
 
     // Notify central server
     try {
@@ -370,10 +367,6 @@ export class BridgeServer {
 
     // Get pending tasks from Redis
     const pendingTaskData = await this.redis.zrevrange('task_queue', 0, availableContainers.length - 1);
-      'task_queue',
-      0,
-      availableContainers.length - 1
-    );
 
     for (const taskData of pendingTaskData) {
       const { id, language } = JSON.parse(taskData);

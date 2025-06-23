@@ -29,8 +29,6 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     getService: mock(),
     getSetting: mock().mockReturnValue(null),
     useModel: mock().mockResolvedValue('Test model response'),
-    getProviderResults: mock().mockResolvedValue([]),
-    evaluateProviders: mock().mockResolvedValue([]),
     evaluate: mock().mockResolvedValue([]),
     ...overrides,
   });

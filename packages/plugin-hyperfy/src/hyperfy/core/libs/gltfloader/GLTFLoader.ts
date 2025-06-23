@@ -26,8 +26,8 @@ export interface GLTF extends ThreeGLTF {
 }
 
 export class GLTFLoader extends ThreeGLTFLoader {
-  protected dracoLoader: DRACOLoader | null = null;
-  protected ktx2Loader: KTX2Loader | null = null;
+  public dracoLoader: DRACOLoader | null = null;
+  public ktx2Loader: KTX2Loader | null = null;
 
   constructor(manager?: THREE.LoadingManager) {
     super(manager);
@@ -66,7 +66,7 @@ export class GLTFLoader extends ThreeGLTFLoader {
     url: string,
     onLoad: (gltf: GLTF) => void,
     onProgress?: (event: ProgressEvent) => void,
-    onError?: (err: unknown) => void
+    onError?: (event: ErrorEvent) => void
   ): void {
     super.load(
       url,
@@ -76,6 +76,7 @@ export class GLTFLoader extends ThreeGLTFLoader {
         onLoad(processedGltf as GLTF);
       },
       onProgress,
+      // @ts-ignore - Type mismatch between THREE.js versions
       onError
     );
   }
@@ -96,7 +97,7 @@ export class GLTFLoader extends ThreeGLTFLoader {
     data: ArrayBuffer | string,
     path: string,
     onLoad: (gltf: GLTF) => void,
-    onError?: (err: unknown) => void
+    onError?: (event: ErrorEvent) => void
   ): void {
     super.parse(
       data,

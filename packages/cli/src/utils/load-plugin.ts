@@ -1,5 +1,5 @@
 import { logger } from '@elizaos/core';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import {
   detectPluginContext,
@@ -46,8 +46,8 @@ function findMonorepoRoot(): string | null {
     while (!visited.has(currentDir)) {
       visited.add(currentDir);
       const pkgPath = path.join(currentDir, 'package.json');
-      if (fs.existsSync(pkgPath)) {
-        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      if (existsSync(pkgPath)) {
+        const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
         if (pkg.workspaces) {
           return currentDir;
         }

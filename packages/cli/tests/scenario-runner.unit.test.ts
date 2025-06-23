@@ -95,6 +95,7 @@ describe('ScenarioRunner Unit Tests', () => {
   it('should require exactly one subject actor', () => {
     const runner = new ScenarioRunner(mockServer, mockRuntime);
 
+    // Test scenario with NO subject actors (should throw error)
     const noSubjectScenario: Scenario = {
       id: 'test',
       name: 'Test',
@@ -103,7 +104,7 @@ describe('ScenarioRunner Unit Tests', () => {
         {
           id: 'tester' as UUID,
           name: 'Tester',
-          role: 'subject',
+          role: 'assistant', // Changed from 'subject' to 'assistant'
           script: { steps: [] }
         },
       ],
@@ -147,6 +148,46 @@ describe('ScenarioRunner Unit Tests', () => {
     expect(() => (runner as any).validateScenario(multipleSubjectsScenario)).toThrow(
       'can only have one subject actor'
     );
+  });
+
+  it('should accept scenario with exactly one subject actor', () => {
+    const runner = new ScenarioRunner(mockServer, mockRuntime);
+
+    const validScenarioWithOneSubject: Scenario = {
+      id: 'test',
+      name: 'Test',
+      description: 'Test',
+      actors: [
+        {
+          id: 'subject-actor' as UUID,
+          name: 'Subject',
+          role: 'subject',
+          script: { steps: [] }
+        },
+        {
+          id: 'assistant-actor' as UUID,
+          name: 'Assistant',
+          role: 'assistant',
+          script: { steps: [] }
+        },
+      ],
+      setup: {},
+      execution: {},
+      verification: {
+        rules: [
+          {
+            id: 'test-rule',
+            type: 'llm',
+            description: 'Test rule',
+            weight: 1,
+            config: {},
+          },
+        ],
+      },
+    };
+
+    // This should NOT throw an error
+    expect(() => (runner as any).validateScenario(validScenarioWithOneSubject)).not.toThrow();
   });
 });
 

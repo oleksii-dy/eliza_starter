@@ -531,12 +531,6 @@ Generate a unified diff patch that fixes this issue.`;
    */
   private async saveReport(report: BenchmarkReport, runId: string): Promise<void> {
     const reportDir = path.join(process.cwd(), '.eliza-temp', 'swe-bench-work', 'distributed', runId);
-      process.cwd(),
-      '.eliza-temp',
-      'swe-bench-work',
-      'distributed',
-      runId
-    );
     await fs.mkdir(reportDir, { recursive: true });
 
     const reportPath = path.join(reportDir, 'report.json');

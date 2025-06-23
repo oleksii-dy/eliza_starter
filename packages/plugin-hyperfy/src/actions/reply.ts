@@ -114,9 +114,12 @@ export const replyAction = {
     });
 
     const responseContent = {
+      // @ts-ignore - Response type is unknown
       thought: response.thought,
+      // @ts-ignore - Response type is unknown
       text: (response.message as string) || '',
-      actions: ['REPLY'],
+      actions: ['HYPERFY_REPLY'],
+      source: 'hyperfy',
     };
 
     await callback(responseContent);

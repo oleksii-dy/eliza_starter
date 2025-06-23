@@ -14,12 +14,12 @@ import {
     similes: ['RELEASE_ITEM', 'DROP_ITEM', 'CANCEL_INTERACTION'],
     description: `Drops or stops interacting with the currently held item; use when a player tells you to release it or you're done using it.`,
     validate: async (runtime: IAgentRuntime): Promise<boolean> => {
-      const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
+      const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
       const world = service?.getWorld();
       return !!service && service.isConnected() && !!world?.actions;
     },
     handler: async (runtime: IAgentRuntime, _message: Memory, _state?: State, _options?: {}, callback?: HandlerCallback) => {
-      const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
+      const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
       const world = service?.getWorld();
       const actions = world?.actions as unknown as AgentActions | undefined;
   

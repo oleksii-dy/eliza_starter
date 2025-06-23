@@ -1,17 +1,17 @@
-import { describe, it, expect, mock, spyOn, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { displayAgent, logHeader } from '../../../src/utils/helpers';
 import type { Agent } from '@elizaos/core';
 import colors from 'yoctocolors';
 
 // Mock dependencies
-mock.module('@elizaos/core', () => ({
+vi.mock('@elizaos/core', () => ({
   logger: {
     info: vi.fn(),
     error: vi.fn(),
   },
 }));
 
-mock.module('yoctocolors', () => ({
+vi.mock('yoctocolors', () => ({
   default: {
     green: vi.fn((text) => text),
     cyan: vi.fn((text) => text),

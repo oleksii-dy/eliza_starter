@@ -19,7 +19,7 @@ interface ExtendedRuntime extends IAgentRuntime {
  */
 export const cacheProvider: Provider = {
   name: 'cacheProvider',
-  description: 'Provides caching context and capabilities',
+  description: 'Provides in-memory cache status including hit/miss statistics, operational state, and performance metrics when agent needs to understand cache utilization or make caching-related decisions',
 
   get: async (
     runtime: ExtendedRuntime,

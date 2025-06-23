@@ -530,7 +530,7 @@ describe('Planning Integration Tests', () => {
         mockRuntime,
         originalPlan,
         0, // currentStepIndex
-        [] // results
+        [], // results
         new Error(failureContext.error) // error
       );
 

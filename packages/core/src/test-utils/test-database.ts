@@ -42,7 +42,7 @@ export class TestDatabaseManager {
           }
 
           const dbPath = `:memory:test-${testId}`;
-          adapter = createDatabaseAdapter(
+          adapter = await createDatabaseAdapter(
             {
               dataDir: dbPath,
             },

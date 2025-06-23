@@ -14,7 +14,7 @@ export const hyperfyStopMovingAction: Action = {
     similes: ['STOP', 'HALT', 'STOP_WALKING', 'CANCEL_MOVEMENT', 'STOP_PATROLLING'],
     description: 'Instantly stops your current walking or pathing; use to pause movement before speaking or performing another action.',
     validate: async (runtime: IAgentRuntime): Promise<boolean> => {
-      const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
+      const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
       const controls = service?.getWorld()?.controls as unknown as AgentControls | undefined;
       // Valid only if connected and controls are available
       // Optional: Could check if getIsNavigating() or getIsPatrolling() is true
@@ -22,7 +22,7 @@ export const hyperfyStopMovingAction: Action = {
     },
     handler: async (runtime: IAgentRuntime, _message: Memory, _state?: State, options?: { reason?: string }, // Optional reason for stopping
       callback?: HandlerCallback) => {
-      const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
+      const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
       const controls = service?.getWorld()?.controls as unknown as AgentControls | undefined;
 
       if (!controls) {

@@ -125,7 +125,7 @@ export class FragmentRepository {
   /**
    * Calculate cosine similarity between two embeddings
    */
-  private calculateCosineSimilarity(a: number[] b: number[]): number {
+  private calculateCosineSimilarity(a: number[], b: number[]): number {
     if (a.length !== b.length) return 0;
 
     let dotProduct = 0;

@@ -75,7 +75,7 @@ describe('Advanced Knowledge Features', () => {
         hasMore: false,
       };
 
-      vi.mocked(mockKnowledgeService.advancedSearch).mockResolvedValue(mockResults);
+      (mockKnowledgeService.advancedSearch as any).mockResolvedValue(mockResults);
 
       const message: Memory = {
         id: generateMockUuid(21),
@@ -98,7 +98,7 @@ describe('Advanced Knowledge Features', () => {
       expect(mockKnowledgeService.advancedSearch).toHaveBeenCalled();
 
       // Get the actual call arguments
-      const callArgs = vi.mocked(mockKnowledgeService.advancedSearch).mock.calls[0][0];
+      const callArgs = (mockKnowledgeService.advancedSearch as any).mock.calls[0][0];
 
       // Verify key properties
       expect(callArgs.query).toContain('AI');
@@ -116,7 +116,7 @@ describe('Advanced Knowledge Features', () => {
     });
 
     it('should handle empty search results', async () => {
-      vi.mocked(mockKnowledgeService.advancedSearch).mockResolvedValue({
+      (mockKnowledgeService.advancedSearch as any).mockResolvedValue({
         results: [],
         totalCount: 0,
         hasMore: false,
@@ -181,7 +181,7 @@ describe('Advanced Knowledge Features', () => {
         usageByDate: [],
       };
 
-      vi.mocked(mockKnowledgeService.getAnalytics).mockResolvedValue(mockAnalytics);
+      (mockKnowledgeService.getAnalytics as any).mockResolvedValue(mockAnalytics);
 
       const message: Memory = {
         id: generateMockUuid(43),
@@ -246,7 +246,7 @@ describe('Advanced Knowledge Features', () => {
         2
       );
 
-      vi.mocked(mockKnowledgeService.exportKnowledge).mockResolvedValue(mockExportData);
+      (mockKnowledgeService.exportKnowledge as any).mockResolvedValue(mockExportData);
 
       const message: Memory = {
         id: generateMockUuid(53),
@@ -282,7 +282,7 @@ describe('Advanced Knowledge Features', () => {
       const mockCsvData =
         'ID,Title,Content,Type,Created\n1,test.txt,Test content,text/plain,2024-01-01';
 
-      vi.mocked(mockKnowledgeService.exportKnowledge).mockResolvedValue(mockCsvData);
+      (mockKnowledgeService.exportKnowledge as any).mockResolvedValue(mockCsvData);
 
       const message: Memory = {
         id: generateMockUuid(56),
@@ -306,7 +306,7 @@ describe('Advanced Knowledge Features', () => {
       const mockMarkdownData =
         '# Document 1\n\nContent here\n\n---\n\n# Document 2\n\nMore content';
 
-      vi.mocked(mockKnowledgeService.exportKnowledge).mockResolvedValue(mockMarkdownData);
+      (mockKnowledgeService.exportKnowledge as any).mockResolvedValue(mockMarkdownData);
 
       const message: Memory = {
         id: generateMockUuid(59),
@@ -339,7 +339,7 @@ describe('Advanced Knowledge Features', () => {
         ],
       };
 
-      vi.mocked(mockKnowledgeService.batchOperation).mockResolvedValue(mockBatchResult);
+      (mockKnowledgeService.batchOperation as any).mockResolvedValue(mockBatchResult);
 
       const batchOp = {
         operation: 'add' as const,
@@ -397,7 +397,7 @@ describe('Advanced Knowledge Features', () => {
         ],
       };
 
-      vi.mocked(mockKnowledgeService.batchOperation).mockResolvedValue(mockBatchResult);
+      (mockKnowledgeService.batchOperation as any).mockResolvedValue(mockBatchResult);
 
       const batchOp = {
         operation: 'update' as const,
@@ -434,7 +434,7 @@ describe('Advanced Knowledge Features', () => {
         results: [{ id: generateMockUuid(70), success: true }],
       };
 
-      vi.mocked(mockKnowledgeService.importKnowledge).mockResolvedValue(mockImportResult);
+      (mockKnowledgeService.importKnowledge as any).mockResolvedValue(mockImportResult);
 
       const result = await mockKnowledgeService.importKnowledge(jsonData, {
         format: 'json',
@@ -455,7 +455,7 @@ describe('Advanced Knowledge Features', () => {
         results: [{ id: '1', success: true }],
       };
 
-      vi.mocked(mockKnowledgeService.importKnowledge).mockResolvedValue(mockImportResult);
+      (mockKnowledgeService.importKnowledge as any).mockResolvedValue(mockImportResult);
 
       const result = await mockKnowledgeService.importKnowledge(csvData, {
         format: 'csv',

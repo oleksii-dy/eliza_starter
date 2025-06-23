@@ -19,11 +19,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["node"],
-    "paths": {
-      "@elizaos/core": ["../../packages/core/src"],
-      "@elizaos/core/*": ["../../packages/core/src/*"]
-    }
+    "types": ["node"]
   },
   "exclude": ["node_modules", "dist"],
   "include": ["src/**/*.ts", "src/**/*.tsx"]

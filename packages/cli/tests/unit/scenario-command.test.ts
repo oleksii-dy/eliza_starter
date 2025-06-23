@@ -19,6 +19,8 @@ vi.mock('fs/promises', async () => {
     ...actual,
     readFile: vi.fn().mockResolvedValue('{}'),
     writeFile: vi.fn().mockResolvedValue(undefined),
+    readdir: vi.fn().mockResolvedValue([]),
+    stat: vi.fn().mockResolvedValue({ isFile: () => true, isDirectory: () => false }),
   };
 });
 
@@ -145,12 +147,12 @@ describe('Scenario Command Module', () => {
     it('should load all scenario files from directory', async () => {
       const fsPromises = await import('fs/promises');
       
-      vi.mocked(fsPromises.readdir).mockResolvedValue([
+      (fsPromises.readdir as any).mockResolvedValue([
         'scenario1.json',
         'scenario2.ts',
         'not-a-scenario.txt',
         'subdir',
-      ] as any);
+      ]);
 
       (fsPromises.stat as any).mockImplementation(async (filePath: any) => {
         const pathStr = String(filePath);
@@ -230,7 +232,7 @@ describe('Scenario Command Module', () => {
 
     it('should handle errors gracefully', async () => {
       const fsPromises = await import('fs/promises');
-      vi.mocked(fsPromises.readdir).mockRejectedValue(new Error('Permission denied'));
+      (fsPromises.readdir as any).mockRejectedValue(new Error('Permission denied'));
 
       loadScenariosFromDirectory.mockImplementation(async () => {
         return [];
@@ -282,8 +284,8 @@ describe('Scenario Command Module', () => {
       };
 
       const fsPromises = await import('fs/promises');
-      vi.mocked(fsPromises.readdir).mockResolvedValue(['auth-test.json', 'other-test.json'] as any);
-      vi.mocked(fsPromises.stat).mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any);
+      (fsPromises.readdir as any).mockResolvedValue(['auth-test.json', 'other-test.json']);
+      (fsPromises.stat as any).mockResolvedValue({ isFile: () => true, isDirectory: () => false });
       vi.mocked(fs.existsSync).mockReturnValue(true);
 
       (fsPromises.readFile as any).mockImplementation(async (filePath: any) => {
@@ -357,9 +359,9 @@ describe('Scenario Command Module', () => {
       });
 
       const fsPromises = await import('fs/promises');
-      vi.mocked(fsPromises.readdir).mockResolvedValue(['default.json'] as any);
-      vi.mocked(fsPromises.stat).mockResolvedValue({ isFile: () => true, isDirectory: () => false } as any);
-      vi.mocked(fsPromises.readFile).mockResolvedValue(
+      (fsPromises.readdir as any).mockResolvedValue(['default.json']);
+      (fsPromises.stat as any).mockResolvedValue({ isFile: () => true, isDirectory: () => false });
+      (fsPromises.readFile as any).mockResolvedValue(
         JSON.stringify({
           id: 'default-scenario',
           name: 'Default Scenario',

@@ -26,7 +26,7 @@ export const hyperfyProvider: Provider = {
     };
     const utcTimeString = new Intl.DateTimeFormat('en-US', timeOptions).format(currentDate);
 
-    const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
+    const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
 
     if (!service || !service.isConnected()) {
       return {

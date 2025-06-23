@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi, expect } from 'vitest';
 import type { IAgentRuntime, Memory, State, Character, UUID, Service } from '@elizaos/core';
 
 // Define ModelType locally for testing
@@ -43,8 +43,8 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     modelResponses = {},
     modelErrors = {},
     services = {},
-    memoryResults = []
-    memoryErrors = []
+    memoryResults = [],
+    memoryErrors = [],
     settings = {},
     character = {},
     simulateErrors = false,

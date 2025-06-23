@@ -21,12 +21,8 @@
     "noEmitOnError": false,
     "moduleDetection": "force",
     "allowArbitraryExtensions": true,
-    "baseUrl": ".",
-    "paths": {
-      "@elizaos/core": ["../../core/src"],
-      "@elizaos/core/*": ["../../core/src/*"]
-    }
+    "baseUrl": "."
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["dist", "node_modules", "src/__tests__/**/*", "src/**/cypress/**/*", "**/*.test.ts", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist"]
 }

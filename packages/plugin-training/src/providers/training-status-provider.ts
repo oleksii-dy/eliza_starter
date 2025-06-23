@@ -14,7 +14,7 @@ import {
  */
 export const trainingStatusProvider: Provider = {
   name: 'TRAINING_STATUS',
-  description: 'Provides current training job status and metrics',
+  description: 'Provides current training job status including dataset quality metrics, active job progress, and completion statistics when agent needs to report on model training activities or guide training decisions',
   dynamic: true, // Only included when training-related conversation is happening
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {

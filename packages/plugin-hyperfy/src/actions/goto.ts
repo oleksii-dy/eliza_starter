@@ -73,7 +73,7 @@ export const hyperfyGotoEntityAction: Action = {
     similes: ['GO_TO_ENTITY_IN_WORLD', 'MOVE_TO_ENTITY', 'NAVIGATE_TO_ENTITY'],
     description: 'Moves your character to a specified player, object, or world position; use when you need to approach something or go somewhere before interacting.',
     validate: async (runtime: IAgentRuntime): Promise<boolean> => {
-      const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
+      const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
       // Check if connected and if controls are available
       return !!service && service.isConnected() && !!service.getWorld()?.controls;
     },
@@ -91,7 +91,7 @@ export const hyperfyGotoEntityAction: Action = {
           .filter(Boolean)
           .join('\n') ?? '';
 
-      const service = runtime.getService<HyperfyService>(HyperfyService.serviceType);
+      const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
       const world = service?.getWorld(); // Use the getter
       const controls = world?.controls as unknown as AgentControls | undefined; // Get controls and cast type
       const player = world?.entities?.player;

@@ -9,9 +9,9 @@ import {
     parseUnits,
     type Hex,
     getContract,
-    erc20ABI,
-    waitForTransactionReceipt
+    erc20Abi
 } from 'viem';
+import { waitForTransactionReceipt } from 'viem/actions';
 import { mainnet, polygon, arbitrum, optimism, base } from 'viem/chains';
 // ABI import removed - using inline AAVE_POOL_ABI instead
 import { getChainConfig } from '../core/chains/config';
@@ -706,7 +706,7 @@ export class DeFiService {
                 // Approve token spending if needed
                 const tokenContract = getContract({
                     address: params.asset!,
-                    abi: erc20ABI,
+                    abi: erc20Abi,
                     client: walletClient
                 });
 

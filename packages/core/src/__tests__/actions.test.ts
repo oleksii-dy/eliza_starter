@@ -108,7 +108,7 @@ describe('Actions', () => {
         {
           name: 'test',
           description: 'Test action without examples',
-          examples: [] // Empty examples array
+          examples: [], // Empty examples array
           similes: [],
           handler: async () => {
             throw new Error('Not implemented');
