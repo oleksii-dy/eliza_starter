@@ -35,7 +35,7 @@ export function toV2Memory(memory: MemoryV1): MemoryV2 {
 export function fromV2KnowledgeItem(item: KnowledgeItemV2, agentId: string): RAGKnowledgeItem {
   return {
     id: item.id,
-    agentId: agentId as any,
+    agentId: agentId as UUID,
     content: {
       text: item.content.text,
       metadata: item.metadata,
