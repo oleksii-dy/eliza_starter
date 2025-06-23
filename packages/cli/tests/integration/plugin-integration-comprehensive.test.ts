@@ -1,6 +1,6 @@
 /**
  * Comprehensive Integration Tests for Trust, Rolodex, Payment, and Secrets Manager Plugins
- * 
+ *
  * This test suite verifies the complete integration between all four plugins:
  * - OAuth identity verification flow (Secrets Manager + Rolodex)
  * - Trust score updates from verified identities (Trust + Rolodex)
@@ -27,7 +27,7 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
   const mockEntities = new Map();
   const mockTrustScores = new Map();
   const mockPaymentProfiles = new Map();
-  
+
   return {
     agentId: asUUID('test-agent-id'),
     character: {
@@ -37,12 +37,11 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       clients: [],
       plugins: [
         '@elizaos/plugin-trust',
-        '@elizaos/plugin-rolodex', 
+        '@elizaos/plugin-rolodex',
         '@elizaos/plugin-payment',
         '@elizaos/plugin-secrets-manager',
       ],
@@ -107,18 +106,18 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
           lastUpdated: Date.now(),
           version: 1,
         };
-        
+
         // Simulate trust score increase from OAuth verification
         if (evidence.type === 'oauth-verification') {
           currentScore.overallScore = Math.min(1.0, currentScore.overallScore + evidence.impact);
           currentScore.dimensions.integrity += evidence.impact * 0.5;
           currentScore.dimensions.transparency += evidence.impact * 0.3;
         }
-        
+
         currentScore.evidence.push(evidence);
         currentScore.lastUpdated = Date.now();
         currentScore.version += 1;
-        
+
         mockTrustScores.set(entityId, currentScore);
         return Promise.resolve(currentScore);
       }),
@@ -148,19 +147,21 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
             },
             relationships: [],
             metadata: {
-              verificationHistory: [{
-                type: 'oauth',
-                platform: proof.data.platform,
-                timestamp: Date.now(),
-                success: true,
-              }],
+              verificationHistory: [
+                {
+                  type: 'oauth',
+                  platform: proof.data.platform,
+                  timestamp: Date.now(),
+                  success: true,
+                },
+              ],
             },
             createdAt: Date.now(),
             lastUpdated: Date.now(),
           };
-          
+
           mockEntities.set(entityId, profile);
-          
+
           return Promise.resolve({
             success: true,
             verified: true,
@@ -169,7 +170,7 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
             metadata: { userProfile: proof.data.userProfile },
           });
         }
-        
+
         return Promise.resolve({
           success: false,
           verified: false,
@@ -192,20 +193,22 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
         };
         return Promise.resolve(profile);
       }),
-      assessPaymentRisk: vi.fn().mockImplementation((entityId: UUID, amount: string, method: any) => {
-        const trustScore = mockTrustScores.get(entityId)?.overallScore || 0.5;
-        const profile = mockEntities.get(entityId);
-        
-        // Risk assessment based on trust score and verification status
-        let riskLevel = 'medium';
-        if (trustScore >= 0.8 && profile?.verificationLevel === 'verified') {
-          riskLevel = 'low';
-        } else if (trustScore <= 0.3 || !profile) {
-          riskLevel = 'high';
-        }
-        
-        return Promise.resolve(riskLevel);
-      }),
+      assessPaymentRisk: vi
+        .fn()
+        .mockImplementation((entityId: UUID, amount: string, method: any) => {
+          const trustScore = mockTrustScores.get(entityId)?.overallScore || 0.5;
+          const profile = mockEntities.get(entityId);
+
+          // Risk assessment based on trust score and verification status
+          let riskLevel = 'medium';
+          if (trustScore >= 0.8 && profile?.verificationLevel === 'verified') {
+            riskLevel = 'low';
+          } else if (trustScore <= 0.3 || !profile) {
+            riskLevel = 'high';
+          }
+
+          return Promise.resolve(riskLevel);
+        }),
       processPayment: vi.fn().mockResolvedValue({
         id: asUUID('test-payment-id'),
         entityId: asUUID('test-entity-id'),
@@ -228,13 +231,13 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
 describe('Cross-Plugin Integration Tests', () => {
   let runtime: Partial<IAgentRuntime>;
   let testEntityId: UUID;
-  
+
   beforeEach(() => {
     runtime = createTestRuntime();
     testEntityId = asUUID('test-entity-12345');
     vi.clearAllMocks();
   });
-  
+
   afterEach(() => {
     vi.resetAllMocks();
   });
@@ -244,7 +247,7 @@ describe('Cross-Plugin Integration Tests', () => {
       // Step 1: Initiate OAuth verification
       const oauthService = runtime.getService('OAUTH_VERIFICATION');
       expect(oauthService).toBeDefined();
-      
+
       // Step 2: Simulate OAuth callback with user profile
       const userProfile = await oauthService.handleCallback('google', 'auth-code', 'state');
       expect(userProfile).toEqual({
@@ -257,7 +260,7 @@ describe('Cross-Plugin Integration Tests', () => {
           avatar_url: 'https://example.com/avatar.jpg',
         },
       });
-      
+
       // Step 3: Verify identity through Rolodex
       const identityManager = runtime.getIdentityManager();
       const verificationResult = await identityManager.verifyIdentity(testEntityId, {
@@ -268,11 +271,11 @@ describe('Cross-Plugin Integration Tests', () => {
           userProfile,
         },
       });
-      
+
       expect(verificationResult.success).toBe(true);
       expect(verificationResult.verified).toBe(true);
       expect(verificationResult.confidence).toBe(0.95);
-      
+
       // Step 4: Verify identity profile was created
       const profile = await identityManager.getIdentityProfile(testEntityId);
       expect(profile).toBeDefined();
@@ -285,11 +288,11 @@ describe('Cross-Plugin Integration Tests', () => {
     it('should update trust scores after OAuth verification', async () => {
       const trustProvider = runtime.getTrustProvider();
       const identityManager = runtime.getIdentityManager();
-      
+
       // Get initial trust score
       const initialScore = await trustProvider.getTrustScore(testEntityId);
       expect(initialScore.overallScore).toBe(0.5);
-      
+
       // Perform OAuth verification
       await identityManager.verifyIdentity(testEntityId, {
         type: 'oauth',
@@ -304,7 +307,7 @@ describe('Cross-Plugin Integration Tests', () => {
           },
         },
       });
-      
+
       // Verify trust score was updated (through mock implementation)
       expect(trustProvider.updateTrust).toHaveBeenCalledWith(
         testEntityId,
@@ -318,7 +321,7 @@ describe('Cross-Plugin Integration Tests', () => {
     it('should handle multiple platform verifications', async () => {
       const identityManager = runtime.getIdentityManager();
       const trustProvider = runtime.getTrustProvider();
-      
+
       // Verify Google account
       await identityManager.verifyIdentity(testEntityId, {
         type: 'oauth',
@@ -328,7 +331,7 @@ describe('Cross-Plugin Integration Tests', () => {
           userProfile: { id: 'google-user-id', name: 'John Doe', verified: true },
         },
       });
-      
+
       // Verify GitHub account
       await identityManager.verifyIdentity(testEntityId, {
         type: 'oauth',
@@ -338,10 +341,10 @@ describe('Cross-Plugin Integration Tests', () => {
           userProfile: { id: 'github-user-id', login: 'johndoe', verified: true },
         },
       });
-      
+
       // Check that both verifications were processed
       expect(trustProvider.updateTrust).toHaveBeenCalledTimes(2);
-      
+
       const profile = await identityManager.getIdentityProfile(testEntityId);
       expect(profile.platformIdentities).toHaveProperty('google');
       expect(profile.platformIdentities).toHaveProperty('github');
@@ -353,7 +356,7 @@ describe('Cross-Plugin Integration Tests', () => {
       const paymentProvider = runtime.getPaymentProvider();
       const trustProvider = runtime.getTrustProvider();
       const identityManager = runtime.getIdentityManager();
-      
+
       // Initial risk assessment for unverified user
       let riskLevel = await paymentProvider.assessPaymentRisk(
         testEntityId,
@@ -361,7 +364,7 @@ describe('Cross-Plugin Integration Tests', () => {
         { type: 'crypto', currency: 'ETH' }
       );
       expect(riskLevel).toBe('medium'); // Default for unknown user
-      
+
       // Verify identity to increase trust
       await identityManager.verifyIdentity(testEntityId, {
         type: 'oauth',
@@ -371,7 +374,7 @@ describe('Cross-Plugin Integration Tests', () => {
           userProfile: { id: 'test-user', name: 'John Doe', verified: true },
         },
       });
-      
+
       // Update trust score
       await trustProvider.updateTrust(testEntityId, {
         type: 'oauth-verification',
@@ -379,26 +382,25 @@ describe('Cross-Plugin Integration Tests', () => {
         reason: 'Verified Google identity',
         metadata: { platform: 'google' },
       });
-      
+
       // Re-assess risk after verification
-      riskLevel = await paymentProvider.assessPaymentRisk(
-        testEntityId,
-        '1000',
-        { type: 'crypto', currency: 'ETH' }
-      );
+      riskLevel = await paymentProvider.assessPaymentRisk(testEntityId, '1000', {
+        type: 'crypto',
+        currency: 'ETH',
+      });
       expect(riskLevel).toBe('low'); // Should be lower risk now
     });
 
     it('should prevent high-risk payments for unverified users', async () => {
       const paymentProvider = runtime.getPaymentProvider();
-      
+
       // Assess risk for large payment from unverified user
       const riskLevel = await paymentProvider.assessPaymentRisk(
         asUUID('unknown-user-id'),
         '10000', // $10,000 payment
         { type: 'crypto', currency: 'BTC' }
       );
-      
+
       expect(riskLevel).toBe('high'); // Should be high risk for unknown user
     });
 
@@ -406,7 +408,7 @@ describe('Cross-Plugin Integration Tests', () => {
       const paymentProvider = runtime.getPaymentProvider();
       const identityManager = runtime.getIdentityManager();
       const trustProvider = runtime.getTrustProvider();
-      
+
       // Set up verified, high-trust user
       await identityManager.verifyIdentity(testEntityId, {
         type: 'oauth',
@@ -416,14 +418,14 @@ describe('Cross-Plugin Integration Tests', () => {
           userProfile: { id: 'trusted-user', name: 'Alice Smith', verified: true },
         },
       });
-      
+
       await trustProvider.updateTrust(testEntityId, {
         type: 'oauth-verification',
         impact: 0.4,
         reason: 'Verified identity and transaction history',
         metadata: { platform: 'google' },
       });
-      
+
       // Process payment
       const paymentRequest: PaymentRequest = {
         entityId: testEntityId,
@@ -433,9 +435,9 @@ describe('Cross-Plugin Integration Tests', () => {
         description: 'Test payment',
         requiresConfirmation: false,
       };
-      
+
       const result = await paymentProvider.processPayment(paymentRequest);
-      
+
       expect(result).toBeDefined();
       expect(result.status).toBe('completed');
       expect(result.entityId).toBe(testEntityId);
@@ -447,7 +449,7 @@ describe('Cross-Plugin Integration Tests', () => {
       const identityManager = runtime.getIdentityManager();
       const trustProvider = runtime.getTrustProvider();
       const paymentProvider = runtime.getPaymentProvider();
-      
+
       // Create verified identity
       await identityManager.verifyIdentity(testEntityId, {
         type: 'oauth',
@@ -457,7 +459,7 @@ describe('Cross-Plugin Integration Tests', () => {
           userProfile: { id: 'consistent-user', name: 'Bob Wilson', verified: true },
         },
       });
-      
+
       // Update trust score
       await trustProvider.updateTrust(testEntityId, {
         type: 'oauth-verification',
@@ -465,17 +467,17 @@ describe('Cross-Plugin Integration Tests', () => {
         reason: 'Verified Google account',
         metadata: { platform: 'google' },
       });
-      
+
       // Get data from all plugins
       const identityProfile = await identityManager.getIdentityProfile(testEntityId);
       const trustScore = await trustProvider.getTrustScore(testEntityId);
       const paymentProfile = await paymentProvider.getPaymentProfile(testEntityId);
-      
+
       // Verify entity ID consistency
       expect(identityProfile.entityId).toBe(testEntityId);
       expect(trustScore.entityId).toBe(testEntityId);
       expect(paymentProfile.entityId).toBe(testEntityId);
-      
+
       // Verify trust score consistency
       expect(identityProfile.trustScore).toBeGreaterThan(0.5);
       expect(trustScore.overallScore).toBeGreaterThan(0.5);
@@ -485,7 +487,7 @@ describe('Cross-Plugin Integration Tests', () => {
       const identityManager = runtime.getIdentityManager();
       const trustProvider = runtime.getTrustProvider();
       const paymentProvider = runtime.getPaymentProvider();
-      
+
       // Simulate concurrent operations
       const operations = await Promise.all([
         identityManager.verifyIdentity(testEntityId, {
@@ -499,7 +501,7 @@ describe('Cross-Plugin Integration Tests', () => {
         trustProvider.getTrustScore(testEntityId),
         paymentProvider.getPaymentProfile(testEntityId),
       ]);
-      
+
       // All operations should complete successfully
       expect(operations[0].success).toBe(true); // Verification
       expect(operations[1]).toBeDefined(); // Trust score
@@ -510,13 +512,13 @@ describe('Cross-Plugin Integration Tests', () => {
   describe('Error Handling and Edge Cases', () => {
     it('should handle OAuth verification failures gracefully', async () => {
       const identityManager = runtime.getIdentityManager();
-      
+
       // Simulate failed OAuth verification
       const verificationResult = await identityManager.verifyIdentity(testEntityId, {
         type: 'invalid-type' as any,
         data: {},
       });
-      
+
       expect(verificationResult.success).toBe(false);
       expect(verificationResult.verified).toBe(false);
       expect(verificationResult.reason).toContain('Unsupported verification type');
@@ -528,21 +530,21 @@ describe('Cross-Plugin Integration Tests', () => {
         ...runtime,
         getTrustProvider: vi.fn(() => null),
       };
-      
+
       const trustProvider = runtimeWithoutTrust.getTrustProvider();
       expect(trustProvider).toBeNull();
     });
 
     it('should handle invalid payment requests', async () => {
       const paymentProvider = runtime.getPaymentProvider();
-      
+
       // Test with invalid entity ID
       const riskLevel = await paymentProvider.assessPaymentRisk(
         asUUID('non-existent-user'),
         '0', // Invalid amount
         { type: 'invalid' } as any
       );
-      
+
       expect(riskLevel).toBe('high'); // Should default to high risk
     });
   });

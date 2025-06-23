@@ -201,11 +201,7 @@ export async function runScenarioWithAgents(
         system:
           actor.system ||
           `You are ${actor.name}, a helpful AI assistant participating in a scenario test.`,
-        modelProvider: 'openai',
-        settings: {
-          model: 'gpt-4o-mini',
-          temperature: 0.7,
-        },
+        settings: {},
         plugins: pluginList, // Include the plugins in the character
       };
 

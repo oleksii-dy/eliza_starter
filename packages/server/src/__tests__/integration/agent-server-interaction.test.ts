@@ -36,10 +36,8 @@ describe('Agent-Server Interaction Integration Tests', () => {
       clients: [],
       plugins: [],
       settings: {
-        model: 'gpt-4',
         secrets: {},
       },
-      modelProvider: 'openai',
     } as Character;
 
     const db1 = createDatabaseAdapter(
@@ -70,7 +68,6 @@ describe('Agent-Server Interaction Integration Tests', () => {
         model: 'gpt-3.5-turbo',
         secrets: {},
       },
-      modelProvider: 'openai',
     } as Character;
 
     const db2 = createDatabaseAdapter(

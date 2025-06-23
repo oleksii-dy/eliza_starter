@@ -5,6 +5,7 @@
 After acknowledging the critical issues with the over-engineered complex implementation, I built a **minimal viable product (MVP)** that actually works. The MVP successfully provides:
 
 ✅ **Core Requirements Met:**
+
 - Non-breaking integration with ElizaOS `runtime.useModel`
 - Enable/disable actions that actually work
 - Training data collection and storage
@@ -31,12 +32,13 @@ The initial complex implementation was exactly the kind of over-engineered disas
 ```
 src/mvp/
 ├── simple-reasoning-service.ts    # Core service with real useModel override
-├── simple-actions.ts              # Working enable/disable/status actions  
+├── simple-actions.ts              # Working enable/disable/status actions
 ├── mvp-plugin.ts                  # Minimal plugin that actually integrates
 └── index.ts                       # Clean exports
 ```
 
 ### Test Coverage:
+
 ```
 src/__tests__/mvp/
 ├── mvp-integration.test.ts        # 15/15 tests passing - Core functionality
@@ -46,53 +48,59 @@ src/__tests__/mvp/
 ## 🛠️ How It Actually Works
 
 ### 1. Simple Service Architecture
+
 - **One class**: `SimpleReasoningService`
 - **Service registry**: Maintains state across action calls
 - **Real override**: Actually replaces `runtime.useModel` when enabled
 - **True restoration**: Restores original method when disabled
 
 ### 2. Working Actions
-- **ENABLE_CUSTOM_REASONING**: Actually enables the service and overrides useModel
-- **DISABLE_CUSTOM_REASONING**: Actually disables and restores original behavior  
+
+- **ENABLE_REASONING_SERVICE**: Actually enables the service and overrides useModel
+- **DISABLE_REASONING_SERVICE**: Actually disables and restores original behavior
 - **CHECK_REASONING_STATUS**: Shows real status and data collection stats
 
 ### 3. Real Training Data Collection
+
 - **In-memory storage**: Collects training data in service instance
 - **Database integration**: Saves to `training_data` table if SQL service available
 - **Graceful degradation**: Works without database, doesn't fail on DB errors
 
-### 4. Backwards Compatibility 
+### 4. Backwards Compatibility
+
 - **Original method preserved**: Stores reference to original `runtime.useModel`
 - **Fallback mechanism**: Any error in custom logic falls back to original
 - **Invisible when disabled**: Zero impact on ElizaOS when service is off
 
 ## 📊 Test Results Comparison
 
-| Implementation | Tests Passing | Tests Failing | Success Rate |
-|---------------|---------------|---------------|--------------|
-| Complex/Over-engineered | 81 | 40 | 67% ❌ |
-| MVP/Working | 19 | 0 | 100% ✅ |
+| Implementation          | Tests Passing | Tests Failing | Success Rate |
+| ----------------------- | ------------- | ------------- | ------------ |
+| Complex/Over-engineered | 81            | 40            | 67% ❌       |
+| MVP/Working             | 19            | 0             | 100% ✅      |
 
 ## 💡 Usage Instructions
 
 ### Installation
+
 ```typescript
 import { mvpCustomReasoningPlugin } from '@elizaos/plugin-training';
 
 // Add to agent character
 const character = {
-  name: "MyAgent",
+  name: 'MyAgent',
   plugins: [mvpCustomReasoningPlugin],
   // ... other config
 };
 ```
 
 ### Natural Language Interface
+
 ```
 User: "enable custom reasoning"
 Agent: ✅ Custom Reasoning Service Enabled! [starts collecting training data]
 
-User: "check reasoning status"  
+User: "check reasoning status"
 Agent: 📊 Custom Reasoning Service Status: 🟢 Active, 15 records collected
 
 User: "disable custom reasoning"
@@ -100,6 +108,7 @@ Agent: ✅ Custom Reasoning Service Disabled [reverts to original ElizaOS behavi
 ```
 
 ### Testing
+
 ```bash
 # Run working MVP tests only
 npm run test:mvp
@@ -111,6 +120,7 @@ npx vitest run src/__tests__/mvp/
 ## 🎯 Key Lessons Learned
 
 ### What Worked (MVP Approach):
+
 1. **Start small**: Build one working feature at a time
 2. **Real integration**: Test against actual ElizaOS runtime
 3. **Backwards compatibility first**: Preserve original behavior religiously
@@ -118,6 +128,7 @@ npx vitest run src/__tests__/mvp/
 5. **Simple architecture**: One service, three actions, clear responsibilities
 
 ### What Failed (Complex Approach):
+
 1. **Over-engineering**: Built entire CLI frameworks nobody needed
 2. **Untested integration**: Created files that couldn't import each other
 3. **Mock-heavy testing**: Tests so mocked they tested nothing real

@@ -11,11 +11,7 @@
   "modelProviderType": "openai",
   "model": "gpt-4o-mini",
   "clients": [],
-  "plugins": [
-    "@elizaos/plugin-sql",
-    "@elizaos/plugin-rolodex",
-    "."
-  ],
+  "plugins": ["@elizaos/plugin-sql", "@elizaos/plugin-rolodex", "."],
   "settings": {
     "OPENAI_API_KEY": "{{OPENAI_API_KEY}}",
     "DATABASE_URL": "{{DATABASE_URL}}",
@@ -53,15 +49,6 @@
       "celebrates completed tasks"
     ]
   },
-  "adjectives": [
-    "organized",
-    "helpful",
-    "proactive",
-    "reliable",
-    "encouraging",
-    "efficient",
-    "thoughtful"
-  ],
   "messageExamples": [
     [
       {
@@ -108,4 +95,4 @@
       }
     ]
   ]
-} 
+}

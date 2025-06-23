@@ -4,7 +4,6 @@ import { readResourceAction } from "./actions/readResourceAction";
 import { provider } from "./provider";
 import { McpService } from "./service";
 import { mcpRoutes } from "./routes/mcpRoutes";
-import McpViewerTestSuite from "./__tests__/e2e/mcp-viewer";
 
 const mcpPlugin: Plugin = {
   name: "mcp",
@@ -18,7 +17,6 @@ const mcpPlugin: Plugin = {
   actions: [callToolAction, readResourceAction],
   providers: [provider],
   routes: mcpRoutes,
-  tests: [McpViewerTestSuite],
 };
 
 export type { McpService };

@@ -15,7 +15,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       competence: 75,
       integrity: 70,
       benevolence: 78,
-      transparency: 72
+      transparency: 72,
     },
     evidence: [],
     lastCalculated: Date.now(),
@@ -23,9 +23,9 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     trend: {
       direction: 'stable',
       changeRate: 0,
-      lastChangeAt: Date.now()
+      lastChangeAt: Date.now(),
     },
-    interactionCount: 25
+    interactionCount: 25,
   };
 
   const defaultRuntime: IAgentRuntime = {
@@ -38,12 +38,11 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       clients: [],
       plugins: [],
     },
-    
+
     // Settings
     getSetting: vi.fn((key: string) => {
       const settings: Record<string, string> = {
@@ -67,7 +66,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
           getRole: vi.fn().mockResolvedValue('user'),
           updateRole: vi.fn().mockResolvedValue(true),
         },
-        'trust': {
+        trust: {
           evaluateTrust: vi.fn().mockResolvedValue(mockTrustProfile),
           calculateTrust: vi.fn().mockResolvedValue(mockTrustProfile),
           getTrustScore: vi.fn().mockResolvedValue(75),
@@ -82,7 +81,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
             description: 'Helpful interaction',
             sentiment: 'positive',
             affectedDimensions: ['benevolence', 'reliability'],
-            analysisConfidence: 0.8
+            analysisConfidence: 0.8,
           }),
         },
         ...(overrides as any).services,
@@ -188,7 +187,11 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
 /**
  * Create a mock memory for trust plugin tests
  */
-export function createMockMemory(text: string, entityId: UUID, overrides: Partial<Memory> = {}): Memory {
+export function createMockMemory(
+  text: string,
+  entityId: UUID,
+  overrides: Partial<Memory> = {}
+): Memory {
   return {
     id: `memory-${Date.now()}` as UUID,
     entityId,

@@ -3,19 +3,8 @@ import type { IAgentRuntime, Memory, UUID } from '@elizaos/core';
 import { MemoryType } from '@elizaos/core';
 import { KnowledgeService } from '../../service';
 
-// Mock createLogger
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual<typeof import('@elizaos/core')>('@elizaos/core');
-  return {
-    ...actual,
-    createLogger: vi.fn(() => ({
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
-    })),
-  };
-});
+// Create mock functions for testing
+const createMockFn = () => vi.fn();
 
 describe('Knowledge Update Operations', () => {
   let mockRuntime: IAgentRuntime;
@@ -23,7 +12,7 @@ describe('Knowledge Update Operations', () => {
   const memories = new Map<UUID, Memory>();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Clear all mocks
     memories.clear();
 
     mockRuntime = {

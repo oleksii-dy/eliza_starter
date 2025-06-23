@@ -1,33 +1,37 @@
-import {
-  Service,
-  type IAgentRuntime,
-  type Character,
-  type UUID,
-  logger,
-} from '@elizaos/core';
+import { Service, type IAgentRuntime, type Character, type UUID, logger } from '@elizaos/core';
 import fs from 'fs-extra';
 import path from 'path';
 import { z } from 'zod';
 
 // Validation schema for character modifications
 const CharacterModificationSchema = z.object({
-  system: z.string().optional().describe('System prompt that defines agent behavior and instructions'),
+  system: z
+    .string()
+    .optional()
+    .describe('System prompt that defines agent behavior and instructions'),
   bio: z.array(z.string()).optional(),
-  messageExamples: z.array(z.array(z.object({
-    name: z.string(),
-    content: z.object({
-      text: z.string(),
-      actions: z.array(z.string()).optional()
-    })
-  }))).optional(),
+  messageExamples: z
+    .array(
+      z.array(
+        z.object({
+          name: z.string(),
+          content: z.object({
+            text: z.string(),
+            actions: z.array(z.string()).optional(),
+          }),
+        })
+      )
+    )
+    .optional(),
   topics: z.array(z.string()).optional(),
-  adjectives: z.array(z.string()).optional(),
-  style: z.object({
-    all: z.array(z.string()).optional(),
-    chat: z.array(z.string()).optional(),
-    post: z.array(z.string()).optional()
-  }).optional(),
-  settings: z.record(z.any()).optional()
+  style: z
+    .object({
+      all: z.array(z.string()).optional(),
+      chat: z.array(z.string()).optional(),
+      post: z.array(z.string()).optional(),
+    })
+    .optional(),
+  settings: z.record(z.any()).optional(),
 });
 
 type CharacterModification = z.infer<typeof CharacterModificationSchema>;
@@ -71,27 +75,27 @@ export class CharacterFileManager extends Service {
 
     logger.info('CharacterFileManager initialized', {
       characterFile: this.characterFilePath,
-      backupDir: this.backupDir
+      backupDir: this.backupDir,
     });
   }
 
   private async detectCharacterFile(): Promise<void> {
     const character = this.runtime.character;
-    
+
     // Look for character file in common locations
     const possiblePaths = [
       // Current working directory
       path.join(process.cwd(), `${character.name}.json`),
       path.join(process.cwd(), 'character.json'),
-      
+
       // Agent directory
       path.join(process.cwd(), 'agent', `${character.name}.json`),
       path.join(process.cwd(), 'agent', 'character.json'),
-      
+
       // Characters directory
       path.join(process.cwd(), 'characters', `${character.name}.json`),
       path.join(process.cwd(), 'characters', 'character.json'),
-      
+
       // Relative paths
       path.join(process.cwd(), '..', 'characters', `${character.name}.json`),
       path.join(process.cwd(), '..', '..', 'characters', `${character.name}.json`),
@@ -134,34 +138,25 @@ export class CharacterFileManager extends Service {
     // Bio validation - ensure reasonable length and content
     this.validationRules.set('bio', (bio: string[]) => {
       if (!Array.isArray(bio)) return false;
-      return bio.every(item => 
-        typeof item === 'string' && 
-        item.length > 0 && 
-        item.length < 500 &&
-        !item.includes('<script>') && // Basic XSS protection
-        !item.includes('javascript:')
+      return bio.every(
+        (item) =>
+          typeof item === 'string' &&
+          item.length > 0 &&
+          item.length < 500 &&
+          !item.includes('<script>') && // Basic XSS protection
+          !item.includes('javascript:')
       );
     });
 
     // Topics validation
     this.validationRules.set('topics', (topics: string[]) => {
       if (!Array.isArray(topics)) return false;
-      return topics.every(topic => 
-        typeof topic === 'string' && 
-        topic.length > 0 && 
-        topic.length < 100 &&
-        /^[a-zA-Z0-9\s\-_]+$/.test(topic) // Alphanumeric, spaces, hyphens, underscores only
-      );
-    });
-
-    // Adjectives validation
-    this.validationRules.set('adjectives', (adjectives: string[]) => {
-      if (!Array.isArray(adjectives)) return false;
-      return adjectives.every(adj => 
-        typeof adj === 'string' && 
-        adj.length > 0 && 
-        adj.length < 50 &&
-        /^[a-zA-Z\s\-]+$/.test(adj) // Letters, spaces, hyphens only
+      return topics.every(
+        (topic) =>
+          typeof topic === 'string' &&
+          topic.length > 0 &&
+          topic.length < 100 &&
+          /^[a-zA-Z0-9\s\-_]+$/.test(topic) // Alphanumeric, spaces, hyphens, underscores only
       );
     });
   }
@@ -178,7 +173,7 @@ export class CharacterFileManager extends Service {
       const backupPath = path.join(this.backupDir, backupFileName);
 
       await fs.copy(this.characterFilePath, backupPath);
-      
+
       // Clean up old backups
       await this.cleanupOldBackups();
 
@@ -194,11 +189,11 @@ export class CharacterFileManager extends Service {
     try {
       const files = await fs.readdir(this.backupDir);
       const backupFiles = files
-        .filter(file => file.endsWith('.json'))
-        .map(file => ({
+        .filter((file) => file.endsWith('.json'))
+        .map((file) => ({
           name: file,
           path: path.join(this.backupDir, file),
-          stat: fs.statSync(path.join(this.backupDir, file))
+          stat: fs.statSync(path.join(this.backupDir, file)),
         }))
         .sort((a, b) => b.stat.mtime.getTime() - a.stat.mtime.getTime());
 
@@ -245,20 +240,18 @@ export class CharacterFileManager extends Service {
       errors.push('Too many topics - maximum 50 allowed');
     }
 
-    if (modification.adjectives && modification.adjectives.length > 30) {
-      errors.push('Too many adjectives - maximum 30 allowed');
-    }
-
     return { valid: errors.length === 0, errors };
   }
 
-  async applyModification(modification: CharacterModification): Promise<{ success: boolean; error?: string }> {
+  async applyModification(
+    modification: CharacterModification
+  ): Promise<{ success: boolean; error?: string }> {
     // Validate modification
     const validation = this.validateModification(modification);
     if (!validation.valid) {
-      return { 
-        success: false, 
-        error: `Validation failed: ${validation.errors.join(', ')}` 
+      return {
+        success: false,
+        error: `Validation failed: ${validation.errors.join(', ')}`,
       };
     }
 
@@ -270,49 +263,41 @@ export class CharacterFileManager extends Service {
       const currentCharacter = { ...this.runtime.character };
 
       // Apply modifications using merge logic (additive, not replacement)
-      
+
       // Handle system prompt modification - this is a direct replacement, not additive
       if (modification.system) {
         const oldSystem = currentCharacter.system || 'No system prompt';
         currentCharacter.system = modification.system;
-        
+
         logger.info('System prompt modified', {
           oldLength: oldSystem.length,
           newLength: modification.system.length,
-          changed: oldSystem !== modification.system
+          changed: oldSystem !== modification.system,
         });
       }
 
       if (modification.bio) {
-        const currentBio = Array.isArray(currentCharacter.bio) 
-          ? currentCharacter.bio 
+        const currentBio = Array.isArray(currentCharacter.bio)
+          ? currentCharacter.bio
           : [currentCharacter.bio];
-        
+
         // Add new bio elements, avoiding duplicates
-        const newBioElements = modification.bio.filter(newBio => 
-          !currentBio.some(existing => 
-            existing.toLowerCase().includes(newBio.toLowerCase()) ||
-            newBio.toLowerCase().includes(existing.toLowerCase())
-          )
+        const newBioElements = modification.bio.filter(
+          (newBio) =>
+            !currentBio.some(
+              (existing) =>
+                existing.toLowerCase().includes(newBio.toLowerCase()) ||
+                newBio.toLowerCase().includes(existing.toLowerCase())
+            )
         );
-        
+
         currentCharacter.bio = [...currentBio, ...newBioElements];
       }
 
       if (modification.topics) {
         const currentTopics = currentCharacter.topics || [];
-        const newTopics = modification.topics.filter(topic => 
-          !currentTopics.includes(topic)
-        );
+        const newTopics = modification.topics.filter((topic) => !currentTopics.includes(topic));
         currentCharacter.topics = [...currentTopics, ...newTopics];
-      }
-
-      if (modification.adjectives) {
-        const currentAdjectives = currentCharacter.adjectives || [];
-        const newAdjectives = modification.adjectives.filter(adj => 
-          !currentAdjectives.includes(adj)
-        );
-        currentCharacter.adjectives = [...currentAdjectives, ...newAdjectives];
       }
 
       if (modification.messageExamples) {
@@ -323,14 +308,14 @@ export class CharacterFileManager extends Service {
       if (modification.style) {
         currentCharacter.style = {
           ...currentCharacter.style,
-          ...modification.style
+          ...modification.style,
         };
       }
 
       if (modification.settings) {
         currentCharacter.settings = {
           ...currentCharacter.settings,
-          ...modification.settings
+          ...modification.settings,
         };
       }
 
@@ -345,28 +330,30 @@ export class CharacterFileManager extends Service {
 
       // Log the modification - need roomId for memory creation
       const dummyRoomId = this.runtime.agentId; // Use agentId as fallback roomId
-      await this.runtime.createMemory({
-        entityId: this.runtime.agentId,
-        roomId: dummyRoomId,
-        content: {
-          text: `Character modification applied to file: ${this.characterFilePath || 'memory-only'}`,
-          source: 'character_modification',
+      await this.runtime.createMemory(
+        {
+          entityId: this.runtime.agentId,
+          roomId: dummyRoomId,
+          content: {
+            text: `Character modification applied to file: ${this.characterFilePath || 'memory-only'}`,
+            source: 'character_modification',
+          },
+          metadata: {
+            type: 'custom' as const,
+            timestamp: Date.now(),
+            filePath: this.characterFilePath,
+            modificationType: 'file_update',
+          },
         },
-        metadata: {
-          type: 'custom' as const,
-          timestamp: Date.now(),
-          filePath: this.characterFilePath,
-          modificationType: 'file_update'
-        }
-      }, 'character_modifications');
+        'character_modifications'
+      );
 
       return { success: true };
-
     } catch (error) {
       logger.error('Failed to apply character modification', error);
-      return { 
-        success: false, 
-        error: `Application failed: ${(error as Error).message}` 
+      return {
+        success: false,
+        error: `Application failed: ${(error as Error).message}`,
       };
     }
   }
@@ -375,18 +362,18 @@ export class CharacterFileManager extends Service {
     const memories = await this.runtime.getMemories({
       entityId: this.runtime.agentId,
       count: limit,
-      tableName: 'character_modifications'
+      tableName: 'character_modifications',
     });
 
-    return memories.map(memory => ({
+    return memories.map((memory) => ({
       timestamp: (memory.content.metadata as any)?.timestamp,
       modification: (memory.content.metadata as any)?.modification,
-      filePath: (memory.content.metadata as any)?.filePath
+      filePath: (memory.content.metadata as any)?.filePath,
     }));
   }
 
   async getAvailableBackups(): Promise<Array<{ path: string; timestamp: number; size: number }>> {
-    if (!await fs.pathExists(this.backupDir)) {
+    if (!(await fs.pathExists(this.backupDir))) {
       return [];
     }
 
@@ -397,11 +384,11 @@ export class CharacterFileManager extends Service {
       if (file.endsWith('.json')) {
         const filePath = path.join(this.backupDir, file);
         const stat = await fs.stat(filePath);
-        
+
         // Extract timestamp from filename (format: character-YYYYMMDD-HHMMSS.json)
         const timestampMatch = file.match(/character-(\d{8})-(\d{6})\.json/);
         let timestamp = stat.mtime.getTime();
-        
+
         if (timestampMatch) {
           const dateStr = timestampMatch[1];
           const timeStr = timestampMatch[2];
@@ -411,14 +398,14 @@ export class CharacterFileManager extends Service {
           const hour = parseInt(timeStr.substring(0, 2));
           const minute = parseInt(timeStr.substring(2, 4));
           const second = parseInt(timeStr.substring(4, 6));
-          
+
           timestamp = new Date(year, month, day, hour, minute, second).getTime();
         }
 
         backups.push({
           path: filePath,
           timestamp,
-          size: stat.size
+          size: stat.size,
         });
       }
     }
@@ -429,20 +416,20 @@ export class CharacterFileManager extends Service {
   async restoreFromBackup(backupPath: string): Promise<{ success: boolean; error?: string }> {
     try {
       // Validate backup file exists and is readable
-      if (!await fs.pathExists(backupPath)) {
+      if (!(await fs.pathExists(backupPath))) {
         return { success: false, error: 'Backup file not found' };
       }
 
       // Read and validate backup content
       const backupContent = await fs.readJSON(backupPath);
-      
+
       if (!backupContent.name || typeof backupContent.name !== 'string') {
         return { success: false, error: 'Invalid backup file format - missing character name' };
       }
 
       // Create a backup of the current state before restoration
       const currentBackupPath = await this.createBackup();
-      
+
       // Update runtime character
       Object.assign(this.runtime.character, backupContent);
 
@@ -453,42 +440,44 @@ export class CharacterFileManager extends Service {
 
       // Log the restoration
       const dummyRoomId = this.runtime.agentId;
-      await this.runtime.createMemory({
-        entityId: this.runtime.agentId,
-        roomId: dummyRoomId,
-        content: {
-          text: `Character restored from backup: ${path.basename(backupPath)}`,
-          source: 'character_restoration',
+      await this.runtime.createMemory(
+        {
+          entityId: this.runtime.agentId,
+          roomId: dummyRoomId,
+          content: {
+            text: `Character restored from backup: ${path.basename(backupPath)}`,
+            source: 'character_restoration',
+          },
+          metadata: {
+            type: 'custom' as const,
+            timestamp: Date.now(),
+            backupPath,
+            previousBackup: currentBackupPath,
+            restorationType: 'backup_restoration',
+          },
         },
-        metadata: {
-          type: 'custom' as const,
-          timestamp: Date.now(),
-          backupPath,
-          previousBackup: currentBackupPath,
-          restorationType: 'backup_restoration'
-        }
-      }, 'character_modifications');
+        'character_modifications'
+      );
 
       logger.info('Character restored from backup', {
         backupPath,
         characterName: backupContent.name,
-        currentBackup: currentBackupPath
+        currentBackup: currentBackupPath,
       });
 
       return { success: true };
-
     } catch (error) {
       logger.error('Failed to restore from backup', error);
-      return { 
-        success: false, 
-        error: `Restoration failed: ${(error as Error).message}` 
+      return {
+        success: false,
+        error: `Restoration failed: ${(error as Error).message}`,
       };
     }
   }
 
   async restoreFromHistory(entryIndex: number): Promise<{ success: boolean; error?: string }> {
     const history = await this.getModificationHistory(50);
-    
+
     if (entryIndex < 0 || entryIndex >= history.length) {
       return { success: false, error: 'Invalid history entry index' };
     }
@@ -500,8 +489,8 @@ export class CharacterFileManager extends Service {
 
     // Find the corresponding backup file
     const backups = await this.getAvailableBackups();
-    const backup = backups.find(b => 
-      Math.abs(b.timestamp - entry.timestamp) < 60000 // Within 1 minute
+    const backup = backups.find(
+      (b) => Math.abs(b.timestamp - entry.timestamp) < 60000 // Within 1 minute
     );
 
     if (!backup) {

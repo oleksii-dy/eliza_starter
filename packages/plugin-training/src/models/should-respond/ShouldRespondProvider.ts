@@ -1,9 +1,15 @@
-import { elizaLogger, type IAgentRuntime, type Memory, type State, type Provider } from '@elizaos/core';
+import {
+  elizaLogger,
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  type Provider,
+} from '@elizaos/core';
 import { ShouldRespondModel } from './ShouldRespondModel';
 
 /**
  * ShouldRespondProvider - Provides enhanced shouldRespond decisions with data collection
- * 
+ *
  * This provider intercepts shouldRespond decisions and enhances them with:
  * - Custom model inference (when enabled)
  * - Comprehensive data collection for training
@@ -23,10 +29,10 @@ export const shouldRespondProvider: Provider = {
 
       // Initialize ShouldRespond model
       const shouldRespondModel = new ShouldRespondModel(runtime);
-      
+
       // Get enhanced shouldRespond decision
       const result = await shouldRespondModel.shouldRespond(runtime, message, state);
-      
+
       // Store decision in state for other providers/actions to use
       const enhancedState = {
         ...state,
@@ -43,7 +49,10 @@ export const shouldRespondProvider: Provider = {
             reasoning: result.reasoning,
             confidence: result.confidence,
             timestamp: Date.now(),
-            modelUsed: runtime.getSetting('CUSTOM_REASONING_SHOULD_RESPOND_ENABLED') === 'true' ? 'custom' : 'heuristic',
+            modelUsed:
+              runtime.getSetting('REASONING_SERVICE_SHOULD_RESPOND_ENABLED') === 'true'
+                ? 'custom'
+                : 'heuristic',
           },
         },
       };
@@ -64,10 +73,9 @@ Reasoning: ${result.reasoning}
           shouldRespondAnalysis: enhancedState.data.shouldRespondAnalysis,
         },
       };
-      
     } catch (error) {
       elizaLogger.error('❌ ShouldRespond provider error:', error);
-      
+
       // Return safe default
       return {
         text: '[SHOULD RESPOND ANALYSIS]\nDecision: IGNORE\nReasoning: Error in analysis, defaulting to no response\n[/SHOULD RESPOND ANALYSIS]',
@@ -83,7 +91,7 @@ Reasoning: ${result.reasoning}
 
 /**
  * ShouldRespondEvaluator - Post-processing evaluator for shouldRespond decisions
- * 
+ *
  * This evaluator runs after message processing to collect additional training data
  * based on whether the agent actually responded and how the conversation evolved.
  */
@@ -109,14 +117,16 @@ export const shouldRespondEvaluator = {
       // Check if agent actually responded after the decision
       const recentMessages = state.data?.recentMessages || [];
       const messageIndex = recentMessages.findIndex((msg: any) => msg.id === message.id);
-      
+
       if (messageIndex === -1) {
         return;
       }
 
       // Look for agent responses after this message
       const subsequentMessages = recentMessages.slice(messageIndex + 1);
-      const agentResponded = subsequentMessages.some((msg: any) => msg.entityId === runtime.agentId);
+      const agentResponded = subsequentMessages.some(
+        (msg: any) => msg.entityId === runtime.agentId
+      );
 
       // Collect feedback data
       const feedbackData = {
@@ -130,21 +140,25 @@ export const shouldRespondEvaluator = {
       };
 
       // Store feedback memory for future analysis
-      await runtime.createMemory({
-        id: `feedback-${message.id}` as any,
-        entityId: runtime.agentId,
-        agentId: runtime.agentId,
-        roomId: message.roomId,
-        content: {
-          text: `ShouldRespond Feedback: Decision ${feedbackData.decisionCorrect ? 'correct' : 'incorrect'}`,
-          type: 'shouldRespondFeedback',
-          metadata: feedbackData,
+      await runtime.createMemory(
+        {
+          id: `feedback-${message.id}` as any,
+          entityId: runtime.agentId,
+          agentId: runtime.agentId,
+          roomId: message.roomId,
+          content: {
+            text: `ShouldRespond Feedback: Decision ${feedbackData.decisionCorrect ? 'correct' : 'incorrect'}`,
+            type: 'shouldRespondFeedback',
+            metadata: feedbackData,
+          },
+          createdAt: Date.now(),
         },
-        createdAt: Date.now(),
-      }, 'shouldRespondFeedback');
+        'shouldRespondFeedback'
+      );
 
-      elizaLogger.debug(`📊 ShouldRespond feedback collected: ${feedbackData.decisionCorrect ? 'correct' : 'incorrect'} decision`);
-      
+      elizaLogger.debug(
+        `📊 ShouldRespond feedback collected: ${feedbackData.decisionCorrect ? 'correct' : 'incorrect'} decision`
+      );
     } catch (error) {
       elizaLogger.warn('Failed to collect shouldRespond feedback:', error);
     }

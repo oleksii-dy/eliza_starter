@@ -42,7 +42,6 @@ export async function createRealTestRuntime(
     name: 'TestAgent',
     bio: ['Test AI assistant for real runtime validation'],
     topics: ['testing', 'validation'],
-    adjectives: ['helpful', 'reliable'],
     system: 'You are a helpful test assistant designed to validate self-modification capabilities.',
     messageExamples: [
       [
@@ -56,7 +55,6 @@ export async function createRealTestRuntime(
     },
     plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-personality'],
     settings: {
-      MODEL_PROVIDER: config.useRealLLM ? 'openai' : 'test',
       ...config.apiKeys,
     },
     ...config.characterOverrides,
@@ -185,7 +183,6 @@ export class RealRuntimeTestUtils {
     expectedChanges: {
       bioContains?: string[];
       topicsContains?: string[];
-      adjectivesContains?: string[];
     }
   ): Promise<{ valid: boolean; errors: string[] }> {
     const errors: string[] = [];
@@ -208,15 +205,6 @@ export class RealRuntimeTestUtils {
       for (const expected of expectedChanges.topicsContains) {
         if (!topics.some((topic) => topic.toLowerCase().includes(expected.toLowerCase()))) {
           errors.push(`Topics do not contain expected topic: "${expected}"`);
-        }
-      }
-    }
-
-    if (expectedChanges.adjectivesContains) {
-      const adjectives = character.adjectives || [];
-      for (const expected of expectedChanges.adjectivesContains) {
-        if (!adjectives.some((adj) => adj.toLowerCase().includes(expected.toLowerCase()))) {
-          errors.push(`Adjectives do not contain expected adjective: "${expected}"`);
         }
       }
     }

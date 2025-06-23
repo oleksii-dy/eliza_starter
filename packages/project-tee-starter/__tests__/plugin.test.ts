@@ -1,11 +1,11 @@
-import { describe, it, expect, spyOn, mock } from 'bun:test';
+import { describe, it, expect, vi } from "vitest";
 import teeStarterPlugin from '../src/plugin';
 import { logger } from '@elizaos/core';
 
 // Spy on logger to capture logs
-spyOn(logger, 'info');
-spyOn(logger, 'error');
-spyOn(logger, 'warn');
+vi.spyOn(logger, 'info');
+vi.spyOn(logger, 'error');
+vi.spyOn(logger, 'warn');
 
 // Note: Character import handled by individual tests as needed
 

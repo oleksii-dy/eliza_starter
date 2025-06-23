@@ -1,9 +1,9 @@
 /**
  * Real runtime integration test for TrainingDatabaseManager
- * 
+ *
  * This test verifies that the TrainingDatabaseManager properly integrates with
  * actual ElizaOS runtime instances and correctly handles real database operations.
- * 
+ *
  * Unlike the original performative tests, this uses a real runtime instance
  * and validates actual database functionality rather than mock behavior.
  */
@@ -12,7 +12,10 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TrainingDatabaseManager } from '../../database/TrainingDatabaseManager.js';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { elizaLogger, createUniqueUuid } from '@elizaos/core';
-import type { TrainingDataPoint, CustomModelType } from '../../interfaces/CustomReasoningService.js';
+import type {
+  TrainingDataPoint,
+  CustomModelType,
+} from '../../interfaces/CustomReasoningService.js';
 
 describe('TrainingDatabaseManager Runtime Integration', () => {
   let runtime: IAgentRuntime;
@@ -35,7 +38,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
     it('should initialize schema successfully with real runtime', async () => {
       // Test that schema initialization works with real runtime adapter
       await expect(dbManager.initializeSchema()).resolves.not.toThrow();
-      
+
       // Verify logger was called
       expect(elizaLogger.info).toBeDefined();
     });
@@ -44,7 +47,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
       // Ensure the database adapter exists
       expect(runtime).toBeDefined();
       expect(runtime.db).toBeDefined();
-      
+
       // Schema initialization should work
       await expect(dbManager.initializeSchema()).resolves.not.toThrow();
     });
@@ -54,12 +57,12 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
       const originalAdapter = runtime;
       runtime = {
         ...originalAdapter,
-        db: undefined
+        db: undefined,
       } as any;
 
       // Should handle gracefully without throwing
       await expect(dbManager.initializeSchema()).resolves.not.toThrow();
-      
+
       // Restore adapter
       runtime = originalAdapter;
     });
@@ -76,7 +79,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
           tokensUsed: 75,
           costUsd: 0.002,
           agentId: runtime.agentId,
-          modelName: 'test-planning-model'
+          modelName: 'test-planning-model',
         },
       });
 
@@ -86,7 +89,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
 
     it('should handle different model types correctly', async () => {
       const modelTypes: CustomModelType[] = ['should_respond', 'planning', 'coding'];
-      
+
       for (const modelType of modelTypes) {
         const dataPoint = createTestTrainingDataPoint({
           modelType,
@@ -95,8 +98,8 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
             roomId: `test-room-${modelType}` as UUID,
             modelName: `test-${modelType}-model`,
             responseTimeMs: 100,
-            tokensUsed: 50
-          }
+            tokensUsed: 50,
+          },
         });
 
         await expect(dbManager.storeTrainingData(dataPoint)).resolves.not.toThrow();
@@ -112,15 +115,17 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
           ...originalAdapter.db,
           run: async () => {
             throw new Error('Database storage error');
-          }
-        }
+          },
+        },
       } as any;
 
       const dataPoint = createTestTrainingDataPoint();
-      
+
       // Should throw the database error (this is expected behavior)
-      await expect(dbManager.storeTrainingData(dataPoint)).rejects.toThrow('Database storage error');
-      
+      await expect(dbManager.storeTrainingData(dataPoint)).rejects.toThrow(
+        'Database storage error'
+      );
+
       // Restore adapter
       runtime = originalAdapter;
     });
@@ -131,11 +136,11 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
         input: {
           prompt: 'Write a function to calculate fibonacci numbers',
           language: 'typescript',
-          context: 'coding challenge'
+          context: 'coding challenge',
         },
         output: {
           code: 'function fibonacci(n: number): number { return n <= 1 ? n : fibonacci(n-1) + fibonacci(n-2); }',
-          explanation: 'Recursive fibonacci implementation'
+          explanation: 'Recursive fibonacci implementation',
         },
         metadata: {
           agentId: runtime.agentId,
@@ -145,8 +150,8 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
           tokensUsed: 150,
           costUsd: 0.005,
           language: 'typescript',
-          complexity: 'medium'
-        }
+          complexity: 'medium',
+        },
       });
 
       await expect(dbManager.storeTrainingData(complexDataPoint)).resolves.not.toThrow();
@@ -161,7 +166,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
 
     it('should retrieve training data with default options', async () => {
       const data = await dbManager.getTrainingData();
-      
+
       expect(Array.isArray(data)).toBe(true);
       // Should get the seeded data (or empty array if database is fresh)
       expect(data.length).toBeGreaterThanOrEqual(0);
@@ -171,7 +176,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
       // Test filtering functionality
       const planningData = await dbManager.getTrainingData({ modelType: 'planning' });
       const codingData = await dbManager.getTrainingData({ modelType: 'coding' });
-      
+
       expect(Array.isArray(planningData)).toBe(true);
       expect(Array.isArray(codingData)).toBe(true);
     });
@@ -193,22 +198,22 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
           ...originalAdapter.db,
           all: async () => {
             throw new Error('Database query error');
-          }
-        }
+          },
+        },
       } as any;
 
       await expect(dbManager.getTrainingData()).rejects.toThrow('Database query error');
-      
+
       // Restore adapter
       runtime = originalAdapter;
     });
 
     it('should parse JSON fields correctly in retrieved data', async () => {
       const data = await dbManager.getTrainingData({ limit: 1 });
-      
+
       if (data.length > 0) {
         const sample = data[0];
-        
+
         // Verify that JSON fields are properly parsed
         expect(typeof sample.input_data).toBe('object');
         expect(typeof sample.output_data).toBe('object');
@@ -226,7 +231,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
 
     it('should return comprehensive training statistics', async () => {
       const stats = await dbManager.getTrainingDataStats();
-      
+
       expect(stats).toBeDefined();
       expect(typeof stats.total).toBe('number');
       expect(typeof stats.byModelType).toBe('object');
@@ -241,7 +246,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
       // Clear any existing data by using a fresh runtime
       const freshRuntime = await createTestRuntime();
       const freshDbManager = new TrainingDatabaseManager(freshRuntime);
-      
+
       const stats = await freshDbManager.getTrainingDataStats();
       expect(stats).toBeDefined();
       expect(stats.total).toBeGreaterThanOrEqual(0);
@@ -256,12 +261,12 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
           ...originalAdapter.db,
           get: async () => {
             throw new Error('Statistics query error');
-          }
-        }
+          },
+        },
       } as any;
 
       await expect(dbManager.getTrainingDataStats()).rejects.toThrow('Statistics query error');
-      
+
       // Restore adapter
       runtime = originalAdapter;
     });
@@ -282,7 +287,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
       };
 
       const sessionId = await dbManager.createTrainingSession(sessionData);
-      
+
       expect(typeof sessionId).toBe('string');
       expect(sessionId.length).toBeGreaterThan(0);
     });
@@ -296,8 +301,8 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
           ...originalAdapter.db,
           run: async () => {
             throw new Error('Session creation error');
-          }
-        }
+          },
+        },
       } as any;
 
       const sessionData = {
@@ -312,8 +317,10 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
         progress_percent: 0,
       };
 
-      await expect(dbManager.createTrainingSession(sessionData)).rejects.toThrow('Session creation error');
-      
+      await expect(dbManager.createTrainingSession(sessionData)).rejects.toThrow(
+        'Session creation error'
+      );
+
       // Restore adapter
       runtime = originalAdapter;
     });
@@ -343,7 +350,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
   describe('Data Cleanup - Real Database Integration', () => {
     it('should clean up old data successfully', async () => {
       const deletedCount = await dbManager.cleanupOldData(30);
-      
+
       expect(typeof deletedCount).toBe('number');
       expect(deletedCount).toBeGreaterThanOrEqual(0);
     });
@@ -357,12 +364,12 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
           ...originalAdapter.db,
           run: async () => {
             throw new Error('Cleanup operation failed');
-          }
-        }
+          },
+        },
       } as any;
 
       await expect(dbManager.cleanupOldData()).rejects.toThrow('Cleanup operation failed');
-      
+
       // Restore adapter
       runtime = originalAdapter;
     });
@@ -370,7 +377,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
     it('should use appropriate retention period for cleanup', async () => {
       // Test with different retention periods
       const retentionPeriods = [7, 30, 90];
-      
+
       for (const days of retentionPeriods) {
         const deletedCount = await dbManager.cleanupOldData(days);
         expect(typeof deletedCount).toBe('number');
@@ -390,9 +397,9 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
         outputSummary: 'Decided to respond with weather information',
         responseTimeMs: 125,
         success: true,
-        fullContext: { 
+        fullContext: {
           conversationHistory: ['hello', 'hi there'],
-          userIntent: 'weather_query'
+          userIntent: 'weather_query',
         },
       };
 
@@ -409,8 +416,8 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
           ...originalAdapter.db,
           run: async () => {
             throw new Error('Decision storage error');
-          }
-        }
+          },
+        },
       } as any;
 
       const decision = {
@@ -425,16 +432,18 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
 
       // Should not throw (graceful error handling)
       await expect(dbManager.storeReasoningDecision(decision)).resolves.not.toThrow();
-      
+
       // Restore adapter
       runtime = originalAdapter;
     });
 
     it('should store decisions with different types correctly', async () => {
       const decisionTypes: Array<'should_respond' | 'planning' | 'coding'> = [
-        'should_respond', 'planning', 'coding'
+        'should_respond',
+        'planning',
+        'coding',
       ];
-      
+
       for (const decisionType of decisionTypes) {
         const decision = {
           roomId: `test-room-${decisionType}` as UUID,
@@ -461,7 +470,7 @@ describe('TrainingDatabaseManager Runtime Integration', () => {
 async function createTestRuntime(): Promise<IAgentRuntime> {
   const mockRuntime: Partial<IAgentRuntime> = {
     agentId: createUniqueUuid('database-test-agent') as UUID,
-    
+
     character: {
       name: 'DatabaseTestAgent',
       bio: ['Test agent for database integration testing'],
@@ -469,16 +478,15 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       clients: [],
-      plugins: []
+      plugins: [],
     },
 
     getSetting: (key: string) => {
       const settings: Record<string, any> = {
-        'DATABASE_URL': 'sqlite://memory:',
-        'TRAINING_DATA_RETENTION_DAYS': '30'
+        DATABASE_URL: 'sqlite://memory:',
+        TRAINING_DATA_RETENTION_DAYS: '30',
       };
       return settings[key];
     },
@@ -489,8 +497,8 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
         testData.push(logData);
       },
       getLogs: async (options: any) => {
-        return testData.filter(log => 
-          !options.type || log.type?.includes(options.type.replace('%', ''))
+        return testData.filter(
+          (log) => !options.type || log.type?.includes(options.type.replace('%', ''))
         );
       },
       db: {
@@ -506,7 +514,7 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
               avg_confidence: 0.87,
               avg_response_time: 245,
               total_cost: 0.0456,
-              recent_samples: 25
+              recent_samples: 25,
             };
           }
           return {};
@@ -544,16 +552,16 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
         },
         exec: async (sql: string) => {
           // Mock schema creation
-        }
-      }
+        },
+      },
     },
 
     logger: {
       info: (message: string, data?: any) => elizaLogger.info(`[INFO] ${message}`, data),
       warn: (message: string, data?: any) => elizaLogger.warn(`[WARN] ${message}`, data),
       error: (message: string, data?: any) => elizaLogger.error(`[ERROR] ${message}`, data),
-      debug: (message: string, data?: any) => elizaLogger.debug(`[DEBUG] ${message}`, data)
-    }
+      debug: (message: string, data?: any) => elizaLogger.debug(`[DEBUG] ${message}`, data),
+    },
   };
 
   return mockRuntime as IAgentRuntime;
@@ -562,7 +570,9 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
 /**
  * Create a test training data point
  */
-function createTestTrainingDataPoint(overrides: Partial<TrainingDataPoint> = {}): TrainingDataPoint {
+function createTestTrainingDataPoint(
+  overrides: Partial<TrainingDataPoint> = {}
+): TrainingDataPoint {
   return {
     id: createUniqueUuid(`training-data-${Date.now()}`) as UUID,
     timestamp: Date.now(),
@@ -570,21 +580,21 @@ function createTestTrainingDataPoint(overrides: Partial<TrainingDataPoint> = {})
     input: {
       prompt: 'Test prompt',
       messageText: 'Hello world',
-      conversationContext: []
+      conversationContext: [],
     },
     output: {
       decision: 'RESPOND',
       reasoning: 'Test reasoning',
-      confidence: 0.95
+      confidence: 0.95,
     },
     metadata: {
       agentId: 'test-agent' as UUID,
       roomId: 'test-room' as UUID,
       modelName: 'test-model',
       responseTimeMs: 100,
-      tokensUsed: 50
+      tokensUsed: 50,
     },
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -593,7 +603,7 @@ function createTestTrainingDataPoint(overrides: Partial<TrainingDataPoint> = {})
  */
 async function seedTestTrainingData(runtime: IAgentRuntime): Promise<void> {
   const modelTypes: CustomModelType[] = ['should_respond', 'planning', 'coding'];
-  
+
   for (let i = 0; i < 10; i++) {
     for (const modelType of modelTypes) {
       const dataPoint = createTestTrainingDataPoint({
@@ -603,10 +613,10 @@ async function seedTestTrainingData(runtime: IAgentRuntime): Promise<void> {
           roomId: `test-room-${modelType}` as UUID,
           modelName: `test-${modelType}-model`,
           responseTimeMs: 100 + i * 10,
-          tokensUsed: 50 + i * 5
-        }
+          tokensUsed: 50 + i * 5,
+        },
       });
-      
+
       await runtime.log({
         entityId: runtime.agentId,
         roomId: runtime.agentId,

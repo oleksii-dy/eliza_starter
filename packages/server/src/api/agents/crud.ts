@@ -25,10 +25,19 @@ export function createAgentCrudRouter(
   router.get('/', async (_, res) => {
     try {
       if (!db) {
+        logger.error('[AGENTS LIST] Database not available');
         return sendError(res, 500, 'DB_ERROR', 'Database not available');
       }
+
+      logger.info('[AGENTS LIST] Fetching agents from database...');
       const allAgents = await db.getAgents();
+      logger.info(
+        `[AGENTS LIST] Found ${allAgents.length} agents in database:`,
+        allAgents.map((a) => ({ id: a.id, name: a.name }))
+      );
+
       const runtimes = Array.from(agents.keys());
+      logger.info(`[AGENTS LIST] Found ${runtimes.length} active runtimes:`, runtimes);
 
       // Return only minimal agent data
       const response = allAgents
@@ -47,6 +56,7 @@ export function createAgentCrudRouter(
           return a.status === 'active' ? -1 : 1;
         });
 
+      logger.info(`[AGENTS LIST] Returning ${response.length} agents to client:`, response);
       sendSuccess(res, { agents: response });
     } catch (error) {
       logger.error('[AGENTS LIST] Error retrieving agents:', error);

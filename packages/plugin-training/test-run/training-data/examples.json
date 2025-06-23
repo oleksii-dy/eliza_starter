@@ -1,0 +1,34 @@
+[
+  {
+    "request": "Create a Discord plugin for ElizaOS",
+    "response": "I'll create a comprehensive Discord plugin for ElizaOS. Here's the implementation:\n\n```typescript\nimport { Plugin } from '@elizaos/core';\n// Complete implementation...\n```",
+    "thinking": "The user wants a Discord plugin. I need to create a complete implementation with proper TypeScript types, Discord.js integration, and ElizaOS patterns.",
+    "quality": 0.95,
+    "id": "example-1750611252476-m8x1ad0ef",
+    "createdAt": "2025-06-22T16:54:12.476Z"
+  },
+  {
+    "request": "How do I create a custom action?",
+    "response": "To create a custom action in ElizaOS, you need to implement the Action interface. Here's how:\n\n```typescript\nconst myAction: Action = {\n  name: 'MY_ACTION',\n  // implementation...\n};\n```",
+    "thinking": "The user wants to understand how to create custom actions. I should explain the Action interface and provide a complete example.",
+    "quality": 0.9,
+    "id": "example-1750611252477-6t4b5wxmv",
+    "createdAt": "2025-06-22T16:54:12.477Z"
+  },
+  {
+    "request": "Build a weather API integration",
+    "response": "I'll create a weather API integration plugin that fetches real-time weather data. This will include error handling, rate limiting, and proper data formatting for ElizaOS.",
+    "thinking": "This requires API integration with proper error handling and rate limiting. I should structure this as a service with actions and providers.",
+    "quality": 0.85,
+    "id": "example-1750611252477-07cmhc3ax",
+    "createdAt": "2025-06-22T16:54:12.477Z"
+  },
+  {
+    "request": "How do I use the ElizaOS testing framework?",
+    "response": "Use the 'elizaos test' command to run both unit and E2E tests. The framework supports real runtime testing without mocks.",
+    "thinking": "The user wants to know about testing. I should explain the test command and the philosophy of real runtime testing.",
+    "quality": 0.95,
+    "id": "example-1750613303186-sy2d9kdwp",
+    "createdAt": "2025-06-22T17:28:23.186Z"
+  }
+]

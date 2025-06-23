@@ -14,20 +14,20 @@ import fs from 'fs/promises';
 
 async function testTavilyDirectly() {
   elizaLogger.info('=== Testing Tavily Search Directly ===');
-  
+
   const apiKey = process.env.TAVILY_API_KEY;
   if (!apiKey) {
     elizaLogger.error('TAVILY_API_KEY not found in environment');
     return;
   }
-  
+
   try {
     const tavily = new TavilySearchProvider({ apiKey });
-    const query = "renewable energy storage technologies environmental economic impacts grid scale";
-    
+    const query = 'renewable energy storage technologies environmental economic impacts grid scale';
+
     elizaLogger.info(`Searching Tavily for: "${query}"`);
     const results = await tavily.search(query, 5);
-    
+
     elizaLogger.info(`Found ${results.length} results:`);
     results.forEach((result, i) => {
       elizaLogger.info(`${i + 1}. ${result.title}`);
@@ -35,17 +35,19 @@ async function testTavilyDirectly() {
       elizaLogger.info(`   Score: ${result.score}`);
       elizaLogger.info(`   Snippet: ${result.snippet?.substring(0, 100)}...`);
     });
-    
+
     // Check if results are relevant
-    const relevantResults = results.filter(r => 
-      r.title.toLowerCase().includes('energy') ||
-      r.title.toLowerCase().includes('storage') ||
-      r.snippet?.toLowerCase().includes('battery') ||
-      r.snippet?.toLowerCase().includes('renewable')
+    const relevantResults = results.filter(
+      (r) =>
+        r.title.toLowerCase().includes('energy') ||
+        r.title.toLowerCase().includes('storage') ||
+        r.snippet?.toLowerCase().includes('battery') ||
+        r.snippet?.toLowerCase().includes('renewable')
     );
-    
-    elizaLogger.info(`\n${relevantResults.length} out of ${results.length} results appear relevant`);
-    
+
+    elizaLogger.info(
+      `\n${relevantResults.length} out of ${results.length} results appear relevant`
+    );
   } catch (error) {
     elizaLogger.error('Tavily search failed:', error);
   }
@@ -53,7 +55,7 @@ async function testTavilyDirectly() {
 
 async function testWithMinimalRuntime() {
   elizaLogger.info('\n=== Testing with Minimal Runtime ===');
-  
+
   const runtime: IAgentRuntime = {
     agentId: asUUID('11111111-1111-1111-1111-111111111111'),
     character: {
@@ -63,7 +65,6 @@ async function testWithMinimalRuntime() {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       plugins: [],
     },
@@ -118,13 +119,13 @@ async function testWithMinimalRuntime() {
     },
     stop: async () => {},
   } as any;
-  
+
   const service = new ResearchService(runtime);
-  
+
   try {
-    const query = "Compare renewable energy storage technologies environmental economic impacts";
+    const query = 'Compare renewable energy storage technologies environmental economic impacts';
     elizaLogger.info(`Creating research project: "${query}"`);
-    
+
     const project = await service.createResearchProject(query, {
       searchProviders: ['web'],
       maxSearchResults: 5,
@@ -133,20 +134,22 @@ async function testWithMinimalRuntime() {
       evaluationEnabled: false,
       timeout: 60000,
     });
-    
+
     elizaLogger.info(`Project created: ${project.id}`);
-    
+
     // Wait for completion
     let attempts = 0;
     while (attempts < 60) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       const current = await service.getProject(project.id);
       if (!current) break;
-      
+
       if (attempts % 5 === 0) {
-        elizaLogger.info(`Status: ${current.status}, Phase: ${current.phase}, Sources: ${current.sources.length}`);
-        
+        elizaLogger.info(
+          `Status: ${current.status}, Phase: ${current.phase}, Sources: ${current.sources.length}`
+        );
+
         // Log first few sources
         if (current.sources.length > 0) {
           elizaLogger.info('First few sources:');
@@ -155,26 +158,26 @@ async function testWithMinimalRuntime() {
           });
         }
       }
-      
+
       if (current.status === 'completed' || current.status === 'failed') {
         if (current.status === 'completed' && current.report) {
           const markdown = await service.exportProject(project.id, 'markdown');
           const reportPath = path.join(__dirname, '../../fixed-renewable-energy-report.md');
           await fs.writeFile(reportPath, markdown);
           elizaLogger.info(`✅ Report saved to: ${reportPath}`);
-          
+
           // Show preview
           elizaLogger.info('\nReport Preview:');
           elizaLogger.info(markdown.substring(0, 1000) + '...');
-          
+
           // Check content
-          const hasRelevantContent = 
+          const hasRelevantContent =
             markdown.toLowerCase().includes('energy') &&
             markdown.toLowerCase().includes('storage') &&
-            (markdown.toLowerCase().includes('battery') || 
-             markdown.toLowerCase().includes('renewable') ||
-             markdown.toLowerCase().includes('environmental'));
-          
+            (markdown.toLowerCase().includes('battery') ||
+              markdown.toLowerCase().includes('renewable') ||
+              markdown.toLowerCase().includes('environmental'));
+
           if (hasRelevantContent) {
             elizaLogger.info('\n✅ SUCCESS: Report contains relevant renewable energy content!');
           } else {
@@ -187,12 +190,11 @@ async function testWithMinimalRuntime() {
         }
         break;
       }
-      
+
       attempts++;
     }
-    
+
     await service.stop();
-    
   } catch (error) {
     elizaLogger.error('Test failed:', error);
   }
@@ -201,9 +203,9 @@ async function testWithMinimalRuntime() {
 async function main() {
   // First test Tavily directly
   await testTavilyDirectly();
-  
+
   // Then test with minimal runtime
   await testWithMinimalRuntime();
 }
 
-main().catch(console.error); 
+main().catch(console.error);

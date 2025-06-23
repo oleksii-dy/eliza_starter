@@ -1,24 +1,13 @@
 import { vi } from 'vitest';
-import type { 
-  IAgentRuntime, 
-  Memory, 
-  State, 
-  Character,
-  UUID,
-} from '@elizaos/core';
-import { 
-  createMockRuntime as baseMockRuntime,
-  createMockMemory as baseMockMemory,
-  createMockState as baseMockState,
-} from '@elizaos/core/test-utils';
+import type { IAgentRuntime, Memory, State, Character, UUID } from '@elizaos/core';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Create a comprehensive mock runtime for planning tests
- * Extends the base mock runtime with planning-specific overrides
  */
 export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
-  // Use the centralized mock runtime with planning-specific defaults
-  return baseMockRuntime({
+  return {
+    agentId: uuidv4() as UUID,
     character: {
       name: 'TestAgent',
       bio: ['Test bio for planning tests'],
@@ -26,7 +15,6 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       messageExamples: [],
       postExamples: [],
       topics: ['planning', 'testing'],
-      adjectives: ['helpful', 'accurate'],
       knowledge: [],
       clients: [],
       plugins: ['@elizaos/plugin-planning'],
@@ -45,14 +33,14 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
 
     getService: vi.fn((name: string) => {
       const services: Record<string, any> = {
-        'planning': {
+        planning: {
           createSimplePlan: vi.fn(),
           createComprehensivePlan: vi.fn(),
           executePlan: vi.fn(),
           validatePlan: vi.fn(),
           adaptPlan: vi.fn(),
         },
-        'memory': {
+        memory: {
           getMemories: vi.fn().mockResolvedValue([]),
           createMemory: vi.fn().mockResolvedValue(true),
           searchMemories: vi.fn().mockResolvedValue([]),
@@ -65,6 +53,115 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     useModel: vi.fn().mockImplementation(async (modelType: string, params: any) => {
       // Mock different model responses based on type and prompt
       if (modelType === 'TEXT_LARGE') {
+        if (params.prompt?.includes('Create a comprehensive action plan')) {
+          // Return properly formatted XML for comprehensive planning
+          const goal = params.prompt.match(/GOAL: ([^\n]+)/)?.[1] || 'Test comprehensive goal';
+          const executionModel = params.prompt.match(/EXECUTION MODEL: ([^\n]+)/)?.[1] || 'sequential';
+          
+          let steps = '';
+          if (goal.includes('timeline')) {
+            steps = `<step>
+<id>step_1</id>
+<action>ANALYZE_INPUT</action>
+<parameters>{"type": "timeline_requirements"}</parameters>
+<dependencies>[]</dependencies>
+<description>Analyze project requirements</description>
+</step>
+<step>
+<id>step_2</id>
+<action>CREATE_TASK</action>
+<parameters>{"task": "Define milestones"}</parameters>
+<dependencies>["step_1"]</dependencies>
+<description>Create milestone tasks</description>
+</step>
+<step>
+<id>step_3</id>
+<action>SCHEDULE</action>
+<parameters>{"duration": "2 weeks"}</parameters>
+<dependencies>["step_2"]</dependencies>
+<description>Schedule timeline</description>
+</step>`;
+          } else if (goal.includes('multiple tasks')) {
+            steps = `<step>
+<id>step_1</id>
+<action>TASK_A</action>
+<parameters>{}</parameters>
+<dependencies>[]</dependencies>
+<description>Execute task A</description>
+</step>
+<step>
+<id>step_2</id>
+<action>TASK_B</action>
+<parameters>{}</parameters>
+<dependencies>[]</dependencies>
+<description>Execute task B in parallel</description>
+</step>
+<step>
+<id>step_3</id>
+<action>TASK_C</action>
+<parameters>{}</parameters>
+<dependencies>[]</dependencies>
+<description>Execute task C in parallel</description>
+</step>`;
+          } else if (goal.includes('dependent tasks')) {
+            steps = `<step>
+<id>step_1</id>
+<action>SETUP</action>
+<parameters>{}</parameters>
+<dependencies>[]</dependencies>
+<description>Initial setup</description>
+</step>
+<step>
+<id>step_2</id>
+<action>PROCESS</action>
+<parameters>{}</parameters>
+<dependencies>["step_1"]</dependencies>
+<description>Process after setup</description>
+</step>
+<step>
+<id>step_3</id>
+<action>FINALIZE</action>
+<parameters>{}</parameters>
+<dependencies>["step_2"]</dependencies>
+<description>Finalize process</description>
+</step>`;
+          } else {
+            steps = `<step>
+<id>step_1</id>
+<action>REPLY</action>
+<parameters>{"text": "Executing plan"}</parameters>
+<dependencies>[]</dependencies>
+<description>Default step</description>
+</step>`;
+          }
+          
+          return `<plan>
+<goal>${goal}</goal>
+<execution_model>${executionModel}</execution_model>
+<steps>
+${steps}
+</steps>
+<estimated_duration>30000</estimated_duration>
+</plan>`;
+        }
+        
+        if (params.prompt?.includes('adapt plan')) {
+          return `<plan>
+<goal>Adapted plan goal</goal>
+<execution_model>sequential</execution_model>
+<steps>
+<step>
+<id>step_1</id>
+<action>REPLY</action>
+<parameters>{"text": "Adapted response"}</parameters>
+<dependencies>[]</dependencies>
+<description>Fallback step</description>
+</step>
+</steps>
+<estimated_duration>5000</estimated_duration>
+</plan>`;
+        }
+        
         if (params.prompt?.includes('plan')) {
           return JSON.stringify({
             goal: 'Test planning goal',
@@ -152,16 +249,37 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       text: 'Current state context',
     }),
 
+    // Additional mock methods
+    messageManager: {
+      createMemory: vi.fn().mockResolvedValue(true),
+      getMemories: vi.fn().mockResolvedValue([]),
+      updateMemory: vi.fn().mockResolvedValue(true),
+      deleteMemory: vi.fn().mockResolvedValue(true),
+      searchMemories: vi.fn().mockResolvedValue([]),
+      getLastMessages: vi.fn().mockResolvedValue([]),
+    },
+
+    logger: {
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+    },
+
     ...overrides,
-  });
+  } as unknown as IAgentRuntime;
 }
 
 /**
  * Create a mock memory object for planning tests
- * Uses the centralized mock with planning-specific defaults
  */
 export function createMockMemory(overrides: Partial<Memory> = {}): Memory {
-  return baseMockMemory({
+  return {
+    id: uuidv4() as UUID,
+    entityId: uuidv4() as UUID,
+    roomId: uuidv4() as UUID,
+    agentId: uuidv4() as UUID,
+    createdAt: Date.now(),
     content: {
       text: 'Test message content for planning',
       source: 'planning-test',
@@ -171,15 +289,14 @@ export function createMockMemory(overrides: Partial<Memory> = {}): Memory {
       source: 'planning-test',
     },
     ...overrides,
-  });
+  } as Memory;
 }
 
 /**
  * Create a mock state object for planning tests
- * Uses the centralized mock with planning-specific defaults
  */
 export function createMockState(overrides: Partial<State> = {}): State {
-  return baseMockState({
+  return {
     values: {
       currentTime: new Date().toISOString(),
       userName: 'TestUser',
@@ -200,7 +317,7 @@ export function createMockState(overrides: Partial<State> = {}): State {
     },
     text: 'Current conversation context for planning',
     ...overrides,
-  });
+  } as State;
 }
 
 /**
@@ -237,17 +354,17 @@ export function createMockPlanningContext(overrides: any = {}): any {
  */
 export function createMockActionPlan(overrides: any = {}): any {
   return {
-    id: 'test-plan-id' as UUID,
+    id: uuidv4() as UUID,
     goal: 'Test action plan',
     steps: [
       {
-        id: 'step-1' as UUID,
+        id: uuidv4() as UUID,
         actionName: 'REPLY',
         parameters: { text: 'Test step 1' },
         expectedOutput: 'Confirmation message',
       },
       {
-        id: 'step-2' as UUID,
+        id: uuidv4() as UUID,
         actionName: 'THINK',
         parameters: { thought: 'Test thinking step' },
         expectedOutput: 'Analysis result',
@@ -265,7 +382,7 @@ export function createMockActionPlan(overrides: any = {}): any {
  * Helper to simulate async delays in tests
  */
 export function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**

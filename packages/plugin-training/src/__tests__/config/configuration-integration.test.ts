@@ -26,7 +26,7 @@ function createMockRuntimeWithSettings(settings: Record<string, string>): IAgent
 describe('Configuration Integration Tests', () => {
   let mockRuntime: IAgentRuntime;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset environment variables
     delete process.env.TOGETHER_AI_BASE_URL;
     delete process.env.ANTHROPIC_PROXY_PORT;

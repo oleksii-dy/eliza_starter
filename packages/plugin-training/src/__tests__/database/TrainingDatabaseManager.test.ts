@@ -1,9 +1,9 @@
 /**
  * REAL RUNTIME INTEGRATION TESTS FOR TRAINING DATABASE MANAGER
- * 
+ *
  * These tests use actual ElizaOS runtime instances and real database operations.
  * No mocks - only real runtime instances, actual database connections, and real SQL operations.
- * 
+ *
  * Test coverage:
  * - Real database schema initialization
  * - Actual SQLite database operations
@@ -30,18 +30,17 @@ const testCharacter: Character = {
   messageExamples: [
     [
       { name: 'user', content: { text: 'test database operations' } },
-      { name: 'TrainingDatabaseTestAgent', content: { text: 'testing database response' } }
-    ]
+      { name: 'TrainingDatabaseTestAgent', content: { text: 'testing database response' } },
+    ],
   ],
   postExamples: [],
   topics: ['testing', 'database', 'training', 'sql-operations'],
-  adjectives: ['helpful', 'accurate', 'reliable'],
   plugins: [],
   settings: {
-    CUSTOM_REASONING_ENABLED: 'true',
-    CUSTOM_REASONING_COLLECT_TRAINING_DATA: 'true',
+    REASONING_SERVICE_ENABLED: 'true',
+    REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',
   },
-  secrets: {}
+  secrets: {},
 };
 
 // Helper function to create test training data points
@@ -53,12 +52,12 @@ function createTestTrainingDataPoint(overrides: any = {}) {
       messageText: 'Test message',
       prompt: 'Test prompt for database storage',
       conversationContext: [],
-      state: {}
+      state: {},
     },
     outputData: {
       decision: 'RESPOND',
       reasoning: 'Test reasoning',
-      confidence: 0.95
+      confidence: 0.95,
     },
     conversationContext: [],
     stateData: {},
@@ -67,11 +66,11 @@ function createTestTrainingDataPoint(overrides: any = {}) {
       messageId: uuidv4() as UUID,
       responseTimeMs: 100,
       tokensUsed: 50,
-      costUsd: 0.001
+      costUsd: 0.001,
     },
     tags: ['test'],
     timestamp: Date.now(),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -83,16 +82,16 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
 
   beforeEach(async () => {
     elizaLogger.info('🧪 Setting up TrainingDatabaseManager real runtime test environment...');
-    
+
     // Create unique test paths to avoid conflicts
     const testId = `training-db-manager-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     testDatabasePath = path.join(process.cwd(), '.test-data', testId, 'training.db');
     testDataPath = path.join(process.cwd(), '.test-data', testId, 'db-data');
-    
+
     // Ensure test directories exist
     await fs.mkdir(path.dirname(testDatabasePath), { recursive: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    
+
     // Update test character with test-specific paths
     const testCharacterWithPaths = {
       ...testCharacter,
@@ -100,29 +99,29 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
         ...testCharacter.settings,
         TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
         DATABASE_DATA_DIR: testDataPath,
-      }
+      },
     };
 
     // Create real AgentRuntime instance
     runtime = new AgentRuntime({
       character: testCharacterWithPaths,
       token: process.env.OPENAI_API_KEY || 'test-token',
-      modelName: 'gpt-4o-mini'
+      modelName: 'gpt-4o-mini',
     });
 
     // Register the training plugin
     await runtime.registerPlugin(trainingPlugin);
     await runtime.initialize();
-    
+
     // Create real TrainingDatabaseManager instance
     dbManager = new TrainingDatabaseManager(runtime);
-    
+
     elizaLogger.info('✅ TrainingDatabaseManager real runtime test environment setup complete');
   });
 
   afterEach(async () => {
     elizaLogger.info('🧹 Cleaning up TrainingDatabaseManager test environment...');
-    
+
     try {
       // Clean up test files
       if (testDatabasePath) {
@@ -132,7 +131,7 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
           // File might not exist, that's okay
         }
       }
-      
+
       if (testDataPath) {
         try {
           await fs.rm(path.dirname(testDataPath), { recursive: true, force: true });
@@ -143,7 +142,7 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
     } catch (error) {
       elizaLogger.warn('Warning during TrainingDatabaseManager cleanup:', error);
     }
-    
+
     elizaLogger.info('✅ TrainingDatabaseManager test environment cleanup complete');
   });
 
@@ -157,40 +156,39 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
         WHERE type='table' AND name IN ('training_data', 'training_sessions', 'reasoning_decisions')
         ORDER BY name
       `;
-      
+
       const tables = await runtime.db.all(tablesQuery, []);
       expect(tables.length).toBeGreaterThanOrEqual(2);
-      
+
       const tableNames = tables.map((table: any) => table.name);
       expect(tableNames).toContain('training_data');
       expect(tableNames).toContain('training_sessions');
-      
+
       elizaLogger.info(`✅ Database schema initialized with tables: ${tableNames.join(', ')}`);
     });
 
     it('should handle schema initialization idempotently with real database', async () => {
       // Initialize schema first time
       await dbManager.initializeSchema();
-      
+
       // Initialize schema second time (should not error)
       await expect(dbManager.initializeSchema()).resolves.not.toThrow();
-      
+
       // Verify tables still exist
-      const tablesQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%training%'";
+      const tablesQuery =
+        "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%training%'";
       const tables = await runtime.db.all(tablesQuery, []);
       expect(tables.length).toBeGreaterThanOrEqual(2);
-      
+
       elizaLogger.info('✅ Schema initialization idempotency validated');
     });
 
     it('should create proper table structures with real database', async () => {
       await dbManager.initializeSchema();
-      
+
       // Check training_data table structure
-      const trainingDataColumns = await runtime.db.all(
-        "PRAGMA table_info(training_data)", []
-      );
-      
+      const trainingDataColumns = await runtime.db.all('PRAGMA table_info(training_data)', []);
+
       expect(trainingDataColumns.length).toBeGreaterThan(5);
       const columnNames = trainingDataColumns.map((col: any) => col.name);
       expect(columnNames).toContain('id');
@@ -198,7 +196,7 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
       expect(columnNames).toContain('model_type');
       expect(columnNames).toContain('input_data');
       expect(columnNames).toContain('output_data');
-      
+
       elizaLogger.info(`✅ Training data table columns: ${columnNames.join(', ')}`);
     });
   });
@@ -206,7 +204,7 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
   describe('Real Training Data Storage', () => {
     it('should store training data successfully with real database operations', async () => {
       await dbManager.initializeSchema();
-      
+
       const dataPoint = createTestTrainingDataPoint({
         modelType: 'planning',
         metadata: {
@@ -221,28 +219,27 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
       await dbManager.storeTrainingData(dataPoint);
 
       // Verify data was actually stored by querying the database
-      const storedData = await runtime.db.all(
-        'SELECT * FROM training_data WHERE id = ?',
-        [dataPoint.id]
-      );
-      
+      const storedData = await runtime.db.all('SELECT * FROM training_data WHERE id = ?', [
+        dataPoint.id,
+      ]);
+
       expect(storedData.length).toBe(1);
       expect(storedData[0].id).toBe(dataPoint.id);
       expect(storedData[0].model_type).toBe('planning');
       expect(storedData[0].agent_id).toBe(runtime.agentId);
-      
+
       const inputData = JSON.parse(storedData[0].input_data);
       expect(inputData.messageText).toBe(dataPoint.inputData.messageText);
-      
+
       const outputData = JSON.parse(storedData[0].output_data);
       expect(outputData.decision).toBe(dataPoint.outputData.decision);
-      
+
       elizaLogger.info('✅ Training data storage with real database operations validated');
     });
 
     it('should handle database constraint violations with real database', async () => {
       await dbManager.initializeSchema();
-      
+
       const dataPoint = createTestTrainingDataPoint({
         id: 'invalid-id-format', // Invalid UUID format
       });
@@ -260,8 +257,8 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
 
     it('should store multiple training data points with real transactions', async () => {
       await dbManager.initializeSchema();
-      
-      const dataPoints = Array.from({ length: 5 }, (_, i) => 
+
+      const dataPoints = Array.from({ length: 5 }, (_, i) =>
         createTestTrainingDataPoint({
           id: uuidv4(),
           modelType: 'should_respond',
@@ -269,13 +266,13 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
             messageText: `Batch message ${i}`,
             prompt: `Batch prompt ${i}`,
             conversationContext: [],
-            state: {}
+            state: {},
           },
           outputData: {
             decision: 'RESPOND',
             reasoning: `Batch reasoning ${i}`,
-            confidence: 0.8 + (i * 0.02)
-          }
+            confidence: 0.8 + i * 0.02,
+          },
         })
       );
 
@@ -289,9 +286,9 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
         'SELECT COUNT(*) as count FROM training_data WHERE agent_id = ?',
         [runtime.agentId]
       );
-      
+
       expect(allStoredData[0].count).toBeGreaterThanOrEqual(5);
-      
+
       elizaLogger.info('✅ Multiple training data points stored successfully');
     });
   });
@@ -299,35 +296,50 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
   describe('Real Training Data Retrieval', () => {
     beforeEach(async () => {
       await dbManager.initializeSchema();
-      
+
       // Add real test data
       const testDataPoints = [
         createTestTrainingDataPoint({
           id: 'test-data-1',
           modelType: 'should_respond',
-          inputData: { messageText: 'Hello', prompt: 'Test prompt 1', conversationContext: [], state: {} },
+          inputData: {
+            messageText: 'Hello',
+            prompt: 'Test prompt 1',
+            conversationContext: [],
+            state: {},
+          },
           outputData: { decision: 'RESPOND', reasoning: 'Greeting response', confidence: 0.9 },
           metadata: { roomId: uuidv4() as UUID, messageId: uuidv4() as UUID },
-          tags: ['model:should_respond', 'greeting']
+          tags: ['model:should_respond', 'greeting'],
         }),
         createTestTrainingDataPoint({
           id: 'test-data-2',
           modelType: 'planning',
-          inputData: { messageText: 'Plan my day', prompt: 'Test prompt 2', conversationContext: [], state: {} },
+          inputData: {
+            messageText: 'Plan my day',
+            prompt: 'Test prompt 2',
+            conversationContext: [],
+            state: {},
+          },
           outputData: { decision: 'PLAN', reasoning: 'Planning request', confidence: 0.85 },
           metadata: { roomId: uuidv4() as UUID, messageId: uuidv4() as UUID },
-          tags: ['model:planning', 'schedule']
+          tags: ['model:planning', 'schedule'],
         }),
         createTestTrainingDataPoint({
           id: 'test-data-3',
           modelType: 'coding',
-          inputData: { messageText: 'Write a function', prompt: 'Test prompt 3', conversationContext: [], state: {} },
+          inputData: {
+            messageText: 'Write a function',
+            prompt: 'Test prompt 3',
+            conversationContext: [],
+            state: {},
+          },
           outputData: { decision: 'CODE', reasoning: 'Code generation request', confidence: 0.95 },
           metadata: { roomId: uuidv4() as UUID, messageId: uuidv4() as UUID },
-          tags: ['model:coding', 'function']
-        })
+          tags: ['model:coding', 'function'],
+        }),
       ];
-      
+
       for (const dataPoint of testDataPoints) {
         await dbManager.storeTrainingData(dataPoint);
       }
@@ -337,18 +349,18 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
       const data = await dbManager.getTrainingData();
 
       expect(data.length).toBeGreaterThanOrEqual(3);
-      
+
       // Verify data structure
       const firstItem = data[0];
       expect(firstItem).toHaveProperty('id');
       expect(firstItem).toHaveProperty('model_type');
       expect(firstItem).toHaveProperty('input_data');
       expect(firstItem).toHaveProperty('output_data');
-      
+
       // Verify JSON parsing
       expect(typeof firstItem.input_data).toBe('object');
       expect(typeof firstItem.output_data).toBe('object');
-      
+
       elizaLogger.info(`✅ Retrieved ${data.length} training data items with real database`);
     });
 
@@ -359,16 +371,16 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
       // Should find at least the planning data we inserted
       expect(planningData.length).toBeGreaterThanOrEqual(1);
       expect(codingData.length).toBeGreaterThanOrEqual(1);
-      
+
       // Verify filtering worked
-      planningData.forEach(item => {
+      planningData.forEach((item) => {
         expect(item.model_type).toBe('planning');
       });
-      
-      codingData.forEach(item => {
+
+      codingData.forEach((item) => {
         expect(item.model_type).toBe('coding');
       });
-      
+
       elizaLogger.info('✅ Model type filtering with real database validated');
     });
 
@@ -377,25 +389,25 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
       const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
       const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
-      const recentData = await dbManager.getTrainingData({ 
-        startDate: oneHourAgo, 
-        endDate: oneHourLater 
+      const recentData = await dbManager.getTrainingData({
+        startDate: oneHourAgo,
+        endDate: oneHourLater,
       });
 
       // Should find the data we just inserted
       expect(recentData.length).toBeGreaterThanOrEqual(3);
-      
+
       // Test with past date range (should find nothing)
       const pastStart = new Date('2020-01-01');
       const pastEnd = new Date('2020-12-31');
-      
-      const pastData = await dbManager.getTrainingData({ 
-        startDate: pastStart, 
-        endDate: pastEnd 
+
+      const pastData = await dbManager.getTrainingData({
+        startDate: pastStart,
+        endDate: pastEnd,
       });
-      
+
       expect(pastData.length).toBe(0);
-      
+
       elizaLogger.info('✅ Date range filtering with real database validated');
     });
 
@@ -405,12 +417,12 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
 
       expect(firstPage.length).toBeLessThanOrEqual(2);
       expect(secondPage.length).toBeGreaterThanOrEqual(0);
-      
+
       // Verify different data
       if (firstPage.length > 0 && secondPage.length > 0) {
         expect(firstPage[0].id).not.toBe(secondPage[0].id);
       }
-      
+
       elizaLogger.info('✅ Pagination with real database validated');
     });
   });
@@ -581,9 +593,7 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
         expect.stringContaining('DELETE FROM training_data'),
         [TEST_CONSTANTS.AGENT_ID, expect.stringMatching(/\d{4}-\d{2}-\d{2}T/)]
       );
-      expect(elizaLogger.info).toHaveBeenCalledWith(
-        'Cleaned up 45 old training data records'
-      );
+      expect(elizaLogger.info).toHaveBeenCalledWith('Cleaned up 45 old training data records');
     });
 
     it('should handle cleanup errors', async () => {
@@ -656,156 +666,155 @@ describe('Real Runtime Training Database Manager Integration Tests', () => {
     });
   });
 
-// Additional integration tests for database manager
-describe('Real Database Manager Integration Tests', () => {
-  let runtime: IAgentRuntime;
-  let dbManager: TrainingDatabaseManager;
-  let testDatabasePath: string;
+  // Additional integration tests for database manager
+  describe('Real Database Manager Integration Tests', () => {
+    let runtime: IAgentRuntime;
+    let dbManager: TrainingDatabaseManager;
+    let testDatabasePath: string;
 
-  beforeEach(async () => {
-    elizaLogger.info('🧪 Setting up integrated database manager test environment...');
-    
-    const testId = `integrated-db-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    testDatabasePath = path.join(process.cwd(), '.test-data', testId, 'integrated.db');
-    
-    await fs.mkdir(path.dirname(testDatabasePath), { recursive: true });
-    
-    const testCharacterWithDb = {
-      ...testCharacter,
-      settings: {
-        ...testCharacter.settings,
-        TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
-      }
-    };
+    beforeEach(async () => {
+      elizaLogger.info('🧪 Setting up integrated database manager test environment...');
 
-    runtime = new AgentRuntime({
-      character: testCharacterWithDb,
-      token: process.env.OPENAI_API_KEY || 'test-token',
-      modelName: 'gpt-4o-mini'
-    });
+      const testId = `integrated-db-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      testDatabasePath = path.join(process.cwd(), '.test-data', testId, 'integrated.db');
 
-    await runtime.registerPlugin(trainingPlugin);
-    await runtime.initialize();
-    
-    dbManager = new TrainingDatabaseManager(runtime);
-  });
+      await fs.mkdir(path.dirname(testDatabasePath), { recursive: true });
 
-  afterEach(async () => {
-    try {
-      if (testDatabasePath) {
-        await fs.unlink(testDatabasePath);
-      }
-      await fs.rm(path.dirname(testDatabasePath), { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
-    }
-  });
+      const testCharacterWithDb = {
+        ...testCharacter,
+        settings: {
+          ...testCharacter.settings,
+          TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
+        },
+      };
 
-  it('should handle full database lifecycle with real operations', async () => {
-    // Initialize schema
-    await dbManager.initializeSchema();
-    
-    // Store training data
-    const trainingData = createTestTrainingDataPoint({
-      modelType: 'should_respond',
-      inputData: {
-        messageText: 'Integration test message',
-        prompt: 'Integration test prompt',
-        conversationContext: [],
-        state: {}
-      },
-      outputData: {
-        decision: 'RESPOND',
-        reasoning: 'Integration test reasoning',
-        confidence: 0.92
-      }
-    });
-    
-    await dbManager.storeTrainingData(trainingData);
-    
-    // Create training session
-    const sessionId = await dbManager.createTrainingSession({
-      agent_id: runtime.agentId,
-      model_type: 'should_respond',
-      session_name: 'integration-test-session',
-      base_model: 'deepseek-should-respond',
-      training_config: { integration_test: true },
-      training_samples_count: 1,
-      validation_samples_count: 0,
-      status: 'pending',
-      progress_percent: 0,
-    });
-    
-    // Update session
-    await dbManager.updateTrainingSession(sessionId, {
-      status: 'completed',
-      progress_percent: 100,
-    });
-    
-    // Store reasoning decision
-    await dbManager.storeReasoningDecision({
-      roomId: uuidv4() as UUID,
-      messageId: uuidv4() as UUID,
-      decisionType: 'should_respond',
-      modelUsed: 'deepseek-should-respond',
-      customReasoningUsed: true,
-      inputSummary: 'Integration test decision',
-      outputSummary: 'Integration test output',
-      responseTimeMs: 125,
-      success: true,
-    });
-    
-    // Get statistics
-    const stats = await dbManager.getTrainingDataStats();
-    
-    // Verify everything worked
-    expect(stats.total).toBeGreaterThanOrEqual(1);
-    expect(stats.byModelType.should_respond).toBeGreaterThanOrEqual(1);
-    
-    const sessions = await runtime.db.all(
-      'SELECT * FROM training_sessions WHERE agent_id = ?',
-      [runtime.agentId]
-    );
-    expect(sessions.length).toBe(1);
-    expect(sessions[0].status).toBe('completed');
-    
-    const decisions = await runtime.db.all(
-      'SELECT * FROM reasoning_decisions WHERE agent_id = ?',
-      [runtime.agentId]
-    );
-    expect(decisions.length).toBe(1);
-    expect(decisions[0].success).toBe(1);
-    
-    elizaLogger.info('✅ Full database lifecycle integration test completed successfully');
-  });
-
-  it('should handle database errors gracefully in integrated environment', async () => {
-    await dbManager.initializeSchema();
-    
-    // Test with invalid data that should trigger database constraints
-    const invalidData = createTestTrainingDataPoint({
-      id: '', // Empty ID should cause issues
-      inputData: null as any, // Invalid input data
-    });
-    
-    try {
-      await dbManager.storeTrainingData(invalidData);
-      elizaLogger.info('✅ Database handled invalid data gracefully');
-    } catch (error) {
-      expect(error).toBeDefined();
-      elizaLogger.info('✅ Database properly rejected invalid data');
-    }
-    
-    // Test with non-existent session update
-    try {
-      await dbManager.updateTrainingSession('non-existent-session-id', {
-        status: 'completed'
+      runtime = new AgentRuntime({
+        character: testCharacterWithDb,
+        token: process.env.OPENAI_API_KEY || 'test-token',
+        modelName: 'gpt-4o-mini',
       });
-      elizaLogger.info('✅ Non-existent session update handled gracefully');
-    } catch (error) {
-      // Either handling gracefully or throwing appropriate error is acceptable
-      elizaLogger.info('✅ Non-existent session update error handled');
-    }
+
+      await runtime.registerPlugin(trainingPlugin);
+      await runtime.initialize();
+
+      dbManager = new TrainingDatabaseManager(runtime);
+    });
+
+    afterEach(async () => {
+      try {
+        if (testDatabasePath) {
+          await fs.unlink(testDatabasePath);
+        }
+        await fs.rm(path.dirname(testDatabasePath), { recursive: true, force: true });
+      } catch (error) {
+        // Ignore cleanup errors
+      }
+    });
+
+    it('should handle full database lifecycle with real operations', async () => {
+      // Initialize schema
+      await dbManager.initializeSchema();
+
+      // Store training data
+      const trainingData = createTestTrainingDataPoint({
+        modelType: 'should_respond',
+        inputData: {
+          messageText: 'Integration test message',
+          prompt: 'Integration test prompt',
+          conversationContext: [],
+          state: {},
+        },
+        outputData: {
+          decision: 'RESPOND',
+          reasoning: 'Integration test reasoning',
+          confidence: 0.92,
+        },
+      });
+
+      await dbManager.storeTrainingData(trainingData);
+
+      // Create training session
+      const sessionId = await dbManager.createTrainingSession({
+        agent_id: runtime.agentId,
+        model_type: 'should_respond',
+        session_name: 'integration-test-session',
+        base_model: 'deepseek-should-respond',
+        training_config: { integration_test: true },
+        training_samples_count: 1,
+        validation_samples_count: 0,
+        status: 'pending',
+        progress_percent: 0,
+      });
+
+      // Update session
+      await dbManager.updateTrainingSession(sessionId, {
+        status: 'completed',
+        progress_percent: 100,
+      });
+
+      // Store reasoning decision
+      await dbManager.storeReasoningDecision({
+        roomId: uuidv4() as UUID,
+        messageId: uuidv4() as UUID,
+        decisionType: 'should_respond',
+        modelUsed: 'deepseek-should-respond',
+        customReasoningUsed: true,
+        inputSummary: 'Integration test decision',
+        outputSummary: 'Integration test output',
+        responseTimeMs: 125,
+        success: true,
+      });
+
+      // Get statistics
+      const stats = await dbManager.getTrainingDataStats();
+
+      // Verify everything worked
+      expect(stats.total).toBeGreaterThanOrEqual(1);
+      expect(stats.byModelType.should_respond).toBeGreaterThanOrEqual(1);
+
+      const sessions = await runtime.db.all('SELECT * FROM training_sessions WHERE agent_id = ?', [
+        runtime.agentId,
+      ]);
+      expect(sessions.length).toBe(1);
+      expect(sessions[0].status).toBe('completed');
+
+      const decisions = await runtime.db.all(
+        'SELECT * FROM reasoning_decisions WHERE agent_id = ?',
+        [runtime.agentId]
+      );
+      expect(decisions.length).toBe(1);
+      expect(decisions[0].success).toBe(1);
+
+      elizaLogger.info('✅ Full database lifecycle integration test completed successfully');
+    });
+
+    it('should handle database errors gracefully in integrated environment', async () => {
+      await dbManager.initializeSchema();
+
+      // Test with invalid data that should trigger database constraints
+      const invalidData = createTestTrainingDataPoint({
+        id: '', // Empty ID should cause issues
+        inputData: null as any, // Invalid input data
+      });
+
+      try {
+        await dbManager.storeTrainingData(invalidData);
+        elizaLogger.info('✅ Database handled invalid data gracefully');
+      } catch (error) {
+        expect(error).toBeDefined();
+        elizaLogger.info('✅ Database properly rejected invalid data');
+      }
+
+      // Test with non-existent session update
+      try {
+        await dbManager.updateTrainingSession('non-existent-session-id', {
+          status: 'completed',
+        });
+        elizaLogger.info('✅ Non-existent session update handled gracefully');
+      } catch (error) {
+        // Either handling gracefully or throwing appropriate error is acceptable
+        elizaLogger.info('✅ Non-existent session update error handled');
+      }
+    });
   });
-});
 });

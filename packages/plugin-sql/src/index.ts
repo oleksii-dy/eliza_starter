@@ -5,6 +5,7 @@ import { PostgresConnectionManager } from './pg/manager';
 import { PgDatabaseAdapter } from './pg/adapter';
 import { connectionRegistry } from './connection-registry';
 import { resolvePgliteDir } from './utils';
+import './pglite/graceful-shutdown'; // Auto-registers shutdown handlers
 
 /**
  * Creates a database adapter based on the provided configuration.
@@ -16,13 +17,13 @@ import { resolvePgliteDir } from './utils';
  * @param {UUID} agentId - The unique identifier for the agent.
  * @returns {DatabaseAdapter} The created database adapter.
  */
-export function createDatabaseAdapter(
+export async function createDatabaseAdapter(
   config: {
     dataDir?: string;
     postgresUrl?: string;
   },
   agentId: UUID
-): DatabaseAdapter {
+): Promise<DatabaseAdapter> {
   const dataDir = resolvePgliteDir(config.dataDir);
 
   if (config.postgresUrl) {
@@ -31,12 +32,45 @@ export function createDatabaseAdapter(
   }
 
   const manager = connectionRegistry.getPGLiteManager(dataDir);
+
+  // Initialize the PGLite manager before creating the adapter
+  logger.info('[createDatabaseAdapter] Initializing PGLite manager...');
+  await manager.initialize();
+  logger.info('[createDatabaseAdapter] PGLite manager initialized');
+
   return new PgliteDatabaseAdapter(agentId, manager, dataDir);
 }
 
 // Track initialization to prevent multiple initialization
 let pluginInitialized = false;
 let initializationPromise: Promise<void> | null = null;
+
+/**
+ * Factory function to create a database adapter for the runtime.
+ * This is called by the runtime's plugin registration flow when it sees plugin.adapter.
+ */
+function createAdapterFactory(): DatabaseAdapter | null {
+  // Return a special adapter that defers to the actual adapter created during init
+  return {
+    // This is a proxy adapter that will be replaced during plugin initialization
+    __isProxyAdapter: true,
+    init: async function () {
+      logger.info('[SQL Plugin Proxy Adapter] init called - waiting for actual adapter');
+      // The real adapter will be registered during plugin init
+    },
+    waitForReady: async function () {
+      logger.info('[SQL Plugin Proxy Adapter] waitForReady called - waiting for actual adapter');
+      // The real adapter will be registered during plugin init
+    },
+    // Add minimal implementations for required methods
+    getAgents: async () => [],
+    getAgent: async () => null,
+    createAgent: async () => false,
+    updateAgent: async () => false,
+    deleteAgent: async () => false,
+    ensureAgentExists: async (agent: any) => agent,
+  } as any;
+}
 
 export const plugin: Plugin = {
   name: '@elizaos/plugin-sql',
@@ -46,6 +80,10 @@ export const plugin: Plugin = {
   evaluators: [],
   providers: [],
   services: [],
+
+  // Export an adapter property that the runtime expects
+  // This will be replaced by the actual adapter during init
+  adapter: createAdapterFactory() as any,
 
   init: async (_, runtime) => {
     logger.info('[plugin-sql] Initializing SQL plugin...');
@@ -85,7 +123,7 @@ async function performInitialization(runtime: any): Promise<void> {
 
   // Check if a database adapter is already registered in runtime
   const existingRuntimeAdapter = (runtime as any).adapter || (runtime as any).databaseAdapter;
-  if (existingRuntimeAdapter) {
+  if (existingRuntimeAdapter && !(existingRuntimeAdapter as any).__isProxyAdapter) {
     logger.info('[plugin-sql] Database adapter already registered in runtime');
 
     // Always check if tables exist, not just if adapter claims to be ready
@@ -138,10 +176,16 @@ async function performInitialization(runtime: any): Promise<void> {
     const manager = connectionRegistry.getPostgresManager(postgresUrl);
     const adapter = new PgDatabaseAdapter(runtime.agentId, manager, postgresUrl);
 
-    // Register adapter with runtime - let runtime handle initialization
+    // Register adapter with runtime (replacing the proxy adapter)
     logger.info('[plugin-sql] Registering PostgreSQL adapter with runtime...');
     runtime.registerDatabaseAdapter(adapter);
-    logger.info('[plugin-sql] PostgreSQL adapter registered (runtime will initialize)');
+
+    // Initialize adapter and wait for it to be ready
+    logger.info('[plugin-sql] Initializing PostgreSQL adapter...');
+    await adapter.init();
+    await adapter.waitForReady();
+
+    logger.info('[plugin-sql] PostgreSQL adapter initialized and ready');
     pluginInitialized = true;
   } else {
     // Use PGLite adapter
@@ -166,10 +210,16 @@ async function performInitialization(runtime: any): Promise<void> {
 
     const adapter = new PgliteDatabaseAdapter(runtime.agentId, manager, pglitePath);
 
-    // Register adapter with runtime - let runtime handle initialization
+    // Register adapter with runtime (replacing the proxy adapter)
     logger.info('[plugin-sql] Registering PGLite adapter with runtime...');
     runtime.registerDatabaseAdapter(adapter);
-    logger.info('[plugin-sql] PGLite adapter registered (runtime will initialize)');
+
+    // Initialize adapter and wait for it to be ready
+    logger.info('[plugin-sql] Initializing PGLite adapter...');
+    await adapter.init();
+    await adapter.waitForReady();
+
+    logger.info('[plugin-sql] PGLite adapter initialized and ready');
     pluginInitialized = true;
   }
 

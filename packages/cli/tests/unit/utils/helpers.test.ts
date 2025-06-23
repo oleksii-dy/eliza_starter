@@ -89,17 +89,12 @@ describe('helpers', () => {
     it('should display all array sections', () => {
       const agent: Partial<Agent> = {
         name: 'Test Agent',
-        adjectives: ['smart', 'funny'],
         topics: ['AI', 'Tech'],
         plugins: ['plugin1', 'plugin2'],
         postExamples: ['Example 1', 'Example 2'],
       };
 
       displayAgent(agent);
-
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Adjectives:'));
-      expect(consoleSpy).toHaveBeenCalledWith('  smart');
-      expect(consoleSpy).toHaveBeenCalledWith('  funny');
 
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Topics:'));
       expect(consoleSpy).toHaveBeenCalledWith('  AI');
@@ -158,7 +153,6 @@ describe('helpers', () => {
         name: 'Test Agent',
         bio: [],
         topics: undefined,
-        adjectives: [],
       };
 
       displayAgent(agent);
@@ -166,14 +160,12 @@ describe('helpers', () => {
       // Should not display empty sections
       // expect(consoleSpy).not.toHaveBeenCalledWith(expect.stringContaining('Bio:')); // TODO: Fix for bun test
       // expect(consoleSpy).not.toHaveBeenCalledWith(expect.stringContaining('Topics:')); // TODO: Fix for bun test
-      // expect(consoleSpy).not.toHaveBeenCalledWith(expect.stringContaining('Adjectives:')); // TODO: Fix for bun test
     });
 
     it('should display all agent sections', () => {
       const agent = {
         name: 'Full Agent',
         bio: ['Bio line 1', 'Bio line 2'],
-        adjectives: ['smart', 'helpful'],
         topics: ['AI', 'coding'],
         plugins: ['plugin1', 'plugin2'],
         style: {
@@ -197,9 +189,6 @@ describe('helpers', () => {
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Bio:'));
       expect(consoleSpy).toHaveBeenCalledWith('  Bio line 1');
       expect(consoleSpy).toHaveBeenCalledWith('  Bio line 2');
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Adjectives:'));
-      expect(consoleSpy).toHaveBeenCalledWith('  smart');
-      expect(consoleSpy).toHaveBeenCalledWith('  helpful');
     });
 
     it('should handle missing optional fields', () => {

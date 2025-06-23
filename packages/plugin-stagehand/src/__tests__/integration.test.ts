@@ -3,7 +3,6 @@ import { stagehandPlugin, StagehandService, BrowserSession } from '../index';
 import {
   createMockRuntime,
   setupLoggerSpies,
-  MockRuntime,
   createMockMemory,
   createMockState,
 } from './test-utils';
@@ -104,9 +103,9 @@ describe('Integration: Browser Navigation with StagehandService', () => {
 
     // Verify provider returns correct state
     expect(providerResult.text).toContain('Current browser page');
-    expect(providerResult.values.hasSession).toBe(true);
-    expect(providerResult.values.url).toBe('https://example.com');
-    expect(providerResult.values.title).toBe('Test Page Title');
+    expect(providerResult.values?.hasSession).toBe(true);
+    expect(providerResult.values?.url).toBe('https://example.com');
+    expect(providerResult.values?.title).toBe('Test Page Title');
   });
 
   it('should handle navigation sequence: navigate, back, forward', async () => {
@@ -214,7 +213,7 @@ describe('Integration: Session Management', () => {
     );
 
     expect(result.text).toBe('No active browser session');
-    expect(result.values.hasSession).toBe(false);
+    expect(result.values?.hasSession).toBe(false);
   });
 });
 

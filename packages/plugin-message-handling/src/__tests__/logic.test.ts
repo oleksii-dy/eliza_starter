@@ -13,7 +13,7 @@ import {
   UUID,
 } from '@elizaos/core';
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
-import { bootstrapPlugin } from '../index';
+import { messageHandlingPlugin } from '../index';
 import { MockRuntime, setupActionTest } from './test-utils';
 
 describe('Message Handler Logic', () => {
@@ -28,7 +28,7 @@ describe('Message Handler Logic', () => {
     const setup = setupActionTest({
       runtimeOverrides: {
         // Override default runtime methods for testing message handlers
-        useModel: mock().mockImplementation((modelType, params) => {
+        useModel: vi.fn().mockImplementation((modelType, params) => {
           if (params?.prompt?.includes('should respond template')) {
             return Promise.resolve(
               JSON.stringify({
@@ -51,7 +51,7 @@ describe('Message Handler Logic', () => {
           return Promise.resolve({});
         }),
 
-        composeState: mock().mockResolvedValue({
+        composeState: vi.fn().mockResolvedValue({
           values: {
             agentName: 'Test Agent',
             recentMessages: 'User: Test message',
@@ -61,7 +61,7 @@ describe('Message Handler Logic', () => {
           },
         }),
 
-        getRoom: mock().mockResolvedValue({
+        getRoom: vi.fn().mockResolvedValue({
           id: 'test-room-id',
           name: 'Test Room',
           type: ChannelType.GROUP,
@@ -70,7 +70,7 @@ describe('Message Handler Logic', () => {
           source: 'test',
         }),
 
-        getParticipantUserState: mock().mockResolvedValue('ACTIVE'),
+        getParticipantUserState: vi.fn().mockResolvedValue('ACTIVE'),
       },
       messageOverrides: {
         content: {
@@ -87,22 +87,17 @@ describe('Message Handler Logic', () => {
     // Add required templates to character
     mockRuntime.character = {
       ...mockRuntime.character,
-      templates: {
-        ...mockRuntime.character.templates,
-        messageHandlerTemplate: 'Test message handler template {{recentMessages}}',
-        shouldRespondTemplate: 'Test should respond template {{recentMessages}}',
-      },
     };
   });
 
   afterEach(() => {
     // Note: bun:test doesn't need vi.useRealTimers(), skipping
-    mock.restore();
+    vi.clearAllMocks();
   });
 
   it('should register all expected event handlers', () => {
     // Verify bootstrap plugin has event handlers
-    expect(bootstrapPlugin.events).toBeDefined();
+    expect(messageHandlingPlugin.events).toBeDefined();
 
     // Check for mandatory event handlers
     const requiredEvents = [
@@ -116,14 +111,14 @@ describe('Message Handler Logic', () => {
     ];
 
     requiredEvents.forEach((eventType) => {
-      expect(bootstrapPlugin.events?.[eventType]).toBeDefined();
-      expect(bootstrapPlugin.events?.[eventType]?.length).toBeGreaterThan(0);
+      expect(messageHandlingPlugin.events?.[eventType]).toBeDefined();
+      expect(messageHandlingPlugin.events?.[eventType]?.length).toBeGreaterThan(0);
     });
   });
 
   it('should process MESSAGE_RECEIVED event and save message to memory', async () => {
     // Get the MESSAGE_RECEIVED handler
-    const messageHandler = bootstrapPlugin.events?.[EventType.MESSAGE_RECEIVED]?.[0];
+    const messageHandler = messageHandlingPlugin.events?.[EventType.MESSAGE_RECEIVED]?.[0];
     expect(messageHandler).toBeDefined();
 
     if (messageHandler) {
@@ -156,11 +151,11 @@ describe('Message Handler Logic', () => {
 
   it('should not respond to messages when agent is muted', async () => {
     // Get the MESSAGE_RECEIVED handler
-    const messageHandler = bootstrapPlugin.events?.[EventType.MESSAGE_RECEIVED]?.[0];
+    const messageHandler = messageHandlingPlugin.events?.[EventType.MESSAGE_RECEIVED]?.[0];
     expect(messageHandler).toBeDefined();
 
     // Set agent state to MUTED
-    mockRuntime.getParticipantUserState = mock().mockResolvedValue('MUTED');
+    mockRuntime.getParticipantUserState = vi.fn().mockResolvedValue('MUTED');
 
     if (messageHandler) {
       // Call the handler with our mock payload
@@ -189,13 +184,13 @@ describe('Message Handler Logic', () => {
 
   it('should handle errors gracefully during message processing', async () => {
     // Get the MESSAGE_RECEIVED handler
-    const messageHandler = bootstrapPlugin.events?.[EventType.MESSAGE_RECEIVED]?.[0];
+    const messageHandler = messageHandlingPlugin.events?.[EventType.MESSAGE_RECEIVED]?.[0];
     expect(messageHandler).toBeDefined();
     if (!messageHandler) return; // Guard clause if handler is not found
 
     // Mock emitEvent to handle errors without throwing
-    mockRuntime.emitEvent = mock().mockResolvedValue(undefined);
-    mockRuntime.useModel = mock().mockImplementation((modelType, params) => {
+    mockRuntime.emitEvent = vi.fn().mockResolvedValue(undefined);
+    mockRuntime.useModel = vi.fn().mockImplementation((modelType, params) => {
       // Specifically throw an error for the shouldRespondTemplate
       if (params?.prompt?.includes('should respond template')) {
         return Promise.reject(new Error('Test error in useModel for shouldRespond'));
@@ -241,11 +236,11 @@ describe('Message Handler Logic', () => {
 
   it('should handle mal-formatted response from LLM', async () => {
     // Get the MESSAGE_RECEIVED handler
-    const messageHandler = bootstrapPlugin.events?.[EventType.MESSAGE_RECEIVED]?.[0];
+    const messageHandler = messageHandlingPlugin.events?.[EventType.MESSAGE_RECEIVED]?.[0];
     expect(messageHandler).toBeDefined();
 
     // Simulate bad JSON from LLM
-    mockRuntime.useModel = mock().mockImplementation((modelType, params) => {
+    mockRuntime.useModel = vi.fn().mockImplementation((modelType, params) => {
       if (params?.prompt?.includes('should respond template')) {
         return Promise.resolve('This is not valid JSON');
       } else if (modelType === ModelType.TEXT_SMALL) {
@@ -293,12 +288,12 @@ describe('Reaction Events', () => {
   });
 
   afterEach(() => {
-    mock.restore();
+    vi.clearAllMocks();
   });
 
   it('should store reaction messages correctly', async () => {
     // Get the REACTION_RECEIVED handler
-    const reactionHandler = bootstrapPlugin.events?.[EventType.REACTION_RECEIVED]?.[0];
+    const reactionHandler = messageHandlingPlugin.events?.[EventType.REACTION_RECEIVED]?.[0];
     expect(reactionHandler).toBeDefined();
 
     if (reactionHandler) {
@@ -316,11 +311,11 @@ describe('Reaction Events', () => {
 
   it('should handle duplicate reaction errors', async () => {
     // Get the REACTION_RECEIVED handler
-    const reactionHandler = bootstrapPlugin.events?.[EventType.REACTION_RECEIVED]?.[0];
+    const reactionHandler = messageHandlingPlugin.events?.[EventType.REACTION_RECEIVED]?.[0];
     expect(reactionHandler).toBeDefined();
 
     // Simulate a duplicate key error
-    mockRuntime.createMemory = mock().mockRejectedValue({ code: '23505' });
+    mockRuntime.createMemory = vi.fn().mockRejectedValue({ code: '23505' });
 
     if (reactionHandler) {
       // Should not throw when handling duplicate error
@@ -346,10 +341,10 @@ describe('World and Entity Events', () => {
     // Use setupActionTest for consistent test setup
     const setup = setupActionTest({
       runtimeOverrides: {
-        ensureConnection: mock().mockResolvedValue(undefined),
-        ensureWorldExists: mock().mockResolvedValue(undefined),
-        ensureRoomExists: mock().mockResolvedValue(undefined),
-        getEntityById: mock().mockImplementation((entityId) => {
+        ensureConnection: vi.fn().mockResolvedValue(undefined),
+        ensureWorldExists: vi.fn().mockResolvedValue(undefined),
+        ensureRoomExists: vi.fn().mockResolvedValue(undefined),
+        getEntityById: vi.fn().mockImplementation((entityId) => {
           return Promise.resolve({
             id: entityId,
             names: ['Test User'],
@@ -364,7 +359,7 @@ describe('World and Entity Events', () => {
             },
           });
         }),
-        updateEntity: mock().mockResolvedValue(undefined),
+        updateEntity: vi.fn().mockResolvedValue(undefined),
       },
     });
 
@@ -372,12 +367,12 @@ describe('World and Entity Events', () => {
   });
 
   afterEach(() => {
-    mock.restore();
+    vi.clearAllMocks();
   });
 
   it('should handle ENTITY_JOINED events', async () => {
     // Get the ENTITY_JOINED handler
-    const entityJoinedHandler = bootstrapPlugin.events?.[EventType.ENTITY_JOINED]?.[0];
+    const entityJoinedHandler = messageHandlingPlugin.events?.[EventType.ENTITY_JOINED]?.[0];
     expect(entityJoinedHandler).toBeDefined();
 
     if (entityJoinedHandler) {
@@ -404,7 +399,7 @@ describe('World and Entity Events', () => {
 
   it('should handle ENTITY_LEFT events', async () => {
     // Get the ENTITY_LEFT handler
-    const entityLeftHandler = bootstrapPlugin.events?.[EventType.ENTITY_LEFT]?.[0];
+    const entityLeftHandler = messageHandlingPlugin.events?.[EventType.ENTITY_LEFT]?.[0];
     expect(entityLeftHandler).toBeDefined();
 
     if (entityLeftHandler) {
@@ -431,11 +426,11 @@ describe('World and Entity Events', () => {
 
   it('should handle errors in ENTITY_LEFT events', async () => {
     // Get the ENTITY_LEFT handler
-    const entityLeftHandler = bootstrapPlugin.events?.[EventType.ENTITY_LEFT]?.[0];
+    const entityLeftHandler = messageHandlingPlugin.events?.[EventType.ENTITY_LEFT]?.[0];
     expect(entityLeftHandler).toBeDefined();
 
     // Simulate error in getEntityById
-    mockRuntime.getEntityById = mock().mockRejectedValue(new Error('Entity not found'));
+    mockRuntime.getEntityById = vi.fn().mockRejectedValue(new Error('Entity not found'));
 
     if (entityLeftHandler) {
       // Should not throw when handling error
@@ -468,12 +463,12 @@ describe('Event Lifecycle Events', () => {
   });
 
   afterEach(() => {
-    mock.restore();
+    vi.clearAllMocks();
   });
 
   it('should handle ACTION_STARTED events', async () => {
     // Get the ACTION_STARTED handler
-    const actionStartedHandler = bootstrapPlugin.events?.[EventType.ACTION_STARTED]?.[0];
+    const actionStartedHandler = messageHandlingPlugin.events?.[EventType.ACTION_STARTED]?.[0];
     expect(actionStartedHandler).toBeDefined();
 
     if (actionStartedHandler) {
@@ -493,7 +488,7 @@ describe('Event Lifecycle Events', () => {
 
   it('should handle ACTION_COMPLETED events', async () => {
     // Get the ACTION_COMPLETED handler
-    const actionCompletedHandler = bootstrapPlugin.events?.[EventType.ACTION_COMPLETED]?.[0];
+    const actionCompletedHandler = messageHandlingPlugin.events?.[EventType.ACTION_COMPLETED]?.[0];
     expect(actionCompletedHandler).toBeDefined();
 
     if (actionCompletedHandler) {
@@ -513,7 +508,7 @@ describe('Event Lifecycle Events', () => {
 
   it('should handle ACTION_COMPLETED events with errors', async () => {
     // Get the ACTION_COMPLETED handler
-    const actionCompletedHandler = bootstrapPlugin.events?.[EventType.ACTION_COMPLETED]?.[0];
+    const actionCompletedHandler = messageHandlingPlugin.events?.[EventType.ACTION_COMPLETED]?.[0];
     expect(actionCompletedHandler).toBeDefined();
 
     if (actionCompletedHandler) {
@@ -534,7 +529,7 @@ describe('Event Lifecycle Events', () => {
 
   it('should handle EVALUATOR_STARTED events', async () => {
     // Get the EVALUATOR_STARTED handler
-    const evaluatorStartedHandler = bootstrapPlugin.events?.[EventType.EVALUATOR_STARTED]?.[0];
+    const evaluatorStartedHandler = messageHandlingPlugin.events?.[EventType.EVALUATOR_STARTED]?.[0];
     expect(evaluatorStartedHandler).toBeDefined();
 
     if (evaluatorStartedHandler) {
@@ -554,7 +549,7 @@ describe('Event Lifecycle Events', () => {
 
   it('should handle EVALUATOR_COMPLETED events', async () => {
     // Get the EVALUATOR_COMPLETED handler
-    const evaluatorCompletedHandler = bootstrapPlugin.events?.[EventType.EVALUATOR_COMPLETED]?.[0];
+    const evaluatorCompletedHandler = messageHandlingPlugin.events?.[EventType.EVALUATOR_COMPLETED]?.[0];
     expect(evaluatorCompletedHandler).toBeDefined();
 
     if (evaluatorCompletedHandler) {

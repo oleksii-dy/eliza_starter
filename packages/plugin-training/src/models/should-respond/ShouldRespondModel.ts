@@ -4,7 +4,7 @@ import { TogetherAIClient } from '../../lib/together-client';
 
 /**
  * ShouldRespondModel - Handles both data collection and inference for ShouldRespond decisions
- * 
+ *
  * This model is designed to be the smallest possible model that can make binary decisions
  * about whether the agent should respond to incoming messages.
  */
@@ -16,13 +16,16 @@ export class ShouldRespondModel {
 
   constructor(runtime: IAgentRuntime) {
     this.collector = new ShouldRespondCollector(runtime);
-    this.customModelEnabled = runtime.getSetting('CUSTOM_REASONING_SHOULD_RESPOND_ENABLED') === 'true';
-    
+    this.customModelEnabled =
+      runtime.getSetting('REASONING_SERVICE_SHOULD_RESPOND_ENABLED') === 'true';
+
     if (this.customModelEnabled) {
       const apiKey = runtime.getSetting('TOGETHER_AI_API_KEY');
       if (apiKey) {
         this.togetherClient = new TogetherAIClient(apiKey);
-        this.customModelName = runtime.getSetting('CUSTOM_REASONING_SHOULD_RESPOND_MODEL') || 'user/eliza-should-respond-v1';
+        this.customModelName =
+          runtime.getSetting('REASONING_SERVICE_SHOULD_RESPOND_MODEL') ||
+          'user/eliza-should-respond-v1';
       }
     }
   }
@@ -37,7 +40,7 @@ export class ShouldRespondModel {
     state?: State
   ): Promise<{ shouldRespond: boolean; reasoning: string; confidence: number }> {
     const startTime = Date.now();
-    
+
     try {
       let decision: boolean;
       let reasoning: string;
@@ -45,13 +48,20 @@ export class ShouldRespondModel {
 
       if (this.customModelEnabled && this.togetherClient && this.customModelName) {
         // Use custom trained model
-        const result = await this.inferWithCustomModel(message, state || { values: {}, data: {}, text: '' });
+        const result = await this.inferWithCustomModel(
+          message,
+          state || { values: {}, data: {}, text: '' }
+        );
         decision = result.decision;
         reasoning = result.reasoning;
         confidence = result.confidence;
       } else {
         // Use default heuristic logic with enhanced reasoning
-        const result = await this.defaultShouldRespondLogic(runtime, message, state || { values: {}, data: {}, text: '' });
+        const result = await this.defaultShouldRespondLogic(
+          runtime,
+          message,
+          state || { values: {}, data: {}, text: '' }
+        );
         decision = result.decision;
         reasoning = result.reasoning;
         confidence = result.confidence;
@@ -68,16 +78,21 @@ export class ShouldRespondModel {
       );
 
       const responseTime = Date.now() - startTime;
-      elizaLogger.debug(`🤖 ShouldRespond decision: ${decision ? 'RESPOND' : 'IGNORE'} (${responseTime}ms, confidence: ${confidence})`);
+      elizaLogger.debug(
+        `🤖 ShouldRespond decision: ${decision ? 'RESPOND' : 'IGNORE'} (${responseTime}ms, confidence: ${confidence})`
+      );
 
       return { shouldRespond: decision, reasoning, confidence };
-      
     } catch (error) {
       elizaLogger.error('❌ ShouldRespond model error:', error);
-      
+
       // Fallback to safe default
-      const fallbackResult = { shouldRespond: false, reasoning: 'Error in processing, defaulting to no response', confidence: 0.1 };
-      
+      const fallbackResult = {
+        shouldRespond: false,
+        reasoning: 'Error in processing, defaulting to no response',
+        confidence: 0.1,
+      };
+
       // Still try to collect the error case
       try {
         await this.collector.collectShouldRespondData(
@@ -91,7 +106,7 @@ export class ShouldRespondModel {
       } catch (collectError) {
         elizaLogger.warn('Failed to collect error case data:', collectError);
       }
-      
+
       return fallbackResult;
     }
   }
@@ -99,14 +114,17 @@ export class ShouldRespondModel {
   /**
    * Use custom trained model for inference
    */
-  private async inferWithCustomModel(message: Memory, state: State): Promise<{ decision: boolean; reasoning: string; confidence: number }> {
+  private async inferWithCustomModel(
+    message: Memory,
+    state: State
+  ): Promise<{ decision: boolean; reasoning: string; confidence: number }> {
     if (!this.togetherClient || !this.customModelName) {
       throw new Error('Custom model not properly configured');
     }
 
     // Format input for the model
     const modelInput = this.formatInputForModel(message, state);
-    
+
     // Call the fine-tuned model
     const response = await this.togetherClient.testInference(
       this.customModelName,
@@ -162,7 +180,8 @@ export class ShouldRespondModel {
 
     // Recent conversation activity
     const timeSinceLastResponse = this.getTimeSinceLastResponse(state, runtime.agentId);
-    if (timeSinceLastResponse < 2 * 60 * 1000) { // 2 minutes
+    if (timeSinceLastResponse < 2 * 60 * 1000) {
+      // 2 minutes
       score += 0.2;
       factors.push('recent_activity');
     }
@@ -182,7 +201,7 @@ export class ShouldRespondModel {
     // Determine decision
     const decision = score > 0.3;
     const confidence = Math.min(Math.abs(score), 0.95); // Cap confidence
-    
+
     const reasoning = `Score: ${score.toFixed(2)} based on factors: ${factors.join(', ')}. Decision: ${decision ? 'respond' : 'ignore'} (threshold: 0.3)`;
 
     return { decision, reasoning, confidence };
@@ -210,7 +229,11 @@ export class ShouldRespondModel {
   /**
    * Parse model response into structured output
    */
-  private parseModelResponse(response: string): { decision: boolean; reasoning: string; confidence: number } {
+  private parseModelResponse(response: string): {
+    decision: boolean;
+    reasoning: string;
+    confidence: number;
+  } {
     try {
       // Try to parse as JSON first
       const parsed = JSON.parse(response);
@@ -224,7 +247,7 @@ export class ShouldRespondModel {
       const decision = /respond|yes|true/i.test(response);
       const confidenceMatch = response.match(/confidence[:\s]*([\d.]+)/i);
       const confidence = confidenceMatch ? parseFloat(confidenceMatch[1]) : 0.7;
-      
+
       return {
         decision,
         reasoning: response.substring(0, 200), // Truncate reasoning
@@ -237,10 +260,12 @@ export class ShouldRespondModel {
   private checkMentionsAgent(message: Memory, runtime: IAgentRuntime): boolean {
     const text = message.content.text || '';
     const agentName = runtime.character?.name || '';
-    return text.includes(`@${runtime.agentId}`) || 
-           text.toLowerCase().includes(agentName.toLowerCase()) ||
-           text.includes('<@') || // Discord mention format
-           /\b(hey|hi|hello)\s+(agent|bot|assistant|eliza)\b/i.test(text);
+    return (
+      text.includes(`@${runtime.agentId}`) ||
+      text.toLowerCase().includes(agentName.toLowerCase()) ||
+      text.includes('<@') || // Discord mention format
+      /\b(hey|hi|hello)\s+(agent|bot|assistant|eliza)\b/i.test(text)
+    );
   }
 
   private getTimeSinceLastResponse(state: State, agentId: string): number {

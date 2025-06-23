@@ -1,9 +1,9 @@
 /**
  * Real runtime integration test for Train Model Action
- * 
+ *
  * This test verifies that the train model action properly integrates with
  * actual ElizaOS runtime instances and correctly handles real API calls and file operations.
- * 
+ *
  * Unlike the original performative tests, this uses a real runtime instance
  * and validates actual functionality rather than mock behavior.
  */
@@ -26,7 +26,7 @@ describe('Train Model Action Runtime Integration', () => {
     runtime = await createTestRuntime();
     testMemories = [];
     callbackResults = [];
-    
+
     // Create test data directory
     testDataDir = path.join(process.cwd(), 'test-training-output');
     await fs.mkdir(testDataDir, { recursive: true });
@@ -48,7 +48,7 @@ describe('Train Model Action Runtime Integration', () => {
         'fine-tune DeepSeek-70B on my ElizaOS training dataset',
         'upload training data and start fine-tuning',
         'train the model with together.ai',
-        'start model training with the dataset'
+        'start model training with the dataset',
       ];
 
       for (const text of validMessages) {
@@ -67,7 +67,7 @@ describe('Train Model Action Runtime Integration', () => {
         'what is the weather',
         'create a file',
         'random conversation',
-        'disable model training'
+        'disable model training',
       ];
 
       for (const text of invalidMessages) {
@@ -88,7 +88,7 @@ describe('Train Model Action Runtime Integration', () => {
       };
 
       const message = createTestMessage({
-        content: { text: 'train a model using the generated training data', source: 'test' }
+        content: { text: 'train a model using the generated training data', source: 'test' },
       });
       const callback = createTestCallback(callbackResults);
 
@@ -108,7 +108,7 @@ describe('Train Model Action Runtime Integration', () => {
       expect(callbackResult.text).toContain('https://api.together.xyz');
       expect(callbackResult.thought).toContain('Missing Together.ai API key');
       expect(callbackResult.actions).toContain('TRAIN_MODEL');
-      
+
       expect(result.text).toBe('Missing Together.ai API key');
 
       // Restore original function
@@ -117,7 +117,7 @@ describe('Train Model Action Runtime Integration', () => {
 
     it('should handle missing training file gracefully', async () => {
       const message = createTestMessage({
-        content: { text: 'train model with file training-data.jsonl', source: 'test' }
+        content: { text: 'train model with file training-data.jsonl', source: 'test' },
       });
       const callback = createTestCallback(callbackResults);
 
@@ -136,7 +136,7 @@ describe('Train Model Action Runtime Integration', () => {
       expect(callbackResult.text).toContain('GENERATE_TRAINING_DATA');
       expect(callbackResult.thought).toContain('Training file not found');
       expect(callbackResult.actions).toContain('TRAIN_MODEL');
-      
+
       expect(result.text).toBe('Training file not found');
     });
 
@@ -146,22 +146,22 @@ describe('Train Model Action Runtime Integration', () => {
           text: 'train model with learning rate 0.0001 and 5 epochs',
           expectedConfig: {
             learningRate: 0.0001,
-            epochs: 5
-          }
+            epochs: 5,
+          },
         },
         {
           text: 'fine-tune model meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo with batch size 2',
           expectedConfig: {
             baseModel: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
-            batchSize: 2
-          }
+            batchSize: 2,
+          },
         },
         {
           text: 'train model with suffix my-custom-model',
           expectedConfig: {
-            suffix: 'my-custom-model'
-          }
-        }
+            suffix: 'my-custom-model',
+          },
+        },
       ];
 
       for (const testCase of testCases) {
@@ -177,19 +177,13 @@ describe('Train Model Action Runtime Integration', () => {
         };
 
         const message = createTestMessage({
-          content: { text: `${testCase.text} with file ${trainingFilePath}`, source: 'test' }
+          content: { text: `${testCase.text} with file ${trainingFilePath}`, source: 'test' },
         });
         const callback = createTestCallback(callbackResults);
 
         // This will fail at the API call stage, but we can verify config extraction
         try {
-          await trainModelAction.handler(
-            runtime,
-            message,
-            createTestState(),
-            {},
-            callback
-          );
+          await trainModelAction.handler(runtime, message, createTestState(), {}, callback);
         } catch (error) {
           // Expected to fail at API call with test API key
         }
@@ -198,7 +192,7 @@ describe('Train Model Action Runtime Integration', () => {
         expect(callbackResults.length).toBeGreaterThan(0);
         const firstCallback = callbackResults[0];
         expect(firstCallback.text).toContain('Starting Together.ai model training');
-        
+
         // Reset for next test case
         callbackResults = [];
         runtime.getSetting = originalGetSetting;
@@ -207,12 +201,12 @@ describe('Train Model Action Runtime Integration', () => {
 
     it('should validate training data format properly', async () => {
       const trainingFilePath = path.join(testDataDir, 'invalid-training.jsonl');
-      
+
       // Create invalid training file
       await fs.writeFile(trainingFilePath, 'invalid json line\n{"incomplete": true');
 
       const message = createTestMessage({
-        content: { text: `train model with file ${trainingFilePath}`, source: 'test' }
+        content: { text: `train model with file ${trainingFilePath}`, source: 'test' },
       });
       const callback = createTestCallback(callbackResults);
 
@@ -230,57 +224,51 @@ describe('Train Model Action Runtime Integration', () => {
       expect(callbackResult.text).toContain('Training data validation failed');
       expect(callbackResult.thought).toContain('Training data validation failed');
       expect(callbackResult.actions).toContain('TRAIN_MODEL');
-      
+
       expect(result.text).toBe('Training data validation failed');
     });
 
     it('should handle valid training file and attempt API calls', async () => {
       const trainingFilePath = path.join(testDataDir, 'valid-training.jsonl');
-      
+
       // Create valid training file
       await createValidTrainingFile(trainingFilePath);
 
       const message = createTestMessage({
-        content: { text: `train model with file ${trainingFilePath}`, source: 'test' }
+        content: { text: `train model with file ${trainingFilePath}`, source: 'test' },
       });
       const callback = createTestCallback(callbackResults);
 
       // This will fail at API upload stage with test API key, but should pass validation
       try {
-        await trainModelAction.handler(
-          runtime,
-          message,
-          createTestState(),
-          {},
-          callback
-        );
+        await trainModelAction.handler(runtime, message, createTestState(), {}, callback);
       } catch (error) {
         // Expected to fail at API call stage
       }
 
       // Should have multiple callbacks showing progress
       expect(callbackResults.length).toBeGreaterThan(1);
-      
+
       // First callback should show training start
       const startCallback = callbackResults[0];
       expect(startCallback.text).toContain('Starting Together.ai model training');
       expect(startCallback.text).toContain('Configuration:');
       expect(startCallback.thought).toContain('Initiating Together.ai model training');
-      
+
       // Should have validation callback
-      const validationCallback = callbackResults.find(cb => 
+      const validationCallback = callbackResults.find((cb) =>
         cb.text?.includes('Validating training data format')
       );
       expect(validationCallback).toBeDefined();
-      
+
       // Should have validation success callback
-      const successCallback = callbackResults.find(cb => 
+      const successCallback = callbackResults.find((cb) =>
         cb.text?.includes('Training data validation passed')
       );
       expect(successCallback).toBeDefined();
-      
+
       // Should attempt upload
-      const uploadCallback = callbackResults.find(cb => 
+      const uploadCallback = callbackResults.find((cb) =>
         cb.text?.includes('Uploading training data to Together.ai')
       );
       expect(uploadCallback).toBeDefined();
@@ -298,21 +286,17 @@ describe('Train Model Action Runtime Integration', () => {
       };
 
       const message = createTestMessage({
-        content: { text: `train model with file ${trainingFilePath}`, source: 'test' }
+        content: { text: `train model with file ${trainingFilePath}`, source: 'test' },
       });
       const callback = createTestCallback(callbackResults);
 
       // Should handle API error gracefully
-      await expect(trainModelAction.handler(
-        runtime,
-        message,
-        createTestState(),
-        {},
-        callback
-      )).rejects.toThrow();
+      await expect(
+        trainModelAction.handler(runtime, message, createTestState(), {}, callback)
+      ).rejects.toThrow();
 
       // Should have error callback
-      const errorCallback = callbackResults.find(cb => 
+      const errorCallback = callbackResults.find((cb) =>
         cb.text?.includes('Model training failed')
       );
       expect(errorCallback).toBeDefined();
@@ -332,33 +316,27 @@ describe('Train Model Action Runtime Integration', () => {
         id: 'test-job-123',
         model: 'test-model',
         status: 'pending',
-        created_at: Date.now() / 1000
+        created_at: Date.now() / 1000,
       };
-      
+
       const mockConfig = {
         baseModel: 'test-base-model',
         learningRate: 0.0001,
-        epochs: 3
+        epochs: 3,
       };
-      
+
       // Test the storage function directly (it's not exported, but we can test the behavior)
       // by verifying that training attempts create memory entries
       const trainingFilePath = path.join(testDataDir, 'memory-test-training.jsonl');
       await createValidTrainingFile(trainingFilePath);
 
       const message = createTestMessage({
-        content: { text: `train model with file ${trainingFilePath}`, source: 'test' }
+        content: { text: `train model with file ${trainingFilePath}`, source: 'test' },
       });
       const callback = createTestCallback(callbackResults);
 
       try {
-        await trainModelAction.handler(
-          runtime,
-          message,
-          createTestState(),
-          {},
-          callback
-        );
+        await trainModelAction.handler(runtime, message, createTestState(), {}, callback);
       } catch (error) {
         // Expected API failure, but memory should be attempted
       }
@@ -374,26 +352,18 @@ describe('Train Model Action Runtime Integration', () => {
       await createValidTrainingFile(trainingFilePath);
 
       const message = createTestMessage({
-        content: { text: `train model with file ${trainingFilePath}`, source: 'test' }
+        content: { text: `train model with file ${trainingFilePath}`, source: 'test' },
       });
       const callback = createTestCallback(callbackResults);
 
       try {
-        await trainModelAction.handler(
-          runtime,
-          message,
-          createTestState(),
-          {},
-          callback
-        );
+        await trainModelAction.handler(runtime, message, createTestState(), {}, callback);
       } catch (error) {
         // Expected API failure
       }
 
       // Should show default configuration
-      const configCallback = callbackResults.find(cb => 
-        cb.text?.includes('Configuration:')
-      );
+      const configCallback = callbackResults.find((cb) => cb.text?.includes('Configuration:'));
       expect(configCallback).toBeDefined();
       if (configCallback) {
         // Check for default values
@@ -411,7 +381,7 @@ describe('Train Model Action Runtime Integration', () => {
         'fine-tune with 10 epochs',
         'train model epochs: 10',
         'train with batch_size 4',
-        'train model batch size: 4'
+        'train model batch size: 4',
       ];
 
       for (const text of testFormats) {
@@ -419,28 +389,20 @@ describe('Train Model Action Runtime Integration', () => {
         await createValidTrainingFile(trainingFilePath);
 
         const message = createTestMessage({
-          content: { text: `${text} with file ${trainingFilePath}`, source: 'test' }
+          content: { text: `${text} with file ${trainingFilePath}`, source: 'test' },
         });
         const callback = createTestCallback(callbackResults);
 
         try {
-          await trainModelAction.handler(
-            runtime,
-            message,
-            createTestState(),
-            {},
-            callback
-          );
+          await trainModelAction.handler(runtime, message, createTestState(), {}, callback);
         } catch (error) {
           // Expected API failure
         }
 
         // Should extract configuration successfully
-        const configCallback = callbackResults.find(cb => 
-          cb.text?.includes('Configuration:')
-        );
+        const configCallback = callbackResults.find((cb) => cb.text?.includes('Configuration:'));
         expect(configCallback).toBeDefined();
-        
+
         // Reset for next iteration
         callbackResults = [];
       }
@@ -454,7 +416,7 @@ describe('Train Model Action Runtime Integration', () => {
 async function createTestRuntime(): Promise<IAgentRuntime> {
   const mockRuntime: Partial<IAgentRuntime> = {
     agentId: createUniqueUuid('train-model-test-agent') as UUID,
-    
+
     character: {
       name: 'TrainModelTestAgent',
       bio: ['Test agent for train model action integration testing'],
@@ -462,16 +424,15 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       clients: [],
-      plugins: []
+      plugins: [],
     },
 
     getSetting: (key: string) => {
       const settings: Record<string, any> = {
-        'TOGETHER_API_KEY': 'test-api-key-for-training',
-        'TRAINING_OUTPUT_DIR': './training-output'
+        TOGETHER_API_KEY: 'test-api-key-for-training',
+        TRAINING_OUTPUT_DIR: './training-output',
       };
       return settings[key];
     },
@@ -486,8 +447,8 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
       info: (message: string, data?: any) => elizaLogger.info(`[INFO] ${message}`, data),
       warn: (message: string, data?: any) => elizaLogger.warn(`[WARN] ${message}`, data),
       error: (message: string, data?: any) => elizaLogger.error(`[ERROR] ${message}`, data),
-      debug: (message: string, data?: any) => elizaLogger.debug(`[DEBUG] ${message}`, data)
-    }
+      debug: (message: string, data?: any) => elizaLogger.debug(`[DEBUG] ${message}`, data),
+    },
   };
 
   return mockRuntime as IAgentRuntime;
@@ -505,10 +466,10 @@ function createTestMessage(overrides: Partial<Memory> = {}): Memory {
     content: {
       text: 'test message',
       source: 'test',
-      ...overrides.content
+      ...overrides.content,
     },
     createdAt: Date.now(),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -520,7 +481,7 @@ function createTestState(overrides: Partial<State> = {}): State {
     values: {},
     data: {},
     text: '',
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -543,28 +504,29 @@ async function createValidTrainingFile(filePath: string): Promise<void> {
       messages: [
         { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: 'What is the capital of France?' },
-        { role: 'assistant', content: 'The capital of France is Paris.' }
-      ]
+        { role: 'assistant', content: 'The capital of France is Paris.' },
+      ],
     },
     {
       messages: [
         { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: 'What is 2 + 2?' },
-        { role: 'assistant', content: '2 + 2 equals 4.' }
-      ]
+        { role: 'assistant', content: '2 + 2 equals 4.' },
+      ],
     },
     {
       messages: [
         { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: 'Tell me about TypeScript.' },
-        { role: 'assistant', content: 'TypeScript is a strongly typed programming language that builds on JavaScript.' }
-      ]
-    }
+        {
+          role: 'assistant',
+          content: 'TypeScript is a strongly typed programming language that builds on JavaScript.',
+        },
+      ],
+    },
   ];
 
-  const jsonlContent = trainingData
-    .map(sample => JSON.stringify(sample))
-    .join('\n');
-  
+  const jsonlContent = trainingData.map((sample) => JSON.stringify(sample)).join('\n');
+
   await fs.writeFile(filePath, jsonlContent, 'utf-8');
 }

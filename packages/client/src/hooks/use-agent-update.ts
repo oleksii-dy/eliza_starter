@@ -150,45 +150,20 @@ export function useAgentUpdate(initialAgent: Agent) {
     [agent.settings, updateSettings]
   );
 
-  // ==================== Content Tab ====================
-  /**
-   * Adds an item to a content array (bio, topics, adjectives)
-   *
-   * @param arrayName The name of the array field
-   * @param item The item to add
-   */
-  const addContentItem = useCallback(
-    (arrayName: 'bio' | 'topics' | 'adjectives', item: string) => {
-      addArrayItem(arrayName, item);
-    },
-    [addArrayItem]
-  );
-
-  /**
-   * Removes an item from a content array
-   *
-   * @param arrayName The name of the array field
-   * @param index The index of the item to remove
-   */
-  const removeContentItem = useCallback(
-    (arrayName: 'bio' | 'topics' | 'adjectives', index: number) => {
-      removeArrayItem(arrayName, index);
-    },
-    [removeArrayItem]
-  );
-
   /**
    * Updates an item in a content array
-   *
-   * @param arrayName The name of the array field
-   * @param index The index of the item to update
-   * @param value The new value
+   * @param arrayName - Name of the array to update
+   * @param index - Index of item to update
+   * @param value - New value
    */
-  const updateContentItem = useCallback(
-    (arrayName: 'bio' | 'topics' | 'adjectives', index: number, value: string) => {
-      updateField(`${arrayName}.${index}`, value);
+  const updateArrayItem = useCallback(
+    (arrayName: 'bio' | 'topics', index: number, value: string) => {
+      const array = arrayName === 'bio' ? agent.bio : agent.topics;
+      const newArray = [...(array || [])];
+      newArray[index] = value;
+      updateField(arrayName, newArray);
     },
-    [updateField]
+    [agent.bio, agent.topics, updateField]
   );
 
   // ==================== Style Tab ====================
@@ -325,10 +300,6 @@ export function useAgentUpdate(initialAgent: Agent) {
       changedFields.topics = current.topics;
     }
 
-    if (JSON.stringify(current.adjectives) !== JSON.stringify(initial.adjectives)) {
-      changedFields.adjectives = current.adjectives;
-    }
-
     if (JSON.stringify(current.plugins) !== JSON.stringify(initial.plugins)) {
       changedFields.plugins = current.plugins;
     }
@@ -416,9 +387,9 @@ export function useAgentUpdate(initialAgent: Agent) {
     removeSecret,
 
     // Content Tab
-    addContentItem,
-    removeContentItem,
-    updateContentItem,
+    addArrayItem,
+    removeArrayItem,
+    updateArrayItem,
 
     // Style Tab
     addStyleRule,

@@ -37,7 +37,8 @@ export class TogetherReasoningService extends Service implements CustomReasoning
   static serviceName = 'together-reasoning';
   static serviceType = 'custom-reasoning' as ServiceTypeName;
 
-  capabilityDescription = 'Custom reasoning service using fine-tuned DeepSeek models via Together.ai';
+  capabilityDescription =
+    'Custom reasoning service using fine-tuned DeepSeek models via Together.ai';
 
   private client: TogetherAIClient;
   private models: Map<CustomModelType, ModelConfig> = new Map();
@@ -47,23 +48,24 @@ export class TogetherReasoningService extends Service implements CustomReasoning
   private budgetLimit?: number;
   private budgetUsed: number = 0;
   private dataCollector: TrainingDataCollector;
-  private usageStats: Map<string, { requests: number; totalCost: number; lastUsed: Date }> = new Map();
+  private usageStats: Map<string, { requests: number; totalCost: number; lastUsed: Date }> =
+    new Map();
 
   constructor(runtime: IAgentRuntime) {
     super(runtime);
-    
+
     // Load configuration
     this.config = this.loadConfiguration();
-    
+
     // Initialize Together.ai client
     this.client = new TogetherAIClient(this.config.togetherAI.apiKey);
-    
+
     // Initialize training data collector
     this.dataCollector = new TrainingDataCollector(runtime);
-    
+
     // Initialize model configurations
     this.initializeModels();
-    
+
     // Set budget if configured
     if (this.config.costManagement.budgetLimitUSD) {
       this.budgetLimit = this.config.costManagement.budgetLimitUSD;
@@ -72,27 +74,27 @@ export class TogetherReasoningService extends Service implements CustomReasoning
 
   static async start(runtime: IAgentRuntime): Promise<TogetherReasoningService> {
     const service = new TogetherReasoningService(runtime);
-    
+
     // Validate API key
     const isValidKey = await service.client.validateApiKey();
     if (!isValidKey) {
       throw new Error('Invalid Together.ai API key');
     }
-    
+
     // Load existing deployments
     await service.loadExistingDeployments();
-    
+
     // Enable configured models
     await service.enableConfiguredModels();
-    
+
     elizaLogger.info('TogetherReasoningService started successfully');
     return service;
   }
 
   private loadConfiguration(): CustomReasoningConfig {
-    const enabled = this.runtime.getSetting('CUSTOM_REASONING_ENABLED') === 'true';
+    const enabled = this.runtime.getSetting('REASONING_SERVICE_ENABLED') === 'true';
     const apiKey = this.runtime.getSetting('TOGETHER_AI_API_KEY');
-    
+
     if (!apiKey) {
       throw new Error('TOGETHER_AI_API_KEY is required for custom reasoning service');
     }
@@ -101,19 +103,22 @@ export class TogetherReasoningService extends Service implements CustomReasoning
       enabled,
       models: {
         shouldRespond: {
-          modelName: this.runtime.getSetting('CUSTOM_REASONING_SHOULD_RESPOND_MODEL') || 
-                     'moonmakesmagic/DeepSeek-R1-Distill-Qwen-1.5B-shouldrespond',
-          enabled: this.runtime.getSetting('CUSTOM_REASONING_SHOULD_RESPOND_ENABLED') === 'true',
+          modelName:
+            this.runtime.getSetting('REASONING_SERVICE_SHOULD_RESPOND_MODEL') ||
+            'moonmakesmagic/DeepSeek-R1-Distill-Qwen-1.5B-shouldrespond',
+          enabled: this.runtime.getSetting('REASONING_SERVICE_SHOULD_RESPOND_ENABLED') === 'true',
         },
         planning: {
-          modelName: this.runtime.getSetting('CUSTOM_REASONING_PLANNING_MODEL') || 
-                     'moonmakesmagic/DeepSeek-Qwen-14B-planning',
-          enabled: this.runtime.getSetting('CUSTOM_REASONING_PLANNING_ENABLED') === 'true',
+          modelName:
+            this.runtime.getSetting('REASONING_SERVICE_PLANNING_MODEL') ||
+            'moonmakesmagic/DeepSeek-Qwen-14B-planning',
+          enabled: this.runtime.getSetting('REASONING_SERVICE_PLANNING_ENABLED') === 'true',
         },
         coding: {
-          modelName: this.runtime.getSetting('CUSTOM_REASONING_CODING_MODEL') || 
-                     'moonmakesmagic/DeepSeek-Llama-67B-coding',
-          enabled: this.runtime.getSetting('CUSTOM_REASONING_CODING_ENABLED') === 'true',
+          modelName:
+            this.runtime.getSetting('REASONING_SERVICE_CODING_MODEL') ||
+            'moonmakesmagic/DeepSeek-Llama-67B-coding',
+          enabled: this.runtime.getSetting('REASONING_SERVICE_CODING_ENABLED') === 'true',
         },
       },
       togetherAI: {
@@ -121,14 +126,23 @@ export class TogetherReasoningService extends Service implements CustomReasoning
         baseUrl: this.runtime.getSetting('TOGETHER_AI_BASE_URL'),
       },
       costManagement: {
-        budgetLimitUSD: parseFloat(this.runtime.getSetting('CUSTOM_REASONING_BUDGET_LIMIT') || '0') || undefined,
-        autoShutdownIdleMinutes: parseInt(this.runtime.getSetting('CUSTOM_REASONING_AUTO_SHUTDOWN_MINUTES') || '30'),
-        maxCostPerHour: parseFloat(this.runtime.getSetting('CUSTOM_REASONING_MAX_COST_PER_HOUR') || '10'),
+        budgetLimitUSD:
+          parseFloat(this.runtime.getSetting('REASONING_SERVICE_BUDGET_LIMIT') || '0') || undefined,
+        autoShutdownIdleMinutes: parseInt(
+          this.runtime.getSetting('REASONING_SERVICE_AUTO_SHUTDOWN_MINUTES') || '30'
+        ),
+        maxCostPerHour: parseFloat(
+          this.runtime.getSetting('REASONING_SERVICE_MAX_COST_PER_HOUR') || '10'
+        ),
       },
       trainingData: {
-        collectData: this.runtime.getSetting('CUSTOM_REASONING_COLLECT_TRAINING_DATA') === 'true',
-        maxSamplesPerModel: parseInt(this.runtime.getSetting('CUSTOM_REASONING_MAX_SAMPLES_PER_MODEL') || '10000'),
-        retentionDays: parseInt(this.runtime.getSetting('CUSTOM_REASONING_RETENTION_DAYS') || '30'),
+        collectData: this.runtime.getSetting('REASONING_SERVICE_COLLECT_TRAINING_DATA') === 'true',
+        maxSamplesPerModel: parseInt(
+          this.runtime.getSetting('REASONING_SERVICE_MAX_SAMPLES_PER_MODEL') || '10000'
+        ),
+        retentionDays: parseInt(
+          this.runtime.getSetting('REASONING_SERVICE_RETENTION_DAYS') || '30'
+        ),
       },
     };
   }
@@ -136,7 +150,9 @@ export class TogetherReasoningService extends Service implements CustomReasoning
   private initializeModels(): void {
     // Ultra-small model for shouldRespond decisions
     this.models.set('should_respond' as CustomModelType, {
-      name: this.config.models.shouldRespond?.modelName || 'moonmakesmagic/DeepSeek-R1-Distill-Qwen-1.5B-shouldrespond',
+      name:
+        this.config.models.shouldRespond?.modelName ||
+        'moonmakesmagic/DeepSeek-R1-Distill-Qwen-1.5B-shouldrespond',
       size: 'ultra-small',
       costPerHour: 0.1, // Example pricing
       maxTokens: 512,
@@ -168,7 +184,7 @@ export class TogetherReasoningService extends Service implements CustomReasoning
   private async loadExistingDeployments(): Promise<void> {
     try {
       const deployments = await this.client.listDeployments();
-      
+
       for (const deployment of deployments) {
         this.deployments.set(deployment.name, {
           deploymentId: deployment.id,
@@ -179,7 +195,7 @@ export class TogetherReasoningService extends Service implements CustomReasoning
           lastUsed: Date.now(),
         });
       }
-      
+
       elizaLogger.info(`Loaded ${deployments.length} existing deployments`);
     } catch (error) {
       elizaLogger.warn('Failed to load existing deployments:', error);
@@ -216,7 +232,11 @@ export class TogetherReasoningService extends Service implements CustomReasoning
     const responseTime = Date.now() - startTime;
 
     // Update usage metrics
-    await this.updateUsageMetrics('should_respond' as CustomModelType, response.usage, responseTime);
+    await this.updateUsageMetrics(
+      'should_respond' as CustomModelType,
+      response.usage,
+      responseTime
+    );
 
     // Collect training data
     const trainingData: TrainingDataPoint = {
@@ -350,11 +370,15 @@ export class TogetherReasoningService extends Service implements CustomReasoning
   private buildShouldRespondPrompt(context: ShouldRespondContext): string {
     // Use the existing shouldRespondTemplate but optimized for fine-tuned model
     const agentName = context.runtime.character.name;
-    
+
     // Get recent conversation context
-    const recentMessages = context.conversationHistory.slice(-5).map(msg => 
-      `${msg.entityId === context.runtime.agentId ? agentName : 'User'}: ${msg.content.text}`
-    ).join('\n');
+    const recentMessages = context.conversationHistory
+      .slice(-5)
+      .map(
+        (msg) =>
+          `${msg.entityId === context.runtime.agentId ? agentName : 'User'}: ${msg.content.text}`
+      )
+      .join('\n');
 
     const providers = `Recent conversation:\n${recentMessages}`;
 
@@ -367,7 +391,7 @@ export class TogetherReasoningService extends Service implements CustomReasoning
     // Use the existing messageHandlerTemplate but optimized for fine-tuned model
     const agentName = context.runtime.character.name;
     const actionNames = context.actionNames.join(', ');
-    
+
     // Format providers data
     const providers = Object.entries(context.state.data?.providers || {})
       .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
@@ -393,7 +417,9 @@ export class TogetherReasoningService extends Service implements CustomReasoning
     const parsed = parseKeyValueXml(response);
     return {
       thought: parsed?.thought || 'No thought provided',
-      actions: parsed?.actions ? parsed.actions.split(',').map((a: string) => a.trim()) : ['IGNORE'],
+      actions: parsed?.actions
+        ? parsed.actions.split(',').map((a: string) => a.trim())
+        : ['IGNORE'],
       providers: parsed?.providers ? parsed.providers.split(',').map((p: string) => p.trim()) : [],
       text: parsed?.text || '',
     };
@@ -403,7 +429,7 @@ export class TogetherReasoningService extends Service implements CustomReasoning
     // Extract code blocks and explanations from response
     const codeMatch = response.match(/```[\w]*\n([\s\S]*?)\n```/);
     const code = codeMatch ? codeMatch[1] : response;
-    
+
     return {
       code: code.trim(),
       explanation: response.includes('```') ? response.split('```')[0].trim() : undefined,
@@ -420,7 +446,7 @@ export class TogetherReasoningService extends Service implements CustomReasoning
     const existing = this.deployments.get(model.name);
     if (!existing) {
       elizaLogger.info(`Deploying model ${model.name}...`);
-      
+
       try {
         const deployment = await this.client.deployModel(model.name);
         this.deployments.set(model.name, {
@@ -434,7 +460,7 @@ export class TogetherReasoningService extends Service implements CustomReasoning
       } catch (error) {
         // Model might already be available for inference without explicit deployment
         elizaLogger.warn(`Failed to deploy ${model.name}, checking availability:`, error);
-        
+
         const test = await this.client.testModel(model.name);
         if (!test.available) {
           throw new Error(`Model ${model.name} is not available for inference`);
@@ -458,7 +484,7 @@ export class TogetherReasoningService extends Service implements CustomReasoning
     }
 
     this.enabledModels.delete(modelType);
-    
+
     // Optionally undeploy the model to save costs
     const deployment = this.deployments.get(model.name);
     if (deployment) {
@@ -491,7 +517,7 @@ export class TogetherReasoningService extends Service implements CustomReasoning
       isDeployed,
       lastUsed: deployment?.lastUsed,
       totalRequests: this.usageStats.get(model.name)?.requests || 0,
-      totalCost: this.usageStats.get(model.name)?.totalCost || 0
+      totalCost: this.usageStats.get(model.name)?.totalCost || 0,
     };
   }
 
@@ -499,7 +525,11 @@ export class TogetherReasoningService extends Service implements CustomReasoning
    * Track usage for a model deployment
    */
   private trackUsage(modelName: string, cost: number): void {
-    const stats = this.usageStats.get(modelName) || { requests: 0, totalCost: 0, lastUsed: new Date() };
+    const stats = this.usageStats.get(modelName) || {
+      requests: 0,
+      totalCost: 0,
+      lastUsed: new Date(),
+    };
     stats.requests += 1;
     stats.totalCost += cost;
     stats.lastUsed = new Date();
@@ -513,13 +543,13 @@ export class TogetherReasoningService extends Service implements CustomReasoning
   private calculateCost(modelType: CustomModelType, tokensUsed: number): number {
     // Approximate costs per 1K tokens for fine-tuned models
     const costPer1K = {
-      'should_respond': 0.0001, // Small model, low cost
-      'planning': 0.0002,       // Medium complexity
-      'coding': 0.0003,         // Higher complexity
-      'autocoder': 0.0003,      // Similar to coding
-      'conversation': 0.0002,   // Medium complexity
+      should_respond: 0.0001, // Small model, low cost
+      planning: 0.0002, // Medium complexity
+      coding: 0.0003, // Higher complexity
+      autocoder: 0.0003, // Similar to coding
+      conversation: 0.0002, // Medium complexity
     };
-    
+
     return (tokensUsed / 1000) * (costPer1K[modelType] || 0.0002);
   }
 
@@ -536,20 +566,22 @@ export class TogetherReasoningService extends Service implements CustomReasoning
   async exportTrainingData(options: ExportOptions): Promise<TrainingDataset> {
     try {
       elizaLogger.info('Starting training data export', { options });
-      
+
       // Use the TrainingDataCollector to export data from database logs
       const dataset = await this.dataCollector.exportTrainingData(options);
-      
+
       elizaLogger.info(`Successfully exported training dataset`, {
         modelType: dataset.modelType,
         totalSamples: dataset.samples.length,
-        format: dataset.format
+        format: dataset.format,
       });
-      
+
       return dataset;
     } catch (error) {
       elizaLogger.error('Failed to export training data:', error);
-      throw new Error(`Training data export failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Training data export failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -577,7 +609,7 @@ export class TogetherReasoningService extends Service implements CustomReasoning
         report.totalCost += cost;
       } catch (error) {
         elizaLogger.warn(`Could not fetch usage metrics for ${modelName}:`, error);
-        
+
         // Fallback: estimate cost based on deployment time
         const deploymentAge = Date.now() - deployment.deployedAt;
         const hoursActive = Math.max(0.1, deploymentAge / (1000 * 60 * 60)); // Minimum 0.1 hours
@@ -618,13 +650,15 @@ export class TogetherReasoningService extends Service implements CustomReasoning
       for (const modelType of this.enabledModels) {
         await this.disableModel(modelType);
       }
-      throw new Error(`Budget limit of $${this.budgetLimit} exceeded. Current cost: $${report.totalCost}`);
+      throw new Error(
+        `Budget limit of $${this.budgetLimit} exceeded. Current cost: $${report.totalCost}`
+      );
     }
   }
 
   private async updateUsageMetrics(
-    modelType: CustomModelType, 
-    usage: { total_tokens: number }, 
+    modelType: CustomModelType,
+    usage: { total_tokens: number },
     responseTimeMs: number
   ): Promise<void> {
     const model = this.models.get(modelType);
@@ -655,28 +689,31 @@ export class TogetherReasoningService extends Service implements CustomReasoning
   }
 
   private scheduleAutoShutdown(modelName: string, idleMinutes: number): void {
-    setTimeout(async () => {
-      const deployment = this.deployments.get(modelName);
-      if (!deployment) return;
+    setTimeout(
+      async () => {
+        const deployment = this.deployments.get(modelName);
+        if (!deployment) return;
 
-      const idleTime = Date.now() - deployment.lastUsed;
-      const idleThreshold = idleMinutes * 60 * 1000;
+        const idleTime = Date.now() - deployment.lastUsed;
+        const idleThreshold = idleMinutes * 60 * 1000;
 
-      if (idleTime > idleThreshold) {
-        try {
-          await this.client.undeployModel(deployment.deploymentId);
-          this.deployments.delete(modelName);
-          elizaLogger.info(`Auto-shutdown: ${modelName} was idle for ${idleMinutes} minutes`);
-        } catch (error) {
-          elizaLogger.error(`Failed to auto-shutdown ${modelName}:`, error);
+        if (idleTime > idleThreshold) {
+          try {
+            await this.client.undeployModel(deployment.deploymentId);
+            this.deployments.delete(modelName);
+            elizaLogger.info(`Auto-shutdown: ${modelName} was idle for ${idleMinutes} minutes`);
+          } catch (error) {
+            elizaLogger.error(`Failed to auto-shutdown ${modelName}:`, error);
+          }
         }
-      }
-    }, idleMinutes * 60 * 1000);
+      },
+      idleMinutes * 60 * 1000
+    );
   }
 
   async stop(): Promise<void> {
     elizaLogger.info('Stopping TogetherReasoningService...');
-    
+
     // Optionally undeploy all models to save costs
     for (const [modelName, deployment] of this.deployments) {
       try {

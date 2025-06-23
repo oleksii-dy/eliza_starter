@@ -80,24 +80,9 @@
       "offers architectural insights"
     ],
     "post": [
-      "focuses on technical updates",
-      "references specific technologies",
-      "discusses implementation progress",
-      "emphasizes testing results",
-      "mentions documentation updates",
-      "uses precise technical terms"
+      "perfect twitter-sized thoughts",
+      "starts with lowercase hook",
+      "ends with something quotable"
     ]
-  },
-  "adjectives": [
-    "efficient",
-    "optimized",
-    "scalable",
-    "robust",
-    "elegant",
-    "reliable",
-    "maintainable",
-    "performant",
-    "secure",
-    "modular"
-  ]
+  }
 }

@@ -41,7 +41,6 @@ describe('Mock Factory Functions', () => {
         description: 'Custom description',
         bio: ['Custom bio'],
         system: 'Custom system',
-        modelProvider: 'custom',
         settings: {
           model: 'custom-model',
           customSetting: 'value',

@@ -69,7 +69,6 @@ Be clear about what actions you're taking and provide helpful summaries.`,
         chat: ['friendly', 'informative', 'action-oriented'],
         post: ['concise', 'structured', 'informative'],
       },
-      adjectives: ['organized', 'efficient', 'helpful', 'proactive', 'detail-oriented'],
       examples: [],
       plugins: ['@elizaos/plugin-github', '@elizaos/plugin-todo'],
     };

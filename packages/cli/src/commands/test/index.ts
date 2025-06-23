@@ -24,6 +24,7 @@ export const test = new Command()
   .option('--name <name>', 'filter tests by name')
   .option('--skip-build', 'skip the build step before running tests')
   .option('--skip-type-check', 'skip TypeScript validation before running tests')
+  .option('--quick', 'run tests in quick mode (faster execution, less comprehensive)')
   .hook('preAction', async (thisCommand) => {
     // Install plugin dependencies before running tests
     const testPath = thisCommand.args[0];
@@ -98,7 +99,8 @@ test
     )
   )
   .option('-n, --name <n>', 'Filter tests by name (matches file names or test suite names)')
-  .option('--skip-build', 'Skip building before running tests');
+  .option('--skip-build', 'Skip building before running tests')
+  .option('--quick', 'Run tests in quick mode (faster execution, less comprehensive)');
 
 // Export the command as default
 export default test;

@@ -21,7 +21,6 @@ export const generateMockAgent = (overrides?: Partial<Agent>): Agent => {
     messageExamples: overrides?.messageExamples || [],
     postExamples: overrides?.postExamples || [],
     topics: overrides?.topics || ['testing', 'automation'],
-    adjectives: overrides?.adjectives || ['helpful', 'friendly'],
     knowledge: overrides?.knowledge || [],
     plugins: overrides?.plugins || [],
     settings: overrides?.settings || {
@@ -30,7 +29,6 @@ export const generateMockAgent = (overrides?: Partial<Agent>): Agent => {
     secrets: overrides?.secrets || {},
     style: overrides?.style || {},
     system: overrides?.system,
-    templates: overrides?.templates || {},
     enabled: overrides?.enabled ?? true,
     status: overrides?.status || AgentStatus.INACTIVE,
     createdAt: overrides?.createdAt || Date.now(),

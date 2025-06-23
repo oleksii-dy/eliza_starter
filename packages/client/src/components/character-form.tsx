@@ -257,13 +257,6 @@ export default function CharacterForm({
             getData: (char) => char.topics || [],
             tooltip: 'Subject domains the agent can discuss with confidence.',
           },
-          {
-            title: 'Adjectives',
-            description: 'Descriptive personality traits',
-            path: 'adjectives',
-            getData: (char) => char.adjectives || [],
-            tooltip: "Key personality attributes that define the agent's character.",
-          },
         ] as ArrayField[],
       },
       {
@@ -448,7 +441,7 @@ export default function CharacterForm({
                 {field.title}
                 {field.name in FIELD_REQUIREMENTS &&
                   (FIELD_REQUIREMENTS as Record<string, FIELD_REQUIREMENT_TYPE>)[field.name] ===
-                    FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-red-500">*</p>}
+                  FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-red-500">*</p>}
               </Label>
             </TooltipTrigger>
             {field.tooltip && (
@@ -523,7 +516,7 @@ export default function CharacterForm({
                 {field.title}
                 {field.path in FIELD_REQUIREMENTS &&
                   (FIELD_REQUIREMENTS as Record<string, FIELD_REQUIREMENT_TYPE>)[field.path] ===
-                    FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-red-500">*</p>}
+                  FIELD_REQUIREMENT_TYPE.REQUIRED && <p className="text-red-500">*</p>}
               </Label>
             </TooltipTrigger>
             {field.tooltip && (

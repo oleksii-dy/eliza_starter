@@ -19,19 +19,24 @@ import { getTrainingConfig } from '../config/training-config.js';
  * Action to enable custom reasoning service
  */
 export const enableCustomReasoningAction: Action = {
-  name: 'ENABLE_CUSTOM_REASONING',
-  similes: ['ACTIVATE_CUSTOM_REASONING', 'TURN_ON_REASONING', 'START_CUSTOM_REASONING'],
+  name: 'ENABLE_REASONING_SERVICE',
+  similes: ['ACTIVATE_REASONING_SERVICE', 'TURN_ON_REASONING', 'START_REASONING_SERVICE'],
   description: 'Enable the custom reasoning service with fine-tuned models',
-  
+
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     // Check if message is asking to enable custom reasoning
     const text = message.content.text?.toLowerCase() || '';
-    const hasEnableWord = text.includes('enable') || text.includes('activate') || text.includes('turn on') || text.includes('start');
-    const hasReasoningContext = text.includes('custom reasoning') || 
+    const hasEnableWord =
+      text.includes('enable') ||
+      text.includes('activate') ||
+      text.includes('turn on') ||
+      text.includes('start');
+    const hasReasoningContext =
+      text.includes('custom reasoning') ||
       text.includes('fine-tuned') ||
       text.includes('deepseek') ||
       text.includes('reasoning service');
-    
+
     return hasEnableWord && hasReasoningContext;
   },
 
@@ -79,7 +84,7 @@ export const enableCustomReasoningAction: Action = {
       (runtime as any).customReasoningEnabled = true;
 
       const status = MessageHandlerIntegration.getIntegrationStatus(runtime);
-      
+
       let responseText = '✅ **Custom Reasoning Service Enabled!**\n\n';
       responseText += '🧠 **Integration Status:**\n';
       responseText += `• Service Active: ${status.enabled ? '✅' : '❌'}\n`;
@@ -103,14 +108,13 @@ export const enableCustomReasoningAction: Action = {
       await callback?.({
         text: responseText,
         thought: 'Successfully enabled custom reasoning service with all components',
-        actions: ['ENABLE_CUSTOM_REASONING'],
+        actions: ['ENABLE_REASONING_SERVICE'],
       });
 
       elizaLogger.info('Custom reasoning service enabled successfully');
-
     } catch (error) {
       elizaLogger.error('Failed to enable custom reasoning service:', error);
-      
+
       await callback?.({
         text: `❌ Failed to enable custom reasoning service: ${error instanceof Error ? error.message : 'Unknown error'}`,
         thought: 'Error occurred while enabling custom reasoning service',
@@ -126,7 +130,7 @@ export const enableCustomReasoningAction: Action = {
         content: {
           text: '✅ Custom reasoning service enabled! The agent will now use fine-tuned DeepSeek models for decision-making while maintaining full backwards compatibility.',
           thought: 'User requested to enable custom reasoning service',
-          actions: ['ENABLE_CUSTOM_REASONING'],
+          actions: ['ENABLE_REASONING_SERVICE'],
         },
       },
     ],
@@ -137,7 +141,7 @@ export const enableCustomReasoningAction: Action = {
         content: {
           text: '✅ Custom reasoning service is now active! Training data collection and visual debugging have been initialized.',
           thought: 'Activating custom reasoning with all features',
-          actions: ['ENABLE_CUSTOM_REASONING'],
+          actions: ['ENABLE_REASONING_SERVICE'],
         },
       },
     ],
@@ -148,16 +152,17 @@ export const enableCustomReasoningAction: Action = {
  * Action to disable custom reasoning service
  */
 export const disableCustomReasoningAction: Action = {
-  name: 'DISABLE_CUSTOM_REASONING',
-  similes: ['DEACTIVATE_CUSTOM_REASONING', 'TURN_OFF_REASONING', 'STOP_CUSTOM_REASONING'],
+  name: 'DISABLE_REASONING_SERVICE',
+  similes: ['DEACTIVATE_REASONING_SERVICE', 'TURN_OFF_REASONING', 'STOP_REASONING_SERVICE'],
   description: 'Disable the custom reasoning service and revert to original ElizaOS behavior',
-  
+
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const text = message.content.text?.toLowerCase() || '';
-    return text.includes('disable') && (
-      text.includes('custom reasoning') || 
-      text.includes('reasoning service') ||
-      text.includes('turn off reasoning')
+    return (
+      text.includes('disable') &&
+      (text.includes('custom reasoning') ||
+        text.includes('reasoning service') ||
+        text.includes('turn off reasoning'))
     );
   },
 
@@ -173,7 +178,7 @@ export const disableCustomReasoningAction: Action = {
 
       // Check if custom reasoning is currently enabled
       const enabled = MessageHandlerIntegration.isCustomReasoningEnabled(runtime);
-      
+
       if (!enabled) {
         await callback?.({
           text: '⚠️ Custom reasoning service is already disabled. The agent is using standard ElizaOS behavior.',
@@ -210,14 +215,13 @@ export const disableCustomReasoningAction: Action = {
       await callback?.({
         text: responseText,
         thought: 'Successfully disabled custom reasoning service and reverted to original behavior',
-        actions: ['DISABLE_CUSTOM_REASONING'],
+        actions: ['DISABLE_REASONING_SERVICE'],
       });
 
       elizaLogger.info('Custom reasoning service disabled successfully');
-
     } catch (error) {
       elizaLogger.error('Failed to disable custom reasoning service:', error);
-      
+
       await callback?.({
         text: `❌ Failed to disable custom reasoning service: ${error instanceof Error ? error.message : 'Unknown error'}`,
         thought: 'Error occurred while disabling custom reasoning service',
@@ -233,7 +237,7 @@ export const disableCustomReasoningAction: Action = {
         content: {
           text: '✅ Custom reasoning disabled. The agent has reverted to standard ElizaOS behavior while preserving all training data.',
           thought: 'User requested to disable custom reasoning service',
-          actions: ['DISABLE_CUSTOM_REASONING'],
+          actions: ['DISABLE_REASONING_SERVICE'],
         },
       },
     ],
@@ -247,13 +251,14 @@ export const startTrainingSessionAction: Action = {
   name: 'START_TRAINING_SESSION',
   similes: ['BEGIN_TRAINING_SESSION', 'COMMENCE_TRAINING', 'START_RECORDING_SESSION'],
   description: 'Start a focused training session to collect high-quality training data',
-  
+
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const text = message.content.text?.toLowerCase() || '';
-    return (text.includes('start') || text.includes('begin')) && (
-      text.includes('training session') ||
-      text.includes('training') ||
-      text.includes('recording session')
+    return (
+      (text.includes('start') || text.includes('begin')) &&
+      (text.includes('training session') ||
+        text.includes('training') ||
+        text.includes('recording session'))
     );
   },
 
@@ -268,7 +273,7 @@ export const startTrainingSessionAction: Action = {
       // Extract model type from message
       const text = message.content.text?.toLowerCase() || '';
       let modelType: CustomModelType = 'should_respond'; // default
-      
+
       if (text.includes('planning')) {
         modelType = 'planning';
       } else if (text.includes('coding') || text.includes('code')) {
@@ -278,7 +283,7 @@ export const startTrainingSessionAction: Action = {
       // Initialize managers
       const dbManager = new TrainingDatabaseManager(runtime);
       const recordingManager = new TrainingRecordingManager(runtime);
-      
+
       await recordingManager.initialize();
 
       // Create training session in database
@@ -287,7 +292,10 @@ export const startTrainingSessionAction: Action = {
         agent_id: runtime.agentId,
         model_type: modelType,
         session_name: sessionName,
-        base_model: getTrainingConfig(runtime).getModelConfig().defaults[modelType === 'should_respond' ? 'shouldRespond' : modelType] || `DeepSeek-${modelType}`,
+        base_model:
+          getTrainingConfig(runtime).getModelConfig().defaults[
+            modelType === 'should_respond' ? 'shouldRespond' : modelType
+          ] || `DeepSeek-${modelType}`,
         training_config: {
           focus: modelType,
           qualityThreshold: 0.8,
@@ -326,7 +334,7 @@ export const startTrainingSessionAction: Action = {
         responseText += `• Request code generation in various languages\n`;
         responseText += `• Ask for debugging and code explanation\n`;
       }
-      
+
       responseText += `\nUse "end training session" when complete.`;
 
       await callback?.({
@@ -335,11 +343,13 @@ export const startTrainingSessionAction: Action = {
         actions: ['START_TRAINING_SESSION'],
       });
 
-      elizaLogger.info(`Training session started for ${modelType}:`, { sessionId, recordingSessionId });
-
+      elizaLogger.info(`Training session started for ${modelType}:`, {
+        sessionId,
+        recordingSessionId,
+      });
     } catch (error) {
       elizaLogger.error('Failed to start training session:', error);
-      
+
       await callback?.({
         text: `❌ Failed to start training session: ${error instanceof Error ? error.message : 'Unknown error'}`,
         thought: 'Error occurred while starting training session',
@@ -353,7 +363,7 @@ export const startTrainingSessionAction: Action = {
       {
         name: 'Agent',
         content: {
-          text: '✅ Training session started for planning model! I\'ll now collect high-quality training data for response planning decisions.',
+          text: "✅ Training session started for planning model! I'll now collect high-quality training data for response planning decisions.",
           thought: 'User requested to start a training session for planning model',
           actions: ['START_TRAINING_SESSION'],
         },
@@ -367,16 +377,17 @@ export const startTrainingSessionAction: Action = {
  */
 export const checkReasoningStatusAction: Action = {
   name: 'CHECK_REASONING_STATUS',
-  similes: ['REASONING_STATUS', 'CUSTOM_REASONING_STATUS', 'CHECK_TRAINING_STATUS'],
+  similes: ['REASONING_STATUS', 'REASONING_SERVICE_STATUS', 'CHECK_TRAINING_STATUS'],
   description: 'Check the status and performance of the custom reasoning service',
-  
+
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const text = message.content.text?.toLowerCase() || '';
-    return (text.includes('check') || text.includes('status') || text.includes('show')) && (
-      text.includes('reasoning') ||
-      text.includes('training') ||
-      text.includes('custom reasoning') ||
-      text.includes('model status')
+    return (
+      (text.includes('check') || text.includes('status') || text.includes('show')) &&
+      (text.includes('reasoning') ||
+        text.includes('training') ||
+        text.includes('custom reasoning') ||
+        text.includes('model status'))
     );
   },
 
@@ -390,14 +401,14 @@ export const checkReasoningStatusAction: Action = {
     try {
       // Get integration status
       const status = MessageHandlerIntegration.getIntegrationStatus(runtime);
-      
+
       // Get service status
       const reasoningService = runtime.getService<CustomReasoningService>('together-reasoning');
-      
+
       // Get database stats
       const dbManager = new TrainingDatabaseManager(runtime);
       const trainingStats = await dbManager.getTrainingDataStats();
-      
+
       // Get recording stats
       const recordingManager = new TrainingRecordingManager(runtime);
       const recordingStats = await recordingManager.getRecordingStats();
@@ -434,7 +445,8 @@ export const checkReasoningStatusAction: Action = {
       responseText += `• Total Size: ${(recordingStats.totalSize / 1024 / 1024).toFixed(2)} MB\n`;
       if (recordingStats.oldestRecording && recordingStats.newestRecording) {
         const daysDiff = Math.ceil(
-          (recordingStats.newestRecording.getTime() - recordingStats.oldestRecording.getTime()) / (1000 * 60 * 60 * 24)
+          (recordingStats.newestRecording.getTime() - recordingStats.oldestRecording.getTime()) /
+            (1000 * 60 * 60 * 24)
         );
         responseText += `• Date Range: ${daysDiff} days\n`;
       }
@@ -447,7 +459,7 @@ export const checkReasoningStatusAction: Action = {
           responseText += `💰 **Cost Management:**\n`;
           responseText += `• Total Cost: $${costReport.totalCost.toFixed(4)}\n`;
           if (costReport.budgetLimit) {
-            const percentage = (costReport.budgetUsed / costReport.budgetLimit * 100).toFixed(1);
+            const percentage = ((costReport.budgetUsed / costReport.budgetLimit) * 100).toFixed(1);
             responseText += `• Budget Used: ${percentage}% of $${costReport.budgetLimit}\n`;
           }
           responseText += '\n';
@@ -473,10 +485,9 @@ export const checkReasoningStatusAction: Action = {
         thought: 'Provided comprehensive status report of custom reasoning service',
         actions: ['CHECK_REASONING_STATUS'],
       });
-
     } catch (error) {
       elizaLogger.error('Failed to get reasoning status:', error);
-      
+
       await callback?.({
         text: `❌ Failed to get reasoning status: ${error instanceof Error ? error.message : 'Unknown error'}`,
         thought: 'Error occurred while checking reasoning status',
@@ -506,13 +517,12 @@ export const trainModelAction: Action = {
   name: 'TRAIN_CUSTOM_MODEL',
   similes: ['START_MODEL_TRAINING', 'FINE_TUNE_MODEL', 'TRAIN_DEEPSEEK_MODEL'],
   description: 'Start training a custom model using collected training data',
-  
+
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const text = message.content.text?.toLowerCase() || '';
-    return (text.includes('train') || text.includes('fine-tune') || text.includes('fine tune')) && (
-      text.includes('model') ||
-      text.includes('deepseek') ||
-      text.includes('custom model')
+    return (
+      (text.includes('train') || text.includes('fine-tune') || text.includes('fine tune')) &&
+      (text.includes('model') || text.includes('deepseek') || text.includes('custom model'))
     );
   },
 
@@ -527,7 +537,7 @@ export const trainModelAction: Action = {
       // Extract model type from message
       const text = message.content.text?.toLowerCase() || '';
       let modelType: CustomModelType = 'should_respond'; // default
-      
+
       if (text.includes('planning')) {
         modelType = 'planning';
       } else if (text.includes('coding') || text.includes('code')) {
@@ -535,7 +545,7 @@ export const trainModelAction: Action = {
       }
 
       const dbManager = new TrainingDatabaseManager(runtime);
-      
+
       // Check available training data
       const trainingData = await dbManager.getTrainingData({
         modelType,
@@ -556,7 +566,14 @@ export const trainModelAction: Action = {
         agent_id: runtime.agentId,
         model_type: modelType,
         session_name: `fine_tune_${modelType}_${Date.now()}`,
-        base_model: getTrainingConfig(runtime).getModelConfig().defaults[modelType === 'should_respond' ? 'shouldRespond' : modelType === 'planning' ? 'planning' : 'coding'],
+        base_model:
+          getTrainingConfig(runtime).getModelConfig().defaults[
+            modelType === 'should_respond'
+              ? 'shouldRespond'
+              : modelType === 'planning'
+                ? 'planning'
+                : 'coding'
+          ],
         training_config: {
           learning_rate: getTrainingConfig(runtime).getModelConfig().training.learningRate,
           batch_size: getTrainingConfig(runtime).getModelConfig().training.batchSize,
@@ -572,7 +589,7 @@ export const trainModelAction: Action = {
 
       // Get custom reasoning service
       const reasoningService = runtime.getService<CustomReasoningService>('together-reasoning');
-      
+
       if (!reasoningService) {
         await callback?.({
           text: '❌ Custom reasoning service not available. Cannot start training.',
@@ -630,10 +647,9 @@ export const trainModelAction: Action = {
       });
 
       // In a real implementation, this would trigger the actual Together.ai fine-tuning API
-
     } catch (error) {
       elizaLogger.error('Failed to start model training:', error);
-      
+
       await callback?.({
         text: `❌ Failed to start model training: ${error instanceof Error ? error.message : 'Unknown error'}`,
         thought: 'Error occurred while starting model training',

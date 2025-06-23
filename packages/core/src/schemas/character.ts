@@ -66,25 +66,37 @@ const settingsSchema = z.record(z.union([z.string(), z.boolean(), z.number(), z.
 const secretsSchema = z.record(z.union([z.string(), z.boolean(), z.number()])).optional();
 
 // Main Character schema
-export const characterSchema = z
-  .object({
-    id: uuidSchema.optional(),
-    name: z.string().min(1, 'Character name is required'),
-    username: z.string().optional(),
-    system: z.string().optional(),
-    templates: z.record(templateTypeSchema).optional(),
-    bio: z.union([z.string(), z.array(z.string())]),
-    messageExamples: z.array(z.array(messageExampleSchema)).optional(),
-    postExamples: z.array(z.string()).optional(),
-    topics: z.array(z.string()).optional(),
-    adjectives: z.array(z.string()).optional(),
-    knowledge: z.array(knowledgeItemSchema).optional(),
-    plugins: z.array(z.string()).optional(),
-    settings: settingsSchema,
-    secrets: secretsSchema,
-    style: styleSchema,
-  })
-  .strict(); // Only allow known properties
+export const characterSchema = z.object({
+  id: uuidSchema.optional(),
+  name: z.string().min(1, 'Character name is required'),
+  username: z.string().optional(),
+  system: z.string().optional(),
+  bio: z.union([z.string(), z.array(z.string())]),
+  messageExamples: z
+    .array(
+      z.array(
+        z.object({
+          name: z.string(),
+          content: z.object({
+            text: z.string(),
+            action: z.string().optional(),
+            source: z.string().optional(),
+            url: z.string().optional(),
+            inReplyTo: z.string().optional(),
+            attachments: z.array(z.any()).optional(),
+          }),
+        })
+      )
+    )
+    .optional(),
+  postExamples: z.array(z.string()).optional(),
+  topics: z.array(z.string()).optional(),
+  knowledge: z.array(knowledgeItemSchema).optional(),
+  plugins: z.array(z.string()).optional(),
+  settings: settingsSchema,
+  secrets: secretsSchema,
+  style: styleSchema,
+}).strict(); // Enable strict mode to reject unknown properties
 
 // Validation result type
 export interface CharacterValidationResult {

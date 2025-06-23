@@ -21,7 +21,6 @@ const testCharacter = {
   name: 'ProductionTestAgent',
   bio: ['Production validation agent for self-modification capabilities'],
   topics: ['validation', 'testing', 'production'],
-  adjectives: ['reliable', 'thorough'],
   system: 'You are a production validation agent testing self-modification capabilities.',
   messageExamples: [
     [

@@ -45,7 +45,7 @@ export type MockRuntimeOverrides = Partial<IAgentRuntime & IDatabaseAdapter>;
  * @returns Complete mock implementation of IAgentRuntime
  *
  * @deprecated Use real runtime testing instead: import { createTestRuntime } from '@elizaos/core/test-utils'
- * 
+ *
  * @example Legacy Mock Testing (Deprecated)
  * ```typescript
  * import { createMockRuntime } from '@elizaos/core/test-utils';
@@ -67,7 +67,6 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
     messageExamples: [],
     postExamples: [],
     topics: ['testing', 'development'],
-    adjectives: ['helpful', 'reliable'],
     knowledge: [],
     plugins: [],
     settings: {
@@ -112,6 +111,7 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
     initialize: vi.fn().mockResolvedValue(undefined),
     getConnection: vi.fn().mockResolvedValue(mockDb),
     getService: vi.fn().mockReturnValue(null),
+    getServicesByType: vi.fn().mockReturnValue([]),
     getAllServices: vi.fn().mockReturnValue(new Map()),
     registerService: vi.fn().mockResolvedValue(undefined),
     registerDatabaseAdapter: vi.fn(),
@@ -119,8 +119,6 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
     getSetting: vi.fn((key: string) => {
       const defaultSettings: Record<string, any> = {
         TEST_API_KEY: 'test-api-key',
-        MODEL_PROVIDER: 'openai',
-        MODEL_NAME: 'gpt-4',
         ...overrides.character?.settings,
       };
       return defaultSettings[key];

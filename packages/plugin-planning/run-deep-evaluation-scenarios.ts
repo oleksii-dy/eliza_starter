@@ -2,7 +2,7 @@
 
 /**
  * Deep Evaluation Scenario Runner for Planning Plugin
- * 
+ *
  * This creates REAL tests that:
  * 1. Execute the full planning pipeline end-to-end
  * 2. Capture all intermediate outputs and execution traces
@@ -59,19 +59,28 @@ interface ScenarioResult {
 const testCharacter = {
   id: uuidv4(),
   name: 'Deep Evaluation Agent',
-  bio: ['An AI agent specialized in planning and task coordination with detailed execution tracking'],
-  system: 'You are a planning specialist who creates and executes comprehensive multi-step plans. Always be explicit about which actions you are taking and why.',
+  bio: [
+    'An AI agent specialized in planning and task coordination with detailed execution tracking',
+  ],
+  system:
+    'You are a planning specialist who creates and executes comprehensive multi-step plans. Always be explicit about which actions you are taking and why.',
   messageExamples: [
     [
       { name: 'user', content: { text: 'I need help planning a product launch' } },
-      { name: 'Deep Evaluation Agent', content: { text: 'I will create a comprehensive plan for your product launch, starting with market research and stakeholder coordination.', actions: ['CREATE_PLAN', 'ANALYZE_INPUT'] } }
-    ]
+      {
+        name: 'Deep Evaluation Agent',
+        content: {
+          text: 'I will create a comprehensive plan for your product launch, starting with market research and stakeholder coordination.',
+          actions: ['CREATE_PLAN', 'ANALYZE_INPUT'],
+        },
+      },
+    ],
   ],
   plugins: ['@elizaos/plugin-planning', '@elizaos/plugin-sql'],
   settings: {
     model: 'gpt-4',
-    temperature: 0.7
-  }
+    temperature: 0.7,
+  },
 };
 
 // Enhanced test runtime that tracks ALL interactions
@@ -81,17 +90,17 @@ class DeepTrackingRuntime {
   services: Map<string, any> = new Map();
   actions: any[] = [];
   providers: any[] = [];
-  
+
   // Execution tracking
   actionCalls: ActionCall[] = [];
   currentTrace: ExecutionTrace;
-  
+
   constructor() {
     this.agentId = uuidv4();
     this.character = testCharacter;
     this.currentTrace = this.createTrace('classification');
   }
-  
+
   private createTrace(phase: ExecutionTrace['phase']): ExecutionTrace {
     return {
       timestamp: Date.now(),
@@ -100,23 +109,27 @@ class DeepTrackingRuntime {
       actionCalls: [],
       planSteps: [],
       errors: [],
-      duration: 0
+      duration: 0,
     };
   }
-  
+
   async useModel(modelType: string, params: any): Promise<string> {
     const startTime = Date.now();
     const prompt = params.prompt || '';
     console.log(`🤖 LLM Call (${modelType}): ${prompt.substring(0, 150)}...`);
-    
+
     let response: string;
-    
+
     // Enhanced LLM responses that create realistic planning scenarios
     if (prompt.includes('Analyze this user request and classify')) {
       const messageMatch = prompt.match(/\"([^\"]+)\"/) || prompt.match(/MESSAGE: ([^\n]+)/);
       const userMessage = messageMatch ? messageMatch[1].toLowerCase() : '';
-      
-      if (userMessage.includes('product launch') || userMessage.includes('strategy') || userMessage.includes('comprehensive')) {
+
+      if (
+        userMessage.includes('product launch') ||
+        userMessage.includes('strategy') ||
+        userMessage.includes('comprehensive')
+      ) {
         response = `COMPLEXITY: complex
 PLANNING: strategic_planning
 CAPABILITIES: strategic_planning, market_analysis, stakeholder_management, execution_monitoring
@@ -124,7 +137,11 @@ STAKEHOLDERS: product_team, marketing_team, executives, customers, compliance_te
 CONSTRAINTS: budget, timeline, market_conditions, regulatory_requirements
 DEPENDENCIES: market_research, product_readiness, team_coordination, compliance_clearance
 CONFIDENCE: 0.95`;
-      } else if (userMessage.includes('coordinate') || userMessage.includes('team') || userMessage.includes('project')) {
+      } else if (
+        userMessage.includes('coordinate') ||
+        userMessage.includes('team') ||
+        userMessage.includes('project')
+      ) {
         response = `COMPLEXITY: medium
 PLANNING: sequential_planning
 CAPABILITIES: project_management, coordination, analysis, communication
@@ -132,7 +149,11 @@ STAKEHOLDERS: team_members, project_manager, department_heads
 CONSTRAINTS: timeline, resources, availability
 DEPENDENCIES: team_availability, data_access, approval_processes
 CONFIDENCE: 0.85`;
-      } else if (userMessage.includes('simple') || userMessage.includes('quick') || userMessage.length < 30) {
+      } else if (
+        userMessage.includes('simple') ||
+        userMessage.includes('quick') ||
+        userMessage.length < 30
+      ) {
         response = `COMPLEXITY: simple
 PLANNING: direct_action
 CAPABILITIES: basic_assistance, information_retrieval
@@ -149,13 +170,16 @@ CONSTRAINTS: standard_limitations
 DEPENDENCIES: data_availability
 CONFIDENCE: 0.8`;
       }
-      
+
       this.currentTrace.data.classification = response;
     } else if (prompt.includes('Create a detailed plan')) {
       const goalMatch = prompt.match(/GOAL: ([^\n]+)/);
       const goal = goalMatch ? goalMatch[1] : 'Complete the requested task';
-      
-      if (goal.toLowerCase().includes('product launch') || goal.toLowerCase().includes('strategy')) {
+
+      if (
+        goal.toLowerCase().includes('product launch') ||
+        goal.toLowerCase().includes('strategy')
+      ) {
         response = `<plan>
 <goal>${goal}</goal>
 <execution_model>sequential</execution_model>
@@ -257,7 +281,7 @@ CONFIDENCE: 0.8`;
 <estimated_duration>120000</estimated_duration>
 </plan>`;
       }
-      
+
       this.currentTrace.data.planGeneration = response;
       this.currentTrace.planSteps = this.extractStepsFromPlan(response);
     } else if (prompt.includes('evaluate the planning execution')) {
@@ -265,44 +289,54 @@ CONFIDENCE: 0.8`;
       const executionData = params.executionData || {};
       const expectedActions = params.expectedActions || [];
       const actualActions = params.actualActions || [];
-      
-      const actionMatch = expectedActions.length > 0 && actualActions.length > 0 ? 
-        expectedActions.filter(action => actualActions.includes(action)).length / expectedActions.length : 0;
-      
-      const score = Math.min(0.95, 0.6 + (actionMatch * 0.3) + (executionData.planExecuted ? 0.1 : 0));
-      
+
+      const actionMatch =
+        expectedActions.length > 0 && actualActions.length > 0
+          ? expectedActions.filter((action) => actualActions.includes(action)).length /
+            expectedActions.length
+          : 0;
+
+      const score = Math.min(
+        0.95,
+        0.6 + actionMatch * 0.3 + (executionData.planExecuted ? 0.1 : 0)
+      );
+
       response = `EVALUATION_SCORE: ${score.toFixed(2)}
 ACTION_VERIFICATION: ${actionMatch > 0.7 ? 'PASS' : 'FAIL'}
 PLAN_COMPLETENESS: ${executionData.planCreated ? '0.9' : '0.1'}
 EXECUTION_QUALITY: ${executionData.planExecuted ? '0.85' : '0.2'}
 REASONING: ${this.generateEvaluationReasoning(executionData, expectedActions, actualActions, actionMatch)}`;
-      
     } else {
       response = 'Standard response for general queries';
     }
-    
+
     const duration = Date.now() - startTime;
     this.currentTrace.duration += duration;
-    
+
     console.log(`   📝 Response (${duration}ms): ${response.substring(0, 100)}...`);
     return response;
   }
-  
-  private generateEvaluationReasoning(executionData: any, expectedActions: string[], actualActions: string[], actionMatch: number): string {
+
+  private generateEvaluationReasoning(
+    executionData: any,
+    expectedActions: string[],
+    actualActions: string[],
+    actionMatch: number
+  ): string {
     let reasoning = '';
-    
+
     if (executionData.planCreated) {
       reasoning += 'Plan was successfully created with structured steps. ';
     } else {
       reasoning += 'No plan was created, which indicates planning failure. ';
     }
-    
+
     if (executionData.planExecuted) {
       reasoning += 'Plan execution was attempted and completed. ';
     } else {
       reasoning += 'Plan was not executed, missing the implementation phase. ';
     }
-    
+
     if (actionMatch > 0.8) {
       reasoning += 'Excellent action matching - most expected actions were called. ';
     } else if (actionMatch > 0.5) {
@@ -310,41 +344,41 @@ REASONING: ${this.generateEvaluationReasoning(executionData, expectedActions, ac
     } else {
       reasoning += 'Poor action matching - few expected actions were actually executed. ';
     }
-    
+
     reasoning += `Expected: [${expectedActions.join(', ')}]. Actual: [${actualActions.join(', ')}].`;
-    
+
     return reasoning;
   }
-  
+
   private extractStepsFromPlan(planXml: string): any[] {
     const steps: any[] = [];
     const stepMatches = planXml.match(/<step>(.*?)<\/step>/gs) || [];
-    
+
     for (const stepMatch of stepMatches) {
       const idMatch = stepMatch.match(/<id>(.*?)<\/id>/);
       const actionMatch = stepMatch.match(/<action>(.*?)<\/action>/);
       const parametersMatch = stepMatch.match(/<parameters>(.*?)<\/parameters>/);
-      
+
       if (idMatch && actionMatch) {
         steps.push({
           id: idMatch[1].trim(),
           action: actionMatch[1].trim(),
-          parameters: parametersMatch ? parametersMatch[1] : '{}'
+          parameters: parametersMatch ? parametersMatch[1] : '{}',
         });
       }
     }
-    
+
     return steps;
   }
-  
+
   getService<T>(name: string): T | null {
-    return this.services.get(name) as T || null;
+    return (this.services.get(name) as T) || null;
   }
-  
+
   registerService(service: any): void {
     this.services.set(service.serviceName, service);
   }
-  
+
   // Track action execution
   async executeAction(actionName: string, parameters: any): Promise<any> {
     const startTime = Date.now();
@@ -352,27 +386,30 @@ REASONING: ${this.generateEvaluationReasoning(executionData, expectedActions, ac
       actionName,
       parameters,
       timestamp: startTime,
-      duration: 0
+      duration: 0,
     };
-    
-    console.log(`🎯 Executing Action: ${actionName} with params:`, JSON.stringify(parameters, null, 2));
-    
+
+    console.log(
+      `🎯 Executing Action: ${actionName} with params:`,
+      JSON.stringify(parameters, null, 2)
+    );
+
     try {
       // Find and execute the actual action
-      const action = this.actions.find(a => a.name === actionName);
+      const action = this.actions.find((a) => a.name === actionName);
       if (!action) {
         throw new Error(`Action ${actionName} not found`);
       }
-      
+
       const mockMessage = {
         id: uuidv4(),
         entityId: 'test-user',
         roomId: uuidv4(),
-        content: { text: 'Test message for action execution' }
+        content: { text: 'Test message for action execution' },
       };
-      
+
       const mockState = { values: {}, data: {}, text: '' };
-      
+
       const result = await action.handler(
         this,
         mockMessage,
@@ -383,35 +420,34 @@ REASONING: ${this.generateEvaluationReasoning(executionData, expectedActions, ac
           return [];
         }
       );
-      
+
       actionCall.result = result;
       actionCall.duration = Date.now() - startTime;
-      
+
       this.actionCalls.push(actionCall);
       this.currentTrace.actionCalls.push(actionCall);
-      
+
       console.log(`   ✅ Action ${actionName} completed in ${actionCall.duration}ms`);
       return result;
-      
     } catch (error) {
       actionCall.error = error as Error;
       actionCall.duration = Date.now() - startTime;
-      
+
       this.actionCalls.push(actionCall);
       this.currentTrace.actionCalls.push(actionCall);
       this.currentTrace.errors.push(error as Error);
-      
+
       console.log(`   ❌ Action ${actionName} failed: ${error.message}`);
       throw error;
     }
   }
-  
+
   async createMemory(memory: any, tableName: string = 'messages'): Promise<string> {
     const id = uuidv4();
     console.log(`💾 Created memory: ${memory.content.text?.substring(0, 50)}...`);
     return id;
   }
-  
+
   async getMemories(params: any): Promise<any[]> {
     return [
       {
@@ -419,38 +455,37 @@ REASONING: ${this.generateEvaluationReasoning(executionData, expectedActions, ac
         entityId: 'user-1',
         roomId: params.roomId,
         content: { text: 'Previous conversation context' },
-        createdAt: Date.now() - 10000
-      }
+        createdAt: Date.now() - 10000,
+      },
     ];
   }
-  
+
   async ensureRoomExists(room: any): Promise<void> {
     console.log(`🏠 Room ensured: ${room.name}`);
   }
-  
+
   logger = {
     info: (msg: string, ...args: any[]) => console.log('ℹ️', msg, ...args),
     warn: (msg: string, ...args: any[]) => console.log('⚠️', msg, ...args),
     error: (msg: string, ...args: any[]) => console.log('❌', msg, ...args),
-    debug: (msg: string, ...args: any[]) => console.log('🐛', msg, ...args)
+    debug: (msg: string, ...args: any[]) => console.log('🐛', msg, ...args),
   };
-  
+
   getSetting(key: string): any {
     const settings: Record<string, any> = {
-      'OPENAI_API_KEY': 'test-key',
-      'MODEL_PROVIDER': 'openai',
-      'DATABASE_URL': ':memory:'
+      OPENAI_API_KEY: 'test-key',
+      DATABASE_URL: ':memory:',
     };
     return settings[key];
   }
-  
+
   setTracePhase(phase: ExecutionTrace['phase']): void {
     if (this.currentTrace) {
       this.currentTrace.duration = Date.now() - this.currentTrace.timestamp;
     }
     this.currentTrace = this.createTrace(phase);
   }
-  
+
   getFullTrace(): ExecutionTrace[] {
     return [this.currentTrace];
   }
@@ -461,24 +496,26 @@ const deepEvaluationScenarios = [
   {
     name: 'Product Launch Strategy - Full Pipeline Test',
     description: 'Test complete planning pipeline from classification through execution',
-    userRequest: 'I need a comprehensive product launch strategy including market research, stakeholder coordination, compliance checks, and execution monitoring.',
+    userRequest:
+      'I need a comprehensive product launch strategy including market research, stakeholder coordination, compliance checks, and execution monitoring.',
     expectedActions: ['ANALYZE_INPUT', 'PROCESS_ANALYSIS', 'EXECUTE_FINAL'],
     expectedPlanSteps: 5,
     complexityLevel: 'complex',
     planningType: 'strategic_planning',
     shouldCreatePlan: true,
-    shouldExecutePlan: true
+    shouldExecutePlan: true,
   },
   {
     name: 'Team Coordination - Medium Complexity',
     description: 'Test team coordination planning with sequential execution',
-    userRequest: 'Help me coordinate a team project with data analysis, stakeholder communication, and deliverable creation phases.',
+    userRequest:
+      'Help me coordinate a team project with data analysis, stakeholder communication, and deliverable creation phases.',
     expectedActions: ['ANALYZE_INPUT', 'PROCESS_ANALYSIS', 'EXECUTE_FINAL'],
     expectedPlanSteps: 3,
     complexityLevel: 'medium',
     planningType: 'sequential_planning',
     shouldCreatePlan: true,
-    shouldExecutePlan: true
+    shouldExecutePlan: true,
   },
   {
     name: 'Simple Query - No Planning Required',
@@ -489,17 +526,17 @@ const deepEvaluationScenarios = [
     complexityLevel: 'simple',
     planningType: 'direct_action',
     shouldCreatePlan: false,
-    shouldExecutePlan: false
-  }
+    shouldExecutePlan: false,
+  },
 ];
 
 async function runDeepEvaluationScenarios() {
   console.log('🔬 Starting Deep Evaluation Scenario Tests\n');
   console.log('This will test REAL planning execution with LLM evaluation');
-  console.log('=' .repeat(80));
-  
+  console.log('='.repeat(80));
+
   const results: ScenarioResult[] = [];
-  
+
   for (let i = 0; i < deepEvaluationScenarios.length; i++) {
     const scenario = deepEvaluationScenarios[i];
     console.log(`\n🧪 Deep Test ${i + 1}/${deepEvaluationScenarios.length}: ${scenario.name}`);
@@ -507,15 +544,15 @@ async function runDeepEvaluationScenarios() {
     console.log(`💬 User Request: "${scenario.userRequest}"`);
     console.log(`🎯 Expected Actions: [${scenario.expectedActions.join(', ')}]`);
     console.log(`📊 Expected Plan Steps: ${scenario.expectedPlanSteps}`);
-    
+
     const runtime = new DeepTrackingRuntime();
     const executionTrace: ExecutionTrace[] = [];
-    
+
     try {
       // Initialize planning service
       const planningService = await PlanningService.start(runtime as any);
       runtime.registerService(planningService);
-      
+
       // Register plugin components
       if (planningPlugin.actions) {
         runtime.actions.push(...planningPlugin.actions);
@@ -523,120 +560,130 @@ async function runDeepEvaluationScenarios() {
       if (planningPlugin.providers) {
         runtime.providers.push(...planningPlugin.providers);
       }
-      
+
       // Add tracking wrapper for actions
-      runtime.actions = runtime.actions.map(action => ({
+      runtime.actions = runtime.actions.map((action) => ({
         ...action,
         handler: async (runtime: any, message: any, state: any, options: any, callback: any) => {
           return await (runtime as DeepTrackingRuntime).executeAction(action.name, options);
-        }
+        },
       }));
-      
+
       console.log(`\n🔧 Runtime initialized with ${runtime.actions.length} actions`);
-      
+
       // Phase 1: Message Classification
       console.log('\n📊 Phase 1: Message Classification');
       runtime.setTracePhase('classification');
-      
+
       const testMessage = {
         id: uuidv4(),
         entityId: 'test-user',
         roomId: uuidv4(),
-        content: { text: scenario.userRequest }
+        content: { text: scenario.userRequest },
       };
-      
+
       const testState = { values: {}, data: {}, text: '' };
-      
+
       const classificationResult = await planningPlugin.providers![0].get(
         runtime as any,
         testMessage as any,
         testState as any
       );
-      
+
       console.log(`   🧠 Classification: ${classificationResult.data?.classification || 'N/A'}`);
       console.log(`   🎯 Complexity: ${classificationResult.data?.complexity || 'N/A'}`);
-      console.log(`   📋 Planning Required: ${classificationResult.data?.planningRequired || false}`);
-      
+      console.log(
+        `   📋 Planning Required: ${classificationResult.data?.planningRequired || false}`
+      );
+
       let planCreated = false;
       let planExecuted = false;
       let comprehensivePlan: any = null;
-      
+
       // Phase 2: Plan Creation (if required)
       if (classificationResult.data?.planningRequired && scenario.shouldCreatePlan) {
         console.log('\n🎯 Phase 2: Plan Creation');
         runtime.setTracePhase('planning');
-        
+
         const planningContext = {
           goal: scenario.userRequest,
           constraints: [
-            { type: 'time' as const, value: 'standard', description: 'Standard timeline constraints' }
+            {
+              type: 'time' as const,
+              value: 'standard',
+              description: 'Standard timeline constraints',
+            },
           ],
           availableActions: runtime.actions.map((a: any) => a.name),
           availableProviders: runtime.providers.map((p: any) => p.name),
           preferences: {
             executionModel: 'sequential' as const,
             maxSteps: scenario.expectedPlanSteps + 2,
-            timeoutMs: 30000
-          }
+            timeoutMs: 30000,
+          },
         };
-        
+
         comprehensivePlan = await planningService.createComprehensivePlan(
           runtime as any,
           planningContext
         );
-        
+
         planCreated = true;
         console.log(`   📋 Plan Created: ${comprehensivePlan.id}`);
         console.log(`   🎯 Goal: ${comprehensivePlan.goal}`);
         console.log(`   📊 Steps: ${comprehensivePlan.steps.length}`);
         console.log(`   ⚙️ Execution Model: ${comprehensivePlan.executionModel}`);
-        
+
         // Phase 3: Plan Execution
         if (scenario.shouldExecutePlan) {
           console.log('\n⚡ Phase 3: Plan Execution');
           runtime.setTracePhase('execution');
-          
+
           const executionResult = await planningService.executePlan(
             runtime as any,
             comprehensivePlan,
             testMessage as any
           );
-          
+
           planExecuted = executionResult.success;
           console.log(`   ✅ Execution Success: ${executionResult.success}`);
-          console.log(`   📊 Completed Steps: ${executionResult.completedSteps}/${executionResult.totalSteps}`);
+          console.log(
+            `   📊 Completed Steps: ${executionResult.completedSteps}/${executionResult.totalSteps}`
+          );
           console.log(`   ⏱️ Duration: ${executionResult.duration}ms`);
-          
+
           if (executionResult.errors && executionResult.errors.length > 0) {
             console.log(`   ❌ Errors: ${executionResult.errors.length}`);
-            executionResult.errors.forEach(error => {
+            executionResult.errors.forEach((error) => {
               console.log(`      • ${error.message}`);
             });
           }
         }
       } else if (scenario.shouldCreatePlan) {
-        console.log('\n⚠️ Expected plan creation but classification indicated no planning required');
+        console.log(
+          '\n⚠️ Expected plan creation but classification indicated no planning required'
+        );
       } else {
         console.log('\n➡️ No planning required - direct response expected');
       }
-      
+
       // Phase 4: LLM Evaluation
       console.log('\n🎭 Phase 4: LLM Evaluation of Execution');
       runtime.setTracePhase('evaluation');
-      
-      const actualActionsCalled = runtime.actionCalls.map(call => call.actionName);
+
+      const actualActionsCalled = runtime.actionCalls.map((call) => call.actionName);
       const executionData = {
         planCreated,
         planExecuted,
         stepsExecuted: runtime.actionCalls.length,
         expectedSteps: scenario.expectedPlanSteps,
-        errors: runtime.currentTrace.errors.length
+        errors: runtime.currentTrace.errors.length,
       };
-      
+
       console.log(`   📋 Expected Actions: [${scenario.expectedActions.join(', ')}]`);
       console.log(`   ✅ Actually Called: [${actualActionsCalled.join(', ')}]`);
       console.log(`   📊 Execution Data:`, executionData);
-      
+
       const evaluationResponse = await runtime.useModel('TEXT_LARGE', {
         prompt: `You are an expert evaluator. Assess this planning execution:
 
@@ -664,21 +711,22 @@ REASONING: (detailed explanation of the evaluation)`,
         temperature: 0.2,
         expectedActions: scenario.expectedActions,
         actualActions: actualActionsCalled,
-        executionData
+        executionData,
       });
-      
+
       const evaluation = parseEvaluationResponse(evaluationResponse);
-      
+
       console.log(`   🎯 LLM Evaluation Score: ${evaluation.score}/1.0`);
       console.log(`   ✅ Action Verification: ${evaluation.actionVerification ? 'PASS' : 'FAIL'}`);
       console.log(`   📊 Plan Completeness: ${evaluation.planCompletnessScore}/1.0`);
       console.log(`   ⚙️ Execution Quality: ${evaluation.executionQualityScore}/1.0`);
       console.log(`   💭 Reasoning: ${evaluation.reasoning}`);
-      
-      const scenarioSuccess = evaluation.score >= 0.7 && 
-                             (scenario.shouldCreatePlan ? planCreated : true) &&
-                             (scenario.shouldExecutePlan ? planExecuted : true);
-      
+
+      const scenarioSuccess =
+        evaluation.score >= 0.7 &&
+        (scenario.shouldCreatePlan ? planCreated : true) &&
+        (scenario.shouldExecutePlan ? planExecuted : true);
+
       const result: ScenarioResult = {
         scenario: scenario.name,
         userRequest: scenario.userRequest,
@@ -688,18 +736,19 @@ REASONING: (detailed explanation of the evaluation)`,
         planCreated,
         planExecuted,
         llmEvaluation: evaluation,
-        success: scenarioSuccess
+        success: scenarioSuccess,
       };
-      
+
       results.push(result);
-      
-      console.log(`\n${scenarioSuccess ? '🎉' : '❌'} Scenario ${i + 1} ${scenarioSuccess ? 'PASSED' : 'FAILED'}`);
+
+      console.log(
+        `\n${scenarioSuccess ? '🎉' : '❌'} Scenario ${i + 1} ${scenarioSuccess ? 'PASSED' : 'FAILED'}`
+      );
       console.log(`   📊 Overall Score: ${evaluation.score}/1.0`);
-      
     } catch (error) {
       console.error(`❌ Scenario ${i + 1} ERROR:`, error.message);
       console.error('Stack:', error.stack);
-      
+
       const result: ScenarioResult = {
         scenario: scenario.name,
         userRequest: scenario.userRequest,
@@ -713,39 +762,41 @@ REASONING: (detailed explanation of the evaluation)`,
           reasoning: `Execution failed with error: ${error.message}`,
           actionVerification: false,
           planCompletnessScore: 0,
-          executionQualityScore: 0
+          executionQualityScore: 0,
         },
-        success: false
+        success: false,
       };
-      
+
       results.push(result);
     }
-    
-    console.log('\n' + '=' .repeat(80));
+
+    console.log('\n' + '='.repeat(80));
   }
-  
+
   // Final comprehensive evaluation
   console.log('\n📊 COMPREHENSIVE EVALUATION RESULTS');
-  console.log('=' .repeat(80));
-  
-  const passedTests = results.filter(r => r.success).length;
+  console.log('='.repeat(80));
+
+  const passedTests = results.filter((r) => r.success).length;
   const totalTests = results.length;
   const averageScore = results.reduce((sum, r) => sum + r.llmEvaluation.score, 0) / results.length;
-  
+
   console.log(`✅ Passed: ${passedTests}/${totalTests} scenarios`);
   console.log(`❌ Failed: ${totalTests - passedTests}/${totalTests} scenarios`);
   console.log(`📈 Success Rate: ${Math.round((passedTests / totalTests) * 100)}%`);
   console.log(`🎯 Average LLM Score: ${averageScore.toFixed(2)}/1.0`);
-  
+
   console.log('\n📋 Detailed Results:');
   results.forEach((result, i) => {
     console.log(`${i + 1}. ${result.scenario}: ${result.success ? '✅' : '❌'}`);
     console.log(`   Score: ${result.llmEvaluation.score}/1.0`);
-    console.log(`   Actions: Expected [${result.expectedActions.join(', ')}] → Called [${result.actualActionsCalled.join(', ')}]`);
+    console.log(
+      `   Actions: Expected [${result.expectedActions.join(', ')}] → Called [${result.actualActionsCalled.join(', ')}]`
+    );
     console.log(`   Plan Created: ${result.planCreated}, Executed: ${result.planExecuted}`);
     console.log(`   Reasoning: ${result.llmEvaluation.reasoning.substring(0, 100)}...`);
   });
-  
+
   if (passedTests === totalTests && averageScore >= 0.8) {
     console.log('\n🎉 ALL DEEP EVALUATION TESTS PASSED! 🎉');
     console.log('✅ Real Planning Execution Validated');
@@ -773,13 +824,13 @@ function parseEvaluationResponse(response: string): {
   const completenessMatch = response.match(/PLAN_COMPLETENESS:\s*([\d.]+)/);
   const executionMatch = response.match(/EXECUTION_QUALITY:\s*([\d.]+)/);
   const reasoningMatch = response.match(/REASONING:\s*(.+)/s);
-  
+
   return {
     score: scoreMatch ? parseFloat(scoreMatch[1]) : 0,
     actionVerification: actionMatch ? actionMatch[1] === 'PASS' : false,
     planCompletnessScore: completenessMatch ? parseFloat(completenessMatch[1]) : 0,
     executionQualityScore: executionMatch ? parseFloat(executionMatch[1]) : 0,
-    reasoning: reasoningMatch ? reasoningMatch[1].trim() : 'No reasoning provided'
+    reasoning: reasoningMatch ? reasoningMatch[1].trim() : 'No reasoning provided',
   };
 }
 

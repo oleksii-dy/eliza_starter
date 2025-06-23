@@ -18,3 +18,10 @@ coverage-exclude = [
   "**/*.cy.tsx",
   "cypress/**",
 ]
+
+# TypeScript configuration
+tsconfig = "./tsconfig.test.json"
+
+# Module resolution
+[resolve]
+paths = { "@/*" = ["./src/*"] }

@@ -48,7 +48,6 @@ describe('ScenarioRunner Integration Tests', () => {
     messageExamples: [],
     postExamples: [],
     topics: [],
-    adjectives: [],
     knowledge: [],
     style: {
       all: [],
@@ -106,7 +105,7 @@ describe('ScenarioRunner Integration Tests', () => {
 
     // Create server with mock runtime
     server = new AgentServer();
-    await server.initialize({ dataDir: "./test-data" });
+    await server.initialize({ dataDir: './test-data' });
 
     // Add the mock runtime to the server
     // server.agents.set('test-agent-id', mockRuntime); // agents property doesn't exist
@@ -133,7 +132,7 @@ describe('ScenarioRunner Integration Tests', () => {
           id: 'subject' as UUID,
           name: 'Test Agent',
           role: 'subject',
-          script: { steps: [] }
+          script: { steps: [] },
         },
         {
           id: 'tester' as UUID,
@@ -267,8 +266,10 @@ describe('ScenarioRunner Integration Tests', () => {
       description: 'First test scenario',
       actors: [
         {
-          id: 'subject' as UUID, name: 'Agent', role: 'subject',
-          script: { steps: [] }
+          id: 'subject' as UUID,
+          name: 'Agent',
+          role: 'subject',
+          script: { steps: [] },
         },
         {
           id: 'user1' as UUID,
@@ -301,8 +302,10 @@ describe('ScenarioRunner Integration Tests', () => {
       description: 'Second test scenario',
       actors: [
         {
-          id: 'subject' as UUID, name: 'Agent', role: 'subject',
-          script: { steps: [] }
+          id: 'subject' as UUID,
+          name: 'Agent',
+          role: 'subject',
+          script: { steps: [] },
         },
         {
           id: 'user2' as UUID,
@@ -342,8 +345,10 @@ describe('ScenarioRunner Integration Tests', () => {
       description: 'Test metrics collection',
       actors: [
         {
-          id: 'subject' as UUID, name: 'Agent', role: 'subject',
-          script: { steps: [] }
+          id: 'subject' as UUID,
+          name: 'Agent',
+          role: 'subject',
+          script: { steps: [] },
         },
         {
           id: 'user' as UUID,

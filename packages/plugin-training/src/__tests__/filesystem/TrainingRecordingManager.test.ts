@@ -1,9 +1,9 @@
 /**
  * REAL RUNTIME INTEGRATION TESTS FOR TRAINING RECORDING MANAGER
- * 
+ *
  * These tests use actual ElizaOS runtime instances and real filesystem operations.
  * No mocks - only real runtime instances, services, and actual file I/O.
- * 
+ *
  * Test coverage:
  * - Real filesystem directory creation and management
  * - Real recording session lifecycle
@@ -29,19 +29,18 @@ const testCharacter: Character = {
   messageExamples: [
     [
       { name: 'user', content: { text: 'test recording functionality' } },
-      { name: 'TrainingRecordingTestAgent', content: { text: 'testing recording response' } }
-    ]
+      { name: 'TrainingRecordingTestAgent', content: { text: 'testing recording response' } },
+    ],
   ],
   postExamples: [],
   topics: ['testing', 'recording', 'filesystem', 'service-validation'],
-  adjectives: ['helpful', 'accurate', 'thorough'],
   plugins: [],
   settings: {
-    CUSTOM_REASONING_ENABLED: 'true',
-    CUSTOM_REASONING_COLLECT_TRAINING_DATA: 'true',
+    REASONING_SERVICE_ENABLED: 'true',
+    REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',
     TOGETHER_AI_API_KEY: 'test-api-key-recording',
   },
-  secrets: {}
+  secrets: {},
 };
 
 // Helper function to create test training data points
@@ -53,12 +52,12 @@ function createTestTrainingDataPoint(overrides: any = {}) {
       messageText: 'Test message',
       prompt: 'Test prompt for training data recording',
       conversationContext: [],
-      state: {}
+      state: {},
     },
     outputData: {
       decision: 'RESPOND',
       reasoning: 'Test reasoning',
-      confidence: 0.95
+      confidence: 0.95,
     },
     conversationContext: [],
     stateData: {},
@@ -67,11 +66,11 @@ function createTestTrainingDataPoint(overrides: any = {}) {
       messageId: uuidv4() as UUID,
       responseTimeMs: 100,
       tokensUsed: 50,
-      costUsd: 0.001
+      costUsd: 0.001,
     },
     tags: ['test'],
     timestamp: Date.now(),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -83,16 +82,16 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
 
   beforeEach(async () => {
     elizaLogger.info('🧪 Setting up TrainingRecordingManager real runtime test environment...');
-    
+
     // Create unique test paths to avoid conflicts
     const testId = `recording-manager-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     testRecordingsPath = path.join(process.cwd(), '.test-data', testId, 'training_recordings');
     testDataPath = path.join(process.cwd(), '.test-data', testId, 'data');
-    
+
     // Ensure test directories exist
     await fs.mkdir(path.dirname(testRecordingsPath), { recursive: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    
+
     // Update test character with test-specific paths
     const testCharacterWithPaths = {
       ...testCharacter,
@@ -100,29 +99,29 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
         ...testCharacter.settings,
         TRAINING_RECORDINGS_DIR: testRecordingsPath,
         RECORDING_DATA_DIR: testDataPath,
-      }
+      },
     };
 
     // Create real AgentRuntime instance
     runtime = new AgentRuntime({
       character: testCharacterWithPaths,
       token: process.env.OPENAI_API_KEY || 'test-token',
-      modelName: 'gpt-4o-mini'
+      modelName: 'gpt-4o-mini',
     });
 
     // Register the training plugin
     await runtime.registerPlugin(trainingPlugin);
     await runtime.initialize();
-    
+
     // Create real TrainingRecordingManager instance
     recordingManager = new TrainingRecordingManager(runtime);
-    
+
     elizaLogger.info('✅ TrainingRecordingManager real runtime test environment setup complete');
   });
 
   afterEach(async () => {
     elizaLogger.info('🧹 Cleaning up TrainingRecordingManager test environment...');
-    
+
     try {
       // Clean up test files
       if (testRecordingsPath) {
@@ -135,7 +134,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
     } catch (error) {
       elizaLogger.warn('Warning during TrainingRecordingManager cleanup:', error);
     }
-    
+
     elizaLogger.info('✅ TrainingRecordingManager test environment cleanup complete');
   });
 
@@ -144,21 +143,30 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       await recordingManager.initialize();
 
       // Verify base directory was created
-      const baseExists = await fs.access(testRecordingsPath).then(() => true).catch(() => false);
+      const baseExists = await fs
+        .access(testRecordingsPath)
+        .then(() => true)
+        .catch(() => false);
       expect(baseExists).toBe(true);
 
       // Verify model type directories were created
       const modelTypes = ['should_respond', 'planning', 'coding'];
       for (const modelType of modelTypes) {
         const modelPath = path.join(testRecordingsPath, modelType);
-        const modelExists = await fs.access(modelPath).then(() => true).catch(() => false);
+        const modelExists = await fs
+          .access(modelPath)
+          .then(() => true)
+          .catch(() => false);
         expect(modelExists).toBe(true);
         elizaLogger.info(`✅ Model type directory created: ${modelType}`);
       }
 
       // Verify sessions directory was created
       const sessionsPath = path.join(testRecordingsPath, 'sessions');
-      const sessionsExists = await fs.access(sessionsPath).then(() => true).catch(() => false);
+      const sessionsExists = await fs
+        .access(sessionsPath)
+        .then(() => true)
+        .catch(() => false);
       expect(sessionsExists).toBe(true);
 
       elizaLogger.info('✅ Real directory structure initialization validated');
@@ -173,7 +181,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
             return '/root/invalid-path'; // Path that should cause permission error
           }
           return runtime.getSetting(key);
-        }
+        },
       } as IAgentRuntime);
 
       try {
@@ -198,15 +206,21 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       const sessionId = await recordingManager.startSession('planning', 'test-session');
 
       expect(sessionId).toBe('test-session');
-      
+
       // Verify session directory was created
       const sessionPath = path.join(testRecordingsPath, 'sessions', 'test-session');
-      const sessionExists = await fs.access(sessionPath).then(() => true).catch(() => false);
+      const sessionExists = await fs
+        .access(sessionPath)
+        .then(() => true)
+        .catch(() => false);
       expect(sessionExists).toBe(true);
 
       // Verify session metadata file was created
       const metadataPath = path.join(sessionPath, 'session.json');
-      const metadataExists = await fs.access(metadataPath).then(() => true).catch(() => false);
+      const metadataExists = await fs
+        .access(metadataPath)
+        .then(() => true)
+        .catch(() => false);
       expect(metadataExists).toBe(true);
 
       // Read and verify session metadata content
@@ -225,10 +239,13 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       const sessionId = await recordingManager.startSession('coding');
 
       expect(sessionId).toMatch(/^session_\d+_[a-z0-9]+$/);
-      
+
       // Verify generated session directory exists
       const sessionPath = path.join(testRecordingsPath, 'sessions', sessionId);
-      const sessionExists = await fs.access(sessionPath).then(() => true).catch(() => false);
+      const sessionExists = await fs
+        .access(sessionPath)
+        .then(() => true)
+        .catch(() => false);
       expect(sessionExists).toBe(true);
 
       elizaLogger.info(`✅ Session ID generation validated: ${sessionId}`);
@@ -240,7 +257,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       const metadataPath = path.join(testRecordingsPath, 'sessions', sessionId, 'session.json');
       const metadataContent = await fs.readFile(metadataPath, 'utf-8');
       const metadata = JSON.parse(metadataContent);
-      
+
       expect(metadata).toEqual({
         sessionId: 'metadata-test',
         startTime: expect.stringMatching(/\d{4}-\d{2}-\d{2}T/),
@@ -261,9 +278,9 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
     it('should end current session successfully with real filesystem updates', async () => {
       // Start a session first
       const sessionId = await recordingManager.startSession('planning', 'end-test-session');
-      
+
       // Wait a bit to ensure time difference
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // End the session
       await recordingManager.endSession();
@@ -272,13 +289,13 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       const metadataPath = path.join(testRecordingsPath, 'sessions', sessionId, 'session.json');
       const metadataContent = await fs.readFile(metadataPath, 'utf-8');
       const metadata = JSON.parse(metadataContent);
-      
+
       expect(metadata.endTime).toMatch(/\d{4}-\d{2}-\d{2}T/);
       expect(metadata.recordingCount).toBeDefined();
       expect(typeof metadata.recordingCount).toBe('number');
       expect(metadata.totalSize).toBeDefined();
       expect(typeof metadata.totalSize).toBe('number');
-      
+
       // End time should be after start time
       const startTime = new Date(metadata.startTime);
       const endTime = new Date(metadata.endTime);
@@ -300,7 +317,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
         // Sessions directory might not exist, which is fine
         elizaLogger.info('✅ No sessions directory found (expected when no sessions created)');
       }
-      
+
       elizaLogger.info('✅ Graceful handling of no active session validated');
     });
   });
@@ -323,7 +340,10 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       expect(filePath).toEndWith('.json');
 
       // Verify file was actually created
-      const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
+      const fileExists = await fs
+        .access(filePath)
+        .then(() => true)
+        .catch(() => false);
       expect(fileExists).toBe(true);
 
       // Read and verify file content
@@ -376,11 +396,14 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
 
       expect(filePath).toContain(`sessions/${sessionId}`);
       expect(filePath).toContain('session-recording-id');
-      
+
       // Verify file was created in session directory
-      const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
+      const fileExists = await fs
+        .access(filePath)
+        .then(() => true)
+        .catch(() => false);
       expect(fileExists).toBe(true);
-      
+
       // Verify file is in correct session subdirectory
       const sessionPath = path.join(testRecordingsPath, 'sessions', sessionId);
       expect(filePath).toMatch(new RegExp(sessionPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
@@ -398,16 +421,18 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       // Verify file was created and get real file stats
       const fileStats = await fs.stat(filePath);
       expect(fileStats.size).toBeGreaterThan(0);
-      
+
       // Verify session metadata includes file statistics
       const metadataPath = path.join(testRecordingsPath, 'sessions', sessionId, 'session.json');
       const metadataContent = await fs.readFile(metadataPath, 'utf-8');
       const metadata = JSON.parse(metadataContent);
-      
+
       expect(metadata.recordingCount).toBeGreaterThanOrEqual(0);
       expect(metadata.totalSize).toBeGreaterThanOrEqual(0);
 
-      elizaLogger.info(`✅ Session statistics updated: ${metadata.recordingCount} recordings, ${metadata.totalSize} bytes`);
+      elizaLogger.info(
+        `✅ Session statistics updated: ${metadata.recordingCount} recordings, ${metadata.totalSize} bytes`
+      );
     });
 
     it('should format input data correctly for different model types with real filesystem', async () => {
@@ -418,9 +443,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
             modelType: 'should_respond',
             inputData: {
               messageText: 'Hello there',
-              conversationContext: [
-                { entityId: 'user-1', content: { text: 'Previous message' } },
-              ],
+              conversationContext: [{ entityId: 'user-1', content: { text: 'Previous message' } }],
               prompt: 'A very long prompt that should be truncated...',
               state: {},
             },
@@ -470,7 +493,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
 
       for (const { dataPoint, expectedInput } of testCases) {
         const filePath = await recordingManager.recordTrainingData(dataPoint);
-        
+
         // Read the actual file content from filesystem
         const fileContent = await fs.readFile(filePath, 'utf-8');
         const recordContent = JSON.parse(fileContent);
@@ -484,27 +507,27 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
   describe('Real Recording File Retrieval', () => {
     beforeEach(async () => {
       await recordingManager.initialize();
-      
+
       // Create some test recording files
       const testFiles = [
         {
           modelType: 'should_respond',
           date: '2024-01-15',
           filename: 'file1.json',
-          content: { id: 'test1', data: 'content1' }
+          content: { id: 'test1', data: 'content1' },
         },
         {
           modelType: 'planning',
           date: '2024-01-15',
           filename: 'file2.json',
-          content: { id: 'test2', data: 'content2' }
+          content: { id: 'test2', data: 'content2' },
         },
         {
           modelType: 'coding',
           date: '2024-01-16',
           filename: 'file3.json',
-          content: { id: 'test3', data: 'content3' }
-        }
+          content: { id: 'test3', data: 'content3' },
+        },
       ];
 
       for (const testFile of testFiles) {
@@ -519,7 +542,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       const files = await recordingManager.getRecordingFiles();
 
       expect(files.length).toBeGreaterThanOrEqual(3);
-      
+
       // Verify file structure
       const firstFile = files[0];
       expect(firstFile.filename).toMatch(/\.json$/);
@@ -536,9 +559,9 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       const planningFiles = await recordingManager.getRecordingFiles('planning');
 
       expect(planningFiles.length).toBeGreaterThanOrEqual(1);
-      
+
       // All files should be from planning directory
-      planningFiles.forEach(file => {
+      planningFiles.forEach((file) => {
         expect(file.path).toContain('/planning/');
       });
 
@@ -549,9 +572,9 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       const codingFiles = await recordingManager.getRecordingFiles('coding', '2024-01-16');
 
       expect(codingFiles.length).toBeGreaterThanOrEqual(1);
-      
+
       // All files should be from specific date directory
-      codingFiles.forEach(file => {
+      codingFiles.forEach((file) => {
         expect(file.path).toContain('/coding/2024-01-16/');
       });
 
@@ -570,7 +593,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
   describe('Real Recording Export to JSONL', () => {
     beforeEach(async () => {
       await recordingManager.initialize();
-      
+
       // Create test recording files with real data
       const testRecordings = [
         {
@@ -580,8 +603,8 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
             input: { messageText: 'Hello' },
             output: { decision: 'RESPOND', reasoning: 'Friendly greeting' },
             performance: { responseTimeMs: 100 },
-            timestamp: '2024-01-15T10:00:00Z'
-          }
+            timestamp: '2024-01-15T10:00:00Z',
+          },
         },
         {
           modelType: 'planning',
@@ -590,9 +613,9 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
             input: { messageText: 'Plan this' },
             output: { thought: 'Planning response', actions: ['REPLY'] },
             performance: { responseTimeMs: 200 },
-            timestamp: '2024-01-16T10:00:00Z'
-          }
-        }
+            timestamp: '2024-01-16T10:00:00Z',
+          },
+        },
       ];
 
       for (const recording of testRecordings) {
@@ -602,8 +625,8 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
           outputData: recording.data.output,
           metadata: {
             ...createTestTrainingDataPoint().metadata,
-            responseTimeMs: recording.data.performance.responseTimeMs
-          }
+            responseTimeMs: recording.data.performance.responseTimeMs,
+          },
         });
         await recordingManager.recordTrainingData(dataPoint);
       }
@@ -614,19 +637,22 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       const count = await recordingManager.exportRecordingsToJSONL(outputPath);
 
       expect(count).toBeGreaterThanOrEqual(2);
-      
+
       // Verify JSONL file was created
-      const fileExists = await fs.access(outputPath).then(() => true).catch(() => false);
+      const fileExists = await fs
+        .access(outputPath)
+        .then(() => true)
+        .catch(() => false);
       expect(fileExists).toBe(true);
-      
+
       // Read and verify JSONL content
       const content = await fs.readFile(outputPath, 'utf-8');
       const lines = content.trim().split('\n');
-      
+
       expect(lines.length).toBeGreaterThanOrEqual(2);
-      
+
       // Verify each line is valid JSON with expected structure
-      lines.forEach(line => {
+      lines.forEach((line) => {
         const parsed = JSON.parse(line);
         expect(parsed.messages).toBeDefined();
         expect(Array.isArray(parsed.messages)).toBe(true);
@@ -642,10 +668,10 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       const dataPoint = createTestTrainingDataPoint({
         modelType: 'should_respond',
         inputData: { messageText: 'Filtered test' },
-        outputData: { decision: 'RESPOND' }
+        outputData: { decision: 'RESPOND' },
       });
       await recordingManager.recordTrainingData(dataPoint);
-      
+
       const options = {
         modelType: 'should_respond' as const,
         startDate: new Date('2024-01-01T00:00:00Z'),
@@ -657,7 +683,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       const count = await recordingManager.exportRecordingsToJSONL(outputPath, options);
 
       expect(count).toBe(1); // Limited to 1 due to options.limit
-      
+
       // Verify file contains only one line
       const content = await fs.readFile(outputPath, 'utf-8');
       const lines = content.trim().split('\n');
@@ -669,7 +695,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
     it('should handle export errors with real filesystem', async () => {
       // Try to export to invalid path
       const invalidPath = '/root/invalid/path.jsonl';
-      
+
       try {
         await recordingManager.exportRecordingsToJSONL(invalidPath);
         // If this doesn't throw, the test environment allows creation
@@ -685,7 +711,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
   describe('Real Recording Statistics', () => {
     beforeEach(async () => {
       await recordingManager.initialize();
-      
+
       // Create test recordings with known data
       const testRecordings = [
         { modelType: 'should_respond', date: '2024-01-15' },
@@ -696,7 +722,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       for (const recording of testRecordings) {
         const dataPoint = createTestTrainingDataPoint({
           modelType: recording.modelType,
-          timestamp: new Date(`${recording.date}T10:00:00Z`).getTime()
+          timestamp: new Date(`${recording.date}T10:00:00Z`).getTime(),
         });
         await recordingManager.recordTrainingData(dataPoint);
       }
@@ -708,25 +734,29 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       expect(stats.totalFiles).toBeGreaterThanOrEqual(3);
       expect(stats.totalSize).toBeGreaterThan(0);
       expect(typeof stats.totalSize).toBe('number');
-      
+
       // Verify model type breakdown
       expect(stats.byModelType).toBeDefined();
       expect(typeof stats.byModelType).toBe('object');
       expect(stats.byModelType.should_respond).toBeGreaterThanOrEqual(2);
       expect(stats.byModelType.planning).toBeGreaterThanOrEqual(1);
-      
+
       // Verify date breakdown
       expect(stats.byDate).toBeDefined();
       expect(typeof stats.byDate).toBe('object');
-      
+
       // Verify date range
       if (stats.oldestRecording && stats.newestRecording) {
         expect(stats.oldestRecording).toBeInstanceOf(Date);
         expect(stats.newestRecording).toBeInstanceOf(Date);
-        expect(stats.newestRecording.getTime()).toBeGreaterThanOrEqual(stats.oldestRecording.getTime());
+        expect(stats.newestRecording.getTime()).toBeGreaterThanOrEqual(
+          stats.oldestRecording.getTime()
+        );
       }
 
-      elizaLogger.info(`✅ Real recording statistics: ${stats.totalFiles} files, ${stats.totalSize} bytes`);
+      elizaLogger.info(
+        `✅ Real recording statistics: ${stats.totalFiles} files, ${stats.totalSize} bytes`
+      );
     });
 
     it('should handle errors gracefully with real filesystem', async () => {
@@ -738,7 +768,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
             return '/non/existent/path';
           }
           return runtime.getSetting(key);
-        }
+        },
       } as IAgentRuntime);
 
       const stats = await invalidManager.getRecordingStats();
@@ -763,48 +793,57 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
       // Create recordings with different timestamps
       const oldTime = Date.now() - 10 * 24 * 60 * 60 * 1000; // 10 days ago
       const newTime = Date.now() - 5 * 24 * 60 * 60 * 1000; // 5 days ago
-      
+
       const oldRecordings = [
         createTestTrainingDataPoint({ modelType: 'should_respond', timestamp: oldTime }),
         createTestTrainingDataPoint({ modelType: 'planning', timestamp: oldTime }),
       ];
-      
+
       const newRecordings = [
         createTestTrainingDataPoint({ modelType: 'coding', timestamp: newTime }),
       ];
-      
+
       // Record the test data
       const oldPaths = [];
       for (const recording of oldRecordings) {
         const filePath = await recordingManager.recordTrainingData(recording);
         oldPaths.push(filePath);
       }
-      
+
       const newPaths = [];
       for (const recording of newRecordings) {
         const filePath = await recordingManager.recordTrainingData(recording);
         newPaths.push(filePath);
       }
-      
+
       // Verify files exist before cleanup
       for (const filePath of [...oldPaths, ...newPaths]) {
-        const exists = await fs.access(filePath).then(() => true).catch(() => false);
+        const exists = await fs
+          .access(filePath)
+          .then(() => true)
+          .catch(() => false);
         expect(exists).toBe(true);
       }
-      
+
       // Cleanup recordings older than 7 days
       const deletedCount = await recordingManager.cleanupOldRecordings(7);
-      
+
       expect(deletedCount).toBeGreaterThanOrEqual(2);
-      
+
       // Verify old files were deleted and new files remain
       for (const filePath of oldPaths) {
-        const exists = await fs.access(filePath).then(() => true).catch(() => false);
+        const exists = await fs
+          .access(filePath)
+          .then(() => true)
+          .catch(() => false);
         expect(exists).toBe(false);
       }
-      
+
       for (const filePath of newPaths) {
-        const exists = await fs.access(filePath).then(() => true).catch(() => false);
+        const exists = await fs
+          .access(filePath)
+          .then(() => true)
+          .catch(() => false);
         expect(exists).toBe(true);
       }
 
@@ -820,7 +859,7 @@ describe('Real Runtime Training Recording Manager Integration Tests', () => {
             return '/root/restricted'; // Path that should cause permission errors
           }
           return runtime.getSetting(key);
-        }
+        },
       } as IAgentRuntime);
 
       try {

@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+// Remove jest-dom import as it's not needed for non-React tests
 import { vi } from 'vitest';
 
 // Mock Socket.IO client

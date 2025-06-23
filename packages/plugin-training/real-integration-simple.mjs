@@ -43,7 +43,7 @@ try {
         console.log(`   Actions count: ${mvpCustomReasoningPlugin.actions?.length || 0}`);
         
         // Verify essential actions exist
-        const requiredActions = ['ENABLE_CUSTOM_REASONING', 'DISABLE_CUSTOM_REASONING', 'CHECK_REASONING_STATUS'];
+        const requiredActions = ['ENABLE_REASONING_SERVICE', 'DISABLE_REASONING_SERVICE', 'CHECK_REASONING_STATUS'];
         const actionNames = mvpCustomReasoningPlugin.actions?.map(a => a.name) || [];
         
         let allActionsFound = true;

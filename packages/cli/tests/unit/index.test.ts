@@ -87,12 +87,14 @@ vi.mock('@/src/version', () => ({
 }));
 
 // Mock fs
-vi.mock('node:fs', () => ({
-  default: {
+vi.mock('node:fs', async () => {
+  const actual = await vi.importActual('node:fs');
+  return {
+    ...actual,
     existsSync: vi.fn(() => true),
     readFileSync: vi.fn(() => JSON.stringify({ version: '1.0.0-test' })),
-  },
-}));
+  };
+});
 
 // Mock logger
 vi.mock('@elizaos/core', () => ({

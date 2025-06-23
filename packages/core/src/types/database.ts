@@ -54,6 +54,9 @@ export interface IDatabaseAdapter {
   /** Check if the database connection is ready */
   isReady(): Promise<boolean>;
 
+  /** Wait for the database to be ready */
+  waitForReady?(timeoutMs?: number): Promise<void>;
+
   /** Close database connection */
   close(): Promise<void>;
 

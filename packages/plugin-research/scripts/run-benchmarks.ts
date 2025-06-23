@@ -53,44 +53,43 @@ class BatchBenchmarkRunner {
     this.researchService = researchService;
   }
 
-  async runQuery(
-    query: any,
-    config: any,
-    queryIndex: number,
-    totalQueries: number
-  ): Promise<any> {
+  async runQuery(query: any, config: any, queryIndex: number, totalQueries: number): Promise<any> {
     await this.semaphore.acquire();
-    
+
     try {
       console.log(`🔄 [${queryIndex + 1}/${totalQueries}] Starting: ${query.id}`);
       const queryStartTime = Date.now();
 
       const runner = new BenchmarkRunner(this.runtime, this.researchService);
-      
+
       // Create mini-config for single query
       const singleQueryConfig = {
         ...config,
         queries: [query],
-        name: `${config.name} - ${query.id}`
+        name: `${config.name} - ${query.id}`,
       };
 
       const result = await runner.runBenchmark(singleQueryConfig);
       const duration = Date.now() - queryStartTime;
-      
-      console.log(`✅ [${queryIndex + 1}/${totalQueries}] Completed: ${query.id} (${(duration / 1000).toFixed(1)}s)`);
-      
+
+      console.log(
+        `✅ [${queryIndex + 1}/${totalQueries}] Completed: ${query.id} (${(duration / 1000).toFixed(1)}s)`
+      );
+
       return {
         queryId: query.id,
         result,
         duration,
-        success: true
+        success: true,
       };
     } catch (error) {
-      console.error(`❌ [${queryIndex + 1}/${totalQueries}] Failed: ${query.id} - ${error.message}`);
+      console.error(
+        `❌ [${queryIndex + 1}/${totalQueries}] Failed: ${query.id} - ${error.message}`
+      );
       return {
         queryId: query.id,
         error: error.message,
-        success: false
+        success: false,
       };
     } finally {
       this.semaphore.release();
@@ -98,19 +97,21 @@ class BatchBenchmarkRunner {
   }
 
   async runBatch(queries: any[], config: any): Promise<any[]> {
-    console.log(`🚀 Starting batch execution with ${queries.length} queries (max ${this.semaphore.permits} concurrent)`);
-    
+    console.log(
+      `🚀 Starting batch execution with ${queries.length} queries (max ${this.semaphore.permits} concurrent)`
+    );
+
     const promises = queries.map((query, index) =>
       this.runQuery(query, config, index, queries.length)
     );
 
     const results = await Promise.all(promises);
-    
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
-    
+
+    const successful = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
+
     console.log(`\n📊 Batch Results: ${successful} successful, ${failed} failed`);
-    
+
     return results;
   }
 }
@@ -125,7 +126,6 @@ class BenchmarkRuntime {
     messageExamples: [],
     postExamples: [],
     topics: [],
-    adjectives: [],
     knowledge: [],
     clients: [],
     plugins: [],
@@ -145,16 +145,18 @@ class BenchmarkRuntime {
   async useModel(type: any, params: any): Promise<any> {
     // In production, this would connect to your AI model
     // For benchmarks, you need real AI model access
-    
+
     if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
-      throw new Error('AI model API key required for benchmarks. Set OPENAI_API_KEY or ANTHROPIC_API_KEY');
+      throw new Error(
+        'AI model API key required for benchmarks. Set OPENAI_API_KEY or ANTHROPIC_API_KEY'
+      );
     }
 
     // Mock sophisticated AI responses for different research tasks
     if (params.messages) {
       const lastMessage = params.messages[params.messages.length - 1];
       const content = lastMessage.content;
-      
+
       // Sub-query generation
       if (content.includes('Generate sub-queries')) {
         const query = content.match(/Main Query: "([^"]+)"/)?.[1] || 'unknown';
@@ -173,7 +175,7 @@ QUERY: ${query} expert analysis research
 TYPE: theoretical
 PRIORITY: medium`;
       }
-      
+
       // Temporal focus analysis
       if (content.includes('temporal focus')) {
         if (content.includes('recent') || content.includes('2024') || content.includes('latest')) {
@@ -187,12 +189,12 @@ PRIORITY: medium`;
         }
         return 'current';
       }
-      
+
       // Geographic scope
       if (content.includes('geographic')) {
         return 'global';
       }
-      
+
       // Evaluation rubric generation
       if (content.includes('evaluation rubric')) {
         return `0: Content is completely missing or entirely irrelevant to the research question
@@ -201,49 +203,52 @@ PRIORITY: medium`;
 3: Content shows good understanding with adequate depth and minor gaps
 4: Content demonstrates exceptional understanding with comprehensive depth and accuracy`;
       }
-      
+
       // Relevance scoring
       if (content.includes('Score the relevance')) {
         return JSON.stringify({
           queryAlignment: 0.85,
-          topicRelevance: 0.80,
+          topicRelevance: 0.8,
           specificity: 0.75,
-          reasoning: 'Research result demonstrates strong alignment with query intent and covers key topics with good specificity',
-          score: 0.80
+          reasoning:
+            'Research result demonstrates strong alignment with query intent and covers key topics with good specificity',
+          score: 0.8,
         });
       }
-      
+
       // Claim extraction
       if (content.includes('Extract factual claims')) {
         return JSON.stringify([
           {
-            statement: 'Research demonstrates significant advances in the field with measurable improvements',
+            statement:
+              'Research demonstrates significant advances in the field with measurable improvements',
             citationIndex: 1,
-            supportingEvidence: 'Multiple peer-reviewed studies confirm these findings'
-          }
+            supportingEvidence: 'Multiple peer-reviewed studies confirm these findings',
+          },
         ]);
       }
-      
+
       // Research evaluation
       if (content.includes('Evaluate this research report')) {
         return JSON.stringify({
           score: 82,
-          reasoning: 'Research report demonstrates strong methodology, comprehensive coverage, and well-supported conclusions with appropriate citations',
+          reasoning:
+            'Research report demonstrates strong methodology, comprehensive coverage, and well-supported conclusions with appropriate citations',
           rubricScores: {
             comprehensiveness: 85,
             depth: 80,
             accuracy: 85,
-            clarity: 78
-          }
+            clarity: 78,
+          },
         });
       }
-      
+
       // Query verification
       if (content.includes('Does this evidence support')) {
         return 'yes';
       }
     }
-    
+
     return 'Simulated AI response for benchmark testing';
   }
 
@@ -297,13 +302,13 @@ async function main() {
   const args = process.argv.slice(2);
   const benchmarkName = args[0] || 'deepresearch';
   const outputDir = args[1] || '/Users/shawwalters/eliza-self/packages/docs/benchmarks';
-  
+
   // Check for individual test flag
-  const testIdFlag = args.find(arg => arg.startsWith('--test-id='));
+  const testIdFlag = args.find((arg) => arg.startsWith('--test-id='));
   const testId = testIdFlag ? testIdFlag.split('=')[1] : null;
-  
+
   // Check for batch processing flag
-  const batchFlag = args.find(arg => arg.startsWith('--batch='));
+  const batchFlag = args.find((arg) => arg.startsWith('--batch='));
   const batchSize = batchFlag ? parseInt(batchFlag.split('=')[1]) : null;
 
   console.log(`📊 Running benchmark: ${benchmarkName}`);
@@ -331,12 +336,12 @@ async function main() {
     // Handle individual test execution
     if (testId) {
       console.log(`🎯 Running individual test: ${testId}\n`);
-      
-      const targetQuery = config.queries.find(q => q.id === testId);
+
+      const targetQuery = config.queries.find((q) => q.id === testId);
       if (!targetQuery) {
         console.error(`❌ Test ID '${testId}' not found in benchmark '${benchmarkName}'`);
         console.error('Available test IDs:');
-        config.queries.forEach(q => console.error(`  - ${q.id}`));
+        config.queries.forEach((q) => console.error(`  - ${q.id}`));
         process.exit(1);
       }
 
@@ -344,7 +349,7 @@ async function main() {
       const singleConfig = {
         ...config,
         queries: [targetQuery],
-        name: `${config.name} - ${testId}`
+        name: `${config.name} - ${testId}`,
       };
 
       const runner = new BenchmarkRunner(runtime, researchService);
@@ -356,31 +361,33 @@ async function main() {
       console.log(`📊 Test: ${testId}`);
       console.log(`⏱️ Duration: ${(totalDuration / 1000).toFixed(1)}s`);
       console.log(`📁 Results saved to: ${outputDir}`);
-      
+
       return;
     }
 
     // Handle batch processing
     if (batchSize) {
       console.log(`🔄 Running batch mode with concurrency: ${batchSize}\n`);
-      
+
       const batchRunner = new BatchBenchmarkRunner(batchSize, runtime, researchService);
       const startTime = Date.now();
-      
+
       const batchResults = await batchRunner.runBatch(config.queries, config);
-      
+
       const totalDuration = Date.now() - startTime;
-      const successful = batchResults.filter(r => r.success).length;
-      const failed = batchResults.filter(r => !r.success).length;
-      
+      const successful = batchResults.filter((r) => r.success).length;
+      const failed = batchResults.filter((r) => !r.success).length;
+
       console.log('\n🎉 Batch execution completed!');
       console.log('📊 Batch Summary:');
       console.log(`   Successful: ${successful}/${config.queries.length}`);
       console.log(`   Failed: ${failed}/${config.queries.length}`);
       console.log(`   Total Duration: ${(totalDuration / 1000).toFixed(1)}s`);
-      console.log(`   Average per Query: ${((totalDuration / config.queries.length) / 1000).toFixed(1)}s`);
+      console.log(
+        `   Average per Query: ${(totalDuration / config.queries.length / 1000).toFixed(1)}s`
+      );
       console.log(`📁 Results saved to: ${outputDir}`);
-      
+
       return;
     }
 
@@ -399,15 +406,19 @@ async function main() {
     console.log('\n🎉 Benchmark completed!\n');
     console.log('📊 Results Summary:');
     console.log(`   Quality Grade: ${result.summary.qualityGrade}`);
-    console.log(`   Success Rate: ${((result.summary.successfulQueries / result.summary.totalQueries) * 100).toFixed(1)}%`);
+    console.log(
+      `   Success Rate: ${((result.summary.successfulQueries / result.summary.totalQueries) * 100).toFixed(1)}%`
+    );
     console.log(`   Total Duration: ${(totalDuration / 1000).toFixed(1)}s`);
-    console.log(`   Average Duration: ${(result.summary.averageDuration / 1000).toFixed(1)}s per query`);
+    console.log(
+      `   Average Duration: ${(result.summary.averageDuration / 1000).toFixed(1)}s per query`
+    );
     console.log(`   Average Sources: ${result.summary.averageSourcesFound.toFixed(1)}`);
-    
+
     if (result.summary.averageRaceScore) {
       console.log(`   Average RACE Score: ${(result.summary.averageRaceScore * 100).toFixed(1)}%`);
     }
-    
+
     if (result.summary.averageFactScore) {
       console.log(`   Average FACT Score: ${(result.summary.averageFactScore * 100).toFixed(1)}%`);
     }
@@ -419,7 +430,6 @@ async function main() {
     if (benchmarkName === 'deepresearch') {
       await generateBenchmarkSummary(outputDir);
     }
-
   } catch (error) {
     console.error('\n❌ Benchmark failed:', error);
     process.exit(1);
@@ -432,8 +442,8 @@ async function validateEnvironment() {
   const aiKeys = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY'];
   const searchKeys = ['TAVILY_API_KEY', 'SERPER_API_KEY', 'EXA_API_KEY', 'SERPAPI_API_KEY'];
 
-  const hasAIKey = aiKeys.some(key => process.env[key]);
-  const hasSearchKey = searchKeys.some(key => process.env[key]);
+  const hasAIKey = aiKeys.some((key) => process.env[key]);
+  const hasSearchKey = searchKeys.some((key) => process.env[key]);
 
   if (!hasAIKey) {
     console.error('❌ No AI model API key found');
@@ -472,7 +482,7 @@ async function generateBenchmarkSummary(outputDir: string) {
     console.log('📈 Generating benchmark summary...');
 
     const files = await fs.readdir(outputDir);
-    const jsonFiles = files.filter(f => f.endsWith('.json') && !f.includes('summary'));
+    const jsonFiles = files.filter((f) => f.endsWith('.json') && !f.includes('summary'));
 
     if (jsonFiles.length === 0) {
       return;
@@ -498,12 +508,16 @@ async function generateBenchmarkSummary(outputDir: string) {
       generatedAt: new Date().toISOString(),
       totalBenchmarks: results.length,
       overallStats: {
-        averageSuccessRate: results.reduce((sum, r) => sum + (r.summary.successfulQueries / r.summary.totalQueries), 0) / results.length,
-        averageQualityGrade: calculateAverageGrade(results.map(r => r.summary.qualityGrade)),
+        averageSuccessRate:
+          results.reduce(
+            (sum, r) => sum + r.summary.successfulQueries / r.summary.totalQueries,
+            0
+          ) / results.length,
+        averageQualityGrade: calculateAverageGrade(results.map((r) => r.summary.qualityGrade)),
         totalQueries: results.reduce((sum, r) => sum + r.summary.totalQueries, 0),
         totalSuccessfulQueries: results.reduce((sum, r) => sum + r.summary.successfulQueries, 0),
       },
-      benchmarkResults: results.map(r => ({
+      benchmarkResults: results.map((r) => ({
         benchmarkName: r.benchmarkName,
         runId: r.runId,
         timestamp: r.timestamp,
@@ -512,7 +526,7 @@ async function generateBenchmarkSummary(outputDir: string) {
         averageDuration: r.summary.averageDuration,
         averageRaceScore: r.summary.averageRaceScore,
         averageFactScore: r.summary.averageFactScore,
-      }))
+      })),
     };
 
     // Save summary
@@ -526,7 +540,6 @@ async function generateBenchmarkSummary(outputDir: string) {
 
     console.log(`📊 Summary saved to: ${summaryPath}`);
     console.log(`📄 Markdown report: ${markdownPath}`);
-
   } catch (error) {
     console.error('❌ Failed to generate summary:', error);
   }
@@ -534,8 +547,10 @@ async function generateBenchmarkSummary(outputDir: string) {
 
 function calculateAverageGrade(grades: string[]): string {
   const gradeValues = { A: 4, B: 3, C: 2, D: 1, F: 0 };
-  const average = grades.reduce((sum, grade) => sum + (gradeValues[grade as keyof typeof gradeValues] || 0), 0) / grades.length;
-  
+  const average =
+    grades.reduce((sum, grade) => sum + (gradeValues[grade as keyof typeof gradeValues] || 0), 0) /
+    grades.length;
+
   if (average >= 3.5) return 'A';
   if (average >= 2.5) return 'B';
   if (average >= 1.5) return 'C';
@@ -557,7 +572,9 @@ This directory contains benchmark results for the ElizaOS Research Plugin, demon
 
 ## Benchmark Results
 
-${summary.benchmarkResults.map((result: any) => `
+${summary.benchmarkResults
+  .map(
+    (result: any) => `
 ### ${result.benchmarkName}
 
 - **Run ID:** ${result.runId}
@@ -566,7 +583,9 @@ ${summary.benchmarkResults.map((result: any) => `
 - **Average Duration:** ${(result.averageDuration / 1000).toFixed(1)}s
 - **RACE Score:** ${result.averageRaceScore ? (result.averageRaceScore * 100).toFixed(1) + '%' : 'N/A'}
 - **FACT Score:** ${result.averageFactScore ? (result.averageFactScore * 100).toFixed(1) + '%' : 'N/A'}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 ## About the Benchmarks
 
@@ -639,7 +658,7 @@ npm run benchmark comprehensive ./my-results
 if (import.meta.url.startsWith('file:')) {
   const modulePath = new URL(import.meta.url).pathname;
   if (process.argv[1] === modulePath) {
-    main().catch(error => {
+    main().catch((error) => {
       console.error('❌ Script failed:', error);
       process.exit(1);
     });

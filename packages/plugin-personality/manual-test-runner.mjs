@@ -68,7 +68,6 @@ async function runManualTests() {
     const testModification = {
       bio: ['Expert in real-time system testing'],
       topics: ['system testing', 'runtime validation'],
-      adjectives: ['thorough', 'methodical']
     };
     
     const validation = fileManager.validateModification(testModification);

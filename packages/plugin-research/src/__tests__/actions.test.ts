@@ -28,9 +28,9 @@ function createTestRuntime(): IAgentRuntime {
       debug: () => {},
     },
   } as any;
-  
+
   const researchService = new ResearchService(mockRuntime);
-  
+
   return {
     agentId: uuidv4() as UUID,
     character: {
@@ -40,7 +40,6 @@ function createTestRuntime(): IAgentRuntime {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       clients: [],
       plugins: [],
@@ -96,17 +95,17 @@ describe('Research Actions - Real Implementation Tests', () => {
       content: { text: 'test' },
       createdAt: Date.now(),
     } as Memory;
-    
+
     // Test validation with service available
     const isValid = await startResearchAction.validate(runtime, message);
     expect(isValid).toBe(true);
-    
+
     // Test validation without service
     const runtimeNoService = { ...runtime, getService: () => null } as IAgentRuntime;
     const isInvalid = await startResearchAction.validate(runtimeNoService, message);
     expect(isInvalid).toBe(false);
   });
-  
+
   it('should handle research action correctly', async () => {
     const runtime = createTestRuntime();
     const message: Memory = {
@@ -117,13 +116,13 @@ describe('Research Actions - Real Implementation Tests', () => {
       content: { text: 'research quantum computing' },
       createdAt: Date.now(),
     } as Memory;
-    
+
     const responses: any[] = [];
     const callback = async (response: any) => {
       responses.push(response);
       return [];
     };
-    
+
     const result = await startResearchAction.handler(
       runtime,
       message,
@@ -131,8 +130,8 @@ describe('Research Actions - Real Implementation Tests', () => {
       {},
       callback
     );
-    
+
     // The handler should return something (even if research fails)
     expect(result).toBeDefined();
   });
-}); 
+});

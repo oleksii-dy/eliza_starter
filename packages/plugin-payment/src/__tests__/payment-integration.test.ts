@@ -17,9 +17,9 @@ describe('Payment System Integration', () => {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([]),
       insert: vi.fn().mockReturnThis(),
-      values: vi.fn().mockReturnThis(),
+      values: vi.fn().mockResolvedValue({}),
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
       execute: vi.fn().mockResolvedValue([]),
@@ -45,6 +45,7 @@ describe('Payment System Integration', () => {
           PAYMENT_REQUIRE_CONFIRMATION: 'false',
           PAYMENT_TRUST_THRESHOLD: '70',
           PAYMENT_MAX_DAILY_SPEND: '1000',
+          WALLET_ENCRYPTION_KEY: '0x' + '0'.repeat(64),
         };
         return settings[key];
       }),

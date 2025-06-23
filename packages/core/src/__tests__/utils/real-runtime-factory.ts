@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   // Required by IDatabaseAdapter interface
   db: any = {};
-  
+
   private data = {
     agents: new Map<UUID, any>(),
     memories: new Map<UUID, Memory>(),
@@ -75,10 +75,10 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     let filtered = memories;
 
     if (params.roomId) {
-      filtered = filtered.filter(m => m.roomId === params.roomId);
+      filtered = filtered.filter((m) => m.roomId === params.roomId);
     }
     if (params.entityId) {
-      filtered = filtered.filter(m => m.entityId === params.entityId);
+      filtered = filtered.filter((m) => m.entityId === params.entityId);
     }
 
     // Sort by creation time, most recent first
@@ -97,13 +97,13 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     let filtered = memories;
 
     if (params.roomId) {
-      filtered = filtered.filter(m => m.roomId === params.roomId);
+      filtered = filtered.filter((m) => m.roomId === params.roomId);
     }
 
     if (params.embedding && filtered.length > 0) {
       // Simulate similarity search by returning memories with embeddings
-      filtered = filtered.filter(m => m.embedding);
-      
+      filtered = filtered.filter((m) => m.embedding);
+
       // For testing, just return all matching memories
       filtered = filtered.slice(0, params.count || 10);
     }
@@ -140,24 +140,25 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
 
   async getEntitiesByIds(entityIds: UUID[]): Promise<any[]> {
     return entityIds
-      .map(id => this.data.entities.get(id))
-      .filter(entity => entity !== undefined);
+      .map((id) => this.data.entities.get(id))
+      .filter((entity) => entity !== undefined);
   }
 
   async getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<any[]> {
     const participants = Array.from(this.data.participants.values())
-      .filter(p => p.roomId === roomId)
-      .map(p => p.entityId);
-    
+      .filter((p) => p.roomId === roomId)
+      .map((p) => p.entityId);
+
     const entities = participants
-      .map(entityId => this.data.entities.get(entityId))
-      .filter(entity => entity !== undefined);
+      .map((entityId) => this.data.entities.get(entityId))
+      .filter((entity) => entity !== undefined);
 
     if (includeComponents) {
       // Add components to entities if requested
       for (const entity of entities) {
-        entity.components = Array.from(this.data.components.values())
-          .filter(c => c.entityId === entity.id);
+        entity.components = Array.from(this.data.components.values()).filter(
+          (c) => c.entityId === entity.id
+        );
       }
     }
 
@@ -185,7 +186,7 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   async getRooms(worldId?: UUID): Promise<any[]> {
     const rooms = Array.from(this.data.rooms.values());
     if (worldId) {
-      return rooms.filter(r => r.worldId === worldId);
+      return rooms.filter((r) => r.worldId === worldId);
     }
     return rooms;
   }
@@ -199,9 +200,7 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   }
 
   async getRoomsByIds(roomIds: UUID[]): Promise<any[]> {
-    return roomIds
-      .map(id => this.data.rooms.get(id))
-      .filter(room => room !== undefined);
+    return roomIds.map((id) => this.data.rooms.get(id)).filter((room) => room !== undefined);
   }
 
   async createRooms(rooms: any[]): Promise<any[]> {
@@ -228,7 +227,7 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   async getWorlds(options?: any): Promise<any[]> {
     const worlds = Array.from(this.data.worlds.values());
     if (options?.agentId) {
-      return worlds.filter(w => w.agentId === options.agentId);
+      return worlds.filter((w) => w.agentId === options.agentId);
     }
     return worlds;
   }
@@ -253,7 +252,7 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
 
   async getParticipantsForRoom(roomId: UUID): Promise<any[]> {
     const participants = Array.from(this.data.participants.values());
-    return participants.filter(p => p.roomId === roomId);
+    return participants.filter((p) => p.roomId === roomId);
   }
 
   async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
@@ -291,12 +290,10 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     let filtered = tasks;
 
     if (params.roomId) {
-      filtered = filtered.filter(t => t.roomId === params.roomId);
+      filtered = filtered.filter((t) => t.roomId === params.roomId);
     }
     if (params.tags && params.tags.length > 0) {
-      filtered = filtered.filter(t => 
-        params.tags.some((tag: string) => t.tags?.includes(tag))
-      );
+      filtered = filtered.filter((t) => params.tags.some((tag: string) => t.tags?.includes(tag)));
     }
 
     return filtered;
@@ -319,22 +316,31 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
     return true;
   }
 
-  async getComponent(entityId: UUID, type: string, worldId?: UUID, sourceEntityId?: UUID): Promise<any | null> {
+  async getComponent(
+    entityId: UUID,
+    type: string,
+    worldId?: UUID,
+    sourceEntityId?: UUID
+  ): Promise<any | null> {
     const components = Array.from(this.data.components.values());
-    return components.find(c => 
-      c.entityId === entityId && 
-      c.type === type &&
-      (!worldId || c.worldId === worldId) &&
-      (!sourceEntityId || c.sourceEntityId === sourceEntityId)
-    ) || null;
+    return (
+      components.find(
+        (c) =>
+          c.entityId === entityId &&
+          c.type === type &&
+          (!worldId || c.worldId === worldId) &&
+          (!sourceEntityId || c.sourceEntityId === sourceEntityId)
+      ) || null
+    );
   }
 
   async getComponents(entityId: UUID, worldId?: UUID, sourceEntityId?: UUID): Promise<any[]> {
     const components = Array.from(this.data.components.values());
-    return components.filter(c => 
-      c.entityId === entityId &&
-      (!worldId || c.worldId === worldId) &&
-      (!sourceEntityId || c.sourceEntityId === sourceEntityId)
+    return components.filter(
+      (c) =>
+        c.entityId === entityId &&
+        (!worldId || c.worldId === worldId) &&
+        (!sourceEntityId || c.sourceEntityId === sourceEntityId)
     );
   }
 
@@ -373,8 +379,8 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   async getRelationships(params: any): Promise<any[]> {
     const relationships = Array.from(this.data.relationships.values());
     if (params.entityId) {
-      return relationships.filter(r => 
-        r.sourceEntityId === params.entityId || r.targetEntityId === params.entityId
+      return relationships.filter(
+        (r) => r.sourceEntityId === params.entityId || r.targetEntityId === params.entityId
       );
     }
     return relationships;
@@ -385,29 +391,75 @@ class InMemoryDatabaseAdapter implements IDatabaseAdapter {
   }
 
   // Missing required methods
-  async runMigrations(): Promise<void> { return; }
-  async isReady(): Promise<boolean> { return true; }
-  async getConnection(): Promise<any> { return {}; }
-  async deleteAgent(agentId: UUID): Promise<boolean> { return true; }
-  async getMemoryById(id: UUID): Promise<any | null> { return null; }
-  async getMemoriesByIds(ids: UUID[]): Promise<any[]> { return []; }
-  async getMemoriesByRoomIds(params: any): Promise<any[]> { return []; }
-  async getCachedEmbeddings(params: any): Promise<any[]> { return []; }
-  async getLogs(params: any): Promise<any[]> { return []; }
-  async deleteLog(id: UUID): Promise<void> { return; }
-  async deleteManyMemories(ids: UUID[]): Promise<void> { return; }
-  async deleteAllMemories(roomId: UUID, tableName: string): Promise<void> { return; }
-  async countMemories(roomId: UUID): Promise<number> { return 0; }
-  async getAllWorlds(): Promise<any[]> { return []; }
-  async deleteRoomsByWorldId(worldId: UUID): Promise<void> { return; }
-  async getRoomsForParticipant(entityId: UUID): Promise<UUID[]> { return []; }
-  async getRoomsForParticipants(entityIds: UUID[]): Promise<UUID[]> { return []; }
-  async getRoomsByWorld(worldId: UUID): Promise<any[]> { return []; }
-  async getParticipantsForEntity(entityId: UUID): Promise<any[]> { return []; }
-  async getRelationship(params: any): Promise<any | null> { return null; }
-  async getTasksByName(name: string): Promise<any[]> { return []; }
-  async getMemoriesByWorldId(params: any): Promise<any[]> { return []; }
-  async ensureEmbeddingDimension(dimension: number): Promise<void> { return; }
+  async runMigrations(): Promise<void> {
+    return;
+  }
+  async isReady(): Promise<boolean> {
+    return true;
+  }
+  async getConnection(): Promise<any> {
+    return {};
+  }
+  async deleteAgent(agentId: UUID): Promise<boolean> {
+    return true;
+  }
+  async getMemoryById(id: UUID): Promise<any | null> {
+    return null;
+  }
+  async getMemoriesByIds(ids: UUID[]): Promise<any[]> {
+    return [];
+  }
+  async getMemoriesByRoomIds(params: any): Promise<any[]> {
+    return [];
+  }
+  async getCachedEmbeddings(params: any): Promise<any[]> {
+    return [];
+  }
+  async getLogs(params: any): Promise<any[]> {
+    return [];
+  }
+  async deleteLog(id: UUID): Promise<void> {
+    return;
+  }
+  async deleteManyMemories(ids: UUID[]): Promise<void> {
+    return;
+  }
+  async deleteAllMemories(roomId: UUID, tableName: string): Promise<void> {
+    return;
+  }
+  async countMemories(roomId: UUID): Promise<number> {
+    return 0;
+  }
+  async getAllWorlds(): Promise<any[]> {
+    return [];
+  }
+  async deleteRoomsByWorldId(worldId: UUID): Promise<void> {
+    return;
+  }
+  async getRoomsForParticipant(entityId: UUID): Promise<UUID[]> {
+    return [];
+  }
+  async getRoomsForParticipants(entityIds: UUID[]): Promise<UUID[]> {
+    return [];
+  }
+  async getRoomsByWorld(worldId: UUID): Promise<any[]> {
+    return [];
+  }
+  async getParticipantsForEntity(entityId: UUID): Promise<any[]> {
+    return [];
+  }
+  async getRelationship(params: any): Promise<any | null> {
+    return null;
+  }
+  async getTasksByName(name: string): Promise<any[]> {
+    return [];
+  }
+  async getMemoriesByWorldId(params: any): Promise<any[]> {
+    return [];
+  }
+  async ensureEmbeddingDimension(dimension: number): Promise<void> {
+    return;
+  }
 
   // Add any other missing methods that are required by the interface
   [key: string]: any;
@@ -423,7 +475,9 @@ export interface RealRuntimeOptions {
   settings?: Record<string, any>;
 }
 
-export async function createRealTestRuntime(options: RealRuntimeOptions = {}): Promise<IAgentRuntime> {
+export async function createRealTestRuntime(
+  options: RealRuntimeOptions = {}
+): Promise<IAgentRuntime> {
   const {
     plugins = [],
     enableLLM = false,
@@ -509,9 +563,8 @@ export async function createRealTestRuntime(options: RealRuntimeOptions = {}): P
     ],
     postExamples: ['Working on real runtime testing'],
     topics: ['testing', 'integration', 'runtime'],
-    adjectives: ['helpful', 'thorough', 'reliable'],
     knowledge: [],
-    plugins: plugins.map(p => p.name),
+    plugins: plugins.map((p) => p.name),
     settings: {
       enablePlanning,
       TEST_MODE: 'true',
@@ -538,7 +591,7 @@ export async function createRealTestRuntime(options: RealRuntimeOptions = {}): P
   });
 
   // Register core providers
-  coreProviders.forEach(provider => runtime.registerProvider(provider));
+  coreProviders.forEach((provider) => runtime.registerProvider(provider));
 
   // Initialize runtime first
   await runtime.initialize();
@@ -549,23 +602,21 @@ export async function createRealTestRuntime(options: RealRuntimeOptions = {}): P
     const mockEmbeddingHandler = async (runtime: any, params: any) => {
       const text = params?.text || '';
       const hash = text.split('').reduce((a: number, b: string) => {
-        a = ((a << 5) - a) + b.charCodeAt(0);
+        a = (a << 5) - a + b.charCodeAt(0);
         return a & a;
       }, 0);
-      
+
       // Generate 1536-dimensional embedding (OpenAI ada-002 format)
-      const embedding = new Array(1536).fill(0).map((_, i) => 
-        Math.sin(hash + i) * 0.1
-      );
-      
+      const embedding = new Array(1536).fill(0).map((_, i) => Math.sin(hash + i) * 0.1);
+
       return embedding;
     };
 
     // Register the embedding handler
-    (runtime as any).registerModel('TEXT_EMBEDDING', { 
-      handler: mockEmbeddingHandler, 
-      provider: 'test', 
-      priority: 100 
+    (runtime as any).registerModel('TEXT_EMBEDDING', {
+      handler: mockEmbeddingHandler,
+      provider: 'test',
+      priority: 100,
     });
 
     // Also override useModel as backup
@@ -575,16 +626,20 @@ export async function createRealTestRuntime(options: RealRuntimeOptions = {}): P
       if (modelType === 'TEXT_EMBEDDING') {
         return await mockEmbeddingHandler(runtime, params);
       }
-      
+
       // For testing, return predictable responses based on input
       if (modelType.includes('TEXT') || modelType.includes('REASONING')) {
         const prompt = params?.prompt || params?.text || '';
-        
+
         // Handle planning requests
         if (prompt.includes('plan') || prompt.includes('steps')) {
-          return '<plan><goal>Execute user request</goal><steps><step><id>' + uuidv4() + '</id><action>REPLY</action><parameters>{}</parameters></step></steps><executionModel>sequential</executionModel></plan>';
+          return (
+            '<plan><goal>Execute user request</goal><steps><step><id>' +
+            uuidv4() +
+            '</id><action>REPLY</action><parameters>{}</parameters></step></steps><executionModel>sequential</executionModel></plan>'
+          );
         }
-        
+
         // Handle fact extraction
         if (prompt.includes('facts') || prompt.includes('extract')) {
           return JSON.stringify([
@@ -592,117 +647,131 @@ export async function createRealTestRuntime(options: RealRuntimeOptions = {}): P
               type: 'fact',
               claim: 'Test fact extracted from conversation',
               already_known: false,
-            }
+            },
           ]);
         }
-        
+
         // Handle action chaining scenarios
-        if (prompt.includes('fetch and process user data') || prompt.includes('Please fetch and process user data')) {
+        if (
+          prompt.includes('fetch and process user data') ||
+          prompt.includes('Please fetch and process user data')
+        ) {
           return JSON.stringify({
             text: "I'll fetch and process the user data for you.",
-            thought: "The user wants me to fetch and process user data, I should start with fetching.",
-            actions: ["FETCH_USER_DATA", "PROCESS_USER_DATA", "SAVE_USER_PROFILE"]
+            thought:
+              'The user wants me to fetch and process user data, I should start with fetching.',
+            actions: ['FETCH_USER_DATA', 'PROCESS_USER_DATA', 'SAVE_USER_PROFILE'],
           });
         }
-        
+
         if (prompt.includes('Fetch user data please') || prompt.includes('fetch user')) {
           return JSON.stringify({
             text: "I'll fetch the user data now.",
-            thought: "The user wants me to fetch user data.",
-            actions: ["FETCH_USER_DATA"]
+            thought: 'The user wants me to fetch user data.',
+            actions: ['FETCH_USER_DATA'],
           });
         }
-        
-        if (prompt.includes('Process the fetched data') || prompt.includes('process') && prompt.includes('data')) {
+
+        if (
+          prompt.includes('Process the fetched data') ||
+          (prompt.includes('process') && prompt.includes('data'))
+        ) {
           return JSON.stringify({
             text: "I'll process the fetched data.",
-            thought: "The user wants me to process the previously fetched data.",
-            actions: ["PROCESS_USER_DATA"]
+            thought: 'The user wants me to process the previously fetched data.',
+            actions: ['PROCESS_USER_DATA'],
           });
         }
-        
+
         if (prompt.includes('Complete full workflow') || prompt.includes('Complete workflow')) {
           return JSON.stringify({
             text: "I'll complete the full workflow for you.",
-            thought: "The user wants the complete workflow executed.",
-            actions: ["FETCH_USER_DATA", "PROCESS_USER_DATA", "SAVE_USER_PROFILE", "SUMMARIZE_WORKFLOW"]
+            thought: 'The user wants the complete workflow executed.',
+            actions: [
+              'FETCH_USER_DATA',
+              'PROCESS_USER_DATA',
+              'SAVE_USER_PROFILE',
+              'SUMMARIZE_WORKFLOW',
+            ],
           });
         }
-        
+
         if (prompt.includes('Process and save user data')) {
           return JSON.stringify({
             text: "I'll process and save the user data.",
-            thought: "The user wants data processing and saving.",
-            actions: ["FETCH_USER_DATA", "PROCESS_USER_DATA", "SAVE_USER_PROFILE"]
+            thought: 'The user wants data processing and saving.',
+            actions: ['FETCH_USER_DATA', 'PROCESS_USER_DATA', 'SAVE_USER_PROFILE'],
           });
         }
-        
+
         if (prompt.includes('Complete workflow and cleanup')) {
           return JSON.stringify({
             text: "I'll complete the workflow and clean up.",
-            thought: "The user wants workflow completion with cleanup.",
-            actions: ["FETCH_USER_DATA", "PROCESS_USER_DATA", "SAVE_USER_PROFILE"]
+            thought: 'The user wants workflow completion with cleanup.',
+            actions: ['FETCH_USER_DATA', 'PROCESS_USER_DATA', 'SAVE_USER_PROFILE'],
           });
         }
-        
+
         if (prompt.includes('Execute chain with failure')) {
           return JSON.stringify({
             text: "I'll execute the chain including the failing action.",
-            thought: "The user wants to test failure handling.",
-            actions: ["FETCH_USER_DATA", "FAILING_CHAIN_ACTION", "PROCESS_USER_DATA"]
+            thought: 'The user wants to test failure handling.',
+            actions: ['FETCH_USER_DATA', 'FAILING_CHAIN_ACTION', 'PROCESS_USER_DATA'],
           });
         }
-        
+
         if (prompt.includes('Process data without fetching')) {
           return JSON.stringify({
             text: "I'll try to process data without fetching first.",
-            thought: "The user wants to test validation failure.",
-            actions: ["PROCESS_USER_DATA"]
+            thought: 'The user wants to test validation failure.',
+            actions: ['PROCESS_USER_DATA'],
           });
         }
-        
+
         // Handle action selection - return response that includes actions
         if (prompt.includes('favorite color is blue')) {
           return JSON.stringify({
             text: "I'll remember that your favorite color is blue.",
-            thought: "The user is telling me their favorite color preference, I should store this.",
-            actions: ["STORE_PREFERENCE"]
+            thought: 'The user is telling me their favorite color preference, I should store this.',
+            actions: ['STORE_PREFERENCE'],
           });
         }
-        
-        if ((prompt.includes('what') && prompt.includes('color')) || 
-            (prompt.includes('What is my favorite color'))) {
+
+        if (
+          (prompt.includes('what') && prompt.includes('color')) ||
+          prompt.includes('What is my favorite color')
+        ) {
           return JSON.stringify({
-            text: "Your favorite color is blue.",
-            thought: "The user is asking about their color preference, I should recall it.",
-            actions: ["RECALL_PREFERENCE"]
+            text: 'Your favorite color is blue.',
+            thought: 'The user is asking about their color preference, I should recall it.',
+            actions: ['RECALL_PREFERENCE'],
           });
         }
-        
+
         if (prompt.includes('prefer')) {
           return JSON.stringify({
             text: "I'll store that preference for you.",
-            thought: "The user is expressing a preference, I should store this.",
-            actions: ["STORE_PREFERENCE"]
+            thought: 'The user is expressing a preference, I should store this.',
+            actions: ['STORE_PREFERENCE'],
           });
         }
-        
+
         // Handle general text generation (fallback)
         if (prompt.toLowerCase().includes('blue')) {
           return 'Yes, you mentioned that your favorite color is blue.';
         }
-        
+
         return JSON.stringify({
           text: 'I understand your request and will help you accordingly.',
           thought: 'Responding to user message.',
-          actions: []
+          actions: [],
         });
       }
-      
+
       if (modelType === 'TEXT_EMBEDDING' || modelType.includes('EMBEDDING')) {
         return await mockEmbeddingHandler(runtime, params);
       }
-      
+
       // Fallback to original implementation for any other model types
       return originalUseModel(modelType, params);
     };
@@ -719,15 +788,18 @@ export async function createMemoryWithEmbedding(
   tableName = 'messages'
 ) {
   const embedding = await runtime.useModel('TEXT_EMBEDDING', { text: content.text });
-  
-  return await runtime.createMemory({
-    id: uuidv4() as UUID,
-    entityId,
-    roomId,
-    content,
-    embedding: Array.isArray(embedding) ? embedding : undefined,
-    createdAt: Date.now(),
-  }, tableName);
+
+  return await runtime.createMemory(
+    {
+      id: uuidv4() as UUID,
+      entityId,
+      roomId,
+      content,
+      embedding: Array.isArray(embedding) ? embedding : undefined,
+      createdAt: Date.now(),
+    },
+    tableName
+  );
 }
 
 export function createTestMessage(overrides: any = {}) {
@@ -754,26 +826,28 @@ export async function processMessageWithActions(
   message: Memory,
   callback?: (content: any) => Promise<Memory[]>
 ): Promise<{ responses: Memory[]; actionResults: any[] }> {
-  // 1. Create basic state context 
+  // 1. Create basic state context
   const character = runtime.character;
-  const bioText = Array.isArray(character.bio) ? character.bio.join('\n') : character.bio || 'Test character';
+  const bioText = Array.isArray(character.bio)
+    ? character.bio.join('\n')
+    : character.bio || 'Test character';
   const contextPrompt = `CHARACTER:\nName: ${character.name}\nBio: ${bioText}\nSystem: ${character.system}`;
-  
+
   // 2. Generate LLM response with context
   const agentName = character?.name || 'TestAgent';
   const messageText = message?.content?.text || 'test message';
   const prompt = `${contextPrompt}\n\nUser: ${messageText}\n\nRespond as ${agentName}:`;
-  
+
   const llmResponse = await runtime.useModel('TEXT_LARGE', {
     prompt,
     temperature: 0.7,
     maxTokens: 150,
   });
-  
-  // 3. Parse the LLM response 
+
+  // 3. Parse the LLM response
   let responseContent: any;
   let actions: string[] = [];
-  
+
   try {
     // Try to parse as JSON first (for structured responses)
     responseContent = JSON.parse(llmResponse);
@@ -785,15 +859,15 @@ export async function processMessageWithActions(
       thought: 'Generated response',
       actions: [],
     };
-    
+
     // Try to extract actions from text patterns
     const actionMatches = llmResponse.match(/\[([\w_]+)\]/g);
     if (actionMatches) {
-      actions = actionMatches.map(match => match.slice(1, -1));
+      actions = actionMatches.map((match) => match.slice(1, -1));
       responseContent.actions = actions;
     }
   }
-  
+
   // 4. Create response memory with actions
   const responseMemory: Memory = {
     id: uuidv4() as UUID,
@@ -803,14 +877,14 @@ export async function processMessageWithActions(
     content: responseContent,
     createdAt: Date.now(),
   };
-  
+
   const responses = [responseMemory];
-  
+
   // 5. Execute callback if provided
   if (callback) {
     await callback(responseContent);
   }
-  
+
   // 6. Process actions if any were found
   const actionResults: any[] = [];
   if (actions.length > 0) {
@@ -821,13 +895,13 @@ export async function processMessageWithActions(
         data: {},
         text: contextPrompt,
       };
-      
+
       await runtime.processActions(message, responses, basicState, callback);
       actionResults.push({ success: true, actions });
     } catch (error) {
       actionResults.push({ success: false, error: (error as Error).message, actions });
     }
   }
-  
+
   return { responses, actionResults };
 }

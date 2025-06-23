@@ -6,32 +6,32 @@ import * as fs from 'node:fs';
 // Mock dependencies
 mock.module('@elizaos/core', () => ({
   logger: {
-    info: vi.fn(),
-    success: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
+    info: mock(() => {}),
+    success: mock(() => {}),
+    error: mock(() => {}),
+    warn: mock(() => {}),
+    debug: mock(() => {}),
   },
 }));
 
-vi.mock('execa', () => ({
-  execa: vi.fn(),
+mock.module('execa', () => ({
+  execa: mock(() => {}),
 }));
 
-vi.mock('../../../src/utils/run-bun', () => ({
-  runBunCommand: vi.fn(),
+mock.module('../../../src/utils/run-bun', () => ({
+  runBunCommand: mock(() => {}),
 }));
 
-vi.mock('node:fs', () => ({
-  existsSync: vi.fn(),
-  readFileSync: vi.fn(),
+mock.module('node:fs', () => ({
+  existsSync: mock(() => true),
+  readFileSync: mock(() => '{}'),
   promises: {
-    rm: vi.fn(),
+    rm: mock(() => {}),
   },
 }));
 
-vi.mock('../../../src/utils/directory-detection', () => ({
-  detectDirectoryType: vi.fn().mockReturnValue({ monorepoRoot: null }),
+mock.module('../../../src/utils/directory-detection', () => ({
+  detectDirectoryType: mock(() => ({ monorepoRoot: null })),
 }));
 
 // Import mocked modules
@@ -39,19 +39,22 @@ import { runBunCommand } from '../../../src/utils/run-bun';
 
 describe('buildProject', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     // Mock process.env to not be in test mode
     delete process.env.ELIZA_TEST_MODE;
   });
 
   it('should build project with bun when build script exists', async () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(fs.readFileSync).mockReturnValue(
+    const mockExistsSync = fs.existsSync as any;
+    const mockReadFileSync = fs.readFileSync as any;
+    const mockRunBunCommand = runBunCommand as any;
+    
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue(
       JSON.stringify({
         scripts: { build: 'tsc' },
       })
     );
-    vi.mocked(runBunCommand).mockResolvedValue(undefined);
+    mockRunBunCommand.mockResolvedValue(undefined);
 
     await buildProject('/test/project');
 
@@ -61,13 +64,17 @@ describe('buildProject', () => {
   });
 
   it('should build plugin with bun when isPlugin is true', async () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(fs.readFileSync).mockReturnValue(
+    const mockExistsSync = fs.existsSync as any;
+    const mockReadFileSync = fs.readFileSync as any;
+    const mockRunBunCommand = runBunCommand as any;
+    
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue(
       JSON.stringify({
         scripts: { build: 'tsc' },
       })
     );
-    vi.mocked(runBunCommand).mockResolvedValue(undefined);
+    mockRunBunCommand.mockResolvedValue(undefined);
 
     await buildProject('/test/plugin', true);
 
@@ -77,7 +84,10 @@ describe('buildProject', () => {
   });
 
   it('should skip build when no build script exists', async () => {
-    (fs.existsSync as any).mockImplementation((path: any) => {
+    const mockExistsSync = fs.existsSync as any;
+    const mockReadFileSync = fs.readFileSync as any;
+    
+    mockExistsSync.mockImplementation((path: any) => {
       const pathStr = path.toString();
       if (pathStr === '/test/project') return true; // Project directory exists
       if (pathStr.endsWith('package.json')) return true;
@@ -85,7 +95,7 @@ describe('buildProject', () => {
       if (pathStr.endsWith('dist')) return false;
       return false;
     });
-    vi.mocked(fs.readFileSync).mockReturnValue(
+    mockReadFileSync.mockReturnValue(
       JSON.stringify({
         scripts: {},
       })
@@ -102,13 +112,17 @@ describe('buildProject', () => {
 
   it('should handle build errors', async () => {
     const mockError = new Error('Build failed');
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(fs.readFileSync).mockReturnValue(
+    const mockExistsSync = fs.existsSync as any;
+    const mockReadFileSync = fs.readFileSync as any;
+    const mockRunBunCommand = runBunCommand as any;
+    
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue(
       JSON.stringify({
         scripts: { build: 'tsc' },
       })
     );
-    vi.mocked(runBunCommand).mockRejectedValue(mockError);
+    mockRunBunCommand.mockRejectedValue(mockError);
 
     await expect(buildProject('/test/project')).rejects.toThrow(
       'Failed to build using bun: Error: Build failed'
@@ -121,13 +135,17 @@ describe('buildProject', () => {
 
   it('should handle non-zero exit code', async () => {
     const mockError = new Error('Command failed with exit code 1');
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(fs.readFileSync).mockReturnValue(
+    const mockExistsSync = fs.existsSync as any;
+    const mockReadFileSync = fs.readFileSync as any;
+    const mockRunBunCommand = runBunCommand as any;
+    
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue(
       JSON.stringify({
         scripts: { build: 'tsc' },
       })
     );
-    vi.mocked(runBunCommand).mockRejectedValue(mockError);
+    mockRunBunCommand.mockRejectedValue(mockError);
 
     await expect(buildProject('/test/project')).rejects.toThrow(
       'Failed to build using bun: Error: Command failed with exit code 1'
@@ -141,13 +159,17 @@ describe('buildProject', () => {
   });
 
   it('should pass projectPath correctly', async () => {
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(fs.readFileSync).mockReturnValue(
+    const mockExistsSync = fs.existsSync as any;
+    const mockReadFileSync = fs.readFileSync as any;
+    const mockRunBunCommand = runBunCommand as any;
+    
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue(
       JSON.stringify({
         scripts: { build: 'tsc' },
       })
     );
-    vi.mocked(runBunCommand).mockResolvedValue(undefined);
+    mockRunBunCommand.mockResolvedValue(undefined);
 
     const testPath = '/custom/project/path';
     await buildProject(testPath);

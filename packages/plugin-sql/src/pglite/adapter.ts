@@ -33,6 +33,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
   private migrator: UnifiedMigrator | null = null;
   private dataDir: string;
   private migrationsComplete: boolean = false;
+  private isClosed: boolean = false;
 
   /**
    * Constructor for creating an instance of a class.
@@ -52,8 +53,8 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
     // This ensures schema objects are properly initialized
     setDatabaseType('pglite');
 
-    // Now create the drizzle instance with the schema
-    this.db = drizzle(this.manager.getConnection() as any, { schema });
+    // Initialize db as null - will be set when manager is initialized
+    this.db = null as any;
 
     // Register this adapter in the connection registry
     connectionRegistry.registerAdapter(agentId, this);
@@ -100,11 +101,26 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
    * @returns {Promise<T>} A promise that resolves with the result of the database operation.
    */
   protected async withDatabase<T>(operation: () => Promise<T>): Promise<T> {
+    if (this.isClosed) {
+      throw new Error('Adapter is closed');
+    }
+    
     if (this.manager.isShuttingDown()) {
       logger.warn('Database is shutting down, operation may fail');
       // Still execute the operation to maintain type contract
       // The operation itself should handle any errors appropriately
     }
+    
+    // Ensure db is initialized
+    if (!this.db) {
+      try {
+        const connection = this.manager.getConnection();
+        this.db = drizzle(connection as any, { schema });
+      } catch (error) {
+        // Manager not initialized yet, operation will fail appropriately
+      }
+    }
+    
     return operation();
   }
 
@@ -117,10 +133,21 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
     logger.info('PgliteDatabaseAdapter: Initializing');
     logger.debug(`Adapter init() called for agent ${this.agentId}`);
     logger.debug(`Migrations complete flag:`, this.migrationsComplete);
-    logger.debug(`Database connection status:`, !!this.manager.getConnection());
+    // Don't check connection status yet - manager might not be initialized
+
+    // If already initialized and migrations complete, skip
+    if (this.migrationsComplete) {
+      logger.info('PgliteDatabaseAdapter: Already initialized, skipping');
+      return;
+    }
 
     // Always ensure the manager is properly initialized first
     await this.manager.initialize();
+    
+    // Now create the drizzle instance with the schema after manager is initialized
+    if (!this.db) {
+      this.db = drizzle(this.manager.getConnection() as any, { schema });
+    }
 
     // Always verify tables exist AND are ready for transactions, regardless of migration flag
     // The migration flag can be stale if adapter was created but not properly verified
@@ -198,6 +225,11 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
    */
   async isReady(): Promise<boolean> {
     try {
+      // Check if adapter has been closed
+      if (this.isClosed) {
+        return false;
+      }
+      
       if (this.manager.isShuttingDown()) {
         return false;
       }
@@ -228,6 +260,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
    * Asynchronously closes the database.
    */
   async close() {
+    this.isClosed = true;
     await this.manager.close();
   }
 

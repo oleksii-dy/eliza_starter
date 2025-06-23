@@ -52,7 +52,7 @@ global.console = {
 
 // Setup test environment variables
 process.env.NODE_ENV = 'test';
-process.env.CUSTOM_REASONING_ENABLED = 'true';
+process.env.REASONING_SERVICE_ENABLED = 'true';
 process.env.TOGETHER_AI_API_KEY = 'test-together-api-key';
 
 // Clean up after each test

@@ -1,4 +1,4 @@
-import { describe, expect, it, spyOn, beforeAll, afterAll } from 'bun:test';
+import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { logger, IAgentRuntime, Plugin } from '@elizaos/core';
@@ -9,10 +9,10 @@ import * as os from 'node:os';
 
 // Set up spies on logger
 beforeAll(() => {
-  spyOn(logger, 'info');
-  spyOn(logger, 'error');
-  spyOn(logger, 'warn');
-  spyOn(logger, 'debug');
+  vi.spyOn(logger, 'info');
+  vi.spyOn(logger, 'error');
+  vi.spyOn(logger, 'warn');
+  vi.spyOn(logger, 'debug');
 });
 
 afterAll(() => {

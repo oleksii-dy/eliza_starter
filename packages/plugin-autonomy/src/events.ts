@@ -380,7 +380,7 @@ const messageReceivedHandler = async ({
         if (!shouldSkipShouldRespond) {
           const shouldRespondPrompt = composePromptFromState({
             state,
-            template: runtime.character.templates?.shouldRespondTemplate || shouldRespondTemplate,
+            template: shouldRespondTemplate,
           });
 
           logger.debug(
@@ -428,7 +428,7 @@ const messageReceivedHandler = async ({
 
           const prompt = composePromptFromState({
             state,
-            template: runtime.character.templates?.messageHandlerTemplate || messageHandlerTemplate,
+            template: messageHandlerTemplate,
           });
 
           let responseContent: Content | null = null;
@@ -806,7 +806,7 @@ const postGeneratedHandler = async ({
 
   const prompt = composePromptFromState({
     state,
-    template: runtime.character.templates?.messageHandlerTemplate || messageHandlerTemplate,
+    template: messageHandlerTemplate,
   });
 
   let responseContent: Content | null = null;
@@ -853,7 +853,7 @@ const postGeneratedHandler = async ({
   // Generate prompt for tweet content
   const postPrompt = composePromptFromState({
     state,
-    template: runtime.character.templates?.postCreationTemplate || postCreationTemplate,
+    template: postCreationTemplate,
   });
 
   // Use TEXT_LARGE model as we expect structured XML text, not a JSON object

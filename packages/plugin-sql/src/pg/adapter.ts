@@ -75,8 +75,10 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
    * @returns {Promise<T>} A promise that resolves with the result of the operation.
    */
   protected async withDatabase<T>(operation: () => Promise<T>): Promise<T> {
-    // Ensure tables exist before any operation
-    await this.ensureTables();
+    // Only ensure tables if not already initialized
+    if (!this.initialized) {
+      await this.ensureTables();
+    }
 
     return await this.withRetry(async () => {
       const client = await this.manager.getClient();
@@ -100,6 +102,12 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
   async init(): Promise<void> {
     logger.info('PgDatabaseAdapter: Initializing');
 
+    // If already initialized and migrations complete, skip
+    if (this.migrationsComplete && this.initialized) {
+      logger.info('PgDatabaseAdapter: Already initialized, skipping');
+      return;
+    }
+
     // Run migrations if not already complete
     if (!this.migrationsComplete) {
       await this.runMigrations();
@@ -107,12 +115,13 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter {
 
     // Ensure pgvector extension exists
     try {
-      await this.db.execute('CREATE EXTENSION IF NOT EXISTS vector');
+      await this.db.execute(sql`CREATE EXTENSION IF NOT EXISTS vector`);
       logger.info('PgDatabaseAdapter: pgvector extension ensured');
     } catch (error) {
       logger.warn('PgDatabaseAdapter: Could not create vector extension:', error);
     }
 
+    this.initialized = true;
     logger.info('PgDatabaseAdapter: Initialization complete');
   }
 

@@ -6,7 +6,7 @@ export function trainModelCommand(program: Command) {
   program
     .command('train-model')
     .description('Start fine-tuning on Together.ai')
-    .requiredOption('-k, --api-key <key>', 'Together.ai API key (or set TOGETHER_AI_API_KEY)')
+    .option('-k, --api-key <key>', 'Together.ai API key (or set TOGETHER_AI_API_KEY)')
     .requiredOption('-m, --model <model>', 'Base model to fine-tune')
     .requiredOption('-f, --file <path>', 'JSONL dataset file')
     .option('-s, --suffix <suffix>', 'Model suffix')
@@ -34,38 +34,92 @@ export function trainModelCommand(program: Command) {
         const client = new TogetherAIClient(apiKey);
 
         elizaLogger.info('📤 Uploading dataset to Together.ai...');
-        const fileId = await client.uploadDataset(options.file);
-        elizaLogger.info(`✅ Dataset uploaded: ${fileId}`);
+        
+        // Use Together.ai CLI for file upload since it works reliably
+        const { execSync } = await import('child_process');
+        
+        try {
+          const uploadResult = execSync(
+            `TOGETHER_API_KEY="${apiKey}" together files upload "${options.file}" --purpose fine-tune`,
+            { encoding: 'utf8' }
+          );
+          
+          const uploadData = JSON.parse(uploadResult);
+          const fileId = uploadData.id;
+          elizaLogger.info(`✅ Dataset uploaded: ${fileId}`);
 
-        elizaLogger.info('🚀 Starting fine-tuning job...');
-        const job = await client.startFineTuning(
-          {
-            apiKey,
-            baseModel: options.model,
-            suffix: options.suffix,
-            epochs,
-            learningRate,
-            batchSize,
-          },
-          fileId
-        );
+          elizaLogger.info('🚀 Starting fine-tuning job...');
+          
+          // Use Together.ai CLI for fine-tuning since it works reliably
+          const suffix = options.suffix || `eliza-${Date.now()}`;
+          const fineTuneResult = execSync(
+            `TOGETHER_API_KEY="${apiKey}" together fine-tuning create --training-file "${fileId}" --model "${options.model}" --suffix "${suffix}" --n-epochs ${epochs} --learning-rate ${learningRate} --batch-size ${batchSize} --confirm`,
+            { encoding: 'utf8' }
+          );
+          
+          // Extract job ID from the output
+          const jobIdMatch = fineTuneResult.match(/job (\S+) at/);
+          if (!jobIdMatch) {
+            throw new Error('Could not extract job ID from Together.ai response');
+          }
+          
+          const jobId = jobIdMatch[1];
+          elizaLogger.info(`✅ Fine-tuning job started: ${jobId}`);
+          elizaLogger.info(`📊 Base model: ${options.model}`);
+          elizaLogger.info(`📊 Status: queued`);
 
-        elizaLogger.info(`✅ Fine-tuning job started: ${job.id}`);
-        elizaLogger.info(`📊 Base model: ${job.model}`);
-        elizaLogger.info(`📊 Status: ${job.status}`);
-        elizaLogger.info(`📊 Created: ${job.createdAt.toISOString()}`);
-
-        if (options.monitor) {
-          elizaLogger.info('\n🔍 Monitoring training progress...');
-          await monitorJob(client, job.id);
-        } else {
-          elizaLogger.info(`\n💡 To monitor progress, run: eliza-training test-model --job-id ${job.id} --api-key ${apiKey}`);
+          if (options.monitor) {
+            elizaLogger.info('\n🔍 Monitoring training progress...');
+            await monitorJobCLI(apiKey, jobId);
+          } else {
+            elizaLogger.info(`\n💡 To monitor progress, run: eliza-training test-model --job-id ${jobId} --api-key ${apiKey}`);
+          }
+        } catch (uploadError) {
+          elizaLogger.error('❌ Upload failed:', uploadError instanceof Error ? uploadError.message : String(uploadError));
+          process.exit(1);
         }
       } catch (error) {
         elizaLogger.error('❌ Error starting training:', error instanceof Error ? error.message : String(error));
         process.exit(1);
       }
     });
+}
+
+async function monitorJobCLI(apiKey: string, jobId: string): Promise<void> {
+  let lastStatus = '';
+  const { execSync } = await import('child_process');
+  
+  while (true) {
+    try {
+      const statusResult = execSync(
+        `TOGETHER_API_KEY="${apiKey}" together fine-tuning retrieve ${jobId}`,
+        { encoding: 'utf8' }
+      );
+      
+      const jobData = JSON.parse(statusResult);
+      
+      if (jobData.status !== lastStatus) {
+        elizaLogger.info(`📊 Status: ${jobData.status}`);
+        lastStatus = jobData.status;
+        
+        if (jobData.status === 'completed') {
+          elizaLogger.info(`🎉 Training completed! Fine-tuned model: ${jobData.output_name}`);
+          break;
+        } else if (jobData.status === 'failed') {
+          elizaLogger.error('❌ Training failed');
+          break;
+        } else if (jobData.status === 'running') {
+          elizaLogger.info(`⚡ Training progress: ${jobData.steps_completed}/${jobData.total_steps} steps`);
+        }
+      }
+      
+      // Wait 30 seconds before checking again
+      await new Promise(resolve => setTimeout(resolve, 30000));
+    } catch (error) {
+      elizaLogger.error('❌ Error monitoring job:', error instanceof Error ? error.message : String(error));
+      break;
+    }
+  }
 }
 
 async function monitorJob(client: TogetherAIClient, jobId: string): Promise<void> {

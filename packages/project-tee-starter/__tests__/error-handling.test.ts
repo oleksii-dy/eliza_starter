@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect } from "vitest";
 import teeStarterPlugin from '../src/plugin';
 import { mrTeeCharacter } from '../src/character';
 

@@ -1,20 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { 
+import {
   RealRuntimeTestHarness,
   createTestRuntime,
   runIntegrationTest,
   TestModelProvider,
-  scenarios
+  scenarios,
 } from '../../test-utils';
 import { stringToUuid } from '../../utils';
 import type { IAgentRuntime, Character, Plugin, Memory, UUID, ActionResult } from '../../types';
 
 /**
  * REAL RUNTIME INTEGRATION TESTS
- * 
+ *
  * This file demonstrates the new real runtime testing approach that replaces
  * mock-based testing with actual agent runtime validation.
- * 
+ *
  * Key differences from mock testing:
  * - Uses real AgentRuntime instances
  * - Tests actual functionality, not mock calls
@@ -43,7 +43,6 @@ describe('Real Runtime Integration Testing Examples', () => {
           messageExamples: [],
           postExamples: [],
           topics: ['testing', 'validation'],
-          adjectives: ['helpful', 'reliable'],
           knowledge: [],
           plugins: [],
         },
@@ -56,16 +55,19 @@ describe('Real Runtime Integration Testing Examples', () => {
       // Validate runtime is actually functional
       expect(runtime.agentId).toBeDefined();
       expect(runtime.character.name).toBe('TestAgent');
-      
+
       // Test real database functionality
-      const memory = await runtime.createMemory({
-        entityId: stringToUuid('test-user'),
-        roomId: stringToUuid('test-room'),
-        content: {
-          text: 'Test message',
-          source: 'test',
+      const memory = await runtime.createMemory(
+        {
+          entityId: stringToUuid('test-user'),
+          roomId: stringToUuid('test-room'),
+          content: {
+            text: 'Test message',
+            source: 'test',
+          },
         },
-      }, 'messages');
+        'messages'
+      );
 
       expect(memory).toBeDefined();
 
@@ -82,7 +84,7 @@ describe('Real Runtime Integration Testing Examples', () => {
 
     it('should validate runtime health comprehensively', async () => {
       harness = new RealRuntimeTestHarness();
-      
+
       const runtime = await harness.createTestRuntime({
         character: {
           name: 'HealthTestAgent',
@@ -91,7 +93,6 @@ describe('Real Runtime Integration Testing Examples', () => {
           messageExamples: [],
           postExamples: [],
           topics: [],
-          adjectives: [],
           knowledge: [],
           plugins: [],
         },
@@ -111,14 +112,6 @@ describe('Real Runtime Integration Testing Examples', () => {
     it('should process messages with realistic AI responses', async () => {
       harness = new RealRuntimeTestHarness();
 
-      // Create realistic model provider with intelligent responses
-      const modelProvider = scenarios()
-        .addGreeting('Hello! I\'m here to help you today.')
-        .addTaskCreation('I\'ll create that task right away.')
-        .addSearch('Let me search for that information.')
-        .addCustom(/weather/i, 'I\'ll check the weather for you.')
-        .build();
-
       const runtime = await harness.createTestRuntime({
         character: {
           name: 'SmartAgent',
@@ -132,7 +125,6 @@ describe('Real Runtime Integration Testing Examples', () => {
           ],
           postExamples: [],
           topics: ['general', 'assistance'],
-          adjectives: ['smart', 'helpful'],
           knowledge: [],
           plugins: [],
         },
@@ -141,15 +133,11 @@ describe('Real Runtime Integration Testing Examples', () => {
       });
 
       // Test greeting response
-      const greetingResult = await harness.processTestMessage(
-        runtime,
-        'Hello there!',
-        {
-          roomId: 'test-room-1',
-          entityId: 'test-user-1',
-          timeoutMs: 5000,
-        }
-      );
+      const greetingResult = await harness.processTestMessage(runtime, 'Hello there!', {
+        roomId: 'test-room-1',
+        entityId: 'test-user-1',
+        timeoutMs: 5000,
+      });
 
       expect(greetingResult.passed).toBe(true);
       expect(greetingResult.errors).toHaveLength(0);
@@ -179,38 +167,47 @@ describe('Real Runtime Integration Testing Examples', () => {
           const userId = stringToUuid('test-user');
 
           // First message: greeting
-          const greeting = await runtime.createMemory({
-            entityId: userId,
-            roomId,
-            content: {
-              text: 'Hi, I need help with planning my day',
-              source: 'user',
+          const greeting = await runtime.createMemory(
+            {
+              entityId: userId,
+              roomId,
+              content: {
+                text: 'Hi, I need help with planning my day',
+                source: 'user',
+              },
             },
-          }, 'messages');
+            'messages'
+          );
 
           expect(greeting).toBeDefined();
 
           // Simulate processing and response
-          const response1 = await runtime.createMemory({
-            entityId: runtime.agentId,
-            roomId,
-            content: {
-              text: 'I\'d be happy to help you plan your day! What would you like to focus on?',
-              source: 'agent',
+          const response1 = await runtime.createMemory(
+            {
+              entityId: runtime.agentId,
+              roomId,
+              content: {
+                text: "I'd be happy to help you plan your day! What would you like to focus on?",
+                source: 'agent',
+              },
             },
-          }, 'messages');
+            'messages'
+          );
 
           expect(response1).toBeDefined();
 
           // Second message: specific request
-          const request = await runtime.createMemory({
-            entityId: userId,
-            roomId,
-            content: {
-              text: 'I need to schedule meetings and prepare a presentation',
-              source: 'user',
+          const request = await runtime.createMemory(
+            {
+              entityId: userId,
+              roomId,
+              content: {
+                text: 'I need to schedule meetings and prepare a presentation',
+                source: 'user',
+              },
             },
-          }, 'messages');
+            'messages'
+          );
 
           expect(request).toBeDefined();
 
@@ -222,8 +219,8 @@ describe('Real Runtime Integration Testing Examples', () => {
           });
 
           expect(memories.length).toBe(3);
-          expect(memories.some(m => m.content.text?.includes('planning'))).toBe(true);
-          expect(memories.some(m => m.content.text?.includes('meetings'))).toBe(true);
+          expect(memories.some((m) => m.content.text?.includes('planning'))).toBe(true);
+          expect(memories.some((m) => m.content.text?.includes('meetings'))).toBe(true);
         },
         {
           character: {
@@ -233,7 +230,6 @@ describe('Real Runtime Integration Testing Examples', () => {
             messageExamples: [],
             postExamples: [],
             topics: ['planning', 'scheduling', 'productivity'],
-            adjectives: ['organized', 'efficient', 'helpful'],
             knowledge: [],
             plugins: [],
           },
@@ -273,12 +269,12 @@ describe('Real Runtime Integration Testing Examples', () => {
             examples: [
               [
                 { name: 'User', content: { text: 'run test' } },
-                { 
-                  name: 'Agent', 
-                  content: { 
+                {
+                  name: 'Agent',
+                  content: {
                     text: 'Test action executed successfully',
                     actions: ['TEST_ACTION'],
-                  } 
+                  },
                 },
               ],
             ],
@@ -301,22 +297,22 @@ describe('Real Runtime Integration Testing Examples', () => {
         async (runtime) => {
           // Verify plugin is loaded
           expect(runtime.plugins).toContain(testPlugin);
-          
+
           // Verify actions are registered
-          const testAction = runtime.actions.find(a => a.name === 'TEST_ACTION');
+          const testAction = runtime.actions.find((a) => a.name === 'TEST_ACTION');
           expect(testAction).toBeDefined();
-          
+
           // Verify providers are registered
-          const testProvider = runtime.providers.find(p => p.name === 'TEST_PROVIDER');
+          const testProvider = runtime.providers.find((p) => p.name === 'TEST_PROVIDER');
           expect(testProvider).toBeDefined();
-          
+
           // Test provider functionality
           if (testProvider) {
             const providerResult = await testProvider.get(runtime, {} as any, {} as any);
             expect(providerResult.text).toBe('Test provider context');
             expect(providerResult.values?.testFlag).toBe(true);
           }
-          
+
           // Test action execution
           if (testAction) {
             const callbackResults: any[] = [];
@@ -365,7 +361,6 @@ describe('Real Runtime Integration Testing Examples', () => {
             messageExamples: [],
             postExamples: [],
             topics: [],
-            adjectives: [],
             knowledge: [],
             plugins: [],
           },
@@ -374,19 +369,14 @@ describe('Real Runtime Integration Testing Examples', () => {
         });
 
         // Test error handling in message processing
-        const result = await harness.processTestMessage(
-          runtime,
-          'This might cause an error',
-          {
-            timeoutMs: 1000, // Short timeout to test timeout handling
-          }
-        );
+        const result = await harness.processTestMessage(runtime, 'This might cause an error', {
+          timeoutMs: 1000, // Short timeout to test timeout handling
+        });
 
         // Even if there are errors, the test framework should handle them gracefully
         expect(result).toBeDefined();
         expect(typeof result.passed).toBe('boolean');
         expect(Array.isArray(result.errors)).toBe(true);
-
       } catch (error) {
         // Error during setup is expected for invalid configuration
         expect(error).toBeDefined();
@@ -400,18 +390,24 @@ describe('Real Runtime Integration Testing Examples', () => {
 
       try {
         // Add data to first runtime
-        await runtime1.createMemory({
-          entityId: stringToUuid('user1'),
-          roomId: stringToUuid('room1'),
-          content: { text: 'Message in runtime 1', source: 'test' },
-        }, 'messages');
+        await runtime1.createMemory(
+          {
+            entityId: stringToUuid('user1'),
+            roomId: stringToUuid('room1'),
+            content: { text: 'Message in runtime 1', source: 'test' },
+          },
+          'messages'
+        );
 
         // Add different data to second runtime
-        await runtime2.createMemory({
-          entityId: stringToUuid('user2'),
-          roomId: stringToUuid('room2'),
-          content: { text: 'Message in runtime 2', source: 'test' },
-        }, 'messages');
+        await runtime2.createMemory(
+          {
+            entityId: stringToUuid('user2'),
+            roomId: stringToUuid('room2'),
+            content: { text: 'Message in runtime 2', source: 'test' },
+          },
+          'messages'
+        );
 
         // Verify isolation - runtime1 should not see runtime2's data
         const runtime1Memories = await runtime1.getMemories({
@@ -444,7 +440,6 @@ describe('Real Runtime Integration Testing Examples', () => {
 
         expect(runtime1OwnMemories).toHaveLength(1);
         expect(runtime2OwnMemories).toHaveLength(1);
-
       } finally {
         await harness1.cleanup();
         await harness2.cleanup();
@@ -468,7 +463,6 @@ describe('Real Runtime Integration Testing Examples', () => {
             messageExamples: [],
             postExamples: [],
             topics: [],
-            adjectives: [],
             knowledge: [],
             plugins: [],
           },
@@ -477,11 +471,7 @@ describe('Real Runtime Integration Testing Examples', () => {
         });
 
         // Process some messages
-        await harness.processTestMessage(
-          runtime,
-          `Test message ${i}`,
-          { timeoutMs: 2000 }
-        );
+        await harness.processTestMessage(runtime, `Test message ${i}`, { timeoutMs: 2000 });
       }
 
       const midMemory = process.memoryUsage().heapUsed;
@@ -496,20 +486,22 @@ describe('Real Runtime Integration Testing Examples', () => {
       }
 
       // Give time for cleanup to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const endMemory = process.memoryUsage().heapUsed;
 
       // Verify memory is managed properly
       expect(memoryIncrease).toBeGreaterThan(0); // Should use some memory
-      
+
       // Note: We can't reliably test memory reduction due to GC timing
       // Just verify cleanup completed without errors
       expect(harness).toBeDefined();
 
-      console.log(`Memory usage: Start: ${Math.round(startMemory / 1024 / 1024)}MB, ` +
-                  `Mid: ${Math.round(midMemory / 1024 / 1024)}MB, ` +
-                  `End: ${Math.round(endMemory / 1024 / 1024)}MB`);
+      console.log(
+        `Memory usage: Start: ${Math.round(startMemory / 1024 / 1024)}MB, ` +
+          `Mid: ${Math.round(midMemory / 1024 / 1024)}MB, ` +
+          `End: ${Math.round(endMemory / 1024 / 1024)}MB`
+      );
     });
 
     it('should handle concurrent operations', async () => {
@@ -520,15 +512,11 @@ describe('Real Runtime Integration Testing Examples', () => {
       const promises = [];
       for (let i = 0; i < 5; i++) {
         promises.push(
-          harness.processTestMessage(
-            runtime,
-            `Concurrent message ${i}`,
-            {
-              roomId: `room-${i}`,
-              entityId: `user-${i}`,
-              timeoutMs: 3000,
-            }
-          )
+          harness.processTestMessage(runtime, `Concurrent message ${i}`, {
+            roomId: `room-${i}`,
+            entityId: `user-${i}`,
+            timeoutMs: 3000,
+          })
         );
       }
 
@@ -545,7 +533,7 @@ describe('Real Runtime Integration Testing Examples', () => {
 
 /**
  * COMPARISON: Mock vs Real Runtime Testing
- * 
+ *
  * This section demonstrates the difference between mock-based and real runtime testing
  */
 describe('Mock vs Real Runtime Comparison', () => {
@@ -567,32 +555,32 @@ describe('Mock vs Real Runtime Comparison', () => {
 
   it('Real runtime test example (RECOMMENDED - actual validation)', async () => {
     // This is the NEW real runtime approach - USE THIS
-    const result = await runIntegrationTest(
-      'Real functionality test',
-      async (runtime) => {
-        // Test ACTUAL functionality with REAL runtime
-        const memory = await runtime.createMemory({
+    const result = await runIntegrationTest('Real functionality test', async (runtime) => {
+      // Test ACTUAL functionality with REAL runtime
+      const memory = await runtime.createMemory(
+        {
           entityId: stringToUuid('test-user'),
           roomId: stringToUuid('test-room'),
           content: { text: 'Real test message', source: 'test' },
-        }, 'messages');
+        },
+        'messages'
+      );
 
-        // Verify REAL database interaction
-        expect(memory).toBeDefined();
+      // Verify REAL database interaction
+      expect(memory).toBeDefined();
 
-        // Verify REAL memory retrieval
-        const memories = await runtime.getMemories({
-          roomId: stringToUuid('test-room'),
-          count: 1,
-          tableName: 'messages',
-        });
+      // Verify REAL memory retrieval
+      const memories = await runtime.getMemories({
+        roomId: stringToUuid('test-room'),
+        count: 1,
+        tableName: 'messages',
+      });
 
-        expect(memories).toHaveLength(1);
-        expect(memories[0].content.text).toBe('Real test message');
+      expect(memories).toHaveLength(1);
+      expect(memories[0].content.text).toBe('Real test message');
 
-        // This test actually validates that the functionality works!
-      }
-    );
+      // This test actually validates that the functionality works!
+    });
 
     expect(result.passed).toBe(true);
   });

@@ -60,7 +60,6 @@ Always be clear about what actions you're taking and provide helpful summaries.`
       chat: ['friendly', 'informative', 'action-oriented'],
       post: ['concise', 'structured', 'informative'],
     },
-    adjectives: ['organized', 'efficient', 'helpful', 'proactive'],
     plugins: [],
   };
 }
@@ -127,7 +126,6 @@ async function runGitHubTodoTest() {
         GITHUB_OWNER: process.env.GITHUB_OWNER || 'elizaOS',
         GITHUB_REPO: process.env.GITHUB_REPO || 'eliza',
         OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-        MODEL_PROVIDER: process.env.MODEL_PROVIDER || 'openai',
       },
     });
 

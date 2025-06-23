@@ -30,30 +30,30 @@ describe('SQL Plugin Structure', () => {
 describe('createDatabaseAdapter Function', () => {
   const agentId = '00000000-0000-0000-0000-000000000000';
 
-  it('should create adapter with postgres config', () => {
+  it('should create adapter with postgres config', async () => {
     const config = {
       postgresUrl: 'postgresql://localhost:5432/test',
     };
 
-    const adapter = createDatabaseAdapter(config, agentId);
+    const adapter = await createDatabaseAdapter(config, agentId);
     expect(adapter).toBeDefined();
     expect(adapter.constructor.name).toBe('PgDatabaseAdapter');
   });
 
-  it('should create adapter with pglite config', () => {
+  it('should create adapter with pglite config', async () => {
     const config = {
       dataDir: ':memory:', // Use memory database to avoid file system issues
     };
 
-    const adapter = createDatabaseAdapter(config, agentId);
+    const adapter = await createDatabaseAdapter(config, agentId);
     expect(adapter).toBeDefined();
     expect(adapter.constructor.name).toBe('PgliteDatabaseAdapter');
   });
 
-  it('should create adapter with default config', () => {
+  it('should create adapter with default config', async () => {
     const config = {};
 
-    const adapter = createDatabaseAdapter(config, agentId);
+    const adapter = await createDatabaseAdapter(config, agentId);
     expect(adapter).toBeDefined();
     expect(adapter.constructor.name).toBe('PgliteDatabaseAdapter');
   });

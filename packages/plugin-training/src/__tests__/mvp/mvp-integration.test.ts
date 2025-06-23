@@ -1,9 +1,9 @@
 /**
  * REAL RUNTIME INTEGRATION TESTS FOR MVP CUSTOM REASONING
- * 
+ *
  * These tests use actual ElizaOS runtime instances and real service implementations.
  * No mocks - only real runtime instances, services, and plugin functionality.
- * 
+ *
  * Test coverage:
  * - Real MVP service lifecycle with actual runtime
  * - Actual model override functionality
@@ -15,7 +15,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { AgentRuntime, elizaLogger } from '@elizaos/core';
 import type { Character, IAgentRuntime, Memory, UUID } from '@elizaos/core';
-import { SimpleReasoningService, enableCustomReasoningAction, disableCustomReasoningAction, checkReasoningStatusAction } from '../../mvp';
+import {
+  SimpleReasoningService,
+  enableCustomReasoningAction,
+  disableCustomReasoningAction,
+  checkReasoningStatusAction,
+} from '../../mvp';
 import { mvpCustomReasoningPlugin } from '../../mvp-only';
 import fs from 'fs/promises';
 import path from 'path';
@@ -29,18 +34,17 @@ const testCharacter: Character = {
   messageExamples: [
     [
       { name: 'user', content: { text: 'enable custom reasoning' } },
-      { name: 'MVPTestAgent', content: { text: 'testing MVP response' } }
-    ]
+      { name: 'MVPTestAgent', content: { text: 'testing MVP response' } },
+    ],
   ],
   postExamples: [],
   topics: ['testing', 'mvp', 'reasoning', 'service-validation'],
-  adjectives: ['helpful', 'accurate', 'reliable'],
   plugins: [],
   settings: {
-    CUSTOM_REASONING_ENABLED: 'true',
-    CUSTOM_REASONING_COLLECT_TRAINING_DATA: 'true',
+    REASONING_SERVICE_ENABLED: 'true',
+    REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',
   },
-  secrets: {}
+  secrets: {},
 };
 
 // Helper function to create test memory
@@ -49,12 +53,12 @@ function createTestMessage(text: string, roomId?: UUID): Memory {
     id: uuidv4() as UUID,
     entityId: uuidv4() as UUID,
     agentId: 'test-agent-id' as UUID,
-    roomId: roomId || uuidv4() as UUID,
+    roomId: roomId || (uuidv4() as UUID),
     content: {
       text,
-      source: 'test'
+      source: 'test',
     },
-    createdAt: Date.now()
+    createdAt: Date.now(),
   };
 }
 
@@ -67,16 +71,16 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
 
   beforeEach(async () => {
     elizaLogger.info('🧪 Setting up MVP Custom Reasoning real runtime test environment...');
-    
+
     // Create unique test paths to avoid conflicts
     const testId = `mvp-reasoning-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     testDatabasePath = path.join(process.cwd(), '.test-data', testId, 'mvp.db');
     testDataPath = path.join(process.cwd(), '.test-data', testId, 'mvp-data');
-    
+
     // Ensure test directories exist
     await fs.mkdir(path.dirname(testDatabasePath), { recursive: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    
+
     // Update test character with test-specific paths
     const testCharacterWithPaths = {
       ...testCharacter,
@@ -84,32 +88,32 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
         ...testCharacter.settings,
         TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
         MVP_DATA_DIR: testDataPath,
-      }
+      },
     };
 
     // Create real AgentRuntime instance
     runtime = new AgentRuntime({
       character: testCharacterWithPaths,
       token: process.env.OPENAI_API_KEY || 'test-token',
-      modelName: 'gpt-4o-mini'
+      modelName: 'gpt-4o-mini',
     });
 
     // Register the MVP plugin
     await runtime.registerPlugin(mvpCustomReasoningPlugin);
     await runtime.initialize();
-    
+
     // Create real SimpleReasoningService instance
     service = new SimpleReasoningService(runtime);
-    
+
     // Store reference to original useModel
     originalUseModel = runtime.useModel;
-    
+
     elizaLogger.info('✅ MVP Custom Reasoning real runtime test environment setup complete');
   });
 
   afterEach(async () => {
     elizaLogger.info('🧹 Cleaning up MVP Custom Reasoning test environment...');
-    
+
     try {
       // Disable service if enabled
       if (service && service.getStatus().enabled) {
@@ -124,7 +128,7 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
           // File might not exist, that's okay
         }
       }
-      
+
       if (testDataPath) {
         try {
           await fs.rm(path.dirname(testDataPath), { recursive: true, force: true });
@@ -135,7 +139,7 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
     } catch (error) {
       elizaLogger.warn('Warning during MVP Custom Reasoning cleanup:', error);
     }
-    
+
     elizaLogger.info('✅ MVP Custom Reasoning test environment cleanup complete');
   });
 
@@ -149,64 +153,66 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
 
     it('should enable and override runtime.useModel with real runtime', async () => {
       await service.enable();
-      
+
       const status = service.getStatus();
       expect(status.enabled).toBe(true);
-      
+
       // Verify that runtime.useModel was overridden
       expect(runtime.useModel).not.toBe(originalUseModel);
-      
+
       elizaLogger.info('✅ Service enabled and useModel overridden successfully');
     });
 
     it('should collect training data when enabled with real runtime', async () => {
       await service.enable();
-      
+
       // Call useModel through the runtime (testing the override)
-      const result = await runtime.useModel('TEXT_LARGE', { text: 'test prompt for training data collection' });
-      
+      const result = await runtime.useModel('TEXT_LARGE', {
+        text: 'test prompt for training data collection',
+      });
+
       expect(result).toBeDefined();
-      
+
       const status = service.getStatus();
       expect(status.dataCount).toBeGreaterThanOrEqual(1);
-      
+
       const trainingData = service.getTrainingData();
       expect(trainingData.length).toBeGreaterThanOrEqual(1);
       expect(trainingData[0].modelType).toBeDefined();
       expect(trainingData[0].success).toBeDefined();
-      
+
       elizaLogger.info(`✅ Training data collected: ${trainingData.length} samples`);
     });
 
     it('should disable and restore original runtime.useModel with real runtime', async () => {
       // Test the enable/disable cycle
       await service.enable();
-      
+
       const enabledStatus = service.getStatus();
       expect(enabledStatus.enabled).toBe(true);
-      
+
       await service.disable();
-      
+
       const disabledStatus = service.getStatus();
       expect(disabledStatus.enabled).toBe(false);
-      
+
       // Test that useModel still works after disable
       const result = await runtime.useModel('TEXT_LARGE', { text: 'test after disable' });
       expect(result).toBeDefined();
-      
+
       elizaLogger.info('✅ Service disabled and useModel restored successfully');
     });
 
     it('should handle model execution errors gracefully with real runtime', async () => {
       await service.enable();
-      
+
       try {
         // Test with potentially problematic input
         const result = await runtime.useModel('TEXT_LARGE', { text: '' }); // Empty text
-        
+
         // Should either handle gracefully or provide meaningful error
         expect(result).toBeDefined();
-        
+
         elizaLogger.info('✅ Empty input handled gracefully');
       } catch (error) {
         // If it throws, that's also acceptable as long as it's a meaningful error
@@ -222,18 +228,20 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
       let status = service.getStatus();
       const firstCount = status.dataCount;
       await service.disable();
-      
+
       // Second cycle
       await service.enable();
       await runtime.useModel('TEXT_LARGE', { text: 'second test' });
       status = service.getStatus();
-      
+
       // Data should accumulate across cycles
       expect(status.dataCount).toBeGreaterThan(firstCount);
-      
+
       await service.disable();
-      
-      elizaLogger.info(`✅ Data consistency maintained across cycles: ${status.dataCount} total samples`);
+
+      elizaLogger.info(
+        `✅ Data consistency maintained across cycles: ${status.dataCount} total samples`
+      );
     });
   });
 
@@ -258,7 +266,7 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
     it('should handle enable action and actually enable service with real runtime', async () => {
       const message = createTestMessage('enable custom reasoning');
       const { callback, responses } = createTestCallback();
-      
+
       await enableCustomReasoningAction.handler(
         runtime,
         message,
@@ -266,25 +274,25 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
         {},
         callback
       );
-      
+
       expect(responses.length).toBeGreaterThan(0);
       const response = responses[0];
       expect(response.text).toBeDefined();
       expect(response.thought).toBeDefined();
-      expect(response.actions).toContain('ENABLE_CUSTOM_REASONING');
-      
+      expect(response.actions).toContain('ENABLE_REASONING_SERVICE');
+
       // Test that response indicates enablement
       const isEnabled = response.text.includes('Enabled') || response.text.includes('enabled');
       const isAlreadyEnabled = response.text.includes('already enabled');
       expect(isEnabled || isAlreadyEnabled).toBe(true);
-      
+
       elizaLogger.info(`✅ Enable action response: ${response.text.substring(0, 100)}...`);
     });
 
     it('should handle disable action with real runtime', async () => {
       const message = createTestMessage('disable custom reasoning');
       const { callback, responses } = createTestCallback();
-      
+
       await disableCustomReasoningAction.handler(
         runtime,
         message,
@@ -292,23 +300,23 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
         {},
         callback
       );
-      
+
       expect(responses.length).toBeGreaterThan(0);
       const response = responses[0];
       expect(response.text).toBeDefined();
       expect(response.thought).toBeDefined();
-      expect(response.actions).toContain('DISABLE_CUSTOM_REASONING');
-      
+      expect(response.actions).toContain('DISABLE_REASONING_SERVICE');
+
       // Should handle disable gracefully whether enabled or not
       expect(response.text).toContain('Custom Reasoning Service');
-      
+
       elizaLogger.info(`✅ Disable action response: ${response.text.substring(0, 100)}...`);
     });
 
     it('should handle status check action with real runtime', async () => {
       const message = createTestMessage('check reasoning status');
       const { callback, responses } = createTestCallback();
-      
+
       await checkReasoningStatusAction.handler(
         runtime,
         message,
@@ -316,16 +324,16 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
         {},
         callback
       );
-      
+
       expect(responses.length).toBeGreaterThan(0);
       const response = responses[0];
       expect(response.text).toBeDefined();
       expect(response.thought).toBeDefined();
       expect(response.actions).toContain('CHECK_REASONING_STATUS');
-      
+
       // Should contain status information
       expect(response.text).toContain('Status');
-      
+
       elizaLogger.info(`✅ Status check response: ${response.text.substring(0, 100)}...`);
     });
 
@@ -333,30 +341,42 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
       const { callback: enableCallback, responses: enableResponses } = createTestCallback();
       const { callback: statusCallback, responses: statusResponses } = createTestCallback();
       const { callback: disableCallback, responses: disableResponses } = createTestCallback();
-      
+
       // Enable
       const enableMessage = createTestMessage('enable custom reasoning');
       await enableCustomReasoningAction.handler(
-        runtime, enableMessage, { values: {}, data: {}, text: '' }, {}, enableCallback
+        runtime,
+        enableMessage,
+        { values: {}, data: {}, text: '' },
+        {},
+        enableCallback
       );
-      
+
       // Check status
       const statusMessage = createTestMessage('check reasoning status');
       await checkReasoningStatusAction.handler(
-        runtime, statusMessage, { values: {}, data: {}, text: '' }, {}, statusCallback
+        runtime,
+        statusMessage,
+        { values: {}, data: {}, text: '' },
+        {},
+        statusCallback
       );
-      
+
       // Disable
       const disableMessage = createTestMessage('disable custom reasoning');
       await disableCustomReasoningAction.handler(
-        runtime, disableMessage, { values: {}, data: {}, text: '' }, {}, disableCallback
+        runtime,
+        disableMessage,
+        { values: {}, data: {}, text: '' },
+        {},
+        disableCallback
       );
-      
+
       // All actions should have responses
       expect(enableResponses.length).toBeGreaterThan(0);
       expect(statusResponses.length).toBeGreaterThan(0);
       expect(disableResponses.length).toBeGreaterThan(0);
-      
+
       elizaLogger.info('✅ Action sequence (enable -> status -> disable) completed successfully');
     });
   });
@@ -366,23 +386,23 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
       // Test original behavior
       const originalResult = await runtime.useModel('TEXT_LARGE', { text: 'compatibility test' });
       expect(originalResult).toBeDefined();
-      
+
       // Enable then disable
       await service.enable();
       await service.disable();
-      
+
       // Should still work after enable/disable cycle
       const afterResult = await runtime.useModel('TEXT_LARGE', { text: 'compatibility test' });
       expect(afterResult).toBeDefined();
-      
+
       elizaLogger.info('✅ Runtime behavior preserved after enable/disable cycle');
     });
-    
+
     it('should handle double enable/disable gracefully with real runtime', async () => {
       // First enable should work
       await service.enable();
       expect(service.getStatus().enabled).toBe(true);
-      
+
       // Second enable should handle gracefully
       try {
         await service.enable();
@@ -394,11 +414,11 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
         expect(error.message).toContain('already enabled');
         elizaLogger.info('✅ Double enable properly rejected');
       }
-      
+
       // Disable should work
       await service.disable();
       expect(service.getStatus().enabled).toBe(false);
-      
+
       // Second disable should handle gracefully
       try {
         await service.disable();
@@ -417,18 +437,18 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
       for (let i = 0; i < 3; i++) {
         await service.enable();
         expect(service.getStatus().enabled).toBe(true);
-        
+
         // Use the service
         await runtime.useModel('TEXT_LARGE', { text: `test cycle ${i}` });
-        
+
         await service.disable();
         expect(service.getStatus().enabled).toBe(false);
       }
-      
+
       // Final check that everything still works
       const finalResult = await runtime.useModel('TEXT_LARGE', { text: 'final test' });
       expect(finalResult).toBeDefined();
-      
+
       elizaLogger.info('✅ Service state consistency maintained through multiple cycles');
     });
   });
@@ -436,35 +456,35 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
   describe('Real Model Type Detection', () => {
     it('should detect model types based on real parameters', async () => {
       await service.enable();
-      
+
       // Test different model calls
       await runtime.useModel('TEXT_SMALL', { shouldRespond: true });
       await runtime.useModel('TEXT_LARGE', { text: 'function myCode() { return true; }' });
       await runtime.useModel('TEXT_LARGE', { text: 'regular conversation' });
-      
+
       const trainingData = service.getTrainingData();
       expect(trainingData.length).toBeGreaterThanOrEqual(3);
-      
+
       // Verify that different model types are detected
-      const modelTypes = trainingData.map(data => data.modelType);
+      const modelTypes = trainingData.map((data) => data.modelType);
       expect(modelTypes.length).toBeGreaterThanOrEqual(3);
-      
+
       // At least one should be detected as coding (contains function keyword)
-      const hasCoding = modelTypes.some(type => type === 'coding');
+      const hasCoding = modelTypes.some((type) => type === 'coding');
       if (hasCoding) {
         elizaLogger.info('✅ Coding model type detected correctly');
       }
-      
+
       // Should have different types or default to planning
       const uniqueTypes = new Set(modelTypes);
       expect(uniqueTypes.size).toBeGreaterThanOrEqual(1);
-      
+
       elizaLogger.info(`✅ Model types detected: ${Array.from(uniqueTypes).join(', ')}`);
     });
 
     it('should handle edge cases in model type detection', async () => {
       await service.enable();
-      
+
       // Test edge cases
       const testCases = [
         { params: { text: '' }, description: 'empty text' },
@@ -473,28 +493,30 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
         { params: { shouldRespond: false }, description: 'shouldRespond false' },
         { params: {}, description: 'empty params' },
       ];
-      
+
       for (const testCase of testCases) {
         await runtime.useModel('TEXT_LARGE', testCase.params);
       }
-      
+
       const trainingData = service.getTrainingData();
       expect(trainingData.length).toBeGreaterThanOrEqual(testCases.length);
-      
+
       // All should have some model type assigned
       trainingData.forEach((data, index) => {
         expect(data.modelType).toBeDefined();
         expect(typeof data.modelType).toBe('string');
       });
-      
-      elizaLogger.info(`✅ Edge case model type detection: ${trainingData.length} samples processed`);
+
+      elizaLogger.info(
+        `✅ Edge case model type detection: ${trainingData.length} samples processed`
+      );
     });
   });
 
   describe('Real Error Handling', () => {
     it('should handle service errors gracefully with real runtime', async () => {
       await service.enable();
-      
+
       // Test with various potentially problematic inputs
       const problematicInputs = [
         { text: null }, // null text
@@ -502,7 +524,7 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
         { text: 'a'.repeat(10000) }, // very long text
         { invalidParam: 'test' }, // invalid parameter structure
       ];
-      
+
       for (const input of problematicInputs) {
         try {
           const result = await runtime.useModel('TEXT_LARGE', input as any);
@@ -513,16 +535,16 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
           expect(error).toBeDefined();
         }
       }
-      
+
       // Service should still be operational
       expect(service.getStatus().enabled).toBe(true);
-      
+
       elizaLogger.info('✅ Service error handling validated');
     });
 
     it('should maintain data integrity despite individual failures', async () => {
       await service.enable();
-      
+
       // Mix of good and potentially bad calls
       const calls = [
         { text: 'good call 1' },
@@ -531,10 +553,10 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
         { text: null }, // potentially problematic
         { text: 'good call 3' },
       ];
-      
+
       let successCount = 0;
       let errorCount = 0;
-      
+
       for (const call of calls) {
         try {
           await runtime.useModel('TEXT_LARGE', call as any);
@@ -543,34 +565,38 @@ describe('Real Runtime MVP Custom Reasoning Service Integration Tests', () => {
           errorCount++;
         }
       }
-      
+
       const trainingData = service.getTrainingData();
-      
+
       // Should have collected data for successful calls
       expect(trainingData.length).toBeGreaterThanOrEqual(successCount);
-      
-      elizaLogger.info(`✅ Data integrity maintained: ${successCount} successful, ${errorCount} errors, ${trainingData.length} data points`);
+
+      elizaLogger.info(
+        `✅ Data integrity maintained: ${successCount} successful, ${errorCount} errors, ${trainingData.length} data points`
+      );
     });
 
     it('should handle concurrent model calls correctly', async () => {
       await service.enable();
-      
+
       // Create multiple concurrent calls
-      const concurrentCalls = Array.from({ length: 5 }, (_, i) => 
+      const concurrentCalls = Array.from({ length: 5 }, (_, i) =>
         runtime.useModel('TEXT_LARGE', { text: `concurrent call ${i}` })
       );
-      
+
       const results = await Promise.allSettled(concurrentCalls);
-      
+
       // Count successful calls
-      const successfulCalls = results.filter(result => result.status === 'fulfilled').length;
-      
+      const successfulCalls = results.filter((result) => result.status === 'fulfilled').length;
+
       const trainingData = service.getTrainingData();
-      
+
       // Should have data for most or all successful calls
       expect(trainingData.length).toBeGreaterThanOrEqual(Math.min(successfulCalls, 1));
-      
-      elizaLogger.info(`✅ Concurrent calls handled: ${successfulCalls} successful, ${trainingData.length} data points`);
+
+      elizaLogger.info(
+        `✅ Concurrent calls handled: ${successfulCalls} successful, ${trainingData.length} data points`
+      );
     });
   });
 });

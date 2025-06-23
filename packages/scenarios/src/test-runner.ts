@@ -2,9 +2,10 @@
 
 console.log('🚀 Starting test runner...');
 
-import { allScenarios, pluginTestScenarios, exampleScenarios, rolodexScenarios } from './index.js';
+// Import scenarios loader to avoid circular dependencies
+import { loadAllScenarios } from './scenarios-loader.js';
 
-console.log(`📦 Loaded ${allScenarios?.length || 0} total scenarios`);
+// Scenarios will be loaded dynamically when needed
 
 import type {
   Scenario,
@@ -286,6 +287,7 @@ export class ConsolidatedScenarioTestRunner {
 
   async runAllScenarios(options: TestRunnerOptions = {}): Promise<TestRunnerResult> {
     const startTime = Date.now();
+    const allScenarios = await loadAllScenarios();
     const scenarios = this.filterScenarios(allScenarios, options);
 
     console.log(`🚀 Starting scenario test run with ${scenarios.length} scenarios`);
@@ -932,8 +934,8 @@ export class ConsolidatedScenarioTestRunner {
   }
 }
 
-// Export for programmatic use
-export { allScenarios, pluginTestScenarios, exampleScenarios, rolodexScenarios };
+// Export scenarios loader for programmatic use
+export { loadAllScenarios } from './scenarios-loader.js';
 
 // CLI interface
 export async function runScenarioTests(): Promise<void> {

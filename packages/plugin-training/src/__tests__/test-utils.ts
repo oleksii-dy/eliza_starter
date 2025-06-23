@@ -68,7 +68,6 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       messageExamples: [],
       postExamples: [],
       topics: ['training', 'machine learning'],
-      adjectives: ['helpful', 'accurate'],
       knowledge: [],
       plugins: ['@elizaos/plugin-training'],
     },
@@ -85,10 +84,10 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     // Training-specific settings
     getSetting: vi.fn((key: string) => {
       const mockSettings: Record<string, string> = {
-        CUSTOM_REASONING_ENABLED: 'true',
-        CUSTOM_REASONING_SHOULD_RESPOND_ENABLED: 'true',
-        CUSTOM_REASONING_PLANNING_ENABLED: 'true',
-        CUSTOM_REASONING_CODING_ENABLED: 'true',
+        REASONING_SERVICE_ENABLED: 'true',
+        REASONING_SERVICE_SHOULD_RESPOND_ENABLED: 'true',
+        REASONING_SERVICE_PLANNING_ENABLED: 'true',
+        REASONING_SERVICE_CODING_ENABLED: 'true',
         TOGETHER_AI_API_KEY: 'test-api-key',
         HUGGING_FACE_TOKEN: 'hf_test_token',
         ATROPOS_API_URL: 'http://localhost:8000',
@@ -105,7 +104,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
         return mockReasoningService;
       }
       const services: Record<string, any> = {
-        'training': {
+        training: {
           extractTrainingData: vi.fn().mockResolvedValue([]),
           prepareDataset: vi.fn().mockResolvedValue('./test-dataset'),
           uploadToHuggingFace: vi.fn().mockResolvedValue('https://huggingface.co/test'),
@@ -123,7 +122,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
             topicDistribution: { programming: 50, ai: 30, general: 20 },
           }),
         },
-        'trust': {
+        trust: {
           getTrustScore: vi.fn().mockResolvedValue(0.9),
         },
         ...overrides.services,
@@ -276,7 +275,9 @@ export function createMockState(overrides: Partial<State> = {}): State {
 /**
  * Creates a mock training data point for testing
  */
-export function createMockTrainingDataPoint(overrides: Partial<TrainingDataPoint> = {}): TrainingDataPoint {
+export function createMockTrainingDataPoint(
+  overrides: Partial<TrainingDataPoint> = {}
+): TrainingDataPoint {
   return {
     id: 'test-data-point-id' as UUID,
     timestamp: Date.now(),
@@ -315,11 +316,9 @@ export function mockFileSystem() {
     mkdir: vi.fn().mockResolvedValue(undefined),
     writeFile: vi.fn().mockResolvedValue(undefined),
     readFile: vi.fn().mockResolvedValue('{"test": "data"}'),
-    readdir: vi.fn().mockResolvedValue([
-      'test-file-1.json',
-      'test-file-2.json',
-      'test-file-3.json'
-    ]),
+    readdir: vi
+      .fn()
+      .mockResolvedValue(['test-file-1.json', 'test-file-2.json', 'test-file-3.json']),
     stat: vi.fn().mockResolvedValue({
       size: 1024,
       birthtime: new Date(),
@@ -345,10 +344,8 @@ export function expectTrainingDataStored(mockDb: any, expectedData: Partial<Trai
   expect(mockDb.run.called).eq(true);
   const calls = mockDb.run.mock.calls;
   expect(calls.length).greaterThan(0);
-  
-  const insertCall = calls.find((call: any[]) => 
-    call[0]?.includes('INSERT INTO training_data')
-  );
+
+  const insertCall = calls.find((call: any[]) => call[0]?.includes('INSERT INTO training_data'));
   expect(insertCall).not.undefined;
 }
 
@@ -356,9 +353,9 @@ export function expectRecordingFileSaved(mockFs: any, expectedFilename: string) 
   expect(mockFs.writeFile.called).eq(true);
   const calls = mockFs.writeFile.mock.calls;
   expect(calls.length).greaterThan(0);
-  
-  const relevantCall = calls.find((call: any[]) => 
-    call[0]?.includes(expectedFilename) && call[1]?.includes('"modelType"')
+
+  const relevantCall = calls.find(
+    (call: any[]) => call[0]?.includes(expectedFilename) && call[1]?.includes('"modelType"')
   );
   expect(relevantCall).not.undefined;
 }
@@ -501,7 +498,7 @@ export async function createTestRuntime(config: any = {}): Promise<IAgentRuntime
   // Import required modules
   const { AgentRuntime } = await import('@elizaos/core');
   const uuid = await import('uuid');
-  
+
   const defaultCharacter = {
     id: config.agentId || uuid.v4(),
     name: 'TestAgent',
@@ -510,7 +507,6 @@ export async function createTestRuntime(config: any = {}): Promise<IAgentRuntime
     messageExamples: [],
     postExamples: [],
     topics: ['testing', 'ai'],
-    adjectives: ['helpful', 'efficient'],
     knowledge: [],
     clients: [],
     plugins: ['@elizaos/plugin-sql'],

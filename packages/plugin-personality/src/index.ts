@@ -69,7 +69,6 @@ export const selfModificationPlugin: Plugin = {
     MODIFICATION_CONFIDENCE_THRESHOLD: 0.7, // Minimum confidence for auto-modifications
     MAX_BIO_ELEMENTS: 20,
     MAX_TOPICS: 50,
-    MAX_ADJECTIVES: 30,
     MAX_BACKUPS: 10,
 
     // Safety settings
@@ -101,7 +100,6 @@ export const selfModificationPlugin: Plugin = {
         name: character.name,
         bioElements: Array.isArray(character.bio) ? character.bio.length : 1,
         topics: character.topics?.length || 0,
-        adjectives: character.adjectives?.length || 0,
         messageExamples: character.messageExamples?.length || 0,
         hasStyleConfig: !!(character.style?.all || character.style?.chat || character.style?.post),
         hasSystemPrompt: !!character.system,

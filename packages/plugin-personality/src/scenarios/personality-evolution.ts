@@ -119,7 +119,6 @@ export const personalityEvolutionScenario: PluginScenario = {
           successCriteria: `
             The agent's character should show gradual evolution:
             - Bio should include elements about being encouraging or enthusiastic
-            - Adjectives should include encouraging, enthusiastic, or motivating traits
             - Style should reflect positive, supportive communication
             - System prompt may incorporate supportive behavior patterns
             The changes should be incremental, not dramatic shifts

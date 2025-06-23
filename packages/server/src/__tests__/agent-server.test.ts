@@ -2,51 +2,27 @@
  * Integration tests for AgentServer class
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { AgentServer } from '../index';
 import { logger, type UUID, ChannelType } from '@elizaos/core';
 import type { ServerOptions } from '../index';
 import http from 'node:http';
 
-// Mock dependencies
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
-  return {
-    ...actual,
-    logger: {
-      warn: vi.fn(),
-      info: vi.fn(),
-      error: vi.fn(),
-      debug: vi.fn(),
-      success: vi.fn(),
-    },
-    Service: class MockService {
-      constructor() {}
-      async initialize() {}
-      async cleanup() {}
-    },
-    createUniqueUuid: vi.fn(() => '123e4567-e89b-12d3-a456-426614174000'),
-    ChannelType: {
-      DIRECT: 'direct',
-      GROUP: 'group',
-    },
-    EventType: {
-      MESSAGE: 'message',
-      USER_JOIN: 'user_join',
-    },
-    SOCKET_MESSAGE_TYPE: {
-      MESSAGE: 'message',
-      AGENT_UPDATE: 'agent_update',
-      CONNECTION: 'connection',
-    },
-    AgentRuntime: class MockAgentRuntime {
-      constructor(config: any) {
-        this.agentId = config.agentId;
-        this.character = config.character;
-        this.adapter = config.adapter;
-        this.plugins = config.plugins || [];
-      }
-      async initialize() {
+// Mock AgentRuntime for testing
+class MockAgentRuntime {
+  agentId: string;
+  character: any;
+  adapter: any;
+  plugins: any[];
+
+  constructor(config: any) {
+    this.agentId = config.agentId;
+    this.character = config.character;
+    this.adapter = config.adapter;
+    this.plugins = config.plugins || [];
+  }
+
+  async initialize() {
         // Mock successful initialization
         return Promise.resolve();
       }

@@ -84,7 +84,6 @@ EVOLUTION_COOLDOWN_MS=300000          # 5 minutes between evaluations
 MODIFICATION_CONFIDENCE_THRESHOLD=0.7  # Minimum confidence for auto-modifications
 MAX_BIO_ELEMENTS=20                   # Maximum bio elements allowed
 MAX_TOPICS=50                         # Maximum topics allowed
-MAX_ADJECTIVES=30                     # Maximum adjectives allowed
 
 # Safety settings
 REQUIRE_ADMIN_APPROVAL=false          # Require admin approval for modifications

@@ -746,11 +746,11 @@ export class PaymentService extends Service implements IPaymentService {
         requestId: tx.id,
         status: tx.status,
         transactionHash: tx.transactionHash,
-        amount: BigInt(tx.amount),
+        amount: tx.amount ? BigInt(tx.amount) : BigInt(0),
         method: tx.method,
         fromAddress: tx.fromAddress || '',
         toAddress: tx.toAddress || '',
-        timestamp: tx.createdAt.getTime(),
+        timestamp: tx.createdAt ? tx.createdAt.getTime() : Date.now(),
       }));
     } catch (error) {
       logger.error('[PaymentService] Error getting payment history', error);

@@ -62,7 +62,7 @@ try {
     
     // Test 5: Test action validation
     console.log('\n🎯 Testing action validation...');
-    const enableAction = mvpCustomReasoningPlugin.actions.find(a => a.name === 'ENABLE_CUSTOM_REASONING');
+    const enableAction = mvpCustomReasoningPlugin.actions.find(a => a.name === 'ENABLE_REASONING_SERVICE');
     
     const testMessage = {
         id: 'test-msg',

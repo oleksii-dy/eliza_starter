@@ -15,55 +15,54 @@ export async function createMockRuntime(): Promise<Partial<IAgentRuntime>> {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       clients: [],
       plugins: [],
     },
-    
+
     // Mock database operations
     messageManager: {
       async getMemories() {
         elizaLogger.warn('Mock runtime: getMemories not implemented');
         return [];
       },
-      
+
       async searchMemories() {
         elizaLogger.warn('Mock runtime: searchMemories not implemented');
         return [];
       },
-      
+
       async createMemory() {
         elizaLogger.warn('Mock runtime: createMemory not implemented');
         return true;
       },
-      
+
       async updateMemory() {
         elizaLogger.warn('Mock runtime: updateMemory not implemented');
         return true;
       },
-      
+
       async deleteMemory() {
         elizaLogger.warn('Mock runtime: deleteMemory not implemented');
         return true;
       },
-      
+
       async getLastMessages() {
         elizaLogger.warn('Mock runtime: getLastMessages not implemented');
         return [];
       },
     },
-    
+
     // Mock other required methods
     getSetting: (key: string) => process.env[key] || null,
-    
+
     logger: {
       info: console.log,
       warn: console.warn,
       error: console.error,
       debug: console.debug,
     },
-    
+
     // Minimal mock implementations
     providers: [],
     actions: [],
@@ -72,7 +71,7 @@ export async function createMockRuntime(): Promise<Partial<IAgentRuntime>> {
     services: new Map(),
     events: new Map(),
     routes: [],
-    
+
     // Mock methods
     registerPlugin: async () => {},
     initialize: async () => {},

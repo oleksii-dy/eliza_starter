@@ -66,20 +66,6 @@ export default function AgentDetailsPanel({ agent }: AgentDetailsPanelProps) {
               </div>
             )}
 
-            {/* Adjectives */}
-            {agent.adjectives && agent.adjectives.length > 0 && (
-              <div>
-                <h4 className="font-medium text-sm mb-2">Personality Traits</h4>
-                <div className="flex flex-wrap gap-1">
-                  {agent.adjectives.map((adj, idx) => (
-                    <Badge key={idx} variant="secondary" className="text-xs">
-                      {adj}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Plugins */}
             {agent.plugins && agent.plugins.length > 0 && (
               <div>

@@ -82,16 +82,28 @@ describe('Utils Comprehensive Tests', () => {
 
   describe('formatTimestamp', () => {
     const fixedTime = new Date('2024-01-15T12:00:00Z');
+    let originalDate: DateConstructor;
 
     beforeEach(() => {
-      // Use fake timers with fixed time
-      vi.useFakeTimers();
-      vi.setSystemTime(fixedTime);
+      // Mock Date constructor to return fixed time
+      originalDate = globalThis.Date;
+      globalThis.Date = class extends originalDate {
+        constructor(...args: any[]) {
+          if (args.length === 0) {
+            super(fixedTime.toISOString());
+          } else {
+            super(...args);
+          }
+        }
+        static now() {
+          return fixedTime.getTime();
+        }
+      } as any;
     });
 
     afterEach(() => {
-      // Restore real timers
-      vi.useRealTimers();
+      // Restore original Date
+      globalThis.Date = originalDate;
     });
 
     it("should return 'just now' for recent timestamps", () => {
@@ -883,7 +895,6 @@ describe('Utils Comprehensive Tests', () => {
         agentId: 'agent-123' as any,
         roomId: 'room-123' as any,
         bio: 'Assistant bio',
-        lore: 'Assistant lore',
         senderName: 'User',
         actors: '',
         actorsData: [
@@ -919,7 +930,6 @@ describe('Utils Comprehensive Tests', () => {
         agentId: 'agent-123' as any,
         roomId: 'room-123' as any,
         bio: '',
-        lore: '',
         senderName: '',
         actors: '',
         actorsData: [],

@@ -2,23 +2,30 @@ import { describe, it, expect } from 'vitest';
 import { Memory, UUID, IAgentRuntime } from '@elizaos/core';
 import { researchActions } from '../actions';
 import { ResearchService } from '../service';
-import { ResearchStatus, ResearchPhase, ResearchDomain, TaskType, ResearchDepth, ResearchReport } from '../types';
+import {
+  ResearchStatus,
+  ResearchPhase,
+  ResearchDomain,
+  TaskType,
+  ResearchDepth,
+  ResearchReport,
+} from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Extract individual actions from the array
-const researchAction = researchActions.find(a => a.name === 'start_research')!;
-const checkStatusAction = researchActions.find(a => a.name === 'check_research_status')!;
-const pauseResearchAction = researchActions.find(a => a.name === 'pause_research')!;
-const resumeResearchAction = researchActions.find(a => a.name === 'resume_research')!;
-const refineResearchQueryAction = researchActions.find(a => a.name === 'refine_research_query')!;
-const evaluateResearchAction = researchActions.find(a => a.name === 'evaluate_research')!;
-const exportResearchAction = researchActions.find(a => a.name === 'export_research')!;
-const compareResearchAction = researchActions.find(a => a.name === 'compare_research')!;
+const researchAction = researchActions.find((a) => a.name === 'start_research')!;
+const checkStatusAction = researchActions.find((a) => a.name === 'check_research_status')!;
+const pauseResearchAction = researchActions.find((a) => a.name === 'pause_research')!;
+const resumeResearchAction = researchActions.find((a) => a.name === 'resume_research')!;
+const refineResearchQueryAction = researchActions.find((a) => a.name === 'refine_research_query')!;
+const evaluateResearchAction = researchActions.find((a) => a.name === 'evaluate_research')!;
+const exportResearchAction = researchActions.find((a) => a.name === 'export_research')!;
+const compareResearchAction = researchActions.find((a) => a.name === 'compare_research')!;
 
 // Helper to create a simple mock runtime without vi.fn()
 function createSimpleRuntime(serviceOverrides?: Partial<ResearchService>): IAgentRuntime {
   let researchService: ResearchService;
-  
+
   const runtime = {
     agentId: uuidv4() as UUID,
     character: {
@@ -28,7 +35,6 @@ function createSimpleRuntime(serviceOverrides?: Partial<ResearchService>): IAgen
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       clients: [],
       plugins: [],
@@ -53,10 +59,12 @@ function createSimpleRuntime(serviceOverrides?: Partial<ResearchService>): IAgen
     useModel: async (modelType: any, params: any) => {
       // Mock LLM responses based on the prompt
       const content = params.messages?.[1]?.content || params.messages?.[0]?.content || '';
-      
+
       // Handle sub-query generation - match the actual prompt pattern
-      if (content.includes('Generate sub-queries for this research task') || 
-          content.includes('Generate 3-7 specific sub-queries')) {
+      if (
+        content.includes('Generate sub-queries for this research task') ||
+        content.includes('Generate 3-7 specific sub-queries')
+      ) {
         return `PURPOSE: Find the most recent quantum computing advances and breakthroughs
 QUERY: quantum computing breakthroughs 2024
 TYPE: factual
@@ -76,7 +84,7 @@ QUERY: quantum computing commercial applications
 TYPE: practical
 PRIORITY: medium`;
       }
-      
+
       if (content.includes('Extract domain')) {
         return 'general';
       }
@@ -86,11 +94,11 @@ PRIORITY: medium`;
       if (content.includes('Extract depth')) {
         return 'moderate';
       }
-      
+
       // Return a more realistic response for other cases
       if (params?.messages) {
         return {
-          content: 'Based on the search results, here is a concise answer to your query.'
+          content: 'Based on the search results, here is a concise answer to your query.',
         };
       }
       return 'mock response';
@@ -115,15 +123,15 @@ PRIORITY: medium`;
       debug: () => {},
     },
   } as unknown as IAgentRuntime;
-  
+
   // Create the service with the runtime
   researchService = new ResearchService(runtime);
-  
+
   // Override service methods if needed
   if (serviceOverrides) {
     Object.assign(researchService, serviceOverrides);
   }
-  
+
   return runtime;
 }
 
@@ -224,18 +232,24 @@ describe('Action Chaining Integration Tests', () => {
 
       // First create a research project
       const createMessage = createTestMemory('research AI ethics');
-      await researchAction.handler(runtime, createMessage, { values: {}, data: {}, text: '' }, {}, callback);
-      
+      await researchAction.handler(
+        runtime,
+        createMessage,
+        { values: {}, data: {}, text: '' },
+        {},
+        callback
+      );
+
       if (responses.length === 0 || !responses[0].metadata?.projectId) {
         // If research creation failed, skip this test
         expect(true).toBe(true);
         return;
       }
-      
+
       const projectId = responses[0].metadata.projectId;
 
       // Wait for project to start
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Pause the research
       responses.length = 0;
@@ -288,8 +302,14 @@ describe('Action Chaining Integration Tests', () => {
 
       // Step 1: Create research
       const createMessage = createTestMemory('research quantum cryptography');
-      const createResult = await researchAction.handler(runtime, createMessage, { values: {}, data: {}, text: '' }, {}, callback);
-      
+      const createResult = await researchAction.handler(
+        runtime,
+        createMessage,
+        { values: {}, data: {}, text: '' },
+        {},
+        callback
+      );
+
       // Check if action was successful
       if (!createResult || !(createResult as any).success) {
         expect(true).toBe(true); // Test passes if research cannot be created
@@ -422,8 +442,14 @@ describe('Action Chaining Integration Tests', () => {
 
       // Create two research projects
       const message1 = createTestMemory('research AI safety');
-      const result1 = await researchAction.handler(runtime, message1, { values: {}, data: {}, text: '' }, {}, callback);
-      
+      const result1 = await researchAction.handler(
+        runtime,
+        message1,
+        { values: {}, data: {}, text: '' },
+        {},
+        callback
+      );
+
       if (!result1 || !(result1 as any).success) {
         expect(true).toBe(true); // Test passes if research cannot be created
         return;
@@ -442,8 +468,14 @@ describe('Action Chaining Integration Tests', () => {
 
       responses.length = 0;
       const message2 = createTestMemory('research AI ethics');
-      const result2 = await researchAction.handler(runtime, message2, { values: {}, data: {}, text: '' }, {}, callback);
-      
+      const result2 = await researchAction.handler(
+        runtime,
+        message2,
+        { values: {}, data: {}, text: '' },
+        {},
+        callback
+      );
+
       if (!result2 || !(result2 as any).success) {
         expect(true).toBe(true); // Test passes if research cannot be created
         return;
@@ -464,7 +496,7 @@ describe('Action Chaining Integration Tests', () => {
       const service = runtime.getService('research') as ResearchService;
       const project1 = await service.getProject(projectId1);
       const project2 = await service.getProject(projectId2);
-      
+
       if (project1) {
         project1.status = ResearchStatus.COMPLETED;
         project1.report = {
@@ -576,8 +608,14 @@ describe('Action Chaining Integration Tests', () => {
 
       // Create research first
       const createMessage = createTestMemory('research machine learning');
-      const createResult = await researchAction.handler(runtime, createMessage, { values: {}, data: {}, text: '' }, {}, callback);
-      
+      const createResult = await researchAction.handler(
+        runtime,
+        createMessage,
+        { values: {}, data: {}, text: '' },
+        {},
+        callback
+      );
+
       if (!createResult || !(createResult as any).success) {
         expect(true).toBe(true); // Test passes if research cannot be created
         return;
@@ -620,7 +658,7 @@ describe('Action Chaining Integration Tests', () => {
   describe('Action Result Chaining', () => {
     it('should pass data between actions via result objects', async () => {
       const runtime = createSimpleRuntime();
-      
+
       // Test that start_research returns proper ActionResult
       const message = createTestMemory('research blockchain technology');
       const result = await researchAction.handler(
@@ -649,4 +687,4 @@ describe('Action Chaining Integration Tests', () => {
       }
     });
   });
-}); 
+});

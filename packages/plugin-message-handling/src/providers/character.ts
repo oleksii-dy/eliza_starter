@@ -67,13 +67,10 @@ export const characterProvider: Provider = {
             .join('')}`
         : '';
 
-    // Select random adjective if available
-    const adjectiveString =
-      character.adjectives && character.adjectives.length > 0
-        ? character.adjectives[Math.floor(Math.random() * character.adjectives.length)]
-        : '';
+    const topicsList = topics || '';
 
-    const adjective = adjectiveString || '';
+    const topicSentence =
+      topicsList && character.name ? `${character.name} is interested in ${topicsList}.` : '';
 
     // Format post examples
     const formattedCharacterPostExamples = !character.postExamples
@@ -170,7 +167,6 @@ export const characterProvider: Provider = {
       system,
       topic,
       topics,
-      adjective,
       messageDirections,
       postDirections,
       directions,
@@ -181,7 +177,6 @@ export const characterProvider: Provider = {
 
     const data = {
       bio,
-      adjective,
       topic,
       topics,
       character,
@@ -190,12 +185,8 @@ export const characterProvider: Provider = {
       system,
     };
 
-    const topicSentence = topicString
-      ? `${character.name} is currently interested in ${topicString}`
-      : '';
-    const adjectiveSentence = adjectiveString ? `${character.name} is ${adjectiveString}` : '';
     // Combine all text sections
-    const text = [bio, adjectiveSentence, topicSentence, topics, directions, examples, system]
+    const text = [bio, topicSentence, topics, directions, examples, system]
       .filter(Boolean)
       .join('\n\n');
 

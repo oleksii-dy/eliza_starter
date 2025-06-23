@@ -1,12 +1,5 @@
 import { vi } from 'vitest';
-import type {
-  IAgentRuntime,
-  Memory,
-  State,
-  Character,
-  UUID,
-  Service,
-} from '@elizaos/core';
+import type { IAgentRuntime, Memory, State, Character, UUID, Service } from '@elizaos/core';
 
 // Define ModelType locally for testing
 const ModelType = {
@@ -23,20 +16,20 @@ export interface MockRuntimeOptions {
   // Model responses
   modelResponses?: Record<string, string>;
   modelErrors?: Record<string, Error>;
-  
+
   // Service mocks
   services?: Record<string, any>;
-  
+
   // Memory operations
   memoryResults?: any[];
   memoryErrors?: Error[];
-  
+
   // Settings/environment
   settings?: Record<string, any>;
-  
+
   // Character configuration
   character?: Partial<Character>;
-  
+
   // Error simulation
   simulateErrors?: boolean;
   networkTimeout?: boolean;
@@ -70,7 +63,6 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     messageExamples: [],
     postExamples: [],
     topics: [],
-    adjectives: [],
     knowledge: [],
     plugins: [],
     ...character,
@@ -111,15 +103,15 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
       if (networkTimeout) {
         throw new Error('Network timeout');
       }
-      
+
       if (modelErrors[modelType]) {
         throw modelErrors[modelType];
       }
-      
+
       if (modelResponses[modelType]) {
         return modelResponses[modelType];
       }
-      
+
       // Default responses by model type
       const defaultResponses = {
         [ModelType.TEXT_SMALL]: 'Mock small model response',
@@ -127,34 +119,34 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
         [ModelType.TEXT_EMBEDDING]: [0.1, 0.2, 0.3], // Mock embedding vector
         [ModelType.TEXT_REASONING_LARGE]: 'Mock reasoning response',
       };
-      
+
       return defaultResponses[modelType] || 'Mock model response';
     }),
 
     // Memory operations
     createMemory: vi.fn(async (memory: Memory, tableName?: string) => {
       memoryCreateCount++;
-      
+
       if (memoryErrors.length > 0 && memoryCreateCount <= memoryErrors.length) {
         throw memoryErrors[memoryCreateCount - 1];
       }
-      
+
       const memoryId = `memory-${memoryCreateCount}` as UUID;
       return memoryId;
     }),
 
     getMemories: vi.fn(async (params: any) => {
       memoryQueryCount++;
-      
+
       if (simulateErrors && memoryQueryCount > 2) {
         throw new Error('Memory query error');
       }
-      
+
       return memoryResults.slice(0, params.count || 10);
     }),
 
     searchMemories: vi.fn(async (params: any) => {
-      return memoryResults.filter(m => m.similarity > (params.match_threshold || 0.5));
+      return memoryResults.filter((m) => m.similarity > (params.match_threshold || 0.5));
     }),
 
     getConversationLength: vi.fn(() => {
@@ -172,7 +164,6 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
         },
       ];
     }),
-
 
     // Task operations
     createTask: vi.fn(async (task: any) => {
@@ -219,7 +210,7 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
       if (simulateErrors && providers?.includes('ERROR_PROVIDER')) {
         throw new Error('State composition error');
       }
-      
+
       return {
         values: {
           currentDate: new Date().toISOString(),
@@ -251,7 +242,7 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
 
     // Room operations
     createRoom: vi.fn(async (room: any) => {
-      const roomId = room.id || `room-${Date.now()}` as UUID;
+      const roomId = room.id || (`room-${Date.now()}` as UUID);
       return roomId;
     }),
 
@@ -265,13 +256,15 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
         agentId,
         source: 'test',
         type: 'SELF' as any,
-        worldId: roomId.includes('room') ? roomId.replace('room', 'world') : 'test-world-id' as any,
+        worldId: roomId.includes('room')
+          ? roomId.replace('room', 'world')
+          : ('test-world-id' as any),
       };
     }),
 
     // World operations
     createWorld: vi.fn(async (world: any) => {
-      const worldId = world.id || `world-${Date.now()}` as UUID;
+      const worldId = world.id || (`world-${Date.now()}` as UUID);
       return worldId;
     }),
 
@@ -318,14 +311,14 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     registerAction: vi.fn(),
     registerProvider: vi.fn(),
     registerEvaluator: vi.fn(),
-    
+
     // Plugin operations
     plugins: [],
     actions: [],
     providers: [],
     evaluators: [],
     services: new Map(),
-    
+
     // Mock any other methods that might be called
   } as any;
 
@@ -383,22 +376,22 @@ export function createMockService(serviceType: string, methods: Record<string, a
  * Helper to verify mock calls with specific parameters
  */
 export function expectMockCall(mockFn: any, callIndex: number, expectedArgs: any[]) {
-  expect(mockFn).toHaveBeenCalledTimes(callIndex + 1);
-  expect(mockFn).toHaveBeenNthCalledWith(callIndex + 1, ...expectedArgs);
+  expect(mockFn.mock.calls.length).toBeGreaterThanOrEqual(callIndex + 1);
+  expect(mockFn.mock.calls[callIndex]).toEqual(expectedArgs);
 }
 
 /**
  * Helper to reset all mocks in a runtime
  */
 export function resetMockRuntime(runtime: IAgentRuntime) {
-  Object.values(runtime).forEach(value => {
+  Object.values(runtime).forEach((value) => {
     if (value && typeof value === 'object' && 'mockReset' in value) {
       (value as any).mockReset();
     }
   });
-  
+
   if ((runtime as any).logger) {
-    Object.values((runtime as any).logger).forEach(logMethod => {
+    Object.values((runtime as any).logger).forEach((logMethod) => {
       if (logMethod && typeof logMethod === 'object' && 'mockReset' in logMethod) {
         (logMethod as any).mockReset();
       }

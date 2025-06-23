@@ -94,32 +94,51 @@ export class PlanningService extends Service implements IPlanningService {
     runtime: IAgentRuntime,
     message: Memory,
     state: State,
-    responseContent: Content
+    responseContent?: Content
   ): Promise<ActionPlan | null> {
     try {
       logger.debug('[PlanningService] Creating simple plan for message handling');
 
-      // Check if actions are specified in the response content
-      if (!responseContent.actions || responseContent.actions.length === 0) {
+      // If no responseContent provided, analyze the message to determine actions
+      let actions: string[] = [];
+      if (responseContent?.actions && responseContent.actions.length > 0) {
+        actions = responseContent.actions;
+      } else {
+        // Simple heuristic-based action selection based on message content
+        const text = message.content.text?.toLowerCase() || '';
+        if (text.includes('email')) {
+          actions = ['SEND_EMAIL'];
+        } else if (text.includes('research') && (text.includes('send') || text.includes('summary'))) {
+          actions = ['SEARCH', 'REPLY'];
+        } else if (text.includes('search') || text.includes('find') || text.includes('research')) {
+          actions = ['SEARCH'];
+        } else if (text.includes('analyze')) {
+          actions = ['THINK', 'REPLY'];
+        } else {
+          actions = ['REPLY'];
+        }
+      }
+
+      if (actions.length === 0) {
         return null;
       }
 
       // Create a simple sequential plan from the actions
       const planId = asUUID(uuidv4());
-      const steps: ActionStep[] = responseContent.actions.map((actionName, index) => ({
+      const steps: ActionStep[] = actions.map((actionName, index) => ({
         id: asUUID(uuidv4()),
         actionName,
         parameters: {
-          message: responseContent.text,
-          thought: responseContent.thought,
-          providers: responseContent.providers || [],
+          message: responseContent?.text || message.content.text,
+          thought: responseContent?.thought,
+          providers: responseContent?.providers || [],
         },
         dependencies: index > 0 ? [asUUID(uuidv4())] : [],
       }));
 
       const plan: ActionPlan = {
         id: planId,
-        goal: `Execute actions: ${responseContent.actions.join(', ')}`,
+        goal: responseContent?.text || `Execute actions: ${actions.join(', ')}`,
         steps,
         executionModel: 'sequential',
         state: {
@@ -153,6 +172,20 @@ export class PlanningService extends Service implements IPlanningService {
     state?: State
   ): Promise<ActionPlan> {
     try {
+      // Validate context
+      if (!context.goal || context.goal.trim() === '') {
+        throw new Error('Planning context must have a non-empty goal');
+      }
+      if (!Array.isArray(context.constraints)) {
+        throw new Error('Planning context constraints must be an array');
+      }
+      if (!Array.isArray(context.availableActions)) {
+        throw new Error('Planning context availableActions must be an array');
+      }
+      if (!context.preferences || typeof context.preferences !== 'object') {
+        throw new Error('Planning context preferences must be an object');
+      }
+      
       logger.info(`[PlanningService] Creating comprehensive plan for goal: ${context.goal}`);
 
       // Construct planning prompt with full context
@@ -419,9 +452,9 @@ export class PlanningService extends Service implements IPlanningService {
     message?: Memory,
     state?: State
   ): string {
-    const availableActions = context.availableActions.join(', ');
-    const availableProviders = context.availableProviders.join(', ');
-    const constraints = context.constraints.map(c => `${c.type}: ${c.description || c.value}`).join(', ');
+    const availableActions = (context.availableActions || []).join(', ');
+    const availableProviders = (context.availableProviders || []).join(', ');
+    const constraints = (context.constraints || []).map(c => `${c.type}: ${c.description || c.value}`).join(', ');
 
     return `You are an expert AI planning system. Create a comprehensive action plan to achieve the following goal.
 
@@ -570,6 +603,7 @@ Focus on:
         steps,
         executionModel: executionModel as any,
         state: { status: 'pending' },
+        constraints: context.constraints || [],
         metadata: {
           createdAt: Date.now(),
           estimatedDuration,
@@ -966,20 +1000,22 @@ Return the adapted plan in the same XML format as the original planning response
 
         return {
           ...originalPlan,
+          id: asUUID(uuidv4()), // Generate new ID for adapted plan
           steps: [...originalPlan.steps.slice(0, currentStepIndex), fallbackStep],
           metadata: {
-            ...originalPlan.metadata,
-            adaptations: [...((originalPlan.metadata as any).adaptations || []), 'Fallback adaptation'],
+            ...(originalPlan.metadata || {}),
+            adaptations: [...(((originalPlan.metadata as any)?.adaptations) || []), 'Fallback adaptation'],
           } as any,
         };
       }
 
       return {
         ...originalPlan,
+        id: asUUID(uuidv4()), // Generate new ID for adapted plan
         steps: [...originalPlan.steps.slice(0, currentStepIndex), ...adaptedSteps],
         metadata: {
-          ...originalPlan.metadata,
-          adaptations: [...((originalPlan.metadata as any).adaptations || []), `Adapted at step ${currentStepIndex}`],
+          ...(originalPlan.metadata || {}),
+          adaptations: [...(((originalPlan.metadata as any)?.adaptations) || []), `Adapted at step ${currentStepIndex}`],
         } as any,
       };
     } catch (error) {
@@ -995,10 +1031,11 @@ Return the adapted plan in the same XML format as the original planning response
 
       return {
         ...originalPlan,
+        id: asUUID(uuidv4()), // Generate new ID for adapted plan
         steps: [...originalPlan.steps.slice(0, currentStepIndex), fallbackStep],
         metadata: {
-          ...originalPlan.metadata,
-          adaptations: [...((originalPlan.metadata as any).adaptations || []), 'Emergency fallback adaptation'],
+          ...(originalPlan.metadata || {}),
+          adaptations: [...(((originalPlan.metadata as any)?.adaptations) || []), 'Emergency fallback adaptation'],
         } as any,
       };
     }

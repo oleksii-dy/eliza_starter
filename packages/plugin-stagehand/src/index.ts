@@ -271,7 +271,7 @@ const browserNavigateAction: Action = {
   similes: ['GO_TO_URL', 'OPEN_WEBSITE', 'VISIT_PAGE', 'NAVIGATE_TO'],
   description: 'Navigate the browser to a specified URL',
 
-  validate: async (_runtime: IAgentRuntime, message: Memory, _state: State): Promise<boolean> => {
+  validate: async (_runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const url = extractUrl(message.content.text || '');
     return url !== null;
   },
@@ -1370,7 +1370,7 @@ const stagehandE2ETestSuite = {
                   if (headers.authorization) {
                     bearerToken = headers.authorization.replace('Bearer ', '');
                     logger.info(
-                      `Intercepted bearer token from network: ${bearerToken.substring(0, 20)}...`
+                      `Intercepted bearer token from network: ${bearerToken?.substring(0, 20)}...`
                     );
                     resolve();
                   }

@@ -62,13 +62,6 @@ function createAgentTable() {
       }>()
       .default({}),
     plugins: factory.json('plugins').$type<string[]>().default([]),
-    modelProvider: factory.text('model_provider'),
-    planningEnabled: factory.boolean('planning_enabled').default(false),
-    temperature: factory.real('temperature').default(0.5),
-    maxTokens: factory.integer('max_tokens').default(50),
-    frequencyPenalty: factory.real('frequency_penalty').default(0.9),
-    presencePenalty: factory.real('presence_penalty').default(0.7),
-    repetitionPenalty: factory.real('repetition_penalty').default(0.0),
   };
 
   return factory.table('agents', tableColumns, (table) => ({

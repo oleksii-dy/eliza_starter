@@ -1,8 +1,4 @@
-import {
-  type Character,
-  type Plugin,
-  logger,
-} from '@elizaos/core';
+import { type Character, type Plugin, logger } from '@elizaos/core';
 import { BenchmarkRunner, type BenchmarkConfig } from '../benchmarks/benchmark-runner';
 import { planningPlugin } from '../index';
 import * as fs from 'fs';
@@ -72,8 +68,9 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning a
       {
         name: 'PlanningBenchmarkAgent',
         content: {
-          text: 'I\'ll help you plan a comprehensive research task on climate change impacts. Let me break this down into actionable steps.',
-          thought: 'This requires a systematic approach: defining scope, gathering sources, analyzing data, and presenting findings.',
+          text: "I'll help you plan a comprehensive research task on climate change impacts. Let me break this down into actionable steps.",
+          thought:
+            'This requires a systematic approach: defining scope, gathering sources, analyzing data, and presenting findings.',
           actions: ['CREATE_RESEARCH_PLAN'],
         },
       },
@@ -86,8 +83,9 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning a
       {
         name: 'PlanningBenchmarkAgent',
         content: {
-          text: 'I\'ll help you send a project update email. Let me gather the relevant information and compose the message.',
-          thought: 'Need to collect project status, format professionally, and send to team members.',
+          text: "I'll help you send a project update email. Let me gather the relevant information and compose the message.",
+          thought:
+            'Need to collect project status, format professionally, and send to team members.',
           actions: ['GATHER_PROJECT_STATUS', 'COMPOSE_EMAIL', 'SEND_EMAIL'],
         },
       },
@@ -103,15 +101,6 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning a
     'problem solving',
     'workflow optimization',
   ],
-  adjectives: [
-    'methodical',
-    'efficient',
-    'thorough',
-    'adaptive',
-    'reliable',
-    'strategic',
-    'organized',
-  ],
   knowledge: [],
   clients: [],
   plugins: [],
@@ -126,33 +115,33 @@ export async function runBenchmarkCommand(options: BenchmarkCommandOptions): Pro
   try {
     // Load character
     const character = await loadCharacter(options.characterPath);
-    
+
     // Prepare plugins
     const plugins = await preparePlugins(options.plugins);
-    
+
     // Validate benchmark data paths
     await validateBenchmarkPaths(options);
-    
+
     // Create benchmark configuration
     const config: BenchmarkConfig = {
       character,
       plugins,
       enabledProviders: options.providers,
-      
+
       // Test data paths
       realmBenchPath: options.realmBenchPath,
       apiBankPath: options.apiBankPath,
-      
+
       // Benchmark options
       runRealmBench: options.realmBench ?? true,
       runApiBank: options.apiBank ?? true,
       maxTestsPerCategory: options.maxTests,
       timeoutMs: options.timeout ?? 60000,
-      
+
       // Output configuration
       outputDir: options.outputDir ?? './benchmark-results',
       saveDetailedLogs: options.saveDetails ?? true,
-      
+
       // Performance monitoring
       enableMetrics: options.enableMetrics ?? true,
       enableMemoryTracking: options.enableMemory ?? true,
@@ -171,7 +160,6 @@ export async function runBenchmarkCommand(options: BenchmarkCommandOptions): Pro
     // Success
     logger.info('[BenchmarkCommand] Benchmark execution completed successfully');
     process.exit(0);
-
   } catch (error) {
     logger.error('[BenchmarkCommand] Benchmark execution failed:', error);
     console.error(`❌ Benchmark failed: ${error.message}`);
@@ -190,7 +178,7 @@ async function loadCharacter(characterPath?: string): Promise<Character> {
 
   try {
     logger.info(`[BenchmarkCommand] Loading character from ${characterPath}`);
-    
+
     if (!fs.existsSync(characterPath)) {
       throw new Error(`Character file not found: ${characterPath}`);
     }
@@ -204,7 +192,6 @@ async function loadCharacter(characterPath?: string): Promise<Character> {
     }
 
     return character;
-
   } catch (error) {
     logger.error('[BenchmarkCommand] Failed to load character:', error);
     throw new Error(`Failed to load character: ${error.message}`);
@@ -219,7 +206,7 @@ async function preparePlugins(pluginNames?: string[]): Promise<Plugin[]> {
 
   if (pluginNames && pluginNames.length > 0) {
     logger.info(`[BenchmarkCommand] Loading additional plugins: ${pluginNames.join(', ')}`);
-    
+
     for (const pluginName of pluginNames) {
       try {
         // Dynamic import of plugin
@@ -268,13 +255,13 @@ function logBenchmarkSummary(results: any, verbose: boolean): void {
 
   console.log('\n🎯 PLANNING BENCHMARK RESULTS\n');
   console.log('═'.repeat(50));
-  
+
   console.log(`📊 Overall Performance: ${summary.performanceScore}/100`);
   console.log(`✅ Success Rate: ${(overallMetrics.overallSuccessRate * 100).toFixed(1)}%`);
   console.log(`📈 Tests Passed: ${overallMetrics.totalPassed}/${overallMetrics.totalTests}`);
   console.log(`⚡ Avg Planning Time: ${overallMetrics.averagePlanningTime.toFixed(0)}ms`);
   console.log(`🚀 Avg Execution Time: ${overallMetrics.averageExecutionTime.toFixed(0)}ms`);
-  
+
   console.log('\n🔍 Key Findings:');
   summary.keyFindings.forEach((finding: string) => {
     console.log(`  • ${finding}`);
@@ -282,17 +269,31 @@ function logBenchmarkSummary(results: any, verbose: boolean): void {
 
   if (results.realmBenchResults) {
     console.log('\n📋 REALM-Bench Results:');
-    console.log(`  Success Rate: ${(results.realmBenchResults.passedTests / results.realmBenchResults.totalTests * 100).toFixed(1)}%`);
-    console.log(`  Tests: ${results.realmBenchResults.passedTests}/${results.realmBenchResults.totalTests}`);
-    console.log(`  Plan Quality: ${(results.realmBenchResults.overallMetrics.averagePlanQuality * 100).toFixed(1)}%`);
+    console.log(
+      `  Success Rate: ${((results.realmBenchResults.passedTests / results.realmBenchResults.totalTests) * 100).toFixed(1)}%`
+    );
+    console.log(
+      `  Tests: ${results.realmBenchResults.passedTests}/${results.realmBenchResults.totalTests}`
+    );
+    console.log(
+      `  Plan Quality: ${(results.realmBenchResults.overallMetrics.averagePlanQuality * 100).toFixed(1)}%`
+    );
   }
 
   if (results.apiBankResults) {
     console.log('\n🔧 API-Bank Results:');
-    console.log(`  Success Rate: ${(results.apiBankResults.passedTests / results.apiBankResults.totalTests * 100).toFixed(1)}%`);
-    console.log(`  Tests: ${results.apiBankResults.passedTests}/${results.apiBankResults.totalTests}`);
-    console.log(`  API Accuracy: ${(results.apiBankResults.overallMetrics.averageApiCallAccuracy * 100).toFixed(1)}%`);
-    console.log(`  Response Quality: ${(results.apiBankResults.overallMetrics.averageResponseQuality * 100).toFixed(1)}%`);
+    console.log(
+      `  Success Rate: ${((results.apiBankResults.passedTests / results.apiBankResults.totalTests) * 100).toFixed(1)}%`
+    );
+    console.log(
+      `  Tests: ${results.apiBankResults.passedTests}/${results.apiBankResults.totalTests}`
+    );
+    console.log(
+      `  API Accuracy: ${(results.apiBankResults.overallMetrics.averageApiCallAccuracy * 100).toFixed(1)}%`
+    );
+    console.log(
+      `  Response Quality: ${(results.apiBankResults.overallMetrics.averageResponseQuality * 100).toFixed(1)}%`
+    );
   }
 
   console.log('\n💡 Recommendations:');
@@ -301,8 +302,11 @@ function logBenchmarkSummary(results: any, verbose: boolean): void {
   });
 
   if (verbose) {
-    console.log('\n📁 Detailed results saved to:', results.metadata.outputDir || './benchmark-results');
-    
+    console.log(
+      '\n📁 Detailed results saved to:',
+      results.metadata.outputDir || './benchmark-results'
+    );
+
     if (results.comparison.strengthsAndWeaknesses.strengths.length > 0) {
       console.log('\n💪 Strengths:');
       results.comparison.strengthsAndWeaknesses.strengths.forEach((strength: string) => {
@@ -368,7 +372,7 @@ export async function main(): Promise<void> {
 
 // Run if called directly
 if (require.main === module) {
-  main().catch(error => {
+  main().catch((error) => {
     console.error('Benchmark execution failed:', error);
     process.exit(1);
   });

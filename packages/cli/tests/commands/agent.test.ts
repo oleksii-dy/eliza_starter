@@ -34,8 +34,8 @@ describe('ElizaOS Agent Commands', () => {
     defaultCharacter = join(scriptDir, 'test-characters/ada.json');
 
     // Convert to absolute path and verify it exists
-    const { resolve } = await import('path');
-    defaultCharacter = resolve(defaultCharacter);
+    const { resolve: pathResolve } = await import('path');
+    defaultCharacter = pathResolve(defaultCharacter);
     console.log(`[DEBUG] Looking for character file at: ${defaultCharacter}`);
 
     if (!existsSync(defaultCharacter)) {

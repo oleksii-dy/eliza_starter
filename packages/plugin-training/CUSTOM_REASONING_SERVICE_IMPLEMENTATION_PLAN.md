@@ -11,20 +11,23 @@ This document outlines the implementation of a comprehensive custom reasoning se
 Based on analysis of the ElizaOS codebase, the current message processing pipeline works as follows:
 
 1. **Message Reception** (`/packages/server/src/services/message.ts:401`)
+
    - MessageBusService receives messages from external platforms
    - Validates permissions and creates agent memory
    - Emits MESSAGE_RECEIVED event
 
 2. **Message Processing** (`/packages/plugin-message-handling/src/events.ts:373`)
+
    - **shouldRespond Decision** (Lines 373-414):
      - Uses `shouldRespondTemplate` from `/packages/core/src/prompts.ts:1`
-     - Calls `runtime.useModel(ModelType.TEXT_LARGE)` 
+     - Calls `runtime.useModel(ModelType.TEXT_LARGE)`
      - Returns RESPOND/IGNORE/STOP decision
 
 3. **Response Generation** (`/packages/plugin-message-handling/src/events.ts:422`)
+
    - **Planning/Response** (Lines 422-441):
      - Uses `messageHandlerTemplate` from `/packages/core/src/prompts.ts:26`
-     - Calls `runtime.useModel(ModelType.TEXT_LARGE)` 
+     - Calls `runtime.useModel(ModelType.TEXT_LARGE)`
      - Generates thought, actions, providers, and text response
 
 4. **Action Execution** (`/packages/plugin-message-handling/src/events.ts:526`)
@@ -34,7 +37,7 @@ Based on analysis of the ElizaOS codebase, the current message processing pipeli
 ### Key Override Points Identified
 
 1. **shouldRespond Override**: Lines 373-414 in events.ts
-2. **Planning Override**: Lines 422-441 in events.ts  
+2. **Planning Override**: Lines 422-441 in events.ts
 3. **Autocoder Override**: In plugin-autocoder (Anthropic API proxy)
 
 ## Custom Reasoning Service Design
@@ -49,12 +52,12 @@ export interface CustomReasoningService extends Service {
   shouldRespond(context: ShouldRespondContext): Promise<ShouldRespondResult>;
   planResponse(context: PlanningContext): Promise<PlanningResult>;
   generateCode(context: CodingContext): Promise<CodingResult>;
-  
+
   // Model management
   enableModel(modelType: CustomModelType): Promise<void>;
   disableModel(modelType: CustomModelType): Promise<void>;
   getModelStatus(modelType: CustomModelType): Promise<ModelStatus>;
-  
+
   // Training data collection
   collectTrainingData(interaction: InteractionData): Promise<void>;
   exportTrainingData(options: ExportOptions): Promise<TrainingDataset>;
@@ -62,8 +65,8 @@ export interface CustomReasoningService extends Service {
 
 export enum CustomModelType {
   SHOULD_RESPOND = 'should_respond',
-  PLANNING = 'planning', 
-  CODING = 'coding'
+  PLANNING = 'planning',
+  CODING = 'coding',
 }
 
 export interface ShouldRespondContext {
@@ -119,32 +122,33 @@ export interface TrainingDataPoint {
 
 ### 2. Together.ai Custom Reasoning Service Implementation
 
-```typescript
+````typescript
 // /packages/plugin-training/src/services/TogetherReasoningService.ts
 
 export class TogetherReasoningService implements CustomReasoningService {
   static serviceType = 'custom-reasoning' as ServiceTypeName;
   static serviceName = 'together-reasoning';
-  
-  capabilityDescription = 'Custom reasoning service using fine-tuned DeepSeek models via Together.ai';
-  
+
+  capabilityDescription =
+    'Custom reasoning service using fine-tuned DeepSeek models via Together.ai';
+
   private client: TogetherAIClient;
   private models: Map<CustomModelType, ModelConfig> = new Map();
   private enabledModels: Set<CustomModelType> = new Set();
-  
+
   constructor(runtime: IAgentRuntime) {
     super(runtime);
     this.client = new TogetherAIClient(runtime.getSetting('TOGETHER_AI_API_KEY'));
     this.initializeModels();
   }
-  
+
   static async start(runtime: IAgentRuntime): Promise<TogetherReasoningService> {
     const service = new TogetherReasoningService(runtime);
     await service.validateApiKey();
     await service.loadModelConfigurations();
     return service;
   }
-  
+
   private initializeModels(): void {
     this.models.set(CustomModelType.SHOULD_RESPOND, {
       name: 'moonmakesmagic/DeepSeek-R1-Distill-Qwen-1.5B-shouldrespond',
@@ -153,41 +157,41 @@ export class TogetherReasoningService implements CustomReasoningService {
       maxTokens: 512,
       temperature: 0.1,
     });
-    
+
     this.models.set(CustomModelType.PLANNING, {
-      name: 'moonmakesmagic/DeepSeek-Qwen-14B-planning', 
+      name: 'moonmakesmagic/DeepSeek-Qwen-14B-planning',
       size: 'medium',
       costPerHour: 0.5,
       maxTokens: 2048,
       temperature: 0.3,
     });
-    
+
     this.models.set(CustomModelType.CODING, {
       name: 'moonmakesmagic/DeepSeek-Llama-67B-coding',
-      size: 'large', 
+      size: 'large',
       costPerHour: 2.0,
       maxTokens: 4096,
       temperature: 0.2,
     });
   }
-  
+
   async shouldRespond(context: ShouldRespondContext): Promise<ShouldRespondResult> {
     if (!this.enabledModels.has(CustomModelType.SHOULD_RESPOND)) {
       throw new Error('ShouldRespond model not enabled');
     }
-    
+
     const model = this.models.get(CustomModelType.SHOULD_RESPOND)!;
     const prompt = this.buildShouldRespondPrompt(context);
-    
+
     const response = await this.client.complete({
       model: model.name,
       prompt,
       max_tokens: model.maxTokens,
       temperature: model.temperature,
     });
-    
+
     const result = this.parseShouldRespondResponse(response);
-    
+
     // Collect training data
     const trainingData: TrainingDataPoint = {
       id: v4() as UUID,
@@ -209,29 +213,29 @@ export class TogetherReasoningService implements CustomReasoningService {
         modelName: model.name,
       },
     };
-    
+
     await this.collectTrainingData(trainingData);
-    
+
     return { ...result, trainingData };
   }
-  
+
   async planResponse(context: PlanningContext): Promise<PlanningResult> {
     if (!this.enabledModels.has(CustomModelType.PLANNING)) {
       throw new Error('Planning model not enabled');
     }
-    
+
     const model = this.models.get(CustomModelType.PLANNING)!;
     const prompt = this.buildPlanningPrompt(context);
-    
+
     const response = await this.client.complete({
       model: model.name,
       prompt,
       max_tokens: model.maxTokens,
       temperature: model.temperature,
     });
-    
+
     const result = this.parsePlanningResponse(response);
-    
+
     // Collect training data
     const trainingData: TrainingDataPoint = {
       id: v4() as UUID,
@@ -250,32 +254,32 @@ export class TogetherReasoningService implements CustomReasoningService {
         modelName: model.name,
       },
     };
-    
+
     await this.collectTrainingData(trainingData);
-    
+
     return { ...result, trainingData };
   }
-  
+
   async generateCode(context: CodingContext): Promise<CodingResult> {
     if (!this.enabledModels.has(CustomModelType.CODING)) {
       throw new Error('Coding model not enabled');
     }
-    
+
     const model = this.models.get(CustomModelType.CODING)!;
-    
+
     const response = await this.client.complete({
       model: model.name,
       prompt: context.prompt,
       max_tokens: model.maxTokens,
       temperature: model.temperature,
     });
-    
+
     const result = this.parseCodingResponse(response);
-    
+
     // Collect training data
     const trainingData: TrainingDataPoint = {
       id: v4() as UUID,
-      timestamp: Date.now(), 
+      timestamp: Date.now(),
       modelType: CustomModelType.CODING,
       input: context,
       output: result,
@@ -284,34 +288,34 @@ export class TogetherReasoningService implements CustomReasoningService {
         language: context.language,
       },
     };
-    
+
     await this.collectTrainingData(trainingData);
-    
+
     return { ...result, trainingData };
   }
-  
+
   private buildShouldRespondPrompt(context: ShouldRespondContext): string {
     // Use the existing shouldRespondTemplate but optimized for fine-tuned model
     const providers = context.state.data?.providers || {};
     const agentName = context.runtime.character.name;
-    
+
     return shouldRespondTemplate
       .replace(/{{agentName}}/g, agentName)
       .replace(/{{providers}}/g, JSON.stringify(providers));
   }
-  
+
   private buildPlanningPrompt(context: PlanningContext): string {
     // Use the existing messageHandlerTemplate but optimized for fine-tuned model
     const agentName = context.runtime.character.name;
     const providers = context.state.data?.providers || {};
     const actionNames = context.actionNames.join(', ');
-    
+
     return messageHandlerTemplate
       .replace(/{{agentName}}/g, agentName)
       .replace(/{{providers}}/g, JSON.stringify(providers))
       .replace(/{{actionNames}}/g, actionNames);
   }
-  
+
   private parseShouldRespondResponse(response: string): Omit<ShouldRespondResult, 'trainingData'> {
     // Parse XML response similar to existing parseKeyValueXml
     const parsed = parseKeyValueXml(response);
@@ -321,28 +325,28 @@ export class TogetherReasoningService implements CustomReasoningService {
       confidence: parsed.confidence ? parseFloat(parsed.confidence) : 0.8,
     };
   }
-  
+
   private parsePlanningResponse(response: string): Omit<PlanningResult, 'trainingData'> {
     const parsed = parseKeyValueXml(response);
     return {
       thought: parsed.thought || '',
-      actions: parsed.actions ? parsed.actions.split(',').map(a => a.trim()) : ['IGNORE'],
-      providers: parsed.providers ? parsed.providers.split(',').map(p => p.trim()) : [],
+      actions: parsed.actions ? parsed.actions.split(',').map((a) => a.trim()) : ['IGNORE'],
+      providers: parsed.providers ? parsed.providers.split(',').map((p) => p.trim()) : [],
       text: parsed.text || '',
     };
   }
-  
+
   private parseCodingResponse(response: string): Omit<CodingResult, 'trainingData'> {
     // Extract code blocks and explanations from response
     const codeMatch = response.match(/```[\w]*\n([\s\S]*?)\n```/);
     const code = codeMatch ? codeMatch[1] : response;
-    
+
     return {
       code: code.trim(),
       explanation: response.includes('```') ? response.split('```')[0].trim() : undefined,
     };
   }
-  
+
   async collectTrainingData(trainingData: TrainingDataPoint): Promise<void> {
     // Store in database for future training
     await this.runtime.adapter.log({
@@ -352,23 +356,23 @@ export class TogetherReasoningService implements CustomReasoningService {
       type: `training-data:${trainingData.modelType}`,
     });
   }
-  
+
   async enableModel(modelType: CustomModelType): Promise<void> {
     this.enabledModels.add(modelType);
     this.runtime.logger.info(`Enabled custom reasoning model: ${modelType}`);
   }
-  
+
   async disableModel(modelType: CustomModelType): Promise<void> {
     this.enabledModels.delete(modelType);
     this.runtime.logger.info(`Disabled custom reasoning model: ${modelType}`);
   }
-  
+
   async getModelStatus(modelType: CustomModelType): Promise<ModelStatus> {
     const model = this.models.get(modelType);
     if (!model) {
       throw new Error(`Unknown model type: ${modelType}`);
     }
-    
+
     return {
       enabled: this.enabledModels.has(modelType),
       name: model.name,
@@ -377,7 +381,7 @@ export class TogetherReasoningService implements CustomReasoningService {
       isDeployed: await this.checkModelDeployment(model.name),
     };
   }
-  
+
   private async checkModelDeployment(modelName: string): Promise<boolean> {
     try {
       await this.client.complete({
@@ -390,12 +394,12 @@ export class TogetherReasoningService implements CustomReasoningService {
       return false;
     }
   }
-  
+
   async stop(): Promise<void> {
     this.runtime.logger.info('Stopping Together.ai reasoning service');
   }
 }
-```
+````
 
 ### 3. Message Handling Hooks
 
@@ -410,12 +414,12 @@ export class ReasoningHooks {
     originalShouldRespond: () => Promise<boolean>
   ): Promise<boolean> {
     const reasoningService = runtime.getService<CustomReasoningService>('custom-reasoning');
-    
+
     if (!reasoningService) {
       // Fallback to original logic
       return originalShouldRespond();
     }
-    
+
     try {
       const context: ShouldRespondContext = {
         runtime,
@@ -427,18 +431,20 @@ export class ReasoningHooks {
           tableName: 'messages',
         }),
       };
-      
+
       const result = await reasoningService.shouldRespond(context);
-      
-      runtime.logger.debug(`Custom shouldRespond decision: ${result.decision} (confidence: ${result.confidence})`);
-      
+
+      runtime.logger.debug(
+        `Custom shouldRespond decision: ${result.decision} (confidence: ${result.confidence})`
+      );
+
       return result.decision === 'RESPOND';
     } catch (error) {
       runtime.logger.error('Error in custom shouldRespond, falling back:', error);
       return originalShouldRespond();
     }
   }
-  
+
   static async overridePlanning(
     runtime: IAgentRuntime,
     message: Memory,
@@ -447,11 +453,11 @@ export class ReasoningHooks {
     originalPlanning: () => Promise<Content>
   ): Promise<Content> {
     const reasoningService = runtime.getService<CustomReasoningService>('custom-reasoning');
-    
+
     if (!reasoningService) {
       return originalPlanning();
     }
-    
+
     try {
       const context: PlanningContext = {
         runtime,
@@ -459,9 +465,9 @@ export class ReasoningHooks {
         state,
         actionNames,
       };
-      
+
       const result = await reasoningService.planResponse(context);
-      
+
       return {
         thought: result.thought,
         actions: result.actions,
@@ -486,9 +492,9 @@ export class ReasoningHooks {
 
 export async function handleMessageReceived(params: MessageReceivedHandlerParams) {
   const { runtime, message, callback } = params;
-  
+
   // ... existing setup code ...
-  
+
   // HOOK 1: Override shouldRespond decision
   const shouldRespond = await ReasoningHooks.overrideShouldRespond(
     runtime,
@@ -500,16 +506,17 @@ export async function handleMessageReceived(params: MessageReceivedHandlerParams
         state: await runtime.composeState(message, ['SHOULD_RESPOND']),
         template: shouldRespondTemplate,
       });
-      
+
       const response = await runtime.useModel(ModelType.TEXT_LARGE, { prompt });
       const responseObject = parseKeyValueXml(response);
-      
+
       const nonResponseActions = ['IGNORE', 'NONE'];
-      return responseObject?.action && 
-        !nonResponseActions.includes(responseObject.action.toUpperCase());
+      return (
+        responseObject?.action && !nonResponseActions.includes(responseObject.action.toUpperCase())
+      );
     }
   );
-  
+
   if (shouldRespond) {
     // HOOK 2: Override planning/response generation
     const responseContent = await ReasoningHooks.overridePlanning(
@@ -523,12 +530,12 @@ export async function handleMessageReceived(params: MessageReceivedHandlerParams
           state: await runtime.composeState(message, ['ACTIONS']),
           template: messageHandlerTemplate,
         });
-        
+
         const response = await runtime.useModel(ModelType.TEXT_LARGE, { prompt });
         return parseKeyValueXml(response);
       }
     );
-    
+
     // ... rest of existing message handling logic ...
   }
 }
@@ -542,31 +549,31 @@ export async function handleMessageReceived(params: MessageReceivedHandlerParams
 export class AnthropicAPIProxy {
   private reasoningService: CustomReasoningService;
   private originalBaseURL: string;
-  
+
   constructor(reasoningService: CustomReasoningService) {
     this.reasoningService = reasoningService;
     this.originalBaseURL = 'https://api.anthropic.com';
   }
-  
+
   createProxyServer(): express.Application {
     const app = express();
     app.use(bodyParser.json());
-    
+
     // Intercept Anthropic API calls
     app.post('/v1/messages', async (req, res) => {
       try {
         const { messages, model, max_tokens, temperature } = req.body;
-        
+
         // Extract the coding prompt from the request
         const prompt = this.extractPromptFromMessages(messages);
-        
+
         // Use our custom coding model instead
         const result = await this.reasoningService.generateCode({
           prompt,
           language: this.detectLanguage(prompt),
           context: JSON.stringify(messages),
         });
-        
+
         // Format response to match Anthropic API format
         const anthropicResponse = {
           id: `msg_${Date.now()}`,
@@ -581,37 +588,37 @@ export class AnthropicAPIProxy {
             output_tokens: this.estimateTokens(result.code),
           },
         };
-        
+
         res.json(anthropicResponse);
       } catch (error) {
         // Fallback to original Anthropic API
         await this.forwardToOriginalAPI(req, res);
       }
     });
-    
+
     // Forward other endpoints to original API
     app.use('*', (req, res) => {
       this.forwardToOriginalAPI(req, res);
     });
-    
+
     return app;
   }
-  
+
   private extractPromptFromMessages(messages: any[]): string {
-    return messages.map(m => `${m.role}: ${m.content}`).join('\n');
+    return messages.map((m) => `${m.role}: ${m.content}`).join('\n');
   }
-  
+
   private detectLanguage(prompt: string): string {
     if (prompt.includes('typescript') || prompt.includes('.ts')) return 'typescript';
     if (prompt.includes('javascript') || prompt.includes('.js')) return 'javascript';
     if (prompt.includes('python') || prompt.includes('.py')) return 'python';
     return 'javascript'; // default
   }
-  
+
   private estimateTokens(text: string): number {
     return Math.ceil(text.length / 4); // rough estimate
   }
-  
+
   private async forwardToOriginalAPI(req: express.Request, res: express.Response) {
     // Forward to real Anthropic API as fallback
     const response = await fetch(`${this.originalBaseURL}${req.path}`, {
@@ -619,7 +626,7 @@ export class AnthropicAPIProxy {
       headers: req.headers as any,
       body: JSON.stringify(req.body),
     });
-    
+
     const data = await response.json();
     res.status(response.status).json(data);
   }
@@ -633,7 +640,7 @@ export class AnthropicAPIProxy {
 
 export class TrainingDataCollector {
   constructor(private runtime: IAgentRuntime) {}
-  
+
   async exportTrainingData(options: ExportOptions): Promise<TrainingDataset> {
     const logs = await this.runtime.adapter.getLogs({
       entityId: this.runtime.agentId,
@@ -641,21 +648,21 @@ export class TrainingDataCollector {
       limit: options.limit || 1000,
       offset: options.offset || 0,
     });
-    
+
     const dataset: TrainingDataset = {
       modelType: options.modelType,
       format: 'jsonl',
-      samples: logs.map(log => this.formatTrainingSample(log.body as TrainingDataPoint)),
+      samples: logs.map((log) => this.formatTrainingSample(log.body as TrainingDataPoint)),
       metadata: {
         exportedAt: Date.now(),
         agentId: this.runtime.agentId,
         totalSamples: logs.length,
       },
     };
-    
+
     return dataset;
   }
-  
+
   private formatTrainingSample(dataPoint: TrainingDataPoint): TrainingSample {
     switch (dataPoint.modelType) {
       case CustomModelType.SHOULD_RESPOND:
@@ -663,19 +670,25 @@ export class TrainingDataCollector {
           messages: [
             { role: 'system', content: 'Decide whether to respond to this message.' },
             { role: 'user', content: dataPoint.input.prompt },
-            { role: 'assistant', content: `<response><reasoning>${dataPoint.output.reasoning}</reasoning><action>${dataPoint.output.decision}</action></response>` },
+            {
+              role: 'assistant',
+              content: `<response><reasoning>${dataPoint.output.reasoning}</reasoning><action>${dataPoint.output.decision}</action></response>`,
+            },
           ],
         };
-        
+
       case CustomModelType.PLANNING:
         return {
           messages: [
             { role: 'system', content: 'Generate a response plan for this message.' },
             { role: 'user', content: dataPoint.input.prompt },
-            { role: 'assistant', content: `<response><thought>${dataPoint.output.thought}</thought><actions>${dataPoint.output.actions.join(',')}</actions><providers>${dataPoint.output.providers.join(',')}</providers><text>${dataPoint.output.text}</text></response>` },
+            {
+              role: 'assistant',
+              content: `<response><thought>${dataPoint.output.thought}</thought><actions>${dataPoint.output.actions.join(',')}</actions><providers>${dataPoint.output.providers.join(',')}</providers><text>${dataPoint.output.text}</text></response>`,
+            },
           ],
         };
-        
+
       case CustomModelType.CODING:
         return {
           messages: [
@@ -684,16 +697,16 @@ export class TrainingDataCollector {
             { role: 'assistant', content: dataPoint.output.code },
           ],
         };
-        
+
       default:
         throw new Error(`Unknown model type: ${dataPoint.modelType}`);
     }
   }
-  
+
   async exportToJSONL(dataset: TrainingDataset): Promise<string> {
-    return dataset.samples.map(sample => JSON.stringify(sample)).join('\n');
+    return dataset.samples.map((sample) => JSON.stringify(sample)).join('\n');
   }
-  
+
   async saveToFile(dataset: TrainingDataset, filePath: string): Promise<void> {
     const jsonl = await this.exportToJSONL(dataset);
     await fs.writeFile(filePath, jsonl, 'utf-8');
@@ -709,71 +722,76 @@ export class TrainingDataCollector {
 export class ModelManager {
   private deployedModels: Map<string, DeploymentInfo> = new Map();
   private client: TogetherAIClient;
-  
+
   constructor(private runtime: IAgentRuntime) {
     this.client = new TogetherAIClient(runtime.getSetting('TOGETHER_AI_API_KEY'));
   }
-  
+
   async deployModel(modelName: string): Promise<void> {
     // Deploy model to Together.ai endpoint
     const deployment = await this.client.deployModel(modelName);
-    
+
     this.deployedModels.set(modelName, {
       deploymentId: deployment.id,
       endpoint: deployment.endpoint,
       deployedAt: Date.now(),
       status: 'active',
     });
-    
+
     this.runtime.logger.info(`Deployed model ${modelName} to endpoint ${deployment.endpoint}`);
   }
-  
+
   async undeployModel(modelName: string): Promise<void> {
     const deployment = this.deployedModels.get(modelName);
     if (!deployment) {
       throw new Error(`Model ${modelName} is not deployed`);
     }
-    
+
     await this.client.undeployModel(deployment.deploymentId);
     this.deployedModels.delete(modelName);
-    
+
     this.runtime.logger.info(`Undeployed model ${modelName}`);
   }
-  
+
   async getDeploymentCosts(): Promise<CostReport> {
     const costs: CostReport = {
       totalCost: 0,
       modelCosts: new Map(),
       period: '24h',
     };
-    
+
     for (const [modelName, deployment] of this.deployedModels) {
       const usage = await this.client.getUsageMetrics(deployment.deploymentId);
       const cost = usage.hoursActive * deployment.costPerHour;
-      
+
       costs.modelCosts.set(modelName, {
         hoursActive: usage.hoursActive,
         cost,
         requests: usage.requests,
       });
-      
+
       costs.totalCost += cost;
     }
-    
+
     return costs;
   }
-  
+
   async scheduleAutomaticShutdown(modelName: string, idleTimeMinutes: number = 30): Promise<void> {
     // Implement automatic shutdown after idle time to save costs
-    setTimeout(async () => {
-      const lastUsed = await this.getLastUsageTime(modelName);
-      const idleTime = Date.now() - lastUsed;
-      
-      if (idleTime > idleTimeMinutes * 60 * 1000) {
-        await this.undeployModel(modelName);
-        this.runtime.logger.info(`Auto-shutdown: ${modelName} was idle for ${idleTimeMinutes} minutes`);
-      }
-    }, idleTimeMinutes * 60 * 1000);
+    setTimeout(
+      async () => {
+        const lastUsed = await this.getLastUsageTime(modelName);
+        const idleTime = Date.now() - lastUsed;
+
+        if (idleTime > idleTimeMinutes * 60 * 1000) {
+          await this.undeployModel(modelName);
+          this.runtime.logger.info(
+            `Auto-shutdown: ${modelName} was idle for ${idleTimeMinutes} minutes`
+          );
+        }
+      },
+      idleTimeMinutes * 60 * 1000
+    );
   }
 }
 ```
@@ -879,13 +897,13 @@ CREATE TABLE model_usage (
 
 ```typescript
 // .env additions
-TOGETHER_AI_API_KEY=your_api_key_here
-CUSTOM_REASONING_ENABLED=true
-CUSTOM_REASONING_MODELS=should-respond,planning,coding
-ANTHROPIC_PROXY_ENABLED=true
-ANTHROPIC_PROXY_PORT=8001
-AUTO_SHUTDOWN_IDLE_MINUTES=30
-TRAINING_DATA_COLLECTION=true
+TOGETHER_AI_API_KEY = your_api_key_here;
+REASONING_SERVICE_ENABLED = true;
+(REASONING_SERVICE_MODELS = should - respond), planning, coding;
+ANTHROPIC_PROXY_ENABLED = true;
+ANTHROPIC_PROXY_PORT = 8001;
+AUTO_SHUTDOWN_IDLE_MINUTES = 30;
+TRAINING_DATA_COLLECTION = true;
 ```
 
 ## Testing Strategy

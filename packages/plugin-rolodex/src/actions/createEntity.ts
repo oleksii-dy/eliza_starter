@@ -2,17 +2,14 @@ import {
   ModelType,
   logger,
   stringToUuid,
-} from '@elizaos/core';
-import type {
-  Action,
-  IAgentRuntime,
-  Memory,
-  State,
-  HandlerCallback,
-  UUID,
-  ActionResult,
+  type Action,
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  type HandlerCallback,
+  type UUID,
+  type ActionResult,
 } from '../core-types';
-import { EntityGraphService } from '../services/EntityGraphService';
 import type { EntityProfile } from '../types';
 
 export const createEntityAction: Action = {
@@ -37,9 +34,9 @@ export const createEntityAction: Action = {
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
-      const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
-      if (!entityGraphService) {
-        throw new Error('EntityGraphService not available');
+      const rolodexService = runtime.getService('rolodex');
+      if (!rolodexService) {
+        throw new Error('Rolodex service not available');
       }
 
       // Extract entity details from message
@@ -96,10 +93,13 @@ Return format:
         updatedAt: new Date().toISOString(),
       };
 
-      const created = await entityGraphService.trackEntity(
-        entityId,
-        'Manual entity creation'
-      );
+      // Use the service to upsert the entity
+      const upsertMethod = (rolodexService as any).upsertEntity;
+      if (!upsertMethod) {
+        throw new Error('Entity creation method not available');
+      }
+
+      const created = await upsertMethod.call(rolodexService, profile);
 
       const responseText = `Created new ${profile.type} entity "${profile.names?.[0] || 'Unknown'}" with ID ${entityId}. You can now track interactions and relationships for this entity.`;
 

@@ -13,7 +13,6 @@ describe('Character Schema Validation', () => {
     messageExamples: [],
     postExamples: [],
     topics: ['AI', 'Testing'],
-    adjectives: ['helpful', 'reliable'],
     knowledge: [],
     plugins: [],
     settings: {},
@@ -101,7 +100,6 @@ describe('Character Schema Validation', () => {
         ],
         postExamples: ['Example post 1', 'Example post 2'],
         topics: ['AI', 'Testing', 'Validation'],
-        adjectives: ['helpful', 'reliable', 'intelligent'],
         knowledge: [
           'knowledge/file1.txt',
           { path: 'knowledge/file2.txt', shared: true },

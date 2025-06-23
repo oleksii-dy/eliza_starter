@@ -59,20 +59,13 @@ A `characterfile` implements the [Character](/api/type-aliases/character) type a
 {
   "id": "unique-identifier",
   "name": "character_name",
-  "modelProvider": "ModelProviderName",
-  "clients": ["Client1", "Client2"],
   "settings": {
-    "secrets": { "key": "value" },
-    "voice": { "model": "VoiceModelName", "url": "VoiceModelURL" },
-    "model": "CharacterModel",
-    "embeddingModel": "EmbeddingModelName"
+    "secrets": { "key": "value" }
   },
   "bio": "Character biography or description",
-  "lore": ["Storyline or backstory element 1", "Storyline or backstory element 2"],
   "messageExamples": [["Message example 1", "Message example 2"]],
   "postExamples": ["Post example 1", "Post example 2"],
   "topics": ["Topic1", "Topic2"],
-  "adjectives": ["Adjective1", "Adjective2"],
   "style": {
     "all": ["All style guidelines"],
     "chat": ["Chat-specific style guidelines"],
@@ -86,14 +79,6 @@ A `characterfile` implements the [Character](/api/type-aliases/character) type a
 #### `name` (required)
 
 The character's display name for identification and in conversations.
-
-#### `modelProvider` (required)
-
-Specifies the AI model provider. Supported options from [ModelProviderName](/api/enumerations/modelprovidername) include `anthropic`, `llama_local`, `openai`, `livepeer`, and others.
-
-#### `clients` (required)
-
-Array of supported client types from [Clients](/api/enumerations/clients) e.g., `discord`, `direct`, `twitter`, `telegram`, `farcaster`.
 
 #### `bio`
 
@@ -110,20 +95,6 @@ Example:
   "Mark Andreessen is an American entrepreneur and investor",
   "Co-founder of Netscape and Andreessen Horowitz",
   "Pioneer of the early web, created NCSA Mosaic"
-]
-```
-
-#### `lore`
-
-Backstory elements and unique character traits. These help define personality and can be randomly sampled in conversations.
-
-Example:
-
-```json
-"lore": [
-  "Believes strongly in the power of software to transform industries",
-  "Known for saying 'Software is eating the world'",
-  "Early investor in Facebook, Twitter, and other tech giants"
 ]
 ```
 
@@ -185,12 +156,6 @@ The `style` object defines behavior patterns across contexts:
 - Used to guide conversations and generate relevant content
 - Helps maintain character consistency
 
-### Adjectives Array
-
-- Words that describe the character's traits and personality
-- Used for generating responses with a consistent tone
-- Can be used in "Mad Libs" style content generation
-
 ### Settings Configuration
 
 The `settings` object defines additional configurations like secrets and voice models.
@@ -204,53 +169,6 @@ The `settings` object defines additional configurations like secrets and voice m
 }
 ```
 
-### Templates Configuration
-
-The `templates` object defines customizable prompt templates used for various tasks and interactions. Below is the list of available templates:
-
-- `goalsTemplate`
-- `factsTemplate`
-- `messageHandlerTemplate`
-- `shouldRespondTemplate`
-- `continueMessageHandlerTemplate`
-- `evaluationTemplate`
-- `twitterSearchTemplate`
-- `twitterPostTemplate`
-- `twitterMessageHandlerTemplate`
-- `twitterShouldRespondTemplate`
-- `telegramMessageHandlerTemplate`
-- `telegramShouldRespondTemplate`
-- `discordVoiceHandlerTemplate`
-- `discordShouldRespondTemplate`
-- `discordMessageHandlerTemplate`
-
-### Example: Twitter Post Template
-
-Here’s an example of a `twitterPostTemplate`:
-
-```js
-templates: {
-    twitterPostTemplate: `
-# Areas of Expertise
-{{knowledge}}
-
-# About {{agentName}} (@{{twitterUserName}}):
-{{bio}}
-{{lore}}
-{{topics}}
-
-{{providers}}
-
-{{characterPostExamples}}
-
-{{postDirections}}
-
-# Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
-Write a 1-3 sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
-Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements.`,
-}
-```
-
 ---
 
 ## Example: Complete Character File
@@ -258,10 +176,8 @@ Your response should not contain any questions. Brief, concise statements only. 
 ```json
 {
   "name": "TechAI",
-  "modelProvider": "anthropic",
-  "clients": ["discord", "direct"],
+  "plugins": ["@elizaos/plugin-sql", "@elizaos/plugin-openai", "@elizaos/plugin-discord"],
   "bio": "AI researcher and educator focused on practical applications",
-  "lore": ["Pioneer in open-source AI development", "Advocate for AI accessibility"],
   "messageExamples": [
     [
       {
@@ -286,11 +202,7 @@ Your response should not contain any questions. Brief, concise statements only. 
     "chat": ["use relevant examples", "check understanding"],
     "post": ["focus on practical insights", "encourage learning"]
   },
-  "adjectives": ["knowledgeable", "approachable", "practical"],
-  "settings": {
-    "model": "claude-opus-4-20250514",
-    "voice": { "model": "en-US-neural" }
-  }
+  "settings": {}
 }
 ```
 

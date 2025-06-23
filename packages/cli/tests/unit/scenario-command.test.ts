@@ -5,8 +5,22 @@ import { ScenarioActionTracker } from '../../src/commands/scenario/action-tracke
 import type { Scenario } from '../../src/scenario-runner/types.js';
 
 // Mock fs and fs/promises at the top level
-vi.mock('fs');
-vi.mock('fs/promises');
+vi.mock('fs', async () => {
+  const actual = await vi.importActual('fs');
+  return {
+    ...actual,
+    existsSync: vi.fn(() => true),
+    readFileSync: vi.fn(() => '{}'),
+  };
+});
+vi.mock('fs/promises', async () => {
+  const actual = await vi.importActual('fs/promises');
+  return {
+    ...actual,
+    readFile: vi.fn().mockResolvedValue('{}'),
+    writeFile: vi.fn().mockResolvedValue(undefined),
+  };
+});
 
 // Mock implementations for internal functions that are not exported
 const loadScenarioFile = vi.fn();

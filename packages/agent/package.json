@@ -30,7 +30,9 @@
   "dependencies": {
     "@elizaos/cli": "workspace:*",
     "@elizaos/core": "workspace:*",
+    "@elizaos/plugin-dummy-services": "workspace:*",
     "@elizaos/plugin-knowledge": "workspace:*",
+    "@elizaos/plugin-lowlevel-testing": "workspace:*",
     "@elizaos/plugin-message-handling": "workspace:*",
     "@elizaos/plugin-planning": "workspace:*",
     "@elizaos/plugin-sql": "workspace:*",

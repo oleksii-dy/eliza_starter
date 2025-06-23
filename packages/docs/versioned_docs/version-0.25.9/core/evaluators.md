@@ -240,7 +240,7 @@ async function handler(runtime: IAgentRuntime, message: Memory) {
 
   const context = composeContext({
     state,
-    template: runtime.character.templates?.factsTemplate || factsTemplate,
+    template: factsTemplate,
   });
 
   const facts = await generateObjectArray({
@@ -545,7 +545,7 @@ options: { [key: string]: unknown } = { onlyInProgress: true }
 state = (await runtime.composeState(message)) as State;
 const context = composeContext({
 state,
-template: runtime.character.templates?.goalsTemplate || goalsTemplate,
+template: goalsTemplate,
 });
 
     // Request generateText from OpenAI to analyze conversation and suggest goal updates

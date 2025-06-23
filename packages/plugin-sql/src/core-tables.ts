@@ -27,7 +27,7 @@ export const CORE_TABLES: TableSchema[] = [
       "enabled" BOOLEAN DEFAULT true,
       "status" TEXT DEFAULT 'active',
       "settings" JSONB DEFAULT '{}',
-      "plugins" JSONB DEFAULT '[]',
+      "plugins" JSONB DEFAULT '[]'
     )`,
     // Fallback SQL for PGLite (PostgreSQL-compatible syntax)
     fallbackSql: `CREATE TABLE IF NOT EXISTS agents (

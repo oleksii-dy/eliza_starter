@@ -52,9 +52,14 @@ export class OODALoopService extends Service {
   private minLoopDelay: number = 1000; // Minimum 1 second between loops
   private autonomousRoomId: UUID | null = null;
   private autonomousWorldId: UUID | null = null;
-  
+
   // Real action tracking
-  private actionResults: { success: boolean; timestamp: number; actionName?: string; error?: string }[] = [];
+  private actionResults: {
+    success: boolean;
+    timestamp: number;
+    actionName?: string;
+    error?: string;
+  }[] = [];
   private readonly maxActionHistorySize = 100;
 
   constructor(runtime: IAgentRuntime) {
@@ -750,7 +755,7 @@ export class OODALoopService extends Service {
     // Use messageHandlerTemplate to decide what actions and providers to use
     const prompt = composePromptFromState({
       state,
-      template: this.runtime.character.templates?.messageHandlerTemplate || messageHandlerTemplate,
+      template: messageHandlerTemplate,
     });
 
     let responseContent: Content | null = null;
@@ -853,7 +858,7 @@ export class OODALoopService extends Service {
       // Track action results for real metrics
       const actionNames = response.actions || [];
       const isSuccessful = this.isActionResponseSuccessful(response);
-      
+
       // Record each action result
       for (const actionName of actionNames) {
         this.recordActionResult({
@@ -883,9 +888,12 @@ export class OODALoopService extends Service {
       await this.runtime.processActions(message, responseMessages, state, callback);
 
       this.logger.acting('Actions processed successfully');
-      
+
       // Record successful completion if no actions were executed but processing succeeded
-      if (responseMessages.length === 0 || !responseMessages.some(m => m.content.actions?.length)) {
+      if (
+        responseMessages.length === 0 ||
+        !responseMessages.some((m) => m.content.actions?.length)
+      ) {
         this.recordActionResult({
           success: true,
           timestamp: Date.now(),
@@ -895,7 +903,7 @@ export class OODALoopService extends Service {
     } catch (error) {
       this.logger.error('Error processing actions', error as Error);
       this.currentContext!.errors.push(error as Error);
-      
+
       // Record failed action result
       this.recordActionResult({
         success: false,
@@ -1046,14 +1054,19 @@ export class OODALoopService extends Service {
   }
 
   // Helper methods for real action tracking
-  private recordActionResult(result: { success: boolean; timestamp: number; actionName?: string; error?: string }): void {
+  private recordActionResult(result: {
+    success: boolean;
+    timestamp: number;
+    actionName?: string;
+    error?: string;
+  }): void {
     this.actionResults.push(result);
-    
+
     // Keep only recent results to prevent memory bloat
     if (this.actionResults.length > this.maxActionHistorySize) {
       this.actionResults = this.actionResults.slice(-this.maxActionHistorySize);
     }
-    
+
     this.logger.debug('Action result recorded', {
       success: result.success,
       actionName: result.actionName,
@@ -1064,58 +1077,79 @@ export class OODALoopService extends Service {
 
   private isActionResponseSuccessful(response: Content): boolean {
     // Determine if an action response indicates success or failure
-    
+
     // Check for explicit error indicators
-    if (response.actions?.some(action => action.includes('ERROR') || action.includes('FAILED'))) {
+    if (response.actions?.some((action) => action.includes('ERROR') || action.includes('FAILED'))) {
       return false;
     }
-    
+
     // Check response text for error indicators
     const responseText = response.text?.toLowerCase() || '';
     const errorPatterns = [
-      'error', 'failed', 'couldn\'t', 'unable', 'impossible',
-      'not found', 'access denied', 'permission denied', 'timeout',
-      'exception', 'crash', 'broken', 'invalid'
+      'error',
+      'failed',
+      "couldn't",
+      'unable',
+      'impossible',
+      'not found',
+      'access denied',
+      'permission denied',
+      'timeout',
+      'exception',
+      'crash',
+      'broken',
+      'invalid',
     ];
-    
-    if (errorPatterns.some(pattern => responseText.includes(pattern))) {
+
+    if (errorPatterns.some((pattern) => responseText.includes(pattern))) {
       return false;
     }
-    
+
     // Check for success indicators
     const successPatterns = [
-      'success', 'completed', 'done', 'finished', 'created',
-      'saved', 'updated', 'processed', 'executed', 'found'
+      'success',
+      'completed',
+      'done',
+      'finished',
+      'created',
+      'saved',
+      'updated',
+      'processed',
+      'executed',
+      'found',
     ];
-    
-    if (successPatterns.some(pattern => responseText.includes(pattern))) {
+
+    if (successPatterns.some((pattern) => responseText.includes(pattern))) {
       return true;
     }
-    
+
     // Default to success if no clear indicators (neutral response)
     return true;
   }
 
   private extractErrorFromResponse(response: Content): string | undefined {
     const responseText = response.text || '';
-    
+
     // Try to extract specific error message
     const errorMatch = responseText.match(/error[:\s]+([^.]+)/i);
     if (errorMatch) {
       return errorMatch[1].trim();
     }
-    
+
     // Look for failure descriptions
     const failureMatch = responseText.match(/failed[:\s]+([^.]+)/i);
     if (failureMatch) {
       return failureMatch[1].trim();
     }
-    
+
     // Return general error indicator
-    if (responseText.toLowerCase().includes('error') || responseText.toLowerCase().includes('failed')) {
+    if (
+      responseText.toLowerCase().includes('error') ||
+      responseText.toLowerCase().includes('failed')
+    ) {
       return responseText.substring(0, 100); // First 100 chars as error description
     }
-    
+
     return undefined;
   }
 
@@ -1123,18 +1157,18 @@ export class OODALoopService extends Service {
     if (this.actionResults.length === 0) {
       return 1.0; // Default to 100% if no data
     }
-    
+
     // Use recent results (last hour) for more relevant metrics
     const oneHourAgo = Date.now() - 3600000;
-    const recentResults = this.actionResults.filter(result => result.timestamp > oneHourAgo);
-    
+    const recentResults = this.actionResults.filter((result) => result.timestamp > oneHourAgo);
+
     if (recentResults.length === 0) {
       // Fall back to all results if no recent ones
-      const successCount = this.actionResults.filter(result => result.success).length;
+      const successCount = this.actionResults.filter((result) => result.success).length;
       return successCount / this.actionResults.length;
     }
-    
-    const recentSuccessCount = recentResults.filter(result => result.success).length;
+
+    const recentSuccessCount = recentResults.filter((result) => result.success).length;
     return recentSuccessCount / recentResults.length;
   }
 
@@ -1159,8 +1193,12 @@ export class OODALoopService extends Service {
     this.logger.debug('OODA metrics calculated', {
       actionSuccessRate,
       totalActionResults: this.actionResults.length,
-      recentSuccesses: this.actionResults.filter(r => r.success && r.timestamp > Date.now() - 3600000).length,
-      recentFailures: this.actionResults.filter(r => !r.success && r.timestamp > Date.now() - 3600000).length,
+      recentSuccesses: this.actionResults.filter(
+        (r) => r.success && r.timestamp > Date.now() - 3600000
+      ).length,
+      recentFailures: this.actionResults.filter(
+        (r) => !r.success && r.timestamp > Date.now() - 3600000
+      ).length,
     });
 
     return metrics;

@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AgentRuntime } from '../runtime';
-import type { 
-  Plugin, 
-  Action, 
-  Provider, 
-  Evaluator, 
+import type {
+  Plugin,
+  Action,
+  Provider,
+  Evaluator,
   IAgentRuntime,
   Character,
   IDatabaseAdapter,
-  UUID
+  UUID,
 } from '../types';
 import { Service } from '../types/service';
 
@@ -20,7 +20,6 @@ const testCharacter: Character = {
   messageExamples: [],
   postExamples: [],
   topics: [],
-  adjectives: [],
   knowledge: [],
   plugins: ['test-plugin'],
   settings: {},
@@ -33,32 +32,32 @@ const testCharacter: Character = {
         TEST_ACTION: {
           enabled: true,
           settings: {
-            testMode: true
-          }
-        }
+            testMode: true,
+          },
+        },
       },
       providers: {
         TEST_PROVIDER: {
           enabled: true,
-          settings: {}
-        }
+          settings: {},
+        },
       },
       evaluators: {
         TEST_EVALUATOR: {
           enabled: true,
-          settings: {}
-        }
+          settings: {},
+        },
       },
       services: {
         TEST_SERVICE: {
           enabled: true,
           settings: {
-            maxConnections: 10
-          }
-        }
-      }
-    }
-  }
+            maxConnections: 10,
+          },
+        },
+      },
+    },
+  },
 };
 
 // Mock plugin components for testing
@@ -111,28 +110,28 @@ const testPlugin: Plugin = {
     actions: {
       TEST_ACTION: {
         enabled: true,
-        settings: {}
-      }
+        settings: {},
+      },
     },
     providers: {
       TEST_PROVIDER: {
         enabled: true,
-        settings: {}
-      }
+        settings: {},
+      },
     },
     evaluators: {
       TEST_EVALUATOR: {
         enabled: true,
-        settings: {}
-      }
+        settings: {},
+      },
     },
     services: {
       TEST_SERVICE: {
         enabled: true,
-        settings: {}
-      }
-    }
-  }
+        settings: {},
+      },
+    },
+  },
 };
 
 describe('Runtime Configuration System E2E Tests', () => {
@@ -143,10 +142,10 @@ describe('Runtime Configuration System E2E Tests', () => {
     // Track created entities for mock consistency
     const createdEntities = new Map();
     const createdRooms = new Map();
-    
+
     // Track configuration persistence (shared across runtime instances)
     const configStorage = new Map();
-    
+
     // Create mock database adapter for testing
     dbAdapter = {
       init: vi.fn().mockResolvedValue(undefined),
@@ -155,18 +154,18 @@ describe('Runtime Configuration System E2E Tests', () => {
       close: vi.fn().mockResolvedValue(undefined),
       getConnection: vi.fn().mockResolvedValue({}),
       db: {},
-      
+
       // Agent management methods
       getAgent: vi.fn().mockResolvedValue(null),
       getAgents: vi.fn().mockResolvedValue([]),
       createAgent: vi.fn().mockResolvedValue(true),
       updateAgent: vi.fn().mockResolvedValue(true),
       deleteAgent: vi.fn().mockResolvedValue(true),
-      
+
       // Migration and embedding methods
       runMigrations: vi.fn().mockResolvedValue(undefined),
       ensureEmbeddingDimension: vi.fn().mockResolvedValue(undefined),
-      
+
       // Entity methods
       getEntitiesByIds: vi.fn().mockImplementation((ids: UUID[]) => {
         const entities = ids.map((id: UUID) => createdEntities.get(id)).filter(Boolean);
@@ -175,13 +174,23 @@ describe('Runtime Configuration System E2E Tests', () => {
       getEntitiesForRoom: vi.fn().mockResolvedValue([]),
       createEntities: vi.fn().mockImplementation((entities: any[]) => {
         entities.forEach((entity: any) => {
-          const entityData = { id: entity.id, names: entity.names, metadata: entity.metadata, agentId: entity.agentId };
+          const entityData = {
+            id: entity.id,
+            names: entity.names,
+            metadata: entity.metadata,
+            agentId: entity.agentId,
+          };
           createdEntities.set(entity.id, entityData);
         });
         return Promise.resolve(true);
       }),
       createEntity: vi.fn().mockImplementation((entity) => {
-        const entityData = { id: entity.id, names: entity.names, metadata: entity.metadata, agentId: entity.agentId };
+        const entityData = {
+          id: entity.id,
+          names: entity.names,
+          metadata: entity.metadata,
+          agentId: entity.agentId,
+        };
         createdEntities.set(entity.id, entityData);
         return Promise.resolve(entity.id || 'test-entity-id');
       }),
@@ -189,14 +198,14 @@ describe('Runtime Configuration System E2E Tests', () => {
         return Promise.resolve(createdEntities.get(id) || null);
       }),
       updateEntity: vi.fn().mockResolvedValue(undefined),
-      
+
       // Component methods
       getComponent: vi.fn().mockResolvedValue(null),
       getComponents: vi.fn().mockResolvedValue([]),
       createComponent: vi.fn().mockResolvedValue(true),
       updateComponent: vi.fn().mockResolvedValue(undefined),
       deleteComponent: vi.fn().mockResolvedValue(undefined),
-      
+
       // Memory methods
       getMemories: vi.fn().mockResolvedValue([]),
       getMemoryById: vi.fn().mockResolvedValue(null),
@@ -211,12 +220,12 @@ describe('Runtime Configuration System E2E Tests', () => {
       deleteManyMemories: vi.fn().mockResolvedValue(undefined),
       deleteAllMemories: vi.fn().mockResolvedValue(undefined),
       countMemories: vi.fn().mockResolvedValue(0),
-      
+
       // Logging methods
       log: vi.fn().mockResolvedValue(undefined),
       getLogs: vi.fn().mockResolvedValue([]),
       deleteLog: vi.fn().mockResolvedValue(undefined),
-      
+
       // World methods
       createWorld: vi.fn().mockResolvedValue('test-world-id'),
       getWorld: vi.fn().mockResolvedValue({ id: 'test-world-id', name: 'test' }),
@@ -224,7 +233,7 @@ describe('Runtime Configuration System E2E Tests', () => {
       getAllWorlds: vi.fn().mockResolvedValue([]),
       updateWorld: vi.fn().mockResolvedValue(undefined),
       removeWorld: vi.fn().mockResolvedValue(undefined),
-      
+
       // Room methods
       createRoom: vi.fn().mockImplementation((room) => {
         const roomData = { id: room.id, name: room.name, type: room.type, agentId: room.agentId };
@@ -242,7 +251,7 @@ describe('Runtime Configuration System E2E Tests', () => {
       updateRoom: vi.fn().mockResolvedValue(undefined),
       deleteRoom: vi.fn().mockResolvedValue(undefined),
       deleteRoomsByWorldId: vi.fn().mockResolvedValue(undefined),
-      
+
       // Participant methods
       addParticipant: vi.fn().mockResolvedValue(undefined),
       addParticipantsRoom: vi.fn().mockResolvedValue(true),
@@ -251,18 +260,18 @@ describe('Runtime Configuration System E2E Tests', () => {
       getParticipantsForRoom: vi.fn().mockResolvedValue([]),
       setParticipantUserState: vi.fn().mockResolvedValue(undefined),
       getParticipantUserState: vi.fn().mockResolvedValue(null),
-      
+
       // Relationship methods
       createRelationship: vi.fn().mockResolvedValue(true),
       updateRelationship: vi.fn().mockResolvedValue(undefined),
       getRelationship: vi.fn().mockResolvedValue(null),
       getRelationships: vi.fn().mockResolvedValue([]),
-      
+
       // Cache methods
       setCache: vi.fn().mockResolvedValue(true),
       getCache: vi.fn().mockResolvedValue(null),
       deleteCache: vi.fn().mockResolvedValue(true),
-      
+
       // Task methods
       createTask: vi.fn().mockResolvedValue('test-task-id'),
       getTasks: vi.fn().mockResolvedValue([]),
@@ -302,7 +311,7 @@ describe('Runtime Configuration System E2E Tests', () => {
     it('should retrieve plugin configuration correctly', async () => {
       const configManager = runtime.getConfigurationManager();
       const pluginConfig = configManager.getPluginConfiguration('test-plugin');
-      
+
       expect(pluginConfig).toBeDefined();
       expect(pluginConfig!.pluginName).toBe('test-plugin');
       expect(pluginConfig!.enabled).toBe(true);
@@ -314,10 +323,10 @@ describe('Runtime Configuration System E2E Tests', () => {
 
     it('should update component configuration and reflect in runtime', async () => {
       const configManager = runtime.getConfigurationManager();
-      
+
       // Initially, action should be enabled and registered
-      expect(runtime.actions.find(a => a.name === 'TEST_ACTION')).toBeDefined();
-      
+      expect(runtime.actions.find((a) => a.name === 'TEST_ACTION')).toBeDefined();
+
       // Update component configuration to disable
       const enabledComponents = configManager.getEnabledComponentsMap();
       const result = await configManager.updateComponentConfiguration(
@@ -328,11 +337,15 @@ describe('Runtime Configuration System E2E Tests', () => {
         [],
         enabledComponents
       );
-      
+
       expect(result.valid).toBe(true);
-      
+
       // Check that component config is updated
-      const componentConfig = configManager.getComponentConfig('test-plugin', 'TEST_ACTION', 'action');
+      const componentConfig = configManager.getComponentConfig(
+        'test-plugin',
+        'TEST_ACTION',
+        'action'
+      );
       expect(componentConfig.enabled).toBe(false);
     });
   });
@@ -347,14 +360,18 @@ describe('Runtime Configuration System E2E Tests', () => {
             overrideLevel: 'runtime',
             overrideReason: 'Test disable',
             settings: {},
-            lastModified: new Date()
-          }
-        }
+            lastModified: new Date(),
+          },
+        },
       });
 
       // Verify component is disabled
       const configManager = runtime.getConfigurationManager();
-      let componentConfig = configManager.getComponentConfig('test-plugin', 'TEST_ACTION', 'action');
+      let componentConfig = configManager.getComponentConfig(
+        'test-plugin',
+        'TEST_ACTION',
+        'action'
+      );
       expect(componentConfig.enabled).toBe(false);
 
       // Re-enable component
@@ -365,9 +382,9 @@ describe('Runtime Configuration System E2E Tests', () => {
             overrideLevel: 'runtime',
             overrideReason: 'Test enable',
             settings: {},
-            lastModified: new Date()
-          }
-        }
+            lastModified: new Date(),
+          },
+        },
       });
 
       // Verify component is enabled
@@ -380,10 +397,26 @@ describe('Runtime Configuration System E2E Tests', () => {
 
       // Test all component types
       const componentTypes = [
-        { type: 'actions', name: 'TEST_ACTION', runtimeCheck: () => runtime.actions.find(a => a.name === 'TEST_ACTION') },
-        { type: 'providers', name: 'TEST_PROVIDER', runtimeCheck: () => runtime.providers.find(p => p.name === 'TEST_PROVIDER') },
-        { type: 'evaluators', name: 'TEST_EVALUATOR', runtimeCheck: () => runtime.evaluators.find(e => e.name === 'TEST_EVALUATOR') },
-        { type: 'services', name: 'TEST_SERVICE', runtimeCheck: () => runtime.getService('TEST_SERVICE') }
+        {
+          type: 'actions',
+          name: 'TEST_ACTION',
+          runtimeCheck: () => runtime.actions.find((a) => a.name === 'TEST_ACTION'),
+        },
+        {
+          type: 'providers',
+          name: 'TEST_PROVIDER',
+          runtimeCheck: () => runtime.providers.find((p) => p.name === 'TEST_PROVIDER'),
+        },
+        {
+          type: 'evaluators',
+          name: 'TEST_EVALUATOR',
+          runtimeCheck: () => runtime.evaluators.find((e) => e.name === 'TEST_EVALUATOR'),
+        },
+        {
+          type: 'services',
+          name: 'TEST_SERVICE',
+          runtimeCheck: () => runtime.getService('TEST_SERVICE'),
+        },
       ];
 
       for (const component of componentTypes) {
@@ -398,15 +431,15 @@ describe('Runtime Configuration System E2E Tests', () => {
               overrideLevel: 'runtime',
               overrideReason: `Test disable ${component.name}`,
               settings: {},
-              lastModified: new Date()
-            }
-          }
+              lastModified: new Date(),
+            },
+          },
         });
 
         // Check configuration is updated
         const componentConfig = configManager.getComponentConfig(
-          'test-plugin', 
-          component.name, 
+          'test-plugin',
+          component.name,
           component.type.slice(0, -1) as any
         );
         expect(componentConfig.enabled).toBe(false);
@@ -419,15 +452,15 @@ describe('Runtime Configuration System E2E Tests', () => {
               overrideLevel: 'runtime',
               overrideReason: `Test enable ${component.name}`,
               settings: {},
-              lastModified: new Date()
-            }
-          }
+              lastModified: new Date(),
+            },
+          },
         });
 
         // Check configuration is updated
         const enabledConfig = configManager.getComponentConfig(
-          'test-plugin', 
-          component.name, 
+          'test-plugin',
+          component.name,
           component.type.slice(0, -1) as any
         );
         expect(enabledConfig.enabled).toBe(true);
@@ -440,9 +473,9 @@ describe('Runtime Configuration System E2E Tests', () => {
       const configManager = runtime.getConfigurationManager();
 
       // Get initial state
-      const initialActions = runtime.actions.map(a => a.name);
-      const initialProviders = runtime.providers.map(p => p.name);
-      const initialEvaluators = runtime.evaluators.map(e => e.name);
+      const initialActions = runtime.actions.map((a) => a.name);
+      const initialProviders = runtime.providers.map((p) => p.name);
+      const initialEvaluators = runtime.evaluators.map((e) => e.name);
       const initialServices = Array.from(runtime.services.keys());
 
       expect(initialActions).toContain('TEST_ACTION');
@@ -458,27 +491,31 @@ describe('Runtime Configuration System E2E Tests', () => {
             overrideLevel: 'runtime',
             overrideReason: 'Test state tracking',
             settings: {},
-            lastModified: new Date()
-          }
-        }
+            lastModified: new Date(),
+          },
+        },
       });
 
       // Check that action is removed from runtime
-      const actionsAfterDisable = runtime.actions.map(a => a.name);
+      const actionsAfterDisable = runtime.actions.map((a) => a.name);
       expect(actionsAfterDisable).not.toContain('TEST_ACTION');
 
       // But configuration should still exist
-      const componentConfig = configManager.getComponentConfig('test-plugin', 'TEST_ACTION', 'action');
+      const componentConfig = configManager.getComponentConfig(
+        'test-plugin',
+        'TEST_ACTION',
+        'action'
+      );
       expect(componentConfig).toBeDefined();
       expect(componentConfig.enabled).toBe(false);
     });
 
     it('should handle component dependencies correctly', async () => {
       const configManager = runtime.getConfigurationManager();
-      
+
       // Test dependency validation
       const enabledComponents = configManager.getEnabledComponentsMap();
-      
+
       // Try to update a component with dependencies
       const result = await configManager.updateComponentConfiguration(
         'test-plugin',
@@ -497,7 +534,7 @@ describe('Runtime Configuration System E2E Tests', () => {
   describe('Configuration Persistence', () => {
     it('should persist configuration changes in memory correctly', async () => {
       const configManager = runtime.getConfigurationManager();
-      
+
       // Make a configuration change
       await runtime.configurePlugin('test-plugin', {
         actions: {
@@ -506,13 +543,17 @@ describe('Runtime Configuration System E2E Tests', () => {
             overrideLevel: 'gui',
             overrideReason: 'Persistence test',
             settings: { testSetting: 'value' },
-            lastModified: new Date()
-          }
-        }
+            lastModified: new Date(),
+          },
+        },
       });
 
       // Verify change is applied and persisted in the configuration manager
-      let componentConfig = configManager.getComponentConfig('test-plugin', 'TEST_ACTION', 'action');
+      let componentConfig = configManager.getComponentConfig(
+        'test-plugin',
+        'TEST_ACTION',
+        'action'
+      );
       expect(componentConfig.enabled).toBe(false);
       expect(componentConfig.settings?.testSetting).toBe('value');
       expect(componentConfig.overrideLevel).toBe('gui');
@@ -520,7 +561,7 @@ describe('Runtime Configuration System E2E Tests', () => {
 
       // Verify configuration persists in the configuration manager's state
       const allConfigs = configManager.listConfigurations();
-      const testPluginConfig = allConfigs.find(c => c.pluginName === 'test-plugin');
+      const testPluginConfig = allConfigs.find((c) => c.pluginName === 'test-plugin');
       expect(testPluginConfig).toBeDefined();
       expect(testPluginConfig!.actions['TEST_ACTION'].enabled).toBe(false);
       expect(testPluginConfig!.actions['TEST_ACTION'].settings?.testSetting).toBe('value');
@@ -528,16 +569,16 @@ describe('Runtime Configuration System E2E Tests', () => {
 
     it('should handle configuration override levels correctly', async () => {
       const configManager = runtime.getConfigurationManager();
-      
+
       // Set plugin-level default
       await configManager.setOverride('database', 'test-plugin', {
         actions: {
           TEST_ACTION: {
             enabled: true,
             overrideLevel: 'database',
-            settings: { level: 'plugin' }
-          }
-        }
+            settings: { level: 'plugin' },
+          },
+        },
       });
 
       // Set GUI-level override
@@ -546,13 +587,17 @@ describe('Runtime Configuration System E2E Tests', () => {
           TEST_ACTION: {
             enabled: false,
             overrideLevel: 'gui',
-            settings: { level: 'gui' }
-          }
-        }
+            settings: { level: 'gui' },
+          },
+        },
       });
 
       // GUI override should take precedence
-      const componentConfig = configManager.getComponentConfig('test-plugin', 'TEST_ACTION', 'action');
+      const componentConfig = configManager.getComponentConfig(
+        'test-plugin',
+        'TEST_ACTION',
+        'action'
+      );
       expect(componentConfig.enabled).toBe(false);
       expect(componentConfig.settings?.level).toBe('gui');
 
@@ -564,13 +609,17 @@ describe('Runtime Configuration System E2E Tests', () => {
             overrideLevel: 'runtime',
             overrideReason: 'Runtime override test',
             settings: { level: 'runtime' },
-            lastModified: new Date()
-          }
-        }
+            lastModified: new Date(),
+          },
+        },
       });
 
       // Runtime override should take precedence
-      const runtimeConfig = configManager.getComponentConfig('test-plugin', 'TEST_ACTION', 'action');
+      const runtimeConfig = configManager.getComponentConfig(
+        'test-plugin',
+        'TEST_ACTION',
+        'action'
+      );
       expect(runtimeConfig.enabled).toBe(true);
       expect(runtimeConfig.settings?.level).toBe('runtime');
     });
@@ -579,11 +628,11 @@ describe('Runtime Configuration System E2E Tests', () => {
   describe('Error Handling', () => {
     it('should handle invalid plugin names gracefully', async () => {
       const configManager = runtime.getConfigurationManager();
-      
+
       expect(() => {
         configManager.getPluginConfiguration('non-existent-plugin');
       }).not.toThrow();
-      
+
       const config = configManager.getPluginConfiguration('non-existent-plugin');
       expect(config).toBeNull();
     });
@@ -591,7 +640,7 @@ describe('Runtime Configuration System E2E Tests', () => {
     it('should handle invalid component configurations gracefully', async () => {
       const configManager = runtime.getConfigurationManager();
       const enabledComponents = configManager.getEnabledComponentsMap();
-      
+
       const result = await configManager.updateComponentConfiguration(
         'test-plugin',
         'NON_EXISTENT_COMPONENT',
@@ -602,13 +651,15 @@ describe('Runtime Configuration System E2E Tests', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.errors).toContain('Component NON_EXISTENT_COMPONENT not found in plugin test-plugin');
+      expect(result.errors).toContain(
+        'Component NON_EXISTENT_COMPONENT not found in plugin test-plugin'
+      );
     });
 
     it('should validate component dependencies', async () => {
       const configManager = runtime.getConfigurationManager();
       const enabledComponents = configManager.getEnabledComponentsMap();
-      
+
       // Try to set a dependency on a non-existent component
       const result = await configManager.updateComponentConfiguration(
         'test-plugin',
@@ -620,14 +671,14 @@ describe('Runtime Configuration System E2E Tests', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some(error => error.includes('NON_EXISTENT_DEPENDENCY'))).toBe(true);
+      expect(result.errors.some((error) => error.includes('NON_EXISTENT_DEPENDENCY'))).toBe(true);
     });
   });
 
   describe('Performance Tests', () => {
     it('should handle configuration changes efficiently', async () => {
       const startTime = Date.now();
-      
+
       // Perform multiple configuration changes
       for (let i = 0; i < 10; i++) {
         await runtime.configurePlugin('test-plugin', {
@@ -637,33 +688,33 @@ describe('Runtime Configuration System E2E Tests', () => {
               overrideLevel: 'runtime',
               overrideReason: `Performance test iteration ${i}`,
               settings: { iteration: i },
-              lastModified: new Date()
-            }
-          }
+              lastModified: new Date(),
+            },
+          },
         });
       }
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       // Should complete within reasonable time (adjust threshold as needed)
       expect(duration).toBeLessThan(5000); // 5 seconds
     });
 
     it('should cache configuration data efficiently', async () => {
       const configManager = runtime.getConfigurationManager();
-      
+
       const startTime = Date.now();
-      
+
       // Perform multiple reads
       for (let i = 0; i < 100; i++) {
         configManager.getPluginConfiguration('test-plugin');
         configManager.getComponentConfig('test-plugin', 'TEST_ACTION', 'action');
       }
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       // Should be fast due to caching
       expect(duration).toBeLessThan(1000); // 1 second
     });

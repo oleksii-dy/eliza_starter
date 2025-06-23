@@ -1,6 +1,6 @@
 /**
  * Real runtime integration test for ReasoningProxyService
- * 
+ *
  * This test verifies that the ReasoningProxyService properly integrates with
  * actual ElizaOS runtime instances and correctly handles fallback scenarios.
  */
@@ -29,8 +29,10 @@ describe('ReasoningProxyService Runtime Integration', () => {
   it('should initialize successfully with valid configuration', async () => {
     // Verify service constructs properly
     expect(service).toBeDefined();
-    expect(service.capabilityDescription).toBe('Proxies auto-coder requests to fine-tuned reasoning models on Together.ai');
-    
+    expect(service.capabilityDescription).toBe(
+      'Proxies auto-coder requests to fine-tuned reasoning models on Together.ai'
+    );
+
     // Verify static properties
     expect(ReasoningProxyService.serviceName).toBe('reasoning_proxy');
     expect(ReasoningProxyService.serviceType).toBe('reasoning_proxy');
@@ -40,20 +42,20 @@ describe('ReasoningProxyService Runtime Integration', () => {
     // Set test configuration
     runtime.getSetting = ((key: string) => {
       const settings: Record<string, any> = {
-        'TOGETHER_API_KEY': 'test-key',
-        'ELIZAOS_FINETUNED_MODEL': 'ft-test-model',
-        'FALLBACK_MODEL': 'test-gemini',
-        'REASONING_PROXY_ENABLED': 'true',
-        'REASONING_TEMPERATURE': '0.2',
-        'REASONING_MAX_TOKENS': '2000',
-        'REASONING_TIMEOUT': '15000'
+        TOGETHER_API_KEY: 'test-key',
+        ELIZAOS_FINETUNED_MODEL: 'ft-test-model',
+        FALLBACK_MODEL: 'test-gemini',
+        REASONING_PROXY_ENABLED: 'true',
+        REASONING_TEMPERATURE: '0.2',
+        REASONING_MAX_TOKENS: '2000',
+        REASONING_TIMEOUT: '15000',
       };
       return settings[key];
     }) as any;
 
     // Reinitialize with new settings
     const newService = new ReasoningProxyService(runtime);
-    
+
     // Access config through service status
     const status = newService.getStatus();
     expect(status.enabled).toBe(true);
@@ -64,20 +66,20 @@ describe('ReasoningProxyService Runtime Integration', () => {
     // Configure runtime without Together.ai key
     runtime.getSetting = ((key: string) => {
       const settings: Record<string, any> = {
-        'TOGETHER_API_KEY': '', // Empty key
-        'REASONING_PROXY_ENABLED': 'true',
-        'FALLBACK_MODEL': 'gemini-pro'
+        TOGETHER_API_KEY: '', // Empty key
+        REASONING_PROXY_ENABLED: 'true',
+        FALLBACK_MODEL: 'gemini-pro',
       };
       return settings[key];
     }) as any;
 
     const testService = new ReasoningProxyService(runtime);
-    
+
     // Should still initialize but report as not healthy
     const status = testService.getStatus();
     expect(status.enabled).toBe(true);
     expect(status.healthy).toBe(false);
-    
+
     await testService.stop();
   });
 
@@ -97,11 +99,11 @@ describe('ReasoningProxyService Runtime Integration', () => {
     // Configure service to use fallback (no Together.ai key)
     runtime.getSetting = ((key: string) => {
       const settings: Record<string, any> = {
-        'TOGETHER_API_KEY': '', // No key = fallback
-        'REASONING_PROXY_ENABLED': 'true',
-        'FALLBACK_MODEL': 'gemini-pro',
-        'REASONING_TEMPERATURE': '0.1',
-        'REASONING_MAX_TOKENS': '1000'
+        TOGETHER_API_KEY: '', // No key = fallback
+        REASONING_PROXY_ENABLED: 'true',
+        FALLBACK_MODEL: 'gemini-pro',
+        REASONING_TEMPERATURE: '0.1',
+        REASONING_MAX_TOKENS: '1000',
       };
       return settings[key];
     }) as any;
@@ -114,7 +116,7 @@ describe('ReasoningProxyService Runtime Integration', () => {
       {
         type: 'code_generation',
         context: 'Discord integration',
-        language: 'typescript'
+        language: 'typescript',
       }
     );
 
@@ -137,7 +139,7 @@ describe('ReasoningProxyService Runtime Integration', () => {
   });
 
   it('should handle different request types appropriately', async () => {
-    const modelCalls: Array<{ type: any, params: any }> = [];
+    const modelCalls: Array<{ type: any; params: any }> = [];
 
     runtime.useModel = (async (modelType: any, params: any) => {
       modelCalls.push({ type: modelType, params });
@@ -146,9 +148,9 @@ describe('ReasoningProxyService Runtime Integration', () => {
 
     runtime.getSetting = ((key: string) => {
       const settings: Record<string, any> = {
-        'TOGETHER_API_KEY': '', // Force fallback
-        'REASONING_PROXY_ENABLED': 'true',
-        'FALLBACK_MODEL': 'gemini-pro'
+        TOGETHER_API_KEY: '', // Force fallback
+        REASONING_PROXY_ENABLED: 'true',
+        FALLBACK_MODEL: 'gemini-pro',
       };
       return settings[key];
     }) as any;
@@ -160,7 +162,7 @@ describe('ReasoningProxyService Runtime Integration', () => {
       { type: 'code_generation', expectedModel: 'TEXT_LARGE' },
       { type: 'code_analysis', expectedModel: 'TEXT_LARGE' },
       { type: 'reasoning', expectedModel: 'TEXT_LARGE' },
-      { type: 'general', expectedModel: 'TEXT_SMALL' }
+      { type: 'general', expectedModel: 'TEXT_SMALL' },
     ];
 
     for (const { type, expectedModel } of requestTypes) {
@@ -170,7 +172,7 @@ describe('ReasoningProxyService Runtime Integration', () => {
     // Verify correct model types were used
     expect(modelCalls.length).toBe(4);
     expect(modelCalls[0].type).toBe('TEXT_LARGE'); // code_generation
-    expect(modelCalls[1].type).toBe('TEXT_LARGE'); // code_analysis  
+    expect(modelCalls[1].type).toBe('TEXT_LARGE'); // code_analysis
     expect(modelCalls[2].type).toBe('TEXT_LARGE'); // reasoning
     expect(modelCalls[3].type).toBe('TEXT_SMALL'); // general
 
@@ -185,9 +187,9 @@ describe('ReasoningProxyService Runtime Integration', () => {
 
     runtime.getSetting = ((key: string) => {
       const settings: Record<string, any> = {
-        'TOGETHER_API_KEY': '', // Force fallback
-        'REASONING_PROXY_ENABLED': 'true',
-        'FALLBACK_MODEL': 'gemini-pro'
+        TOGETHER_API_KEY: '', // Force fallback
+        REASONING_PROXY_ENABLED: 'true',
+        FALLBACK_MODEL: 'gemini-pro',
       };
       return settings[key];
     }) as any;
@@ -195,10 +197,9 @@ describe('ReasoningProxyService Runtime Integration', () => {
     const testService = new ReasoningProxyService(runtime);
 
     // Process request that will fail
-    const result = await testService.processReasoningRequest(
-      'This will fail',
-      { type: 'code_generation' }
-    );
+    const result = await testService.processReasoningRequest('This will fail', {
+      type: 'code_generation',
+    });
 
     // Should return graceful error response
     expect(result.content).toContain('unable to process your request');
@@ -219,8 +220,8 @@ describe('ReasoningProxyService Runtime Integration', () => {
 
     runtime.getSetting = ((key: string) => {
       const settings: Record<string, any> = {
-        'TOGETHER_API_KEY': '',
-        'REASONING_PROXY_ENABLED': 'true'
+        TOGETHER_API_KEY: '',
+        REASONING_PROXY_ENABLED: 'true',
       };
       return settings[key];
     }) as any;
@@ -228,19 +229,16 @@ describe('ReasoningProxyService Runtime Integration', () => {
     const testService = new ReasoningProxyService(runtime);
 
     // Process request with rich context
-    await testService.processReasoningRequest(
-      'Create a Discord bot',
-      {
-        type: 'code_generation',
-        context: 'ElizaOS plugin development',
-        files: [
-          { path: 'src/actions/example.ts', content: 'export const example = {...}' },
-          { path: 'src/providers/data.ts', content: 'export const data = {...}' }
-        ],
-        language: 'typescript',
-        framework: 'ElizaOS'
-      }
-    );
+    await testService.processReasoningRequest('Create a Discord bot', {
+      type: 'code_generation',
+      context: 'ElizaOS plugin development',
+      files: [
+        { path: 'src/actions/example.ts', content: 'export const example = {...}' },
+        { path: 'src/providers/data.ts', content: 'export const data = {...}' },
+      ],
+      language: 'typescript',
+      framework: 'ElizaOS',
+    });
 
     // Verify prompt formatting
     expect(capturedPrompt).toContain('Create a Discord bot');
@@ -281,10 +279,7 @@ describe('ReasoningProxyService Runtime Integration', () => {
 
     const testService = new ReasoningProxyService(runtime);
 
-    const result = await testService.processReasoningRequest(
-      'Test request',
-      { type: 'general' }
-    );
+    const result = await testService.processReasoningRequest('Test request', { type: 'general' });
 
     // Should estimate tokens based on actual response length
     // "This is a test response with exactly forty characters" = 54 chars
@@ -302,7 +297,7 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
   // Mock the essential runtime methods needed for testing
   const mockRuntime: Partial<IAgentRuntime> = {
     agentId: 'test-agent-id' as UUID,
-    
+
     character: {
       name: 'TestAgent',
       bio: ['Test agent for reasoning proxy testing'],
@@ -310,21 +305,20 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       clients: [],
-      plugins: []
+      plugins: [],
     },
 
     getSetting: (key: string) => {
       // Default test settings
       const settings: Record<string, any> = {
-        'TOGETHER_API_KEY': '',
-        'REASONING_PROXY_ENABLED': 'true',
-        'FALLBACK_MODEL': 'gemini-pro',
-        'REASONING_TEMPERATURE': '0.1',
-        'REASONING_MAX_TOKENS': '4000',
-        'REASONING_TIMEOUT': '30000'
+        TOGETHER_API_KEY: '',
+        REASONING_PROXY_ENABLED: 'true',
+        FALLBACK_MODEL: 'gemini-pro',
+        REASONING_TEMPERATURE: '0.1',
+        REASONING_MAX_TOKENS: '4000',
+        REASONING_TIMEOUT: '30000',
       };
       return settings[key];
     },
@@ -338,8 +332,8 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
       info: () => {},
       warn: () => {},
       error: () => {},
-      debug: () => {}
-    }
+      debug: () => {},
+    },
   };
 
   return mockRuntime as IAgentRuntime;

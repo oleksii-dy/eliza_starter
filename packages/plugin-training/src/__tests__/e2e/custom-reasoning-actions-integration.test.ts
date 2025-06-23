@@ -1,9 +1,9 @@
 /**
  * Real runtime integration test for Custom Reasoning Actions
- * 
+ *
  * This test verifies that the custom reasoning actions properly integrate with
  * actual ElizaOS runtime instances and correctly handle real API calls and database operations.
- * 
+ *
  * Unlike the original performative tests, this uses a real runtime instance
  * and validates actual functionality rather than mock behavior.
  */
@@ -47,7 +47,7 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
         'activate fine-tuned models',
         'turn on deepseek reasoning',
         'start reasoning service',
-        'enable together.ai reasoning'
+        'enable together.ai reasoning',
       ];
 
       for (const text of validMessages) {
@@ -63,7 +63,7 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
         'what is the weather',
         'disable reasoning',
         'turn off custom models',
-        'random conversation'
+        'random conversation',
       ];
 
       for (const text of invalidMessages) {
@@ -75,25 +75,19 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
 
     it('should enable custom reasoning with real runtime integration', async () => {
       const message = createTestMessage({
-        text: 'enable custom reasoning with together.ai'
+        text: 'enable custom reasoning with together.ai',
       });
       const state = createTestState();
       const callback = createTestCallback();
 
-      await enableCustomReasoningAction.handler(
-        runtime,
-        message,
-        state,
-        {},
-        callback
-      );
+      await enableCustomReasoningAction.handler(runtime, message, state, {}, callback);
 
       // Verify callback was called with success message
       expect(callbackResults).toHaveLength(1);
       const result = callbackResults[0];
       expect(result.text).toContain('Custom Reasoning Service Enabled');
       expect(result.thought).toContain('Successfully enabled custom reasoning service');
-      expect(result.actions).toContain('ENABLE_CUSTOM_REASONING');
+      expect(result.actions).toContain('ENABLE_REASONING_SERVICE');
 
       // Verify service is actually available in runtime
       const service = runtime.getService('together-reasoning');
@@ -109,17 +103,11 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
       };
 
       const message = createTestMessage({
-        text: 'enable custom reasoning'
+        text: 'enable custom reasoning',
       });
       const callback = createTestCallback();
 
-      await enableCustomReasoningAction.handler(
-        runtime,
-        message,
-        createTestState(),
-        {},
-        callback
-      );
+      await enableCustomReasoningAction.handler(runtime, message, createTestState(), {}, callback);
 
       // Should provide helpful error message
       expect(callbackResults).toHaveLength(1);
@@ -141,18 +129,12 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
       };
 
       const message = createTestMessage({
-        text: 'enable custom reasoning'
+        text: 'enable custom reasoning',
       });
       const callback = createTestCallback();
 
       // This should not throw but should provide error feedback
-      await enableCustomReasoningAction.handler(
-        runtime,
-        message,
-        createTestState(),
-        {},
-        callback
-      );
+      await enableCustomReasoningAction.handler(runtime, message, createTestState(), {}, callback);
 
       expect(callbackResults).toHaveLength(1);
       const result = callbackResults[0];
@@ -171,7 +153,7 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
         'disable custom reasoning',
         'turn off custom reasoning',
         'deactivate together.ai',
-        'stop custom reasoning service'
+        'stop custom reasoning service',
       ];
 
       for (const text of validMessages) {
@@ -196,39 +178,27 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
 
       // Now disable it
       const message = createTestMessage({
-        text: 'disable custom reasoning'
+        text: 'disable custom reasoning',
       });
       const callback = createTestCallback();
 
-      await disableCustomReasoningAction.handler(
-        runtime,
-        message,
-        createTestState(),
-        {},
-        callback
-      );
+      await disableCustomReasoningAction.handler(runtime, message, createTestState(), {}, callback);
 
       expect(callbackResults).toHaveLength(1);
       const result = callbackResults[0];
       expect(result.text).toContain('Custom Reasoning Service Disabled');
       expect(result.thought).toContain('Successfully disabled custom reasoning service');
-      expect(result.actions).toContain('DISABLE_CUSTOM_REASONING');
+      expect(result.actions).toContain('DISABLE_REASONING_SERVICE');
     });
 
     it('should handle when already disabled', async () => {
       // Ensure custom reasoning is not enabled
       const message = createTestMessage({
-        text: 'disable custom reasoning'
+        text: 'disable custom reasoning',
       });
       const callback = createTestCallback();
 
-      await disableCustomReasoningAction.handler(
-        runtime,
-        message,
-        createTestState(),
-        {},
-        callback
-      );
+      await disableCustomReasoningAction.handler(runtime, message, createTestState(), {}, callback);
 
       expect(callbackResults).toHaveLength(1);
       const result = callbackResults[0];
@@ -243,7 +213,7 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
         'start training session for planning model',
         'begin training session',
         'initiate model training session',
-        'start training for coding model'
+        'start training for coding model',
       ];
 
       for (const text of validMessages) {
@@ -255,17 +225,11 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
 
     it('should start training session successfully with real database integration', async () => {
       const message = createTestMessage({
-        text: 'start training session for coding model'
+        text: 'start training session for coding model',
       });
       const callback = createTestCallback();
 
-      await startTrainingSessionAction.handler(
-        runtime,
-        message,
-        createTestState(),
-        {},
-        callback
-      );
+      await startTrainingSessionAction.handler(runtime, message, createTestState(), {}, callback);
 
       expect(callbackResults).toHaveLength(1);
       const result = callbackResults[0];
@@ -280,7 +244,7 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
         { text: 'start training session for planning', expectedType: 'planning' },
         { text: 'begin coding training session', expectedType: 'coding' },
         { text: 'start training session', expectedType: 'should_respond' }, // default
-        { text: 'train the should_respond model', expectedType: 'should_respond' }
+        { text: 'train the should_respond model', expectedType: 'should_respond' },
       ];
 
       for (const { text, expectedType } of testCases) {
@@ -288,13 +252,7 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
         const message = createTestMessage({ text });
         const callback = createTestCallback();
 
-        await startTrainingSessionAction.handler(
-          runtime,
-          message,
-          createTestState(),
-          {},
-          callback
-        );
+        await startTrainingSessionAction.handler(runtime, message, createTestState(), {}, callback);
 
         expect(callbackResults).toHaveLength(1);
         const result = callbackResults[0];
@@ -311,23 +269,17 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
         db: {
           run: async () => {
             throw new Error('Database connection failed');
-          }
-        }
+          },
+        },
       } as any;
 
       const message = createTestMessage({
-        text: 'start training session'
+        text: 'start training session',
       });
       const callback = createTestCallback();
 
       // Should not throw but should handle error
-      await startTrainingSessionAction.handler(
-        runtime,
-        message,
-        createTestState(),
-        {},
-        callback
-      );
+      await startTrainingSessionAction.handler(runtime, message, createTestState(), {}, callback);
 
       expect(callbackResults).toHaveLength(1);
       const result = callbackResults[0];
@@ -346,7 +298,7 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
         'check reasoning status',
         'show custom reasoning status',
         'what is the reasoning status',
-        'custom reasoning report'
+        'custom reasoning report',
       ];
 
       for (const text of validMessages) {
@@ -358,24 +310,18 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
 
     it('should provide comprehensive status report with real data', async () => {
       const message = createTestMessage({
-        text: 'show custom reasoning status'
+        text: 'show custom reasoning status',
       });
       const callback = createTestCallback();
 
-      await checkReasoningStatusAction.handler(
-        runtime,
-        message,
-        createTestState(),
-        {},
-        callback
-      );
+      await checkReasoningStatusAction.handler(runtime, message, createTestState(), {}, callback);
 
       expect(callbackResults).toHaveLength(1);
       const result = callbackResults[0];
       expect(result.text).toContain('Custom Reasoning Status Report');
       expect(result.thought).toContain('Provided comprehensive status report');
       expect(result.actions).toContain('CHECK_REASONING_STATUS');
-      
+
       // Verify status report contains expected sections
       expect(result.text).toContain('Service Status:');
       expect(result.text).toContain('Training Data:');
@@ -393,22 +339,16 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
           },
           all: async () => {
             throw new Error('Database query failed');
-          }
-        }
+          },
+        },
       } as any;
 
       const message = createTestMessage({
-        text: 'check status'
+        text: 'check status',
       });
       const callback = createTestCallback();
 
-      await checkReasoningStatusAction.handler(
-        runtime,
-        message,
-        createTestState(),
-        {},
-        callback
-      );
+      await checkReasoningStatusAction.handler(runtime, message, createTestState(), {}, callback);
 
       expect(callbackResults).toHaveLength(1);
       const result = callbackResults[0];
@@ -431,7 +371,7 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
         'train the planning model',
         'fine-tune the coding model',
         'train custom model',
-        'initiate model training'
+        'initiate model training',
       ];
 
       for (const text of validMessages) {
@@ -443,17 +383,11 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
 
     it('should start model training with sufficient data', async () => {
       const message = createTestMessage({
-        text: 'fine-tune the coding model'
+        text: 'fine-tune the coding model',
       });
       const callback = createTestCallback();
 
-      await trainModelAction.handler(
-        runtime,
-        message,
-        createTestState(),
-        {},
-        callback
-      );
+      await trainModelAction.handler(runtime, message, createTestState(), {}, callback);
 
       expect(callbackResults).toHaveLength(1);
       const result = callbackResults[0];
@@ -475,13 +409,7 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
         const message = createTestMessage({ text });
         const callback = createTestCallback();
 
-        await trainModelAction.handler(
-          runtime,
-          message,
-          createTestState(),
-          {},
-          callback
-        );
+        await trainModelAction.handler(runtime, message, createTestState(), {}, callback);
 
         expect(callbackResults).toHaveLength(1);
         const result = callbackResults[0];
@@ -498,17 +426,11 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
       };
 
       const message = createTestMessage({
-        text: 'train the model'
+        text: 'train the model',
       });
       const callback = createTestCallback();
 
-      await trainModelAction.handler(
-        runtime,
-        message,
-        createTestState(),
-        {},
-        callback
-      );
+      await trainModelAction.handler(runtime, message, createTestState(), {}, callback);
 
       expect(callbackResults).toHaveLength(1);
       const result = callbackResults[0];
@@ -527,7 +449,7 @@ describe('Custom Reasoning Actions Runtime Integration', () => {
 async function createTestRuntime(): Promise<IAgentRuntime> {
   const mockRuntime: Partial<IAgentRuntime> = {
     agentId: 'test-agent-actions-integration' as UUID,
-    
+
     character: {
       name: 'ActionsTestAgent',
       bio: ['Test agent for custom reasoning actions integration testing'],
@@ -535,23 +457,22 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       clients: [],
-      plugins: []
+      plugins: [],
     },
 
     getSetting: (key: string) => {
       // Provide test settings that enable functionality
       const settings: Record<string, any> = {
-        'TOGETHER_AI_API_KEY': 'test-api-key-for-actions',
-        'CUSTOM_REASONING_ENABLED': 'true',
-        'CUSTOM_REASONING_BUDGET_LIMIT': '100',
-        'CUSTOM_REASONING_AUTO_SHUTDOWN_MINUTES': '60',
-        'CUSTOM_REASONING_MAX_COST_PER_HOUR': '5',
-        'CUSTOM_REASONING_COLLECT_TRAINING_DATA': 'true',
-        'CUSTOM_REASONING_MAX_SAMPLES_PER_MODEL': '5000',
-        'CUSTOM_REASONING_RETENTION_DAYS': '14'
+        TOGETHER_AI_API_KEY: 'test-api-key-for-actions',
+        REASONING_SERVICE_ENABLED: 'true',
+        REASONING_SERVICE_BUDGET_LIMIT: '100',
+        REASONING_SERVICE_AUTO_SHUTDOWN_MINUTES: '60',
+        REASONING_SERVICE_MAX_COST_PER_HOUR: '5',
+        REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',
+        REASONING_SERVICE_MAX_SAMPLES_PER_MODEL: '5000',
+        REASONING_SERVICE_RETENTION_DAYS: '14',
       };
       return settings[key];
     },
@@ -563,8 +484,8 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
         testMemories.push(logData);
       },
       getLogs: async (options: any) => {
-        return testMemories.filter(log => 
-          log.type && log.type.includes(options.type?.replace('%', '') || '')
+        return testMemories.filter(
+          (log) => log.type && log.type.includes(options.type?.replace('%', '') || '')
         );
       },
       db: {
@@ -591,16 +512,16 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
         },
         exec: async (sql: string) => {
           // Mock schema execution
-        }
-      }
+        },
+      },
     },
 
     // Service registry
     services: new Map(),
-    getService: function(name: string) {
+    getService: function (name: string) {
       return this.services?.get(name) || null;
     },
-    registerService: function(name: string, service: any) {
+    registerService: function (name: string, service: any) {
       this.services?.set(name, service);
     },
 
@@ -608,8 +529,8 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
       info: (message: string, data?: any) => elizaLogger.info(`[INFO] ${message}`, data),
       warn: (message: string, data?: any) => elizaLogger.warn(`[WARN] ${message}`, data),
       error: (message: string, data?: any) => elizaLogger.error(`[ERROR] ${message}`, data),
-      debug: (message: string, data?: any) => elizaLogger.debug(`[DEBUG] ${message}`, data)
-    }
+      debug: (message: string, data?: any) => elizaLogger.debug(`[DEBUG] ${message}`, data),
+    },
   };
 
   return mockRuntime as IAgentRuntime;
@@ -627,10 +548,10 @@ function createTestMessage(overrides: Partial<Memory> = {}): Memory {
     content: {
       text: 'test message',
       source: 'test',
-      ...overrides.content
+      ...overrides.content,
     },
     createdAt: Date.now(),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -642,7 +563,7 @@ function createTestState(overrides: Partial<State> = {}): State {
     values: {},
     data: {},
     text: '',
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -675,9 +596,9 @@ async function seedTrainingData(runtime: IAgentRuntime): Promise<void> {
           roomId: 'test-room',
           modelName: 'test-model',
           responseTimeMs: 100,
-          tokensUsed: 50
+          tokensUsed: 50,
         },
-        timestamp: Date.now()
+        timestamp: Date.now(),
       },
       type: 'training-data:should_respond',
     });

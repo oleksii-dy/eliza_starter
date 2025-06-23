@@ -152,7 +152,6 @@ export async function runProductionScenarios(
     scenarioDir?: string;
     apiKeys?: Record<string, string>;
     databaseUrl?: string;
-    modelProvider?: string;
   } = {}
 ) {
   logger.info('🚀 Starting Production Scenario Runner');

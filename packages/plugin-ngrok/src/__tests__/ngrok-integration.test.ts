@@ -119,8 +119,14 @@ describe('Ngrok Integration Tests', () => {
   });
 
   beforeEach(() => {
+    // Create mock runtime for each test
+    const mockRuntime = {
+      agentId: 'test-agent-123',
+      getSetting: (key: string) => process.env[key],
+    } as unknown as IAgentRuntime;
+    
     // Create fresh service instance for each test
-    service = new NgrokService(runtime);
+    service = new NgrokService(mockRuntime);
   });
 
   afterEach(async () => {

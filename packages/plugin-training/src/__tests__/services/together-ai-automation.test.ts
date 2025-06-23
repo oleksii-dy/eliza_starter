@@ -34,10 +34,9 @@ const testCharacter: Character = {
   ],
   postExamples: [],
   topics: ['testing', 'automation', 'together-ai', 'service-validation'],
-  adjectives: ['helpful', 'accurate', 'automated'],
   plugins: [],
   settings: {
-    CUSTOM_REASONING_ENABLED: 'true',
+    REASONING_SERVICE_ENABLED: 'true',
     TOGETHER_AI_API_KEY: 'test-api-key-together',
     AUTOMATED_COLLECTION_ENABLED: 'true',
   },

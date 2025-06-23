@@ -1,19 +1,19 @@
 // Note: AgentRuntime is imported dynamically to avoid circular dependencies
-import type { 
-  IAgentRuntime, 
-  Character, 
+import type {
+  IAgentRuntime,
+  Character,
   Plugin,
   IDatabaseAdapter,
   Service,
   UUID,
-  Memory
+  Memory,
 } from '../types';
 import { TestDatabaseManager } from './test-database';
-import { 
-  TestModelProvider, 
-  createTestModelProvider, 
+import {
+  TestModelProvider,
+  createTestModelProvider,
   createSpecializedModelProvider,
-  scenarios 
+  scenarios,
 } from './test-models';
 import { logger } from '../logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -93,10 +93,13 @@ export class RealRuntimeTestHarness {
 
       logger.info(`Successfully created real runtime ${runtime.agentId}`);
       return runtime;
-
     } catch (error) {
-      logger.error(`Failed to create test runtime: ${error instanceof Error ? error.message : String(error)}`);
-      throw new Error(`Test runtime creation failed: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Failed to create test runtime: ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw new Error(
+        `Test runtime creation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -108,29 +111,32 @@ export class RealRuntimeTestHarness {
     try {
       // Dynamic plugin loading for testing
       logger.info(`Attempting to load plugin: ${pluginName}`);
-      
+
       // Try to dynamically import the plugin
       let pluginModule;
       try {
         pluginModule = await import(pluginName);
       } catch (importError) {
-        logger.warn(`Could not import ${pluginName}: ${importError instanceof Error ? importError.message : String(importError)}`);
+        logger.warn(
+          `Could not import ${pluginName}: ${importError instanceof Error ? importError.message : String(importError)}`
+        );
         throw importError;
       }
 
       // Extract the default export (plugin definition)
       const plugin = pluginModule.default || pluginModule[Object.keys(pluginModule)[0]];
-      
+
       if (!plugin || typeof plugin !== 'object') {
         throw new Error(`Invalid plugin export from ${pluginName}`);
       }
 
       logger.info(`Successfully loaded plugin: ${pluginName}`);
       return plugin as Plugin;
-
     } catch (error) {
-      logger.warn(`Failed to load plugin ${pluginName}, creating minimal test plugin: ${error instanceof Error ? error.message : String(error)}`);
-      
+      logger.warn(
+        `Failed to load plugin ${pluginName}, creating minimal test plugin: ${error instanceof Error ? error.message : String(error)}`
+      );
+
       // Return minimal plugin for testing if real plugin unavailable
       return {
         name: pluginName,
@@ -148,27 +154,29 @@ export class RealRuntimeTestHarness {
   /**
    * Creates a test model provider that gives realistic responses
    */
-  createRealisticModelProvider(scenarios?: Array<{
-    prompt: RegExp;
-    response: string;
-  }>): TestModelProvider {
+  createRealisticModelProvider(
+    scenarios?: Array<{
+      prompt: RegExp;
+      response: string;
+    }>
+  ): TestModelProvider {
     const defaultScenarios = [
       {
         prompt: /hello|hi|hey/i,
-        response: "Hello! How can I help you today?"
+        response: 'Hello! How can I help you today?',
       },
       {
         prompt: /create.*todo|add.*task/i,
-        response: "I'll create that todo item for you right away."
+        response: "I'll create that todo item for you right away.",
       },
       {
         prompt: /search|find|look/i,
-        response: "Let me search for that information."
+        response: 'Let me search for that information.',
       },
       {
         prompt: /analyze|review/i,
-        response: "I'll analyze this carefully and provide my assessment."
-      }
+        response: "I'll analyze this carefully and provide my assessment.",
+      },
     ];
 
     return createTestModelProvider(scenarios || defaultScenarios);
@@ -207,12 +215,7 @@ export class RealRuntimeTestHarness {
       const messageId = await runtime.createMemory(memory, 'messages');
 
       // Process message with real runtime - this executes actual logic
-      const responses = await runtime.processActions(
-        memory,
-        [],
-        undefined,
-        undefined
-      );
+      const responses = await runtime.processActions(memory, [], undefined, undefined);
 
       const responseTime = Date.now() - startTime;
 
@@ -230,7 +233,7 @@ export class RealRuntimeTestHarness {
       if (options.expectedActions && options.expectedActions.length > 0) {
         const executedActions = await this.getExecutedActions(runtime, roomId);
         const missingActions = options.expectedActions.filter(
-          action => !executedActions.includes(action)
+          (action) => !executedActions.includes(action)
         );
 
         if (missingActions.length > 0) {
@@ -244,11 +247,12 @@ export class RealRuntimeTestHarness {
       // Check timeout
       if (options.timeoutMs && responseTime > options.timeoutMs) {
         result.passed = false;
-        result.errors.push(`Response time ${responseTime}ms exceeded timeout ${options.timeoutMs}ms`);
+        result.errors.push(
+          `Response time ${responseTime}ms exceeded timeout ${options.timeoutMs}ms`
+        );
       }
 
       return result;
-
     } catch (error) {
       return {
         scenarioName: `Process: "${messageText}"`,
@@ -282,7 +286,9 @@ export class RealRuntimeTestHarness {
 
       return [...new Set(actions)]; // Remove duplicates
     } catch (error) {
-      logger.warn(`Could not retrieve executed actions: ${error instanceof Error ? error.message : String(error)}`);
+      logger.warn(
+        `Could not retrieve executed actions: ${error instanceof Error ? error.message : String(error)}`
+      );
       return [];
     }
   }
@@ -321,7 +327,9 @@ export class RealRuntimeTestHarness {
         };
         await runtime.createMemory(healthMemory, 'test');
       } catch (error) {
-        issues.push(`Database not functional: ${error instanceof Error ? error.message : String(error)}`);
+        issues.push(
+          `Database not functional: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
 
       // Check services
@@ -334,14 +342,18 @@ export class RealRuntimeTestHarness {
           }
         }
       } catch (error) {
-        issues.push(`Services not accessible: ${error instanceof Error ? error.message : String(error)}`);
+        issues.push(
+          `Services not accessible: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
 
       // Check plugins
       try {
-        plugins.push(...(runtime.plugins?.map(p => p.name) || []));
+        plugins.push(...(runtime.plugins?.map((p) => p.name) || []));
       } catch (error) {
-        issues.push(`Plugins not accessible: ${error instanceof Error ? error.message : String(error)}`);
+        issues.push(
+          `Plugins not accessible: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
 
       return {
@@ -350,11 +362,12 @@ export class RealRuntimeTestHarness {
         services,
         plugins,
       };
-
     } catch (error) {
       return {
         healthy: false,
-        issues: [`Runtime health check failed: ${error instanceof Error ? error.message : String(error)}`],
+        issues: [
+          `Runtime health check failed: ${error instanceof Error ? error.message : String(error)}`,
+        ],
         services,
         plugins,
       };
@@ -374,7 +387,9 @@ export class RealRuntimeTestHarness {
           await runtime.stop();
           logger.debug(`Stopped runtime ${runtimeId}`);
         } catch (error) {
-          logger.warn(`Error stopping runtime ${runtimeId}: ${error instanceof Error ? error.message : String(error)}`);
+          logger.warn(
+            `Error stopping runtime ${runtimeId}: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
       }
 
@@ -385,9 +400,10 @@ export class RealRuntimeTestHarness {
       await this.databaseManager.cleanup();
 
       logger.info(`Successfully cleaned up test harness ${this.testId}`);
-
     } catch (error) {
-      logger.error(`Error during cleanup: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Error during cleanup: ${error instanceof Error ? error.message : String(error)}`
+      );
       throw error;
     }
   }
@@ -409,7 +425,6 @@ export async function createTestRuntime(config: Partial<RealRuntimeConfig> = {})
     messageExamples: [],
     postExamples: [],
     topics: ['testing'],
-    adjectives: ['helpful', 'reliable'],
     knowledge: [],
     plugins: [],
   };
@@ -449,7 +464,6 @@ export async function runIntegrationTest(
       createdMemories: 0,
       responseTime: Date.now() - startTime,
     };
-
   } catch (error) {
     return {
       scenarioName: testName,

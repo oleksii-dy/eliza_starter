@@ -42,12 +42,12 @@ fs.writeFileSync(
 // Create character
 const character = {
     "name": "MVPTestAgent",
+    "version": "1.0.0",
     "bio": ["Test agent for MVP validation"],
     "system": "You are a test agent.",
     "messageExamples": [],
     "postExamples": [],
     "topics": [],
-    "adjectives": [],
     "knowledge": [],
     "clients": [],
     "plugins": []
@@ -84,7 +84,7 @@ async function test() {
         await runtime.registerPlugin(mvpCustomReasoningPlugin);
         console.log('✅ Plugin registered');
         
-        const actions = runtime.actions.filter(a => a.name.includes('CUSTOM_REASONING'));
+        const actions = runtime.actions.filter(a => a.name.includes('REASONING_SERVICE'));
         console.log(\`✅ Found \${actions.length} MVP actions\`);
         
         console.log('🎉 MVP WORKS WITH REAL ELIZAOS!');

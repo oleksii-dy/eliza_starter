@@ -26,7 +26,7 @@ export class AtroposBridge {
 
   constructor(private runtime: IAgentRuntime) {
     const config = getTrainingConfig(runtime);
-    this.bridgePort = parseInt(config.getSetting('ATROPOS_BRIDGE_PORT', '8765'));
+    this.bridgePort = parseInt((config as any).getSetting('ATROPOS_BRIDGE_PORT', '8765'));
   }
 
   async initialize(): Promise<void> {

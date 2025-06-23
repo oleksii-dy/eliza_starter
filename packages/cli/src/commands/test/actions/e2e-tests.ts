@@ -3,6 +3,8 @@ import { AgentServer, jsonToCharacter, loadCharacterTryPath } from '@elizaos/ser
 import {
   buildProject,
   findNextAvailablePort,
+  findAvailablePortInRange,
+  isPortFree,
   promptForEnvVars,
   TestRunner,
   UserEnvironment,
@@ -172,23 +174,68 @@ export async function runE2eTests(
       logger.info('Server properties set up');
 
       const desiredPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000');
-      const serverPort = await findNextAvailablePort(desiredPort);
 
-      if (serverPort !== desiredPort) {
-        logger.warn(`Port ${desiredPort} is in use for testing, using port ${serverPort} instead.`);
+      // For tests, try to find a port in a reasonable range to avoid conflicts
+      let serverPort: number;
+      try {
+        // Try the desired port first
+        if (await isPortFree(desiredPort)) {
+          serverPort = desiredPort;
+        } else {
+          // If the desired port is taken, find one in a range
+          // Use a random offset to reduce conflicts when multiple tests run concurrently
+          const randomOffset = Math.floor(Math.random() * 10) * 10; // 0, 10, 20, ... 90
+          const testPortStart = Math.max(desiredPort + 1 + randomOffset, 3001);
+          const testPortEnd = testPortStart + 20; // Try 20 ports in the range
+
+          logger.info(
+            `Port ${desiredPort} is busy, searching for available port in range ${testPortStart}-${testPortEnd}...`
+          );
+
+          serverPort = await findAvailablePortInRange(testPortStart, testPortEnd);
+          logger.warn(
+            `Port ${desiredPort} is in use for testing, using port ${serverPort} instead.`
+          );
+        }
+      } catch (portError) {
+        logger.error(`Failed to find available port: ${portError}`);
+        // Try one more time with a different range
+        try {
+          const fallbackStart = 4000 + Math.floor(Math.random() * 1000);
+          logger.info(`Trying fallback port range ${fallbackStart}-${fallbackStart + 50}...`);
+          serverPort = await findAvailablePortInRange(fallbackStart, fallbackStart + 50);
+          logger.warn(`Using fallback port ${serverPort} for testing.`);
+        } catch (fallbackError) {
+          throw new Error(
+            `Could not find an available port for testing. Please free up some ports or specify a different port with --port`
+          );
+        }
       }
 
-      logger.info('Starting server...');
+      logger.info(`Starting server on port ${serverPort}...`);
       try {
         await server.start(serverPort);
-        logger.info('Server started successfully on port', serverPort);
+        logger.info(`Server started successfully on port ${serverPort}`);
       } catch (error) {
         logger.error('Error starting server:', error);
         if (error instanceof Error) {
           logger.error('Error details:', error.message);
           logger.error('Stack trace:', error.stack);
+
+          // If port is in use, this shouldn't happen since we checked availability
+          // but if it does, throw the error with helpful message
+          if (error.message && error.message.includes('EADDRINUSE')) {
+            throw new Error(
+              `Port ${serverPort} became unavailable between check and server start. ` +
+                `This might happen if multiple tests are running. ` +
+                `Try running tests sequentially or use --port to specify a different port.`
+            );
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
         }
-        throw error;
       }
 
       try {
@@ -346,7 +393,6 @@ export async function runE2eTests(
         }
         return { failed: true };
       } finally {
-
         // Clean up database directory after tests complete
         // MOVED TO AFTER SERVER STOP TO AVOID DATABASE CORRUPTION
 

@@ -70,7 +70,6 @@ try {
         ],
         "postExamples": [],
         "topics": ["testing", "custom reasoning", "plugins"],
-        "adjectives": ["helpful", "testing", "experimental"],
         "knowledge": [],
         "clients": [],
         "plugins": []
@@ -134,8 +133,8 @@ async function runMVPTest() {
         
         // Step 5: Verify actions are available
         console.log('🎯 Verifying actions...');
-        const enableAction = runtime.actions.find(a => a.name === 'ENABLE_CUSTOM_REASONING');
-        const disableAction = runtime.actions.find(a => a.name === 'DISABLE_CUSTOM_REASONING');
+        const enableAction = runtime.actions.find(a => a.name === 'ENABLE_REASONING_SERVICE');
+        const disableAction = runtime.actions.find(a => a.name === 'DISABLE_REASONING_SERVICE');
         const statusAction = runtime.actions.find(a => a.name === 'CHECK_REASONING_STATUS');
         
         if (!enableAction || !disableAction || !statusAction) {
@@ -330,65 +329,4 @@ If failed:
     console.error('\\n💥 **TEST PROJECT CREATION FAILED:**');
     console.error(error.message);
     process.exit(1);
-}`;
-
-writeFileSync(
-    join(testProjectDir, 'src', 'index.js'),
-    indexJs
-);
-console.log('✅ Test script created');
-
-// Create README
-console.log('📚 Creating README...');
-const readme = `# MVP Custom Reasoning Test Project
-
-This is a minimal ElizaOS project created to test the MVP custom reasoning plugin against a real ElizaOS runtime.
-
-## Usage
-
-\`\`\`bash
-cd test-real-project
-npm install
-npm start
-\`\`\`
-
-## What it tests
-
-- MVP plugin import from clean dist/mvp-only.js
-- Real ElizaOS runtime creation and initialization
-- Plugin registration with real runtime
-- Action availability in runtime
-- Enable/disable/status action execution
-- useModel override and restoration
-- Full backwards compatibility
-
-## Expected Output
-
-If successful, you should see:
-- ✅ All test steps passing
-- 🎉 "THE MVP ACTUALLY WORKS WITH REAL ELIZAOS!"
-
-If failed:
-- ❌ Error messages indicating specific failure points
-- 🔧 "MVP NEEDS FIXES FOR REAL ELIZAOS COMPATIBILITY"
-`;
-
-writeFileSync(
-    join(testProjectDir, 'README.md'),
-    readme
-);
-console.log('✅ README created');
-
-console.log('\n🎯 **TEST PROJECT CREATED SUCCESSFULLY!**');
-console.log('📁 Location: ./test-real-project');
-console.log('\n💡 **To run the real ElizaOS test:**');
-console.log('1. cd test-real-project');
-console.log('2. npm install');
-console.log('3. npm start');
-console.log('\n🧪 **This will test MVP against actual ElizaOS runtime**');
-
-} catch (error) {
-console.error('\n💥 **TEST PROJECT CREATION FAILED:**');
-console.error(error.message);
-process.exit(1);
 }

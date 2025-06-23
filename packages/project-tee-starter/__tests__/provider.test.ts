@@ -1,4 +1,4 @@
-import { describe, expect, it, spyOn, beforeAll, afterAll } from 'bun:test';
+import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 import plugin from '../src/plugin';
 import type { IAgentRuntime, Memory, State, Provider } from '@elizaos/core';
 import { logger } from '@elizaos/core';
@@ -11,10 +11,10 @@ dotenv.config();
 
 // Set up logging to capture issues
 beforeAll(() => {
-  spyOn(logger, 'info');
-  spyOn(logger, 'error');
-  spyOn(logger, 'warn');
-  spyOn(logger, 'debug');
+  vi.spyOn(logger, 'info');
+  vi.spyOn(logger, 'error');
+  vi.spyOn(logger, 'warn');
+  vi.spyOn(logger, 'debug');
 });
 
 afterAll(() => {

@@ -1,0 +1,21 @@
+{
+  "name": "TestAgent",
+  "description": "Minimal test agent for plugin manager E2E tests",
+  "modelProvider": "none",
+  "bio": ["Test agent for plugin manager testing"],
+  "lore": [],
+  "messageExamples": [],
+  "postExamples": [],
+  "topics": [],
+  "knowledge": [],
+  "clients": [],
+  "plugins": ["plugin-manager"],
+  "settings": {
+    "secrets": {},
+    "model": "none",
+    "voice": {
+      "model": "none"
+    }
+  },
+  "system": "You are a test agent. Do not make any API calls."
+}

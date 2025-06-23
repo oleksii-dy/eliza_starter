@@ -18,53 +18,79 @@ export type TemplateType =
   | ((options: { state: State | { [key: string]: string } }) => string);
 
 /**
- * Configuration for an agent's character, defining its personality, knowledge, and capabilities.
- * This is a central piece of an agent's definition, used by the `AgentRuntime` to initialize and operate the agent.
- * It includes:
- * - `id`: Optional unique identifier for the character.
- * - `name`, `username`: Identifying names for the character.
- * - `system`: A system prompt that guides the agent's overall behavior.
- * - `templates`: A map of prompt templates for various situations (e.g., message generation, summarization).
- * - `bio`: A textual biography or description of the character.
- * - `messageExamples`, `postExamples`: Examples of how the character communicates.
- * - `topics`, `adjectives`: Keywords describing the character's knowledge areas and traits.
- * - `knowledge`: Paths to knowledge files or directories to be loaded into the agent's memory.
- * - `plugins`: A list of plugin names to be loaded for this character.
- * - `settings`, `secrets`: Configuration key-value pairs, with secrets being handled more securely.
- * - `style`: Guidelines for the character's writing style in different contexts (chat, post).
+ * Represents the core characteristics and configuration of an AI character within the ElizaOS framework.
+ *
+ * This interface defines all the properties that make up a character's personality, knowledge, and behavior patterns.
+ * Characters in ElizaOS are the foundation for creating AI agents with specific roles, expertise, and communication styles.
+ *
+ * A Character encapsulates:
+ * - Identity information (name, bio)
+ * - Communication style and examples
+ * - Knowledge base and expertise areas
+ * - System-level configuration
+ * - Client and plugin integrations
+ *
+ * The Character configuration is used by the AgentRuntime to instantiate and manage AI agents
+ * that can interact across various platforms while maintaining consistent personality and behavior.
+ *
+ * @example
+ * ```typescript
+ * const character: Character = {
+ *   name: "TechHelper",
+ *   bio: "A knowledgeable technical assistant",
+ *   system: "You are a helpful technical assistant...",
+ *   messageExamples: [[
+ *     { user: "user", content: { text: "How do I debug this?" } },
+ *     { user: "TechHelper", content: { text: "Let me help you debug..." } }
+ *   ]],
+ *   topics: ["programming", "debugging", "software development"]
+ * };
+ * ```
+ *
+ * Key properties:
+ * - `name`: Unique identifier and display name for the character.
+ * - `bio`: Character background and description (can be string or string array).
+ * - `system`: System prompt defining the character's core behavior and instructions.
+ * - `messageExamples`: Conversation examples for training response patterns.
+ * - `topics`: Keywords describing the character's knowledge areas and traits.
+ * - `plugins`: Array of plugin names to be loaded for this character.
+ * - `clients`: Array of client platforms where this character can operate.
+ * - `knowledge`: Custom knowledge base entries for specialized information.
+ *
+ * The Character interface is designed to be extensible, allowing for custom
+ * properties to support specific use cases and integrations.
  */
 export interface Character {
-  /** Optional unique identifier */
+  /** Unique identifier for the character */
   id?: UUID;
 
-  /** Character name */
+  /** The character's display name */
   name: string;
 
-  /** Optional username */
+  /** Optional username/handle */
   username?: string;
 
-  /** Optional system prompt */
+  /** System prompt that defines the character's core behavior */
   system?: string;
 
-  /** Optional prompt templates */
-  templates?: {
-    [key: string]: TemplateType;
-  };
-
-  /** Character biography */
+  /**
+   * Character biography - can be a single string or array of strings
+   * @example
+   * bio: "A helpful assistant" // Single string
+   * bio: ["Line 1", "Line 2", "Line 3"] // Array of strings
+   */
   bio: string | string[];
 
-  /** Example messages */
+  /** Example conversations showing how the character should interact */
   messageExamples?: MessageExample[][];
 
-  /** Example posts */
+  /** Example posts for social media style interactions */
   postExamples?: string[];
 
-  /** Known topics */
+  /** Topics and areas of expertise */
   topics?: string[];
 
   /** Character traits */
-  adjectives?: string[];
 
   /** Optional knowledge base */
   knowledge?: (string | { path: string; shared?: boolean } | DirectoryItem)[];

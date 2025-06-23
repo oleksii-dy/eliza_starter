@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   advancedSearchAction,
   knowledgeAnalyticsAction,
@@ -7,24 +7,13 @@ import {
 import { KnowledgeService } from '../../service';
 import type { IAgentRuntime, Memory, State, UUID, ActionResult } from '@elizaos/core';
 
-// Mock @elizaos/core logger
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual<typeof import('@elizaos/core')>('@elizaos/core');
-  return {
-    ...actual,
-    logger: {
-      warn: vi.fn(),
-      error: vi.fn(),
-      info: vi.fn(),
-      debug: vi.fn(),
-    },
-  };
-});
+// Create mock functions for testing
+const createMockFn = () => vi.fn();
 
 describe('Advanced Knowledge Features', () => {
   let mockRuntime: IAgentRuntime;
   let mockKnowledgeService: KnowledgeService;
-  let mockCallback: Mock;
+  let mockCallback: any;
   let mockState: State;
 
   const generateMockUuid = (suffix: string | number): UUID =>
@@ -75,6 +64,7 @@ describe('Advanced Knowledge Features', () => {
             id: generateMockUuid(20),
             content: { text: 'AI research paper content' },
             metadata: {
+              type: 'fragment' as const,
               originalFilename: 'ai-research.pdf',
               contentType: 'application/pdf',
             },
@@ -85,7 +75,7 @@ describe('Advanced Knowledge Features', () => {
         hasMore: false,
       };
 
-      (mockKnowledgeService.advancedSearch as Mock).mockResolvedValue(mockResults);
+      vi.mocked(mockKnowledgeService.advancedSearch).mockResolvedValue(mockResults);
 
       const message: Memory = {
         id: generateMockUuid(21),
@@ -108,13 +98,13 @@ describe('Advanced Knowledge Features', () => {
       expect(mockKnowledgeService.advancedSearch).toHaveBeenCalled();
 
       // Get the actual call arguments
-      const callArgs = (mockKnowledgeService.advancedSearch as Mock).mock.calls[0][0];
+      const callArgs = vi.mocked(mockKnowledgeService.advancedSearch).mock.calls[0][0];
 
       // Verify key properties
       expect(callArgs.query).toContain('AI');
-      expect(callArgs.filters.contentType).toEqual(['application/pdf']);
-      expect(callArgs.filters.dateRange).toBeDefined();
-      expect(callArgs.filters.dateRange.start).toBeInstanceOf(Date);
+      expect(callArgs.filters?.contentType).toEqual(['application/pdf']);
+      expect(callArgs.filters?.dateRange).toBeDefined();
+      expect(callArgs.filters?.dateRange?.start).toBeInstanceOf(Date);
       expect(callArgs.sort).toEqual({ field: 'similarity', order: 'desc' });
 
       expect(result.data).toEqual(mockResults);
@@ -126,7 +116,7 @@ describe('Advanced Knowledge Features', () => {
     });
 
     it('should handle empty search results', async () => {
-      (mockKnowledgeService.advancedSearch as Mock).mockResolvedValue({
+      vi.mocked(mockKnowledgeService.advancedSearch).mockResolvedValue({
         results: [],
         totalCount: 0,
         hasMore: false,
@@ -191,7 +181,7 @@ describe('Advanced Knowledge Features', () => {
         usageByDate: [],
       };
 
-      (mockKnowledgeService.getAnalytics as Mock).mockResolvedValue(mockAnalytics);
+      vi.mocked(mockKnowledgeService.getAnalytics).mockResolvedValue(mockAnalytics);
 
       const message: Memory = {
         id: generateMockUuid(43),
@@ -256,7 +246,7 @@ describe('Advanced Knowledge Features', () => {
         2
       );
 
-      (mockKnowledgeService.exportKnowledge as Mock).mockResolvedValue(mockExportData);
+      vi.mocked(mockKnowledgeService.exportKnowledge).mockResolvedValue(mockExportData);
 
       const message: Memory = {
         id: generateMockUuid(53),
@@ -292,7 +282,7 @@ describe('Advanced Knowledge Features', () => {
       const mockCsvData =
         'ID,Title,Content,Type,Created\n1,test.txt,Test content,text/plain,2024-01-01';
 
-      (mockKnowledgeService.exportKnowledge as Mock).mockResolvedValue(mockCsvData);
+      vi.mocked(mockKnowledgeService.exportKnowledge).mockResolvedValue(mockCsvData);
 
       const message: Memory = {
         id: generateMockUuid(56),
@@ -316,7 +306,7 @@ describe('Advanced Knowledge Features', () => {
       const mockMarkdownData =
         '# Document 1\n\nContent here\n\n---\n\n# Document 2\n\nMore content';
 
-      (mockKnowledgeService.exportKnowledge as Mock).mockResolvedValue(mockMarkdownData);
+      vi.mocked(mockKnowledgeService.exportKnowledge).mockResolvedValue(mockMarkdownData);
 
       const message: Memory = {
         id: generateMockUuid(59),
@@ -349,7 +339,7 @@ describe('Advanced Knowledge Features', () => {
         ],
       };
 
-      (mockKnowledgeService.batchOperation as Mock).mockResolvedValue(mockBatchResult);
+      vi.mocked(mockKnowledgeService.batchOperation).mockResolvedValue(mockBatchResult);
 
       const batchOp = {
         operation: 'add' as const,
@@ -407,7 +397,7 @@ describe('Advanced Knowledge Features', () => {
         ],
       };
 
-      (mockKnowledgeService.batchOperation as Mock).mockResolvedValue(mockBatchResult);
+      vi.mocked(mockKnowledgeService.batchOperation).mockResolvedValue(mockBatchResult);
 
       const batchOp = {
         operation: 'update' as const,
@@ -444,7 +434,7 @@ describe('Advanced Knowledge Features', () => {
         results: [{ id: generateMockUuid(70), success: true }],
       };
 
-      (mockKnowledgeService.importKnowledge as Mock).mockResolvedValue(mockImportResult);
+      vi.mocked(mockKnowledgeService.importKnowledge).mockResolvedValue(mockImportResult);
 
       const result = await mockKnowledgeService.importKnowledge(jsonData, {
         format: 'json',
@@ -465,7 +455,7 @@ describe('Advanced Knowledge Features', () => {
         results: [{ id: '1', success: true }],
       };
 
-      (mockKnowledgeService.importKnowledge as Mock).mockResolvedValue(mockImportResult);
+      vi.mocked(mockKnowledgeService.importKnowledge).mockResolvedValue(mockImportResult);
 
       const result = await mockKnowledgeService.importKnowledge(csvData, {
         format: 'csv',

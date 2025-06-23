@@ -34,7 +34,6 @@ async function runPaymentTests() {
 
 When users request these services, inform them of the cost and process payments appropriately.
 Always be transparent about pricing and provide value for paid services.`,
-      modelProvider: 'openai',
       settings: {
         model: 'gpt-4o-mini',
         temperature: 0.7,
@@ -42,11 +41,9 @@ Always be transparent about pricing and provide value for paid services.`,
     };
 
     const customerCharacter: Character = {
-      id: uuidv4(),
       name: 'TestCustomer',
       bio: ['A test customer for payment scenarios'],
       system: 'You are a customer interested in premium services.',
-      modelProvider: 'openai',
       settings: {
         model: 'gpt-4o-mini',
         temperature: 0.7,

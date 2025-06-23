@@ -1,0 +1,3920 @@
+[
+  {
+    "userId": "jin",
+    "username": "jin",
+    "displayName": "jin",
+    "discriminator": "0001",
+    "messageCount": 815,
+    "conversationCount": 0,
+    "averageMessageLength": 74.52269938650306,
+    "conversationFrequency": 815,
+    "firstSeen": "1970-01-21T02:36:09.600Z",
+    "lastSeen": "1970-01-21T06:22:31.200Z",
+    "channelActivity": {
+      "1253563209462448241": 96,
+      "1308149076893630555": 44,
+      "1318770424632311930": 61,
+      "1301363808421543988": 327,
+      "1313222089271939102": 94,
+      "1300756641406521416": 7,
+      "1300025221834739744": 46,
+      "1328592959444095038": 98,
+      "1351627860351258685": 36,
+      "1362864274862768450": 6
+    },
+    "timeActivity": {
+      "18": 252,
+      "19": 277,
+      "20": 192,
+      "21": 63,
+      "22": 31
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "eliza",
+        "development",
+        "art",
+        "discord"
+      ],
+      "commonPhrases": [
+        "awesome"
+      ],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.927710843373494,
+          "examples": [
+            "Soon knowledge will be a folder",
+            "The dao account is the real one waiting for blue check back, the vc one is a partner who squatted th",
+            "I love dashboards, I love dune, id bounty this"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.14969325153374233,
+          "examples": [
+            "I need help with: Developing a 3D visualization tool for market cap data",
+            "I need help with: Documenting ElizaOS plugins",
+            "I need help with: Needed help summarizing what Shaw was saying during a Twitter space"
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "high",
+      "helpfulness": 0.28957055214723926,
+      "leadership": 0.00245398773006135,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Discord"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 362,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T05:22:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 322,
+        "positiveInteractions": 4,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 303,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 281,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "boom",
+        "targetUsername": "boom",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 281,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:03:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "sm_sith_lord",
+        "targetUsername": "SM Sith Lord",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 220,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:59:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 201,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:26:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 201,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:11:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 193,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:19:12.000Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "odilitime",
+    "username": "Odilitime",
+    "displayName": "Odilitime",
+    "discriminator": "0001",
+    "messageCount": 370,
+    "conversationCount": 0,
+    "averageMessageLength": 76.39189189189189,
+    "conversationFrequency": 370,
+    "firstSeen": "1970-01-21T02:09:09.600Z",
+    "lastSeen": "1970-01-21T06:15:27.600Z",
+    "channelActivity": {
+      "1308149076893630555": 124,
+      "1318770424632311930": 4,
+      "1300025221834739744": 116,
+      "1313222089271939102": 2,
+      "1328592959444095038": 18,
+      "1253563209462448241": 63,
+      "1301363808421543988": 30,
+      "1351627860351258685": 4,
+      "1361442528813121556": 8,
+      "1362864274862768450": 1
+    },
+    "timeActivity": {
+      "18": 26,
+      "19": 88,
+      "20": 141,
+      "21": 63,
+      "22": 52
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "eliza",
+        "development",
+        "art",
+        "discord"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9635036496350365,
+          "examples": [
+            "Alpha.1 is in the main branch",
+            "Alpha.1 is in the main branch",
+            "Released v0.1.9 with comprehensive release notes"
+          ]
+        }
+      ],
+      "emotionalTone": "friendly",
+      "engagementLevel": "high",
+      "helpfulness": 0.14054054054054055,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Discord"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 808,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 321,
+        "positiveInteractions": 4,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 306,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 284,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "boom",
+        "targetUsername": "boom",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 262,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:03:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "sm_sith_lord",
+        "targetUsername": "SM Sith Lord",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 220,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:59:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 201,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:11:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 199,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:26:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 198,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:18:31.200Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "kenk",
+    "username": "Kenk",
+    "displayName": "Kenk",
+    "discriminator": "0001",
+    "messageCount": 325,
+    "conversationCount": 0,
+    "averageMessageLength": 73.31076923076922,
+    "conversationFrequency": 325,
+    "firstSeen": "1970-01-21T02:17:55.200Z",
+    "lastSeen": "1970-01-21T06:20:57.600Z",
+    "channelActivity": {
+      "1300756641406521416": 19,
+      "1253563209462448241": 142,
+      "1300025221834739744": 34,
+      "1351627860351258685": 6,
+      "1361442528813121556": 22,
+      "1301363808421543988": 41,
+      "1362864274862768450": 61
+    },
+    "timeActivity": {
+      "18": 9,
+      "19": 24,
+      "20": 99,
+      "21": 171,
+      "22": 22
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "eliza",
+        "ai",
+        "development",
+        "discord",
+        "art"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9433962264150944,
+          "examples": [
+            "Yes it does, it's a site for projects that have demoed",
+            "It's on the event page in the top left of the Discord",
+            "Provided links to documentation, eliza.gg website, and Shaw's YouTube videos"
+          ]
+        }
+      ],
+      "emotionalTone": "casual",
+      "engagementLevel": "high",
+      "helpfulness": 0.06769230769230769,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Design"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 518,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 230,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 222,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:22:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 203,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 174,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:07:57.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 172,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:36:45.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 153,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:26:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "multiple_users",
+        "targetUsername": "multiple users",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 140,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:37:07.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "honeybadger",
+        "targetUsername": "HoneyBadger",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 136,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:22:31.200Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "patt",
+    "username": "Patt",
+    "displayName": "Patt",
+    "discriminator": "0001",
+    "messageCount": 322,
+    "conversationCount": 0,
+    "averageMessageLength": 79.04347826086956,
+    "conversationFrequency": 322,
+    "firstSeen": "1970-01-21T02:50:52.800Z",
+    "lastSeen": "1970-01-21T05:40:55.200Z",
+    "channelActivity": {
+      "1328592959444095038": 66,
+      "1308149076893630555": 21,
+      "1301363808421543988": 47,
+      "1253563209462448241": 156,
+      "1318770424632311930": 5,
+      "1300756641406521416": 1,
+      "1351627860351258685": 25,
+      "1300025221834739744": 1
+    },
+    "timeActivity": {
+      "18": 9,
+      "19": 159,
+      "20": 150,
+      "21": 4
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "discord",
+        "development",
+        "eliza",
+        "blockchain"
+      ],
+      "commonPhrases": [
+        "awesome"
+      ],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9629629629629629,
+          "examples": [
+            "You need to have 1mil degenai and verify with collabland in roles-and-links",
+            "You might need to grab the dev role and ask in the coders channel",
+            "There's a plugin registry at https://github.com/elizaos-plugins"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.14285714285714285,
+          "examples": [
+            "Suggested grabbing coders role in a specific channel and seeking help in another channel",
+            "I need help with: Interest in waifu NFT features",
+            "I need help with: Patt suggested borrowing Misato's token incentive feature for DegenAI to generate "
+          ]
+        }
+      ],
+      "emotionalTone": "friendly",
+      "engagementLevel": "high",
+      "helpfulness": 0.2546583850931677,
+      "leadership": 0.14363354037267081,
+      "expertise": [
+        "AI/ML",
+        "Discord",
+        "TypeScript"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 715,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T04:57:14.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 359,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T04:25:14.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 278,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:08:48.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 242,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:49:33.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 193,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:19:12.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 193,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:11:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 188,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T04:11:28.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 184,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:07:48.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "rhota",
+        "targetUsername": "rhota",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 156,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:54:02.400Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "community",
+    "username": "Community",
+    "displayName": "Community",
+    "discriminator": "0001",
+    "messageCount": 290,
+    "conversationCount": 0,
+    "averageMessageLength": 62.672413793103445,
+    "conversationFrequency": 290,
+    "firstSeen": "1970-01-21T02:24:09.600Z",
+    "lastSeen": "1970-01-21T06:18:04.800Z",
+    "channelActivity": {
+      "1301363808421543988": 107,
+      "1308149076893630555": 32,
+      "1318770424632311930": 28,
+      "1253563209462448241": 45,
+      "1300756641406521416": 6,
+      "1300025221834739744": 29,
+      "1328592959444095038": 27,
+      "1351627860351258685": 4,
+      "1361442528813121556": 9,
+      "1362864274862768450": 3
+    },
+    "timeActivity": {
+      "18": 59,
+      "19": 111,
+      "20": 72,
+      "21": 35,
+      "22": 13
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "eliza",
+        "blockchain",
+        "development",
+        "art"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 1,
+          "examples": [
+            "I need help with: Recognizing technical contributions",
+            "I need help with: Shared experience with Eliza framework",
+            "I need help with: Documentation site (eliza.how) not configured correctly"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 1,
+          "examples": [
+            "I need help with: Identified bug in packages/plugin-solana/src/providers/simulationSellingService.ts",
+            "I need help with: Supabase date/time field error with value \"1738105067000\"",
+            "I need help with: Embedding Twitter API credentials in character JSON files"
+          ]
+        }
+      ],
+      "emotionalTone": "formal",
+      "engagementLevel": "high",
+      "helpfulness": 1,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Discord"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 721,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 368,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T05:22:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 325,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 322,
+        "positiveInteractions": 4,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 202,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:18:31.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 201,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:26:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 193,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:11:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 192,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:07:57.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "rhota",
+        "targetUsername": "rhota",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 156,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:54:02.400Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "boom",
+    "username": "boom",
+    "displayName": "boom",
+    "discriminator": "0001",
+    "messageCount": 281,
+    "conversationCount": 0,
+    "averageMessageLength": 65.41992882562278,
+    "conversationFrequency": 281,
+    "firstSeen": "1970-01-21T02:08:39.600Z",
+    "lastSeen": "1970-01-21T06:11:19.200Z",
+    "channelActivity": {
+      "1313222089271939102": 260,
+      "1300756641406521416": 19,
+      "1301363808421543988": 2
+    },
+    "timeActivity": {
+      "18": 136,
+      "19": 125,
+      "20": 16,
+      "21": 2,
+      "22": 2
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "development",
+        "eliza",
+        "music",
+        "gaming"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9411764705882353,
+          "examples": [
+            "Use section labels like [verse], [chorus] and add adlibs with (\"adlib\") notation after lines",
+            "Include persona descriptions in brackets and map them to specific verses in the lyrics",
+            "Yes, they're being used for the AIshow and most AI voices, but singing capabilities aren't available"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.40569395017793597,
+          "examples": [
+            "I need help with: Discussion about code assistance tools",
+            "I need help with: Creating multi-voice AI rap songs in Suno",
+            "I need help with: Discussing tools for deep context code understanding"
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "high",
+      "helpfulness": 0.8042704626334519,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Design"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 428,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:00:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "sm_sith_lord",
+        "targetUsername": "SM Sith Lord",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 220,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:59:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 135,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T02:44:09.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 113,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:21:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 106,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T04:34:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 85,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:19:12.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "honeybadger",
+        "targetUsername": "HoneyBadger",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 85,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:33:14.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 70,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:04:45.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "accelxr",
+        "targetUsername": "accelxr",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 69,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:37:14.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "fishai",
+        "targetUsername": "fishai",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 67,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:53:36.000Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "bossu",
+    "username": "BOSSU",
+    "displayName": "BOSSU",
+    "discriminator": "0001",
+    "messageCount": 253,
+    "conversationCount": 0,
+    "averageMessageLength": 52.73517786561265,
+    "conversationFrequency": 253,
+    "firstSeen": "1970-01-21T02:11:39.600Z",
+    "lastSeen": "1970-01-21T03:45:15.600Z",
+    "channelActivity": {
+      "1253563209462448241": 253
+    },
+    "timeActivity": {
+      "18": 124,
+      "19": 125,
+      "20": 4
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "development",
+        "discord",
+        "eliza",
+        "ai",
+        "blockchain"
+      ],
+      "commonPhrases": [
+        "cool",
+        "great"
+      ],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9793103448275862,
+          "examples": [
+            "Yes, but it will be slower than running with a GPU",
+            "Yes, we are looking for passionate non-devs",
+            "You can run it without gpu but itll be slower than my afternoon naps"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.16600790513833993,
+          "examples": [
+            "Check the coders channel for technical help with agents",
+            "Check the coders channel for voice integration help",
+            "Check the coders channel for Twitter bot help"
+          ]
+        }
+      ],
+      "emotionalTone": "friendly",
+      "engagementLevel": "high",
+      "helpfulness": 0.31620553359683795,
+      "leadership": 0,
+      "expertise": [
+        "Discord",
+        "AI/ML",
+        "TypeScript"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 156,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T05:40:55.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 142,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:51:00.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 96,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:43:00.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 63,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:55:00.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 45,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:37:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "osint",
+        "targetUsername": "Osint",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 44,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:50:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "osint_aka_not_a_dev_ai",
+        "targetUsername": "Osint (aka not_a_dev_ai",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 42,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:50:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "xell0x",
+        "targetUsername": "xell0x",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 40,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:27:09.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "abhi_ironman",
+        "targetUsername": "abhi_ironman",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 35,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:04:57.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "multiple_users",
+        "targetUsername": "multiple users",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 33,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:36:38.400Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "sm_sith_lord",
+    "username": "SM Sith Lord",
+    "displayName": "SM Sith Lord",
+    "discriminator": "0001",
+    "messageCount": 220,
+    "conversationCount": 0,
+    "averageMessageLength": 93.75909090909092,
+    "conversationFrequency": 220,
+    "firstSeen": "1970-01-21T02:08:09.600Z",
+    "lastSeen": "1970-01-21T04:54:15.600Z",
+    "channelActivity": {
+      "1313222089271939102": 220
+    },
+    "timeActivity": {
+      "18": 124,
+      "19": 84,
+      "20": 12
+    },
+    "personalityProfile": {
+      "communicationStyle": [
+        "detailed"
+      ],
+      "preferredTopics": [
+        "ai",
+        "development",
+        "gaming",
+        "science",
+        "eliza"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 1,
+          "examples": [
+            "Would it be better if the news aggregator pulls image URLs while scraping data?",
+            "Two approaches discussed: pre-generated scripts vs. real-time interaction with judges",
+            "Through character profiles that define personalities and behaviors"
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "high",
+      "helpfulness": 0.13636363636363635,
+      "leadership": 0.509090909090909,
+      "expertise": [
+        "AI/ML",
+        "JavaScript",
+        "TypeScript"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "boom",
+        "targetUsername": "boom",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 260,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:03:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 94,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:00:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "fishai",
+        "targetUsername": "fishai",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 67,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:53:36.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "pendingreality",
+        "targetUsername": "PENDINGREALITY",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 17,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T04:06:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "vega",
+        "targetUsername": "VEGA",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 15,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:22:14.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "team",
+        "targetUsername": "Team",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 15,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:52:09.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "slothify_daily_gmove",
+        "targetUsername": "Slothify⚡Daily Gmove",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 15,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:30:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kamx",
+        "targetUsername": "KamX",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 11,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T02:43:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 8,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T04:04:45.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "alsara2k",
+        "targetUsername": "Alsara2k",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 6,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T02:58:33.600Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "yikesawjeez",
+    "username": "yikesawjeez",
+    "displayName": "yikesawjeez",
+    "discriminator": "0001",
+    "messageCount": 206,
+    "conversationCount": 0,
+    "averageMessageLength": 79.64563106796116,
+    "conversationFrequency": 206,
+    "firstSeen": "1970-01-21T02:08:09.600Z",
+    "lastSeen": "1970-01-21T05:54:04.800Z",
+    "channelActivity": {
+      "1300756641406521416": 7,
+      "1253563209462448241": 12,
+      "1301363808421543988": 94,
+      "1318770424632311930": 46,
+      "1328592959444095038": 2,
+      "1313222089271939102": 5,
+      "1351627860351258685": 21,
+      "1300025221834739744": 2,
+      "1362864274862768450": 12,
+      "1361442528813121556": 5
+    },
+    "timeActivity": {
+      "18": 42,
+      "19": 40,
+      "20": 75,
+      "21": 49
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "eliza",
+        "development",
+        "discord",
+        "blockchain"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9824561403508771,
+          "examples": [
+            "Explained that core team only launches ai16z and degen, recommended attending Friday spaces for upda",
+            "Directed to the appropriate channel (#dev-help)",
+            "Explained current swarm-style implementation and future commerce-like agent interactions"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.15048543689320387,
+          "examples": [
+            "Directed to the appropriate channel (#dev-help)",
+            "I need help with: Request for information about where code development is happening",
+            "I need help with: yikesawjeez asked about repositories for working on the summarization tools"
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "high",
+      "helpfulness": 0.2621359223300971,
+      "leadership": 0.1,
+      "expertise": [
+        "AI/ML",
+        "Discord",
+        "TypeScript"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 771,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 325,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 301,
+        "positiveInteractions": 4,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "boom",
+        "targetUsername": "boom",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 281,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:03:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 258,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 246,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T05:22:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "sm_sith_lord",
+        "targetUsername": "SM Sith Lord",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 220,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:59:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 190,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:11:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 189,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:18:31.200Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "doriand",
+    "username": "DorianD",
+    "displayName": "DorianD",
+    "discriminator": "0001",
+    "messageCount": 202,
+    "conversationCount": 0,
+    "averageMessageLength": 70.89603960396039,
+    "conversationFrequency": 202,
+    "firstSeen": "1970-01-21T02:09:39.600Z",
+    "lastSeen": "1970-01-21T06:13:57.600Z",
+    "channelActivity": {
+      "1308149076893630555": 13,
+      "1318770424632311930": 78,
+      "1301363808421543988": 81,
+      "1253563209462448241": 17,
+      "1300756641406521416": 4,
+      "1361442528813121556": 9
+    },
+    "timeActivity": {
+      "18": 83,
+      "19": 55,
+      "20": 33,
+      "21": 15,
+      "22": 16
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "eliza",
+        "blockchain",
+        "development",
+        "discord"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9444444444444444,
+          "examples": [
+            "How to get rid of that annoying alert sound?",
+            "Try disabling sounds, it somehow got toggled back on",
+            "Check https://www.daos.fun/HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC under AUM and https://elizas"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.26732673267326734,
+          "examples": [
+            "I need help with: User sharing AI-generated LGBT community token images and seeking feedback",
+            "I need help with: Looking for auto.fun API",
+            "I need help with: Looking for ElizaOS logo files"
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "high",
+      "helpfulness": 0.4752475247524752,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Blockchain"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 535,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T06:31:38.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 230,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T05:13:45.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 229,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:58:21.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 227,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:32:48.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 224,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:52:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 164,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:20:07.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 159,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:32:07.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "rhota",
+        "targetUsername": "rhota",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 156,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:54:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "honeybadger",
+        "targetUsername": "HoneyBadger",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 118,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:33:14.400Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "jintern",
+    "username": "jintern",
+    "displayName": "jintern",
+    "discriminator": "0001",
+    "messageCount": 201,
+    "conversationCount": 0,
+    "averageMessageLength": 116.44278606965175,
+    "conversationFrequency": 201,
+    "firstSeen": "1970-01-21T03:38:37.200Z",
+    "lastSeen": "1970-01-21T03:59:06.000Z",
+    "channelActivity": {
+      "1300025221834739744": 110,
+      "1301363808421543988": 62,
+      "1328592959444095038": 10,
+      "1313222089271939102": 8,
+      "1308149076893630555": 11
+    },
+    "timeActivity": {
+      "19": 126,
+      "20": 75
+    },
+    "personalityProfile": {
+      "communicationStyle": [
+        "detailed"
+      ],
+      "preferredTopics": [
+        "eliza",
+        "ai",
+        "development",
+        "discord",
+        "art"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 1,
+          "examples": [
+            "Check logs for \"retrieving from knowledge\" messages, set DEBUG=true in .env for verbose logs, or tes",
+            "Set OPENAI_MODEL in .env for default model or override per character in their character.json config",
+            "Set OPENAI_MODEL in .env or override per character in character.json config"
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "high",
+      "helpfulness": 0.11940298507462686,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Design"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 609,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T04:27:00.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 290,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T04:19:15.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "boom",
+        "targetUsername": "boom",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 262,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:03:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "sm_sith_lord",
+        "targetUsername": "SM Sith Lord",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 220,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:59:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 195,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:07:21.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 172,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T04:11:28.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "rhota",
+        "targetUsername": "rhota",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 156,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:54:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 135,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:24:00.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 103,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:49:01.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 94,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:19:12.000Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "shaw",
+    "username": "shaw",
+    "displayName": "shaw",
+    "discriminator": "0001",
+    "messageCount": 193,
+    "conversationCount": 0,
+    "averageMessageLength": 84.69948186528498,
+    "conversationFrequency": 193,
+    "firstSeen": "1970-01-21T02:22:02.400Z",
+    "lastSeen": "1970-01-21T06:31:57.600Z",
+    "channelActivity": {
+      "1308149076893630555": 5,
+      "1301363808421543988": 134,
+      "1328592959444095038": 9,
+      "1318770424632311930": 4,
+      "1313222089271939102": 1,
+      "1253563209462448241": 13,
+      "1300025221834739744": 23,
+      "1361442528813121556": 3,
+      "1362864274862768450": 1
+    },
+    "timeActivity": {
+      "18": 63,
+      "19": 49,
+      "20": 44,
+      "21": 24,
+      "22": 13
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "eliza",
+        "blockchain",
+        "development",
+        "art"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9722222222222222,
+          "examples": [
+            "Clarified they deleted tokens that didn't meet criteria (less than 5% holdings, under $20K value, or",
+            "Room model allows agents to be in a room with many other agents and people",
+            "Clarified that selling donated tokens was necessary to fund development and protect the ai16z token"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.10880829015544041,
+          "examples": [
+            "I need help with: Shaw feeling overwhelmed by Twitter criticism and considering deactivating his acc",
+            "I need help with: Misunderstanding about Shaw's joke tweet regarding Trump",
+            "I need help with: Shaw struggling to stream dev school from hotels while traveling"
+          ]
+        }
+      ],
+      "emotionalTone": "casual",
+      "engagementLevel": "high",
+      "helpfulness": 0.24870466321243523,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Design"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 772,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 366,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T05:22:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 300,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 296,
+        "positiveInteractions": 4,
+        "lastInteraction": "1970-01-21T04:24:00.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 280,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "boom",
+        "targetUsername": "boom",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 262,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:03:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "sm_sith_lord",
+        "targetUsername": "SM Sith Lord",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 220,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:59:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 201,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:11:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 198,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:18:31.200Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "rhota",
+    "username": "rhota",
+    "displayName": "rhota",
+    "discriminator": "0001",
+    "messageCount": 156,
+    "conversationCount": 0,
+    "averageMessageLength": 98.1923076923077,
+    "conversationFrequency": 156,
+    "firstSeen": "1970-01-21T02:30:15.600Z",
+    "lastSeen": "1970-01-21T04:12:03.600Z",
+    "channelActivity": {
+      "1308149076893630555": 154,
+      "1301363808421543988": 2
+    },
+    "timeActivity": {
+      "18": 33,
+      "19": 100,
+      "20": 23
+    },
+    "personalityProfile": {
+      "communicationStyle": [
+        "detailed"
+      ],
+      "preferredTopics": [
+        "ai",
+        "discord",
+        "eliza",
+        "art",
+        "development"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9622641509433962,
+          "examples": [
+            "I'll be able to provide a date this week. Right now the team is heads down enhancing trading functio",
+            "The delay was caused by resourcing issues with too many concurrent projects. Now DegenAI has full-ti",
+            "This will pick up as we continue to roll out improvements."
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "high",
+      "helpfulness": 0.08974358974358974,
+      "leadership": 0.02564102564102564,
+      "expertise": [
+        "AI/ML",
+        "Discord",
+        "TypeScript"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 371,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T06:31:38.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 154,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T06:09:08.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 139,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:21:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 139,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:43:13.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 94,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:19:12.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 94,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:56:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "honeybadger",
+        "targetUsername": "HoneyBadger",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 87,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:33:14.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 73,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:36:45.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "accelxr",
+        "targetUsername": "accelxr",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 69,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:37:14.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 68,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:13:45.600Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "multiple_users",
+    "username": "Multiple users",
+    "displayName": "Multiple users",
+    "discriminator": "0001",
+    "messageCount": 148,
+    "conversationCount": 0,
+    "averageMessageLength": 59.71621621621622,
+    "conversationFrequency": 148,
+    "firstSeen": "1970-01-21T03:08:09.600Z",
+    "lastSeen": "1970-01-21T06:36:38.400Z",
+    "channelActivity": {
+      "1300025221834739744": 37,
+      "1253563209462448241": 33,
+      "1301363808421543988": 48,
+      "1308149076893630555": 4,
+      "1328592959444095038": 4,
+      "1361442528813121556": 11,
+      "1362864274862768450": 10,
+      "1351627860351258685": 1
+    },
+    "timeActivity": {
+      "18": 40,
+      "19": 36,
+      "20": 33,
+      "21": 32,
+      "22": 7
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "blockchain",
+        "eliza",
+        "development",
+        "art"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 1,
+          "examples": [
+            "How do I verify for the partner role?",
+            "I need help with: Warning about scam attempts in the chat",
+            "I need help with: Clarifying which tokens are officially associated with elizaOS"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.6418918918918919,
+          "examples": [
+            "I need help with: Verifying for partner role",
+            "I need help with: Offered access to NanoGPT (LLM provider integrated into Eliza) with o1 and o1 Pro ",
+            "I need help with: Offered access to NanoGPT (LLM provider integrated with Eliza)"
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "high",
+      "helpfulness": 1,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Design"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 653,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 364,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T05:22:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 316,
+        "positiveInteractions": 4,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 306,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 256,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 193,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:11:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 188,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:07:57.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "rhota",
+        "targetUsername": "rhota",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 156,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:54:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 148,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:26:50.400Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "honeybadger",
+    "username": "HoneyBadger",
+    "displayName": "HoneyBadger",
+    "discriminator": "0001",
+    "messageCount": 146,
+    "conversationCount": 0,
+    "averageMessageLength": 58.273972602739725,
+    "conversationFrequency": 146,
+    "firstSeen": "1970-01-21T02:33:45.600Z",
+    "lastSeen": "1970-01-21T05:22:31.200Z",
+    "channelActivity": {
+      "1301363808421543988": 85,
+      "1253563209462448241": 27,
+      "1328592959444095038": 4,
+      "1318770424632311930": 4,
+      "1351627860351258685": 23,
+      "1308149076893630555": 2,
+      "1362864274862768450": 1
+    },
+    "timeActivity": {
+      "18": 14,
+      "19": 61,
+      "20": 68,
+      "21": 3
+    },
+    "personalityProfile": {
+      "communicationStyle": [
+        "inquisitive"
+      ],
+      "preferredTopics": [
+        "ai",
+        "blockchain",
+        "eliza",
+        "art",
+        "development"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.8518518518518519,
+          "examples": [
+            "Entity is called ElizaOS, the token is ai16z",
+            "Yes, as confirmed by a GitHub PR link",
+            "We're moving away from that name to ElizaOS. It's a DAO because we treat holders as partners. With n"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.15753424657534246,
+          "examples": [
+            "I need help with: Questions about Instacart agent capabilities",
+            "I need help with: Clarification about L1/L2 plans and tokenomics timeline",
+            "I need help with: Clarification about product roadmap and tokenomics timeline"
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "high",
+      "helpfulness": 0.3013698630136986,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "Discord",
+        "TypeScript"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 668,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 320,
+        "positiveInteractions": 4,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 250,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 246,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 244,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T05:22:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 189,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:19:12.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 187,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:26:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 166,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:07:57.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "rhota",
+        "targetUsername": "rhota",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 156,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:54:02.400Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "accelxr",
+    "username": "accelxr",
+    "displayName": "accelxr",
+    "discriminator": "0001",
+    "messageCount": 123,
+    "conversationCount": 0,
+    "averageMessageLength": 88.1219512195122,
+    "conversationFrequency": 123,
+    "firstSeen": "1970-01-21T02:59:03.600Z",
+    "lastSeen": "1970-01-21T05:04:01.200Z",
+    "channelActivity": {
+      "1301363808421543988": 69,
+      "1328592959444095038": 1,
+      "1351627860351258685": 16,
+      "1361442528813121556": 13,
+      "1362864274862768450": 24
+    },
+    "timeActivity": {
+      "18": 1,
+      "19": 44,
+      "20": 47,
+      "21": 31
+    },
+    "personalityProfile": {
+      "communicationStyle": [
+        "detailed"
+      ],
+      "preferredTopics": [
+        "ai",
+        "blockchain",
+        "art",
+        "business",
+        "development"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9655172413793104,
+          "examples": [
+            "Tokenomics for the launchpad is 95% complete, with plans to release both together with the launchpad",
+            "No, there are no existing discussions about additional tokens beyond ai16z and degenai",
+            "The team has a healthy stable allocation providing runway for approximately a year, plus revenue fro"
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "high",
+      "helpfulness": 0.14634146341463414,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Design"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 467,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 150,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 147,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:07:57.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 138,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 134,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:26:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 130,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "honeybadger",
+        "targetUsername": "HoneyBadger",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 113,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:22:31.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 90,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:18:31.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "multiple_users",
+        "targetUsername": "multiple users",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 74,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:37:07.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 72,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:11:19.200Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "channel_members",
+    "username": "Channel members",
+    "displayName": "Channel members",
+    "discriminator": "0001",
+    "messageCount": 82,
+    "conversationCount": 0,
+    "averageMessageLength": 60.73170731707317,
+    "conversationFrequency": 82,
+    "firstSeen": "1970-01-21T02:28:09.600Z",
+    "lastSeen": "1970-01-21T06:23:31.200Z",
+    "channelActivity": {
+      "1318770424632311930": 15,
+      "1313222089271939102": 5,
+      "1301363808421543988": 17,
+      "1308149076893630555": 11,
+      "1328592959444095038": 5,
+      "1300756641406521416": 5,
+      "1253563209462448241": 4,
+      "1351627860351258685": 11,
+      "1362864274862768450": 2,
+      "1361442528813121556": 7
+    },
+    "timeActivity": {
+      "18": 32,
+      "19": 13,
+      "20": 20,
+      "21": 14,
+      "22": 3
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "eliza",
+        "blockchain",
+        "development",
+        "art"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 1,
+          "examples": [
+            "I need help with: Understanding Eliza's GitHub contributors graph for potential reward system",
+            "I need help with: Lack of browser interface for news parser data",
+            "I need help with: Shared a screenshot from Shaw providing some update about DegenAI"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 1,
+          "examples": [
+            "I need help with: How to get started with PayAI plugin",
+            "I need help with: Moderation needed for channel cleanup",
+            "I need help with: Maintaining positive discussion environment"
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "medium",
+      "helpfulness": 1,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "Discord",
+        "TypeScript"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 769,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 321,
+        "positiveInteractions": 4,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 291,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "boom",
+        "targetUsername": "boom",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 281,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:03:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 261,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 254,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T05:22:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "sm_sith_lord",
+        "targetUsername": "SM Sith Lord",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 220,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:59:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 204,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:26:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 202,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:18:31.200Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "witch",
+    "username": "witch",
+    "displayName": "witch",
+    "discriminator": "0001",
+    "messageCount": 77,
+    "conversationCount": 0,
+    "averageMessageLength": 90.72727272727273,
+    "conversationFrequency": 77,
+    "firstSeen": "1970-01-21T02:12:39.600Z",
+    "lastSeen": "1970-01-21T04:19:15.600Z",
+    "channelActivity": {
+      "1253563209462448241": 16,
+      "1301363808421543988": 50,
+      "1318770424632311930": 8,
+      "1328592959444095038": 3
+    },
+    "timeActivity": {
+      "18": 12,
+      "19": 56,
+      "20": 9
+    },
+    "personalityProfile": {
+      "communicationStyle": [
+        "detailed"
+      ],
+      "preferredTopics": [
+        "ai",
+        "eliza",
+        "blockchain",
+        "art",
+        "development"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 1,
+          "examples": [
+            "You'll need to host it somewhere, can use bespoke solutions like mee.fun or find your own hosting + ",
+            "Sorted through all plugins and prepared documentation for commit",
+            "Tokenomics is in the #tokenomics channel but they're waiting for launchpad release before releasing "
+          ]
+        }
+      ],
+      "emotionalTone": "casual",
+      "engagementLevel": "high",
+      "helpfulness": 0.15584415584415584,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Discord"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 582,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T04:27:00.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 274,
+        "positiveInteractions": 4,
+        "lastInteraction": "1970-01-21T04:24:00.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 207,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:07:21.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 183,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T06:21:04.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 176,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:19:12.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 160,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T04:11:28.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 154,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:49:01.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "honeybadger",
+        "targetUsername": "HoneyBadger",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 120,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:27:25.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 115,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T04:19:15.600Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "xell0x",
+    "username": "xell0x",
+    "displayName": "xell0x",
+    "discriminator": "0001",
+    "messageCount": 72,
+    "conversationCount": 0,
+    "averageMessageLength": 69.625,
+    "conversationFrequency": 72,
+    "firstSeen": "1970-01-21T05:10:09.600Z",
+    "lastSeen": "1970-01-21T05:59:48.000Z",
+    "channelActivity": {
+      "1253563209462448241": 40,
+      "1361442528813121556": 32
+    },
+    "timeActivity": {
+      "21": 63,
+      "22": 9
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "eliza",
+        "ai",
+        "development",
+        "discord",
+        "blockchain"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9230769230769231,
+          "examples": [
+            "Yes, Shaw teased it a week ago with a May shipping timeline, and later confirmed it's coming soon",
+            "Eli5, eddy, degenai will be ai agents you can directly interact with on the elizaos v2 terminal or b",
+            "Because there is demand for ai agents? And v2 finally being out."
+          ]
+        }
+      ],
+      "emotionalTone": "casual",
+      "engagementLevel": "high",
+      "helpfulness": 0.08333333333333333,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Discord"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 164,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:52:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 156,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T05:40:55.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 96,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:43:00.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 71,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T04:58:21.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 54,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:32:48.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "osint",
+        "targetUsername": "Osint",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 47,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:17:52.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "multiple_users",
+        "targetUsername": "multiple users",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 44,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:44:09.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "osint_aka_not_a_dev_ai",
+        "targetUsername": "Osint (aka not_a_dev_ai",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 44,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:16:51.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "abhi_ironman",
+        "targetUsername": "abhi_ironman",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 42,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:43:19.200Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "anon",
+    "username": "anon",
+    "displayName": "anon",
+    "discriminator": "0001",
+    "messageCount": 69,
+    "conversationCount": 0,
+    "averageMessageLength": 45.15942028985507,
+    "conversationFrequency": 69,
+    "firstSeen": "1970-01-21T02:29:36.000Z",
+    "lastSeen": "1970-01-21T05:05:24.000Z",
+    "channelActivity": {
+      "1301363808421543988": 42,
+      "1328592959444095038": 3,
+      "1253563209462448241": 10,
+      "1361442528813121556": 14
+    },
+    "timeActivity": {
+      "18": 13,
+      "19": 4,
+      "20": 45,
+      "21": 7
+    },
+    "personalityProfile": {
+      "communicationStyle": [
+        "inquisitive"
+      ],
+      "preferredTopics": [
+        "ai",
+        "blockchain",
+        "eliza",
+        "gaming"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.75,
+          "examples": [
+            "autofun is a launchpad. sol used on autofun will go back to buy ai16z. completing the flywheel",
+            "have to wait for an offical announcement no idea how autofun works",
+            "have to wait for an offical announcement no idea how autofun works"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.15942028985507245,
+          "examples": [
+            "I need help with: anon needed someone who makes custom VRMs",
+            "I need help with: Looking for someone who makes custom VRMs",
+            "I need help with: Explaining V2 deployment capabilities"
+          ]
+        }
+      ],
+      "emotionalTone": "casual",
+      "engagementLevel": "high",
+      "helpfulness": 0.3188405797101449,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 521,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T04:27:00.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 269,
+        "positiveInteractions": 4,
+        "lastInteraction": "1970-01-21T04:24:00.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 205,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:52:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 188,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:32:48.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 159,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:32:07.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 119,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T04:58:21.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "honeybadger",
+        "targetUsername": "HoneyBadger",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 116,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:27:25.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 113,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:20:07.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 107,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:18:31.200Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "fishai",
+    "username": "fishai",
+    "displayName": "fishai",
+    "discriminator": "0001",
+    "messageCount": 67,
+    "conversationCount": 0,
+    "averageMessageLength": 69.61194029850746,
+    "conversationFrequency": 67,
+    "firstSeen": "1970-01-21T02:38:40.800Z",
+    "lastSeen": "1970-01-21T03:47:31.200Z",
+    "channelActivity": {
+      "1313222089271939102": 67
+    },
+    "timeActivity": {
+      "18": 28,
+      "19": 39
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "development",
+        "eliza",
+        "music",
+        "art"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9166666666666666,
+          "examples": [
+            "A modular Unity-based system for creating AI shows with features like infinite conversations, scene ",
+            "A modular AI system that adds AI Agent support to Unity as an engine utility, allowing for rapid dev",
+            "Provided detailed explanation of FishAI system capabilities including interactive elements and anima"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.40298507462686567,
+          "examples": [
+            "I need help with: Understanding the news aggregator for the AI Podcast",
+            "I need help with: Discussion about exporting Unity projects to web",
+            "I need help with: fishai asked about AI personalities"
+          ]
+        }
+      ],
+      "emotionalTone": "technical",
+      "engagementLevel": "high",
+      "helpfulness": 0.7164179104477612,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Design"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "boom",
+        "targetUsername": "boom",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 260,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:03:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "sm_sith_lord",
+        "targetUsername": "SM Sith Lord",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 220,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:59:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 94,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:00:19.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "pendingreality",
+        "targetUsername": "PENDINGREALITY",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 17,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T04:06:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "vega",
+        "targetUsername": "VEGA",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 15,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:22:14.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "team",
+        "targetUsername": "Team",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 15,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:52:09.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "slothify_daily_gmove",
+        "targetUsername": "Slothify⚡Daily Gmove",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 15,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:30:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kamx",
+        "targetUsername": "KamX",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 11,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T02:43:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 8,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T04:04:45.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "alsara2k",
+        "targetUsername": "Alsara2k",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 6,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T02:58:33.600Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "kalshnikov",
+    "username": "kalshnikov",
+    "displayName": "kalshnikov",
+    "discriminator": "0001",
+    "messageCount": 67,
+    "conversationCount": 0,
+    "averageMessageLength": 80.02985074626865,
+    "conversationFrequency": 67,
+    "firstSeen": "1970-01-21T02:29:30.000Z",
+    "lastSeen": "1970-01-21T06:08:38.400Z",
+    "channelActivity": {
+      "1253563209462448241": 17,
+      "1328592959444095038": 21,
+      "1308149076893630555": 11,
+      "1300756641406521416": 2,
+      "1301363808421543988": 12,
+      "1351627860351258685": 1,
+      "1362864274862768450": 3
+    },
+    "timeActivity": {
+      "18": 12,
+      "19": 43,
+      "20": 10,
+      "21": 1,
+      "22": 1
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "ai",
+        "discord",
+        "eliza",
+        "blockchain",
+        "development"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 1,
+          "examples": [
+            "Go to roles channel and verify via Collabland",
+            "Collabland bot + have >10k ai16z in wallet",
+            "Beta release March. GA release April"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.16417910447761194,
+          "examples": [
+            "Confirmed AI16Z is a good option with active dev community, troubleshooting help, and framework impr",
+            "I need help with: kalshnikov asked about implementing confidence thresholds for AI responses",
+            "I need help with: kalshnikov mentioned lack of ways for non-dev partners to contribute"
+          ]
+        }
+      ],
+      "emotionalTone": "formal",
+      "engagementLevel": "medium",
+      "helpfulness": 0.3283582089552239,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "Discord",
+        "TypeScript"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 614,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 316,
+        "positiveInteractions": 4,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 269,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 240,
+        "positiveInteractions": 2,
+        "lastInteraction": "1970-01-21T05:22:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 224,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 162,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:07:57.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "rhota",
+        "targetUsername": "rhota",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 156,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T03:54:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 148,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:26:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "honeybadger",
+        "targetUsername": "HoneyBadger",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 142,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:22:31.200Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "ben",
+    "username": "Ben",
+    "displayName": "Ben",
+    "discriminator": "0001",
+    "messageCount": 66,
+    "conversationCount": 0,
+    "averageMessageLength": 87.66666666666667,
+    "conversationFrequency": 66,
+    "firstSeen": "1970-01-21T02:56:55.200Z",
+    "lastSeen": "1970-01-21T06:24:26.400Z",
+    "channelActivity": {
+      "1300025221834739744": 1,
+      "1253563209462448241": 4,
+      "1301363808421543988": 20,
+      "1351627860351258685": 7,
+      "1361442528813121556": 31,
+      "1362864274862768450": 3
+    },
+    "timeActivity": {
+      "18": 1,
+      "19": 4,
+      "20": 24,
+      "21": 34,
+      "22": 3
+    },
+    "personalityProfile": {
+      "communicationStyle": [
+        "detailed"
+      ],
+      "preferredTopics": [
+        "ai",
+        "blockchain",
+        "art",
+        "eliza",
+        "discord"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 1,
+          "examples": [
+            "I need help with: Creating prediction market agents",
+            "there will be clear instructions in-product, as well as an article that explains the features. but w",
+            "Explained that there will be clear instructions in-product and an article explaining features, notin"
+          ]
+        }
+      ],
+      "emotionalTone": "casual",
+      "engagementLevel": "high",
+      "helpfulness": 0.09090909090909091,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Discord"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 511,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 306,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 229,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 222,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:22:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 197,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 174,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:07:57.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "jintern",
+        "targetUsername": "jintern",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 172,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:36:45.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 146,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:26:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "multiple_users",
+        "targetUsername": "multiple users",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 140,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:37:07.200Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "eskender_eth",
+    "username": "eskender.eth",
+    "displayName": "eskender.eth",
+    "discriminator": "0001",
+    "messageCount": 64,
+    "conversationCount": 0,
+    "averageMessageLength": 98.234375,
+    "conversationFrequency": 64,
+    "firstSeen": "1970-01-21T02:10:09.600Z",
+    "lastSeen": "1970-01-21T05:41:46.800Z",
+    "channelActivity": {
+      "1318770424632311930": 12,
+      "1301363808421543988": 20,
+      "1351627860351258685": 2,
+      "1361442528813121556": 16,
+      "1253563209462448241": 8,
+      "1362864274862768450": 6
+    },
+    "timeActivity": {
+      "18": 7,
+      "19": 5,
+      "20": 35,
+      "21": 17
+    },
+    "personalityProfile": {
+      "communicationStyle": [
+        "detailed"
+      ],
+      "preferredTopics": [
+        "blockchain",
+        "ai",
+        "eliza",
+        "development",
+        "business"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 0.9230769230769231,
+          "examples": [
+            "That's what we're working to confirm now",
+            "Due to reflexivity - removing LP when price goes up makes the structure weaker, causing more dramati",
+            "What is the risk with requiring AI16Z for agent launches?"
+          ]
+        }
+      ],
+      "emotionalTone": "casual",
+      "engagementLevel": "high",
+      "helpfulness": 0.0625,
+      "leadership": 0,
+      "expertise": [
+        "AI/ML",
+        "TypeScript",
+        "Design"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 526,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T05:26:40.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 272,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T05:33:43.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 233,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 196,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:23:02.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 190,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:26:50.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 185,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:18:31.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 155,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:07:57.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "honeybadger",
+        "targetUsername": "HoneyBadger",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 140,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:22:31.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "accelxr",
+        "targetUsername": "accelxr",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 122,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:33:07.200Z",
+        "topics": []
+      }
+    ]
+  },
+  {
+    "userId": "vincentpaul",
+    "username": "vincentpaul",
+    "displayName": "vincentpaul",
+    "discriminator": "0001",
+    "messageCount": 63,
+    "conversationCount": 0,
+    "averageMessageLength": 69.5079365079365,
+    "conversationFrequency": 63,
+    "firstSeen": "1970-01-21T03:45:45.600Z",
+    "lastSeen": "1970-01-21T05:21:04.800Z",
+    "channelActivity": {
+      "1301363808421543988": 18,
+      "1253563209462448241": 9,
+      "1351627860351258685": 36
+    },
+    "timeActivity": {
+      "19": 23,
+      "20": 36,
+      "21": 4
+    },
+    "personalityProfile": {
+      "communicationStyle": [],
+      "preferredTopics": [
+        "eliza",
+        "discord",
+        "ai",
+        "art",
+        "development"
+      ],
+      "commonPhrases": [],
+      "responsePatterns": [
+        {
+          "trigger": "questions",
+          "pattern": "helpful responses to questions",
+          "frequency": 1,
+          "examples": [
+            "Easily. The biggest problem in crypto has been lack of real utility, which agents fix, and ElizaOS i",
+            "It's in the works but no ETA yet",
+            "It's precisely because the market will be flooded with agents that you want an open source framework"
+          ]
+        },
+        {
+          "trigger": "help_requests",
+          "pattern": "offers assistance",
+          "frequency": 0.19047619047619047,
+          "examples": [
+            "No ETA yet but it is in the works - move from $ai16z to $elizaos will help people understand growth ",
+            "I need help with: Inquiring about the quality of the csm-1b TTS model compared to initial demos",
+            "I need help with: Creating a DAO Organization working group channel"
+          ]
+        }
+      ],
+      "emotionalTone": "friendly",
+      "engagementLevel": "high",
+      "helpfulness": 0.38095238095238093,
+      "leadership": 0,
+      "expertise": [
+        "TypeScript",
+        "AI/ML",
+        "Discord"
+      ]
+    },
+    "relationships": [
+      {
+        "targetUserId": "jin",
+        "targetUsername": "jin",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 459,
+        "positiveInteractions": 5,
+        "lastInteraction": "1970-01-21T04:57:14.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "bossu",
+        "targetUsername": "BOSSU",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 253,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:20:26.400Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "patt",
+        "targetUsername": "Patt",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 228,
+        "positiveInteractions": 3,
+        "lastInteraction": "1970-01-21T04:56:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "kenk",
+        "targetUsername": "Kenk",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 189,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:49:33.600Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "community",
+        "targetUsername": "Community",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 156,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:08:48.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "shaw",
+        "targetUsername": "Shaw",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 147,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:43:13.200Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "honeybadger",
+        "targetUsername": "HoneyBadger",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 135,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T04:57:16.800Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "yikesawjeez",
+        "targetUsername": "yikesawjeez",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 127,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T05:07:48.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "doriand",
+        "targetUsername": "DorianD",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 98,
+        "positiveInteractions": 0,
+        "lastInteraction": "1970-01-21T06:19:12.000Z",
+        "topics": []
+      },
+      {
+        "targetUserId": "odilitime",
+        "targetUsername": "Odilitime",
+        "relationshipType": "frequent_interaction",
+        "interactionCount": 97,
+        "positiveInteractions": 1,
+        "lastInteraction": "1970-01-21T04:25:14.400Z",
+        "topics": []
+      }
+    ]
+  }
+]

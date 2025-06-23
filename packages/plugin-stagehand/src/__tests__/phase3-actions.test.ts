@@ -63,7 +63,7 @@ describe('Phase 3 Browser Actions', () => {
       mockSession = new BrowserSession('test-session', mockStagehand as any);
 
       vi.spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
-      mockRuntime.getService.mockReturnValue(mockService);
+      (mockRuntime.getService as any).mockReturnValue(mockService);
       mockCallback = vi.fn().mockResolvedValue([]);
     });
 
@@ -189,7 +189,7 @@ describe('Phase 3 Browser Actions', () => {
       mockSession = new BrowserSession('test-session', mockStagehand as any);
 
       vi.spyOn(mockService, 'getCurrentSession').mockResolvedValue(mockSession);
-      mockRuntime.getService.mockReturnValue(mockService);
+      (mockRuntime.getService as any).mockReturnValue(mockService);
       mockCallback = vi.fn().mockResolvedValue([]);
     });
 
@@ -269,7 +269,7 @@ describe('Phase 3 Browser Actions', () => {
       // Both actions should work with the same session
       const mockRuntime = createMockRuntime();
       const mockService = new StagehandService(mockRuntime as unknown as IAgentRuntime);
-      mockRuntime.getService.mockReturnValue(mockService);
+      (mockRuntime.getService as any).mockReturnValue(mockService);
 
       const message1 = createMockMemory({ content: { text: 'Navigate to example.com' } });
       const message2 = createMockMemory({ content: { text: 'Extract the page title' } });

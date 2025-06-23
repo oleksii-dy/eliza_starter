@@ -24,7 +24,6 @@ describe('Simple Real Runtime Test', () => {
         messageExamples: [],
         postExamples: [],
         topics: [],
-        adjectives: [],
         knowledge: [],
         plugins: [],
       },
@@ -38,14 +37,17 @@ describe('Simple Real Runtime Test', () => {
     expect(runtime.character.name).toBe('SimpleTestAgent');
 
     // Test basic database functionality
-    const memory = await runtime.createMemory({
-      entityId: stringToUuid('test-user'),
-      roomId: stringToUuid('test-room'),
-      content: {
-        text: 'Hello, world!',
-        source: 'test',
+    const memory = await runtime.createMemory(
+      {
+        entityId: stringToUuid('test-user'),
+        roomId: stringToUuid('test-room'),
+        content: {
+          text: 'Hello, world!',
+          source: 'test',
+        },
       },
-    }, 'messages');
+      'messages'
+    );
 
     expect(memory).toBeDefined();
 
@@ -62,7 +64,7 @@ describe('Simple Real Runtime Test', () => {
 
   it('should validate runtime health', async () => {
     harness = new RealRuntimeTestHarness();
-    
+
     const runtime = await harness.createTestRuntime({
       character: {
         name: 'HealthCheckAgent',
@@ -71,7 +73,6 @@ describe('Simple Real Runtime Test', () => {
         messageExamples: [],
         postExamples: [],
         topics: [],
-        adjectives: [],
         knowledge: [],
         plugins: [],
       },

@@ -14,12 +14,10 @@ interface Character {
   name: string;
   username?: string;
   system?: string; // System prompt
-  templates?: { [key: string]: TemplateType }; // Prompt templates
   bio: string | string[];
   messageExamples?: MessageExample[][];
   postExamples?: string[];
   topics?: string[];
-  adjectives?: string[];
   knowledge?: (string | { path: string; shared?: boolean } | DirectoryItem)[];
   plugins?: string[];
   settings?: { [key: string]: any };
@@ -6005,7 +6003,6 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       clients: [],
       plugins: [],

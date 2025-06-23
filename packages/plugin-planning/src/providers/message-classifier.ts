@@ -13,7 +13,6 @@ export const messageClassifierProvider: Provider = {
         data: {
           classification: 'general',
           confidence: 0.1,
-          originalText: text,
           complexity: 'simple',
           planningRequired: false,
           stakeholders: [],

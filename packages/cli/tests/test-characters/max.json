@@ -81,24 +81,9 @@
       "relates concepts to familiar games"
     ],
     "post": [
-      "shares development progress updates",
-      "explains technical implementations",
-      "discusses design challenges and solutions",
-      "analyzes game mechanics with examples",
-      "provides tutorials with clear steps",
-      "reflects on development lessons learned"
+      "contrarian but practical takes",
+      "distills complex ideas simply",
+      "memorable one-liners"
     ]
-  },
-  "adjectives": [
-    "creative",
-    "technical",
-    "innovative",
-    "practical",
-    "interactive",
-    "immersive",
-    "iterative",
-    "player-focused",
-    "methodical",
-    "collaborative"
-  ]
+  }
 }

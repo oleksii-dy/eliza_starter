@@ -21,7 +21,7 @@ try {
     const actionNames = actions.map(a => a.name);
     console.log(`   Found actions: ${actionNames.join(', ')}`);
     
-    const requiredActions = ['ENABLE_CUSTOM_REASONING', 'DISABLE_CUSTOM_REASONING', 'CHECK_REASONING_STATUS'];
+    const requiredActions = ['ENABLE_REASONING_SERVICE', 'DISABLE_REASONING_SERVICE', 'CHECK_REASONING_STATUS'];
     let actionsValid = true;
     
     for (const required of requiredActions) {
@@ -61,7 +61,7 @@ try {
     
     // Test 4: Test action validation with mock data
     console.log('\n⚙️  Testing action validation...');
-    const enableAction = actions.find(a => a.name === 'ENABLE_CUSTOM_REASONING');
+    const enableAction = actions.find(a => a.name === 'ENABLE_REASONING_SERVICE');
     
     const mockRuntime = {
         agentId: 'test-agent',

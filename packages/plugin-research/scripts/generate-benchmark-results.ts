@@ -12,11 +12,11 @@ class MockRuntime implements IAgentRuntime {
   character = {
     name: 'ElizaOS Research Agent',
     bio: ['Advanced research agent for academic and business inquiries'],
-    system: 'You are an expert research assistant capable of conducting comprehensive, multi-source research.',
+    system:
+      'You are an expert research assistant capable of conducting comprehensive, multi-source research.',
     messageExamples: [],
     postExamples: [],
     topics: [],
-    adjectives: [],
     knowledge: [],
     clients: [],
     plugins: [],
@@ -69,11 +69,27 @@ class MockRuntime implements IAgentRuntime {
   }
 
   // Implement required interface methods with basic implementations
-  async processActions(message: Memory, responses: Memory[], state?: State, callback?: any): Promise<void> {}
-  async evaluate(message: Memory, state?: State, didRespond?: boolean, callback?: any, responses?: Memory[]): Promise<any[] | null> {
+  async processActions(
+    message: Memory,
+    responses: Memory[],
+    state?: State,
+    callback?: any
+  ): Promise<void> {}
+  async evaluate(
+    message: Memory,
+    state?: State,
+    didRespond?: boolean,
+    callback?: any,
+    responses?: Memory[]
+  ): Promise<any[] | null> {
     return null;
   }
-  async composeState(message: Memory, includeList?: string[], onlyInclude?: boolean, skipCache?: boolean): Promise<State> {
+  async composeState(
+    message: Memory,
+    includeList?: string[],
+    onlyInclude?: boolean,
+    skipCache?: boolean
+  ): Promise<State> {
     return { values: {}, data: {}, text: '' };
   }
   async registerPlugin(plugin: any): Promise<void> {
@@ -88,30 +104,60 @@ class MockRuntime implements IAgentRuntime {
   async initialize(): Promise<void> {}
 
   // Database adapter methods (minimal implementations)
-  async getMemories(params: any): Promise<Memory[]> { return []; }
+  async getMemories(params: any): Promise<Memory[]> {
+    return [];
+  }
   async createMemory(memory: Memory, unique?: boolean): Promise<void> {}
-  async searchMemories(params: any): Promise<Memory[]> { return []; }
+  async searchMemories(params: any): Promise<Memory[]> {
+    return [];
+  }
   async updateMemory(memory: Memory): Promise<void> {}
   async removeMemory(id: string): Promise<void> {}
   async removeAllMemories(roomId: string): Promise<void> {}
-  async countMemories(roomId: string, unique?: boolean): Promise<number> { return 0; }
-  async getGoals(params: any): Promise<any[]> { return []; }
+  async countMemories(roomId: string, unique?: boolean): Promise<number> {
+    return 0;
+  }
+  async getGoals(params: any): Promise<any[]> {
+    return [];
+  }
   async createGoal(goal: any): Promise<void> {}
   async updateGoal(goal: any): Promise<void> {}
   async removeGoal(id: string): Promise<void> {}
   async removeAllGoals(roomId: string): Promise<void> {}
-  async getRoom(roomId: string): Promise<any | null> { return null; }
-  async createRoom(roomId?: string): Promise<string> { return roomId || uuidv4(); }
+  async getRoom(roomId: string): Promise<any | null> {
+    return null;
+  }
+  async createRoom(roomId?: string): Promise<string> {
+    return roomId || uuidv4();
+  }
   async removeRoom(roomId: string): Promise<void> {}
-  async listRooms(userId: string): Promise<any[]> { return []; }
-  async createRelationship(params: any): Promise<boolean> { return true; }
-  async getRelationship(params: any): Promise<any | null> { return null; }
-  async getRelationships(params: any): Promise<any[]> { return []; }
-  async createParticipant(participant: any): Promise<boolean> { return true; }
-  async removeParticipant(params: any): Promise<boolean> { return true; }
-  async updateParticipant(participant: any): Promise<boolean> { return true; }
-  async getParticipants(roomId: string): Promise<any[]> { return []; }
-  async getParticipantUserState(params: any): Promise<any | null> { return null; }
+  async listRooms(userId: string): Promise<any[]> {
+    return [];
+  }
+  async createRelationship(params: any): Promise<boolean> {
+    return true;
+  }
+  async getRelationship(params: any): Promise<any | null> {
+    return null;
+  }
+  async getRelationships(params: any): Promise<any[]> {
+    return [];
+  }
+  async createParticipant(participant: any): Promise<boolean> {
+    return true;
+  }
+  async removeParticipant(params: any): Promise<boolean> {
+    return true;
+  }
+  async updateParticipant(participant: any): Promise<boolean> {
+    return true;
+  }
+  async getParticipants(roomId: string): Promise<any[]> {
+    return [];
+  }
+  async getParticipantUserState(params: any): Promise<any | null> {
+    return null;
+  }
   async setParticipantUserState(params: any): Promise<void> {}
 
   messageManager = {
@@ -169,36 +215,38 @@ interface BenchmarkResult {
 
 async function generateBenchmarkResults() {
   console.log('🚀 Starting ElizaOS Research Plugin benchmark generation...');
-  
+
   // Create research runtime
   const runtime = new MockRuntime();
   await runtime.initialize();
   await runtime.registerPlugin(researchPlugin);
-  
+
   const researchService = runtime.getService('research') as ResearchService;
-  
+
   if (!researchService) {
     throw new Error('Research service not found after plugin registration');
   }
-  
+
   // Load benchmark queries
   const queriesPath = path.join(__dirname, 'deep_research_bench/data/prompt_data/query.jsonl');
   const queriesContent = await fs.readFile(queriesPath, 'utf-8');
   const queries: BenchmarkQuery[] = queriesContent
     .trim()
     .split('\n')
-    .map(line => JSON.parse(line));
-  
+    .map((line) => JSON.parse(line));
+
   console.log(`📋 Loaded ${queries.length} benchmark queries`);
-  
+
   // Process first 5 English queries for testing
-  const englishQueries = queries.filter(q => q.language === 'en').slice(0, 5);
+  const englishQueries = queries.filter((q) => q.language === 'en').slice(0, 5);
   const results: BenchmarkResult[] = [];
-  
+
   for (let i = 0; i < englishQueries.length; i++) {
     const query = englishQueries[i];
-    console.log(`\n📝 Processing query ${i + 1}/${englishQueries.length}: ${query.prompt.substring(0, 100)}...`);
-    
+    console.log(
+      `\n📝 Processing query ${i + 1}/${englishQueries.length}: ${query.prompt.substring(0, 100)}...`
+    );
+
     try {
       // Create research project
       const project = await researchService.createResearchProject(query.prompt, {
@@ -208,25 +256,24 @@ async function generateBenchmarkResults() {
         language: query.language as 'en' | 'zh',
         timeout: 300000, // 5 minutes
       });
-      
+
       // Generate final formatted report
       const report = await researchService.generateFormattedReport(project.id);
-      
+
       const wordCount = report.split(' ').length;
       console.log(`✅ Generated ${wordCount} word report for query ${query.id}`);
-      
+
       // Format result for benchmark
       const benchmarkResult: BenchmarkResult = {
         id: query.id.toString(),
         prompt: query.prompt,
-        article: report
+        article: report,
       };
-      
+
       results.push(benchmarkResult);
-      
     } catch (error) {
       console.error(`❌ Error processing query ${query.id}:`, error);
-      
+
       // Add fallback result
       const fallbackResult: BenchmarkResult = {
         id: query.id.toString(),
@@ -235,32 +282,34 @@ async function generateBenchmarkResults() {
 
 Unfortunately, we encountered an error while generating this research report: ${error.message}
 
-Please try again or contact support for assistance.`
+Please try again or contact support for assistance.`,
       };
-      
+
       results.push(fallbackResult);
     }
   }
-  
+
   // Save results to benchmark format
   const outputDir = path.join(__dirname, 'deep_research_bench/data/test_data/raw_data');
   await fs.mkdir(outputDir, { recursive: true });
-  
+
   const outputPath = path.join(outputDir, 'eliza.jsonl');
-  const outputContent = results.map(result => JSON.stringify(result)).join('\n');
-  
+  const outputContent = results.map((result) => JSON.stringify(result)).join('\n');
+
   await fs.writeFile(outputPath, outputContent);
-  
+
   console.log(`\n🎉 Benchmark results saved to: ${outputPath}`);
   console.log(`📊 Generated ${results.length} research reports`);
-  
+
   // Print summary statistics
-  const wordCounts = results.map(r => r.article.split(' ').length);
+  const wordCounts = results.map((r) => r.article.split(' ').length);
   const avgWordCount = wordCounts.reduce((a, b) => a + b, 0) / wordCounts.length;
-  
+
   console.log(`📈 Average report length: ${Math.round(avgWordCount)} words`);
-  console.log(`📏 Report length range: ${Math.min(...wordCounts)} - ${Math.max(...wordCounts)} words`);
-  
+  console.log(
+    `📏 Report length range: ${Math.min(...wordCounts)} - ${Math.max(...wordCounts)} words`
+  );
+
   return results;
 }
 

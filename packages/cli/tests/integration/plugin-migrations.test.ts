@@ -34,13 +34,14 @@ describe('Plugin Migration Regression Tests', () => {
         characterFile,
         JSON.stringify({
           name: 'TestAgent',
+          bio: ['Test agent for migration testing'],
           plugins: ['@elizaos/plugin-sql', 'todo'],
         })
       );
 
       try {
         const output = execSync(
-          `node ${path.join(__dirname, '../../../../dist/index.js')} start --character="${characterFile}" --test-mode`,
+          `node ${path.join(__dirname, '../../dist/index.js')} start --character="${characterFile}" --test-mode`,
           {
             cwd: testDir,
             encoding: 'utf8',
@@ -71,13 +72,14 @@ describe('Plugin Migration Regression Tests', () => {
         characterFile,
         JSON.stringify({
           name: 'TestAgent',
+          bio: ['Test agent for migration testing'],
           plugins: ['@elizaos/plugin-sql', 'todo', 'trust', 'rolodex'],
         })
       );
 
       try {
         const output = execSync(
-          `node ${path.join(__dirname, '../../../../dist/index.js')} start --character="${characterFile}" --test-mode`,
+          `node ${path.join(__dirname, '../../dist/index.js')} start --character="${characterFile}" --test-mode`,
           {
             cwd: testDir,
             encoding: 'utf8',
@@ -114,13 +116,14 @@ describe('Plugin Migration Regression Tests', () => {
         characterFile,
         JSON.stringify({
           name: 'TestAgent',
+          bio: ['Test agent for migration testing'],
           plugins: ['@elizaos/plugin-sql', 'bootstrap'], // bootstrap doesn't have schema
         })
       );
 
       try {
         const output = execSync(
-          `node ${path.join(__dirname, '../../../../dist/index.js')} start --character="${characterFile}" --test-mode`,
+          `node ${path.join(__dirname, '../../dist/index.js')} start --character="${characterFile}" --test-mode`,
           {
             cwd: testDir,
             encoding: 'utf8',
@@ -151,13 +154,14 @@ describe('Plugin Migration Regression Tests', () => {
         characterFile,
         JSON.stringify({
           name: 'TestAgent',
+          bio: ['Test agent for migration testing'],
           plugins: ['@elizaos/plugin-sql', 'todo', 'trust'],
         })
       );
 
       try {
         const output = execSync(
-          `node ${path.join(__dirname, '../../../../dist/index.js')} start --character="${characterFile}" --test-mode`,
+          `node ${path.join(__dirname, '../../dist/index.js')} start --character="${characterFile}" --test-mode`,
           {
             cwd: testDir,
             encoding: 'utf8',
@@ -324,6 +328,7 @@ describe('Plugin Migration Regression Tests', () => {
         characterFile,
         JSON.stringify({
           name: 'TestAgent',
+          bio: ['Test agent for migration testing'],
           plugins: ['@elizaos/plugin-sql', 'todo'],
         })
       );
@@ -332,7 +337,7 @@ describe('Plugin Migration Regression Tests', () => {
       for (let i = 0; i < 2; i++) {
         try {
           const output = execSync(
-            `node ${path.join(__dirname, '../../../../dist/index.js')} start --character="${characterFile}" --test-mode`,
+            `node ${path.join(__dirname, '../../dist/index.js')} start --character="${characterFile}" --test-mode`,
             {
               cwd: testDir,
               encoding: 'utf8',

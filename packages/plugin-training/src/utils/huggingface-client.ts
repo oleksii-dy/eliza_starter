@@ -196,7 +196,7 @@ export class HuggingFaceClient {
         path: 'README.md',
         content: new Blob([new TextEncoder().encode(readme)]),
       },
-      commitMessage: 'Add README',
+      commitTitle: 'Add README',
       credentials: this.credentials!
     });
 
@@ -396,7 +396,7 @@ For questions or issues with this dataset, please contact the ElizaOS team.
         path: 'dataset_info.json',
         content: new Blob([new TextEncoder().encode(JSON.stringify(datasetCard, null, 2))]),
       },
-      commitMessage: 'Add dataset card',
+      commitTitle: 'Add dataset card',
       credentials: this.credentials!
     });
 
@@ -618,7 +618,7 @@ For questions or issues with this dataset, please contact the ElizaOS team.
   private generateModelCard(config: TrainingConfig): string {
     return `---
 license: apache-2.0
-base_model: ${config.getModelTrainingConfig?.().defaultBaseModel || 'unknown'}
+base_model: ${(config as any).getModelTrainingConfig?.().defaultBaseModel || 'unknown'}
 tags:
 - eliza
 - conversational-ai
@@ -639,9 +639,9 @@ This model has been fine-tuned for ElizaOS agent conversations using RLAIF (Rein
 
 ## Training Configuration
 
-- **Base Model**: ${config.getModelTrainingConfig?.().defaultBaseModel || 'Not specified'}
-- **Learning Rate**: ${config.getModelTrainingConfig?.().defaultLearningRate || 'Not specified'}
-- **Batch Size**: ${config.getModelTrainingConfig?.().defaultBatchSize || 'Not specified'}
+- **Base Model**: ${(config as any).getModelTrainingConfig?.().defaultBaseModel || 'Not specified'}
+- **Learning Rate**: ${(config as any).getModelTrainingConfig?.().defaultLearningRate || 'Not specified'}
+- **Batch Size**: ${(config as any).getModelTrainingConfig?.().defaultBatchSize || 'Not specified'}
 - **Training Steps**: Not specified
 
 ## Intended Use

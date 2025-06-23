@@ -6,7 +6,7 @@ import type { Character, World, UUID } from '../types';
 // Mock database adapter with getWorlds implementation
 class TestDatabaseAdapter extends DatabaseAdapter {
   db = {}; // Add the required abstract property
-  
+
   private worlds: World[] = [
     {
       id: 'world-1' as UUID,
@@ -208,7 +208,6 @@ describe('End-to-End getWorlds API test', () => {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       style: { all: [], chat: [], post: [] },
     };
 

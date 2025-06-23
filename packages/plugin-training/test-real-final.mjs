@@ -29,7 +29,6 @@ try {
         messageExamples: [],
         postExamples: [],
         topics: [],
-        adjectives: [],
         knowledge: [],
         clients: [],
         plugins: []
@@ -54,7 +53,7 @@ try {
     
     // Verify actions
     console.log('🎯 Verifying MVP actions...');
-    const mvpActions = runtime.actions.filter(a => a.name.includes('CUSTOM_REASONING'));
+    const mvpActions = runtime.actions.filter(a => a.name.includes('REASONING_SERVICE'));
     console.log(`✅ Found ${mvpActions.length} MVP actions: ${mvpActions.map(a => a.name).join(', ')}`);
     
     if (mvpActions.length !== 3) {
@@ -70,7 +69,7 @@ try {
     
     // Test enable action
     console.log('⚡ Testing enable action...');
-    const enableAction = runtime.actions.find(a => a.name === 'ENABLE_CUSTOM_REASONING');
+    const enableAction = runtime.actions.find(a => a.name === 'ENABLE_REASONING_SERVICE');
     
     const testMessage = await runtime.createMemory({
         entityId: `user-${Date.now()}`,

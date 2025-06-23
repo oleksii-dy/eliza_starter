@@ -162,7 +162,6 @@ const mockCharacter: Character = {
   messageExamples: [], // Ensure required fields are present
   postExamples: [],
   topics: [],
-  adjectives: [],
   style: {
     all: [],
     chat: [],

@@ -41,7 +41,6 @@ describe('Character Loader', () => {
     messageExamples: [],
     postExamples: [],
     topics: ['AI', 'Testing'],
-    adjectives: ['helpful', 'reliable'],
     knowledge: [],
     plugins: [],
     settings: {},

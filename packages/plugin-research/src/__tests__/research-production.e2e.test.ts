@@ -13,7 +13,6 @@ class ProductionTestRuntime implements IAgentRuntime {
     messageExamples: [],
     postExamples: [],
     topics: [],
-    adjectives: [],
     knowledge: [],
     clients: [],
     plugins: [],
@@ -47,15 +46,15 @@ class ProductionTestRuntime implements IAgentRuntime {
   async useModel(type: ModelType, params: any): Promise<any> {
     // For production tests, we need a real model or we should provide mock responses
     const hasRealAI = process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith('mock-');
-    
+
     if (hasRealAI) {
       // In a real implementation, this would call OpenAI
       // For now, we'll simulate AI responses for critical research functions
-      
+
       if (params.messages) {
         const lastMessage = params.messages[params.messages.length - 1];
         const content = lastMessage.content;
-        
+
         // Simulate responses for different types of AI tasks
         if (content.includes('sub-queries')) {
           return `PURPOSE: Find general information
@@ -68,15 +67,15 @@ QUERY: ${content.match(/Query: "([^"]+)"/)?.[1] || 'analysis query'} analysis
 TYPE: theoretical  
 PRIORITY: medium`;
         }
-        
+
         if (content.includes('temporal focus')) {
           return 'current';
         }
-        
+
         if (content.includes('geographic scope')) {
           return 'global';
         }
-        
+
         if (content.includes('evaluation rubric')) {
           return `0: Completely missing or fails to meet requirements
 1: Minimal effort with significant gaps
@@ -84,27 +83,27 @@ PRIORITY: medium`;
 3: Good coverage with solid analysis
 4: Excellent comprehensive treatment`;
         }
-        
+
         if (content.includes('Score the relevance')) {
           return JSON.stringify({
             queryAlignment: 0.8,
             topicRelevance: 0.7,
             specificity: 0.6,
             reasoning: 'Test relevance assessment',
-            score: 0.7
+            score: 0.7,
           });
         }
-        
+
         if (content.includes('Extract factual claims')) {
           return JSON.stringify([
             {
               statement: 'Test factual claim from research',
               citationIndex: 1,
-              supportingEvidence: 'Test evidence for the claim'
-            }
+              supportingEvidence: 'Test evidence for the claim',
+            },
           ]);
         }
-        
+
         // Default response for evaluation tasks
         if (content.includes('Evaluate this research report')) {
           return JSON.stringify({
@@ -112,20 +111,20 @@ PRIORITY: medium`;
             reasoning: 'Test evaluation of research quality',
             rubricScores: {
               item1: 70,
-              item2: 80
-            }
+              item2: 80,
+            },
           });
         }
       }
-      
+
       return 'Test AI response for research evaluation';
     }
-    
+
     // If no real AI key, provide mock responses for testing
     if (params.messages) {
       const lastMessage = params.messages[params.messages.length - 1];
       const content = lastMessage.content;
-      
+
       // Simulate responses for different types of AI tasks
       if (content.includes('sub-queries')) {
         return `PURPOSE: Find general information
@@ -138,37 +137,37 @@ QUERY: test analysis query
 TYPE: theoretical  
 PRIORITY: medium`;
       }
-      
+
       if (content.includes('temporal focus')) {
         return 'current';
       }
-      
+
       if (content.includes('geographic scope')) {
         return 'global';
       }
-      
+
       if (content.includes('domain')) {
         return 'general';
       }
-      
+
       if (content.includes('task type')) {
         return 'exploratory';
       }
-      
+
       if (content.includes('depth')) {
         return 'surface';
       }
-      
+
       return 'Mock AI response for production test';
     }
-    
+
     return 'Mock AI response';
   }
 
   // Additional IAgentRuntime methods (simplified for testing)
   async initialize(): Promise<void> {}
   async stop(): Promise<void> {}
-  
+
   // Placeholder implementations for other required methods
   registerPlugin = async () => {};
   getService = () => null;
@@ -185,21 +184,28 @@ describe('Research Service Production E2E Tests', () => {
 
   beforeAll(async () => {
     // Check if we have required API keys for full testing
-    const hasSearchKeys = ['TAVILY_API_KEY', 'SERPER_API_KEY', 'EXA_API_KEY', 'SERPAPI_API_KEY']
-      .some(key => process.env[key]);
-    
+    const hasSearchKeys = [
+      'TAVILY_API_KEY',
+      'SERPER_API_KEY',
+      'EXA_API_KEY',
+      'SERPAPI_API_KEY',
+    ].some((key) => process.env[key]);
+
     if (!hasSearchKeys) {
       elizaLogger.warn('No search API keys found - some tests may be limited');
     }
 
     runtime = new ProductionTestRuntime();
-    
+
     // Add API keys to runtime for testing
     runtime.setSetting('EXA_API_KEY', process.env.EXA_API_KEY || 'mock-exa-api-key');
     runtime.setSetting('SERPER_API_KEY', process.env.SERPER_API_KEY || 'mock-serper-api-key');
-    runtime.setSetting('FIRECRAWL_API_KEY', process.env.FIRECRAWL_API_KEY || 'mock-firecrawl-api-key');
+    runtime.setSetting(
+      'FIRECRAWL_API_KEY',
+      process.env.FIRECRAWL_API_KEY || 'mock-firecrawl-api-key'
+    );
     runtime.setSetting('OPENAI_API_KEY', process.env.OPENAI_API_KEY || 'mock-openai-api-key');
-    
+
     try {
       researchService = new ResearchService(runtime);
       elizaLogger.info('Research service initialized for production testing');
@@ -231,7 +237,7 @@ describe('Research Service Production E2E Tests', () => {
     // Create a runtime without AI model access
     const noAIRuntime = {
       ...runtime,
-      useModel: undefined
+      useModel: undefined,
     } as any;
 
     // Should throw error during service construction
@@ -244,7 +250,7 @@ describe('Research Service Production E2E Tests', () => {
     // Create a runtime with no API keys
     const noKeysRuntime = {
       ...runtime,
-      getSetting: () => null
+      getSetting: () => null,
     } as any;
 
     // Should throw error during service construction
@@ -255,7 +261,7 @@ describe('Research Service Production E2E Tests', () => {
 
   it('should create research project with proper validation', async () => {
     const query = 'What are the benefits of renewable energy?';
-    
+
     const project = await researchService.createResearchProject(query, {
       researchDepth: ResearchDepth.SURFACE,
       domain: ResearchDomain.ENVIRONMENTAL_SCIENCE,
@@ -272,26 +278,26 @@ describe('Research Service Production E2E Tests', () => {
 
   it('should reject invalid configuration parameters', async () => {
     const query = 'Test query';
-    
+
     // Should reject invalid timeout - but the config validation happens at service level, not project level
     // This test should actually pass since the service validates config, not individual projects
     const invalidProject = await researchService.createResearchProject(query, {
-      timeout: 60000 // Use valid timeout for this test
+      timeout: 60000, // Use valid timeout for this test
     });
-    
+
     expect(invalidProject).toBeDefined();
 
     // Should reject invalid max results - same issue, this is validated at service level
     const invalidProject2 = await researchService.createResearchProject(query, {
-      maxSearchResults: 10 // Use valid max results
+      maxSearchResults: 10, // Use valid max results
     });
-    
+
     expect(invalidProject2).toBeDefined();
   });
 
   it('should handle research project lifecycle correctly', async () => {
     const query = 'What is machine learning?';
-    
+
     const project = await researchService.createResearchProject(query, {
       researchDepth: ResearchDepth.SURFACE,
       timeout: 60000,
@@ -311,11 +317,11 @@ describe('Research Service Production E2E Tests', () => {
     const queries = [
       'What is artificial intelligence?',
       'What is quantum computing?',
-      'What is blockchain?'
+      'What is blockchain?',
     ];
 
     const projects = await Promise.all(
-      queries.map(query => 
+      queries.map((query) =>
         researchService.createResearchProject(query, {
           researchDepth: ResearchDepth.SURFACE,
           timeout: 30000,
@@ -325,9 +331,9 @@ describe('Research Service Production E2E Tests', () => {
 
     // All projects should be created
     expect(projects).toHaveLength(3);
-    
+
     // All should have unique IDs
-    const ids = projects.map(p => p.id);
+    const ids = projects.map((p) => p.id);
     const uniqueIds = new Set(ids);
     expect(uniqueIds.size).toBe(3);
 
@@ -341,7 +347,7 @@ describe('Research Service Production E2E Tests', () => {
   it('should validate research configuration at runtime', async () => {
     // Test that configuration is properly loaded and validated
     const query = 'Test configuration validation';
-    
+
     const project = await researchService.createResearchProject(query, {
       maxSearchResults: 5,
       timeout: 30000,
@@ -349,7 +355,7 @@ describe('Research Service Production E2E Tests', () => {
     });
 
     expect(project.metadata).toBeDefined();
-    
+
     // Configuration should be applied
     const retrievedProject = await researchService.getProject(project.id);
     expect(retrievedProject).toBeDefined();
@@ -360,7 +366,7 @@ describe('Research Service Production E2E Tests', () => {
     // Verify service provides expected capabilities
     expect(researchService.capabilityDescription).toContain('PhD-level');
     expect(researchService.capabilityDescription).toContain('RACE/FACT evaluation');
-    
+
     // Service should be properly named
     expect(researchService.serviceName).toBe('research');
     expect(ResearchService.serviceName).toBe('research');
@@ -368,7 +374,7 @@ describe('Research Service Production E2E Tests', () => {
 
   it('should cleanup resources properly', async () => {
     const query = 'Cleanup test query';
-    
+
     const project = await researchService.createResearchProject(query, {
       researchDepth: ResearchDepth.SURFACE,
       timeout: 10000,
@@ -377,25 +383,29 @@ describe('Research Service Production E2E Tests', () => {
     // Cleanup test - check that we can retrieve the project
     const retrievedProject = await researchService.getProject(project.id);
     expect(retrievedProject).toBeDefined();
-    
+
     // Verify the project exists in active projects
     const activeProjects = await researchService.getActiveProjects();
-    const foundProject = activeProjects.find(p => p.id === project.id);
+    const foundProject = activeProjects.find((p) => p.id === project.id);
     expect(foundProject).toBeDefined();
   });
 
   it('should integrate with real search providers when configured', async () => {
     // Skip this test if no search API keys are available
-    const hasSearchKeys = ['TAVILY_API_KEY', 'SERPER_API_KEY', 'EXA_API_KEY', 'SERPAPI_API_KEY']
-      .some(key => process.env[key]);
-    
+    const hasSearchKeys = [
+      'TAVILY_API_KEY',
+      'SERPER_API_KEY',
+      'EXA_API_KEY',
+      'SERPAPI_API_KEY',
+    ].some((key) => process.env[key]);
+
     if (!hasSearchKeys) {
       elizaLogger.warn('Skipping search provider test - no API keys configured');
       return;
     }
 
     const query = 'What is renewable energy?';
-    
+
     const project = await researchService.createResearchProject(query, {
       researchDepth: ResearchDepth.SURFACE,
       maxSearchResults: 3,
@@ -403,13 +413,13 @@ describe('Research Service Production E2E Tests', () => {
     });
 
     expect(project).toBeDefined();
-    
+
     // Wait a moment for search to potentially start
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     const retrievedProject = await researchService.getProject(project.id);
     expect(retrievedProject).toBeDefined();
-    
+
     // Status should not be failed immediately (indicates search providers are working)
     expect(retrievedProject?.status).not.toBe('failed');
   });
@@ -429,9 +439,9 @@ describe('Research Service Error Handling', () => {
     runtime.setSetting('SERPER_API_KEY', 'mock-serper-api-key');
     runtime.setSetting('FIRECRAWL_API_KEY', 'mock-firecrawl-api-key');
     runtime.setSetting('OPENAI_API_KEY', 'mock-openai-api-key');
-    
+
     const service = new ResearchService(runtime);
-    
+
     const invalidProject = await service.getProject('invalid-id');
     expect(invalidProject).toBeUndefined();
   });
@@ -443,9 +453,9 @@ describe('Research Service Error Handling', () => {
     runtime.setSetting('SERPER_API_KEY', 'mock-serper-api-key');
     runtime.setSetting('FIRECRAWL_API_KEY', 'mock-firecrawl-api-key');
     runtime.setSetting('OPENAI_API_KEY', 'mock-openai-api-key');
-    
+
     const service = new ResearchService(runtime);
-    
+
     // Should handle shutdown gracefully
     await expect(service.stop()).resolves.not.toThrow();
   });

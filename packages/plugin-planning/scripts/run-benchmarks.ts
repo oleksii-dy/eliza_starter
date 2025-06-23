@@ -2,20 +2,17 @@
 
 /**
  * Comprehensive Planning Benchmark Runner
- * 
+ *
  * This script demonstrates how to run ElizaOS planning benchmarks
  * against REALM-Bench and API-Bank test suites.
- * 
+ *
  * Usage:
  *   npm run benchmark
  *   npm run benchmark -- --realm-bench /path/to/realm-bench --api-bank /path/to/api-bank
  *   tsx scripts/run-benchmarks.ts --verbose --max-tests 50
  */
 
-import {
-  type Character,
-  logger,
-} from '@elizaos/core';
+import { type Character, logger } from '@elizaos/core';
 import { runBenchmarkCommand, type BenchmarkCommandOptions } from '../src/cli/benchmark-command';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -59,13 +56,16 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning p
     [
       {
         name: 'user',
-        content: { text: 'Help me plan and execute a comprehensive market research project on sustainable technology trends' },
+        content: {
+          text: 'Help me plan and execute a comprehensive market research project on sustainable technology trends',
+        },
       },
       {
         name: 'ElizaPlanningAgent',
         content: {
-          text: 'I\'ll help you plan a comprehensive market research project on sustainable technology trends. This requires systematic data gathering, analysis, and synthesis.',
-          thought: 'This is a complex multi-step research project requiring: 1) Scope definition, 2) Source identification, 3) Data collection, 4) Analysis, 5) Report generation. I need to plan each phase carefully.',
+          text: "I'll help you plan a comprehensive market research project on sustainable technology trends. This requires systematic data gathering, analysis, and synthesis.",
+          thought:
+            'This is a complex multi-step research project requiring: 1) Scope definition, 2) Source identification, 3) Data collection, 4) Analysis, 5) Report generation. I need to plan each phase carefully.',
           actions: ['THINK', 'SEARCH', 'ANALYZE', 'COMPILE_REPORT'],
         },
       },
@@ -73,13 +73,16 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning p
     [
       {
         name: 'user',
-        content: { text: 'I need to coordinate a product launch involving multiple teams and dependencies' },
+        content: {
+          text: 'I need to coordinate a product launch involving multiple teams and dependencies',
+        },
       },
       {
         name: 'ElizaPlanningAgent',
         content: {
-          text: 'I\'ll help you coordinate a successful product launch. This requires careful orchestration of multiple teams with interdependent tasks.',
-          thought: 'Product launch coordination involves: 1) Timeline planning, 2) Team coordination, 3) Dependency management, 4) Risk mitigation, 5) Communication planning. This needs a DAG execution model due to dependencies.',
+          text: "I'll help you coordinate a successful product launch. This requires careful orchestration of multiple teams with interdependent tasks.",
+          thought:
+            'Product launch coordination involves: 1) Timeline planning, 2) Team coordination, 3) Dependency management, 4) Risk mitigation, 5) Communication planning. This needs a DAG execution model due to dependencies.',
           actions: ['CREATE_PROJECT_PLAN', 'COORDINATE_TEAMS', 'MANAGE_TIMELINE'],
         },
       },
@@ -92,8 +95,9 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning p
       {
         name: 'ElizaPlanningAgent',
         content: {
-          text: 'I\'ll help you find a great restaurant and make a reservation for tonight. Let me search for options and handle the booking.',
-          thought: 'This is a sequential task: 1) Get user location, 2) Search restaurants, 3) Filter by availability, 4) Present options, 5) Make reservation. Straightforward execution plan.',
+          text: "I'll help you find a great restaurant and make a reservation for tonight. Let me search for options and handle the booking.",
+          thought:
+            'This is a sequential task: 1) Get user location, 2) Search restaurants, 3) Filter by availability, 4) Present options, 5) Make reservation. Straightforward execution plan.',
           actions: ['GET_LOCATION', 'SEARCH_RESTAURANTS', 'MAKE_RESERVATION'],
         },
       },
@@ -112,18 +116,6 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning p
     'process improvement',
     'decision making',
   ],
-  adjectives: [
-    'systematic',
-    'strategic',
-    'methodical',
-    'efficient',
-    'adaptive',
-    'thorough',
-    'coordinated',
-    'analytical',
-    'proactive',
-    'reliable',
-  ],
   knowledge: [
     'Planning methodologies and frameworks',
     'Project management best practices',
@@ -135,10 +127,7 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning p
     'Decision-making frameworks',
   ],
   clients: [],
-  plugins: [
-    '@elizaos/plugin-planning',
-    '@elizaos/plugin-sql',
-  ],
+  plugins: ['@elizaos/plugin-planning', '@elizaos/plugin-sql'],
 };
 
 /**
@@ -291,7 +280,9 @@ function detectBenchmarkPaths(options: BenchmarkCommandOptions): void {
       options.realmBenchPath = realmPath;
       logger.info(`[Benchmark] Auto-detected REALM-Bench: ${realmPath}`);
     } else {
-      logger.warn('[Benchmark] REALM-Bench enabled but no data found. Create ./benchmark-data/realm-bench/ or specify --realm-bench <path>');
+      logger.warn(
+        '[Benchmark] REALM-Bench enabled but no data found. Create ./benchmark-data/realm-bench/ or specify --realm-bench <path>'
+      );
     }
   }
 
@@ -302,7 +293,9 @@ function detectBenchmarkPaths(options: BenchmarkCommandOptions): void {
       options.apiBankPath = apiBankPath;
       logger.info(`[Benchmark] Auto-detected API-Bank: ${apiBankPath}`);
     } else {
-      logger.warn('[Benchmark] API-Bank enabled but no data found. Create ./benchmark-data/api-bank/ or specify --api-bank <path>');
+      logger.warn(
+        '[Benchmark] API-Bank enabled but no data found. Create ./benchmark-data/api-bank/ or specify --api-bank <path>'
+      );
     }
   }
 }
@@ -372,17 +365,14 @@ npm run benchmark -- --realm-bench ./path/to/realm-bench --api-bank ./path/to/ap
 async function createSampleCharacter(): Promise<string> {
   const charactersDir = path.join(process.cwd(), 'benchmark-characters');
   await fs.promises.mkdir(charactersDir, { recursive: true });
-  
+
   const characterPath = path.join(charactersDir, 'planning-agent.json');
-  
+
   if (!fs.existsSync(characterPath)) {
-    await fs.promises.writeFile(
-      characterPath,
-      JSON.stringify(PLANNING_CHARACTER, null, 2)
-    );
+    await fs.promises.writeFile(characterPath, JSON.stringify(PLANNING_CHARACTER, null, 2));
     logger.info(`[Benchmark] Created sample character: ${characterPath}`);
   }
-  
+
   return characterPath;
 }
 
@@ -409,7 +399,9 @@ async function main(): Promise<void> {
 
     // Enable both benchmarks by default if none specified
     if (!options.realmBench && !options.apiBank) {
-      logger.info('[Benchmark] No specific benchmarks selected, enabling both REALM-Bench and API-Bank');
+      logger.info(
+        '[Benchmark] No specific benchmarks selected, enabling both REALM-Bench and API-Bank'
+      );
       options.realmBench = true;
       options.apiBank = true;
     }
@@ -423,8 +415,12 @@ async function main(): Promise<void> {
     // Log configuration
     console.log('📋 Benchmark Configuration:');
     console.log(`   Character: ${options.characterPath}`);
-    console.log(`   REALM-Bench: ${options.realmBench ? 'enabled' : 'disabled'} ${options.realmBenchPath || ''}`);
-    console.log(`   API-Bank: ${options.apiBank ? 'enabled' : 'disabled'} ${options.apiBankPath || ''}`);
+    console.log(
+      `   REALM-Bench: ${options.realmBench ? 'enabled' : 'disabled'} ${options.realmBenchPath || ''}`
+    );
+    console.log(
+      `   API-Bank: ${options.apiBank ? 'enabled' : 'disabled'} ${options.apiBankPath || ''}`
+    );
     console.log(`   Output: ${options.outputDir}`);
     console.log(`   Max Tests: ${options.maxTests}`);
     console.log(`   Timeout: ${options.timeout}ms`);
@@ -432,16 +428,17 @@ async function main(): Promise<void> {
 
     // Run benchmarks
     await runBenchmarkCommand(options);
-
   } catch (error) {
     logger.error('[Benchmark] Execution failed:', error);
     console.error(`❌ Benchmark failed: ${error.message}`);
-    
+
     if (error.message.includes('not found') || error.message.includes('ENOENT')) {
       console.log('\n💡 Tip: Run with --help to see setup instructions');
-      console.log('   Make sure benchmark data is available or specify paths with --realm-bench and --api-bank');
+      console.log(
+        '   Make sure benchmark data is available or specify paths with --realm-bench and --api-bank'
+      );
     }
-    
+
     process.exit(1);
   }
 }

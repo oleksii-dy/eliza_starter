@@ -21,7 +21,7 @@ import { AutocoderIntegration } from '../../models/autocoder/AutocoderIntegratio
 
 /**
  * Multi-Model Integration Tests
- * 
+ *
  * Comprehensive E2E tests for all 4 training models:
  * 1. ShouldRespond Model (binary classification)
  * 2. Planning Model (REALM-style planning)
@@ -42,10 +42,9 @@ describe('Multi-Model Integration Tests', () => {
         messageExamples: [],
         postExamples: [],
         topics: ['testing', 'training', 'models'],
-        adjectives: ['comprehensive', 'thorough'],
         knowledge: [],
         plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-training'],
-      }
+      },
     });
 
     console.log('🧪 Multi-model test runtime initialized');
@@ -118,7 +117,7 @@ describe('Multi-Model Integration Tests', () => {
       };
 
       const result = await shouldRespondModel.shouldRespond(runtime, testMessage);
-      
+
       expect(result).toHaveProperty('shouldRespond');
       expect(result).toHaveProperty('reasoning');
       expect(result).toHaveProperty('confidence');
@@ -126,12 +125,14 @@ describe('Multi-Model Integration Tests', () => {
       expect(typeof result.reasoning).toBe('string');
       expect(typeof result.confidence).toBe('number');
 
-      console.log(`✅ ShouldRespond decision: ${result.shouldRespond} (confidence: ${result.confidence})`);
+      console.log(
+        `✅ ShouldRespond decision: ${result.shouldRespond} (confidence: ${result.confidence})`
+      );
     });
 
     it('should export shouldRespond training data', async () => {
       const exportedData = await shouldRespondModel.exportShouldRespondData(10);
-      
+
       expect(exportedData).toHaveProperty('model_type', 'should_respond');
       expect(exportedData).toHaveProperty('samples');
       expect(Array.isArray(exportedData.samples)).toBe(true);
@@ -160,8 +161,11 @@ describe('Multi-Model Integration Tests', () => {
     });
 
     it('should generate planning scenarios', async () => {
-      const scenario = await planningGenerator.generatePlanningScenario('software_development', 'medium');
-      
+      const scenario = await planningGenerator.generatePlanningScenario(
+        'software_development',
+        'medium'
+      );
+
       expect(scenario).toHaveProperty('id');
       expect(scenario).toHaveProperty('title');
       expect(scenario).toHaveProperty('description');
@@ -172,16 +176,18 @@ describe('Multi-Model Integration Tests', () => {
       expect(Array.isArray(scenario.expectedPlan.steps)).toBe(true);
       expect(scenario.expectedPlan.steps.length).toBeGreaterThan(2);
 
-      console.log(`✅ Generated planning scenario: ${scenario.title} (${scenario.expectedPlan.steps.length} steps)`);
+      console.log(
+        `✅ Generated planning scenario: ${scenario.title} (${scenario.expectedPlan.steps.length} steps)`
+      );
     });
 
     it('should generate training examples from scenarios', async () => {
       const scenario = await planningGenerator.generatePlanningScenario('ai_research', 'complex');
       const examples = await planningGenerator.generateTrainingExamples(scenario);
-      
+
       expect(Array.isArray(examples)).toBe(true);
       expect(examples.length).toBeGreaterThan(3);
-      
+
       for (const example of examples) {
         expect(example).toHaveProperty('input');
         expect(example).toHaveProperty('output');
@@ -197,10 +203,10 @@ describe('Multi-Model Integration Tests', () => {
     it('should initialize planning benchmarks', async () => {
       await planningBenchmarks.initializeBenchmarks();
       const benchmarkScenarios = planningBenchmarks.getBenchmarkScenarios();
-      
+
       expect(Array.isArray(benchmarkScenarios)).toBe(true);
       expect(benchmarkScenarios.length).toBeGreaterThan(5);
-      
+
       for (const benchmark of benchmarkScenarios) {
         expect(benchmark).toHaveProperty('id');
         expect(benchmark).toHaveProperty('name');
@@ -214,7 +220,7 @@ describe('Multi-Model Integration Tests', () => {
 
     it('should export planning training data', async () => {
       const exportedData = await planningGenerator.exportPlanningDataset(100);
-      
+
       expect(exportedData).toHaveProperty('model_type', 'planning');
       expect(exportedData).toHaveProperty('samples');
       expect(Array.isArray(exportedData.samples)).toBe(true);
@@ -250,7 +256,7 @@ describe('Multi-Model Integration Tests', () => {
             id: '1001',
             timestamp: '2024-01-15T10:00:00.000Z',
             author: { id: 'user1', username: 'alice', displayName: 'Alice', bot: false },
-            content: 'Hey everyone! How\'s the project going?',
+            content: "Hey everyone! How's the project going?",
             attachments: [],
             embeds: [],
             mentions: [],
@@ -262,7 +268,7 @@ describe('Multi-Model Integration Tests', () => {
             id: '1002',
             timestamp: '2024-01-15T10:02:00.000Z',
             author: { id: 'user2', username: 'bob', displayName: 'Bob', bot: false },
-            content: 'It\'s going well! We just finished the conversation parsing module.',
+            content: "It's going well! We just finished the conversation parsing module.",
             attachments: [],
             embeds: [],
             mentions: [{ id: 'user1', username: 'alice' }],
@@ -274,7 +280,8 @@ describe('Multi-Model Integration Tests', () => {
             id: '1003',
             timestamp: '2024-01-15T10:05:00.000Z',
             author: { id: 'user3', username: 'charlie', displayName: 'Charlie', bot: false },
-            content: '<thinking>\nThe user is asking about complex topics, so I should provide a detailed explanation with proper reasoning.\n</thinking>\n\nThat\'s awesome! The parsing looks really comprehensive. I love how it handles thinking blocks and creates character profiles for each user.',
+            content:
+              "<thinking>\nThe user is asking about complex topics, so I should provide a detailed explanation with proper reasoning.\n</thinking>\n\nThat's awesome! The parsing looks really comprehensive. I love how it handles thinking blocks and creates character profiles for each user.",
             attachments: [],
             embeds: [],
             mentions: [],
@@ -294,10 +301,10 @@ describe('Multi-Model Integration Tests', () => {
       };
 
       const examples = await conversationParser.parseConversation(mockConversation);
-      
+
       expect(Array.isArray(examples)).toBe(true);
       expect(examples.length).toBeGreaterThan(0);
-      
+
       for (const example of examples) {
         expect(example).toHaveProperty('input');
         expect(example).toHaveProperty('output');
@@ -311,16 +318,21 @@ describe('Multi-Model Integration Tests', () => {
       const userProfiles = conversationParser.getUserProfiles();
       expect(userProfiles.size).toBeGreaterThan(0);
 
-      console.log(`✅ Parsed conversation into ${examples.length} training examples with ${userProfiles.size} user profiles`);
+      console.log(
+        `✅ Parsed conversation into ${examples.length} training examples with ${userProfiles.size} user profiles`
+      );
     });
 
     it('should build conversation datasets', async () => {
       // Create a temporary directory for test data
       const testDir = '/tmp/test-conversations';
-      
+
       try {
-        const result = await datasetBuilder.processConversationDirectory(testDir, '/tmp/test-output');
-        
+        const result = await datasetBuilder.processConversationDirectory(
+          testDir,
+          '/tmp/test-output'
+        );
+
         expect(result).toHaveProperty('totalExamples');
         expect(result).toHaveProperty('totalUsers');
         expect(result).toHaveProperty('modelSizes');
@@ -329,7 +341,9 @@ describe('Multi-Model Integration Tests', () => {
         expect(typeof result.totalUsers).toBe('number');
         expect(Array.isArray(result.characterFiles)).toBe(true);
 
-        console.log(`✅ Built conversation dataset: ${result.totalExamples} examples, ${result.totalUsers} users`);
+        console.log(
+          `✅ Built conversation dataset: ${result.totalExamples} examples, ${result.totalUsers} users`
+        );
       } catch (error) {
         // Expected if directory doesn't exist - the method creates sample data
         console.log('✅ Conversation dataset builder handles missing directories gracefully');
@@ -338,7 +352,7 @@ describe('Multi-Model Integration Tests', () => {
 
     it('should export conversation training data', async () => {
       const exportedData = await datasetBuilder.exportConversationDataset('8B', 10);
-      
+
       expect(exportedData).toHaveProperty('model_type');
       expect(exportedData).toHaveProperty('samples');
       expect(Array.isArray(exportedData.samples)).toBe(true);
@@ -367,7 +381,7 @@ describe('Multi-Model Integration Tests', () => {
     it('should record coding trajectories', async () => {
       const sessionId = 'test-session-123';
       const userRequest = 'Create an MCP plugin for weather data';
-      
+
       const trajectoryId = await trajectoryRecorder.startTrajectory(
         sessionId,
         userRequest,
@@ -474,7 +488,9 @@ export class WeatherPlugin extends MCPServer {
       expect(completedTrajectory).toHaveProperty('back_reasoning');
       expect(completedTrajectory.back_reasoning).toHaveProperty('optimal_path');
 
-      console.log(`✅ Recorded complete trajectory: ${completedTrajectory.trajectory.length} steps with back-reasoning`);
+      console.log(
+        `✅ Recorded complete trajectory: ${completedTrajectory.trajectory.length} steps with back-reasoning`
+      );
     });
 
     it('should integrate with autocoder session management', async () => {
@@ -499,7 +515,7 @@ export class WeatherPlugin extends MCPServer {
 
     it('should export autocoder training data', async () => {
       const exportedData = await trajectoryRecorder.exportAutocoderDataset(10);
-      
+
       expect(exportedData).toHaveProperty('model_type', 'autocoder');
       expect(exportedData).toHaveProperty('samples');
       expect(Array.isArray(exportedData.samples)).toBe(true);
@@ -512,7 +528,7 @@ export class WeatherPlugin extends MCPServer {
   describe('Multi-Model Integration', () => {
     it('should have all models working together', async () => {
       console.log('🧪 Testing multi-model integration...');
-      
+
       // Test that all model components can coexist
       const shouldRespondModel = new ShouldRespondModel(runtime);
       const planningGenerator = new PlanningScenarioGenerator(runtime);
@@ -576,7 +592,7 @@ export class WeatherPlugin extends MCPServer {
 
     it('should generate training data in compatible formats', async () => {
       console.log('🔬 Testing training data format compatibility...');
-      
+
       // Test each model can export training data
       const shouldRespondModel = new ShouldRespondModel(runtime);
       const planningGenerator = new PlanningScenarioGenerator(runtime);
@@ -607,7 +623,7 @@ export class WeatherPlugin extends MCPServer {
   describe('Performance and Scalability', () => {
     it('should handle concurrent model operations', async () => {
       console.log('⚡ Testing concurrent model operations...');
-      
+
       const operations = [
         // ShouldRespond operations
         async () => {
@@ -621,19 +637,19 @@ export class WeatherPlugin extends MCPServer {
             createdAt: Date.now(),
           });
         },
-        
+
         // Planning operations
         async () => {
           const generator = new PlanningScenarioGenerator(runtime);
           return await generator.generatePlanningScenario('software_development', 'simple');
         },
-        
+
         // Conversation operations
         async () => {
           const parser = new DiscordConversationParser(runtime);
           return parser.getUserProfiles().size;
         },
-        
+
         // Autocoder operations
         async () => {
           const recorder = new TrajectoryRecorder(runtime);
@@ -642,7 +658,7 @@ export class WeatherPlugin extends MCPServer {
       ];
 
       const results = await Promise.all(operations);
-      
+
       expect(results).toHaveLength(4);
       expect(results[0]).toHaveProperty('shouldRespond'); // ShouldRespond result
       expect(results[1]).toHaveProperty('id'); // Planning scenario
@@ -654,7 +670,7 @@ export class WeatherPlugin extends MCPServer {
 
     it('should have reasonable memory usage', () => {
       const initialMemory = process.memoryUsage();
-      
+
       // Create all model instances
       const shouldRespondModel = new ShouldRespondModel(runtime);
       const planningGenerator = new PlanningScenarioGenerator(runtime);
@@ -664,18 +680,20 @@ export class WeatherPlugin extends MCPServer {
 
       const finalMemory = process.memoryUsage();
       const memoryIncrease = finalMemory.heapUsed - initialMemory.heapUsed;
-      
+
       // Should not use more than 100MB for model instances
       expect(memoryIncrease).toBeLessThan(100 * 1024 * 1024);
-      
-      console.log(`✅ Memory usage increase: ${Math.round(memoryIncrease / 1024 / 1024)}MB (acceptable)`);
+
+      console.log(
+        `✅ Memory usage increase: ${Math.round(memoryIncrease / 1024 / 1024)}MB (acceptable)`
+      );
     });
   });
 
   describe('Final Integration Validation', () => {
     it('should pass comprehensive integration test', async () => {
       console.log('🎯 Running comprehensive integration validation...');
-      
+
       // Test 1: All models initialize
       const shouldRespondModel = new ShouldRespondModel(runtime);
       const planningGenerator = new PlanningScenarioGenerator(runtime);
@@ -701,7 +719,10 @@ export class WeatherPlugin extends MCPServer {
       expect(shouldRespondResult.shouldRespond).toBeDefined();
       console.log('  ✓ Model 1: Processes messages correctly');
 
-      const planningScenario = await planningGenerator.generatePlanningScenario('ai_research', 'medium');
+      const planningScenario = await planningGenerator.generatePlanningScenario(
+        'ai_research',
+        'medium'
+      );
       expect(planningScenario.id).toBeDefined();
       console.log('  ✓ Model 2: Generates scenarios correctly');
 

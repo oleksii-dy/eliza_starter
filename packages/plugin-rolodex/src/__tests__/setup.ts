@@ -1,4 +1,5 @@
-import '@testing-library/jest-dom';
+// Temporarily disable jest-dom due to lodash import issue
+// import '@testing-library/jest-dom';
 import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { vi } from 'vitest';

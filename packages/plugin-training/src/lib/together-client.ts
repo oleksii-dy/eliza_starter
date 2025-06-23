@@ -73,7 +73,7 @@ export class TogetherAIClient {
       });
       formData.append('purpose', 'fine-tune');
 
-      const response = await fetch(`${this.baseUrl}/files/upload`, {
+      const response = await fetch(`${this.baseUrl}/files`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,

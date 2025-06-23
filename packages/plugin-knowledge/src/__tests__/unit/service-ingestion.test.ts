@@ -17,7 +17,6 @@ describe('KnowledgeService Ingestion Methods', () => {
         messageExamples: [],
         postExamples: [],
         topics: [],
-        adjectives: [],
         knowledge: [],
         plugins: [],
       },

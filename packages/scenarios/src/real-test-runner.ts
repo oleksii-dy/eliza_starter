@@ -19,7 +19,10 @@ import {
 // Use workspace packages directly for development
 import { createDatabaseAdapter } from '../../plugin-sql/src/index.js';
 import sqlPlugin from '../../plugin-sql/src/index.js';
-// import { allScenarios } from './index.js'; // Temporarily disabled due to circular dependency
+import { schemaRegistry } from '../../plugin-sql/src/schema-registry.js';
+import { coreSchema } from '../../plugin-sql/src/schema/core.js';
+// Import scenarios loader to avoid circular dependencies
+import { loadAllScenarios, loadScenariosByCategory } from './scenarios-loader.js';
 import type {
   Scenario,
   ScenarioContext,
@@ -36,155 +39,232 @@ import path from 'path';
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 
-// Helper function to ensure core tables exist
+// Helper function to ensure core tables exist using proper schema registry
 async function ensureCoreTablesExist(database: any): Promise<void> {
-  console.log('🔧 Ensuring core ElizaOS tables exist...');
+  console.log('🔧 Ensuring core ElizaOS tables exist using schema registry...');
 
   try {
-    // For PGLite adapter, we need to get the raw connection
-    let db: any;
+    // Register core SQL plugin schema first
+    console.log('   Registering core schema tables...');
+    
+    // Register core tables from the SQL plugin
+    const coreTableSchemas = [
+      {
+        name: 'agents',
+        pluginName: '@elizaos/plugin-sql',
+        sql: `CREATE TABLE IF NOT EXISTS agents (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          name TEXT NOT NULL,
+          email TEXT,
+          avatar TEXT,
+          metadata JSONB DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`,
+        fallbackSql: `CREATE TABLE IF NOT EXISTS agents (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT,
+          avatar TEXT,
+          metadata TEXT DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`
+      },
+      {
+        name: 'entities',
+        pluginName: '@elizaos/plugin-sql',
+        sql: `CREATE TABLE IF NOT EXISTS entities (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          "agentId" UUID NOT NULL,
+          names JSONB NOT NULL,
+          metadata JSONB DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`,
+        fallbackSql: `CREATE TABLE IF NOT EXISTS entities (
+          id TEXT PRIMARY KEY,
+          "agentId" TEXT NOT NULL,
+          names TEXT NOT NULL,
+          metadata TEXT DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`
+      },
+      {
+        name: 'memories',
+        pluginName: '@elizaos/plugin-sql',
+        sql: `CREATE TABLE IF NOT EXISTS memories (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          "entityId" UUID NOT NULL,
+          "agentId" UUID NOT NULL,
+          "roomId" UUID NOT NULL,
+          "worldId" UUID,
+          content JSONB NOT NULL,
+          embedding VECTOR(1536),
+          metadata JSONB DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`,
+        fallbackSql: `CREATE TABLE IF NOT EXISTS memories (
+          id TEXT PRIMARY KEY,
+          "entityId" TEXT NOT NULL,
+          "agentId" TEXT NOT NULL,
+          "roomId" TEXT NOT NULL,
+          "worldId" TEXT,
+          content TEXT NOT NULL,
+          embedding TEXT,
+          metadata TEXT DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`
+      },
+      {
+        name: 'rooms',
+        pluginName: '@elizaos/plugin-sql',
+        sql: `CREATE TABLE IF NOT EXISTS rooms (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          name TEXT NOT NULL,
+          "channelId" TEXT,
+          "agentId" UUID,
+          "serverId" TEXT,
+          "worldId" UUID,
+          type TEXT,
+          source TEXT,
+          metadata JSONB DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`,
+        fallbackSql: `CREATE TABLE IF NOT EXISTS rooms (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          "channelId" TEXT,
+          "agentId" TEXT,
+          "serverId" TEXT,
+          "worldId" TEXT,
+          type TEXT,
+          source TEXT,
+          metadata TEXT DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`
+      },
+      {
+        name: 'participants',
+        pluginName: '@elizaos/plugin-sql',
+        sql: `CREATE TABLE IF NOT EXISTS participants (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          "entityId" UUID NOT NULL,
+          "roomId" UUID NOT NULL,
+          "userState" TEXT,
+          metadata JSONB DEFAULT '{}' NOT NULL,
+          "lastActiveAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`,
+        fallbackSql: `CREATE TABLE IF NOT EXISTS participants (
+          id TEXT PRIMARY KEY,
+          "entityId" TEXT NOT NULL,
+          "roomId" TEXT NOT NULL,
+          "userState" TEXT,
+          metadata TEXT DEFAULT '{}' NOT NULL,
+          "lastActiveAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`
+      },
+      {
+        name: 'worlds',
+        pluginName: '@elizaos/plugin-sql',
+        sql: `CREATE TABLE IF NOT EXISTS worlds (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          name TEXT NOT NULL,
+          "serverId" TEXT,
+          metadata JSONB DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`,
+        fallbackSql: `CREATE TABLE IF NOT EXISTS worlds (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          "serverId" TEXT,
+          metadata TEXT DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`
+      },
+      {
+        name: 'cache',
+        pluginName: '@elizaos/plugin-sql',
+        sql: `CREATE TABLE IF NOT EXISTS cache (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          key TEXT NOT NULL UNIQUE,
+          "entityId" UUID,
+          value TEXT NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "expiresAt" TIMESTAMP
+        )`,
+        fallbackSql: `CREATE TABLE IF NOT EXISTS cache (
+          id TEXT PRIMARY KEY,
+          key TEXT NOT NULL UNIQUE,
+          "entityId" TEXT,
+          value TEXT NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "expiresAt" TIMESTAMP
+        )`
+      },
+      {
+        name: 'relationships',
+        pluginName: '@elizaos/plugin-sql',
+        sql: `CREATE TABLE IF NOT EXISTS relationships (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          "sourceEntityId" UUID NOT NULL,
+          "targetEntityId" UUID NOT NULL,
+          tags JSONB DEFAULT '[]' NOT NULL,
+          metadata JSONB DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`,
+        fallbackSql: `CREATE TABLE IF NOT EXISTS relationships (
+          id TEXT PRIMARY KEY,
+          "sourceEntityId" TEXT NOT NULL,
+          "targetEntityId" TEXT NOT NULL,
+          tags TEXT DEFAULT '[]' NOT NULL,
+          metadata TEXT DEFAULT '{}' NOT NULL,
+          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )`
+      }
+    ];
 
+    // Register all core tables with the schema registry
+    schemaRegistry.registerTables(coreTableSchemas);
+    console.log(`   Registered ${coreTableSchemas.length} core tables with schema registry`);
+
+    // Get the database type for proper table creation
+    const dbType = database.constructor.name === 'PgliteDatabaseAdapter' ? 'pglite' : 'postgres';
+    console.log(`   Detected database type: ${dbType}`);
+
+    // Use schema registry to create tables in proper dependency order
     if (
       database.constructor.name === 'PgliteDatabaseAdapter' &&
       typeof database.getConnection === 'function'
     ) {
       console.log('   Using PGLite adapter, getting raw connection...');
       const rawPglite = await database.getConnection();
-
-      // Create tables using raw SQL to avoid Drizzle schema circular references
-      const tableQueries = [
-        // Agents table (required for agent entity creation)
-        `CREATE TABLE IF NOT EXISTS agents (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          name TEXT NOT NULL,
-          bio TEXT DEFAULT '',
-          metadata JSONB DEFAULT '{}',
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-
-        // Entities table
-        `CREATE TABLE IF NOT EXISTS entities (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          names TEXT[] DEFAULT '{}',
-          "agentId" UUID,
-          "worldId" UUID,
-          metadata JSONB DEFAULT '{}',
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-
-        // Memories table
-        `CREATE TABLE IF NOT EXISTS memories (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          type TEXT DEFAULT 'message',
-          content JSONB DEFAULT '{}',
-          embedding JSONB,
-          "entityId" UUID,
-          "agentId" UUID,
-          "roomId" UUID,
-          "worldId" UUID,
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-
-        // Messages table (alias for memories)
-        `CREATE TABLE IF NOT EXISTS messages (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          type TEXT DEFAULT 'message',
-          content JSONB DEFAULT '{}',
-          embedding JSONB,
-          "entityId" UUID,
-          "agentId" UUID,
-          "roomId" UUID,
-          "worldId" UUID,
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-
-        // Rooms table
-        `CREATE TABLE IF NOT EXISTS rooms (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          "agentId" UUID,
-          source TEXT NOT NULL,
-          type TEXT NOT NULL,
-          "serverId" TEXT,
-          "worldId" UUID,
-          name TEXT,
-          metadata JSONB DEFAULT '{}',
-          "channelId" TEXT,
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-
-        // Participants table
-        `CREATE TABLE IF NOT EXISTS participants (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          "entityId" UUID NOT NULL,
-          "roomId" UUID NOT NULL,
-          "userState" TEXT,
-          "lastActiveAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE("entityId", "roomId")
-        )`,
-
-        // Worlds table
-        `CREATE TABLE IF NOT EXISTS worlds (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          name TEXT NOT NULL,
-          "agentId" UUID,
-          "serverId" TEXT,
-          metadata JSONB DEFAULT '{}',
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-
-        // Logs table
-        `CREATE TABLE IF NOT EXISTS logs (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          "entityId" UUID NOT NULL,
-          "roomId" UUID,
-          type TEXT NOT NULL,
-          body JSONB DEFAULT '{}',
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-
-        // Cache table
-        `CREATE TABLE IF NOT EXISTS cache (
-          key TEXT PRIMARY KEY,
-          value JSONB NOT NULL,
-          "expiresAt" TIMESTAMP,
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`,
-
-        // Relationships table
-        `CREATE TABLE IF NOT EXISTS relationships (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          "sourceEntityId" UUID NOT NULL,
-          "targetEntityId" UUID NOT NULL,
-          tags TEXT[] DEFAULT '{}',
-          metadata JSONB DEFAULT '{}',
-          "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE("sourceEntityId", "targetEntityId")
-        )`,
-      ];
-
-      // Execute each table creation query
-      for (const query of tableQueries) {
-        try {
-          await rawPglite.exec(query);
-        } catch (error) {
-          console.log(
-            `   ⚠️  Table creation query failed (may already exist): ${error instanceof Error ? error.message : String(error)}`
-          );
-        }
-      }
-
-      console.log('   ✅ Core tables created successfully');
+      
+      // Use schema registry to create all tables
+      await schemaRegistry.createTables(rawPglite, dbType);
+      
+      console.log('   ✅ Core tables created successfully using schema registry');
     } else if (database.db) {
-      // For regular database adapters, we can't easily access the migrator
-      console.log('   Using regular database adapter...');
-      console.warn('   ⚠️  Cannot run table creation for non-PGLite adapters in test context');
-      console.log(
-        '   ⚠️  Tables should be created by the SQL plugin during runtime initialization'
-      );
+      console.log('   Using PostgreSQL adapter...');
+      
+      // Use schema registry to create all tables
+      await schemaRegistry.createTables(database.db, dbType);
+      
+      console.log('   ✅ Core tables created successfully using schema registry');
     } else {
       console.warn('   ⚠️  Unable to determine database type or access connection');
+      throw new Error('Cannot access database connection for table creation');
     }
+
   } catch (error) {
     console.error('   ❌ Failed to ensure core tables exist:', error);
     throw error;
@@ -212,23 +292,30 @@ export class RealScenarioTestRunner {
     this.testDir = testDir || path.join(process.cwd(), '.test-scenarios');
   }
 
-  async runAllScenarios(options: TestRunnerOptions = {}, providedScenarios?: Scenario[]): Promise<TestRunnerResult> {
+  async runAllScenarios(
+    options: TestRunnerOptions = {},
+    providedScenarios?: Scenario[]
+  ): Promise<TestRunnerResult> {
     const startTime = Date.now();
-    
-    // Use provided scenarios or try to load from index
+
+    // Use provided scenarios or load them dynamically to avoid circular dependencies
     let allScenarios: Scenario[] = [];
     if (providedScenarios) {
       allScenarios = providedScenarios;
     } else {
       try {
-        const { allScenarios: importedScenarios } = await import('./index.js');
-        allScenarios = importedScenarios;
+        // Use scenarios loader to avoid circular dependency
+        if (options.category) {
+          allScenarios = await loadScenariosByCategory(options.category);
+        } else {
+          allScenarios = await loadAllScenarios();
+        }
       } catch (error) {
-        console.warn('Could not load scenarios from index.js, using empty array');
+        console.warn('Could not load scenarios using scenarios loader, using empty array');
         allScenarios = [];
       }
     }
-    
+
     const scenarios = this.filterScenarios(allScenarios, options);
 
     console.log(`🚀 Starting REAL scenario test run with ${scenarios.length} scenarios`);
@@ -458,10 +545,13 @@ export class RealScenarioTestRunner {
 
       // Wait for tables to be created and verify agents table
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      
+
       // Verify agents table exists
       try {
-        if (database.constructor.name === 'PgliteDatabaseAdapter' && typeof database.getConnection === 'function') {
+        if (
+          database.constructor.name === 'PgliteDatabaseAdapter' &&
+          typeof database.getConnection === 'function'
+        ) {
           const rawPglite = await database.getConnection();
           const result = await rawPglite.query('SELECT COUNT(*) FROM agents;');
           console.log(`   ✅ Agents table verified - contains ${result.rows[0].count} records`);
@@ -503,7 +593,7 @@ export class RealScenarioTestRunner {
     for (const pluginName of requiredPlugins) {
       try {
         console.log(`   📦 Loading plugin: ${pluginName}`);
-        
+
         let plugin;
         // Handle workspace packages for development
         if (pluginName === '@elizaos/plugin-autocoder') {
@@ -516,7 +606,7 @@ export class RealScenarioTestRunner {
           // Try regular import for other plugins
           plugin = await import(pluginName);
         }
-        
+
         loadedPlugins.set(pluginName, plugin.default || plugin);
         console.log(`   ✅ Successfully loaded plugin: ${pluginName}`);
       } catch (error) {
@@ -537,7 +627,6 @@ export class RealScenarioTestRunner {
         messageExamples: [],
         postExamples: [],
         topics: [],
-        adjectives: [],
         knowledge: [],
         plugins: actor.plugins || [],
         settings: actor.settings || {},
@@ -566,15 +655,17 @@ export class RealScenarioTestRunner {
         });
 
         // Initialize runtime with plugins but skip agent creation
-        console.log(`   🔄 Initializing runtime with ${actorPlugins.length} plugins (skipping agent creation)...`);
-        
+        console.log(
+          `   🔄 Initializing runtime with ${actorPlugins.length} plugins (skipping agent creation)...`
+        );
+
         try {
           // Initialize plugins without creating agent entities
           for (const plugin of actorPlugins) {
             if (plugin.init) {
               await plugin.init(plugin.config || {}, runtime);
             }
-            
+
             // Register plugin components manually
             if (plugin.actions) {
               for (const action of plugin.actions) {
@@ -592,8 +683,10 @@ export class RealScenarioTestRunner {
               }
             }
           }
-          
-          console.log(`   ✅ Initialized runtime manually with ${runtime.actions.length} actions, ${runtime.providers.length} providers`);
+
+          console.log(
+            `   ✅ Initialized runtime manually with ${runtime.actions.length} actions, ${runtime.providers.length} providers`
+          );
         } catch (initError) {
           console.warn(`   ⚠️  Manual plugin initialization had issues:`, initError);
           // Fall back to full initialization
@@ -604,7 +697,9 @@ export class RealScenarioTestRunner {
         context.agentRuntimes.set(actor.id, runtime);
         context.actors.set(actor.id, { ...actor, runtime });
 
-        console.log(`   ✅ Created and initialized real runtime for ${actor.name} with ${actorPlugins.length} plugins`);
+        console.log(
+          `   ✅ Created and initialized real runtime for ${actor.name} with ${actorPlugins.length} plugins`
+        );
       } catch (error) {
         console.log(
           `   ❌ Failed to create runtime for ${actor.name}: ${error instanceof Error ? error.message : String(error)}`

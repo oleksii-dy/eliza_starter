@@ -1,6 +1,6 @@
 /**
  * REAL MVP ACTIONS - ZERO LARP CODE
- * 
+ *
  * Actions based on validated real integration tests.
  * Every action has been tested with real ElizaOS runtime.
  */
@@ -11,14 +11,16 @@ import { getReasoningService } from './real-reasoning-service';
 
 export const enableReasoningAction: Action = {
   name: 'ENABLE_REASONING',
-  similes: ['ENABLE_CUSTOM_REASONING', 'START_REASONING'],
+  similes: ['ENABLE_REASONING_SERVICE', 'START_REASONING'],
   description: 'Enable the custom reasoning service to collect training data',
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     // REAL: Check for enable-related keywords
     const text = message.content.text?.toLowerCase() || '';
-    return text.includes('enable') && 
-           (text.includes('reasoning') || text.includes('training') || text.includes('custom'));
+    return (
+      text.includes('enable') &&
+      (text.includes('reasoning') || text.includes('training') || text.includes('custom'))
+    );
   },
 
   handler: async (
@@ -30,7 +32,7 @@ export const enableReasoningAction: Action = {
   ) => {
     try {
       const service = getReasoningService(runtime);
-      
+
       if (service.isEnabled()) {
         await callback?.({
           text: 'Custom reasoning is already enabled.',
@@ -49,10 +51,9 @@ export const enableReasoningAction: Action = {
       });
 
       return { text: 'Reasoning enabled successfully' };
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      
+
       await callback?.({
         text: `Failed to enable custom reasoning: ${errorMessage}`,
         thought: 'Error occurred during reasoning service activation',
@@ -82,14 +83,16 @@ export const enableReasoningAction: Action = {
 
 export const disableReasoningAction: Action = {
   name: 'DISABLE_REASONING',
-  similes: ['DISABLE_CUSTOM_REASONING', 'STOP_REASONING'],
+  similes: ['DISABLE_REASONING_SERVICE', 'STOP_REASONING'],
   description: 'Disable the custom reasoning service and restore normal behavior',
 
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     // REAL: Check for disable-related keywords
     const text = message.content.text?.toLowerCase() || '';
-    return text.includes('disable') && 
-           (text.includes('reasoning') || text.includes('training') || text.includes('custom'));
+    return (
+      text.includes('disable') &&
+      (text.includes('reasoning') || text.includes('training') || text.includes('custom'))
+    );
   },
 
   handler: async (
@@ -101,7 +104,7 @@ export const disableReasoningAction: Action = {
   ) => {
     try {
       const service = getReasoningService(runtime);
-      
+
       if (!service.isEnabled()) {
         await callback?.({
           text: 'Custom reasoning is not currently enabled.',
@@ -124,10 +127,9 @@ export const disableReasoningAction: Action = {
       });
 
       return { text: `Reasoning disabled, ${dataCount} records collected` };
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      
+
       await callback?.({
         text: `Failed to disable custom reasoning: ${errorMessage}`,
         thought: 'Error occurred during reasoning service deactivation',
@@ -163,8 +165,10 @@ export const checkReasoningStatusAction: Action = {
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     // REAL: Check for status-related keywords
     const text = message.content.text?.toLowerCase() || '';
-    return (text.includes('status') || text.includes('check')) && 
-           (text.includes('reasoning') || text.includes('training') || text.includes('custom'));
+    return (
+      (text.includes('status') || text.includes('check')) &&
+      (text.includes('reasoning') || text.includes('training') || text.includes('custom'))
+    );
   },
 
   handler: async (
@@ -179,11 +183,11 @@ export const checkReasoningStatusAction: Action = {
       const isEnabled = service.isEnabled();
       const trainingData = service.getTrainingData();
       const totalRecords = trainingData.length;
-      const successfulRecords = trainingData.filter(r => r.success).length;
+      const successfulRecords = trainingData.filter((r) => r.success).length;
       const failedRecords = totalRecords - successfulRecords;
 
       const statusText = isEnabled ? 'enabled' : 'disabled';
-      const statusDetail = isEnabled 
+      const statusDetail = isEnabled
         ? `Currently collecting training data from model interactions.`
         : `Not currently collecting training data.`;
 
@@ -193,14 +197,13 @@ export const checkReasoningStatusAction: Action = {
         actions: ['CHECK_REASONING_STATUS'],
       });
 
-      return { 
-        text: `Status: ${statusText}`, 
-        data: { enabled: isEnabled, totalRecords, successfulRecords, failedRecords }
+      return {
+        text: `Status: ${statusText}`,
+        data: { enabled: isEnabled, totalRecords, successfulRecords, failedRecords },
       };
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      
+
       await callback?.({
         text: `Failed to check reasoning status: ${errorMessage}`,
         thought: 'Error occurred during status check',

@@ -14,10 +14,11 @@ const getServersRoute: Route = {
     try {
       const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;
       if (!mcpService) {
-        return res.status(503).json({
+        res.status(503).json({
           success: false,
           error: "MCP service not available"
         });
+        return;
       }
 
       const servers = mcpService.getServers();
@@ -48,11 +49,13 @@ const getServersRoute: Route = {
           connectedServers: servers.filter((s: McpServer) => s.status === "connected").length
         }
       });
+      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : "Internal server error"
       });
+      return;
     }
   }
 };
@@ -70,10 +73,11 @@ const callToolRoute: Route = {
 
       const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;
       if (!mcpService) {
-        return res.status(503).json({
+        res.status(503).json({
           success: false,
           error: "MCP service not available"
         });
+        return;
       }
 
       const result = await mcpService.callTool(serverName, toolName, toolArgs || {});
@@ -87,11 +91,13 @@ const callToolRoute: Route = {
           timestamp: new Date().toISOString()
         }
       });
+      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : "Tool execution failed"
       });
+      return;
     }
   }
 };
@@ -108,18 +114,20 @@ const readResourceRoute: Route = {
       const { uri } = req.body;
 
       if (!uri) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: "Resource URI is required"
         });
+        return;
       }
 
       const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;
       if (!mcpService) {
-        return res.status(503).json({
+        res.status(503).json({
           success: false,
           error: "MCP service not available"
         });
+        return;
       }
 
       const result = await mcpService.readResource(serverName, uri);
@@ -133,11 +141,13 @@ const readResourceRoute: Route = {
           timestamp: new Date().toISOString()
         }
       });
+      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : "Resource read failed"
       });
+      return;
     }
   }
 };
@@ -154,10 +164,11 @@ const reconnectServerRoute: Route = {
 
       const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;
       if (!mcpService) {
-        return res.status(503).json({
+        res.status(503).json({
           success: false,
           error: "MCP service not available"
         });
+        return;
       }
 
       // Get current server config
@@ -165,10 +176,11 @@ const reconnectServerRoute: Route = {
       const server = servers.find((s: McpServer) => s.name === serverName);
       
       if (!server) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           error: `Server ${serverName} not found`
         });
+        return;
       }
 
       // Parse config and reconnect
@@ -183,11 +195,13 @@ const reconnectServerRoute: Route = {
           timestamp: new Date().toISOString()
         }
       });
+      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : "Reconnection failed"
       });
+      return;
     }
   }
 };
@@ -244,11 +258,13 @@ const viewerRoute: Route = {
       `;
       
       res.type('html').send(htmlContent);
+      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : "Failed to load viewer"
       });
+      return;
     }
   }
 };
@@ -276,11 +292,13 @@ export function renderMcpViewer(elementId, agentId) {
       `;
       
       res.type('application/javascript').send(jsContent);
+      return;
     } catch (error) {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : "Failed to load viewer bundle"
       });
+      return;
     }
   }
 };

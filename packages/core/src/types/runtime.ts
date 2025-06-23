@@ -42,6 +42,7 @@ export interface IAgentRuntime extends IDatabaseAdapter {
   getService<T extends Service>(service: ServiceTypeName | string): T | null;
 
   getAllServices(): Map<ServiceTypeName, Service>;
+  getServicesByType(type: ServiceTypeName): Service[];
 
   registerService(service: typeof Service): Promise<void>;
 

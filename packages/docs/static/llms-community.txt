@@ -17579,7 +17579,6 @@ Define your agent's personality and communication style:
 {
   "username": "handle", // Character's username/handle
   "system": "System prompt text", // Custom system prompt
-  "lore": [], // Additional background/history
   "knowledge": [
     // Knowledge base entries
     "Direct string knowledge",
@@ -17589,7 +17588,6 @@ Define your agent's personality and communication style:
   "messageExamples": [], // Example conversations
   "postExamples": [], // Example social posts
   "topics": [], // Areas of expertise
-  "adjectives": [] // Character traits
 }
 ```
 

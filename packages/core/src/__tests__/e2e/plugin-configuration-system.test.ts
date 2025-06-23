@@ -192,7 +192,6 @@ describe('Plugin Configuration System E2E Tests', () => {
       messageExamples: [],
       postExamples: [],
       topics: ['testing'],
-      adjectives: ['helpful'],
       knowledge: [],
       plugins: ['test-plugin'],
       settings: {},

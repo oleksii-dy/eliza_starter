@@ -19,7 +19,14 @@ class DatabaseConnectionRegistry {
    * Get or create a PGLite manager for the given path
    */
   getPGLiteManager(dataDir: string): PGliteClientManager {
-    const key = dataDir || 'default';
+    // Normalize the path to handle trailing slashes and dots
+    let normalizedDir = dataDir || 'default';
+    if (normalizedDir !== 'default' && !normalizedDir.startsWith(':memory:')) {
+      // Remove trailing slashes and normalize path
+      normalizedDir = normalizedDir.replace(/\/+$/, '').replace(/\/\.$/, '');
+    }
+    
+    const key = normalizedDir;
 
     if (!this.pgLiteManagers.has(key)) {
       logger.info(`[ConnectionRegistry] Creating new PGLite manager for: ${key}`);
@@ -112,6 +119,13 @@ class DatabaseConnectionRegistry {
   }
 
   /**
+   * Get all adapters currently in the registry
+   */
+  getAllAdapters(): (PgliteDatabaseAdapter | PgDatabaseAdapter)[] {
+    return Array.from(this.adapters.values());
+  }
+
+  /**
    * Clean up all connections
    */
   async cleanup(): Promise<void> {
@@ -147,6 +161,17 @@ class DatabaseConnectionRegistry {
     }
 
     // Clear all maps
+    this.adapters.clear();
+    this.pgLiteManagers.clear();
+    this.postgresManagers.clear();
+    this.migrationLocks.clear();
+  }
+
+  /**
+   * Clear all connections synchronously (for tests)
+   */
+  clearAll(): void {
+    // Clear all maps without async cleanup
     this.adapters.clear();
     this.pgLiteManagers.clear();
     this.postgresManagers.clear();

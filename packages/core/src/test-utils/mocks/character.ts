@@ -41,15 +41,6 @@ export function createMockCharacter(overrides: MockCharacterOverrides = {}): Cha
     system:
       'You are a helpful test assistant designed for automated testing scenarios. Respond concisely and clearly.',
 
-    templates: {
-      messageHandlerTemplate: 'Handle this message: {{content}}' as TemplateType,
-      shouldRespondTemplate: 'Should respond to: {{content}}' as TemplateType,
-      continueMessageHandlerTemplate:
-        'Continue the conversation about: {{content}}' as TemplateType,
-      evaluationTemplate: 'Evaluate this interaction: {{content}}' as TemplateType,
-      ...overrides.templates,
-    },
-
     bio: [
       'A test agent designed for comprehensive testing scenarios',
       'Provides consistent, predictable responses for test validation',
@@ -119,19 +110,6 @@ export function createMockCharacter(overrides: MockCharacterOverrides = {}): Cha
       'system reliability',
       'debugging',
       'performance testing',
-    ],
-
-    adjectives: [
-      'reliable',
-      'consistent',
-      'thorough',
-      'methodical',
-      'precise',
-      'helpful',
-      'systematic',
-      'analytical',
-      'dependable',
-      'comprehensive',
     ],
 
     knowledge: [
@@ -213,7 +191,6 @@ export function createMinimalMockCharacter(
       ],
     ],
     topics: ['testing'],
-    adjectives: ['helpful'],
     plugins: [],
     ...overrides,
   });
@@ -319,32 +296,4 @@ export function createMultipleCharacters(
   }
 
   return characters;
-}
-
-/**
- * Create a mock character with specific model settings
- *
- * @param modelProvider - Model provider (e.g., 'openai', 'anthropic')
- * @param modelName - Specific model name
- * @param overrides - Additional overrides
- * @returns Character with model-specific settings
- */
-export function createModelSpecificCharacter(
-  modelProvider: string = 'openai',
-  modelName: string = 'gpt-4',
-  overrides: MockCharacterOverrides = {}
-): Character {
-  return createMockCharacter({
-    name: `${modelProvider}TestAgent`,
-    settings: {
-      model: modelName,
-      modelProvider,
-      temperature: 0.2,
-      maxTokens: 2000,
-      ...overrides.settings,
-    },
-    bio: [`Test agent configured for ${modelProvider} ${modelName}`],
-    knowledge: [`${modelProvider} model capabilities and limitations`],
-    ...overrides,
-  });
 }

@@ -1,9 +1,9 @@
 /**
  * REAL RUNTIME INTEGRATION TESTS FOR ENHANCED CUSTOM REASONING
- * 
+ *
  * These tests use actual ElizaOS runtime instances and real service implementations.
  * No mocks - only real runtime instances, services, and plugin functionality.
- * 
+ *
  * Test coverage:
  * - Real enhanced reasoning service lifecycle
  * - Actual database and file system integration
@@ -30,18 +30,18 @@ const testCharacter: Character = {
   messageExamples: [
     [
       { name: 'user', content: { text: 'test enhanced reasoning' } },
-      { name: 'EnhancedReasoningTestAgent', content: { text: 'testing enhanced response' } }
-    ]
+      { name: 'EnhancedReasoningTestAgent', content: { text: 'testing enhanced response' } },
+    ],
   ],
   postExamples: [],
   topics: ['testing', 'enhanced-reasoning', 'integration', 'database'],
-  adjectives: ['helpful', 'accurate', 'enhanced'],
+  knowledge: [],
   plugins: [],
   settings: {
     ENHANCED_REASONING_ENABLED: 'true',
-    CUSTOM_REASONING_COLLECT_TRAINING_DATA: 'true',
+    REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',
   },
-  secrets: {}
+  secrets: {},
 };
 
 describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
@@ -53,18 +53,18 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
 
   beforeEach(async () => {
     elizaLogger.info('🧪 Setting up Enhanced Custom Reasoning real runtime test environment...');
-    
+
     // Create unique test paths to avoid conflicts
     const testId = `enhanced-reasoning-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     testDatabasePath = path.join(process.cwd(), '.test-data', testId, 'enhanced.db');
     testDataPath = path.join(process.cwd(), '.test-data', testId, 'enhanced-data');
     testSessionDir = path.join(process.cwd(), '.test-data', testId, 'training_recording');
-    
+
     // Ensure test directories exist
     await fs.mkdir(path.dirname(testDatabasePath), { recursive: true });
     await fs.mkdir(testDataPath, { recursive: true });
     await fs.mkdir(testSessionDir, { recursive: true });
-    
+
     // Update test character with test-specific paths
     const testCharacterWithPaths = {
       ...testCharacter,
@@ -73,30 +73,30 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
         TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
         ENHANCED_DATA_DIR: testDataPath,
         TRAINING_RECORDING_DIR: testSessionDir,
-      }
+      },
     };
 
     // Create real AgentRuntime instance
     runtime = new AgentRuntime({
       character: testCharacterWithPaths,
       token: process.env.OPENAI_API_KEY || 'test-token',
-      modelName: 'gpt-4o-mini'
+      modelName: 'gpt-4o-mini',
     });
 
     // Register both training and enhanced plugins
     await runtime.registerPlugin(trainingPlugin);
     await runtime.registerPlugin(enhancedCustomReasoningPlugin);
     await runtime.initialize();
-    
+
     // Create real EnhancedReasoningService instance
     service = new EnhancedReasoningService(runtime);
-    
+
     elizaLogger.info('✅ Enhanced Custom Reasoning real runtime test environment setup complete');
   });
 
   afterEach(async () => {
     elizaLogger.info('🧹 Cleaning up Enhanced Custom Reasoning test environment...');
-    
+
     try {
       // Disable service if enabled
       if (service && service.getStatus().enabled) {
@@ -111,7 +111,7 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
           // File might not exist, that's okay
         }
       }
-      
+
       if (testDataPath) {
         try {
           await fs.rm(path.dirname(testDataPath), { recursive: true, force: true });
@@ -122,7 +122,7 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
     } catch (error) {
       elizaLogger.warn('Warning during Enhanced Custom Reasoning cleanup:', error);
     }
-    
+
     elizaLogger.info('✅ Enhanced Custom Reasoning test environment cleanup complete');
   });
 
@@ -138,8 +138,8 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
 
     it('should have required enhanced actions', () => {
       const actions = enhancedCustomReasoningPlugin.actions!;
-      const actionNames = actions.map(action => action.name);
-      
+      const actionNames = actions.map((action) => action.name);
+
       expect(actionNames).toContain('ENABLE_ENHANCED_REASONING');
       expect(actionNames).toContain('DISABLE_ENHANCED_REASONING');
       expect(actionNames).toContain('CHECK_ENHANCED_REASONING_STATUS');
@@ -162,7 +162,7 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
 
     it('should enable successfully with real runtime', async () => {
       await service.enable();
-      
+
       const status = service.getStatus();
       expect(status.enabled).toBe(true);
       expect(status.sessionId).toBeTruthy();
@@ -170,7 +170,7 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
       expect(status.stats.totalCalls).toBe(0);
       expect(status.stats.successfulCalls).toBe(0);
       expect(status.stats.failedCalls).toBe(0);
-      
+
       elizaLogger.info('✅ Enhanced service enabled successfully with real runtime');
     });
 
@@ -178,18 +178,18 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
       await service.enable();
       const enabledStatus = service.getStatus();
       expect(enabledStatus.enabled).toBe(true);
-      
+
       await service.disable();
       const disabledStatus = service.getStatus();
       expect(disabledStatus.enabled).toBe(false);
       expect(disabledStatus.sessionId).toBeNull();
-      
+
       elizaLogger.info('✅ Enhanced service disabled successfully with real runtime');
     });
 
     it('should prevent double enable with real runtime', async () => {
       await service.enable();
-      
+
       await expect(service.enable()).rejects.toThrow('Enhanced reasoning already enabled');
       elizaLogger.info('✅ Double enable properly prevented with real runtime');
     });
@@ -203,21 +203,25 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
   describe('Real UseModel Interception', () => {
     it('should intercept useModel calls when enabled with real runtime', async () => {
       await service.enable();
-      
+
       // Make some model calls with real runtime
-      const result1 = await runtime.useModel('TEXT_LARGE', { text: 'test prompt for enhanced recording' });
+      const result1 = await runtime.useModel('TEXT_LARGE', {
+        text: 'test prompt for enhanced recording',
+      });
       const result2 = await runtime.useModel('TEXT_EMBEDDING', { text: 'test text for embedding' });
-      
+
       expect(result1).toBeDefined();
       expect(result2).toBeDefined();
-      
+
       // Check that calls were intercepted and recorded
       const status = service.getStatus();
       expect(status.stats.totalCalls).toBeGreaterThanOrEqual(2);
       expect(status.stats.successfulCalls).toBeGreaterThanOrEqual(2);
       expect(status.stats.recordsCollected).toBeGreaterThanOrEqual(2);
-      
-      elizaLogger.info(`✅ UseModel interception working: ${status.stats.totalCalls} calls intercepted`);
+
+      elizaLogger.info(
+        `✅ UseModel interception working: ${status.stats.totalCalls} calls intercepted`
+      );
     });
 
     it('should not intercept useModel calls when disabled with real runtime', async () => {
@@ -225,34 +229,34 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
       if (service.getStatus().enabled) {
         await service.disable();
       }
-      
+
       // Make model calls while disabled
       const result = await runtime.useModel('TEXT_LARGE', { text: 'test prompt while disabled' });
       expect(result).toBeDefined();
-      
+
       const status = service.getStatus();
       expect(status.enabled).toBe(false);
       expect(status.stats.totalCalls).toBe(0);
       expect(status.stats.successfulCalls).toBe(0);
       expect(status.stats.failedCalls).toBe(0);
-      
+
       elizaLogger.info('✅ UseModel interception correctly disabled with real runtime');
     });
 
     it('should restore original useModel after disable with real runtime', async () => {
       const originalUseModel = runtime.useModel;
-      
+
       await service.enable();
-      
+
       // useModel should be overridden when enabled
       expect(runtime.useModel).toBeDefined();
-      
+
       await service.disable();
-      
+
       // useModel should still work after disable
       const result = await runtime.useModel('TEXT_LARGE', { text: 'test after disable' });
       expect(result).toBeDefined();
-      
+
       elizaLogger.info('✅ UseModel properly restored after disable with real runtime');
     });
   });
@@ -261,66 +265,68 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
     it('should create training directory structure with real runtime', async () => {
       await service.enable();
       const status = service.getStatus();
-      
+
       const sessionDir = path.join(testSessionDir, status.sessionId!);
-      
+
       // Directory should exist
       const stats = await fs.stat(sessionDir);
       expect(stats.isDirectory()).toBe(true);
-      
+
       elizaLogger.info(`✅ Training directory created: ${sessionDir}`);
     });
 
     it('should save training records to files with real runtime', async () => {
       await service.enable();
       const status = service.getStatus();
-      
+
       // Make a model call to generate training data with real runtime
       await runtime.useModel('TEXT_LARGE', { text: 'test prompt for file recording' });
-      
+
       // Give some time for file operations
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       const sessionDir = path.join(testSessionDir, status.sessionId!);
       const files = await fs.readdir(sessionDir);
-      
+
       // Should have at least one training record file
-      const recordFiles = files.filter(file => file.endsWith('.json') && file.includes('TEXT_LARGE'));
+      const recordFiles = files.filter(
+        (file) => file.endsWith('.json') && file.includes('TEXT_LARGE')
+      );
       expect(recordFiles.length).toBeGreaterThan(0);
-      
+
       elizaLogger.info(`✅ Training records saved: ${recordFiles.length} files`);
     });
 
     it('should create session summary file on disable with real runtime', async () => {
       await service.enable();
       const status = service.getStatus();
-      
+
       // Make some model calls with real runtime
       await runtime.useModel('TEXT_LARGE', { text: 'test prompt 1' });
       await runtime.useModel('TEXT_EMBEDDING', { text: 'test text for embedding' });
-      
+
       // Allow time for processing
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       await service.disable();
-      
+
       const sessionDir = path.join(testSessionDir, status.sessionId!);
       const summaryFile = path.join(sessionDir, 'session_summary.json');
-      
+
       // Summary file should exist
       const summaryStats = await fs.stat(summaryFile);
       expect(summaryStats.isFile()).toBe(true);
-      
+
       // Summary should contain correct data
       const summaryContent = await fs.readFile(summaryFile, 'utf-8');
       const summary = JSON.parse(summaryContent);
-      
+
       expect(summary.sessionId).toBe(status.sessionId);
       expect(summary.agentId).toBe(runtime.agentId);
       expect(summary.statistics.totalCalls).toBeGreaterThanOrEqual(2);
       expect(summary.statistics.successfulCalls).toBeGreaterThanOrEqual(2);
       expect(summary.records.length).toBeGreaterThanOrEqual(2);
-      
+
       elizaLogger.info(`✅ Session summary created with ${summary.records.length} records`);
     });
   });
@@ -328,31 +334,33 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
   describe('Real Database Integration', () => {
     it('should perform real database operations during enable/disable cycle', async () => {
       await service.enable();
-      
+
       // Make model call to generate database activity
       await runtime.useModel('TEXT_LARGE', { text: 'test database integration' });
-      
+
       // Allow time for database operations
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       await service.disable();
-      
+
       // Verify database tables exist
       const tablesQuery = `
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name IN ('training_data', 'training_sessions')
         ORDER BY name
       `;
-      
+
       const tables = await runtime.db.all(tablesQuery, []);
       expect(tables.length).toBeGreaterThanOrEqual(1);
-      
+
       // Verify training data was stored
       const dataQuery = 'SELECT COUNT(*) as count FROM training_data WHERE agent_id = ?';
       const dataCount = await runtime.db.get(dataQuery, [runtime.agentId]);
       expect(dataCount.count).toBeGreaterThanOrEqual(1);
-      
-      elizaLogger.info(`✅ Database integration verified: ${tables.length} tables, ${dataCount.count} records`);
+
+      elizaLogger.info(
+        `✅ Database integration verified: ${tables.length} tables, ${dataCount.count} records`
+      );
     });
   });
 
@@ -365,25 +373,25 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
           settings: {
             ...testCharacter.settings,
             TRAINING_DATABASE_URL: 'sqlite:/invalid/path/enhanced.db',
-          }
+          },
         },
         token: 'test-token',
-        modelName: 'gpt-4o-mini'
+        modelName: 'gpt-4o-mini',
       });
 
       await invalidRuntime.registerPlugin(trainingPlugin);
       await invalidRuntime.registerPlugin(enhancedCustomReasoningPlugin);
       await invalidRuntime.initialize();
-      
+
       const invalidService = new EnhancedReasoningService(invalidRuntime);
-      
+
       try {
         // Should handle database errors gracefully
         await invalidService.enable();
-        
+
         const status = invalidService.getStatus();
         expect(status.enabled).toBe(true);
-        
+
         elizaLogger.info('✅ Database errors handled gracefully with real runtime');
       } catch (error) {
         // Error handling during enable is also acceptable
@@ -400,18 +408,18 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
           settings: {
             ...testCharacter.settings,
             TRAINING_RECORDING_DIR: '/restricted/path/that/does/not/exist',
-          }
+          },
         },
         token: 'test-token',
-        modelName: 'gpt-4o-mini'
+        modelName: 'gpt-4o-mini',
       });
 
       await restrictedRuntime.registerPlugin(trainingPlugin);
       await restrictedRuntime.registerPlugin(enhancedCustomReasoningPlugin);
       await restrictedRuntime.initialize();
-      
+
       const restrictedService = new EnhancedReasoningService(restrictedRuntime);
-      
+
       try {
         await restrictedService.enable();
         elizaLogger.info('✅ File system limitations handled gracefully');
@@ -425,49 +433,51 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
   describe('Real Action Integration', () => {
     it('should have working action validation functions with real runtime', async () => {
       const actions = enhancedCustomReasoningPlugin.actions!;
-      
+
       for (const action of actions) {
         expect(action.validate).toBeDefined();
         expect(typeof action.validate).toBe('function');
         expect(action.handler).toBeDefined();
         expect(typeof action.handler).toBe('function');
       }
-      
+
       elizaLogger.info(`✅ All ${actions.length} enhanced actions have valid structure`);
     });
 
     it('should validate enable action correctly with real runtime', async () => {
       const enableAction = enhancedCustomReasoningPlugin.actions!.find(
-        action => action.name === 'ENABLE_ENHANCED_REASONING'
+        (action) => action.name === 'ENABLE_ENHANCED_REASONING'
       )!;
-      
+
       const validMessage = {
         id: uuidv4() as UUID,
         entityId: uuidv4() as UUID,
         agentId: runtime.agentId,
         roomId: uuidv4() as UUID,
         content: { text: 'enable enhanced reasoning for training', source: 'test' },
-        createdAt: Date.now()
+        createdAt: Date.now(),
       };
-      
+
       const invalidMessage = {
         id: uuidv4() as UUID,
         entityId: uuidv4() as UUID,
         agentId: runtime.agentId,
         roomId: uuidv4() as UUID,
         content: { text: 'just a regular message', source: 'test' },
-        createdAt: Date.now()
+        createdAt: Date.now(),
       };
-      
+
       const validResult = await enableAction.validate!(runtime, validMessage);
       const invalidResult = await enableAction.validate!(runtime, invalidMessage);
-      
+
       expect(validResult).toBe(true);
       expect(invalidResult).toBe(false);
-      
+
       elizaLogger.info('✅ Enhanced action validation working correctly with real runtime');
     });
   });
 });
 
-elizaLogger.info('✅ Enhanced integration tests defined - comprehensive real runtime coverage of database and file system integration');
+elizaLogger.info(
+  '✅ Enhanced integration tests defined - comprehensive real runtime coverage of database and file system integration'
+);

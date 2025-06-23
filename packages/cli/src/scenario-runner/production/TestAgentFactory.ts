@@ -12,7 +12,6 @@ import { Client } from 'pg';
 export interface TestAgentConfig {
   character: Character;
   plugins?: string[];
-  modelProvider?: string;
   testDatabaseUrl?: string;
   apiKeys?: Record<string, string>;
 }

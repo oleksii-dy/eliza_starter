@@ -39,13 +39,9 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       messageExamples: [],
       postExamples: [],
       topics: ['plugin creation', 'automation'],
-      adjectives: ['helpful', 'creative'],
       knowledge: [],
       plugins: ['@elizaos/plugin-auton8n'],
-      settings: {
-        modelProvider: 'openai',
-        model: 'gpt-4',
-      },
+      settings: {},
     },
 
     // Plugin-specific settings

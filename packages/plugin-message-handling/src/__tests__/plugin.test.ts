@@ -11,12 +11,12 @@ describe('Message Handling Plugin', () => {
   let mockRuntime: MockRuntime;
 
   beforeEach(() => {
-    mock.restore();
+    vi.clearAllMocks();
 
     mockRuntime = createMockRuntime({
-      getSetting: mock().mockReturnValue('medium'),
-      getParticipantUserState: mock().mockResolvedValue('ACTIVE'),
-      composeState: mock().mockResolvedValue({}),
+      getSetting: vi.fn().mockReturnValue('medium'),
+      getParticipantUserState: vi.fn().mockResolvedValue('ACTIVE'),
+      composeState: vi.fn().mockResolvedValue({}),
     });
 
     // Set or reset mockInit's implementation for each test
@@ -116,13 +116,13 @@ describe('Message Handling Plugin', () => {
 
   it('should handle initialization errors gracefully', async () => {
     // Setup runtime to fail during registration
-    mockRuntime.registerProvider = mock().mockImplementation(() => {
+    mockRuntime.registerProvider = vi.fn().mockImplementation(() => {
       throw new Error('Registration failed');
     });
 
     // Create a spy for console.error
     const originalConsoleError = console.error;
-    const consoleErrorSpy = mock();
+    const consoleErrorSpy = vi.fn();
     console.error = consoleErrorSpy;
 
     // Should not throw error during initialization
@@ -142,14 +142,14 @@ describe('Message Event Handlers', () => {
   let mockCallback: any;
 
   beforeEach(() => {
-    mock.restore();
+    vi.clearAllMocks();
 
-    mockCallback = mock();
+    mockCallback = vi.fn();
 
     mockRuntime = createMockRuntime({
-      getSetting: mock().mockReturnValue('medium'),
-      getParticipantUserState: mock().mockResolvedValue('ACTIVE'),
-      composeState: mock().mockResolvedValue({}),
+      getSetting: vi.fn().mockReturnValue('medium'),
+      getParticipantUserState: vi.fn().mockResolvedValue('ACTIVE'),
+      composeState: vi.fn().mockResolvedValue({}),
     });
 
     mockMessage = {
@@ -228,8 +228,8 @@ describe('Message Event Handlers', () => {
 
         // Call the message handler with our mocked runtime
         // This test only verifies the handler doesn't throw with our mock
-        await expect(async () => {
-          await messageHandler({
+        await expect(
+          messageHandler({
             runtime: mockRuntime as unknown as IAgentRuntime,
             message: mockMessage as Memory,
             callback: mockCallback,

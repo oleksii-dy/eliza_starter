@@ -32,12 +32,6 @@ export function createMockRuntime(overrides: Partial<MockRuntime> = {}): MockRun
     character: {
       name: 'Test Agent',
       bio: 'This is a test agent for unit tests',
-      tone: 'helpful',
-      templates: {
-        reflectionTemplate: 'Test reflection template {{recentMessages}}',
-        messageHandlerTemplate: 'Test message handler template {{recentMessages}}',
-        shouldRespondTemplate: 'Test should respond template {{recentMessages}}',
-      },
     } as Character,
     providers: [],
     actions: [],

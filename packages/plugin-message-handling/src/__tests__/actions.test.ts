@@ -52,7 +52,7 @@ describe('Reply Action', () => {
   });
 
   it('should handle reply action successfully', async () => {
-    const specificUseModelMock = mock().mockImplementation(async (modelType, params) => {
+    const specificUseModelMock = vi.fn().mockImplementation(async (modelType, params) => {
       console.log('specificUseModelMock CALLED WITH - modelType:', modelType, 'params:', params);
       const result = {
         message: 'Hello there! How can I help you today?',
@@ -89,7 +89,7 @@ describe('Reply Action', () => {
   });
 
   it('should handle errors in reply action gracefully', async () => {
-    const errorUseModelMock = mock().mockRejectedValue(new Error('Model API timeout'));
+    const errorUseModelMock = vi.fn().mockRejectedValue(new Error('Model API timeout'));
     const setup = setupActionTest({
       runtimeOverrides: {
         useModel: errorUseModelMock,
@@ -164,7 +164,7 @@ describe('Follow Room Action', () => {
     if (mockMessage.content) {
       mockMessage.content.text = 'Please follow this room';
     }
-    mockRuntime.getParticipantUserState = mock().mockResolvedValue(null);
+    mockRuntime.getParticipantUserState = vi.fn().mockResolvedValue(null);
 
     const isValid = await followRoomAction.validate(
       mockRuntime as IAgentRuntime,
@@ -207,7 +207,7 @@ describe('Follow Room Action', () => {
 
     // Create a specific error message
     const errorMessage = 'Failed to update participant state: Database error';
-    mockRuntime.setParticipantUserState = mock().mockRejectedValue(new Error(errorMessage));
+    mockRuntime.setParticipantUserState = vi.fn().mockRejectedValue(new Error(errorMessage));
 
     // Create a custom handler that properly handles the error
     const customErrorHandler = async (
@@ -379,7 +379,7 @@ describe('Mute Room Action', () => {
   it('should handle errors in mute room action gracefully', async () => {
     // Create a descriptive error
     const errorMessage = 'Permission denied: Cannot modify participant state';
-    mockRuntime.setParticipantUserState = mock().mockRejectedValue(new Error(errorMessage));
+    mockRuntime.setParticipantUserState = vi.fn().mockRejectedValue(new Error(errorMessage));
 
     // Create a custom handler that properly handles errors
     const customMuteErrorHandler = async (
@@ -453,7 +453,7 @@ describe('Unmute Room Action', () => {
 
   it('should validate unmute room action correctly', async () => {
     // Currently MUTED, so should validate
-    mockRuntime.getParticipantUserState = mock().mockResolvedValue('MUTED');
+    mockRuntime.getParticipantUserState = vi.fn().mockResolvedValue('MUTED');
 
     const isValid = await unmuteRoomAction.validate(
       mockRuntime as IAgentRuntime,
@@ -466,7 +466,7 @@ describe('Unmute Room Action', () => {
   it('should not validate unmute if not currently muted', async () => {
     // Not currently MUTED, so should not validate
     mockState.data!.currentParticipantState = 'ACTIVE';
-    mockRuntime.getParticipantUserState = mock().mockResolvedValue('ACTIVE');
+    mockRuntime.getParticipantUserState = vi.fn().mockResolvedValue('ACTIVE');
 
     const isValid = await unmuteRoomAction.validate(
       mockRuntime as IAgentRuntime,
@@ -498,7 +498,7 @@ describe('Unmute Room Action', () => {
   it('should handle errors in unmute room action gracefully', async () => {
     // Create a descriptive error
     const errorMessage = 'Permission denied: Cannot modify participant state';
-    mockRuntime.setParticipantUserState = mock().mockRejectedValue(new Error(errorMessage));
+    mockRuntime.setParticipantUserState = vi.fn().mockRejectedValue(new Error(errorMessage));
 
     // Create a custom handler that properly handles errors
     const customUnmuteErrorHandler = async (
@@ -572,7 +572,7 @@ describe('Unfollow Room Action', () => {
 
   it('should validate unfollow room action correctly', async () => {
     // Currently FOLLOWED, so should validate
-    mockRuntime.getParticipantUserState = mock().mockResolvedValue('FOLLOWED');
+    mockRuntime.getParticipantUserState = vi.fn().mockResolvedValue('FOLLOWED');
 
     const isValid = await unfollowRoomAction.validate(
       mockRuntime as IAgentRuntime,
@@ -584,7 +584,7 @@ describe('Unfollow Room Action', () => {
 
   it('should not validate unfollow if not currently following', async () => {
     // Not currently FOLLOWED, so should not validate
-    mockRuntime.getParticipantUserState = mock().mockResolvedValue('ACTIVE');
+    mockRuntime.getParticipantUserState = vi.fn().mockResolvedValue('ACTIVE');
 
     const isValid = await unfollowRoomAction.validate(
       mockRuntime as IAgentRuntime,
@@ -616,7 +616,7 @@ describe('Unfollow Room Action', () => {
   it('should handle errors in unfollow room action gracefully', async () => {
     // Create a descriptive error
     const errorMessage = 'Database connection error: Could not update state';
-    mockRuntime.setParticipantUserState = mock().mockRejectedValue(new Error(errorMessage));
+    mockRuntime.setParticipantUserState = vi.fn().mockRejectedValue(new Error(errorMessage));
 
     // Create a custom handler that properly handles errors
     const customUnfollowErrorHandler = async (
@@ -731,7 +731,7 @@ describe('Reply Action (Extended)', () => {
 
   it('should not validate if agent is muted', async () => {
     // Mock that the agent is muted
-    mockRuntime.getParticipantUserState = mock().mockResolvedValue('MUTED');
+    mockRuntime.getParticipantUserState = vi.fn().mockResolvedValue('MUTED');
 
     // Patch replyAction.validate for this test only
     const originalValidate = replyAction.validate;

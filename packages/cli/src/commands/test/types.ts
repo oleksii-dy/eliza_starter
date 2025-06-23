@@ -9,6 +9,7 @@ export interface ComponentTestOptions {
   name?: string;
   skipBuild?: boolean;
   skipTypeCheck?: boolean;
+  quick?: boolean;
 }
 
 /**
@@ -18,6 +19,7 @@ export interface E2ETestOptions {
   port?: number;
   name?: string;
   skipBuild?: boolean;
+  quick?: boolean;
 }
 
 /**
@@ -28,6 +30,7 @@ export interface TestCommandOptions extends ComponentTestOptions, E2ETestOptions
   port?: number;
   name?: string;
   skipBuild?: boolean;
+  quick?: boolean;
 }
 
 /**

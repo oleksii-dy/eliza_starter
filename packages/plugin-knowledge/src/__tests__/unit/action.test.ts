@@ -1,38 +1,28 @@
-import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { processKnowledgeAction, searchKnowledgeAction } from '../../actions';
 import { KnowledgeService } from '../../service';
 import type { IAgentRuntime, Memory, Content, State, UUID, ActionResult } from '@elizaos/core';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Mock @elizaos/core logger and stringToUuid
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual<typeof import('@elizaos/core')>('@elizaos/core');
-  return {
-    ...actual,
-    logger: {
-      warn: vi.fn(),
-      error: vi.fn(),
-      info: vi.fn(),
-      debug: vi.fn(),
-    },
-    stringToUuid: vi.fn((input: string) => {
-      // Generate consistent UUIDs for testing
-      const hash = input.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const uuid = `${hash.toString(16).padStart(8, '0')}-${hash.toString(16).padStart(4, '0')}-${hash.toString(16).padStart(4, '0')}-${hash.toString(16).padStart(4, '0')}-${hash.toString(16).padStart(12, '0')}`;
-      return uuid as UUID;
-    }),
-  };
-});
-
-// Mock fs and path
+// Mock fs and path modules at the top level
 vi.mock('fs');
 vi.mock('path');
+
+// Create mock functions for testing
+const createMockFn = () => vi.fn();
+
+// Mock stringToUuid function
+const mockStringToUuid = (input: string): UUID => {
+  const hash = input.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const uuid = `${hash.toString(16).padStart(8, '0')}-${hash.toString(16).padStart(4, '0')}-${hash.toString(16).padStart(4, '0')}-${hash.toString(16).padStart(4, '0')}-${hash.toString(16).padStart(12, '0')}`;
+  return uuid as UUID;
+};
 
 describe('processKnowledgeAction', () => {
   let mockRuntime: IAgentRuntime;
   let mockKnowledgeService: KnowledgeService;
-  let mockCallback: Mock;
+  let mockCallback: any;
   let mockState: State;
 
   const generateMockUuid = (suffix: string | number): UUID =>
@@ -56,16 +46,13 @@ describe('processKnowledgeAction', () => {
       data: {},
       text: '',
     };
-    vi.clearAllMocks();
+    // Clear all mocks
   });
 
   describe('handler', () => {
     beforeEach(() => {
-      // Reset and re-mock fs/path functions for each handler test
-      (fs.existsSync as Mock).mockReset();
-      (fs.readFileSync as Mock).mockReset();
-      (path.basename as Mock).mockReset();
-      (path.extname as Mock).mockReset();
+      // Reset all mocks before each test
+      vi.clearAllMocks();
     });
 
     it('should process a file when a valid path is provided', async () => {
@@ -79,13 +66,17 @@ describe('processKnowledgeAction', () => {
       };
 
       // Mock Date.now() for this test to generate predictable clientDocumentId's
-      const dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(1749491066994);
+      vi.spyOn(Date, 'now').mockReturnValue(1749491066994);
 
-      (fs.existsSync as Mock).mockReturnValue(true);
-      (fs.readFileSync as Mock).mockReturnValue(Buffer.from('file content'));
-      (path.basename as Mock).mockReturnValue('document.pdf');
-      (path.extname as Mock).mockReturnValue('.pdf');
-      (mockKnowledgeService.addKnowledge as Mock).mockResolvedValue({ fragmentCount: 5 });
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readFileSync).mockReturnValue(Buffer.from('file content'));
+      vi.mocked(path.basename).mockReturnValue('document.pdf');
+      vi.mocked(path.extname).mockReturnValue('.pdf');
+      vi.mocked(mockKnowledgeService.addKnowledge).mockResolvedValue({ 
+        clientDocumentId: 'test-client-doc-id',
+        storedDocumentMemoryId: generateMockUuid(100),
+        fragmentCount: 5 
+      });
 
       const result = (await processKnowledgeAction.handler?.(
         mockRuntime,
@@ -115,7 +106,7 @@ describe('processKnowledgeAction', () => {
       expect(result?.data?.results).toBeInstanceOf(Array);
 
       // Restore Date.now() after the test
-      dateNowSpy.mockRestore();
+      vi.restoreAllMocks();
     });
 
     it('should return a message if the file path is provided but file does not exist', async () => {
@@ -128,7 +119,7 @@ describe('processKnowledgeAction', () => {
         roomId: generateMockUuid(6),
       };
 
-      (fs.existsSync as Mock).mockReturnValue(false);
+      vi.mocked(fs.existsSync).mockReturnValue(false);
 
       const result = (await processKnowledgeAction.handler?.(
         mockRuntime,
@@ -157,7 +148,11 @@ describe('processKnowledgeAction', () => {
         roomId: generateMockUuid(9),
       };
 
-      (mockKnowledgeService.addKnowledge as Mock).mockResolvedValue({});
+      vi.mocked(mockKnowledgeService.addKnowledge).mockResolvedValue({ 
+        clientDocumentId: 'test-client-doc-id-2',
+        storedDocumentMemoryId: generateMockUuid(101),
+        fragmentCount: 0 
+      });
 
       const result = (await processKnowledgeAction.handler?.(
         mockRuntime,
@@ -220,11 +215,11 @@ describe('processKnowledgeAction', () => {
         roomId: generateMockUuid(15),
       };
 
-      (fs.existsSync as Mock).mockReturnValue(true);
-      (fs.readFileSync as Mock).mockReturnValue(Buffer.from('error content'));
-      (path.basename as Mock).mockReturnValue('error.txt');
-      (path.extname as Mock).mockReturnValue('.txt');
-      (mockKnowledgeService.addKnowledge as Mock).mockRejectedValue(new Error('Service error'));
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readFileSync).mockReturnValue(Buffer.from('error content'));
+      vi.mocked(path.basename).mockReturnValue('error.txt');
+      vi.mocked(path.extname).mockReturnValue('.txt');
+      vi.mocked(mockKnowledgeService.addKnowledge).mockRejectedValue(new Error('Service error'));
 
       const result = (await processKnowledgeAction.handler?.(
         mockRuntime,
@@ -244,7 +239,7 @@ describe('processKnowledgeAction', () => {
 
     it("should generate unique clientDocumentId's for different documents and content", async () => {
       // Mock Date.now() for this test to generate predictable clientDocumentId's
-      const dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(1749491066994);
+      vi.spyOn(Date, 'now').mockReturnValue(1749491066994);
 
       // Test with two different files
       const fileMessage1: Memory = {
@@ -276,10 +271,10 @@ describe('processKnowledgeAction', () => {
       };
 
       // Setup mocks for file operations
-      (fs.existsSync as Mock).mockReturnValue(true);
-      (fs.readFileSync as Mock).mockReturnValue(Buffer.from('file content'));
-      (path.basename as Mock).mockReturnValueOnce('doc1.pdf').mockReturnValueOnce('doc2.pdf');
-      (path.extname as Mock).mockReturnValueOnce('.pdf').mockReturnValueOnce('.pdf');
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readFileSync).mockReturnValue(Buffer.from('file content'));
+      vi.mocked(path.basename).mockReturnValueOnce('doc1.pdf').mockReturnValueOnce('doc2.pdf');
+      vi.mocked(path.extname).mockReturnValueOnce('.pdf').mockReturnValueOnce('.pdf');
 
       // Process all three messages
       await processKnowledgeAction.handler?.(
@@ -299,7 +294,7 @@ describe('processKnowledgeAction', () => {
       await processKnowledgeAction.handler?.(mockRuntime, textMessage, mockState, {}, mockCallback);
 
       // Get all calls to addKnowledge
-      const addKnowledgeCalls = (mockKnowledgeService.addKnowledge as Mock).mock.calls;
+      const addKnowledgeCalls = vi.mocked(mockKnowledgeService.addKnowledge).mock.calls;
 
       // Extract clientDocumentId's from the knowledgeOptions objects
       const clientDocumentIds = addKnowledgeCalls.map((call) => call[0].clientDocumentId);
@@ -322,12 +317,12 @@ describe('processKnowledgeAction', () => {
       expect(file2Id).not.toBe(textId);
 
       // Restore Date.now() after the test
-      dateNowSpy.mockRestore();
+      vi.restoreAllMocks();
     });
 
     it("should generate unique clientDocumentId's for same content but different time", async () => {
       // Mock Date.now() for this test to generate predictable clientDocumentId's
-      const dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(1749491066994);
+      vi.spyOn(Date, 'now').mockReturnValue(1749491066994);
 
       // Test with two different files
       const textMessage1: Memory = {
@@ -358,8 +353,7 @@ describe('processKnowledgeAction', () => {
       );
 
       // Change Date.now() mock to generate a different timestamp
-      dateNowSpy.mockRestore();
-      const dateNowSpy2 = vi.spyOn(Date, 'now').mockReturnValue(1749491066995);
+      vi.mocked(Date.now).mockReturnValue(1749491066995);
 
       await processKnowledgeAction.handler?.(
         mockRuntime,
@@ -370,7 +364,7 @@ describe('processKnowledgeAction', () => {
       );
 
       // Get all calls to addKnowledge
-      const addKnowledgeCalls = (mockKnowledgeService.addKnowledge as Mock).mock.calls;
+      const addKnowledgeCalls = vi.mocked(mockKnowledgeService.addKnowledge).mock.calls;
 
       // Extract clientDocumentId's from the knowledgeOptions objects
       const clientDocumentIds = addKnowledgeCalls.map((call) => call[0].clientDocumentId);
@@ -390,13 +384,13 @@ describe('processKnowledgeAction', () => {
       expect(textId1).not.toBe(textId2);
 
       // Restore Date.now() after the test
-      dateNowSpy2.mockRestore();
+      vi.restoreAllMocks();
     });
   });
 
   describe('validate', () => {
     beforeEach(() => {
-      (mockRuntime.getService as Mock).mockReturnValue(mockKnowledgeService);
+      vi.mocked(mockRuntime.getService).mockReturnValue(mockKnowledgeService);
     });
 
     it('should return true if knowledge keywords are present and service is available', async () => {
@@ -427,7 +421,7 @@ describe('processKnowledgeAction', () => {
     });
 
     it('should return false if service is not available', async () => {
-      (mockRuntime.getService as Mock).mockReturnValue(null);
+      vi.mocked(mockRuntime.getService).mockReturnValue(null);
       const message: Memory = {
         id: generateMockUuid(22),
         content: {
@@ -458,7 +452,7 @@ describe('processKnowledgeAction', () => {
 describe('searchKnowledgeAction', () => {
   let mockRuntime: IAgentRuntime;
   let mockKnowledgeService: KnowledgeService;
-  let mockCallback: Mock;
+  let mockCallback: any;
   let mockState: State;
 
   const generateMockUuid = (suffix: string | number): UUID =>
@@ -482,7 +476,7 @@ describe('searchKnowledgeAction', () => {
       data: {},
       text: '',
     };
-    vi.clearAllMocks();
+    // Clear all mocks
   });
 
   describe('handler', () => {
@@ -491,21 +485,21 @@ describe('searchKnowledgeAction', () => {
         {
           id: generateMockUuid(50),
           content: { text: 'First search result about AI' },
-          metadata: { source: 'ai-basics.pdf' },
+          metadata: { type: 'fragment' as const, source: 'ai-basics.pdf' },
         },
         {
           id: generateMockUuid(51),
           content: { text: 'Second search result about machine learning' },
-          metadata: { source: 'ml-guide.pdf' },
+          metadata: { type: 'fragment' as const, source: 'ml-guide.pdf' },
         },
         {
           id: generateMockUuid(52),
           content: { text: 'Third search result about neural networks' },
-          metadata: { source: 'nn-intro.pdf' },
+          metadata: { type: 'fragment' as const, source: 'nn-intro.pdf' },
         },
       ];
 
-      (mockKnowledgeService.getKnowledge as Mock).mockResolvedValue(mockResults);
+      vi.mocked(mockKnowledgeService.getKnowledge).mockResolvedValue(mockResults);
 
       const message: Memory = {
         id: generateMockUuid(53),
@@ -545,7 +539,7 @@ describe('searchKnowledgeAction', () => {
     });
 
     it('should handle empty search results', async () => {
-      (mockKnowledgeService.getKnowledge as Mock).mockResolvedValue([]);
+      vi.mocked(mockKnowledgeService.getKnowledge).mockResolvedValue([]);
 
       const message: Memory = {
         id: generateMockUuid(56),
@@ -571,7 +565,7 @@ describe('searchKnowledgeAction', () => {
     });
 
     it('should handle search errors and return error in ActionResult', async () => {
-      (mockKnowledgeService.getKnowledge as Mock).mockRejectedValue(
+      vi.mocked(mockKnowledgeService.getKnowledge).mockRejectedValue(
         new Error('Search service unavailable')
       );
 
@@ -601,7 +595,7 @@ describe('searchKnowledgeAction', () => {
 
     it('should handle case where only search keywords are provided', async () => {
       // Mock empty results
-      (mockKnowledgeService.getKnowledge as Mock).mockResolvedValue([]);
+      vi.mocked(mockKnowledgeService.getKnowledge).mockResolvedValue([]);
 
       const message: Memory = {
         id: generateMockUuid(62),
@@ -640,6 +634,7 @@ describe('searchKnowledgeAction', () => {
             metadata: { importance: 'high' },
           },
           metadata: {
+            type: 'fragment' as const,
             source: 'climate-report-2024.pdf',
             date: '2024-01-15',
             tags: ['climate', 'environment', 'global-warming'],
@@ -652,6 +647,7 @@ describe('searchKnowledgeAction', () => {
             metadata: { importance: 'medium' },
           },
           metadata: {
+            type: 'fragment' as const,
             source: 'renewable-energy.pdf',
             date: '2024-02-01',
             tags: ['renewable', 'solar', 'wind'],
@@ -659,7 +655,7 @@ describe('searchKnowledgeAction', () => {
         },
       ];
 
-      (mockKnowledgeService.getKnowledge as Mock).mockResolvedValue(complexResults);
+      vi.mocked(mockKnowledgeService.getKnowledge).mockResolvedValue(complexResults);
 
       const message: Memory = {
         id: generateMockUuid(67),
@@ -700,7 +696,7 @@ describe('searchKnowledgeAction', () => {
 
   describe('validate', () => {
     beforeEach(() => {
-      (mockRuntime.getService as Mock).mockReturnValue(mockKnowledgeService);
+      vi.mocked(mockRuntime.getService).mockReturnValue(mockKnowledgeService);
     });
 
     it('should return true when search and knowledge keywords are present', async () => {
@@ -739,7 +735,7 @@ describe('searchKnowledgeAction', () => {
     });
 
     it('should return false when service is not available', async () => {
-      (mockRuntime.getService as Mock).mockReturnValue(null);
+      vi.mocked(mockRuntime.getService).mockReturnValue(null);
 
       const message: Memory = {
         id: generateMockUuid(76),

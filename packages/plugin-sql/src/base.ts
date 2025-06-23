@@ -557,13 +557,6 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           messageExamples,
           postExamples,
           style,
-          modelProvider: row.model_provider,
-          planningEnabled: row.planning_enabled,
-          temperature: row.temperature,
-          maxTokens: row.max_tokens,
-          frequencyPenalty: row.frequency_penalty,
-          presencePenalty: row.presence_penalty,
-          repetitionPenalty: row.repetition_penalty,
           createdAt:
             row.created_at instanceof Date
               ? row.created_at.getTime()
@@ -694,13 +687,6 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           postExamples: agent.postExamples || [],
           style: agent.style || {},
           plugins: agent.plugins || [],
-          modelProvider: (agent as any).modelProvider || 'openai',
-          planningEnabled: (agent as any).planningEnabled || false,
-          temperature: (agent as any).temperature || 0.5,
-          maxTokens: (agent as any).maxTokens || 50,
-          frequencyPenalty: (agent as any).frequencyPenalty || 0.9,
-          presencePenalty: (agent as any).presencePenalty || 0.7,
-          repetitionPenalty: (agent as any).repetitionPenalty || 0.0,
         };
 
         logger.debug(`[BaseDrizzleAdapter] Creating agent using Drizzle:`, agentData.name);

@@ -19,13 +19,16 @@ export const character: Character = {
     ...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),
     ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
     ...(!process.env.OPENAI_API_KEY ? ['@elizaos/plugin-local-ai'] : []),
+    // Testing plugins for runtime validation
+    // '@elizaos/plugin-dummy-services', // Required for lowlevel testing
+    // '@elizaos/plugin-lowlevel-testing', // Runtime service testing
     // ...(process.env.DISCORD_API_TOKEN ? ['@elizaos/plugin-discord'] : []),
     // ...(process.env.TELEGRAM_BOT_TOKEN ? ['@elizaos/plugin-telegram'] : []),
     // '@elizaos/plugin-autonomy', // Temporarily disabled due to dependency issues
     // '@elizaos/plugin-autocoder',    // Temporarily disabled due to WebSocket.Server issues
-    '@elizaos/plugin-personality', // Enable character evolution and self-modification
+    // '@elizaos/plugin-personality', // Enable character evolution and self-modification
     // '@elizaos/plugin-planning',
-    // '@elizaos/plugin-message-handling',
+    '@elizaos/plugin-message-handling',
     // '@elizaos/plugin-research',
     // '@elizaos/plugin-rolodex',
     // '@elizaos/plugin-stagehand',
@@ -46,6 +49,7 @@ export const character: Character = {
       TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
       OPENAI_API_KEY: process.env.OPENAI_API_KEY,
       ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+      REASONING_SERVICE_PLANNING_ENABLED: 'true',
     },
   },
   system:

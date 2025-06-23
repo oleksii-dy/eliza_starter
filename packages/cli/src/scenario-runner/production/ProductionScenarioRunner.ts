@@ -5,7 +5,6 @@ import { ScenarioTestHarness } from './ScenarioTestHarness.js';
 import { Scenario, ScenarioExecutionResult, TranscriptMessage, MetricsReport } from '../types.js';
 export interface ProductionRunnerConfig {
   databaseUrl?: string;
-  modelProvider?: string;
   apiKeys?: Record<string, string>;
   enableMetrics?: boolean;
   enableVerification?: boolean;

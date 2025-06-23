@@ -56,7 +56,6 @@ export class AgentManager {
       messageExamples: [],
       postExamples: [],
       topics: actor.personality?.interests || [],
-      adjectives: actor.personality?.traits || [],
       knowledge: actor.knowledge || [],
       plugins: this.primaryRuntime.character.plugins || [],
       settings: {

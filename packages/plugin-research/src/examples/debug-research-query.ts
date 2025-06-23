@@ -17,7 +17,6 @@ const createTestRuntime = (): IAgentRuntime => {
     messageExamples: [],
     postExamples: [],
     topics: ['technology', 'science', 'research'],
-    adjectives: ['analytical', 'thorough'],
     knowledge: [],
     plugins: ['research'],
   };
@@ -78,9 +77,9 @@ const createTestRuntime = (): IAgentRuntime => {
       // Log model calls to see what's happening
       elizaLogger.info('[Debug] Model called with:', {
         modelType,
-        query: params?.messages?.[params.messages.length - 1]?.content
+        query: params?.messages?.[params.messages.length - 1]?.content,
       });
-      
+
       // Return a simple response to avoid errors
       return 'Based on the search results, here is a concise answer to your query.';
     },
@@ -90,14 +89,15 @@ const createTestRuntime = (): IAgentRuntime => {
 
 async function debugResearch() {
   elizaLogger.info('=== Starting Research Debug ===');
-  
+
   const runtime = createTestRuntime();
   const service = new ResearchService(runtime);
-  
-  const testQuery = "Compare the environmental and economic impacts of different renewable energy storage technologies for grid-scale deployment";
-  
+
+  const testQuery =
+    'Compare the environmental and economic impacts of different renewable energy storage technologies for grid-scale deployment';
+
   elizaLogger.info(`Original Query: "${testQuery}"`);
-  
+
   try {
     // Create a research project
     const project = await service.createResearchProject(testQuery, {
@@ -105,7 +105,7 @@ async function debugResearch() {
       maxSearchResults: 5,
       evaluationEnabled: false,
     });
-    
+
     elizaLogger.info('Project created:', {
       id: project.id,
       query: project.query,
@@ -115,20 +115,20 @@ async function debugResearch() {
         taskType: project.metadata.taskType,
         queryPlan: {
           mainQuery: project.metadata.queryPlan.mainQuery,
-          subQueries: project.metadata.queryPlan.subQueries.map(sq => ({
+          subQueries: project.metadata.queryPlan.subQueries.map((sq) => ({
             query: sq.query,
             purpose: sq.purpose,
           })),
         },
       },
     });
-    
+
     // Wait a bit for the research to start
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     // Check the project status
     const updatedProject = await service.getProject(project.id);
-    
+
     if (updatedProject) {
       elizaLogger.info('Project after 2 seconds:', {
         status: updatedProject.status,
@@ -136,27 +136,27 @@ async function debugResearch() {
         sources: updatedProject.sources.length,
         findings: updatedProject.findings.length,
       });
-      
+
       // Log the first few sources if any
       if (updatedProject.sources.length > 0) {
-        elizaLogger.info('First few sources found:', 
-          updatedProject.sources.slice(0, 3).map(s => ({
+        elizaLogger.info(
+          'First few sources found:',
+          updatedProject.sources.slice(0, 3).map((s) => ({
             title: s.title,
             url: s.url,
           }))
         );
       }
     }
-    
+
     // Stop the service
     await service.stop();
-    
   } catch (error) {
     elizaLogger.error('Debug failed:', error);
   }
-  
+
   elizaLogger.info('=== Debug Complete ===');
 }
 
 // Run the debug
-debugResearch().catch(console.error); 
+debugResearch().catch(console.error);

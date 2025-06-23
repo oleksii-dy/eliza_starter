@@ -6,6 +6,7 @@ import {
   type Character,
   ModelType,
   logger,
+  EvaluationExample,
 } from '@elizaos/core';
 import { z } from 'zod';
 
@@ -14,24 +15,36 @@ const CharacterEvolutionSchema = z.object({
   shouldModify: z.boolean().describe('Whether character modification is recommended'),
   confidence: z.number().min(0).max(1).describe('Confidence level in the modification suggestion'),
   modifications: z.object({
-    system: z.string().optional().describe('Updated system prompt if behavior patterns warrant modification'),
+    system: z
+      .string()
+      .optional()
+      .describe('Updated system prompt if behavior patterns warrant modification'),
     bio: z.array(z.string()).optional().describe('New bio elements to add'),
-    messageExamples: z.array(z.object({
-      user: z.string(),
-      agent: z.string(),
-      context: z.string().optional()
-    })).optional().describe('New message examples to demonstrate learned patterns'),
-    topics: z.array(z.string()).optional().describe('New topics the agent should know about'),
-    adjectives: z.array(z.string()).optional().describe('New personality adjectives'),
-    style: z.object({
-      all: z.array(z.string()).optional(),
-      chat: z.array(z.string()).optional(),
-      post: z.array(z.string()).optional()
-    }).optional().describe('New style elements'),
-    settings: z.record(z.any()).optional().describe('New setting values to add')
+    messageExamples: z
+      .array(
+        z.object({
+          user: z.string(),
+          agent: z.string(),
+          context: z.string().optional(),
+        })
+      )
+      .optional()
+      .describe('New message examples to demonstrate learned patterns'),
+    topics: z.array(z.string()).optional().describe('New topics to explore'),
+    style: z
+      .object({
+        all: z.array(z.string()).optional(),
+        chat: z.array(z.string()).optional(),
+        post: z.array(z.string()).optional(),
+      })
+      .optional()
+      .describe('Updates to communication style'),
+    settings: z.record(z.any()).optional().describe('New setting values to add'),
   }),
   reasoning: z.string().describe('Explanation for why these modifications are suggested'),
-  gradualChange: z.boolean().describe('Whether this represents gradual evolution vs dramatic change')
+  gradualChange: z
+    .boolean()
+    .describe('Whether this represents gradual evolution vs dramatic change'),
 });
 
 type CharacterEvolution = z.infer<typeof CharacterEvolutionSchema>;
@@ -42,7 +55,8 @@ type CharacterEvolution = z.infer<typeof CharacterEvolutionSchema>;
  */
 export const characterEvolutionEvaluator: Evaluator = {
   name: 'CHARACTER_EVOLUTION',
-  description: 'Analyzes conversations to identify opportunities for gradual character evolution and self-modification',
+  description:
+    'Analyzes conversations to identify opportunities for gradual character evolution and self-modification',
   alwaysRun: false, // Only run when conversation warrants it
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
@@ -50,8 +64,8 @@ export const characterEvolutionEvaluator: Evaluator = {
     const lastEvolution = await runtime.getCache<string>('character-evolution:last-check');
     const now = Date.now();
     const cooldownMs = 5 * 60 * 1000; // 5 minutes between evaluations
-    
-    if (lastEvolution && (now - parseInt(lastEvolution)) < cooldownMs) {
+
+    if (lastEvolution && now - parseInt(lastEvolution) < cooldownMs) {
       return false;
     }
 
@@ -66,14 +80,14 @@ export const characterEvolutionEvaluator: Evaluator = {
       roomId: message.roomId,
       count: 10,
       unique: true,
-      tableName: 'messages'
+      tableName: 'messages',
     });
 
     // Advanced trigger detection using "bitter lesson" approach - LLM evaluation instead of hardcoded patterns
     const triggerAnalysisPrompt = `Analyze this conversation for character evolution triggers:
 
 CONVERSATION:
-${recentMessages.map(m => `${m.entityId === runtime.agentId ? 'Agent' : 'User'}: ${m.content.text}`).join('\n')}
+${recentMessages.map((m) => `${m.entityId === runtime.agentId ? 'Agent' : 'User'}: ${m.content.text}`).join('\n')}
 
 TRIGGER ANALYSIS - Check for:
 
@@ -109,22 +123,23 @@ Return JSON: {"hasEvolutionTrigger": boolean, "triggerType": string, "reasoning"
       const triggerResponse = await runtime.useModel(ModelType.TEXT_SMALL, {
         prompt: triggerAnalysisPrompt,
         temperature: 0.2,
-        maxTokens: 300
+        maxTokens: 300,
       });
-      
+
       const triggerAnalysis = JSON.parse(triggerResponse as string);
-      hasEvolutionTriggers = triggerAnalysis.hasEvolutionTrigger && triggerAnalysis.confidence > 0.6;
-      
+      hasEvolutionTriggers =
+        triggerAnalysis.hasEvolutionTrigger && triggerAnalysis.confidence > 0.6;
+
       if (hasEvolutionTriggers) {
         logger.info('Evolution trigger detected', {
           type: triggerAnalysis.triggerType,
           reasoning: triggerAnalysis.reasoning,
-          confidence: triggerAnalysis.confidence
+          confidence: triggerAnalysis.confidence,
         });
       }
     } catch (error) {
       // Fallback to basic pattern matching if LLM analysis fails
-      hasEvolutionTriggers = recentMessages.some(msg => {
+      hasEvolutionTriggers = recentMessages.some((msg) => {
         const text = msg.content.text?.toLowerCase() || '';
         return (
           text.includes('you should') ||
@@ -150,13 +165,13 @@ Return JSON: {"hasEvolutionTrigger": boolean, "triggerType": string, "reasoning"
         roomId: message.roomId,
         count: 20,
         unique: true,
-        tableName: 'messages'
+        tableName: 'messages',
       });
 
       // Format conversation for analysis
       const conversationText = recentMessages
         .slice(-10) // Last 10 messages
-        .map(msg => {
+        .map((msg) => {
           const isAgent = msg.entityId === runtime.agentId;
           const name = isAgent ? runtime.character.name : 'User';
           return `${name}: ${msg.content.text}`;
@@ -170,8 +185,7 @@ Return JSON: {"hasEvolutionTrigger": boolean, "triggerType": string, "reasoning"
         system: currentCharacter.system || 'No system prompt defined',
         bio: Array.isArray(currentCharacter.bio) ? currentCharacter.bio : [currentCharacter.bio],
         currentTopics: currentCharacter.topics || [],
-        currentAdjectives: currentCharacter.adjectives || [],
-        messageExampleCount: currentCharacter.messageExamples?.length || 0
+        messageExampleCount: currentCharacter.messageExamples?.length || 0,
       };
 
       // Advanced evolution analysis using "bitter lesson" approach with specific triggers
@@ -182,7 +196,6 @@ Name: ${characterSummary.name}
 System: ${characterSummary.system}
 Bio: ${characterSummary.bio.join('; ')}
 Topics: ${characterSummary.currentTopics.join(', ')}
-Adjectives: ${characterSummary.currentAdjectives.join(', ')}
 Message Examples: ${characterSummary.messageExampleCount}
 
 CONVERSATION TO ANALYZE:
@@ -226,8 +239,6 @@ MODIFICATION PRIORITIES:
 - system: ONLY for fundamental behavioral misalignment (rare)
 - bio: New traits that emerge from successful interactions
 - topics: Domains where agent showed interest/competence
-- adjectives: Descriptors that would improve user experience
-- messageExamples: Patterns for handling similar situations better
 - style: Communication preferences that enhance effectiveness
 
 Return JSON analysis with specific, measurable reasoning for any suggested modifications.`;
@@ -235,7 +246,7 @@ Return JSON analysis with specific, measurable reasoning for any suggested modif
       const response = await runtime.useModel(ModelType.TEXT_LARGE, {
         prompt: evolutionPrompt,
         temperature: 0.3,
-        maxTokens: 1000
+        maxTokens: 1000,
       });
 
       // Parse and validate the evolution suggestion
@@ -260,31 +271,33 @@ Return JSON analysis with specific, measurable reasoning for any suggested modif
       }
 
       // Store evolution suggestion for potential application
-      await runtime.createMemory({
-        entityId: runtime.agentId,
-        roomId: message.roomId,
-        content: {
-          text: `Character evolution suggested (confidence: ${evolution.confidence}): ${evolution.reasoning}`,
-          source: 'character_evolution',
+      await runtime.createMemory(
+        {
+          entityId: runtime.agentId,
+          roomId: message.roomId,
+          content: {
+            text: `Character evolution suggested (confidence: ${evolution.confidence}): ${evolution.reasoning}`,
+            source: 'character_evolution',
+          },
+          metadata: {
+            type: 'custom' as const,
+            timestamp: Date.now(),
+            confidence: evolution.confidence,
+            evolutionData: {
+              shouldModify: evolution.shouldModify,
+              gradualChange: evolution.gradualChange,
+              modifications: evolution.modifications,
+            },
+          },
         },
-        metadata: {
-          type: 'custom' as const,
-          timestamp: Date.now(),
-          confidence: evolution.confidence,
-          evolutionData: {
-            shouldModify: evolution.shouldModify,
-            gradualChange: evolution.gradualChange,
-            modifications: evolution.modifications
-          }
-        }
-      }, 'character_evolution');
+        'character_evolution'
+      );
 
       logger.info('Character evolution analysis completed', {
         shouldModify: evolution.shouldModify,
         confidence: evolution.confidence,
-        reasoning: evolution.reasoning.slice(0, 100)
+        reasoning: evolution.reasoning.slice(0, 100),
       });
-
     } catch (error) {
       logger.error('Error in character evolution evaluator', error);
     }
@@ -292,23 +305,78 @@ Return JSON analysis with specific, measurable reasoning for any suggested modif
 
   examples: [
     {
-      prompt: 'User provides feedback about agent behavior',
+      prompt: 'Evaluating character evolution after many conversations about environmental issues',
       messages: [
-        { name: 'User', content: { text: 'You should be more encouraging when people are learning' } },
-        { name: 'Agent', content: { text: 'I understand. I want to be supportive of learning.' } },
-        { name: 'User', content: { text: 'Yes, maybe add more positive reinforcement' } }
+        {
+          name: '{{user1}}',
+          content: { text: 'What can I do about climate change?' },
+        },
+        {
+          name: '{{agentName}}',
+          content: {
+            text: 'There are many ways to help, from reducing energy use to supporting renewable energy initiatives.',
+          },
+        },
+        {
+          name: '{{user2}}',
+          content: { text: 'How does solar energy work?' },
+        },
+        {
+          name: '{{agentName}}',
+          content: {
+            text: 'Solar panels convert sunlight into electricity using photovoltaic cells.',
+          },
+        },
+        {
+          name: '{{user3}}',
+          content: { text: 'What are the best sustainable practices for daily life?' },
+        },
+        {
+          name: '{{agentName}}',
+          content: {
+            text: 'Reducing waste, using public transport, and choosing renewable energy are great starts.',
+          },
+        },
       ],
-      outcome: 'Suggests adding encouraging adjectives and supportive message examples'
+      outcome:
+        'Character develops environmental expertise and adds sustainability topics to better serve user interests',
     },
     {
-      prompt: 'Agent encounters new domain repeatedly',
+      prompt: 'Evaluating character evolution after users frequently seek emotional support',
       messages: [
-        { name: 'User', content: { text: 'Can you help with machine learning concepts?' } },
-        { name: 'Agent', content: { text: 'I can explain some basics about ML' } },
-        { name: 'User', content: { text: 'What about neural networks?' } },
-        { name: 'Agent', content: { text: 'Neural networks are fundamental to modern AI...' } }
+        {
+          name: '{{user1}}',
+          content: { text: "I'm feeling overwhelmed with work" },
+        },
+        {
+          name: '{{agentName}}',
+          content: {
+            text: "I hear you. It's okay to feel overwhelmed. Let's take this one step at a time.",
+          },
+        },
+        {
+          name: '{{user2}}',
+          content: { text: "I'm struggling with anxiety" },
+        },
+        {
+          name: '{{agentName}}',
+          content: {
+            text: 'Thank you for sharing. Anxiety can be challenging. What specific situations trigger it for you?',
+          },
+        },
+        {
+          name: '{{user3}}',
+          content: { text: 'I need someone to talk to' },
+        },
+        {
+          name: '{{agentName}}',
+          content: {
+            text: "I'm here to listen. Sometimes just talking things through can help bring clarity.",
+          },
+        },
       ],
-      outcome: 'Suggests adding "machine learning" to topics and related bio elements'
-    }
-  ]
+      outcome:
+        'Character develops empathetic communication style and adds supportive message examples',
+    },
+  ] as EvaluationExample[],
 };

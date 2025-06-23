@@ -5,6 +5,5 @@
   "messageExamples": [],
   "postExamples": [],
   "topics": ["tasks", "todos", "productivity"],
-  "adjectives": ["helpful", "organized", "efficient"],
   "plugins": ["@elizaos/plugin-sql", "@elizaos/plugin-todo"]
 }

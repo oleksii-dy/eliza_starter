@@ -10,19 +10,14 @@ vi.mock('@elizaos/core', async () => {
     ...actual,
     getEntityDetails: vi.fn().mockResolvedValue([
       { id: 'entity-1', names: ['User 1'] },
-      { id: 'test-agent', names: ['Test Agent'] }
-    ])
+      { id: 'test-agent', names: ['Test Agent'] },
+    ]),
   };
 });
 
 const createMockRuntime = (): IAgentRuntime => {
   return {
     agentId: 'test-agent' as UUID,
-    character: {
-      templates: {
-        reflectionTemplate: 'test template'
-      }
-    },
     getCache: vi.fn().mockResolvedValue(null),
     setCache: vi.fn().mockResolvedValue(true),
     getMemories: vi.fn().mockResolvedValue([
@@ -30,7 +25,7 @@ const createMockRuntime = (): IAgentRuntime => {
       { id: 'msg-2', content: { text: 'How are you?' } },
       { id: 'msg-3', content: { text: 'I am fine' } },
       { id: 'msg-4', content: { text: 'Great!' } },
-      { id: 'msg-5', content: { text: 'What about you?' } }
+      { id: 'msg-5', content: { text: 'What about you?' } },
     ]),
     getConversationLength: vi.fn().mockReturnValue(4),
     getRelationships: vi.fn().mockResolvedValue([]),
@@ -41,18 +36,18 @@ const createMockRuntime = (): IAgentRuntime => {
           claim: 'User is feeling fine',
           type: 'fact',
           in_bio: false,
-          already_known: false
-        }
+          already_known: false,
+        },
       ],
-      relationships: []
+      relationships: [],
     }),
     addEmbeddingToMemory: vi.fn().mockImplementation((memory) => ({
       ...memory,
-      id: `fact-${Date.now()}`
+      id: `fact-${Date.now()}`,
     })),
     createMemory: vi.fn().mockResolvedValue(true),
     updateRelationship: vi.fn().mockResolvedValue(true),
-    createRelationship: vi.fn().mockResolvedValue(true)
+    createRelationship: vi.fn().mockResolvedValue(true),
   } as any;
 };
 
@@ -63,10 +58,10 @@ const createMockMemory = (text: string, entityId: UUID): Memory =>
     agentId: 'test-agent' as UUID,
     content: {
       text,
-      channelType: 'group'
+      channelType: 'group',
     },
-    roomId: 'room-1' as UUID
-  } as Memory);
+    roomId: 'room-1' as UUID,
+  }) as Memory;
 
 describe('reflectionEvaluator', () => {
   let runtime: IAgentRuntime;
@@ -79,28 +74,26 @@ describe('reflectionEvaluator', () => {
 
   it('should validate when enough messages have accumulated', async () => {
     const memory = createMockMemory('test', testEntityId);
-    
+
     // Should validate when messages > conversation length / 4
     expect(await reflectionEvaluator.validate(runtime, memory)).toBe(true);
   });
 
   it('should not validate when not enough messages', async () => {
     // Set up runtime to return only 1 message
-    (runtime.getMemories as Mock).mockResolvedValue([
-      { id: 'msg-1', content: { text: 'Hello' } }
-    ]);
-    
+    (runtime.getMemories as Mock).mockResolvedValue([{ id: 'msg-1', content: { text: 'Hello' } }]);
+
     const memory = createMockMemory('test', testEntityId);
-    
+
     expect(await reflectionEvaluator.validate(runtime, memory)).toBe(false);
   });
 
   it('should evaluate and extract facts and relationships', async () => {
     const memory = createMockMemory('I trust you completely', testEntityId);
     const state = {} as State;
-    
+
     const result = await reflectionEvaluator.handler(runtime, memory, state);
-    
+
     expect(runtime.useModel).toHaveBeenCalled();
     expect(runtime.createMemory).toHaveBeenCalled();
     expect(runtime.setCache).toHaveBeenCalledWith(
@@ -114,10 +107,10 @@ describe('reflectionEvaluator', () => {
 
   it('should handle errors gracefully', async () => {
     (runtime.useModel as Mock).mockRejectedValue(new Error('Model error'));
-    
+
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
-    
+
     // Should not throw
     const result = await reflectionEvaluator.handler(runtime, memory, state);
     expect(result).toBeUndefined();
@@ -131,11 +124,11 @@ describe('reflectionEvaluator', () => {
       { id: 'msg-2', content: { text: 'How are you?' } },
       { id: 'msg-3', content: { text: 'I am fine' } },
       { id: 'msg-4', content: { text: 'Great!' } },
-      { id: 'msg-5', content: { text: 'What about you?' } }
+      { id: 'msg-5', content: { text: 'What about you?' } },
     ]);
-    
+
     const memory = createMockMemory('test', testEntityId);
-    
+
     // Should not validate because only 1 new message since last reflection
     expect(await reflectionEvaluator.validate(runtime, memory)).toBe(false);
   });

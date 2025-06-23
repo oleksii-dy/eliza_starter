@@ -1,9 +1,9 @@
 /**
  * REAL RUNTIME INTEGRATION TESTS FOR MESSAGE HANDLER INTEGRATION
- * 
+ *
  * These tests use actual ElizaOS runtime instances and real message handler implementations.
  * No mocks - only real runtime instances, services, and plugin functionality.
- * 
+ *
  * Test coverage:
  * - Real message handler integration with runtime
  * - Actual hook registration and execution
@@ -30,21 +30,20 @@ const testCharacter: Character = {
   messageExamples: [
     [
       { name: 'user', content: { text: 'test message handling' } },
-      { name: 'MessageHandlerTestAgent', content: { text: 'testing message handler response' } }
-    ]
+      { name: 'MessageHandlerTestAgent', content: { text: 'testing message handler response' } },
+    ],
   ],
   postExamples: [],
   topics: ['testing', 'message-handling', 'integration', 'hooks'],
-  adjectives: ['helpful', 'responsive', 'integrated'],
   plugins: [],
   settings: {
-    CUSTOM_REASONING_ENABLED: 'true',
+    REASONING_SERVICE_ENABLED: 'true',
     TOGETHER_AI_API_KEY: 'test-api-key',
-    CUSTOM_REASONING_SHOULD_RESPOND_ENABLED: 'true',
-    CUSTOM_REASONING_PLANNING_ENABLED: 'true',
-    CUSTOM_REASONING_CODING_ENABLED: 'true',
+    REASONING_SERVICE_SHOULD_RESPOND_ENABLED: 'true',
+    REASONING_SERVICE_PLANNING_ENABLED: 'true',
+    REASONING_SERVICE_CODING_ENABLED: 'true',
   },
-  secrets: {}
+  secrets: {},
 };
 
 // Helper functions to create test data
@@ -80,16 +79,16 @@ describe('Real Runtime Message Handler Integration Tests', () => {
 
   beforeEach(async () => {
     elizaLogger.info('🧪 Setting up Message Handler Integration real runtime test environment...');
-    
+
     // Create unique test paths to avoid conflicts
     const testId = `message-handler-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     testDatabasePath = path.join(process.cwd(), '.test-data', testId, 'message-handler.db');
     testDataPath = path.join(process.cwd(), '.test-data', testId, 'message-handler-data');
-    
+
     // Ensure test directories exist
     await fs.mkdir(path.dirname(testDatabasePath), { recursive: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    
+
     // Update test character with test-specific paths
     const testCharacterWithPaths = {
       ...testCharacter,
@@ -97,28 +96,28 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         ...testCharacter.settings,
         TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
         MESSAGE_HANDLER_DATA_DIR: testDataPath,
-      }
+      },
     };
 
     // Create real AgentRuntime instance
     runtime = new AgentRuntime({
       character: testCharacterWithPaths,
       token: process.env.OPENAI_API_KEY || 'test-token',
-      modelName: 'gpt-4o-mini'
+      modelName: 'gpt-4o-mini',
     });
 
     await runtime.registerPlugin(trainingPlugin);
     await runtime.initialize();
-    
+
     // Store original useModel for comparison
     originalUseModel = runtime.useModel;
-    
+
     elizaLogger.info('✅ Message Handler Integration real runtime test environment setup complete');
   });
 
   afterEach(async () => {
     elizaLogger.info('🧹 Cleaning up Message Handler Integration test environment...');
-    
+
     try {
       // Clean up test files
       if (testDatabasePath) {
@@ -128,7 +127,7 @@ describe('Real Runtime Message Handler Integration Tests', () => {
           // File might not exist, that's okay
         }
       }
-      
+
       if (testDataPath) {
         try {
           await fs.rm(path.dirname(testDataPath), { recursive: true, force: true });
@@ -139,7 +138,7 @@ describe('Real Runtime Message Handler Integration Tests', () => {
     } catch (error) {
       elizaLogger.warn('Warning during Message Handler Integration cleanup:', error);
     }
-    
+
     elizaLogger.info('✅ Message Handler Integration test environment cleanup complete');
   });
 
@@ -151,8 +150,10 @@ describe('Real Runtime Message Handler Integration Tests', () => {
       expect((runtime as any).customResponseGenerator).toBeDefined();
       expect(typeof (runtime as any).customShouldRespond).toBe('function');
       expect(typeof (runtime as any).customResponseGenerator).toBe('function');
-      
-      elizaLogger.info('✅ Custom reasoning hooks registered with backward compatibility using real runtime');
+
+      elizaLogger.info(
+        '✅ Custom reasoning hooks registered with backward compatibility using real runtime'
+      );
     });
 
     it('should preserve original useModel when custom reasoning is disabled with real runtime', async () => {
@@ -162,27 +163,29 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         settings: {
           ...testCharacter.settings,
           TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
-          CUSTOM_REASONING_ENABLED: 'false',
-        }
+          REASONING_SERVICE_ENABLED: 'false',
+        },
       };
 
       const runtimeDisabled = new AgentRuntime({
         character: testCharacterDisabled,
         token: process.env.OPENAI_API_KEY || 'test-token',
-        modelName: 'gpt-4o-mini'
+        modelName: 'gpt-4o-mini',
       });
 
       await runtimeDisabled.registerPlugin(trainingPlugin);
       await runtimeDisabled.initialize();
-      
+
       MessageHandlerIntegration.registerHooks(runtimeDisabled);
 
       const result = await runtimeDisabled.useModel(ModelType.TEXT_LARGE, { text: 'test' });
 
       expect(result).toBeDefined();
-      expect(runtimeDisabled.getSetting('CUSTOM_REASONING_ENABLED')).toBe('false');
-      
-      elizaLogger.info('✅ Original useModel preserved when custom reasoning disabled with real runtime');
+      expect(runtimeDisabled.getSetting('REASONING_SERVICE_ENABLED')).toBe('false');
+
+      elizaLogger.info(
+        '✅ Original useModel preserved when custom reasoning disabled with real runtime'
+      );
     });
 
     it('should use custom coding model when enabled and coding request detected with real runtime', async () => {
@@ -195,16 +198,20 @@ describe('Real Runtime Message Handler Integration Tests', () => {
       try {
         const result = await runtime.useModel(ModelType.TEXT_LARGE, codingParams);
         expect(result).toBeDefined();
-        
+
         const reasoningService = runtime.getService('together-reasoning');
         if (reasoningService) {
           expect(reasoningService).toBeDefined();
           elizaLogger.info('✅ Custom coding model integration working with real runtime');
         } else {
-          elizaLogger.info('ℹ️ Custom coding model test completed (service may not be available in test environment)');
+          elizaLogger.info(
+            'ℹ️ Custom coding model test completed (service may not be available in test environment)'
+          );
         }
       } catch (error) {
-        elizaLogger.info('ℹ️ Custom coding model test completed with expected behavior in test environment');
+        elizaLogger.info(
+          'ℹ️ Custom coding model test completed with expected behavior in test environment'
+        );
       }
     });
 
@@ -217,7 +224,7 @@ describe('Real Runtime Message Handler Integration Tests', () => {
 
       // Should either succeed with custom reasoning or fall back gracefully
       expect(result).toBeDefined();
-      
+
       elizaLogger.info('✅ Fallback behavior working correctly with real runtime');
     });
   });
@@ -241,13 +248,15 @@ describe('Real Runtime Message Handler Integration Tests', () => {
 
       try {
         const result = await (runtime as any).customShouldRespond(runtime, message, state);
-        
+
         // Should either use custom reasoning or fall back gracefully
         expect(typeof result === 'boolean').toBe(true);
-        
+
         elizaLogger.info('✅ Custom shouldRespond integration working with real runtime');
       } catch (error) {
-        elizaLogger.info('ℹ️ Custom shouldRespond test completed (expected in test environment without full custom reasoning setup)');
+        elizaLogger.info(
+          'ℹ️ Custom shouldRespond test completed (expected in test environment without full custom reasoning setup)'
+        );
       }
     });
 
@@ -258,19 +267,19 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         settings: {
           ...testCharacter.settings,
           TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
-          CUSTOM_REASONING_ENABLED: 'false',
-        }
+          REASONING_SERVICE_ENABLED: 'false',
+        },
       };
 
       const runtimeDisabled = new AgentRuntime({
         character: testCharacterDisabled,
         token: process.env.OPENAI_API_KEY || 'test-token',
-        modelName: 'gpt-4o-mini'
+        modelName: 'gpt-4o-mini',
       });
 
       await runtimeDisabled.registerPlugin(trainingPlugin);
       await runtimeDisabled.initialize();
-      
+
       MessageHandlerIntegration.registerHooks(runtimeDisabled);
 
       const message = createTestMemory({
@@ -282,12 +291,16 @@ describe('Real Runtime Message Handler Integration Tests', () => {
       });
       const state = createTestState();
 
-      const result = await (runtimeDisabled as any).customShouldRespond(runtimeDisabled, message, state);
+      const result = await (runtimeDisabled as any).customShouldRespond(
+        runtimeDisabled,
+        message,
+        state
+      );
 
       // Should use original shouldRespond logic
       expect(typeof result === 'boolean').toBe(true);
-      expect(runtimeDisabled.getSetting('CUSTOM_REASONING_ENABLED')).toBe('false');
-      
+      expect(runtimeDisabled.getSetting('REASONING_SERVICE_ENABLED')).toBe('false');
+
       elizaLogger.info('✅ Fallback to original shouldRespond logic working with real runtime');
     });
 
@@ -303,13 +316,15 @@ describe('Real Runtime Message Handler Integration Tests', () => {
 
       try {
         const result = await (runtime as any).customShouldRespond(runtime, message, state);
-        
+
         // Should handle errors gracefully and return a boolean result
         expect(typeof result === 'boolean').toBe(true);
-        
+
         elizaLogger.info('✅ Error handling in customShouldRespond working with real runtime');
       } catch (error) {
-        elizaLogger.info('ℹ️ Error handling test for customShouldRespond completed (expected in test environment)');
+        elizaLogger.info(
+          'ℹ️ Error handling test for customShouldRespond completed (expected in test environment)'
+        );
       }
     });
   });
@@ -332,20 +347,22 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         values: {
           recentMessages: [
             { text: 'Hello', timestamp: Date.now() - 1000 },
-            { text: 'Can you help me plan a software project?', timestamp: Date.now() }
-          ]
-        }
+            { text: 'Can you help me plan a software project?', timestamp: Date.now() },
+          ],
+        },
       });
 
       try {
         const result = await (runtime as any).customResponseGenerator(runtime, message, state);
-        
+
         // Result should be defined regardless of custom reasoning availability
         expect(result).toBeDefined();
-        
+
         elizaLogger.info('✅ Custom response generation integration working with real runtime');
       } catch (error) {
-        elizaLogger.info('ℹ️ Custom response generation test completed (expected in test environment without full custom reasoning setup)');
+        elizaLogger.info(
+          'ℹ️ Custom response generation test completed (expected in test environment without full custom reasoning setup)'
+        );
       }
     });
 
@@ -356,20 +373,20 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         settings: {
           ...testCharacter.settings,
           TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
-          CUSTOM_REASONING_PLANNING_ENABLED: 'false',
-          CUSTOM_REASONING_ENABLED: 'true', // Keep reasoning enabled but disable planning
-        }
+          REASONING_SERVICE_PLANNING_ENABLED: 'false',
+          REASONING_SERVICE_ENABLED: 'true', // Keep reasoning enabled but disable planning
+        },
       };
 
       const runtimePlanningDisabled = new AgentRuntime({
         character: testCharacterPlanningDisabled,
         token: process.env.OPENAI_API_KEY || 'test-token',
-        modelName: 'gpt-4o-mini'
+        modelName: 'gpt-4o-mini',
       });
 
       await runtimePlanningDisabled.registerPlugin(trainingPlugin);
       await runtimePlanningDisabled.initialize();
-      
+
       MessageHandlerIntegration.registerHooks(runtimePlanningDisabled);
 
       const message = createTestMemory({
@@ -381,12 +398,18 @@ describe('Real Runtime Message Handler Integration Tests', () => {
       });
       const state = createTestState();
 
-      const result = await (runtimePlanningDisabled as any).customResponseGenerator(runtimePlanningDisabled, message, state);
+      const result = await (runtimePlanningDisabled as any).customResponseGenerator(
+        runtimePlanningDisabled,
+        message,
+        state
+      );
 
       // Should use original response generation
       expect(result).toBeDefined();
-      expect(runtimePlanningDisabled.getSetting('CUSTOM_REASONING_PLANNING_ENABLED')).toBe('false');
-      
+      expect(runtimePlanningDisabled.getSetting('REASONING_SERVICE_PLANNING_ENABLED')).toBe(
+        'false'
+      );
+
       elizaLogger.info('✅ Fallback to original response generation working with real runtime');
     });
 
@@ -404,19 +427,21 @@ describe('Real Runtime Message Handler Integration Tests', () => {
           conversationHistory: [
             'User is working on AI projects',
             'Needs comprehensive planning assistance',
-            'Requests multi-stage pipeline development'
-          ]
-        }
+            'Requests multi-stage pipeline development',
+          ],
+        },
       });
 
       try {
         const result = await (runtime as any).customResponseGenerator(runtime, message, state);
-        
+
         expect(result).toBeDefined();
-        
+
         elizaLogger.info('✅ Complex planning scenario handling working with real runtime');
       } catch (error) {
-        elizaLogger.info('ℹ️ Complex planning scenario test completed (expected in test environment)');
+        elizaLogger.info(
+          'ℹ️ Complex planning scenario test completed (expected in test environment)'
+        );
       }
     });
   });
@@ -439,7 +464,7 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         const result = MessageHandlerIntegration['isCodingRequest']({ prompt: text });
         expect(result).toBe(true);
       });
-      
+
       elizaLogger.info('✅ Coding request detection working correctly with real runtime context');
     });
 
@@ -458,8 +483,10 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         const result = MessageHandlerIntegration['isCodingRequest']({ prompt: text });
         expect(result).toBe(false);
       });
-      
-      elizaLogger.info('✅ Non-coding request detection working correctly with real runtime context');
+
+      elizaLogger.info(
+        '✅ Non-coding request detection working correctly with real runtime context'
+      );
     });
 
     it('should handle edge cases in coding detection with real runtime', () => {
@@ -477,7 +504,7 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         const result = MessageHandlerIntegration['isCodingRequest']({ prompt: text });
         expect(result).toBe(expected);
       });
-      
+
       elizaLogger.info('✅ Edge case handling in coding detection working with real runtime');
     });
   });
@@ -485,11 +512,11 @@ describe('Real Runtime Message Handler Integration Tests', () => {
   describe('isCustomReasoningEnabled Real Runtime Tests', () => {
     it('should return correct status when enabled and service available with real runtime', () => {
       const result = MessageHandlerIntegration.isCustomReasoningEnabled(runtime);
-      
+
       // Should reflect actual runtime configuration
       expect(typeof result === 'boolean').toBe(true);
-      expect(runtime.getSetting('CUSTOM_REASONING_ENABLED')).toBe('true');
-      
+      expect(runtime.getSetting('REASONING_SERVICE_ENABLED')).toBe('true');
+
       elizaLogger.info(`✅ Custom reasoning enabled status: ${result} with real runtime`);
     });
 
@@ -500,22 +527,22 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         settings: {
           ...testCharacter.settings,
           TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
-          CUSTOM_REASONING_ENABLED: 'false',
-        }
+          REASONING_SERVICE_ENABLED: 'false',
+        },
       };
 
       const runtimeDisabled = new AgentRuntime({
         character: testCharacterDisabled,
         token: process.env.OPENAI_API_KEY || 'test-token',
-        modelName: 'gpt-4o-mini'
+        modelName: 'gpt-4o-mini',
       });
 
       // Note: Not registering the training plugin to simulate service unavailability
-      
+
       const result = MessageHandlerIntegration.isCustomReasoningEnabled(runtimeDisabled);
       expect(result).toBe(false);
-      expect(runtimeDisabled.getSetting('CUSTOM_REASONING_ENABLED')).toBe('false');
-      
+      expect(runtimeDisabled.getSetting('REASONING_SERVICE_ENABLED')).toBe('false');
+
       elizaLogger.info('✅ Custom reasoning disabled status working correctly with real runtime');
     });
 
@@ -524,12 +551,12 @@ describe('Real Runtime Message Handler Integration Tests', () => {
       const runtimeWithoutService = new AgentRuntime({
         character: testCharacter,
         token: process.env.OPENAI_API_KEY || 'test-token',
-        modelName: 'gpt-4o-mini'
+        modelName: 'gpt-4o-mini',
       });
 
       const result = MessageHandlerIntegration.isCustomReasoningEnabled(runtimeWithoutService);
       expect(result).toBe(false);
-      
+
       elizaLogger.info('✅ Service availability check working correctly with real runtime');
     });
   });
@@ -544,14 +571,22 @@ describe('Real Runtime Message Handler Integration Tests', () => {
       expect(typeof status.planningOverride === 'boolean').toBe(true);
       expect(typeof status.codingOverride === 'boolean').toBe(true);
       expect(typeof status.fallbackAvailable === 'boolean').toBe(true);
-      
+
       // Verify against actual runtime settings
-      expect(status.enabled).toBe(runtime.getSetting('CUSTOM_REASONING_ENABLED') === 'true');
-      expect(status.shouldRespondOverride).toBe(runtime.getSetting('CUSTOM_REASONING_SHOULD_RESPOND_ENABLED') === 'true');
-      expect(status.planningOverride).toBe(runtime.getSetting('CUSTOM_REASONING_PLANNING_ENABLED') === 'true');
-      expect(status.codingOverride).toBe(runtime.getSetting('CUSTOM_REASONING_CODING_ENABLED') === 'true');
-      
-      elizaLogger.info('✅ Integration status reporting correctly for fully enabled configuration with real runtime');
+      expect(status.enabled).toBe(runtime.getSetting('REASONING_SERVICE_ENABLED') === 'true');
+      expect(status.shouldRespondOverride).toBe(
+        runtime.getSetting('REASONING_SERVICE_SHOULD_RESPOND_ENABLED') === 'true'
+      );
+      expect(status.planningOverride).toBe(
+        runtime.getSetting('REASONING_SERVICE_PLANNING_ENABLED') === 'true'
+      );
+      expect(status.codingOverride).toBe(
+        runtime.getSetting('REASONING_SERVICE_CODING_ENABLED') === 'true'
+      );
+
+      elizaLogger.info(
+        '✅ Integration status reporting correctly for fully enabled configuration with real runtime'
+      );
     });
 
     it('should return correct status when partially disabled with real runtime', () => {
@@ -561,17 +596,17 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         settings: {
           ...testCharacter.settings,
           TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
-          CUSTOM_REASONING_ENABLED: 'true',
-          CUSTOM_REASONING_SHOULD_RESPOND_ENABLED: 'false',
-          CUSTOM_REASONING_PLANNING_ENABLED: 'true',
-          CUSTOM_REASONING_CODING_ENABLED: 'false',
-        }
+          REASONING_SERVICE_ENABLED: 'true',
+          REASONING_SERVICE_SHOULD_RESPOND_ENABLED: 'false',
+          REASONING_SERVICE_PLANNING_ENABLED: 'true',
+          REASONING_SERVICE_CODING_ENABLED: 'false',
+        },
       };
 
       const runtimePartial = new AgentRuntime({
         character: testCharacterPartial,
         token: process.env.OPENAI_API_KEY || 'test-token',
-        modelName: 'gpt-4o-mini'
+        modelName: 'gpt-4o-mini',
       });
 
       const status = MessageHandlerIntegration.getIntegrationStatus(runtimePartial);
@@ -583,8 +618,10 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         codingOverride: false,
         fallbackAvailable: true,
       });
-      
-      elizaLogger.info('✅ Integration status reporting correctly for partially disabled configuration with real runtime');
+
+      elizaLogger.info(
+        '✅ Integration status reporting correctly for partially disabled configuration with real runtime'
+      );
     });
 
     it('should return correct status when completely disabled with real runtime', () => {
@@ -594,17 +631,17 @@ describe('Real Runtime Message Handler Integration Tests', () => {
         settings: {
           ...testCharacter.settings,
           TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
-          CUSTOM_REASONING_ENABLED: 'false',
-          CUSTOM_REASONING_SHOULD_RESPOND_ENABLED: 'false',
-          CUSTOM_REASONING_PLANNING_ENABLED: 'false',
-          CUSTOM_REASONING_CODING_ENABLED: 'false',
-        }
+          REASONING_SERVICE_ENABLED: 'false',
+          REASONING_SERVICE_SHOULD_RESPOND_ENABLED: 'false',
+          REASONING_SERVICE_PLANNING_ENABLED: 'false',
+          REASONING_SERVICE_CODING_ENABLED: 'false',
+        },
       };
 
       const runtimeDisabled = new AgentRuntime({
         character: testCharacterDisabled,
         token: process.env.OPENAI_API_KEY || 'test-token',
-        modelName: 'gpt-4o-mini'
+        modelName: 'gpt-4o-mini',
       });
 
       const status = MessageHandlerIntegration.getIntegrationStatus(runtimeDisabled);
@@ -614,8 +651,10 @@ describe('Real Runtime Message Handler Integration Tests', () => {
       expect(status.planningOverride).toBe(false);
       expect(status.codingOverride).toBe(false);
       expect(status.fallbackAvailable).toBe(true);
-      
-      elizaLogger.info('✅ Integration status reporting correctly for completely disabled configuration with real runtime');
+
+      elizaLogger.info(
+        '✅ Integration status reporting correctly for completely disabled configuration with real runtime'
+      );
     });
   });
 
@@ -623,17 +662,33 @@ describe('Real Runtime Message Handler Integration Tests', () => {
     it('should validate complete integration with real runtime', () => {
       elizaLogger.info('\n🎉 REAL RUNTIME MESSAGE HANDLER INTEGRATION TEST SUMMARY');
       elizaLogger.info('═══════════════════════════════════════════════════════════');
-      elizaLogger.info('✅ Real Hook Registration: Custom hooks registered with backward compatibility');
-      elizaLogger.info('✅ Real customShouldRespond: Custom reasoning and fallback logic with runtime');
-      elizaLogger.info('✅ Real customResponseGenerator: Planning integration and fallback with runtime');
-      elizaLogger.info('✅ Real Coding Detection: Pattern matching for coding requests with runtime context');
-      elizaLogger.info('✅ Real Reasoning Status: Configuration checking with actual runtime settings');
-      elizaLogger.info('✅ Real Integration Status: Complete status reporting with runtime configuration');
+      elizaLogger.info(
+        '✅ Real Hook Registration: Custom hooks registered with backward compatibility'
+      );
+      elizaLogger.info(
+        '✅ Real customShouldRespond: Custom reasoning and fallback logic with runtime'
+      );
+      elizaLogger.info(
+        '✅ Real customResponseGenerator: Planning integration and fallback with runtime'
+      );
+      elizaLogger.info(
+        '✅ Real Coding Detection: Pattern matching for coding requests with runtime context'
+      );
+      elizaLogger.info(
+        '✅ Real Reasoning Status: Configuration checking with actual runtime settings'
+      );
+      elizaLogger.info(
+        '✅ Real Integration Status: Complete status reporting with runtime configuration'
+      );
       elizaLogger.info('✅ Real Error Handling: Graceful handling of hook failures with runtime');
-      elizaLogger.info('✅ Real Configuration Testing: Multiple configuration scenarios with runtime');
+      elizaLogger.info(
+        '✅ Real Configuration Testing: Multiple configuration scenarios with runtime'
+      );
       elizaLogger.info('═══════════════════════════════════════════════════════════');
-      elizaLogger.info('🚀 Message handler integration converted to real runtime tests - fully functional!');
-      
+      elizaLogger.info(
+        '🚀 Message handler integration converted to real runtime tests - fully functional!'
+      );
+
       expect(true).toBe(true);
     });
   });

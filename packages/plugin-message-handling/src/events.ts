@@ -270,7 +270,9 @@ const messageReceivedHandler = async ({
   let timeoutId: NodeJS.Timeout | undefined = undefined;
 
   try {
-    logger.info(`[Message Handling] Message received from ${message.entityId} in room ${message.roomId}`);
+    logger.info(
+      `[Message Handling] Message received from ${message.entityId} in room ${message.roomId}`
+    );
     // Generate a new response ID
     const responseId = v4();
     // Get or create the agent-specific map
@@ -379,7 +381,7 @@ const messageReceivedHandler = async ({
         if (!shouldSkipShouldRespond) {
           const shouldRespondPrompt = composePromptFromState({
             state,
-            template: runtime.character.templates?.shouldRespondTemplate || shouldRespondTemplate,
+            template: shouldRespondTemplate,
           });
 
           logger.debug(
@@ -427,7 +429,7 @@ const messageReceivedHandler = async ({
 
           const prompt = composePromptFromState({
             state,
-            template: runtime.character.templates?.messageHandlerTemplate || messageHandlerTemplate,
+            template: messageHandlerTemplate,
           });
 
           let responseContent: Content | null = null;
@@ -518,7 +520,10 @@ const messageReceivedHandler = async ({
           if (responseContent && responseContent.simple && responseContent.text) {
             // Log provider usage for simple responses
             if (responseContent.providers && responseContent.providers.length > 0) {
-              logger.debug('[Message Handling] Simple response used providers', responseContent.providers);
+              logger.debug(
+                '[Message Handling] Simple response used providers',
+                responseContent.providers
+              );
             }
 
             // without actions there can't be more than one message
@@ -526,11 +531,11 @@ const messageReceivedHandler = async ({
           } else {
             // Check if planning service is available for enhanced planning
             const planningService = runtime.getService<IPlanningService>('planning');
-            
+
             if (planningService && responseContent) {
               try {
                 logger.debug('[Message Handling] Using planning service for action coordination');
-                
+
                 // Create a simple plan using the planning service
                 const plan = await planningService.createSimplePlan(
                   runtime,
@@ -548,11 +553,15 @@ const messageReceivedHandler = async ({
                     callback
                   );
 
-                  logger.debug(`[Message Handling] Plan execution completed. Success: ${planResult.success}`);
+                  logger.debug(
+                    `[Message Handling] Plan execution completed. Success: ${planResult.success}`
+                  );
 
                   // If plan execution failed, fall back to regular action processing
                   if (!planResult.success) {
-                    logger.warn('[Message Handling] Plan execution failed, falling back to regular action processing');
+                    logger.warn(
+                      '[Message Handling] Plan execution failed, falling back to regular action processing'
+                    );
                     await runtime.processActions(message, responseMessages, state, callback);
                   }
                 } else {
@@ -560,7 +569,10 @@ const messageReceivedHandler = async ({
                   await runtime.processActions(message, responseMessages, state, callback);
                 }
               } catch (error) {
-                logger.error('[Message Handling] Planning service error, falling back to regular action processing:', error);
+                logger.error(
+                  '[Message Handling] Planning service error, falling back to regular action processing:',
+                  error
+                );
                 await runtime.processActions(message, responseMessages, state, callback);
               }
             } else {
@@ -583,7 +595,9 @@ const messageReceivedHandler = async ({
           }
 
           if (!message.id) {
-            logger.error('[Message Handling] Message ID is missing, cannot create ignore response.');
+            logger.error(
+              '[Message Handling] Message ID is missing, cannot create ignore response.'
+            );
             return;
           }
 
@@ -708,7 +722,12 @@ const messageDeletedHandler = async ({
       return;
     }
 
-    logger.info('[Message Handling] Deleting memory for message', message.id, 'from room', message.roomId);
+    logger.info(
+      '[Message Handling] Deleting memory for message',
+      message.id,
+      'from room',
+      message.roomId
+    );
     await runtime.deleteMemory(message.id);
     logger.debug('[Message Handling] Successfully deleted memory for message', message.id);
   } catch (error: unknown) {
@@ -837,7 +856,7 @@ const postGeneratedHandler = async ({
 
   const prompt = composePromptFromState({
     state,
-    template: runtime.character.templates?.messageHandlerTemplate || messageHandlerTemplate,
+    template: messageHandlerTemplate,
   });
 
   let responseContent: Content | null = null;
@@ -884,7 +903,7 @@ const postGeneratedHandler = async ({
   // Generate prompt for tweet content
   const postPrompt = composePromptFromState({
     state,
-    template: runtime.character.templates?.postCreationTemplate || postCreationTemplate,
+    template: postCreationTemplate,
   });
 
   // Use TEXT_LARGE model as we expect structured XML text, not a JSON object
@@ -1281,7 +1300,9 @@ export const events = {
 
   [EventType.ENTITY_JOINED]: [
     async (payload: EntityPayload) => {
-      logger.debug(`[Message Handling] ENTITY_JOINED event received for entity ${payload.entityId}`);
+      logger.debug(
+        `[Message Handling] ENTITY_JOINED event received for entity ${payload.entityId}`
+      );
 
       if (!payload.worldId) {
         logger.error('[Message Handling] No worldId provided for entity joined');
@@ -1329,14 +1350,18 @@ export const events = {
 
   [EventType.ACTION_STARTED]: [
     async (payload: ActionEventPayload) => {
-      logger.debug(`[Message Handling] Action started: ${payload.actionName} (${payload.actionId})`);
+      logger.debug(
+        `[Message Handling] Action started: ${payload.actionName} (${payload.actionId})`
+      );
     },
   ],
 
   [EventType.ACTION_COMPLETED]: [
     async (payload: ActionEventPayload) => {
       const status = payload.error ? `failed: ${payload.error.message}` : 'completed';
-      logger.debug(`[Message Handling] Action ${status}: ${payload.actionName} (${payload.actionId})`);
+      logger.debug(
+        `[Message Handling] Action ${status}: ${payload.actionName} (${payload.actionId})`
+      );
     },
   ],
 

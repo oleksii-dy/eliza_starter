@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-import { 
-  AgentRuntime, 
-  encryptedCharacter, 
-  logger, 
+import {
+  AgentRuntime,
+  encryptedCharacter,
+  logger,
   stringToUuid,
-  type Character, 
-  type Plugin 
+  type Character,
+  type Plugin,
 } from '@elizaos/core';
 import { plugin as sqlPlugin } from '@elizaos/plugin-sql';
 import messageHandlingPlugin from '@elizaos/plugin-message-handling';
@@ -14,7 +14,7 @@ import chalk from 'chalk';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ScenarioRunner } from '../../src/scenario-runner/index.js';
-import type { Scenario, ScenarioResult } from "../types.js";
+import type { Scenario, ScenarioResult } from '../types.js';
 
 // Import our new integration test scenarios
 import pluginDevelopmentWorkflowScenario from './03-plugin-development-workflow.js';
@@ -77,26 +77,25 @@ Your capabilities include:
 Always provide clear explanations, proactive guidance, and optimal user experience while maintaining strict security standards.`,
     bio: [
       'plugin development expert',
-      'security specialist', 
+      'security specialist',
       'workflow optimization expert',
-      'integration specialist'
+      'integration specialist',
     ],
     messageExamples: [],
     postExamples: [],
     topics: [
       'plugin development',
-      'security management', 
+      'security management',
       'workflow automation',
       'service integration',
       'error handling',
-      'user experience optimization'
+      'user experience optimization',
     ],
     style: {
       all: ['helpful', 'security-conscious', 'thorough', 'proactive'],
       chat: ['clear', 'educational', 'supportive', 'efficient'],
       post: ['informative', 'structured', 'actionable'],
     },
-    adjectives: ['intelligent', 'secure', 'reliable', 'comprehensive'],
     plugins: [],
   };
 }
@@ -105,10 +104,7 @@ Always provide clear explanations, proactive guidance, and optimal user experien
  * Load and validate required plugins for integration testing
  */
 async function loadIntegrationPlugins(): Promise<Plugin[]> {
-  const plugins: Plugin[] = [
-    sqlPlugin as unknown as Plugin,
-    messageHandlingPlugin,
-  ];
+  const plugins: Plugin[] = [sqlPlugin as unknown as Plugin, messageHandlingPlugin];
 
   // Dynamically load the integration plugins
   const pluginsToLoad = [
@@ -120,7 +116,7 @@ async function loadIntegrationPlugins(): Promise<Plugin[]> {
 
   logger.info('🔄 Loading integration plugins...');
   let loadedCount = 0;
-  
+
   for (const { name, required } of pluginsToLoad) {
     try {
       const plugin = await import(name);
@@ -136,9 +132,9 @@ async function loadIntegrationPlugins(): Promise<Plugin[]> {
       }
     }
   }
-  
+
   logger.info(`🎯 Successfully loaded ${loadedCount}/${pluginsToLoad.length} plugins`);
-  
+
   if (loadedCount === 0) {
     throw new Error('No plugins could be loaded - cannot run integration tests');
   }
@@ -170,25 +166,21 @@ async function runTestSuite(
 
     try {
       // Override scenario's subject actor runtime
-      const subjectActor = scenario.actors.find(a => a.role === 'subject');
+      const subjectActor = scenario.actors.find((a) => a.role === 'subject');
       if (subjectActor) {
         subjectActor.runtime = runtime;
       }
 
-      const result = await runner.runScenario(
-        scenario,
-        { verbose: true },
-        (progress) => {
-          console.log(chalk.gray(`     ${progress.phase}: ${progress.message}`));
-        }
-      );
+      const result = await runner.runScenario(scenario, { verbose: true }, (progress) => {
+        console.log(chalk.gray(`     ${progress.phase}: ${progress.message}`));
+      });
 
       results.push(result);
 
       // Analyze results for issues
       if (!result.passed) {
         criticalIssues.push(`${scenario.name}: Failed with score ${result.score}`);
-        
+
         // Analyze specific failures
         for (const verification of result.verificationResults) {
           if (!verification.passed) {
@@ -196,14 +188,15 @@ async function runTestSuite(
           }
         }
       } else if (result.score < 0.8) {
-        recommendations.push(`${scenario.name}: Passed but score could be improved (${result.score})`);
+        recommendations.push(
+          `${scenario.name}: Passed but score could be improved (${result.score})`
+        );
       }
 
       // Display immediate results
       const status = result.passed ? chalk.green('✅ PASSED') : chalk.red('❌ FAILED');
       const score = result.score ? result.score.toFixed(2) : '0.00';
       console.log(`   ${status} - Score: ${score} - Duration: ${result.duration}ms\n`);
-
     } catch (error) {
       logger.error(`Test execution failed for ${scenario.name}:`, error);
       criticalIssues.push(`${scenario.name}: Exception - ${error.message}`);
@@ -211,7 +204,7 @@ async function runTestSuite(
   }
 
   const duration = Date.now() - startTime;
-  const passedCount = results.filter(r => r.passed).length;
+  const passedCount = results.filter((r) => r.passed).length;
   const totalScore = results.reduce((sum, r) => sum + (r.score || 0), 0);
   const averageScore = results.length > 0 ? totalScore / results.length : 0;
 
@@ -244,7 +237,7 @@ function generateTestReport(reports: TestReport[]): void {
   for (const report of reports) {
     console.log(chalk.cyan(`\n📋 ${report.suiteName}`));
     console.log(chalk.gray('-'.repeat(40)));
-    
+
     console.log(`Scenarios: ${report.passedScenarios}/${report.totalScenarios} passed`);
     console.log(`Average Score: ${report.averageScore.toFixed(2)}`);
     console.log(`Duration: ${(report.duration / 1000).toFixed(1)}s`);
@@ -298,10 +291,12 @@ async function runIntegrationTests(): Promise<void> {
   try {
     // Validate environment
     const requiredEnvVars = ['ANTHROPIC_API_KEY'];
-    const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+    const missingVars = requiredEnvVars.filter((v) => !process.env[v]);
 
     if (missingVars.length > 0) {
-      console.log(chalk.yellow(`⚠️  Missing optional environment variables: ${missingVars.join(', ')}`));
+      console.log(
+        chalk.yellow(`⚠️  Missing optional environment variables: ${missingVars.join(', ')}`)
+      );
       console.log(chalk.gray('Some tests may run with mocked services\n'));
     }
 
@@ -326,7 +321,6 @@ async function runIntegrationTests(): Promise<void> {
       settings: {
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || 'test-key',
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'test-key',
-        MODEL_PROVIDER: process.env.MODEL_PROVIDER || 'anthropic',
         TEST_MODE: 'true',
         MOCK_EXTERNAL_SERVICES: 'true',
       },
@@ -344,12 +338,8 @@ async function runIntegrationTests(): Promise<void> {
 
     // Run test suites
     const reports: TestReport[] = [];
-    
-    const integrationReport = await runTestSuite(
-      PLUGIN_INTEGRATION_SUITE,
-      server,
-      runtime
-    );
+
+    const integrationReport = await runTestSuite(PLUGIN_INTEGRATION_SUITE, server, runtime);
     reports.push(integrationReport);
 
     // Generate comprehensive report
@@ -365,11 +355,10 @@ async function runIntegrationTests(): Promise<void> {
     await server.stop();
 
     // Exit with appropriate code
-    const allPassed = reports.every(r => r.failedScenarios === 0);
-    const goodScores = reports.every(r => r.averageScore >= 0.75);
-    
-    process.exit(allPassed && goodScores ? 0 : 1);
+    const allPassed = reports.every((r) => r.failedScenarios === 0);
+    const goodScores = reports.every((r) => r.averageScore >= 0.75);
 
+    process.exit(allPassed && goodScores ? 0 : 1);
   } catch (error) {
     console.error(chalk.red('\n❌ Integration test suite failed:'));
     console.error(error);

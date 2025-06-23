@@ -3,13 +3,7 @@
  */
 
 import { vi } from './vi-helper';
-import type {
-  IAgentRuntime,
-  Character,
-  Memory,
-  State,
-  UUID,
-} from '../../types';
+import type { IAgentRuntime, Character, Memory, State, UUID } from '../../types';
 
 export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
   const defaultCharacter: Character = {
@@ -18,7 +12,6 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     messageExamples: [],
     postExamples: [],
     topics: [],
-    adjectives: [],
     knowledge: [],
     plugins: [],
   };
@@ -42,14 +35,14 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       data: {},
       text: '',
     }),
-    
+
     // Database methods
     getMemories: vi.fn().mockResolvedValue([]),
     createMemory: vi.fn().mockResolvedValue('test-memory-id' as UUID),
-    
+
     // Service methods
     getService: vi.fn().mockReturnValue(null),
-    
+
     // Apply overrides
     ...overrides,
   } as IAgentRuntime;

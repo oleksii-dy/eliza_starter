@@ -20,7 +20,7 @@
     "noEmitOnError": false,
     "moduleDetection": "force",
     "allowArbitraryExtensions": true,
-    "typeRoots": ["./src/@types", "./node_modules/@types"]
+    "typeRoots": ["src/@types", "./node_modules/@types"]
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts"]
 }

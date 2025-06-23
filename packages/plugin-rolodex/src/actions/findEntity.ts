@@ -1,17 +1,14 @@
 import {
   logger,
-} from '@elizaos/core';
-import type {
-  Action,
-  IAgentRuntime,
-  Memory,
-  State,
-  HandlerCallback,
-  ActionResult,
-  Entity,
-  UUID,
+  type Action,
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  type HandlerCallback,
+  type ActionResult,
+  type Entity,
+  type UUID,
 } from '../core-types';
-import { EntityGraphService } from '../services/EntityGraphService';
 
 // Helper function for fuzzy string matching using Levenshtein distance
 function levenshteinDistance(str1: string, str2: string): number {
@@ -147,9 +144,9 @@ export const findEntityAction: Action = {
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
-      const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
-      if (!entityGraphService) {
-        throw new Error('EntityGraphService not available');
+      const rolodexService = runtime.getService('rolodex');
+      if (!rolodexService) {
+        throw new Error('Rolodex service not available');
       }
 
       // Extract search query from message
@@ -173,10 +170,27 @@ export const findEntityAction: Action = {
         };
       }
 
-      // Search for entities
-      const searchResults = await entityGraphService.searchEntities(searchQuery);
+      // Search for entities using service
+      const searchMethod = (rolodexService as any).searchEntities;
+      if (!searchMethod) {
+        const response = {
+          text: 'Entity search is currently unavailable.',
+          action: 'FIND_ENTITY',
+        };
 
-      if (searchResults.length === 0) {
+        if (callback) {
+          await callback(response);
+        }
+
+        return {
+          text: response.text,
+          data: { error: 'Search method not available' },
+        };
+      }
+
+      const searchResults = await searchMethod.call(rolodexService, searchQuery);
+
+      if (!searchResults || searchResults.length === 0) {
         const response = {
           text: `I couldn't find any entities matching "${searchQuery}". Try different search terms or use TRACK_ENTITY to add them.`,
           action: 'FIND_ENTITY',
@@ -195,10 +209,9 @@ export const findEntityAction: Action = {
       // Format results
       let responseText = `Found ${searchResults.length} ${searchResults.length === 1 ? 'entity' : 'entities'} matching "${searchQuery}":\n\n`;
 
-      for (const result of searchResults.slice(0, 5)) {
-        const entity = result.entity;
-        responseText += `**${entity.names[0]}**\n`;
-        responseText += `- Type: ${entity.type}\n`;
+      for (const entity of searchResults.slice(0, 5)) {
+        responseText += `**${entity.names?.[0] || 'Unknown'}**\n`;
+        responseText += `- Type: ${entity.type || 'unknown'}\n`;
         responseText += `- Tags: ${entity.tags?.join(', ') || 'none'}\n`;
         if (entity.summary) {
           responseText += `- Summary: ${entity.summary}\n`;
@@ -223,11 +236,11 @@ export const findEntityAction: Action = {
         text: responseText,
         data: {
           searchQuery,
-          results: searchResults.map(r => ({
-            entityId: r.entity.entityId,
-            name: r.entity.names[0],
-            type: r.entity.type,
-            score: r.relevanceScore,
+          results: searchResults.map((entity: any) => ({
+            entityId: entity.id || entity.entityId,
+            name: entity.names?.[0] || 'Unknown',
+            type: entity.type || 'unknown',
+            score: entity.relevanceScore || entity.score || 1,
           })),
           totalResults: searchResults.length,
         },

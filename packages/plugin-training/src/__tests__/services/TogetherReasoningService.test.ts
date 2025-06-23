@@ -1,9 +1,9 @@
 /**
  * REAL RUNTIME INTEGRATION TESTS FOR TOGETHER REASONING SERVICE
- * 
+ *
  * These tests use actual ElizaOS runtime instances and real service implementations.
  * No mocks - only real runtime instances, services, and plugin functionality.
- * 
+ *
  * Test coverage:
  * - Service initialization with real runtime
  * - Model management and deployment
@@ -30,22 +30,21 @@ const testCharacter: Character = {
   messageExamples: [
     [
       { name: 'user', content: { text: 'test reasoning request' } },
-      { name: 'TogetherReasoningTestAgent', content: { text: 'testing reasoning response' } }
-    ]
+      { name: 'TogetherReasoningTestAgent', content: { text: 'testing reasoning response' } },
+    ],
   ],
   postExamples: [],
   topics: ['testing', 'reasoning', 'together-ai', 'service-validation'],
-  adjectives: ['helpful', 'accurate', 'intelligent'],
   plugins: [],
   settings: {
-    CUSTOM_REASONING_ENABLED: 'true',
+    REASONING_SERVICE_ENABLED: 'true',
     TOGETHER_AI_API_KEY: 'test-api-key-together',
-    CUSTOM_REASONING_SHOULD_RESPOND_ENABLED: 'true',
-    CUSTOM_REASONING_PLANNING_ENABLED: 'true',
-    CUSTOM_REASONING_CODING_ENABLED: 'true',
-    CUSTOM_REASONING_COLLECT_TRAINING_DATA: 'true',
+    REASONING_SERVICE_SHOULD_RESPOND_ENABLED: 'true',
+    REASONING_SERVICE_PLANNING_ENABLED: 'true',
+    REASONING_SERVICE_CODING_ENABLED: 'true',
+    REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',
   },
-  secrets: {}
+  secrets: {},
 };
 
 describe('Real Runtime Together Reasoning Service Integration Tests', () => {
@@ -56,16 +55,16 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
 
   beforeEach(async () => {
     elizaLogger.info('🧪 Setting up TogetherReasoningService real runtime test environment...');
-    
+
     // Create unique test paths to avoid conflicts
     const testId = `together-reasoning-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     testDatabasePath = path.join(process.cwd(), '.test-data', testId, 'training.db');
     testDataPath = path.join(process.cwd(), '.test-data', testId, 'reasoning-data');
-    
+
     // Ensure test directories exist
     await fs.mkdir(path.dirname(testDatabasePath), { recursive: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    
+
     // Update test character with test-specific paths
     const testCharacterWithPaths = {
       ...testCharacter,
@@ -73,31 +72,31 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
         ...testCharacter.settings,
         TRAINING_DATABASE_URL: `sqlite:${testDatabasePath}`,
         REASONING_DATA_DIR: testDataPath,
-      }
+      },
     };
 
     // Create real AgentRuntime instance
     runtime = new AgentRuntime({
       character: testCharacterWithPaths,
       token: process.env.OPENAI_API_KEY || 'test-token',
-      modelName: 'gpt-4o-mini'
+      modelName: 'gpt-4o-mini',
     });
 
     // Register the training plugin
     await runtime.registerPlugin(trainingPlugin);
-    
+
     // Initialize the runtime
     await runtime.initialize();
-    
+
     // Get the reasoning service from the runtime
     service = runtime.getService('together-reasoning') as TogetherReasoningService;
-    
+
     elizaLogger.info('✅ TogetherReasoningService real runtime test environment setup complete');
   });
 
   afterEach(async () => {
     elizaLogger.info('🧹 Cleaning up TogetherReasoningService test environment...');
-    
+
     try {
       // Stop all services properly
       if (service) {
@@ -112,7 +111,7 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
           // File might not exist, that's okay
         }
       }
-      
+
       if (testDataPath) {
         try {
           await fs.rm(path.dirname(testDataPath), { recursive: true, force: true });
@@ -123,7 +122,7 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
     } catch (error) {
       elizaLogger.warn('Warning during TogetherReasoningService cleanup:', error);
     }
-    
+
     elizaLogger.info('✅ TogetherReasoningService test environment cleanup complete');
   });
 
@@ -136,7 +135,9 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
         elizaLogger.info('✅ TogetherReasoningService properly registered');
       } else {
         // Service might not be available if Together.ai is not configured
-        elizaLogger.warn('TogetherReasoningService not available - this is expected in test environments without API keys');
+        elizaLogger.warn(
+          'TogetherReasoningService not available - this is expected in test environments without API keys'
+        );
       }
     });
 
@@ -158,22 +159,22 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
         settings: {
           ...testCharacter.settings,
           TOGETHER_AI_API_KEY: '', // Empty API key
-        }
+        },
       };
 
       const testRuntime = new AgentRuntime({
         character: noApiKeyCharacter,
         token: 'test-token',
-        modelName: 'gpt-4o-mini'
+        modelName: 'gpt-4o-mini',
       });
 
       try {
         // Should either gracefully handle missing API key or throw appropriate error
         await testRuntime.registerPlugin(trainingPlugin);
         await testRuntime.initialize();
-        
+
         const reasoningService = testRuntime.getService('together-reasoning');
-        
+
         if (reasoningService) {
           elizaLogger.info('✅ Service initialized despite missing API key (graceful degradation)');
         } else {
@@ -206,9 +207,9 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
             entityId: uuidv4() as UUID,
             roomId: uuidv4() as UUID,
             content: { text: 'Hello, how are you today?' },
-            createdAt: Date.now()
+            createdAt: Date.now(),
           },
-          conversationHistory: []
+          conversationHistory: [],
         };
 
         const result = await service.shouldRespond(context);
@@ -221,13 +222,15 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
         expect(result.confidence).toBeTypeOf('number');
         expect(result.confidence).toBeGreaterThanOrEqual(0);
         expect(result.confidence).toBeLessThanOrEqual(1);
-        
+
         if (result.trainingData) {
           expect(result.trainingData).toBeDefined();
           expect(typeof result.trainingData).toBe('object');
         }
 
-        elizaLogger.info(`✅ ShouldRespond processed: decision=${result.decision}, confidence=${result.confidence}`);
+        elizaLogger.info(
+          `✅ ShouldRespond processed: decision=${result.decision}, confidence=${result.confidence}`
+        );
       } catch (error) {
         elizaLogger.warn('ShouldRespond test skipped due to service limitations:', error);
         // This is acceptable as the service may require real API keys
@@ -248,14 +251,14 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
 
         // Enable the model
         await service.enableModel('should_respond');
-        
+
         // Check status after enabling
         const enabledStatus = await service.getModelStatus('should_respond');
         expect(enabledStatus.enabled).toBe(true);
 
         // Disable the model
         await service.disableModel('should_respond');
-        
+
         // Check status after disabling
         const disabledStatus = await service.getModelStatus('should_respond');
         expect(disabledStatus.enabled).toBe(false);
@@ -287,14 +290,14 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
             entityId: uuidv4() as UUID,
             roomId: uuidv4() as UUID,
             content: { text: 'Plan a birthday party for my friend' },
-            createdAt: Date.now()
+            createdAt: Date.now(),
           },
           actionNames: ['SEND_MESSAGE', 'CREATE_EVENT', 'SCHEDULE_REMINDER'],
-          state: { 
-            values: { currentDate: new Date().toISOString() }, 
+          state: {
+            values: { currentDate: new Date().toISOString() },
             data: { providers: { TIME: new Date().toISOString() } },
-            text: 'Current context for planning'
-          }
+            text: 'Current context for planning',
+          },
         };
 
         const result = await service.planResponse(context);
@@ -304,13 +307,15 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
         expect(typeof result.thought).toBe('string');
         expect(Array.isArray(result.actions)).toBe(true);
         expect(Array.isArray(result.providers)).toBe(true);
-        
+
         if (result.trainingData) {
           expect(result.trainingData).toBeDefined();
           expect(typeof result.trainingData).toBe('object');
         }
 
-        elizaLogger.info(`✅ Planning processed: thought=${result.thought.substring(0, 50)}..., actions=${result.actions.length}, providers=${result.providers.length}`);
+        elizaLogger.info(
+          `✅ Planning processed: thought=${result.thought.substring(0, 50)}..., actions=${result.actions.length}, providers=${result.providers.length}`
+        );
       } catch (error) {
         elizaLogger.warn('Planning test skipped due to service limitations:', error);
         // This is acceptable as the service may require real API keys
@@ -329,13 +334,15 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
         expect(planningStatus).toBeDefined();
         expect(typeof planningStatus.enabled).toBe('boolean');
         expect(planningStatus.name).toBeDefined();
-        
+
         if (planningStatus.costPerHour !== undefined) {
           expect(planningStatus.costPerHour).toBeTypeOf('number');
           expect(planningStatus.costPerHour).toBeGreaterThanOrEqual(0);
         }
 
-        elizaLogger.info(`✅ Planning model status validated: enabled=${planningStatus.enabled}, name=${planningStatus.name}`);
+        elizaLogger.info(
+          `✅ Planning model status validated: enabled=${planningStatus.enabled}, name=${planningStatus.name}`
+        );
       } catch (error) {
         elizaLogger.warn('Planning model validation skipped due to service limitations:', error);
       }
@@ -358,7 +365,7 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
           prompt: 'Create a simple ElizaOS action that responds with hello world',
           language: 'typescript',
           maxTokens: 500,
-          temperature: 0.3
+          temperature: 0.3,
         };
 
         const result = await service.generateCode(context);
@@ -367,15 +374,15 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
         expect(result.code).toBeDefined();
         expect(typeof result.code).toBe('string');
         expect(result.code.length).toBeGreaterThan(0);
-        
+
         if (result.explanation) {
           expect(typeof result.explanation).toBe('string');
         }
-        
+
         if (result.language) {
           expect(result.language).toBe('typescript');
         }
-        
+
         if (result.trainingData) {
           expect(result.trainingData).toBeDefined();
           expect(typeof result.trainingData).toBe('object');
@@ -400,12 +407,14 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
         expect(codingStatus).toBeDefined();
         expect(typeof codingStatus.enabled).toBe('boolean');
         expect(codingStatus.name).toBeDefined();
-        
+
         if (codingStatus.size) {
           expect(['small', 'medium', 'large']).toContain(codingStatus.size);
         }
 
-        elizaLogger.info(`✅ Coding model status validated: enabled=${codingStatus.enabled}, name=${codingStatus.name}`);
+        elizaLogger.info(
+          `✅ Coding model status validated: enabled=${codingStatus.enabled}, name=${codingStatus.name}`
+        );
       } catch (error) {
         elizaLogger.warn('Coding model validation skipped due to service limitations:', error);
       }
@@ -422,23 +431,23 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
       try {
         // Test multiple model types
         const modelTypes = ['should_respond', 'planning', 'coding'];
-        
+
         for (const modelType of modelTypes) {
           // Get initial status
           const initialStatus = await service.getModelStatus(modelType as any);
           expect(initialStatus).toBeDefined();
           expect(typeof initialStatus.enabled).toBe('boolean');
           expect(initialStatus.name).toBeDefined();
-          
+
           // Test enable/disable cycle
           await service.enableModel(modelType as any);
           const enabledStatus = await service.getModelStatus(modelType as any);
           expect(enabledStatus.enabled).toBe(true);
-          
+
           await service.disableModel(modelType as any);
           const disabledStatus = await service.getModelStatus(modelType as any);
           expect(disabledStatus.enabled).toBe(false);
-          
+
           elizaLogger.info(`✅ Model ${modelType} lifecycle tested successfully`);
         }
       } catch (error) {
@@ -478,28 +487,31 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
           id: uuidv4(),
           timestamp: Date.now(),
           modelType: 'should_respond' as const,
-          input: { 
+          input: {
             prompt: 'Test reasoning prompt for training data collection',
             messageText: 'Hello, should I respond to this message?',
-            conversationContext: []
+            conversationContext: [],
           },
-          output: { 
+          output: {
             decision: 'RESPOND',
             reasoning: 'This is a friendly greeting that requires a response',
-            confidence: 0.85
+            confidence: 0.85,
           },
-          metadata: { 
+          metadata: {
             agentId: runtime.agentId,
             roomId: uuidv4() as UUID,
             responseTimeMs: 150,
-            tokensUsed: 45
-          }
+            tokensUsed: 45,
+          },
         };
 
         await expect(service.collectTrainingData(trainingData)).resolves.not.toThrow();
         elizaLogger.info('✅ Training data collected successfully');
       } catch (error) {
-        elizaLogger.warn('Training data collection test skipped due to service limitations:', error);
+        elizaLogger.warn(
+          'Training data collection test skipped due to service limitations:',
+          error
+        );
       }
     });
 
@@ -513,7 +525,7 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
         const exportOptions = {
           modelType: 'should_respond' as const,
           format: 'jsonl' as const,
-          limit: 50
+          limit: 50,
         };
 
         const dataset = await service.exportTrainingData(exportOptions);
@@ -522,13 +534,15 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
         expect(dataset.modelType).toBe('should_respond');
         expect(dataset.format).toBe('jsonl');
         expect(Array.isArray(dataset.samples)).toBe(true);
-        
+
         if (dataset.metadata) {
           expect(dataset.metadata.agentId).toBe(runtime.agentId);
           expect(typeof dataset.metadata.exportedAt).toBe('number');
         }
 
-        elizaLogger.info(`✅ Training data exported successfully: ${dataset.samples.length} samples`);
+        elizaLogger.info(
+          `✅ Training data exported successfully: ${dataset.samples.length} samples`
+        );
       } catch (error) {
         elizaLogger.warn('Training data export test skipped due to service limitations:', error);
       }
@@ -548,18 +562,20 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
         expect(report).toBeDefined();
         expect(report.totalCost).toBeTypeOf('number');
         expect(report.totalCost).toBeGreaterThanOrEqual(0);
-        
+
         if (report.modelCosts) {
           expect(report.modelCosts).toBeInstanceOf(Map);
         }
-        
+
         if (report.period) {
           expect(report.period).toBeDefined();
           expect(typeof report.period.start).toBe('number');
           expect(typeof report.period.end).toBe('number');
         }
 
-        elizaLogger.info(`✅ Cost report generated: total=${report.totalCost}, budget=${report.budgetLimit || 'unlimited'}`);
+        elizaLogger.info(
+          `✅ Cost report generated: total=${report.totalCost}, budget=${report.budgetLimit || 'unlimited'}`
+        );
       } catch (error) {
         elizaLogger.warn('Cost reporting test skipped due to service limitations:', error);
       }
@@ -574,7 +590,7 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
       try {
         // Set a budget limit
         await service.setBudgetLimit(100);
-        
+
         // Verify the budget was set
         const report = await service.getCostReport();
         if (report.budgetLimit !== undefined) {
@@ -617,15 +633,15 @@ describe('Real Runtime Together Reasoning Service Integration Tests', () => {
       try {
         // Stop the service
         await service.stop();
-        
+
         // Create a new service instance
         const newService = await TogetherReasoningService.start(runtime);
         expect(newService).toBeDefined();
         expect(newService).toBeInstanceOf(TogetherReasoningService);
-        
+
         // Stop the new service
         await newService.stop();
-        
+
         elizaLogger.info('✅ Service restart cycle completed successfully');
       } catch (error) {
         elizaLogger.warn('Service restart test skipped due to service limitations:', error);

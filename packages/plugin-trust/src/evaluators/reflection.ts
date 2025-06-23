@@ -164,7 +164,7 @@ async function handler(runtime: IAgentRuntime, message: Memory, state?: State) {
       existingRelationships: JSON.stringify(existingRelationships),
       senderId: message.entityId,
     },
-    template: runtime.character.templates?.reflectionTemplate || reflectionTemplate,
+    template: reflectionTemplate,
   });
 
   // Use the model without schema validation

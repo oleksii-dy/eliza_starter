@@ -1,17 +1,13 @@
 import {
   ModelType,
   logger,
-} from '@elizaos/core';
-import type {
-  Action,
-  IAgentRuntime,
-  Memory,
-  State,
-  HandlerCallback,
-  ActionResult,
+  type Action,
+  type IAgentRuntime,
+  type Memory,
+  type State,
+  type HandlerCallback,
+  type ActionResult,
 } from '../core-types';
-import { EntityGraphService } from '../services/EntityGraphService';
-import { CoreIdentityProvider } from '../providers/CoreIdentityProvider';
 
 /**
  * Action to check the current identity verification status
@@ -43,16 +39,10 @@ export const checkIdentityStatusAction: Action = {
     try {
       logger.info('[CheckIdentityStatus] Starting identity status check');
 
-      // Get services
-      const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
-      if (!entityGraphService) {
-        throw new Error('EntityGraphService not available');
-      }
-
-      // Get identity provider
-      const identityProvider = (runtime as any).__rolodexIdentityProvider as CoreIdentityProvider;
-      if (!identityProvider) {
-        throw new Error('Identity provider not available');
+      // Get services from runtime
+      const rolodexService = runtime.getService('rolodex');
+      if (!rolodexService) {
+        throw new Error('Rolodex service not available');
       }
 
       // Extract entity name or ID from message
@@ -76,8 +66,25 @@ export const checkIdentityStatusAction: Action = {
         };
       }
 
-      // Search for the entity
-      const searchResults = await entityGraphService.searchEntities(entityName);
+      // Search for the entity using service method
+      const searchMethod = (rolodexService as any).searchEntities;
+      if (!searchMethod) {
+        const response = {
+          text: 'Identity status checking is currently unavailable.',
+          actions: ['CHECK_IDENTITY_STATUS'],
+        };
+
+        if (callback) {
+          await callback(response);
+        }
+
+        return {
+          text: response.text,
+          data: { error: 'Service method not available' },
+        };
+      }
+
+      const searchResults = await searchMethod.call(rolodexService, entityName);
       if (searchResults.length === 0) {
         const response = {
           text: `I couldn't find any entity matching "${entityName}". Try a different name or use TRACK_ENTITY to add them first.`,
@@ -94,7 +101,7 @@ export const checkIdentityStatusAction: Action = {
         };
       }
 
-      const entity = searchResults[0].entity;
+      const entity = searchResults[0];
       const platforms = entity.platforms || {};
 
       // Get verified and unverified platforms
@@ -102,24 +109,24 @@ export const checkIdentityStatusAction: Action = {
         .filter(([platform, identity]) => (identity as any).verified)
         .map(([platform, identity]) => ({
           platform,
-          name: (identity as any).metadata?.name || (identity as any).platformId,
-          verifiedAt: (identity as any).linkedAt,
+          name: (identity as any).metadata?.name || (identity as any).platformId || (identity as any).handle,
+          verifiedAt: (identity as any).linkedAt || (identity as any).verifiedAt,
         }));
 
       const unverifiedPlatforms = Object.entries(platforms)
         .filter(([platform, identity]) => !(identity as any).verified)
         .map(([platform, identity]) => ({
           platform,
-          name: (identity as any).metadata?.name || (identity as any).platformId,
+          name: (identity as any).metadata?.name || (identity as any).platformId || (identity as any).handle,
         }));
 
       // Build response
-      let responseText = `Identity verification status for ${entity.names[0]}:\n\n`;
+      let responseText = `Identity verification status for ${entity.names?.[0] || entityName}:\n\n`;
 
       if (verifiedPlatforms.length > 0) {
         responseText += '✅ **Verified Identities:**\n';
         verifiedPlatforms.forEach((p) => {
-          responseText += `• ${p.platform}: ${p.name} (verified on ${new Date(p.verifiedAt).toLocaleDateString()})\n`;
+          responseText += `• ${p.platform}: ${p.name}${p.verifiedAt ? ` (verified on ${new Date(p.verifiedAt).toLocaleDateString()})` : ''}\n`;
         });
       }
 
@@ -139,7 +146,7 @@ export const checkIdentityStatusAction: Action = {
         text: responseText,
         actions: ['CHECK_IDENTITY_STATUS'],
         metadata: {
-          entityId: entity.entityId,
+          entityId: entity.id || entity.entityId,
           verifiedCount: verifiedPlatforms.length,
           unverifiedCount: unverifiedPlatforms.length,
         },
@@ -152,7 +159,7 @@ export const checkIdentityStatusAction: Action = {
       return {
         text: responseText,
         data: {
-          entityId: entity.entityId,
+          entityId: entity.id || entity.entityId,
           verifiedPlatforms,
           unverifiedPlatforms,
         },

@@ -22,24 +22,61 @@ import {
 // Mock database that simulates Drizzle ORM behavior
 const createMockDatabase = () => {
   const data = new Map<string, any[]>();
+  // Initialize with table names
+  data.set('payment_transactions', []);
+  data.set('payment_requests', []);
+  data.set('user_wallets', []);
+  data.set('daily_spending', []);
   
   return {
     select: () => ({
       from: (table: any) => ({
         where: (condition: any) => ({
-          limit: (n: number) => {
-            const tableName = table.name || 'unknown';
-            const records = data.get(tableName) || [];
-            return Promise.resolve(records.slice(0, n));
-          },
+          limit: (n: number) => ({
+            then: (resolve: Function) => {
+              // Get the table name from the table object
+              let tableName = 'unknown';
+              if (table.name) {
+                tableName = table.name;
+              } else if (table.tableName) {
+                tableName = table.tableName;
+              } else if (table.symbol && table.symbol.description) {
+                // Try to extract from symbol description
+                const match = table.symbol.description.match(/Symbol\((.+)\)/);
+                if (match) tableName = match[1];
+              }
+              const records = data.get(tableName) || [];
+              return Promise.resolve(records.slice(0, n)).then(resolve);
+            }
+          }),
           orderBy: (order: any) => ({
             limit: (n: number) => ({
-              offset: (o: number) => {
-                const tableName = table.name || 'unknown';
-                const records = data.get(tableName) || [];
-                return Promise.resolve(records.slice(o, o + n));
-              }
+              offset: (o: number) => ({
+                then: (resolve: Function) => {
+                  // Get the table name from the table object
+                  let tableName = 'unknown';
+                  if (table.name) {
+                    tableName = table.name;
+                  } else if (table.tableName) {
+                    tableName = table.tableName;
+                  } else if (table.symbol && table.symbol.description) {
+                    // Try to extract from symbol description
+                    const match = table.symbol.description.match(/Symbol\((.+)\)/);
+                    if (match) tableName = match[1];
+                  }
+                  const records = data.get(tableName) || [];
+                  return Promise.resolve(records.slice(o, o + n)).then(resolve);
+                }
+              })
             })
+          })
+        }),
+        // Add orderBy at top level for getPaymentHistory
+        orderBy: (order: any) => ({
+          limit: (n: number) => ({
+            offset: (o: number) => {
+              return Promise.resolve([]);
+            }
           })
         })
       })

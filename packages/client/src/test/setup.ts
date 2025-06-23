@@ -1,6 +1,7 @@
 // Test setup file for Bun:test
 import { JSDOM } from 'jsdom';
-import '@testing-library/jest-dom';
+// Temporarily disable jest-dom due to lodash import issue
+// import '@testing-library/jest-dom';
 import { mock } from 'bun:test';
 
 // Set up DOM environment

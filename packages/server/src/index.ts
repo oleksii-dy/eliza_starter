@@ -1,4 +1,5 @@
 import {
+  AgentStatus,
   type Character,
   DatabaseAdapter,
   type IAgentRuntime,
@@ -180,7 +181,7 @@ export class AgentServer {
       const postgresUrl = process.env.POSTGRES_URL || options?.postgresUrl;
       const dataDir = agentDataDir;
 
-      this.database = createDatabaseAdapter(
+      this.database = await createDatabaseAdapter(
         {
           dataDir,
           postgresUrl,
@@ -720,6 +721,48 @@ export class AgentServer {
 
       this.agents.set(runtime.agentId, runtime);
       logger.debug(`Agent ${runtime.character.name} (${runtime.agentId}) added to agents map`);
+
+      // **FIX: Persist agent to database**
+      if (this.database) {
+        try {
+          logger.info(`[AgentServer] Persisting agent ${runtime.character.name} to database...`);
+
+          // Create agent record in database
+          const agentData = {
+            id: runtime.agentId,
+            name: runtime.character.name,
+            bio: Array.isArray(runtime.character.bio)
+              ? runtime.character.bio
+              : [runtime.character.bio || ''],
+            system: runtime.character.system,
+            settings: runtime.character.settings || {},
+            plugins: runtime.character.plugins || [],
+            topics: runtime.character.topics || [],
+            knowledge: runtime.character.knowledge || [],
+            messageExamples: runtime.character.messageExamples || [],
+            postExamples: runtime.character.postExamples || [],
+            style: runtime.character.style || {},
+            enabled: true,
+            status: AgentStatus.ACTIVE,
+          };
+
+          const created = await this.database.createAgent(agentData);
+          if (created) {
+            logger.success(`[AgentServer] ✓ Agent ${runtime.character.name} persisted to database`);
+          } else {
+            logger.warn(
+              `[AgentServer] ⚠ Agent ${runtime.character.name} may already exist in database`
+            );
+          }
+        } catch (dbError) {
+          logger.error(`[AgentServer] ✗ Failed to persist agent to database:`, dbError);
+          // Don't throw - agent can still function in memory
+        }
+      } else {
+        logger.warn(
+          `[AgentServer] ⚠ Database not available - agent ${runtime.character.name} only exists in memory`
+        );
+      }
 
       // Auto-register the MessageBusConnector plugin
       try {

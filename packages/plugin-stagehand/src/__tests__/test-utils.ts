@@ -9,11 +9,11 @@ import {
   UUID,
   logger,
 } from '@elizaos/core';
-import { 
+import {
   createMockRuntime as baseMockRuntime,
   createMockMemory as baseMockMemory,
   createMockState as baseMockState,
-} from '@elizaos/core/test-utils';
+} from '../../../core/src/test-utils/mocks/runtime';
 
 /**
  * Creates a mock runtime for testing stagehand components
@@ -32,7 +32,6 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       messageExamples: [],
       postExamples: [],
       topics: ['web-automation', 'testing'],
-      adjectives: ['helpful', 'precise'],
       knowledge: [],
       plugins: ['@elizaos/plugin-stagehand'],
     },
@@ -54,7 +53,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
 
     // Additional methods for stagehand testing
     init: vi.fn().mockResolvedValue(undefined),
-    
+
     ...overrides,
   });
 }
@@ -132,7 +131,7 @@ export const createMockService = (overrides: Partial<Service> = {}): Service => 
     getCapabilities: vi.fn().mockReturnValue([]),
     ...overrides,
   } as unknown as Service;
-  
+
   return mockService;
 };
 

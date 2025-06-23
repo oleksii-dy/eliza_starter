@@ -84,20 +84,6 @@ You can customize the templates used for generating casts by providing custom te
 const myCharacter = {
   name: 'My Agent',
   bio: 'A helpful AI assistant on Farcaster',
-  templates: {
-    farcasterPostTemplate: `
-      # Custom post template
-      Write a thoughtful post about {{topic}} in the voice of {{agentName}}.
-    `,
-    farcasterMessageHandlerTemplate: `
-      # Custom reply template
-      Respond to {{currentPost}} as {{agentName}} would.
-    `,
-    farcasterShouldRespondTemplate: `
-      # Custom response decision template
-      Determine if {{agentName}} should respond to {{currentPost}}.
-    `,
-  },
 };
 ```
 

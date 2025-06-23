@@ -29,13 +29,17 @@ export class SelfModificationTestSuite implements TestSuite {
         }
 
         // Verify evaluators are registered
-        const evolutionEvaluator = runtime.evaluators.find((e: any) => e.name === 'CHARACTER_EVOLUTION');
+        const evolutionEvaluator = runtime.evaluators.find(
+          (e: any) => e.name === 'CHARACTER_EVOLUTION'
+        );
         if (!evolutionEvaluator) {
           throw new Error('CHARACTER_EVOLUTION evaluator not registered');
         }
 
         // Verify providers are registered
-        const evolutionProvider = runtime.providers.find((p: any) => p.name === 'CHARACTER_EVOLUTION');
+        const evolutionProvider = runtime.providers.find(
+          (p: any) => p.name === 'CHARACTER_EVOLUTION'
+        );
         if (!evolutionProvider) {
           throw new Error('CHARACTER_EVOLUTION provider not registered');
         }
@@ -228,7 +232,6 @@ export class SelfModificationTestSuite implements TestSuite {
         const validModification = {
           bio: ['Interested in helping people learn new technologies'],
           topics: ['education', 'learning'],
-          adjectives: ['patient', 'encouraging'],
         };
 
         const validResult = fileManager.validateModification(validModification);
@@ -311,10 +314,10 @@ export class SelfModificationTestSuite implements TestSuite {
         };
 
         const evaluator = runtime.evaluators.find((e: any) => e.name === 'CHARACTER_EVOLUTION');
-        
+
         // Force evaluation by bypassing cooldown
         await runtime.setCache('character-evolution:last-check', '0');
-        
+
         const shouldEvaluate = await evaluator.validate(runtime, feedbackMessage, state);
         if (shouldEvaluate) {
           await evaluator.handler(runtime, feedbackMessage, state);
@@ -341,7 +344,7 @@ export class SelfModificationTestSuite implements TestSuite {
         };
 
         const action = runtime.actions.find((a: any) => a.name === 'MODIFY_CHARACTER');
-        
+
         let modificationApplied = false;
         const callback = async (content: any) => {
           if (content.actions?.includes('MODIFY_CHARACTER')) {
@@ -362,12 +365,12 @@ export class SelfModificationTestSuite implements TestSuite {
           ? runtime.character.bio
           : [runtime.character.bio];
 
-        const hasNewTopic = newTopics.some((topic: string) => 
-          topic.includes('educational') || topic.includes('communication')
+        const hasNewTopic = newTopics.some(
+          (topic: string) => topic.includes('educational') || topic.includes('communication')
         );
-        
-        const hasNewBio = newBio.some((bioItem: string) => 
-          bioItem.includes('clear') || bioItem.includes('explanation')
+
+        const hasNewBio = newBio.some(
+          (bioItem: string) => bioItem.includes('clear') || bioItem.includes('explanation')
         );
 
         if (!hasNewTopic && !hasNewBio) {

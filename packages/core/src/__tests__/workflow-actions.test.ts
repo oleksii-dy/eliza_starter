@@ -1,6 +1,6 @@
 /**
  * Workflow Actions Test Suite
- * 
+ *
  * Tests the high-level workflow actions that orchestrate cross-plugin integration.
  * Verifies OAuth verification, payment risk assessment, and identity consolidation workflows.
  */
@@ -30,7 +30,6 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       plugins: [
         '@elizaos/plugin-trust',
@@ -100,7 +99,7 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
           lastUpdated: Date.now(),
           version: 1,
         };
-        
+
         // Simulate trust increase
         const newScore = Math.min(1.0, currentScore.overallScore + evidence.impact);
         currentScore.overallScore = newScore;
@@ -109,7 +108,7 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
         currentScore.evidence.push(evidence);
         currentScore.lastUpdated = Date.now();
         currentScore.version += 1;
-        
+
         mockTrustScores.set(entityId, currentScore);
         return Promise.resolve(currentScore);
       }),
@@ -125,18 +124,24 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
           verificationLevel: 'verified',
           verificationStatus: 'verified',
           platforms: new Map([
-            ['google', {
-              platformId: 'google-user-123',
-              verified: true,
-              metadata: { email: 'test@example.com' },
-              linkedAt: new Date().toISOString(),
-            }],
-            ['github', {
-              platformId: 'github-user-123',
-              verified: true,
-              metadata: { username: 'testuser' },
-              linkedAt: new Date().toISOString(),
-            }],
+            [
+              'google',
+              {
+                platformId: 'google-user-123',
+                verified: true,
+                metadata: { email: 'test@example.com' },
+                linkedAt: new Date().toISOString(),
+              },
+            ],
+            [
+              'github',
+              {
+                platformId: 'github-user-123',
+                verified: true,
+                metadata: { username: 'testuser' },
+                linkedAt: new Date().toISOString(),
+              },
+            ],
           ]),
           platformIdentities: {
             google: {
@@ -164,7 +169,10 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
       findByPlatformIdentity: vi.fn().mockResolvedValue([]),
       proposeEntityMerge: vi.fn().mockResolvedValue({
         id: asUUID('550e8400-e29b-41d4-a716-446655440501'),
-        entities: [asUUID('550e8400-e29b-41d4-a716-446655440502'), asUUID('550e8400-e29b-41d4-a716-446655440503')],
+        entities: [
+          asUUID('550e8400-e29b-41d4-a716-446655440502'),
+          asUUID('550e8400-e29b-41d4-a716-446655440503'),
+        ],
         confidence: 0.85,
         reason: 'High similarity in platform identities',
         conflicts: [],
@@ -231,7 +239,9 @@ describe('Workflow Actions', () => {
     it('should export OAuth verification workflow action', () => {
       expect(verifyOAuthIdentityWorkflowAction).toBeDefined();
       expect(verifyOAuthIdentityWorkflowAction.name).toBe('VERIFY_OAUTH_IDENTITY_WORKFLOW');
-      expect(verifyOAuthIdentityWorkflowAction.description).toContain('OAuth identity verification');
+      expect(verifyOAuthIdentityWorkflowAction.description).toContain(
+        'OAuth identity verification'
+      );
     });
 
     it('should validate OAuth verification requests correctly', async () => {
@@ -286,7 +296,7 @@ describe('Workflow Actions', () => {
       for (const platform of platforms) {
         vi.clearAllMocks();
         const message = createTestMessage(`Please verify my ${platform} account`, testEntityId);
-        
+
         // Should return failure result due to missing services
         const result = await verifyOAuthIdentityWorkflowAction.handler(
           mockRuntime as IAgentRuntime,
@@ -335,7 +345,10 @@ describe('Workflow Actions', () => {
     });
 
     it('should handle payment risk assessment successfully', async () => {
-      const message = createTestMessage('Assess payment risk for $1000 ETH transaction', testEntityId);
+      const message = createTestMessage(
+        'Assess payment risk for $1000 ETH transaction',
+        testEntityId
+      );
       const mockCallback = vi.fn();
 
       const result = await assessPaymentRiskWorkflowAction.handler(
@@ -358,7 +371,11 @@ describe('Workflow Actions', () => {
 
     it('should extract amount and currency from message', async () => {
       const testCases = [
-        { message: 'Risk for $500 bitcoin payment', expectedAmount: '500', expectedCurrency: 'BTC' },
+        {
+          message: 'Risk for $500 bitcoin payment',
+          expectedAmount: '500',
+          expectedCurrency: 'BTC',
+        },
         { message: 'Check 1000 SOL payment risk', expectedAmount: '1000', expectedCurrency: 'SOL' },
         { message: 'Assess payment safety', expectedAmount: '100', expectedCurrency: 'ETH' }, // defaults
       ];
@@ -375,7 +392,7 @@ describe('Workflow Actions', () => {
           mockCallback
         );
 
-        // The test shows that SOL gets converted to ETH in the logic, 
+        // The test shows that SOL gets converted to ETH in the logic,
         // and the amounts get treated as high risk due to the mock setup
         expect(mockCallback).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -390,11 +407,13 @@ describe('Workflow Actions', () => {
     it('should export identity consolidation action', () => {
       expect(consolidateIdentityWorkflowAction).toBeDefined();
       expect(consolidateIdentityWorkflowAction.name).toBe('CONSOLIDATE_IDENTITY_WORKFLOW');
-      expect(consolidateIdentityWorkflowAction.description).toContain('Consolidate multiple platform identities');
+      expect(consolidateIdentityWorkflowAction.description).toContain(
+        'Consolidate multiple platform identities'
+      );
     });
 
     it('should validate identity consolidation requests correctly', async () => {
-      // Use exact keywords from the validation logic  
+      // Use exact keywords from the validation logic
       const validMessage = createTestMessage('Please consolidate identity for my accounts');
       const invalidMessage = createTestMessage('Hello there');
 
@@ -440,15 +459,15 @@ describe('Workflow Actions', () => {
       expect(workflowActions).toBeDefined();
       expect(Array.isArray(workflowActions)).toBe(true);
       expect(workflowActions).toHaveLength(3);
-      
-      const actionNames = workflowActions.map(action => action.name);
+
+      const actionNames = workflowActions.map((action) => action.name);
       expect(actionNames).toContain('VERIFY_OAUTH_IDENTITY_WORKFLOW');
       expect(actionNames).toContain('ASSESS_PAYMENT_RISK_WORKFLOW');
       expect(actionNames).toContain('CONSOLIDATE_IDENTITY_WORKFLOW');
     });
 
     it('should have all required action properties', () => {
-      workflowActions.forEach(action => {
+      workflowActions.forEach((action) => {
         expect(action.name).toBeDefined();
         expect(action.description).toBeDefined();
         expect(action.validate).toBeDefined();
@@ -471,7 +490,7 @@ describe('Workflow Actions', () => {
       };
 
       const message = createTestMessage('Verify my Google account', testEntityId);
-      
+
       // OAuth verification should fail validation
       const oauthValidation = await verifyOAuthIdentityWorkflowAction.validate(
         runtimeWithoutServices as IAgentRuntime,

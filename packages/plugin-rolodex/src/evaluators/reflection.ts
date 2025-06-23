@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { logger } from '@elizaos/core';
-import {
-  ModelType,
-} from '@elizaos/core';
+import { ModelType } from '@elizaos/core';
 
 import {
   type Entity,
@@ -158,7 +156,9 @@ function resolveEntity(entityId: UUID, entities: Entity[]): UUID {
 
   // If no entity found, this might be a scenario test or external entity reference
   // Log a warning but don't throw - let the caller handle gracefully
-  logger.warn(`Could not resolve entityId "${entityId}" to a valid UUID - this may be an external entity reference in a test scenario`);
+  logger.warn(
+    `Could not resolve entityId "${entityId}" to a valid UUID - this may be an external entity reference in a test scenario`
+  );
   return null as any; // Return null to signal unresolvable entity
 }
 async function handler(
@@ -199,7 +199,7 @@ async function handler(
       existingRelationships: JSON.stringify(existingRelationships),
       senderId: message.entityId,
     },
-    template: runtime.character.templates?.reflectionTemplate || reflectionTemplate,
+    template: reflectionTemplate,
   });
 
   // Use the model without schema validation
@@ -273,14 +273,14 @@ async function handler(
       try {
         sourceId = resolveEntity(relationship.sourceEntityId, entities);
         targetId = resolveEntity(relationship.targetEntityId, entities);
-        
+
         // Skip relationship if either entity couldn't be resolved
         if (!sourceId || !targetId) {
           logger.warn('Skipping relationship - could not resolve entity IDs:', {
             sourceEntityId: relationship.sourceEntityId,
             targetEntityId: relationship.targetEntityId,
             sourceResolved: !!sourceId,
-            targetResolved: !!targetId
+            targetResolved: !!targetId,
           });
           continue;
         }

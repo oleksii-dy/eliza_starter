@@ -267,7 +267,7 @@ export class RepositoryCloner {
     let lastError: Error | null = null;
 
     // Use error handler with retry logic for clone operation
-    return await ErrorHandler.handleError(
+    const result = await ErrorHandler.handleError(
       new Error('Repository clone operation'),
       'clone_repository',
       { repoName, repoUrl, targetDir, type },
@@ -353,8 +353,8 @@ export class RepositoryCloner {
           lastUpdated: new Date().toISOString(),
           commit: log?.latest?.hash,
           branch: status?.current || branch,
-          size,
-          fileCount,
+          size: size || undefined,
+          fileCount: fileCount || undefined,
         };
 
         this.clonedRepos.set(repoName, repoInfo);
@@ -369,6 +369,12 @@ export class RepositoryCloner {
         return repoInfo;
       }
     );
+    
+    if (!result) {
+      throw new Error(`Failed to clone repository: ${repoName}`);
+    }
+    
+    return result;
   }
 
   /**

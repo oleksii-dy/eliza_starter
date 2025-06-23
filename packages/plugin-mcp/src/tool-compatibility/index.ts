@@ -1,4 +1,6 @@
 import type { JSONSchema7 } from 'json-schema';
+import { ServiceType, type IAgentRuntime } from '@elizaos/core';
+import type { ServiceTypeName } from '@elizaos/core';
 
 // Constraint types for embedding in descriptions
 export interface StringConstraints {
@@ -29,7 +31,11 @@ export interface ObjectConstraints {
   additionalProperties?: boolean;
 }
 
-export type SchemaConstraints = StringConstraints | NumberConstraints | ArrayConstraints | ObjectConstraints;
+export type SchemaConstraints =
+  | StringConstraints
+  | NumberConstraints
+  | ArrayConstraints
+  | ObjectConstraints;
 
 // Model provider detection
 export type ModelProvider = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'unknown';
@@ -244,20 +250,29 @@ export abstract class McpToolCompatibility {
 
     // Handle oneOf, anyOf, allOf recursively
     if (Array.isArray(schema.oneOf)) {
-      processed.oneOf = schema.oneOf.map(s => typeof s === 'object' ? this.processSchema(s as JSONSchema7) : s);
+      processed.oneOf = schema.oneOf.map((s) =>
+        typeof s === 'object' ? this.processSchema(s as JSONSchema7) : s
+      );
     }
     if (Array.isArray(schema.anyOf)) {
-      processed.anyOf = schema.anyOf.map(s => typeof s === 'object' ? this.processSchema(s as JSONSchema7) : s);
+      processed.anyOf = schema.anyOf.map((s) =>
+        typeof s === 'object' ? this.processSchema(s as JSONSchema7) : s
+      );
     }
     if (Array.isArray(schema.allOf)) {
-      processed.allOf = schema.allOf.map(s => typeof s === 'object' ? this.processSchema(s as JSONSchema7) : s);
+      processed.allOf = schema.allOf.map((s) =>
+        typeof s === 'object' ? this.processSchema(s as JSONSchema7) : s
+      );
     }
 
     return processed;
   }
 
   // Merge constraints into description
-  protected mergeDescription(originalDescription: string | undefined, constraints: SchemaConstraints): string {
+  protected mergeDescription(
+    originalDescription: string | undefined,
+    constraints: SchemaConstraints
+  ): string {
     const constraintJson = JSON.stringify(constraints);
     if (originalDescription) {
       return `${originalDescription}\n${constraintJson}`;
@@ -273,19 +288,25 @@ export abstract class McpToolCompatibility {
 }
 
 // Model detection utilities
-export function detectModelProvider(runtime: any): ModelInfo {
+export function detectModelProvider(runtime: IAgentRuntime): ModelInfo {
   // Try to extract model info from ElizaOS runtime
-  const modelString = runtime?.modelProvider || runtime?.model || '';
-  const modelId = String(modelString).toLowerCase();
+  // Since there's no MODEL_PROVIDER service type, we'll use a default
+  const modelId = 'unknown';
 
   let provider: ModelProvider = 'unknown';
   let supportsStructuredOutputs = false;
   let isReasoningModel = false;
 
   // Detect provider based on model string
-  if (modelId.includes('openai') || modelId.includes('gpt-') || modelId.includes('o1-') || modelId.includes('o3-')) {
+  if (
+    modelId.includes('openai') ||
+    modelId.includes('gpt-') ||
+    modelId.includes('o1-') ||
+    modelId.includes('o3-')
+  ) {
     provider = 'openai';
-    supportsStructuredOutputs = modelId.includes('gpt-4') || modelId.includes('o1') || modelId.includes('o3');
+    supportsStructuredOutputs =
+      modelId.includes('gpt-4') || modelId.includes('o1') || modelId.includes('o3');
     isReasoningModel = modelId.includes('o1') || modelId.includes('o3');
   } else if (modelId.includes('anthropic') || modelId.includes('claude')) {
     provider = 'anthropic';
@@ -308,9 +329,11 @@ export function detectModelProvider(runtime: any): ModelInfo {
 }
 
 // Factory function to get the appropriate compatibility layer
-export async function createMcpToolCompatibility(runtime: any): Promise<McpToolCompatibility | null> {
+export async function createMcpToolCompatibility(
+  runtime: IAgentRuntime
+): Promise<McpToolCompatibility | null> {
   const modelInfo = detectModelProvider(runtime);
-  
+
   // Import and instantiate the appropriate compatibility layer
   try {
     switch (modelInfo.provider) {
@@ -334,9 +357,11 @@ export async function createMcpToolCompatibility(runtime: any): Promise<McpToolC
 }
 
 // Synchronous version for environments that need it (like service.ts)
-export function createMcpToolCompatibilitySync(runtime: any): McpToolCompatibility | null {
+export function createMcpToolCompatibilitySync(
+  runtime: IAgentRuntime
+): McpToolCompatibility | null {
   const modelInfo = detectModelProvider(runtime);
-  
+
   // Use synchronous requires for CommonJS environments
   try {
     switch (modelInfo.provider) {
@@ -360,4 +385,4 @@ export function createMcpToolCompatibilitySync(runtime: any): McpToolCompatibili
     console.warn('Failed to load compatibility provider:', error);
     return null;
   }
-} 
+}

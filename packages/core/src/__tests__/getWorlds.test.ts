@@ -152,7 +152,6 @@ describe('getWorlds functionality', () => {
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       style: { all: [], chat: [], post: [] },
     };
 

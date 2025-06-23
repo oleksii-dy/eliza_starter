@@ -19,9 +19,7 @@ export function customReasoningCommands(program: Command) {
     .description('Manage custom reasoning service and models');
 
   // Model management commands
-  const models = reasoning
-    .command('models')
-    .description('Manage custom reasoning models');
+  const models = reasoning.command('models').description('Manage custom reasoning models');
 
   models
     .command('list')
@@ -36,7 +34,9 @@ export function customReasoningCommands(program: Command) {
         elizaLogger.info('  • planning: Medium DeepSeek Qwen 14B model');
         elizaLogger.info('  • coding: Large DeepSeek Llama 67B model');
         elizaLogger.info('');
-        elizaLogger.info('⚙️  To get live status, run this command from within an ElizaOS runtime context.');
+        elizaLogger.info(
+          '⚙️  To get live status, run this command from within an ElizaOS runtime context.'
+        );
       } catch (error) {
         elizaLogger.error('❌ Error listing models:', error);
         process.exit(1);
@@ -54,7 +54,9 @@ export function customReasoningCommands(program: Command) {
         elizaLogger.info('This command should be run from within an ElizaOS runtime context.');
         elizaLogger.info('Add this to your agent configuration:');
         elizaLogger.info('');
-        elizaLogger.info(`CUSTOM_REASONING_${modelType.toUpperCase().replace('-', '_')}_ENABLED=true`);
+        elizaLogger.info(
+          `REASONING_SERVICE_${modelType.toUpperCase().replace('-', '_')}_ENABLED=true`
+        );
       } catch (error) {
         elizaLogger.error('❌ Error enabling model:', error);
         process.exit(1);
@@ -72,7 +74,9 @@ export function customReasoningCommands(program: Command) {
         elizaLogger.info('This command should be run from within an ElizaOS runtime context.');
         elizaLogger.info('Set this in your agent configuration:');
         elizaLogger.info('');
-        elizaLogger.info(`CUSTOM_REASONING_${modelType.toUpperCase().replace('-', '_')}_ENABLED=false`);
+        elizaLogger.info(
+          `REASONING_SERVICE_${modelType.toUpperCase().replace('-', '_')}_ENABLED=false`
+        );
       } catch (error) {
         elizaLogger.error('❌ Error disabling model:', error);
         process.exit(1);
@@ -87,17 +91,29 @@ export function customReasoningCommands(program: Command) {
         elizaLogger.info('📈 Custom Reasoning Status');
         elizaLogger.info('');
         elizaLogger.info('Environment Variables:');
-        elizaLogger.info(`  CUSTOM_REASONING_ENABLED: ${process.env.CUSTOM_REASONING_ENABLED || 'not set'}`);
-        elizaLogger.info(`  TOGETHER_AI_API_KEY: ${process.env.TOGETHER_AI_API_KEY ? '✅ Set' : '❌ Not set'}`);
+        elizaLogger.info(
+          `  REASONING_SERVICE_ENABLED: ${process.env.REASONING_SERVICE_ENABLED || 'not set'}`
+        );
+        elizaLogger.info(
+          `  TOGETHER_AI_API_KEY: ${process.env.TOGETHER_AI_API_KEY ? '✅ Set' : '❌ Not set'}`
+        );
         elizaLogger.info('');
         elizaLogger.info('Model Configuration:');
-        elizaLogger.info(`  Should Respond: ${process.env.CUSTOM_REASONING_SHOULD_RESPOND_ENABLED || 'false'}`);
-        elizaLogger.info(`  Planning: ${process.env.CUSTOM_REASONING_PLANNING_ENABLED || 'false'}`);
-        elizaLogger.info(`  Coding: ${process.env.CUSTOM_REASONING_CODING_ENABLED || 'false'}`);
+        elizaLogger.info(
+          `  Should Respond: ${process.env.REASONING_SERVICE_SHOULD_RESPOND_ENABLED || 'false'}`
+        );
+        elizaLogger.info(
+          `  Planning: ${process.env.REASONING_SERVICE_PLANNING_ENABLED || 'false'}`
+        );
+        elizaLogger.info(`  Coding: ${process.env.REASONING_SERVICE_CODING_ENABLED || 'false'}`);
         elizaLogger.info('');
         elizaLogger.info('Cost Management:');
-        elizaLogger.info(`  Budget Limit: $${process.env.CUSTOM_REASONING_BUDGET_LIMIT || 'not set'}`);
-        elizaLogger.info(`  Auto Shutdown: ${process.env.CUSTOM_REASONING_AUTO_SHUTDOWN_MINUTES || '30'} minutes`);
+        elizaLogger.info(
+          `  Budget Limit: $${process.env.REASONING_SERVICE_BUDGET_LIMIT || 'not set'}`
+        );
+        elizaLogger.info(
+          `  Auto Shutdown: ${process.env.REASONING_SERVICE_AUTO_SHUTDOWN_MINUTES || '30'} minutes`
+        );
       } catch (error) {
         elizaLogger.error('❌ Error getting status:', error);
         process.exit(1);
@@ -137,9 +153,7 @@ export function customReasoningCommands(program: Command) {
     });
 
   // Training data commands
-  const data = reasoning
-    .command('data')
-    .description('Manage training data collection and export');
+  const data = reasoning.command('data').description('Manage training data collection and export');
 
   data
     .command('export')
@@ -167,8 +181,10 @@ export function customReasoningCommands(program: Command) {
         elizaLogger.info(`  Model Type: ${exportOptions.modelType || 'all'}`);
         elizaLogger.info(`  Format: ${exportOptions.format}`);
         elizaLogger.info(`  Limit: ${exportOptions.limit}`);
-        if (exportOptions.startDate) elizaLogger.info(`  Start Date: ${exportOptions.startDate.toISOString()}`);
-        if (exportOptions.endDate) elizaLogger.info(`  End Date: ${exportOptions.endDate.toISOString()}`);
+        if (exportOptions.startDate)
+          elizaLogger.info(`  Start Date: ${exportOptions.startDate.toISOString()}`);
+        if (exportOptions.endDate)
+          elizaLogger.info(`  End Date: ${exportOptions.endDate.toISOString()}`);
         elizaLogger.info('');
 
         // Generate output filename if not provided
@@ -179,8 +195,12 @@ export function customReasoningCommands(program: Command) {
 
         elizaLogger.info(`📁 Output file: ${outputFile}`);
         elizaLogger.info('');
-        elizaLogger.info('⚠️  This command requires an active ElizaOS runtime context to access training data.');
-        elizaLogger.info('   Run this command from within your ElizaOS project or plugin directory.');
+        elizaLogger.info(
+          '⚠️  This command requires an active ElizaOS runtime context to access training data.'
+        );
+        elizaLogger.info(
+          '   Run this command from within your ElizaOS project or plugin directory.'
+        );
       } catch (error) {
         elizaLogger.error('❌ Error exporting training data:', error);
         process.exit(1);
@@ -216,12 +236,12 @@ export function customReasoningCommands(program: Command) {
       try {
         const retentionDays = parseInt(options.days);
         elizaLogger.info(`🧹 Cleaning up training data older than ${retentionDays} days`);
-        
+
         if (options.dryRun) {
           elizaLogger.info('');
           elizaLogger.info('🔍 DRY RUN - No data will be deleted');
         }
-        
+
         elizaLogger.info('');
         elizaLogger.info('⚠️  This command requires an active ElizaOS runtime context.');
       } catch (error) {
@@ -231,9 +251,7 @@ export function customReasoningCommands(program: Command) {
     });
 
   // Cost management commands
-  const costs = reasoning
-    .command('costs')
-    .description('Manage costs and budgets');
+  const costs = reasoning.command('costs').description('Manage costs and budgets');
 
   costs
     .command('report')
@@ -270,9 +288,11 @@ export function customReasoningCommands(program: Command) {
         elizaLogger.info(`💰 Setting budget limit to $${budgetLimit}`);
         elizaLogger.info('');
         elizaLogger.info('Environment variable to set:');
-        elizaLogger.info(`CUSTOM_REASONING_BUDGET_LIMIT=${budgetLimit}`);
+        elizaLogger.info(`REASONING_SERVICE_BUDGET_LIMIT=${budgetLimit}`);
         elizaLogger.info('');
-        elizaLogger.info('⚠️  Budget enforcement requires the custom reasoning service to be running.');
+        elizaLogger.info(
+          '⚠️  Budget enforcement requires the custom reasoning service to be running.'
+        );
       } catch (error) {
         elizaLogger.error('❌ Error setting budget:', error);
         process.exit(1);
@@ -289,7 +309,7 @@ export function customReasoningCommands(program: Command) {
         elizaLogger.info(`⏰ Setting auto-shutdown to ${idleMinutes} minutes of idle time`);
         elizaLogger.info('');
         elizaLogger.info('Environment variable to set:');
-        elizaLogger.info(`CUSTOM_REASONING_AUTO_SHUTDOWN_MINUTES=${idleMinutes}`);
+        elizaLogger.info(`REASONING_SERVICE_AUTO_SHUTDOWN_MINUTES=${idleMinutes}`);
       } catch (error) {
         elizaLogger.error('❌ Error configuring auto-shutdown:', error);
         process.exit(1);
@@ -304,33 +324,57 @@ export function customReasoningCommands(program: Command) {
       try {
         elizaLogger.info('⚙️  Custom Reasoning Configuration');
         elizaLogger.info('');
-        
+
         elizaLogger.info('🔧 Core Settings:');
-        elizaLogger.info(`  Enabled: ${process.env.CUSTOM_REASONING_ENABLED || 'false'}`);
-        elizaLogger.info(`  API Key: ${process.env.TOGETHER_AI_API_KEY ? '✅ Configured' : '❌ Missing'}`);
+        elizaLogger.info(`  Enabled: ${process.env.REASONING_SERVICE_ENABLED || 'false'}`);
+        elizaLogger.info(
+          `  API Key: ${process.env.TOGETHER_AI_API_KEY ? '✅ Configured' : '❌ Missing'}`
+        );
         elizaLogger.info('');
-        
+
         elizaLogger.info('🤖 Models:');
-        elizaLogger.info(`  Should Respond: ${process.env.CUSTOM_REASONING_SHOULD_RESPOND_ENABLED || 'false'}`);
-        elizaLogger.info(`    Model: ${process.env.CUSTOM_REASONING_SHOULD_RESPOND_MODEL || 'moonmakesmagic/DeepSeek-R1-Distill-Qwen-1.5B-shouldrespond'}`);
-        elizaLogger.info(`  Planning: ${process.env.CUSTOM_REASONING_PLANNING_ENABLED || 'false'}`);
-        elizaLogger.info(`    Model: ${process.env.CUSTOM_REASONING_PLANNING_MODEL || 'moonmakesmagic/DeepSeek-Qwen-14B-planning'}`);
-        elizaLogger.info(`  Coding: ${process.env.CUSTOM_REASONING_CODING_ENABLED || 'false'}`);
-        elizaLogger.info(`    Model: ${process.env.CUSTOM_REASONING_CODING_MODEL || 'moonmakesmagic/DeepSeek-Llama-67B-coding'}`);
+        elizaLogger.info(
+          `  Should Respond: ${process.env.REASONING_SERVICE_SHOULD_RESPOND_ENABLED || 'false'}`
+        );
+        elizaLogger.info(
+          `    Model: ${process.env.REASONING_SERVICE_SHOULD_RESPOND_MODEL || 'moonmakesmagic/DeepSeek-R1-Distill-Qwen-1.5B-shouldrespond'}`
+        );
+        elizaLogger.info(
+          `  Planning: ${process.env.REASONING_SERVICE_PLANNING_ENABLED || 'false'}`
+        );
+        elizaLogger.info(
+          `    Model: ${process.env.REASONING_SERVICE_PLANNING_MODEL || 'moonmakesmagic/DeepSeek-Qwen-14B-planning'}`
+        );
+        elizaLogger.info(`  Coding: ${process.env.REASONING_SERVICE_CODING_ENABLED || 'false'}`);
+        elizaLogger.info(
+          `    Model: ${process.env.REASONING_SERVICE_CODING_MODEL || 'moonmakesmagic/DeepSeek-Llama-67B-coding'}`
+        );
         elizaLogger.info('');
-        
+
         elizaLogger.info('💰 Cost Management:');
-        elizaLogger.info(`  Budget Limit: $${process.env.CUSTOM_REASONING_BUDGET_LIMIT || 'not set'}`);
-        elizaLogger.info(`  Auto Shutdown: ${process.env.CUSTOM_REASONING_AUTO_SHUTDOWN_MINUTES || '30'} minutes`);
-        elizaLogger.info(`  Max Cost/Hour: $${process.env.CUSTOM_REASONING_MAX_COST_PER_HOUR || '10'}`);
+        elizaLogger.info(
+          `  Budget Limit: $${process.env.REASONING_SERVICE_BUDGET_LIMIT || 'not set'}`
+        );
+        elizaLogger.info(
+          `  Auto Shutdown: ${process.env.REASONING_SERVICE_AUTO_SHUTDOWN_MINUTES || '30'} minutes`
+        );
+        elizaLogger.info(
+          `  Max Cost/Hour: $${process.env.REASONING_SERVICE_MAX_COST_PER_HOUR || '10'}`
+        );
         elizaLogger.info('');
-        
+
         elizaLogger.info('📊 Training Data:');
-        elizaLogger.info(`  Collection: ${process.env.CUSTOM_REASONING_COLLECT_TRAINING_DATA || 'false'}`);
-        elizaLogger.info(`  Max Samples: ${process.env.CUSTOM_REASONING_MAX_SAMPLES_PER_MODEL || '10000'}`);
-        elizaLogger.info(`  Retention: ${process.env.CUSTOM_REASONING_RETENTION_DAYS || '30'} days`);
+        elizaLogger.info(
+          `  Collection: ${process.env.REASONING_SERVICE_COLLECT_TRAINING_DATA || 'false'}`
+        );
+        elizaLogger.info(
+          `  Max Samples: ${process.env.REASONING_SERVICE_MAX_SAMPLES_PER_MODEL || '10000'}`
+        );
+        elizaLogger.info(
+          `  Retention: ${process.env.REASONING_SERVICE_RETENTION_DAYS || '30'} days`
+        );
         elizaLogger.info('');
-        
+
         elizaLogger.info('🔧 Proxy Settings:');
         elizaLogger.info(`  Anthropic Proxy: ${process.env.ANTHROPIC_PROXY_ENABLED || 'false'}`);
         elizaLogger.info(`  Proxy Port: ${process.env.ANTHROPIC_PROXY_PORT || '8001'}`);
@@ -347,28 +391,30 @@ export function customReasoningCommands(program: Command) {
       try {
         elizaLogger.info('🚀 Custom Reasoning Setup');
         elizaLogger.info('');
-        elizaLogger.info('This interactive setup will help you configure custom reasoning for ElizaOS.');
+        elizaLogger.info(
+          'This interactive setup will help you configure custom reasoning for ElizaOS.'
+        );
         elizaLogger.info('');
-        
+
         elizaLogger.info('📋 Required environment variables:');
         elizaLogger.info('');
         elizaLogger.info('1. TOGETHER_AI_API_KEY=your_api_key_here');
         elizaLogger.info('   Get your API key from: https://api.together.xyz/settings/api-keys');
         elizaLogger.info('');
-        elizaLogger.info('2. CUSTOM_REASONING_ENABLED=true');
+        elizaLogger.info('2. REASONING_SERVICE_ENABLED=true');
         elizaLogger.info('   Enable the custom reasoning service');
         elizaLogger.info('');
         elizaLogger.info('3. Choose which models to enable:');
-        elizaLogger.info('   CUSTOM_REASONING_SHOULD_RESPOND_ENABLED=true');
-        elizaLogger.info('   CUSTOM_REASONING_PLANNING_ENABLED=true');
-        elizaLogger.info('   CUSTOM_REASONING_CODING_ENABLED=true');
+        elizaLogger.info('   REASONING_SERVICE_SHOULD_RESPOND_ENABLED=true');
+        elizaLogger.info('   REASONING_SERVICE_PLANNING_ENABLED=true');
+        elizaLogger.info('   REASONING_SERVICE_CODING_ENABLED=true');
         elizaLogger.info('');
         elizaLogger.info('4. Optional cost management:');
-        elizaLogger.info('   CUSTOM_REASONING_BUDGET_LIMIT=100');
-        elizaLogger.info('   CUSTOM_REASONING_AUTO_SHUTDOWN_MINUTES=30');
+        elizaLogger.info('   REASONING_SERVICE_BUDGET_LIMIT=100');
+        elizaLogger.info('   REASONING_SERVICE_AUTO_SHUTDOWN_MINUTES=30');
         elizaLogger.info('');
         elizaLogger.info('5. Optional training data collection:');
-        elizaLogger.info('   CUSTOM_REASONING_COLLECT_TRAINING_DATA=true');
+        elizaLogger.info('   REASONING_SERVICE_COLLECT_TRAINING_DATA=true');
         elizaLogger.info('');
         elizaLogger.info('💡 Add these to your .env file and restart your ElizaOS agent.');
       } catch (error) {
@@ -384,28 +430,28 @@ export async function createSampleConfig(outputPath: string): Promise<void> {
 # Add these variables to your .env file
 
 # Core Settings
-CUSTOM_REASONING_ENABLED=true
+REASONING_SERVICE_ENABLED=true
 TOGETHER_AI_API_KEY=your_api_key_here
 
 # Model Configuration
-CUSTOM_REASONING_SHOULD_RESPOND_ENABLED=true
-CUSTOM_REASONING_SHOULD_RESPOND_MODEL=moonmakesmagic/DeepSeek-R1-Distill-Qwen-1.5B-shouldrespond
+REASONING_SERVICE_SHOULD_RESPOND_ENABLED=true
+REASONING_SERVICE_SHOULD_RESPOND_MODEL=moonmakesmagic/DeepSeek-R1-Distill-Qwen-1.5B-shouldrespond
 
-CUSTOM_REASONING_PLANNING_ENABLED=true
-CUSTOM_REASONING_PLANNING_MODEL=moonmakesmagic/DeepSeek-Qwen-14B-planning
+REASONING_SERVICE_PLANNING_ENABLED=true
+REASONING_SERVICE_PLANNING_MODEL=moonmakesmagic/DeepSeek-Qwen-14B-planning
 
-CUSTOM_REASONING_CODING_ENABLED=false
-CUSTOM_REASONING_CODING_MODEL=moonmakesmagic/DeepSeek-Llama-67B-coding
+REASONING_SERVICE_CODING_ENABLED=false
+REASONING_SERVICE_CODING_MODEL=moonmakesmagic/DeepSeek-Llama-67B-coding
 
 # Cost Management
-CUSTOM_REASONING_BUDGET_LIMIT=100
-CUSTOM_REASONING_AUTO_SHUTDOWN_MINUTES=30
-CUSTOM_REASONING_MAX_COST_PER_HOUR=10
+REASONING_SERVICE_BUDGET_LIMIT=100
+REASONING_SERVICE_AUTO_SHUTDOWN_MINUTES=30
+REASONING_SERVICE_MAX_COST_PER_HOUR=10
 
 # Training Data Collection
-CUSTOM_REASONING_COLLECT_TRAINING_DATA=true
-CUSTOM_REASONING_MAX_SAMPLES_PER_MODEL=10000
-CUSTOM_REASONING_RETENTION_DAYS=30
+REASONING_SERVICE_COLLECT_TRAINING_DATA=true
+REASONING_SERVICE_MAX_SAMPLES_PER_MODEL=10000
+REASONING_SERVICE_RETENTION_DAYS=30
 
 # Anthropic Proxy (for autocoder integration)
 ANTHROPIC_PROXY_ENABLED=false

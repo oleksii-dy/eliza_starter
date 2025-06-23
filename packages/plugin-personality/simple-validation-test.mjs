@@ -34,7 +34,6 @@ async function runSimpleValidation() {
       name: 'ValidationAgent',
       bio: ['Test agent for validation'],
       topics: ['testing', 'validation'],
-      adjectives: ['helpful', 'reliable'],
       system: 'You are a test agent for validation purposes.',
       messageExamples: [
         [

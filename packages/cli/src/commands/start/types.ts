@@ -12,6 +12,7 @@ export interface StartOptions {
   port?: number;
   configDir?: string;
   timeout?: number; // Duration in seconds to run before shutdown
+  testMode?: boolean; // Run in test mode (exits after initialization)
   autonomous?: boolean; // Enable autonomous mode
   adminPort?: number; // Admin interface port
   saveLogsTo?: string; // Directory to save logs

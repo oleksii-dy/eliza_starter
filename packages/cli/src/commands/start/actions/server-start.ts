@@ -15,6 +15,7 @@ export interface ServerStartOptions {
   characters?: Character[];
   projectAgents?: ProjectAgent[];
   timeout?: number; // Duration in seconds to run before shutdown
+  testMode?: boolean; // Run in test mode (exits after initialization)
   autonomous?: boolean; // Enable autonomous mode
   adminPort?: number; // Admin interface port
   saveLogsTo?: string; // Directory to save logs
@@ -125,5 +126,13 @@ export async function startAgents(options: ServerStartOptions): Promise<void> {
   }
   if (options.saveLogsTo) {
     logger.info(`📁 Logs will be saved to: ${options.saveLogsTo}`);
+  }
+
+  // If in test mode, exit after successful initialization
+  if (options.testMode) {
+    logger.info('🧪 Test mode: Server initialized successfully, shutting down...');
+    await server.stop();
+    logger.info('✅ Test mode completed successfully');
+    process.exit(0);
   }
 }

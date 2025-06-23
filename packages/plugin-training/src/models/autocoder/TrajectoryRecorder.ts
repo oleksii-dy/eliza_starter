@@ -748,6 +748,7 @@ export class TrajectoryRecorder {
         constraints: ['typescript_only', 'no_external_dependencies'],
         requirements: [trajectory.initialPrompt],
         success_criteria: ['code_compiles', 'tests_pass', 'meets_requirements'],
+        knowledge_base: ['typescript', 'node.js', 'eliza_framework'],
       },
       
       trajectory: trajectory.steps.map((step: any, index: number) => ({
@@ -792,11 +793,11 @@ export class TrajectoryRecorder {
       
       final_result: {
         success: true,
-        code_files: [{ path: 'main.ts', content: trajectory.finalCode }],
+        final_code: trajectory.finalCode || '',
+        files_created: ['main.ts'],
         tests_passing: true,
         documentation_complete: false,
         user_satisfaction: 0.9,
-        deployment_successful: false,
       },
       
       back_reasoning: {
@@ -807,8 +808,8 @@ export class TrajectoryRecorder {
       },
       
       metadata: {
+        total_duration_ms: trajectory.metadata?.duration || 45000,
         total_steps: trajectory.steps.length,
-        duration_minutes: Math.round((trajectory.metadata?.duration || 45000) / 60000),
         code_lines_generated: trajectory.finalCode?.split('\n').length || 50,
         iterations_required: 1,
         tools_effectiveness: { code_editor: 0.9 },

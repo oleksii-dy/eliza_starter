@@ -123,7 +123,6 @@ export const agentSelfModificationScenario: PluginScenario = {
             The agent's character should have evolved gradually:
             - New bio elements about teaching or explanation skills
             - Topics related to educational communication or blockchain education
-            - Adjectives reflecting teaching abilities (clear, accessible, helpful)
             - Style preferences for educational communication
           `,
           priority: 'medium',

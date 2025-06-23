@@ -7,7 +7,7 @@ This document provides a complete guide to the **Custom Reasoning Service** - a 
 The Custom Reasoning Service provides three specialized fine-tuned models:
 
 1. **ShouldRespond Model** (Ultra-small 1.5B) - Decides when the agent should respond to messages
-2. **Planning Model** (Medium 14B) - Generates thoughts, selects actions, and plans responses  
+2. **Planning Model** (Medium 14B) - Generates thoughts, selects actions, and plans responses
 3. **Coding Model** (Large 67B) - Generates code and technical solutions
 
 ## Key Features
@@ -24,16 +24,18 @@ The Custom Reasoning Service provides three specialized fine-tuned models:
 ### 1. Configuration
 
 Copy the environment template:
+
 ```bash
 cp .env.example .env
 ```
 
 Add your Together.ai API key:
+
 ```env
-CUSTOM_REASONING_ENABLED=true
+REASONING_SERVICE_ENABLED=true
 TOGETHER_AI_API_KEY=your_together_ai_api_key_here
-CUSTOM_REASONING_SHOULD_RESPOND_ENABLED=true
-CUSTOM_REASONING_BUDGET_LIMIT=50
+REASONING_SERVICE_SHOULD_RESPOND_ENABLED=true
+REASONING_SERVICE_BUDGET_LIMIT=50
 ```
 
 ### 2. Start Your Agent
@@ -47,6 +49,7 @@ elizaos start
 ```
 
 Look for initialization logs:
+
 ```
 ✅ Custom reasoning service enabled with Together.ai
 ✅ Enabled custom reasoning models: ShouldRespond
@@ -74,36 +77,39 @@ elizaos reasoning data export --model-type should_respond
 ## Model Configuration
 
 ### ShouldRespond Model (Ultra-small)
+
 - **Purpose**: Decides whether the agent should respond to messages
 - **Model**: DeepSeek-R1-Distill-Qwen-1.5B (1.5B parameters)
 - **Cost**: ~$0.10/hour when deployed
 - **Use Case**: High-frequency decisions, always-on optimization
 
 ```env
-CUSTOM_REASONING_SHOULD_RESPOND_ENABLED=true
-CUSTOM_REASONING_SHOULD_RESPOND_MODEL=moonmakesmagic/DeepSeek-R1-Distill-Qwen-1.5B-shouldrespond
+REASONING_SERVICE_SHOULD_RESPOND_ENABLED=true
+REASONING_SERVICE_SHOULD_RESPOND_MODEL=moonmakesmagic/DeepSeek-R1-Distill-Qwen-1.5B-shouldrespond
 ```
 
 ### Planning Model (Medium)
+
 - **Purpose**: Generates response plans, selects actions, chooses providers
 - **Model**: DeepSeek-Qwen-14B (14B parameters)
 - **Cost**: ~$0.50/hour when deployed
 - **Use Case**: Strategic thinking and response coordination
 
 ```env
-CUSTOM_REASONING_PLANNING_ENABLED=true
-CUSTOM_REASONING_PLANNING_MODEL=moonmakesmagic/DeepSeek-Qwen-14B-planning
+REASONING_SERVICE_PLANNING_ENABLED=true
+REASONING_SERVICE_PLANNING_MODEL=moonmakesmagic/DeepSeek-Qwen-14B-planning
 ```
 
 ### Coding Model (Large)
+
 - **Purpose**: Generates code, technical solutions, and explanations
-- **Model**: DeepSeek-Llama-67B (67B parameters)  
+- **Model**: DeepSeek-Llama-67B (67B parameters)
 - **Cost**: ~$2.00/hour when deployed
 - **Use Case**: Complex coding tasks, autocoder integration
 
 ```env
-CUSTOM_REASONING_CODING_ENABLED=true
-CUSTOM_REASONING_CODING_MODEL=moonmakesmagic/DeepSeek-Llama-67B-coding
+REASONING_SERVICE_CODING_ENABLED=true
+REASONING_SERVICE_CODING_MODEL=moonmakesmagic/DeepSeek-Llama-67B-coding
 ```
 
 ## Cost Management
@@ -111,9 +117,10 @@ CUSTOM_REASONING_CODING_MODEL=moonmakesmagic/DeepSeek-Llama-67B-coding
 ### Budget Limits
 
 Set automatic spending limits:
+
 ```env
-CUSTOM_REASONING_BUDGET_LIMIT=100          # $100 total limit
-CUSTOM_REASONING_MAX_COST_PER_HOUR=10      # $10/hour limit
+REASONING_SERVICE_BUDGET_LIMIT=100          # $100 total limit
+REASONING_SERVICE_MAX_COST_PER_HOUR=10      # $10/hour limit
 ```
 
 When limits are reached, models automatically shut down to prevent overspending.
@@ -121,13 +128,15 @@ When limits are reached, models automatically shut down to prevent overspending.
 ### Auto-Shutdown
 
 Configure idle time before automatic model shutdown:
+
 ```env
-CUSTOM_REASONING_AUTO_SHUTDOWN_MINUTES=30  # Shutdown after 30 minutes idle
+REASONING_SERVICE_AUTO_SHUTDOWN_MINUTES=30  # Shutdown after 30 minutes idle
 ```
 
 ### Cost Monitoring
 
 Track spending in real-time:
+
 ```bash
 # View detailed cost report
 elizaos reasoning costs report
@@ -144,15 +153,17 @@ elizaos reasoning costs auto-shutdown --minutes 60
 ### Automatic Collection
 
 Enable automatic training data collection from agent decisions:
+
 ```env
-CUSTOM_REASONING_COLLECT_TRAINING_DATA=true
-CUSTOM_REASONING_MAX_SAMPLES_PER_MODEL=10000
-CUSTOM_REASONING_RETENTION_DAYS=30
+REASONING_SERVICE_COLLECT_TRAINING_DATA=true
+REASONING_SERVICE_MAX_SAMPLES_PER_MODEL=10000
+REASONING_SERVICE_RETENTION_DAYS=30
 ```
 
 ### Data Export
 
 Export collected training data for model improvement:
+
 ```bash
 # Export all training data
 elizaos reasoning data export
@@ -167,6 +178,7 @@ elizaos reasoning data export --start-date 2024-01-01 --end-date 2024-01-31
 ### Training Data Statistics
 
 View collection statistics:
+
 ```bash
 elizaos reasoning data stats
 ```
@@ -195,6 +207,7 @@ ANTHROPIC_PROXY_PORT=8001
 ### Usage with Autocoder
 
 Configure your autocoder to use the proxy:
+
 ```env
 ANTHROPIC_BASE_URL=http://localhost:8001
 ```
@@ -298,9 +311,9 @@ Message → ShouldRespond Model → Planning Model → Action Execution
 You can specify custom model names for your own fine-tuned models:
 
 ```env
-CUSTOM_REASONING_SHOULD_RESPOND_MODEL=your-org/your-custom-shouldrespond-model
-CUSTOM_REASONING_PLANNING_MODEL=your-org/your-custom-planning-model
-CUSTOM_REASONING_CODING_MODEL=your-org/your-custom-coding-model
+REASONING_SERVICE_SHOULD_RESPOND_MODEL=your-org/your-custom-shouldrespond-model
+REASONING_SERVICE_PLANNING_MODEL=your-org/your-custom-planning-model
+REASONING_SERVICE_CODING_MODEL=your-org/your-custom-coding-model
 ```
 
 ### Custom Reasoning Service Extension
@@ -320,6 +333,7 @@ class MyCustomReasoningService implements CustomReasoningService {
 ### Common Issues
 
 **Service Not Starting**
+
 ```bash
 # Check API key configuration
 elizaos reasoning config
@@ -329,6 +343,7 @@ curl -H "Authorization: Bearer $TOGETHER_AI_API_KEY" https://api.together.xyz/mo
 ```
 
 **High Costs**
+
 ```bash
 # Check current usage
 elizaos reasoning costs report
@@ -341,6 +356,7 @@ elizaos reasoning costs auto-shutdown --minutes 15
 ```
 
 **Models Not Responding**
+
 ```bash
 # Check model status
 elizaos reasoning models status
@@ -353,6 +369,7 @@ elizaos reasoning models deploy model-name
 ### Debug Logging
 
 Enable debug logging for detailed troubleshooting:
+
 ```env
 DEBUG=custom-reasoning*
 ```
@@ -365,27 +382,28 @@ For production deployment:
 
 ```env
 # Core settings
-CUSTOM_REASONING_ENABLED=true
+REASONING_SERVICE_ENABLED=true
 TOGETHER_AI_API_KEY=your_production_key
 
 # Conservative model enablement
-CUSTOM_REASONING_SHOULD_RESPOND_ENABLED=true
-CUSTOM_REASONING_PLANNING_ENABLED=true
-CUSTOM_REASONING_CODING_ENABLED=false  # Start with false, enable gradually
+REASONING_SERVICE_SHOULD_RESPOND_ENABLED=true
+REASONING_SERVICE_PLANNING_ENABLED=true
+REASONING_SERVICE_CODING_ENABLED=false  # Start with false, enable gradually
 
 # Strict cost controls
-CUSTOM_REASONING_BUDGET_LIMIT=500
-CUSTOM_REASONING_AUTO_SHUTDOWN_MINUTES=15
-CUSTOM_REASONING_MAX_COST_PER_HOUR=25
+REASONING_SERVICE_BUDGET_LIMIT=500
+REASONING_SERVICE_AUTO_SHUTDOWN_MINUTES=15
+REASONING_SERVICE_MAX_COST_PER_HOUR=25
 
 # Data collection for improvement
-CUSTOM_REASONING_COLLECT_TRAINING_DATA=true
-CUSTOM_REASONING_RETENTION_DAYS=90
+REASONING_SERVICE_COLLECT_TRAINING_DATA=true
+REASONING_SERVICE_RETENTION_DAYS=90
 ```
 
 ### Monitoring
 
 Set up monitoring for:
+
 - Model response times
 - Cost accumulation
 - Training data quality
@@ -401,6 +419,7 @@ Set up monitoring for:
 ## Support
 
 For issues and questions:
+
 1. Check the troubleshooting section above
 2. Review logs with debug mode enabled
 3. Use `elizaos reasoning config` to verify setup

@@ -7,13 +7,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AgentRuntime } from '../../runtime';
 import { Service } from '../../types/service';
-import type { 
-  IAgentRuntime, 
-  Plugin, 
-  Action, 
-  Provider, 
-  Evaluator, 
-  Memory, 
+import type {
+  IAgentRuntime,
+  Plugin,
+  Action,
+  Provider,
+  Evaluator,
+  Memory,
   State,
   HandlerCallback,
   Character,
@@ -27,7 +27,7 @@ import type {
   Participant,
   Relationship,
   World,
-  Log
+  Log,
 } from '../../types';
 
 // Mock Database Adapter to avoid Drizzle issues
@@ -63,7 +63,7 @@ class MockDatabaseAdapter implements IDatabaseAdapter {
 
   // Mock implementations of all required database methods
   async createMemory(memory: Memory, tableName: string, unique?: boolean): Promise<UUID> {
-    const id = memory.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}` as UUID;
+    const id = memory.id || (`${Date.now()}-${Math.random().toString(36).substr(2, 9)}` as UUID);
     const key = `memory:${id}`;
     this.data.set(key, { ...memory, id });
     return id;
@@ -94,7 +94,11 @@ class MockDatabaseAdapter implements IDatabaseAdapter {
     return memories.slice(0, params.count || 10);
   }
 
-  async getMemoriesByRoomIds(params: { roomIds: UUID[]; tableName: string; limit?: number }): Promise<Memory[]> {
+  async getMemoriesByRoomIds(params: {
+    roomIds: UUID[];
+    tableName: string;
+    limit?: number;
+  }): Promise<Memory[]> {
     const memories: Memory[] = [];
     for (const [key, value] of this.data.entries()) {
       if (key.startsWith('memory:') && params.roomIds.includes(value.roomId)) {
@@ -136,7 +140,9 @@ class MockDatabaseAdapter implements IDatabaseAdapter {
     return this.getMemories(params);
   }
 
-  async getCachedEmbeddings(params: any): Promise<{ embedding: number[]; levenshtein_score: number }[]> {
+  async getCachedEmbeddings(
+    params: any
+  ): Promise<{ embedding: number[]; levenshtein_score: number }[]> {
     return [];
   }
 
@@ -242,7 +248,12 @@ class MockDatabaseAdapter implements IDatabaseAdapter {
     return true;
   }
 
-  async getComponent(entityId: UUID, type: string, worldId?: UUID, sourceEntityId?: UUID): Promise<Component | null> {
+  async getComponent(
+    entityId: UUID,
+    type: string,
+    worldId?: UUID,
+    sourceEntityId?: UUID
+  ): Promise<Component | null> {
     for (const [key, value] of this.data.entries()) {
       if (key.startsWith('component:') && value.entityId === entityId && value.type === type) {
         return value;
@@ -329,11 +340,18 @@ class MockDatabaseAdapter implements IDatabaseAdapter {
     return participants;
   }
 
-  async getParticipantUserState(roomId: UUID, entityId: UUID): Promise<'FOLLOWED' | 'MUTED' | null> {
+  async getParticipantUserState(
+    roomId: UUID,
+    entityId: UUID
+  ): Promise<'FOLLOWED' | 'MUTED' | null> {
     return this.data.get(`userState:${roomId}:${entityId}`) || null;
   }
 
-  async setParticipantUserState(roomId: UUID, entityId: UUID, state: 'FOLLOWED' | 'MUTED' | null): Promise<void> {
+  async setParticipantUserState(
+    roomId: UUID,
+    entityId: UUID,
+    state: 'FOLLOWED' | 'MUTED' | null
+  ): Promise<void> {
     this.data.set(`userState:${roomId}:${entityId}`, state);
   }
 
@@ -439,7 +457,7 @@ class MockDatabaseAdapter implements IDatabaseAdapter {
 
   // Task methods
   async createTask(task: Task): Promise<UUID> {
-    const taskId = task.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}` as UUID;
+    const taskId = task.id || (`${Date.now()}-${Math.random().toString(36).substr(2, 9)}` as UUID);
     this.data.set(`task:${taskId}`, { ...task, id: taskId });
     return taskId;
   }
@@ -578,7 +596,7 @@ class TestDatabaseService extends Service {
   static serviceName = 'test-database-service';
   static serviceType = 'data_storage' as any;
   capabilityDescription = 'Test database service with environment variable requirements';
-  
+
   private connections: Map<string, any> = new Map();
   private isStarted = false;
   private dbUrl: string = '';
@@ -587,15 +605,15 @@ class TestDatabaseService extends Service {
   static async start(runtime: IAgentRuntime): Promise<TestDatabaseService> {
     const dbUrl = runtime.getSetting('DATABASE_URL');
     const apiKey = runtime.getSetting('DATABASE_API_KEY');
-    
+
     if (!dbUrl) {
       throw new Error('DATABASE_URL environment variable is required for TestDatabaseService');
     }
-    
+
     if (!apiKey) {
       throw new Error('DATABASE_API_KEY environment variable is required for TestDatabaseService');
     }
-    
+
     const service = new TestDatabaseService(runtime);
     service.dbUrl = dbUrl;
     service.apiKey = apiKey;
@@ -605,35 +623,39 @@ class TestDatabaseService extends Service {
 
   private async initialize(): Promise<void> {
     console.log('TestDatabaseService: Connecting to test database...', this.dbUrl);
-    
-    this.connections.set('read', { 
+
+    this.connections.set('read', {
       host: this.dbUrl,
       status: 'connected',
-      queries: 0 
+      queries: 0,
     });
-    this.connections.set('write', { 
+    this.connections.set('write', {
       host: this.dbUrl,
-      status: 'connected', 
-      queries: 0 
+      status: 'connected',
+      queries: 0,
     });
-    
+
     this.isStarted = true;
-    console.log('TestDatabaseService: Successfully connected with', this.connections.size, 'connection pools');
+    console.log(
+      'TestDatabaseService: Successfully connected with',
+      this.connections.size,
+      'connection pools'
+    );
   }
 
   async query(sql: string, params: any[] = []): Promise<any[]> {
     if (!this.isStarted) {
       throw new Error('TestDatabaseService not started');
     }
-    
+
     const connection = this.connections.get('read');
     if (!connection) {
       throw new Error('No read connection available');
     }
-    
+
     connection.queries++;
     console.log(`TestDatabaseService: Executing query: ${sql.substring(0, 50)}...`);
-    
+
     return [{ id: 1, result: 'test data', timestamp: new Date().toISOString() }];
   }
 
@@ -643,8 +665,8 @@ class TestDatabaseService extends Service {
       connections: Array.from(this.connections.entries()).map(([name, conn]) => ({
         name,
         status: conn.status,
-        queries: conn.queries
-      }))
+        queries: conn.queries,
+      })),
     };
   }
 
@@ -660,7 +682,7 @@ class TestAuthService extends Service {
   static serviceName = 'test-auth-service';
   static serviceType = 'security' as any;
   capabilityDescription = 'Test authentication service';
-  
+
   private sessions: Map<string, any> = new Map();
   private users: Map<string, any> = new Map();
   private isStarted = false;
@@ -673,31 +695,34 @@ class TestAuthService extends Service {
 
   private async initialize(): Promise<void> {
     console.log('TestAuthService: Initializing...');
-    
+
     this.users.set('admin', {
       id: 'admin',
       username: 'admin',
       roles: ['admin', 'user'],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     });
-    
+
     this.isStarted = true;
     console.log('TestAuthService: Initialized with', this.users.size, 'users');
   }
 
-  async authenticate(username: string, password: string): Promise<{ token: string; user: any } | null> {
+  async authenticate(
+    username: string,
+    password: string
+  ): Promise<{ token: string; user: any } | null> {
     if (!this.isStarted) {
       throw new Error('TestAuthService not started');
     }
-    
+
     const user = this.users.get(username);
     if (!user) {
       return null;
     }
-    
+
     const token = `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     this.sessions.set(token, { userId: user.id, createdAt: new Date() });
-    
+
     return { token, user };
   }
 
@@ -705,7 +730,7 @@ class TestAuthService extends Service {
     return {
       isStarted: this.isStarted,
       activeUsers: this.users.size,
-      activeSessions: this.sessions.size
+      activeSessions: this.sessions.size,
     };
   }
 
@@ -726,31 +751,31 @@ const testQueryAction: Action = {
   examples: [
     [
       { name: 'user', content: { text: 'test query the database' } },
-      { 
-        name: 'assistant', 
-        content: { 
-          text: 'I\'ll test query the database for you.',
-          actions: ['TEST_QUERY_DATABASE']
-        } 
-      }
-    ]
+      {
+        name: 'assistant',
+        content: {
+          text: "I'll test query the database for you.",
+          actions: ['TEST_QUERY_DATABASE'],
+        },
+      },
+    ],
   ],
-  
+
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     const dbService = runtime.getService('test-database-service') as TestDatabaseService;
     const authService = runtime.getService('test-auth-service') as TestAuthService;
-    
+
     if (!dbService || !authService) {
       console.log('TEST_QUERY_DATABASE validation failed: Required services not available');
       return false;
     }
-    
+
     const dbStats = dbService.getConnectionStats();
     if (!dbStats.isStarted) {
       console.log('TEST_QUERY_DATABASE validation failed: TestDatabaseService not started');
       return false;
     }
-    
+
     console.log('TEST_QUERY_DATABASE validation passed');
     return true;
   },
@@ -765,71 +790,71 @@ const testQueryAction: Action = {
     try {
       const dbService = runtime.getService('test-database-service') as TestDatabaseService;
       const authService = runtime.getService('test-auth-service') as TestAuthService;
-      
+
       if (!dbService || !authService) {
         throw new Error('Required services not available');
       }
-      
+
       const authResult = await authService.authenticate('admin', 'password');
       if (!authResult) {
         throw new Error('Authentication failed');
       }
-      
+
       const results = await dbService.query('SELECT * FROM test_users WHERE active = ?', [true]);
-      
+
       const response = `Test database query executed successfully. Found ${results.length} results. Auth token: ${authResult.token.substring(0, 20)}...`;
-      
+
       if (callback) {
         await callback({
           text: response,
           actions: ['TEST_QUERY_DATABASE'],
-          thought: 'Successfully executed test database query with authentication'
+          thought: 'Successfully executed test database query with authentication',
         });
       }
-      
+
       return {
         text: response,
-        data: { 
+        data: {
           queryResults: results,
           authToken: authResult.token,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
     } catch (error) {
       const errorMessage = `Test database query failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
       console.error('TEST_QUERY_DATABASE error:', error);
-      
+
       if (callback) {
         await callback({
           text: errorMessage,
           actions: ['TEST_QUERY_DATABASE'],
-          thought: 'Test database query failed due to error'
+          thought: 'Test database query failed due to error',
         });
       }
-      
+
       throw error;
     }
-  }
+  },
 };
 
-// Test Provider with Service Dependencies  
+// Test Provider with Service Dependencies
 const testStatsProvider: Provider = {
   name: 'TEST_SYSTEM_STATS',
   description: 'Provides real-time test system statistics from services',
-  
+
   get: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     try {
       const dbService = runtime.getService('test-database-service') as TestDatabaseService;
       const authService = runtime.getService('test-auth-service') as TestAuthService;
-      
+
       const stats: any = {
         timestamp: new Date().toISOString(),
         services: {
           database: dbService ? dbService.getConnectionStats() : { status: 'not_available' },
-          auth: authService ? authService.getStats() : { status: 'not_available' }
-        }
+          auth: authService ? authService.getStats() : { status: 'not_available' },
+        },
       };
-      
+
       const text = `[TEST SYSTEM STATS]
 Database Service: ${stats.services.database.isStarted ? 'RUNNING' : 'STOPPED'}
 ${stats.services.database.connections ? `Active Connections: ${stats.services.database.connections.length}` : ''}
@@ -837,25 +862,27 @@ Auth Service: ${stats.services.auth.isStarted ? 'RUNNING' : 'STOPPED'}
 ${stats.services.auth.activeUsers ? `Active Users: ${stats.services.auth.activeUsers}` : ''}
 Timestamp: ${stats.timestamp}
 [/TEST SYSTEM STATS]`;
-      
+
       return {
         text,
         values: {
           systemStats: stats,
-          servicesRunning: (dbService?.getConnectionStats().isStarted || false) && (authService?.getStats().isStarted || false)
+          servicesRunning:
+            (dbService?.getConnectionStats().isStarted || false) &&
+            (authService?.getStats().isStarted || false),
         },
         data: {
-          fullStats: stats
-        }
+          fullStats: stats,
+        },
       };
     } catch (error) {
       console.error('TEST_SYSTEM_STATS provider error:', error);
       return {
         text: `[TEST SYSTEM STATS ERROR: ${error instanceof Error ? error.message : 'Unknown error'}]`,
-        values: { systemStats: null, servicesRunning: false }
+        values: { systemStats: null, servicesRunning: false },
       };
     }
-  }
+  },
 };
 
 // Test Evaluator with Service Dependencies
@@ -867,12 +894,12 @@ const testPerformanceEvaluator: Evaluator = {
       prompt: 'Test system performance evaluation',
       messages: [
         { name: 'user', content: { text: 'How is the test system performing?' } },
-        { name: 'assistant', content: { text: 'Let me check the test system performance.' } }
+        { name: 'assistant', content: { text: 'Let me check the test system performance.' } },
       ],
-      outcome: 'Test performance metrics logged and evaluated'
-    }
+      outcome: 'Test performance metrics logged and evaluated',
+    },
   ],
-  
+
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     // Run evaluation periodically
     const shouldRun = Math.random() < 0.5; // 50% chance for testing
@@ -890,30 +917,30 @@ const testPerformanceEvaluator: Evaluator = {
     try {
       const dbService = runtime.getService('test-database-service') as TestDatabaseService;
       const authService = runtime.getService('test-auth-service') as TestAuthService;
-      
+
       const metrics = {
         timestamp: new Date().toISOString(),
         messageId: message.id,
         roomId: message.roomId,
         services: {
           database: dbService ? dbService.getConnectionStats() : null,
-          auth: authService ? authService.getStats() : null
+          auth: authService ? authService.getStats() : null,
         },
         performance: {
           responseTime: Date.now() - (message.createdAt || Date.now()),
-          memoryUsage: process.memoryUsage ? process.memoryUsage() : null
-        }
+          memoryUsage: process.memoryUsage ? process.memoryUsage() : null,
+        },
       };
-      
+
       console.log('TEST_PERFORMANCE_EVALUATOR metrics:', JSON.stringify(metrics, null, 2));
-      
+
       // Return boolean for evaluator
       return true;
     } catch (error) {
       console.error('TEST_PERFORMANCE_EVALUATOR error:', error);
       return false;
     }
-  }
+  },
 };
 
 // Plugin with Environment Variable Requirements
@@ -924,19 +951,19 @@ const testPluginWithEnvVars: Plugin = {
   actions: [testQueryAction],
   providers: [testStatsProvider],
   evaluators: [testPerformanceEvaluator],
-  
+
   init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
     console.log('test-plugin-with-env-vars: Initializing with config:', Object.keys(config));
-    
+
     const required = ['DATABASE_URL', 'DATABASE_API_KEY'];
-    const missing = required.filter(key => !runtime.getSetting(key));
-    
+    const missing = required.filter((key) => !runtime.getSetting(key));
+
     if (missing.length > 0) {
       throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
     }
-    
+
     console.log('test-plugin-with-env-vars: All required environment variables present');
-  }
+  },
 };
 
 // Plugin without Environment Variable Requirements
@@ -947,11 +974,11 @@ const testPluginNoEnvVars: Plugin = {
   actions: [],
   providers: [],
   evaluators: [],
-  
+
   init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
     console.log('test-plugin-no-env-vars: Initializing (no env vars required)');
     console.log('test-plugin-no-env-vars: TestAuthService will be available for other plugins');
-  }
+  },
 };
 
 describe('Plugin Configuration System Mock Tests', () => {
@@ -972,17 +999,22 @@ describe('Plugin Configuration System Mock Tests', () => {
       messageExamples: [
         [
           { name: 'user', content: { text: 'test the database' } },
-          { name: 'MockTestAgent', content: { text: 'I\'ll test the database connection for you.', actions: ['TEST_QUERY_DATABASE'] } }
-        ]
+          {
+            name: 'MockTestAgent',
+            content: {
+              text: "I'll test the database connection for you.",
+              actions: ['TEST_QUERY_DATABASE'],
+            },
+          },
+        ],
       ],
       postExamples: [],
       topics: ['testing', 'configuration', 'plugins'],
-      adjectives: ['helpful', 'thorough', 'reliable'],
       knowledge: [],
       plugins: ['test-plugin-with-env-vars', 'test-plugin-no-env-vars'],
       settings: {
-        'DATABASE_URL': 'postgresql://test:test@localhost:5432/testdb',
-        'DATABASE_API_KEY': 'test-api-key-12345',
+        DATABASE_URL: 'postgresql://test:test@localhost:5432/testdb',
+        DATABASE_API_KEY: 'test-api-key-12345',
       },
       secrets: {},
     };
@@ -995,8 +1027,8 @@ describe('Plugin Configuration System Mock Tests', () => {
 
     // Set environment variables for this test
     (runtime as any).settings = {
-      'DATABASE_URL': 'postgresql://test:test@localhost:5432/testdb',
-      'DATABASE_API_KEY': 'test-api-key-12345',
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/testdb',
+      DATABASE_API_KEY: 'test-api-key-12345',
     };
 
     await runtime.initialize();
@@ -1014,7 +1046,7 @@ describe('Plugin Configuration System Mock Tests', () => {
       }
       runtime.services.clear();
     }
-    
+
     // Close mock database
     if (mockAdapter) {
       await mockAdapter.close();
@@ -1023,114 +1055,114 @@ describe('Plugin Configuration System Mock Tests', () => {
 
   it('should register and initialize plugins with environment variable validation', async () => {
     console.log('🧪 Test 1: Plugin Registration and Environment Variable Validation');
-    
+
     // Register test plugins
     await runtime.registerPlugin(testPluginWithEnvVars);
     await runtime.registerPlugin(testPluginNoEnvVars);
-    
+
     console.log('✅ Plugins registered successfully');
-    
+
     // Verify services started
     const dbService = runtime.getService('test-database-service') as TestDatabaseService;
     const authService = runtime.getService('test-auth-service') as TestAuthService;
-    
+
     expect(dbService).toBeDefined();
     expect(authService).toBeDefined();
-    
+
     const dbStats = dbService.getConnectionStats();
     const authStats = authService.getStats();
-    
+
     expect(dbStats.isStarted).toBe(true);
     expect(authStats.isStarted).toBe(true);
-    
+
     console.log('✅ Test 1 passed: Services started correctly');
   });
 
   it('should execute actions with service dependencies', async () => {
     console.log('🧪 Test 2: Action Execution with Service Dependencies');
-    
+
     // Register plugins first
     await runtime.registerPlugin(testPluginWithEnvVars);
     await runtime.registerPlugin(testPluginNoEnvVars);
-    
-    const queryAction = runtime.actions.find(a => a.name === 'TEST_QUERY_DATABASE');
+
+    const queryAction = runtime.actions.find((a) => a.name === 'TEST_QUERY_DATABASE');
     expect(queryAction).toBeDefined();
-    
+
     if (!queryAction) {
       throw new Error('TEST_QUERY_DATABASE action not found');
     }
-    
+
     const testMessage: Memory = {
       id: `test-msg-1-${Date.now()}` as UUID,
       entityId: `test-user-${Date.now()}` as UUID,
       roomId: `test-room-${Date.now()}` as UUID,
       agentId: runtime.agentId,
       content: { text: 'test query the database for user data' },
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
-    
+
     const isValid = await queryAction.validate(runtime, testMessage);
     expect(isValid).toBe(true);
-    
+
     const result = await queryAction.handler(runtime, testMessage);
     expect(result).toBeDefined();
     expect((result as any).text).toContain('Test database query executed successfully');
-    
+
     console.log('✅ Test 2 passed: Action executed successfully with service dependencies');
   });
 
   it('should test provider execution with service dependencies', async () => {
     console.log('🧪 Test 3: Provider Execution with Service Dependencies');
-    
+
     // Register plugins first
     await runtime.registerPlugin(testPluginWithEnvVars);
     await runtime.registerPlugin(testPluginNoEnvVars);
-    
-    const statsProvider = runtime.providers.find(p => p.name === 'TEST_SYSTEM_STATS');
+
+    const statsProvider = runtime.providers.find((p) => p.name === 'TEST_SYSTEM_STATS');
     expect(statsProvider).toBeDefined();
-    
+
     if (!statsProvider) {
       throw new Error('TEST_SYSTEM_STATS provider not found');
     }
-    
+
     const testMessage: Memory = {
       id: `test-msg-3-${Date.now()}` as UUID,
       entityId: `test-user-${Date.now()}` as UUID,
       roomId: `test-room-${Date.now()}` as UUID,
       agentId: runtime.agentId,
       content: { text: 'get test system stats' },
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
-    
+
     const providerResult = await statsProvider.get(runtime, testMessage, {
       values: {},
       data: {},
-      text: ''
+      text: '',
     });
     expect(providerResult).toBeDefined();
     expect(providerResult.text).toContain('TEST SYSTEM STATS');
     expect(providerResult.values?.systemStats).toBeDefined();
-    
+
     console.log('✅ Test 3 passed: Provider executed successfully with service dependencies');
   });
 
   it('should validate environment variables and handle missing vars', async () => {
     console.log('🧪 Test 4: Environment Variable Validation');
-    
+
     // Create a plugin that should fail due to missing env vars
     const pluginWithMissingEnvVars: Plugin = {
       name: 'test-plugin-missing-env-vars',
       description: 'Test plugin that requires missing environment variables',
       services: [],
-      
+
       init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
         const missingVar = runtime.getSetting('MISSING_ENV_VAR');
         if (!missingVar) {
           throw new Error('MISSING_ENV_VAR environment variable is required');
         }
-      }
+      },
     };
-    
+
     // This should fail
     let failed = false;
     try {
@@ -1139,24 +1171,24 @@ describe('Plugin Configuration System Mock Tests', () => {
       failed = true;
       expect(error instanceof Error ? error.message : String(error)).toContain('MISSING_ENV_VAR');
     }
-    
+
     expect(failed).toBe(true);
     console.log('✅ Test 4 passed: Environment variable validation works correctly');
   });
 
   it('should generate final system statistics report', async () => {
     console.log('🧪 Test 5: Final System Statistics Report');
-    
+
     // Register plugins first
     await runtime.registerPlugin(testPluginWithEnvVars);
     await runtime.registerPlugin(testPluginNoEnvVars);
-    
+
     const dbService = runtime.getService('test-database-service') as TestDatabaseService;
     const authService = runtime.getService('test-auth-service') as TestAuthService;
-    
+
     const finalDbStats = dbService.getConnectionStats();
     const finalAuthStats = authService.getStats();
-    
+
     console.log('📊 Final Test System Stats:');
     console.log('- Database Service:', finalDbStats);
     console.log('- Auth Service:', finalAuthStats);
@@ -1164,7 +1196,7 @@ describe('Plugin Configuration System Mock Tests', () => {
     console.log('- Providers:', runtime.providers.length);
     console.log('- Evaluators:', runtime.evaluators.length);
     console.log('- Services:', runtime.services.size);
-    
+
     // Verify all components are working
     expect(finalDbStats.isStarted).toBe(true);
     expect(finalAuthStats.isStarted).toBe(true);
@@ -1172,18 +1204,18 @@ describe('Plugin Configuration System Mock Tests', () => {
     expect(runtime.providers.length).toBeGreaterThan(0);
     expect(runtime.evaluators.length).toBeGreaterThan(0);
     expect(runtime.services.size).toBeGreaterThan(0);
-    
+
     console.log('🎉 All Plugin Configuration System Mock Tests Passed!');
   });
 });
 
-export { 
-  TestDatabaseService, 
-  TestAuthService, 
-  testQueryAction, 
-  testStatsProvider, 
+export {
+  TestDatabaseService,
+  TestAuthService,
+  testQueryAction,
+  testStatsProvider,
   testPerformanceEvaluator,
   testPluginWithEnvVars,
   testPluginNoEnvVars,
-  MockDatabaseAdapter
+  MockDatabaseAdapter,
 };

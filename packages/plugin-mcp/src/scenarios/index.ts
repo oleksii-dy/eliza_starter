@@ -1,8 +1,3 @@
-import { mcpViewerScenario } from './mcp-viewer-scenario';
+// No scenarios defined yet
 
-export { mcpViewerScenario };
-
-// Export all scenarios as default
-export default [
-  mcpViewerScenario
-]; 
+export default [];

@@ -4,39 +4,192 @@
  * local definitions for any types that may be missing or renamed.
  */
 
+// Try to import what's available from @elizaos/core
+import { logger, Service, ModelType, stringToUuid, ChannelType } from '@elizaos/core';
+
+// Re-export what we successfully imported
+export { logger, Service, ModelType, stringToUuid, ChannelType };
+
 // Define UUID type locally
 export type UUID = `${string}-${string}-${string}-${string}-${string}`;
 
-// Re-export all needed types from @elizaos/core
-export { 
-  logger, 
-  Service, 
-  ModelType, 
-  stringToUuid, 
-  ChannelType,
-  type IAgentRuntime,
-  type Memory,
-  type State,
-  type Entity,
-  type Room,
-  type Relationship,
-  type Component,
-  type World,
-  type Task,
-  type Character,
-  type Action,
-  type Provider,
-  type Evaluator,
-  type Plugin,
-  type Handler,
-  type HandlerCallback,
-  type Validator,
-  type Content
-} from '@elizaos/core';
+// Define IAgentRuntime interface locally
+export interface IAgentRuntime {
+  agentId: UUID;
+  getService(name: string): Service | null;
+  getMemories(params: { roomId?: UUID; tableName?: string; count?: number; unique?: boolean }): Promise<Memory[]>;
+  getEntitiesForRoom(roomId: UUID): Promise<Entity[]>;
+  getEntityById(entityId: UUID): Promise<Entity | null>;
+  getEntitiesByIds(entityIds: UUID[]): Promise<Entity[]>;
+  getRoom(roomId: UUID): Promise<Room | null>;
+  getRooms(worldId: UUID): Promise<Room[]>;
+  getRoomsForParticipant(entityId: UUID): Promise<UUID[]>;
+  getRelationships(params: { entityId?: UUID; sourceEntityId?: UUID; targetEntityId?: UUID }): Promise<Relationship[]>;
+  createRelationship(relationship: Partial<Relationship>): Promise<Relationship>;
+  updateRelationship(relationship: Relationship): Promise<Relationship>;
+  getComponents(roomId: UUID, worldId: UUID, agentId: UUID): Promise<Component[]>;
+  getComponent(entityId: UUID, type: string, worldId: UUID, sourceEntityId?: UUID): Promise<Component | null>;
+  createComponent(component: Partial<Component>): Promise<Component>;
+  updateComponent(component: Component): Promise<Component>;
+  createEntity(entity: Partial<Entity>): Promise<Entity>;
+  updateEntity(entity: Entity): Promise<Entity>;
+  useModel(model: typeof ModelType[keyof typeof ModelType], params: { prompt?: string; messages?: any[] }): Promise<string>;
+  getCache<T>(key: string): Promise<T | null>;
+  setCache<T>(key: string, value: T): Promise<void>;
+  getConversationLength(): number;
+  messageManager: { createMemory(memory: Memory): Promise<void> };
+  character: Character;
+}
 
-// Additional imports we need from core
-import { Service as ServiceClass, ChannelType as ChannelTypeEnum } from '@elizaos/core';
-import type { IAgentRuntime, Memory, State, Entity } from '@elizaos/core';
+// Define Memory interface
+export interface Memory {
+  id?: UUID;
+  entityId: UUID;
+  agentId: UUID;
+  content: Content;
+  roomId: UUID;
+  createdAt?: number;
+}
+
+// Define Content interface
+export interface Content {
+  text?: string;
+  action?: string;
+  source?: string;
+  metadata?: Record<string, any>;
+  [key: string]: any;
+}
+
+// Define State interface
+export interface State {
+  values?: Record<string, any>;
+  data?: Record<string, any>;
+  text?: string;
+  roomId?: UUID;
+  [key: string]: any;
+}
+
+// Define Entity interface
+export interface Entity {
+  id?: UUID;
+  agentId: UUID;
+  names: string[];
+  metadata?: Record<string, any>;
+}
+
+// Define Room interface
+export interface Room {
+  id: UUID;
+  worldId: UUID;
+  name?: string;
+  metadata?: Record<string, any>;
+}
+
+// Define Relationship interface
+export interface Relationship {
+  id?: UUID;
+  sourceEntityId: UUID;
+  targetEntityId: UUID;
+  tags?: string[];
+  metadata?: Record<string, any>;
+  strength?: number;
+  relationshipType?: string;
+  createdAt?: number;
+}
+
+// Define Component interface
+export interface Component {
+  id: UUID;
+  entityId: UUID;
+  worldId: UUID;
+  type: string;
+  data: any;
+  agentId: UUID;
+  roomId: UUID;
+  sourceEntityId?: UUID;
+  createdAt: number;
+}
+
+// Define World interface
+export interface World {
+  id: UUID;
+  name: string;
+  metadata?: Record<string, any>;
+}
+
+// Define Task interface
+export interface Task {
+  id: UUID;
+  name: string;
+  description?: string;
+  metadata?: TaskMetadata;
+}
+
+// Define Character interface
+export interface Character {
+  name: string;
+  templates?: {
+    reflectionTemplate?: string;
+    [key: string]: string | undefined;
+  };
+  [key: string]: any;
+}
+
+// Define Action interface
+export interface Action {
+  name: string;
+  description: string;
+  similes?: string[];
+  examples?: ActionExample[][];
+  validate: Validator;
+  handler: Handler;
+}
+
+// Define Provider interface
+export interface Provider {
+  name: string;
+  description?: string;
+  get: (runtime: IAgentRuntime, state?: State) => Promise<ProviderResult>;
+}
+
+// Define Evaluator interface
+export interface Evaluator {
+  name: string;
+  description: string;
+  similes?: string[];
+  examples?: EvaluationExample[];
+  validate: Validator;
+  handler: Handler;
+}
+
+// Define Plugin interface
+export interface Plugin {
+  name: string;
+  description?: string;
+  actions?: Action[];
+  providers?: Provider[];
+  evaluators?: Evaluator[];
+  services?: Service[];
+}
+
+// Define Handler type
+export type Handler = (
+  runtime: IAgentRuntime,
+  message: Memory,
+  state?: State,
+  options?: any,
+  callback?: HandlerCallback
+) => Promise<ActionResult>;
+
+// Define HandlerCallback type
+export type HandlerCallback = (response: any) => Promise<void> | void;
+
+// Define Validator type
+export type Validator = (
+  runtime: IAgentRuntime,
+  message: Memory,
+  state?: State
+) => Promise<boolean>;
 
 // Define locally since not exported from core
 export function asUUID(str: string): UUID {
@@ -70,7 +223,8 @@ export type Metadata = Record<string, unknown>;
 
 // ActionExample type
 export interface ActionExample {
-  user: string;
+  user?: string;
+  name?: string;
   content: { text: string; action?: string };
 }
 

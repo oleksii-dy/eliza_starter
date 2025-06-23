@@ -20,12 +20,12 @@ Be proactive in asking for clarification about entities when needed.`,
     [
       {
         name: 'user',
-        content: { text: 'I just met Sarah Chen from TechCorp. She\'s the VP of Engineering.' },
+        content: { text: "I just met Sarah Chen from TechCorp. She's the VP of Engineering." },
       },
       {
         name: 'assistant',
-        content: { 
-          text: 'I\'ve noted that Sarah Chen is the VP of Engineering at TechCorp. Would you like me to track any additional information about her or schedule a follow-up?',
+        content: {
+          text: "I've noted that Sarah Chen is the VP of Engineering at TechCorp. Would you like me to track any additional information about her or schedule a follow-up?",
           action: 'TRACK_ENTITY',
         },
       },
@@ -38,16 +38,12 @@ Be proactive in asking for clarification about entities when needed.`,
       {
         name: 'assistant',
         content: {
-          text: 'I\'ve recorded that John and Sarah are collaborating on the AI project. This strengthens their professional relationship in my records.',
+          text: "I've recorded that John and Sarah are collaborating on the AI project. This strengthens their professional relationship in my records.",
         },
       },
     ],
   ],
   topics: ['networking', 'relationships', 'contacts', 'people', 'organizations', 'follow-ups'],
-  adjectives: ['helpful', 'organized', 'proactive', 'detail-oriented'],
   plugins: ['@elizaos/plugin-rolodex'],
-  settings: {
-    model: 'gpt-4o-mini', // Use a real model for testing
-    temperature: 0.7,
-  },
-}; 
+  settings: {},
+};

@@ -6,7 +6,7 @@ export function testModelCommand(program: Command) {
   program
     .command('test-model')
     .description('Test inference or check job status')
-    .requiredOption('-k, --api-key <key>', 'Together.ai API key (or set TOGETHER_AI_API_KEY)')
+    .option('-k, --api-key <key>', 'Together.ai API key (or set TOGETHER_AI_API_KEY)')
     .option('-m, --model <model>', 'Model name for inference')
     .option('-p, --prompt <text>', 'Test prompt')
     .option('-j, --job-id <id>', 'Check status of training job')

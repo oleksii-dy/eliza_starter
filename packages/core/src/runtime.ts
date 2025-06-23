@@ -688,17 +688,31 @@ export class AgentRuntime implements IAgentRuntime {
       }
     }
 
+    // After all plugins are registered, check if adapter is available
+    // This is important for plugins that register adapters during their init() function
     if (!this.adapter) {
-      this.logger.error(
-        'Database adapter not initialized. Make sure @elizaos/plugin-sql is included in your plugins.'
-      );
-      throw new Error(
-        'Database adapter not initialized. The SQL plugin (@elizaos/plugin-sql) is required for agent initialization. Please ensure it is included in your character configuration.'
-      );
+      // Give plugins a moment to complete async initialization
+      // Some plugins (like SQL plugin) register adapters during init
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Check again after brief delay
+      if (!this.adapter) {
+        this.logger.error(
+          'Database adapter not initialized. Make sure @elizaos/plugin-sql is included in your plugins.'
+        );
+        throw new Error(
+          'Database adapter not initialized. The SQL plugin (@elizaos/plugin-sql) is required for agent initialization. Please ensure it is included in your character configuration.'
+        );
+      }
     }
     try {
-      
       await this.adapter.init();
+
+      // Wait for adapter to be ready after initialization
+      if (typeof this.adapter.waitForReady === 'function') {
+        await this.adapter.waitForReady();
+        this.logger.debug('Database adapter is ready');
+      }
 
       const existingAgent = await this.ensureAgentExists(this.character as Partial<Agent>);
       if (!existingAgent) {
@@ -786,9 +800,9 @@ export class AgentRuntime implements IAgentRuntime {
             errorMsg.includes('does not exist') ||
             errorMsg.includes('no such table') ||
             errorMsg.includes('Entities table not yet created');
-          
+
           // In test environments, also handle constraint violations (entity already exists)
-          const isConstraintError = 
+          const isConstraintError =
             errorMsg.includes('duplicate key value violates unique constraint') ||
             errorMsg.includes('already exists') ||
             errorMsg.includes('UNIQUE constraint failed');
@@ -805,9 +819,7 @@ export class AgentRuntime implements IAgentRuntime {
               agentId: this.agentId,
             };
           } else if (isConstraintError) {
-            this.logger.warn(
-              `Entity already exists (duplicate key), retrieving existing entity`
-            );
+            this.logger.warn(`Entity already exists (duplicate key), retrieving existing entity`);
             // Try to get the existing entity
             try {
               agentEntity = await this.getEntityById(this.agentId);
@@ -815,7 +827,7 @@ export class AgentRuntime implements IAgentRuntime {
                 // Wait a bit and retry - might be a timing issue with PGLite
                 await new Promise((resolve) => setTimeout(resolve, 200));
                 agentEntity = await this.getEntityById(this.agentId);
-                
+
                 if (!agentEntity) {
                   // If we still can't retrieve it, create a mock entity for initialization
                   this.logger.warn(`Could not retrieve existing entity after retry, using mock`);
@@ -851,10 +863,11 @@ export class AgentRuntime implements IAgentRuntime {
       // Room creation and participant setup
       // Special case: skip room setup for migration agent during database migration or test environment
       if (this.character.name !== 'MigrationAgent' && process.env.ELIZA_TESTING_PLUGIN !== 'true') {
-        const room = await this.getRoom(this.agentId);
+        let room = await this.getRoom(this.agentId);
         if (!room) {
-          const room = await this.createRoom({
-            id: this.agentId,
+          const roomId = uuidv4() as UUID;
+          await this.createRoom({
+            id: roomId,
             name: this.character.name,
             source: 'elizaos',
             type: ChannelType.SELF,
@@ -862,26 +875,26 @@ export class AgentRuntime implements IAgentRuntime {
             serverId: this.agentId,
             worldId: this.agentId,
           });
+          room = await this.getRoom(roomId);
+        }
+
+        // Add agent as participant to the room
+        if (room) {
+          const participants = await this.adapter.getParticipantsForRoom(room.id);
+          if (!participants.includes(this.agentId)) {
+            const added = await this.addParticipant(this.agentId, room.id);
+            if (!added) {
+              const errorMsg = `Failed to add agent ${this.agentId} as participant to room ${room.id}`;
+              throw new Error(errorMsg);
+            }
+            this.logger.debug(
+              `Agent ${this.character.name} linked to room ${room.id} successfully`
+            );
+          }
         }
       } else {
         this.logger.warn(
           `Skipping room setup for ${this.character.name} (tables not migrated yet or test environment)`
-        );
-      }
-      // Special case: skip participant setup for migration agent during database migration or test environment
-      if (this.character.name !== 'MigrationAgent' && process.env.ELIZA_TESTING_PLUGIN !== 'true') {
-        const participants = await this.adapter.getParticipantsForRoom(this.agentId);
-        if (!participants.includes(this.agentId)) {
-          const added = await this.addParticipant(this.agentId, this.agentId);
-          if (!added) {
-            const errorMsg = `Failed to add agent ${this.agentId} as participant to its own room`;
-            throw new Error(errorMsg);
-          }
-          this.logger.debug(`Agent ${this.character.name} linked to its own room successfully`);
-        }
-      } else {
-        this.logger.warn(
-          `Skipping participant setup for ${this.character.name} (tables not migrated yet or test environment)`
         );
       }
     } catch (error: any) {
@@ -2293,20 +2306,26 @@ export class AgentRuntime implements IAgentRuntime {
     if (!entity.agentId) {
       entity.agentId = this.agentId;
     }
-    this.logger.info(`[AgentRuntime] Creating entity with ID: ${entity.id}, agentId: ${entity.agentId}`);
+    this.logger.info(
+      `[AgentRuntime] Creating entity with ID: ${entity.id}, agentId: ${entity.agentId}`
+    );
     try {
       const result = await this.createEntities([entity]);
       this.logger.info(`[AgentRuntime] createEntity result: ${result}`);
       return result;
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      
+
       // Check if it's a duplicate key error
-      if (errorMessage.includes('duplicate key') || errorMessage.includes('already exists') || error.code === '23505') {
+      if (
+        errorMessage.includes('duplicate key') ||
+        errorMessage.includes('already exists') ||
+        error.code === '23505'
+      ) {
         this.logger.warn(`[AgentRuntime] Entity ${entity.id} already exists, returning true`);
         return true; // Entity exists, consider it a success
       }
-      
+
       // Re-throw other errors
       throw error;
     }
@@ -2316,15 +2335,17 @@ export class AgentRuntime implements IAgentRuntime {
     entities.forEach((e) => {
       e.agentId = this.agentId;
     });
-    this.logger.info(`[AgentRuntime] Calling adapter.createEntities for ${entities.length} entities`);
-    
+    this.logger.info(
+      `[AgentRuntime] Calling adapter.createEntities for ${entities.length} entities`
+    );
+
     if (!this.adapter) {
       this.logger.error(`[AgentRuntime] No adapter available for createEntities`);
       return false;
     }
-    
+
     this.logger.info(`[AgentRuntime] Using adapter: ${this.adapter.constructor.name}`);
-    
+
     try {
       const result = await this.adapter.createEntities(entities);
       this.logger.info(`[AgentRuntime] Adapter.createEntities returned: ${result}`);
@@ -2775,7 +2796,7 @@ export class AgentRuntime implements IAgentRuntime {
 
       // Fall back to built-in planning logic
       this.logger.debug('Using built-in planning logic');
-      
+
       // Compose state for planning
       const state = await this.composeState(message);
 
@@ -2822,7 +2843,7 @@ export class AgentRuntime implements IAgentRuntime {
 
     // Fall back to built-in execution logic
     this.logger.debug('Using built-in plan execution logic');
-    
+
     const context = new PlanExecutionContext(plan);
 
     try {

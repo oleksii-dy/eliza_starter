@@ -1,9 +1,9 @@
 /**
  * REAL INTEGRATION TEST - NO MOCKS, NO LARP
- * 
+ *
  * This test validates actual ElizaOS integration with real runtime,
  * real database, and real file system operations.
- * 
+ *
  * If this test fails, the plugin is NOT production ready.
  */
 
@@ -39,11 +39,13 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
   beforeAll(async () => {
     // REAL: Create actual test data directory
     testDataDir = path.join(__dirname, '..', '..', 'test-real-data');
-    
+
     try {
       await fs.mkdir(testDataDir, { recursive: true });
     } catch (error) {
-      throw new Error(`Cannot create test directory: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Cannot create test directory: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     // REAL: Create actual ElizaOS runtime
@@ -57,27 +59,32 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
           messageExamples: [],
           postExamples: [],
           topics: [],
-          adjectives: [],
           knowledge: [],
           plugins: [],
         },
       });
     } catch (error) {
-      throw new Error(`Cannot create AgentRuntime: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Cannot create AgentRuntime: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     // REAL: Register actual SQL plugin
     try {
       await runtime.registerPlugin(sqlPlugin);
     } catch (error) {
-      throw new Error(`Cannot register SQL plugin: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Cannot register SQL plugin: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     // REAL: Initialize runtime
     try {
       await runtime.initialize();
     } catch (error) {
-      throw new Error(`Cannot initialize runtime: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Cannot initialize runtime: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   });
 
@@ -99,17 +106,19 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
     // REAL: Verify database adapter actually exists
     const dbAdapter = (runtime as any).databaseAdapter;
     expect(dbAdapter).toBeDefined();
-    
+
     // REAL: Test actual database connectivity
     const db = dbAdapter.db;
     expect(db).toBeDefined();
-    
+
     // REAL: Execute actual database query
     try {
       const result = await db.execute({ sql: 'SELECT 1 as test', args: [] });
       expect(result).toBeDefined();
     } catch (error) {
-      throw new Error(`Real database query failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Real database query failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   });
 
@@ -117,11 +126,13 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
     // REAL: Test actual file creation
     const testFile = path.join(testDataDir, 'real-test.json');
     const testData = { test: 'real data', timestamp: Date.now() };
-    
+
     try {
       await fs.writeFile(testFile, JSON.stringify(testData, null, 2), 'utf-8');
     } catch (error) {
-      throw new Error(`Real file write failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Real file write failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     // REAL: Verify file actually exists
@@ -129,7 +140,9 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
       const stats = await fs.stat(testFile);
       expect(stats.isFile()).toBe(true);
     } catch (error) {
-      throw new Error(`Real file stat failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Real file stat failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     // REAL: Read actual file content
@@ -139,14 +152,18 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
       expect(parsed.test).toBe('real data');
       expect(typeof parsed.timestamp).toBe('number');
     } catch (error) {
-      throw new Error(`Real file read failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Real file read failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     // REAL: Clean up actual file
     try {
       await fs.unlink(testFile);
     } catch (error) {
-      throw new Error(`Real file cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Real file cleanup failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   });
 
@@ -158,19 +175,21 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
     // REAL: Test actual useModel call (this will fail if not properly configured)
     try {
       const originalUseModel = runtime.useModel.bind(runtime);
-      
+
       // REAL: Test that we can actually call useModel
       // Note: This might fail if no model provider is configured, which is REAL feedback
       const result = await originalUseModel('TEXT_SMALL', { prompt: 'test' });
-      
+
       // REAL: If we get here, useModel actually works
       elizaLogger.info('Real useModel result type:', typeof result);
-      
     } catch (error) {
       // REAL: This is expected if no real model provider is configured
       // The important thing is that useModel exists and can be called
-      elizaLogger.info('useModel call failed (expected without real model provider):', error instanceof Error ? error.message : String(error));
-      
+      elizaLogger.info(
+        'useModel call failed (expected without real model provider):',
+        error instanceof Error ? error.message : String(error)
+      );
+
       // REAL: Verify the error is about missing model provider, not missing function
       const errorMessage = error instanceof Error ? error.message : String(error);
       expect(errorMessage).not.toContain('useModel is not a function');
@@ -190,10 +209,12 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
           test_data TEXT NOT NULL,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )`,
-        args: []
+        args: [],
       });
     } catch (error) {
-      throw new Error(`Real table creation failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Real table creation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     // REAL: Test actual data insertion
@@ -201,45 +222,53 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
     try {
       await db.execute({
         sql: 'INSERT INTO real_test_table (id, test_data) VALUES (?, ?)',
-        args: [testId, 'real test data']
+        args: [testId, 'real test data'],
       });
     } catch (error) {
-      throw new Error(`Real data insertion failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Real data insertion failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     // REAL: Test actual data retrieval
     try {
       const result = await db.execute({
         sql: 'SELECT * FROM real_test_table WHERE id = ?',
-        args: [testId]
+        args: [testId],
       });
-      
+
       expect(result.rows).toBeDefined();
       expect(result.rows.length).toBe(1);
       expect((result.rows[0] as any).id).toBe(testId);
       expect((result.rows[0] as any).test_data).toBe('real test data');
     } catch (error) {
-      throw new Error(`Real data retrieval failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Real data retrieval failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     // REAL: Test actual data cleanup
     try {
       await db.execute({
         sql: 'DELETE FROM real_test_table WHERE id = ?',
-        args: [testId]
+        args: [testId],
       });
     } catch (error) {
-      throw new Error(`Real data cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Real data cleanup failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     // REAL: Clean up actual table
     try {
       await db.execute({
         sql: 'DROP TABLE IF EXISTS real_test_table',
-        args: []
+        args: [],
       });
     } catch (error) {
-      throw new Error(`Real table cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Real table cleanup failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   });
 });

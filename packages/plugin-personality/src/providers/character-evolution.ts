@@ -1,10 +1,4 @@
-import {
-  type Provider,
-  type IAgentRuntime,
-  type Memory,
-  type State,
-  logger,
-} from '@elizaos/core';
+import { type Provider, type IAgentRuntime, type Memory, type State, logger } from '@elizaos/core';
 
 /**
  * Provider that supplies character evolution context for self-reflection
@@ -21,38 +15,41 @@ export const characterEvolutionProvider: Provider = {
       const characterInfo = await gatherCharacterInfo(runtime);
       const recentModifications = await getRecentModifications(runtime, message.roomId);
       const evolutionSuggestions = await getEvolutionSuggestions(runtime, message.roomId);
-      
-      const contextText = formatEvolutionContext(characterInfo, recentModifications, evolutionSuggestions);
+
+      const contextText = formatEvolutionContext(
+        characterInfo,
+        recentModifications,
+        evolutionSuggestions
+      );
 
       return {
         text: contextText,
         values: {
           totalModifications: recentModifications.length,
           pendingEvolutionSuggestions: evolutionSuggestions.length,
-          lastModificationAge: recentModifications[0]?.timestamp 
-            ? Date.now() - recentModifications[0].timestamp 
+          lastModificationAge: recentModifications[0]?.timestamp
+            ? Date.now() - recentModifications[0].timestamp
             : null,
-          hasEvolutionCapability: true
+          hasEvolutionCapability: true,
         },
         data: {
           characterInfo,
           recentModifications,
-          evolutionSuggestions
-        }
+          evolutionSuggestions,
+        },
       };
-
     } catch (error) {
       logger.error('Error in character evolution provider', error);
-      
+
       return {
         text: '[CHARACTER EVOLUTION]\nEvolution context temporarily unavailable\n[/CHARACTER EVOLUTION]',
         values: {
           hasEvolutionCapability: false,
-          error: true
-        }
+          error: true,
+        },
       };
     }
-  }
+  },
 };
 
 /**
@@ -60,24 +57,17 @@ export const characterEvolutionProvider: Provider = {
  */
 async function gatherCharacterInfo(runtime: IAgentRuntime) {
   const character = runtime.character;
-  
-  return {
+
+  const characterInfo = {
     name: character.name,
-    bioElements: Array.isArray(character.bio) ? character.bio.length : 1,
+    bio: Array.isArray(character.bio) ? character.bio : [character.bio],
     topics: character.topics?.length || 0,
-    adjectives: character.adjectives?.length || 0,
     messageExamples: character.messageExamples?.length || 0,
-    style: {
-      hasAllStyle: !!character.style?.all?.length,
-      hasChatStyle: !!character.style?.chat?.length,
-      hasPostStyle: !!character.style?.post?.length
-    },
-    lastUpdated: 'runtime',
-    capabilities: {
-      canModify: true,
-      hasFileAccess: !!runtime.getService('character-file-manager')
-    }
+    hasStyle: !!character.style,
+    settings: Object.keys(character.settings || {}).length,
   };
+
+  return characterInfo;
 }
 
 /**
@@ -89,15 +79,15 @@ async function getRecentModifications(runtime: IAgentRuntime, roomId: string, li
       entityId: runtime.agentId,
       roomId: roomId as any, // Type cast for UUID compatibility
       count: limit,
-      tableName: 'character_modifications'
+      tableName: 'character_modifications',
     });
 
-    return modifications.map(memory => ({
+    return modifications.map((memory) => ({
       timestamp: (memory.content.metadata as any)?.timestamp || memory.createdAt,
       modification: (memory.content.metadata as any)?.modification,
       isUserRequested: (memory.content.metadata as any)?.isUserRequested || false,
       requesterId: (memory.content.metadata as any)?.requesterId,
-      summary: memory.content.text
+      summary: memory.content.text,
     }));
   } catch (error) {
     logger.warn('Failed to get recent modifications', error);
@@ -114,15 +104,15 @@ async function getEvolutionSuggestions(runtime: IAgentRuntime, roomId: string, l
       entityId: runtime.agentId,
       roomId: roomId as any, // Type cast for UUID compatibility
       count: limit,
-      tableName: 'character_evolution'
+      tableName: 'character_evolution',
     });
 
-    return suggestions.map(memory => ({
+    return suggestions.map((memory) => ({
       timestamp: (memory.content.metadata as any)?.timestamp || memory.createdAt,
       confidence: (memory.content.metadata as any)?.evolution?.confidence,
       reasoning: (memory.content.metadata as any)?.evolution?.reasoning,
       modifications: (memory.content.metadata as any)?.evolution?.modifications,
-      conversationContext: (memory.content.metadata as any)?.conversationContext
+      conversationContext: (memory.content.metadata as any)?.conversationContext,
     }));
   } catch (error) {
     logger.warn('Failed to get evolution suggestions', error);
@@ -142,13 +132,12 @@ function formatEvolutionContext(
 
   // Current character state
   sections.push(`Current Character State:
-- Bio elements: ${characterInfo.bioElements}
+- Name: ${characterInfo.name}
+- Bio elements: ${characterInfo.bio.length}
 - Topics: ${characterInfo.topics}
-- Adjectives: ${characterInfo.adjectives}
 - Message examples: ${characterInfo.messageExamples}
-- Style configuration: ${getStyleSummary(characterInfo.style)}
-- Can modify: ${characterInfo.capabilities.canModify}
-- File access: ${characterInfo.capabilities.hasFileAccess}`);
+- Has custom style: ${characterInfo.hasStyle}
+- Custom settings: ${characterInfo.settings}`);
 
   // Recent modifications
   if (recentModifications.length > 0) {
@@ -169,7 +158,9 @@ function formatEvolutionContext(
     evolutionSuggestions.forEach((suggestion, index) => {
       const age = Date.now() - suggestion.timestamp;
       const ageStr = formatAge(age);
-      sections.push(`${index + 1}. ${ageStr} ago (confidence: ${(suggestion.confidence * 100).toFixed()}%): ${suggestion.reasoning}`);
+      sections.push(
+        `${index + 1}. ${ageStr} ago (confidence: ${(suggestion.confidence * 100).toFixed()}%): ${suggestion.reasoning}`
+      );
     });
   } else {
     sections.push('No pending evolution suggestions.');
@@ -184,19 +175,8 @@ function formatEvolutionContext(
 - Validates modifications for safety and consistency`);
 
   sections.push('[/CHARACTER EVOLUTION CONTEXT]');
-  
-  return sections.join('\n');
-}
 
-/**
- * Format style configuration summary
- */
-function getStyleSummary(style: any): string {
-  const parts: string[] = [];
-  if (style.hasAllStyle) parts.push('general');
-  if (style.hasChatStyle) parts.push('chat');
-  if (style.hasPostStyle) parts.push('post');
-  return parts.length > 0 ? parts.join(', ') : 'none';
+  return sections.join('\n');
 }
 
 /**

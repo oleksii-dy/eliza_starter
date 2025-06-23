@@ -19,7 +19,6 @@ export default {
         messageExamples: [],
         postExamples: [],
         topics: [],
-        adjectives: [],
         knowledge: [],
         settings: {
           model: 'gpt-4',

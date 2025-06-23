@@ -1,9 +1,6 @@
 import {
   logger,
   ModelType,
-} from '@elizaos/core';
-
-import {
   type Action,
   type IAgentRuntime,
   type Memory,
@@ -13,6 +10,8 @@ import {
   type HandlerCallback,
   type Entity,
   type Relationship,
+  type ActionResult,
+  type UUID,
 } from '../core-types';
 import { type StandardActionResult, EntityNotFoundError, WorldNotFoundError } from '../types';
 import { findBestMatch } from '../utils/stringDistance';
@@ -46,7 +45,7 @@ async function findEntityByName(
 ): Promise<Entity | null> {
   try {
     // Get all rooms in the world
-    const rooms = await runtime.getRooms(worldId as any);
+    const rooms = await runtime.getRooms(worldId as UUID);
     const allEntities = new Set<Entity>();
 
     // Collect entities from all rooms
@@ -192,9 +191,7 @@ export const removeEntityAction: Action = {
     state?: State,
     _options?: { [key: string]: unknown },
     callback?: HandlerCallback
-  ): Promise<
-    StandardActionResult<{ entityId?: string; removed: boolean; relationshipsRemoved: number }>
-  > => {
+  ): Promise<ActionResult> => {
     const startTime = Date.now();
 
     try {
@@ -237,15 +234,8 @@ export const removeEntityAction: Action = {
         }
 
         return {
-          success: false,
-          actionName: 'REMOVE_ENTITY',
-          entityId: message.entityId,
+          text: errorText,
           data: { removed: false, relationshipsRemoved: 0 },
-          metadata: {
-            executedAt: new Date().toISOString(),
-            executionTime: Date.now() - startTime,
-            error: 'No entity specified',
-          },
         };
       }
 
@@ -261,15 +251,8 @@ export const removeEntityAction: Action = {
         }
 
         return {
-          success: false,
-          actionName: 'REMOVE_ENTITY',
-          entityId: message.entityId,
+          text: errorText,
           data: { removed: false, relationshipsRemoved: 0 },
-          metadata: {
-            executedAt: new Date().toISOString(),
-            executionTime: Date.now() - startTime,
-            error: 'Removal not confirmed',
-          },
         };
       }
 
@@ -327,17 +310,11 @@ export const removeEntityAction: Action = {
       }
 
       return {
-        success: true,
-        actionName: 'REMOVE_ENTITY',
-        entityId: message.entityId,
+        text: responseText,
         data: {
           entityId: entity.id!,
           removed: true,
           relationshipsRemoved: removeRelationships ? relationshipCount : 0,
-        },
-        metadata: {
-          executedAt: new Date().toISOString(),
-          executionTime: Date.now() - startTime,
         },
       };
     } catch (error) {
@@ -357,15 +334,8 @@ export const removeEntityAction: Action = {
       }
 
       return {
-        success: false,
-        actionName: 'REMOVE_ENTITY',
-        entityId: message.entityId,
+        text: errorText,
         data: { removed: false, relationshipsRemoved: 0 },
-        metadata: {
-          executedAt: new Date().toISOString(),
-          executionTime: Date.now() - startTime,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        },
       };
     }
   },

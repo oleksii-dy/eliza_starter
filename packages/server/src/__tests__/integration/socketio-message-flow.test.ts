@@ -57,10 +57,8 @@ describe('Socket.IO End-to-End Message Flow', () => {
       clients: [],
       plugins: [],
       settings: {
-        model: 'gpt-4',
         secrets: {},
       },
-      modelProvider: 'openai',
     } as Character;
 
     // Create a real agent runtime for testing

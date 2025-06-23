@@ -203,9 +203,9 @@ export class TrainingService extends Service implements TrainingServiceInterface
         const conversation: TrainingConversation = {
           id: roomId,
           roomId,
-          worldId: room?.worldId,
+          worldId: (room as any)?.worldId,
           agentId: this.runtime.agentId,
-          participants: (participants || []).map((p: any) => p.id),
+          participants: Array.isArray(participants) ? participants.map((p: any) => p.id) : [],
           messages,
           metadata: {
             startTime: Math.min(...messages.map(m => m.timestamp)),
@@ -363,22 +363,22 @@ export class TrainingService extends Service implements TrainingServiceInterface
           };
 
           // Check if there's action-specific metadata
-          if (memory.metadata?.actionResults) {
-            const storedResult = memory.metadata.actionResults.find((r: any) => r.actionName === actionName);
+          if ((((memory.metadata as any)) as any)?.actionResults) {
+            const storedResult = (((memory.metadata as any)) as any).actionResults.find((r: any) => r.actionName === actionName);
             if (storedResult) {
               Object.assign(actionResult, storedResult);
             }
           }
 
           // Extract duration from timestamps if available
-          if (memory.metadata?.actionTimestamps?.[actionName]) {
-            actionResult.duration = memory.metadata.actionTimestamps[actionName].duration || 0;
+          if ((((memory.metadata as any)) as any)?.actionTimestamps?.[actionName]) {
+            actionResult.duration = (((memory.metadata as any)) as any).actionTimestamps[actionName].duration || 0;
           }
 
           // Check for errors in metadata
-          if (memory.metadata?.actionErrors?.[actionName]) {
+          if ((((memory.metadata as any)) as any)?.actionErrors?.[actionName]) {
             actionResult.success = false;
-            actionResult.error = memory.metadata.actionErrors[actionName];
+            actionResult.error = ((memory.metadata as any)).actionErrors[actionName];
           }
 
           results.push(actionResult);
@@ -414,27 +414,27 @@ export class TrainingService extends Service implements TrainingServiceInterface
           };
 
           // Check if there's provider-specific metadata
-          if (memory.metadata?.providerResults) {
-            const storedResult = memory.metadata.providerResults.find((r: any) => r.providerName === providerName);
+          if ((((memory.metadata as any)) as any)?.providerResults) {
+            const storedResult = ((memory.metadata as any)).providerResults.find((r: any) => r.providerName === providerName);
             if (storedResult) {
               Object.assign(providerResult, storedResult);
             }
           }
 
           // Extract provider data from state if available
-          if (memory.metadata?.providerData?.[providerName]) {
-            providerResult.data = memory.metadata.providerData[providerName];
+          if ((((memory.metadata as any)) as any)?.providerData?.[providerName]) {
+            providerResult.data = ((memory.metadata as any)).providerData[providerName];
           }
 
           // Extract duration from timestamps if available
-          if (memory.metadata?.providerTimestamps?.[providerName]) {
-            providerResult.duration = memory.metadata.providerTimestamps[providerName].duration || 0;
+          if ((((memory.metadata as any)) as any)?.providerTimestamps?.[providerName]) {
+            providerResult.duration = ((memory.metadata as any)).providerTimestamps[providerName].duration || 0;
           }
 
           // Check for errors in metadata
-          if (memory.metadata?.providerErrors?.[providerName]) {
+          if ((((memory.metadata as any)) as any)?.providerErrors?.[providerName]) {
             providerResult.success = false;
-            providerResult.error = memory.metadata.providerErrors[providerName];
+            providerResult.error = ((memory.metadata as any)).providerErrors[providerName];
           }
 
           results.push(providerResult);
@@ -447,8 +447,8 @@ export class TrainingService extends Service implements TrainingServiceInterface
       }
 
       // Extract from state data if available
-      if (memory.metadata?.stateData?.providers) {
-        const stateProviders = memory.metadata.stateData.providers;
+      if ((((memory.metadata as any)) as any)?.stateData?.providers) {
+        const stateProviders = ((memory.metadata as any)).stateData.providers;
         for (const [providerName, data] of Object.entries(stateProviders)) {
           results.push({
             providerName,
@@ -472,8 +472,8 @@ export class TrainingService extends Service implements TrainingServiceInterface
     
     try {
       // Extract evaluations from memory metadata
-      if (memory.metadata?.evaluationResults && Array.isArray(memory.metadata.evaluationResults)) {
-        results.push(...memory.metadata.evaluationResults);
+      if ((((memory.metadata as any)) as any)?.evaluationResults && Array.isArray(((memory.metadata as any)).evaluationResults)) {
+        results.push(...((memory.metadata as any)).evaluationResults);
       }
 
       // Extract from evaluators field in content
@@ -491,37 +491,37 @@ export class TrainingService extends Service implements TrainingServiceInterface
           };
 
           // Check if there's evaluator-specific metadata
-          if (memory.metadata?.evaluatorResults) {
-            const storedResult = memory.metadata.evaluatorResults.find((r: any) => r.evaluatorName === evaluatorName);
+          if ((((memory.metadata as any)) as any)?.evaluatorResults) {
+            const storedResult = ((memory.metadata as any)).evaluatorResults.find((r: any) => r.evaluatorName === evaluatorName);
             if (storedResult) {
               Object.assign(evaluationResult, storedResult);
             }
           }
 
           // Extract facts if stored in memory
-          if (memory.metadata?.extractedFacts) {
-            evaluationResult.facts = memory.metadata.extractedFacts;
+          if ((((memory.metadata as any)) as any)?.extractedFacts) {
+            evaluationResult.facts = ((memory.metadata as any)).extractedFacts;
           }
 
           // Extract relationships if stored in memory
-          if (memory.metadata?.extractedRelationships) {
-            evaluationResult.relationships = memory.metadata.extractedRelationships;
+          if ((((memory.metadata as any)) as any)?.extractedRelationships) {
+            evaluationResult.relationships = ((memory.metadata as any)).extractedRelationships;
           }
 
           // Extract insights if stored in memory
-          if (memory.metadata?.insights) {
-            evaluationResult.insights = memory.metadata.insights;
+          if ((((memory.metadata as any)) as any)?.insights) {
+            evaluationResult.insights = ((memory.metadata as any)).insights;
           }
 
           // Extract duration from timestamps if available
-          if (memory.metadata?.evaluatorTimestamps?.[evaluatorName]) {
-            evaluationResult.duration = memory.metadata.evaluatorTimestamps[evaluatorName].duration || 0;
+          if ((((memory.metadata as any)) as any)?.evaluatorTimestamps?.[evaluatorName]) {
+            evaluationResult.duration = ((memory.metadata as any)).evaluatorTimestamps[evaluatorName].duration || 0;
           }
 
           // Check for errors in metadata
-          if (memory.metadata?.evaluatorErrors?.[evaluatorName]) {
+          if ((((memory.metadata as any)) as any)?.evaluatorErrors?.[evaluatorName]) {
             evaluationResult.success = false;
-            evaluationResult.error = memory.metadata.evaluatorErrors[evaluatorName];
+            evaluationResult.error = ((memory.metadata as any)).evaluatorErrors[evaluatorName];
           }
 
           results.push(evaluationResult);
@@ -532,7 +532,7 @@ export class TrainingService extends Service implements TrainingServiceInterface
       if (this.runtime) {
         try {
           // Search for related fact memories in the same room
-          const factMemories = await this.runtime.messageManager.getMemories({
+          const factMemories = await (this.runtime as any).messageManager?.getMemories({
             roomId: memory.roomId,
             tableName: 'facts',
             unique: false,
@@ -545,7 +545,7 @@ export class TrainingService extends Service implements TrainingServiceInterface
               evaluatorName: 'EXTRACT_FACTS',
               success: true,
               duration: 0,
-              facts: factMemories.map(m => m.content.text).filter(Boolean),
+              facts: factMemories.map((m: any) => m.content.text).filter(Boolean),
               insights: [],
               relationships: [],
               metadata: { source: 'fact_memories', count: factMemories.length }
@@ -685,7 +685,7 @@ export class TrainingService extends Service implements TrainingServiceInterface
       
       // Check for thoughtful responses (has metadata like thought or reasoning)
       const thoughtfulResponses = assistantMessages.filter(m => 
-        m.metadata?.thought || m.metadata?.actions?.length > 0
+        m.metadata?.thought || (m.metadata?.actions?.length || 0) > 0
       ).length;
       
       if (thoughtfulResponses > 0) {
@@ -703,7 +703,7 @@ export class TrainingService extends Service implements TrainingServiceInterface
       
       // Penalize conversations with errors
       const errorMessages = messages.filter(m => 
-        m.metadata?.error || (m.content && m.content.includes('error'))
+        (m.metadata as any)?.error || (m.content && m.content.includes('error'))
       );
       if (errorMessages.length > 0) {
         score *= (1 - (errorMessages.length / messages.length) * 0.3);
@@ -753,7 +753,7 @@ export class TrainingService extends Service implements TrainingServiceInterface
         elizaLogger.info('Starting RLAIF training', { config });
         
         // Validate configuration before starting
-        if (!config.trainingConfig) {
+        if (!(config as any).trainingConfig) {
           throw new ConfigurationError(
             'Training configuration is required',
             'trainingConfig'

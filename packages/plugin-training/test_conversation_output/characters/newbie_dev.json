@@ -57,12 +57,7 @@
     "This all sounds really advanced! I'm still learning about LLMs and training data. Could someone explain how the <thinking> blocks work? I see them mentioned but I'm not sure what they're for.",
     "Oh wow, that makes so much sense! So it's like the model can have an internal monologue before responding. That's really cool! Does that mean the responses are more accurate when using thinking blocks?"
   ],
-  "topics": [
-    "artificial-intelligence"
-  ],
-  "adjectives": [
-    "emphatic"
-  ],
+  "topics": ["artificial-intelligence"],
   "knowledge": [],
   "plugins": [],
   "settings": {
@@ -72,14 +67,8 @@
   },
   "secrets": {},
   "style": {
-    "all": [
-      "Uses caps for emphasis"
-    ],
-    "chat": [
-      "Use caps sparingly for emphasis"
-    ],
-    "post": [
-      "Keep responses relevant"
-    ]
+    "all": ["Uses caps for emphasis"],
+    "chat": ["Use caps sparingly for emphasis"],
+    "post": ["Keep responses relevant"]
   }
 }
