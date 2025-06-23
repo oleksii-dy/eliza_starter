@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": false,
+    "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "resolveJsonModule": true,
+    "noImplicitAny": false,
+    "allowJs": true,
+    "checkJs": false,
+    "noEmitOnError": false,
+    "moduleDetection": "force",
+    "allowArbitraryExtensions": true,
+    "baseUrl": "."
+  },
+  "include": ["src/**/*.ts", "src/e2e/**/*.ts", "__tests__/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/__tests__/test-scenarios/**/*.ts",
+    "src/__tests__/test-data/**/*.ts"
+  ]
+}

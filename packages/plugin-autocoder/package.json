@@ -1,0 +1,102 @@
+{
+  "name": "@elizaos/plugin-autocoder",
+  "description": "Autocoder plugin for ElizaOS",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageType": "plugin",
+  "platform": "node",
+  "license": "MIT",
+  "author": "ElizaOS",
+  "keywords": [
+    "plugin",
+    "elizaos"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elizaos-plugins/plugin-autonomy"
+  },
+  "homepage": "https://elizaos.ai",
+  "bugs": {
+    "url": "https://github.com/elizaos-plugins/plugin-autonomy/issues"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    ".npmignore",
+    "package.json",
+    "tsup.config.ts"
+  ],
+  "dependencies": {
+    "@anthropic-ai/claude-code": "^1.0.0",
+    "@elizaos/core": "workspace:*",
+    "@elizaos/plugin-anthropic": "^1.0.3",
+    "@elizaos/plugin-message-handling": "workspace:*",
+    "@elizaos/plugin-secrets-manager": "workspace:*",
+    "@elizaos/plugin-plugin-manager": "workspace:*",
+    "dockerode": "^4.0.2",
+    "fs-extra": "^11.2.0",
+    "lru-cache": "^11.0.2",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.0",
+    "zod": "3.24.2"
+  },
+  "peerDependencies": {},
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.40.1",
+    "@elizaos/cli": "^1.0.0",
+    "@types/dockerode": "^3.3.31",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.5.12",
+    "dotenv": "16.4.5",
+    "prettier": "3.5.3",
+    "tsup": "8.4.0",
+    "typescript": "5.8.2",
+    "vitest": "3.1.4"
+  },
+  "scripts": {
+    "start": "bun run elizaos start",
+    "dev": "bun run elizaos dev",
+    "build": "bun run tsup",
+    "lint": "bun run prettier --write ./src",
+    "test": "elizaos test",
+    "test:watch": "bun run vitest",
+    "test:coverage": "bun run vitest run --coverage",
+    "test:e2e": "bun run elizaos test",
+    "publish": "bun run elizaos publish",
+    "format": "bun run prettier --write ./src",
+    "format:check": "bun run prettier --check ./src",
+    "benchmarks": "bun ./scripts/run-benchmarks.ts",
+    "swe-bench:comprehensive": "bun ./scripts/run-swe-bench-comprehensive.ts",
+    "swe-bench:real": "bun ./scripts/run-swe-bench-real.ts",
+    "swe-bench:single": "bun ./scripts/run-swe-bench-single.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "resolutions": {
+    "zod": "3.24.2"
+  },
+  "agentConfig": {
+    "pluginType": "elizaos:plugin:1.0.0",
+    "pluginParameters": {
+      "API_KEY": {
+        "type": "string",
+        "description": "API key for the service"
+      }
+    }
+  },
+  "gitHead": "d5bd5c43bfebeb7ac02f9e029f924cb6cd5c2ec7"
+}
