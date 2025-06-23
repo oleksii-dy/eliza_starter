@@ -50,7 +50,7 @@ describe('getChannelAgents filtering', () => {
     } as unknown as AgentServer;
 
     const router = createChannelsRouter(agents, serverInstance);
-    const handler = getHandler(router, '/central-channels/:channelId/agents');
+    const handler = getHandler(router, CHANNEL_AGENTS_PATH);
 
     const req: any = { params: { channelId: 'xyz' } };
     const res: any = { status: vi.fn().mockReturnThis(), json: vi.fn() };
