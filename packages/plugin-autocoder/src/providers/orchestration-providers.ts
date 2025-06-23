@@ -6,7 +6,7 @@ import { AutoCodeService } from '../services/autocode-service.js';
  */
 export const activeProjectsProvider: Provider = {
   name: 'activeProjects',
-  description: 'Provides information about active plugin development projects',
+  description: 'Provides real-time status of active plugin development projects including current phase, error counts, and required actions when agent needs to track or report on plugin orchestration progress',
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     const orchestrationService = runtime.getService('autocoder') as AutoCodeService;
@@ -44,7 +44,7 @@ export const activeProjectsProvider: Provider = {
  */
 export const orchestrationCapabilitiesProvider: Provider = {
   name: 'orchestrationCapabilities',
-  description: 'Provides information about plugin development orchestration capabilities',
+  description: 'Provides comprehensive overview of plugin development orchestration capabilities including supported workflows, development phases, and best practices when agent needs to explain or guide plugin creation processes',
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     const orchestrationService = runtime.getService('autocoder') as AutoCodeService;
@@ -84,7 +84,7 @@ Use "create a plugin for..." to start a new project or "update plugin..." to mod
 export const projectHistoryProvider: Provider = {
   name: 'projectHistory',
   description:
-    'Provides information about all plugin development projects including completed ones',
+    'Provides historical overview of all plugin development projects including completed, failed, and active projects with success metrics when agent needs to show development history or analyze project patterns',
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     const orchestrationService = runtime.getService('autocoder') as AutoCodeService;
@@ -140,7 +140,7 @@ export const projectHistoryProvider: Provider = {
  */
 export const pluginBestPracticesProvider: Provider = {
   name: 'pluginBestPractices',
-  description: 'Provides best practices for ElizaOS plugin development',
+  description: 'Provides comprehensive ElizaOS plugin development best practices including structure guidelines, testing strategies, and environment configuration when agent needs to guide developers or ensure quality standards',
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     return {
@@ -191,7 +191,7 @@ export const pluginBestPracticesProvider: Provider = {
 export const projectUpdatesProvider: Provider = {
   name: 'projectUpdates',
   description:
-    'Provides real-time updates and notifications for active plugin development projects',
+    'Provides real-time updates and notifications for active plugin development projects including error summaries, recent activity, and action requirements when agent needs to monitor or alert on development progress',
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     const orchestrationService = runtime.getService('autocoder') as AutoCodeService;
@@ -258,7 +258,7 @@ export const projectUpdatesProvider: Provider = {
  */
 export const developmentProgressProvider: Provider = {
   name: 'developmentProgress',
-  description: 'Provides detailed progress information for plugin development projects',
+  description: 'Provides detailed progress tracking for user-specific plugin development projects including time elapsed, success rates, and custom instructions when agent needs to show personalized development metrics',
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     const orchestrationService = runtime.getService('autocoder') as AutoCodeService;

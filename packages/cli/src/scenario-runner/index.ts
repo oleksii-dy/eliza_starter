@@ -28,6 +28,16 @@ import { ProductionVerificationSystem } from './integration-test.js';
 import { ScenarioActionTracker } from '../commands/scenario/action-tracker.js';
 import { MockLLMService, processMessageWithLLMFallback } from './mock-llm-service.js';
 import { v4 as uuidv4 } from 'uuid';
+
+// Benchmarking System Components  
+import { ProductionCostTracker } from './production-cost-tracker.js';
+import { LiveMessageBus } from './live-message-bus.js';
+import { RealWorldTaskExecutor } from './real-world-task-executor.js';
+import { ExternalAgentAPI } from './external-agent-api.js';
+import { BenchmarkScoringSystem } from './benchmark-scoring-system.js';
+import { defiPortfolioBenchmark } from './benchmarks/defi-portfolio-benchmark.js';
+import { ecommerceStoreBenchmark } from './benchmarks/ecommerce-store-benchmark.js';
+
 // import { getMessageManager } from '../utils/runtime-context'; // Module not found
 // import { calculateFactorQuality } from '../verification/evaluator'; // Module not found
 // import { ScenarioService } from '../services/scenario'; // Module not found
@@ -42,6 +52,14 @@ export class ScenarioRunner {
   private productionVerificationSystem: ProductionVerificationSystem;
   private activeScenarios = new Map<string, ScenarioContext>();
 
+  // Benchmarking system components
+  private costTracker: ProductionCostTracker;
+  private messageBus: LiveMessageBus;
+  private taskExecutor: RealWorldTaskExecutor;
+  private externalAgentAPI: ExternalAgentAPI;
+  private scoringSystem: BenchmarkScoringSystem;
+  private activeBenchmarks = new Map<string, any>();
+
   // Add these interfaces
   private scenario: any;
   private runtime: IAgentRuntime;
@@ -55,6 +73,15 @@ export class ScenarioRunner {
     this.metricsCollector = new MetricsCollector();
     this.productionVerificationSystem = new ProductionVerificationSystem(this.primaryRuntime);
     this.runtime = primaryRuntime;
+
+    // Initialize benchmarking system
+    this.costTracker = new ProductionCostTracker();
+    this.messageBus = new LiveMessageBus();
+    this.taskExecutor = new RealWorldTaskExecutor(this.costTracker);
+    this.externalAgentAPI = new ExternalAgentAPI();
+    this.scoringSystem = new BenchmarkScoringSystem();
+
+    logger.info('ScenarioRunner initialized with real-world benchmarking capabilities');
   }
 
   async runScenario(
@@ -857,6 +884,245 @@ export class ScenarioRunner {
     _actionTracker.detach();
 
     return results;
+  }
+
+  // ========================================
+  // REAL-WORLD BENCHMARKING SYSTEM
+  // ========================================
+
+  /**
+   * Register an external agent for benchmarking
+   */
+  async registerExternalAgent(request: {
+    name: string;
+    description: string;
+    apiEndpoint: string;
+    authToken?: string;
+    capabilities: string[];
+    securityLevel: 'sandbox' | 'trusted';
+    maxBenchmarkCost: number;
+  }): Promise<string> {
+    return await this.externalAgentAPI.registerAgent({
+      name: request.name,
+      description: request.description,
+      apiEndpoint: request.apiEndpoint,
+      authToken: request.authToken,
+      capabilities: request.capabilities,
+      securityConstraints: {
+        level: request.securityLevel,
+        maxBenchmarkCost: request.maxBenchmarkCost,
+        allowedActions: request.capabilities,
+        networkRestrictions: request.securityLevel === 'sandbox' ? ['sandbox_only'] : [],
+        resourceLimits: {
+          maxMemory: request.securityLevel === 'sandbox' ? 512 : 2048,
+          maxCpu: request.securityLevel === 'sandbox' ? 50 : 100,
+          maxNetwork: request.securityLevel === 'sandbox' ? 10 : 100,
+        },
+      },
+      metadata: {
+        registrationTime: Date.now(),
+        source: 'scenario-runner',
+      },
+    });
+  }
+
+  /**
+   * Run a DeFi Portfolio benchmark
+   */
+  async runDeFiBenchmark(
+    agentId: string,
+    parameters: {
+      initialBalance: number;
+      riskTolerance: 'conservative' | 'moderate' | 'aggressive';
+      timeHorizon: number;
+      channelId?: string;
+    }
+  ): Promise<any> {
+    logger.info(`Starting DeFi Portfolio benchmark for agent ${agentId}`);
+
+    // Get agent runtime
+    const runtime = this.agents.get(agentId) || this.primaryRuntime;
+    
+    // Execute the benchmark
+    const result = await defiPortfolioBenchmark.executeBenchmark(agentId, runtime, parameters);
+
+    // Calculate comprehensive score
+    const benchmarkScore = await this.scoringSystem.calculateScore(
+      result.benchmarkId,
+      agentId,
+      'defi_portfolio',
+      result,
+      {
+        environment: 'production',
+        timestamp: Date.now(),
+        runtimeVersion: '1.0.0',
+        plugins: runtime.plugins?.map(p => p.name) || [],
+        configuration: parameters,
+      }
+    );
+
+    // Update leaderboard
+    await this.scoringSystem.updateLeaderboard('defi_portfolio', benchmarkScore);
+
+    logger.info(`DeFi benchmark completed: Score ${(benchmarkScore.overallScore * 100).toFixed(1)}% (Rank #${benchmarkScore.ranking.overall})`);
+
+    return {
+      benchmarkResult: result,
+      score: benchmarkScore,
+      leaderboard: await this.scoringSystem.getLeaderboard('defi_portfolio', 10),
+    };
+  }
+
+  /**
+   * Run an E-commerce Store benchmark
+   */
+  async runEcommerceBenchmark(
+    agentId: string,
+    parameters: {
+      initialCapital: number;
+      businessType: 'dropshipping' | 'inventory' | 'digital' | 'service';
+      targetMarket: string[];
+      timeHorizon: number;
+      channelId?: string;
+    }
+  ): Promise<any> {
+    logger.info(`Starting E-commerce Store benchmark for agent ${agentId}`);
+
+    // Get agent runtime
+    const runtime = this.agents.get(agentId) || this.primaryRuntime;
+    
+    // Execute the benchmark
+    const result = await ecommerceStoreBenchmark.executeBenchmark(agentId, runtime, parameters);
+
+    // Calculate comprehensive score
+    const benchmarkScore = await this.scoringSystem.calculateScore(
+      result.benchmarkId,
+      agentId,
+      'ecommerce_store',
+      result,
+      {
+        environment: 'production',
+        timestamp: Date.now(),
+        runtimeVersion: '1.0.0',
+        plugins: runtime.plugins?.map(p => p.name) || [],
+        configuration: parameters,
+      }
+    );
+
+    // Update leaderboard
+    await this.scoringSystem.updateLeaderboard('ecommerce_store', benchmarkScore);
+
+    logger.info(`E-commerce benchmark completed: Score ${(benchmarkScore.overallScore * 100).toFixed(1)}% (Rank #${benchmarkScore.ranking.overall})`);
+
+    return {
+      benchmarkResult: result,
+      score: benchmarkScore,
+      leaderboard: await this.scoringSystem.getLeaderboard('ecommerce_store', 10),
+    };
+  }
+
+  /**
+   * Get available benchmarks
+   */
+  getAvailableBenchmarks(): any[] {
+    return [
+      {
+        id: 'defi-portfolio-v1',
+        name: 'DeFi Portfolio Management',
+        category: 'finance',
+        difficulty: 'advanced',
+        estimatedCost: { min: 500, typical: 2000, max: 10000 },
+        description: 'Manage a real DeFi portfolio with actual cryptocurrency transactions',
+        capabilities: ['wallet_management', 'defi_protocols', 'yield_farming', 'risk_assessment'],
+      },
+      {
+        id: 'ecommerce-store-v1',
+        name: 'E-commerce Store Management',
+        category: 'business',
+        difficulty: 'advanced',
+        estimatedCost: { min: 300, typical: 1500, max: 5000 },
+        description: 'Run a real e-commerce business with product sourcing and customer service',
+        capabilities: ['business_operations', 'customer_service', 'inventory_management', 'marketing'],
+      },
+    ];
+  }
+
+  /**
+   * Get benchmark leaderboard
+   */
+  async getBenchmarkLeaderboard(benchmarkType: string, limit: number = 10): Promise<any> {
+    return await this.scoringSystem.getLeaderboard(benchmarkType, limit);
+  }
+
+  /**
+   * Get agent's benchmark history
+   */
+  async getAgentBenchmarkHistory(agentId: string): Promise<any[]> {
+    return await this.scoringSystem.getAgentHistory(agentId);
+  }
+
+  /**
+   * Get real-time benchmark stats
+   */
+  async getBenchmarkStats(): Promise<any> {
+    const stats = await this.scoringSystem.getBenchmarkStatistics();
+    
+    return {
+      ...stats,
+      activeBenchmarks: this.activeBenchmarks.size,
+      registeredAgents: await this.externalAgentAPI.getRegisteredAgents(),
+      totalCosts: await this.costTracker.getTotalSpend(),
+      platformStatus: {
+        costTracker: 'active',
+        messageBus: this.messageBus.getAvailablePlatforms().length > 0 ? 'active' : 'inactive',
+        taskExecutor: 'active',
+        scoringSystem: 'active',
+      },
+    };
+  }
+
+  /**
+   * Start real-time monitoring
+   */
+  async startRealtimeMonitoring(): Promise<void> {
+    // Start cost tracking
+    await this.costTracker.startTracking();
+
+    // Setup message bus monitoring
+    this.messageBus.on('message', (data) => {
+      logger.debug('Real-time message:', data);
+    });
+
+    // Setup external agent monitoring
+    this.externalAgentAPI.on('agent_action', (data) => {
+      logger.info('External agent action:', data);
+    });
+
+    logger.info('Real-time monitoring started for benchmark platform');
+  }
+
+  /**
+   * Stop all active benchmarks and cleanup
+   */
+  async stopAllBenchmarks(): Promise<void> {
+    logger.info('Stopping all active benchmarks...');
+
+    // Stop all active benchmarks
+    for (const [benchmarkId, benchmark] of this.activeBenchmarks) {
+      try {
+        await this.taskExecutor.stopTask(benchmarkId);
+        await this.messageBus.cleanupBenchmark(benchmarkId);
+      } catch (error) {
+        logger.error(`Error stopping benchmark ${benchmarkId}:`, error);
+      }
+    }
+
+    this.activeBenchmarks.clear();
+
+    // Stop monitoring
+    await this.costTracker.stopTracking();
+
+    logger.info('All benchmarks stopped successfully');
   }
 }
 

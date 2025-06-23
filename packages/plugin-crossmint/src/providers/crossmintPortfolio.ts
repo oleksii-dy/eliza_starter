@@ -13,7 +13,7 @@ import { CrossMintUniversalWalletService } from '../services/CrossMintUniversalW
  */
 export const crossmintPortfolioProvider: Provider = {
   name: 'CROSSMINT_PORTFOLIO',
-  description: 'Provides CrossMint portfolio and balance information',
+  description: 'Provides comprehensive CrossMint portfolio data including token balances, asset valuations, DeFi positions, NFT holdings, and staked assets across multiple blockchain networks when agent needs to present wallet status or make informed investment decisions',
   dynamic: true, // Only when requested due to API calls
   position: 10,
 

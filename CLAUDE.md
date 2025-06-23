@@ -2442,7 +2442,7 @@ Query: {
   type?: string,
   count?: number,
   offset?: number,
-  excludeTypes?: string[]
+  excludeTypes?: string[],
 }
 
 // Delete specific log
@@ -2544,7 +2544,7 @@ Body: {
   entityId?: UUID,
   worldId?: UUID,
   userName?: string,
-  attachments?: any[]
+  attachments?: any[],
 }
 Response: Audio buffer of agent response
 ```
@@ -2621,7 +2621,7 @@ Body: {
   worldId?: UUID,
   source?: string,
   metadata?: object,
-  agentIds: UUID[]
+  agentIds: UUID[],
 }
 
 // Delete group
@@ -2689,7 +2689,7 @@ Body: {
   content: string,
   server_id: UUID,
   metadata?: object,
-  attachments?: any[]
+  attachments?: any[],
 }
 
 // Get channel messages
@@ -2702,7 +2702,7 @@ Body: {
   name: string,
   server_id: UUID,
   type?: ChannelType,
-  participantCentralUserIds: UUID[]
+  participantCentralUserIds: UUID[],
 }
 
 // Get/Create DM channel
@@ -2782,7 +2782,7 @@ Response: {
   logs: LogEntry[],
   count: number,
   total: number,
-  levels: string[]
+  levels: string[],
 }
 
 // Clear logs
@@ -2849,7 +2849,7 @@ socket.emit('2', {  // SEND_MESSAGE = 2
   serverId: UUID,
   source?: string,
   metadata?: object,
-  attachments?: any[]
+  attachments?: any[],
 });
 ```
 
@@ -7069,8 +7069,9 @@ Scenarios are the comprehensive testing framework for ElizaOS that enable struct
 **Definition**: Scenarios are structured test cases that simulate multi-agent conversations and interactions to validate agent capabilities, plugin functionality, and integration workflows. They are essentially **agent behavior tests** that run against real runtime instances.
 
 **Purpose**:
+
 - Test plugin functionality and integration
-- Validate agent responses and behaviors  
+- Validate agent responses and behaviors
 - Verify action execution and chaining
 - Benchmark performance and measure metrics
 - Test complex multi-agent workflows
@@ -7081,12 +7082,14 @@ Scenarios are the comprehensive testing framework for ElizaOS that enable struct
 ### Scenario Types
 
 **Plugin Scenarios** (`PluginScenario`) - Embedded in plugins:
+
 - Located in `/packages/cli/scenarios/plugin-tests/`
-- Test specific plugin functionality  
+- Test specific plugin functionality
 - Focus on action execution and integration
 - Stored in plugin definitions via `scenarios?: PluginScenario[]`
 
 **Standalone Scenarios** (`Scenario`) - Independent test cases:
+
 - Located in `/packages/cli/scenarios/`
 - More complex multi-step workflows
 - Used by the full scenario runner system
@@ -7105,15 +7108,15 @@ interface ScenarioActor {
 
 interface ScriptStep {
   type: 'message' | 'wait' | 'react' | 'assert' | 'action';
-  content?: string;          // Message to send
-  waitTime?: number;         // Delay
-  actionName?: string;       // Action to execute
-  assertion?: Assertion;     // Validation check
+  content?: string; // Message to send
+  waitTime?: number; // Delay
+  actionName?: string; // Action to execute
+  assertion?: Assertion; // Validation check
 }
 
 interface VerificationRule {
   id: string;
-  type: 'llm';              // All verification is LLM-based
+  type: 'llm'; // All verification is LLM-based
   description: string;
   config: {
     successCriteria: string;
@@ -7126,23 +7129,27 @@ interface VerificationRule {
 ## Execution Flow
 
 ### 1. Setup Phase
+
 - Load plugins and dependencies
 - Create test runtime instances
 - Validate environment requirements
 - Create isolated rooms and worlds
 
 ### 2. Execution Phase
+
 - Execute actor scripts sequentially
 - Send messages between actors
 - Trigger actions and responses
 - Record conversation transcript
 
 ### 3. Verification Phase
+
 - Run LLM-based verification rules
 - Check expected outcomes
 - Calculate scores and metrics
 
 ### 4. Teardown Phase
+
 - Clean up test resources
 - Generate detailed reports
 
@@ -7152,6 +7159,7 @@ interface VerificationRule {
 **Tester Actor**: Simulates user interactions (predefined script with messages/timing)
 
 Example actor interaction:
+
 ```typescript
 // Tester sends message
 {
@@ -7181,34 +7189,34 @@ export const githubTodoWorkflowScenario: Scenario = {
       plugins: ['@elizaos/plugin-github', '@elizaos/plugin-todo'],
     },
     {
-      id: 'de52b6f0-d31b-48a4-bce9-712bf17b2ac2', 
+      id: 'de52b6f0-d31b-48a4-bce9-712bf17b2ac2',
       name: 'Software Developer',
       role: 'assistant',
       script: {
         steps: [
           {
             type: 'message',
-            content: 'Can you create a todo for fixing the authentication bug?'
+            content: 'Can you create a todo for fixing the authentication bug?',
           },
           { type: 'wait', waitTime: 3000 },
           {
-            type: 'message', 
-            content: 'Please list all current todos'
-          }
-        ]
-      }
-    }
+            type: 'message',
+            content: 'Please list all current todos',
+          },
+        ],
+      },
+    },
   ],
 
   setup: {
     roomType: 'dm',
     roomName: 'Project Management',
-    context: 'Software development project tracking'
+    context: 'Software development project tracking',
   },
 
   execution: {
     maxDuration: 60000,
-    maxSteps: 15
+    maxSteps: 15,
   },
 
   verification: {
@@ -7218,11 +7226,12 @@ export const githubTodoWorkflowScenario: Scenario = {
         type: 'llm',
         description: 'Agent responded to project help request',
         config: {
-          criteria: 'The agent should have responded helpfully to the request for project task tracking'
-        }
-      }
-    ]
-  }
+          criteria:
+            'The agent should have responded helpfully to the request for project task tracking',
+        },
+      },
+    ],
+  },
 };
 ```
 
@@ -7251,6 +7260,7 @@ elizaos scenario validate
 ```
 
 ### Test Integration
+
 ```bash
 # Run all tests including scenarios
 elizaos test
@@ -7262,12 +7272,14 @@ elizaos test --type scenario
 ## Scenario Runners
 
 ### Main Scenario Runner
+
 - **ScenarioRunner**: Core execution engine
 - Manages actor lifecycles and message flow
 - Handles verification and metrics collection
 - Supports parallel execution
 
 ### Production Scenario Runner
+
 - **ProductionScenarioRunner**: Production-grade testing
 - **TestAgentFactory**: Creates real agent instances
 - **ScenarioTestHarness**: Manages test interactions
@@ -7278,7 +7290,7 @@ const runner = new ProductionScenarioRunner({
   databaseUrl: 'postgres://test-db',
   apiKeys: { OPENAI_API_KEY: 'sk-...' },
   enableMetrics: true,
-  enableVerification: true
+  enableVerification: true,
 });
 
 const result = await runner.run(scenario);
@@ -7306,6 +7318,7 @@ export const myPlugin: Plugin = {
 ## Verification System
 
 ### LLM-Based Verification
+
 All verification uses LLM evaluation for maximum flexibility:
 
 ```typescript
@@ -7318,7 +7331,7 @@ All verification uses LLM evaluation for maximum flexibility:
       Verify that the agent executed the CREATE_TODO action.
       Expected behavior:
       - User asks to create a todo
-      - Agent acknowledges the request  
+      - Agent acknowledges the request
       - Agent executes CREATE_TODO action
       - Agent confirms todo creation
     `,
@@ -7329,6 +7342,7 @@ All verification uses LLM evaluation for maximum flexibility:
 ```
 
 ### Metrics and Scoring
+
 - **Duration**: Execution time
 - **Message Count**: Number of messages exchanged
 - **Token Usage**: LLM token consumption
@@ -7338,6 +7352,7 @@ All verification uses LLM evaluation for maximum flexibility:
 - **Score**: 0-1 based on verification rule weights
 
 ## Environment Validation
+
 - Scenarios validate required environment variables
 - Check plugin dependencies and API keys
 - Skip scenarios that can't run due to missing requirements
@@ -7346,7 +7361,7 @@ All verification uses LLM evaluation for maximum flexibility:
 
 1. **Integration Tests** (`/plugin-tests/`): Test plugin functionality
 2. **Rolodex Tests** (`/rolodex/`): Entity and relationship management
-3. **Workflow Tests**: Complex multi-step processes  
+3. **Workflow Tests**: Complex multi-step processes
 4. **Performance Tests**: Benchmarking and stress testing
 5. **Security Tests**: Trust networks and attack scenarios
 
@@ -7406,12 +7421,14 @@ Every time you think you're done, ask yourself:
 Never consider anything complete until you've done at least **3 full critical review passes**:
 
 **Pass 1: Functionality Review**
+
 - Does it actually work end-to-end?
 - Are all features fully implemented?
 - Are error cases handled properly?
 - Is the user experience optimal?
 
 **Pass 2: Code Quality Review**
+
 - Is the code maintainable and readable?
 - Are there hardcoded values that should be configuration?
 - Are there brittle algorithms (string matching, regex) that should use AI?
@@ -7419,6 +7436,7 @@ Never consider anything complete until you've done at least **3 full critical re
 - Are there performance optimizations needed?
 
 **Pass 3: Production Readiness Review**
+
 - Is it secure against common attacks?
 - Does it scale appropriately?
 - Is monitoring and logging sufficient?
@@ -7445,16 +7463,18 @@ Never consider anything complete until you've done at least **3 full critical re
 ### Example: Before and After
 
 **Before (Terrible)**:
+
 ```typescript
 // TODO: Fix this later
 function validateInput(input: string): boolean {
-  if (input.includes("bad")) return false; // Hardcoded string matching
-  if (input.length > 100) return false;   // Magic number
+  if (input.includes('bad')) return false; // Hardcoded string matching
+  if (input.length > 100) return false; // Magic number
   return true; // No real validation
 }
 ```
 
 **After (Production Ready)**:
+
 ```typescript
 async function validateInput(
   runtime: IAgentRuntime,
@@ -7466,7 +7486,7 @@ async function validateInput(
     prompt: `Validate if this input meets the criteria: ${validationCriteria.description}\n\nInput: ${input}`,
     maxTokens: validationCriteria.maxTokens || DEFAULT_VALIDATION_TOKENS,
   });
-  
+
   return {
     isValid: result.includes('VALID'),
     reasoning: result,

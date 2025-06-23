@@ -34,6 +34,13 @@ export class BehaviorManager {
   }
 
   /**
+   * Returns whether the behavior manager is currently running
+   */
+  public get running(): boolean {
+    return this.isRunning;
+  }
+
+  /**
    * Starts the behavior loop if not already running and prerequisites are met.
    */
   public start(): void {

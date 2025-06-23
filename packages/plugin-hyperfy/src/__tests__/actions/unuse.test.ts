@@ -201,9 +201,9 @@ describe('hyperfyUnuseItemAction', () => {
     });
 
     it('should cover different command variations', () => {
-      const exampleTexts = hyperfyUnuseItemAction.examples!.map((example) =>
-        example[0]?.content.text.toLowerCase()
-      );
+      const exampleTexts = hyperfyUnuseItemAction
+        .examples!.map((example) => example[0]?.content?.text?.toLowerCase() || '')
+        .filter((text) => text.length > 0);
 
       // Check for variety in commands
       expect(exampleTexts.some((text) => text.includes('drop'))).toBe(true);

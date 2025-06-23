@@ -70,7 +70,7 @@ describe('BehaviorManager', () => {
       behaviorManager.start();
 
       // Check that the behavior manager is now running
-      expect((behaviorManager as any).isRunning).toBe(true);
+      expect(behaviorManager.running).toBe(true);
     });
 
     it('should not start if already running', () => {
@@ -80,7 +80,7 @@ describe('BehaviorManager', () => {
       behaviorManager.start();
 
       // Should still be running
-      expect((behaviorManager as any).isRunning).toBe(true);
+      expect(behaviorManager.running).toBe(true);
     });
 
     it('should stop the behavior loop', () => {
@@ -88,7 +88,7 @@ describe('BehaviorManager', () => {
       behaviorManager.stop();
 
       // Check that the behavior manager is no longer running
-      expect((behaviorManager as any).isRunning).toBe(false);
+      expect(behaviorManager.running).toBe(false);
     });
   });
 

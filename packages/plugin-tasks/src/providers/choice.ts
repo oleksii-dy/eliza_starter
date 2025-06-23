@@ -29,7 +29,7 @@ interface OptionObject {
 export const choiceProvider: Provider = {
   name: 'CHOICE',
   description:
-    'Provides pending choice-based tasks requiring user selection. Use when agent needs to present available options and await user decisions on task workflows.',
+    'Provides pending choice-based tasks requiring user selection with formatted option lists and clear instructions. Use when agent needs to present available options, gather user preferences, or await confirmation decisions on workflow branches and task execution paths.',
   get: async (runtime: IAgentRuntime, message: Memory): Promise<ProviderResult> => {
     try {
       // Get all pending tasks for this room with options
