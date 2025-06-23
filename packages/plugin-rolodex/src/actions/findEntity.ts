@@ -8,7 +8,7 @@ import {
   type ActionResult,
   type Entity,
   type UUID,
-} from '../core-types';
+} from '@elizaos/core';
 
 // Helper function for fuzzy string matching using Levenshtein distance
 function levenshteinDistance(str1: string, str2: string): number {

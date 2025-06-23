@@ -325,12 +325,13 @@ export class ResourceMonitorService extends Service {
     return constraints;
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
     }
     this.logger.info('Resource monitor service stopped');
+    return Promise.resolve();
   }
 
   static async start(runtime: IAgentRuntime): Promise<Service> {

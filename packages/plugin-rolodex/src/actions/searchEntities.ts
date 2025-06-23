@@ -7,7 +7,7 @@ import {
   type IAgentRuntime,
   type Memory,
   type HandlerCallback,
-} from '../core-types';
+} from '@elizaos/core';
 import { RolodexService } from '../services';
 
 export const searchEntitiesAction: Action = {

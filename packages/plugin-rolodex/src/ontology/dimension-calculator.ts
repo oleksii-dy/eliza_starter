@@ -5,7 +5,7 @@
  * multiple dimensions based on evidence, interactions, and patterns.
  */
 
-import { logger, IAgentRuntime, Memory, asUUID } from '../core-types';
+import { logger, IAgentRuntime, Memory, asUUID } from '@elizaos/core';
 import {
   RelationshipDimension,
   RelationshipEvidence,

@@ -6,7 +6,7 @@
  * concurrent relationship types with varying strengths.
  */
 
-import { UUID } from '../core-types';
+import { UUID } from '@elizaos/core';
 
 /**
  * Core relationship categories that group related relationship types

@@ -8,7 +8,7 @@ import {
   type Relationship,
   type Entity,
 } from '@elizaos/core';
-import { asUUID } from '../core-types';
+import { asUUID } from '@elizaos/core';
 import { z } from 'zod';
 import type {
   EntityProfile,
@@ -21,7 +21,7 @@ import { DatabaseAdapter } from '../database/adapter';
 import { CacheManager } from '../utils/cache';
 import { BatchQueue } from '../utils/batch';
 import { LLMProcessor } from '../utils/llm';
-import { EventBridge } from './EventBridge';
+import { EventBridge } from '../managers/EventBridge';
 
 // Schemas for structured LLM responses
 const EntityExtractionSchema = z.object({

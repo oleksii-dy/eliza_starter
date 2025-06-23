@@ -10,7 +10,7 @@ import {
   RolodexEventType,
   type HealthEvent,
   type InteractionEvent
-} from './EventBridge';
+} from '../managers/EventBridge';
 import { RolodexService } from '../services/RolodexService';
 
 export interface RelationshipHealth {

@@ -8,9 +8,9 @@ import {
   asUUID,
   type VerificationProof,
   type VerificationResult,
-} from '../core-types';
-import { EntityGraphService } from '../services/EntityGraphService';
-import { EntityResolutionService } from '../services/EntityResolutionService';
+} from '@elizaos/core';
+import { EntityGraphManager } from '../managers/EntityGraphManager';
+import { EntityResolutionManager } from '../managers/EntityResolutionManager';
 
 /**
  * OAuth Identity Verifier that integrates Secrets Manager OAuth with Rolodex entities
@@ -19,8 +19,8 @@ import { EntityResolutionService } from '../services/EntityResolutionService';
 export class OAuthIdentityVerifier {
   constructor(
     private runtime: IAgentRuntime,
-    private entityGraphService: EntityGraphService,
-    private entityResolutionService: EntityResolutionService
+    private entityGraphService: EntityGraphManager,
+    private entityResolutionService: EntityResolutionManager
   ) {}
 
   /**
@@ -28,30 +28,30 @@ export class OAuthIdentityVerifier {
    */
   async verifyOAuthIdentity(entityId: UUID, proof: VerificationProof): Promise<VerificationResult> {
     try {
-      logger.info('[OAuthIdentityVerifier] Starting OAuth verification:', { entityId, platform: proof.data.platform });
+      logger.info('[OAuthIdentityVerifier] Starting OAuth verification:', { entityId, platform: proof.proofData.platform });
 
       // Get OAuth service from Secrets Manager
       const oauthService = this.runtime.getService('OAUTH_VERIFICATION') as any;
       if (!oauthService) {
         return {
           success: false,
-          verified: false,
+          valid: false,
           confidence: 0,
           reason: 'OAuth service not available',
-          metadata: { error: 'OAuth service not found' },
+          metaproofData: { error: 'OAuth service not found' },
         };
       }
 
-      const { platform, token, expectedUserId } = proof.data;
+      const { platform, token, expectedUserId } = proof.proofData;
 
       // Validate platform is supported
       if (!oauthService.isProviderAvailable(platform)) {
         return {
           success: false,
-          verified: false,
+          valid: false,
           confidence: 0,
           reason: `OAuth provider '${platform}' not available`,
-          metadata: { availableProviders: oauthService.getAvailableProviders() },
+          metaproofData: { availableProviders: oauthService.getAvailableProviders() },
         };
       }
 
@@ -59,16 +59,16 @@ export class OAuthIdentityVerifier {
       // This assumes the token is actually an authorization code from the callback
       let userProfile;
       try {
-        if (proof.data.state && proof.data.authCode) {
+        if (proof.proofData.state && proof.proofData.authCode) {
           // Handle OAuth callback
-          userProfile = await oauthService.handleCallback(platform, proof.data.authCode, proof.data.state);
+          userProfile = await oauthService.handleCallback(platform, proof.proofData.authCode, proof.proofData.state);
         } else {
           return {
             success: false,
-            verified: false,
+            valid: false,
             confidence: 0,
             reason: 'OAuth verification requires authorization code and state',
-            metadata: { 
+            metaproofData: { 
               hint: 'Use createOAuthChallenge to start OAuth flow',
               availableProviders: oauthService.getAvailableProviders(),
             },
@@ -78,10 +78,10 @@ export class OAuthIdentityVerifier {
         logger.error('[OAuthIdentityVerifier] OAuth callback handling failed:', error);
         return {
           success: false,
-          verified: false,
+          valid: false,
           confidence: 0,
           reason: `OAuth verification failed: ${error.message}`,
-          metadata: { error: error.message },
+          metaproofData: { error: error.message },
         };
       }
 
@@ -89,10 +89,10 @@ export class OAuthIdentityVerifier {
       if (expectedUserId && userProfile.id !== expectedUserId) {
         return {
           success: false,
-          verified: false,
+          valid: false,
           confidence: 0,
           reason: 'OAuth user ID does not match expected user',
-          metadata: { 
+          metaproofData: { 
             expected: expectedUserId, 
             actual: userProfile.id,
             platform,
@@ -105,15 +105,15 @@ export class OAuthIdentityVerifier {
 
       // Update trust score for verified platform
       await this.entityGraphService.updateTrust(entityId, {
-        type: 'oauth-verification',
+        proofType: 'oauth-verification',
         impact: 0.15, // Significant trust boost for OAuth verification
         reason: `Verified ${platform} identity: ${userProfile.name} (${userProfile.email})`,
-        metadata: {
+        metaproofData: {
           platform,
           verifiedId: userProfile.id,
           verifiedEmail: userProfile.email,
           verifiedName: userProfile.name,
-          verifiedAt: userProfile.verifiedAt,
+          verifiedAt: userProfile.validAt,
         },
       });
 
@@ -129,10 +129,10 @@ export class OAuthIdentityVerifier {
 
       return {
         success: true,
-        verified: true,
+        valid: true,
         confidence: 0.95, // High confidence for OAuth verification
         reason: `Successfully verified ${platform} identity`,
-        metadata: {
+        metaproofData: {
           platform,
           verifiedProfile: {
             id: userProfile.id,
@@ -140,7 +140,7 @@ export class OAuthIdentityVerifier {
             name: userProfile.name,
             picture: userProfile.picture,
           },
-          verifiedAt: userProfile.verifiedAt,
+          verifiedAt: userProfile.validAt,
           trustBoost: 0.15,
         },
       };
@@ -148,10 +148,10 @@ export class OAuthIdentityVerifier {
       logger.error('[OAuthIdentityVerifier] OAuth verification error:', error);
       return {
         success: false,
-        verified: false,
+        valid: false,
         confidence: 0,
         reason: `Verification failed: ${error.message}`,
-        metadata: { error: error.message },
+        metaproofData: { error: error.message },
       };
     }
   }
@@ -224,7 +224,7 @@ export class OAuthIdentityVerifier {
         const entity = result.entity;
         const platformData = entity.platforms?.[platform];
         
-        if (platformData?.verified && (
+        if (platformData?.valid && (
           platformData.id === platformId ||
           platformData.userId === platformId ||
           platformData.username === platformId
@@ -265,8 +265,8 @@ export class OAuthIdentityVerifier {
           name: userProfile.name,
           username: userProfile.name,
           picture: userProfile.picture,
-          verified: true,
-          verifiedAt: userProfile.verifiedAt,
+          valid: true,
+          verifiedAt: userProfile.validAt,
           verificationMethod: 'oauth',
           linkedAt: new Date().toISOString(),
         },
@@ -276,7 +276,7 @@ export class OAuthIdentityVerifier {
       await this.entityGraphService.batchUpdateEntities([
         {
           entityId,
-          data: {
+          proofData: {
             platforms: updatedPlatforms,
             updatedAt: new Date().toISOString(),
           },
@@ -343,8 +343,8 @@ export class OAuthIdentityVerifier {
           await this.entityGraphService.batchUpdateEntities([
             {
               entityId,
-              data: {
-                metadata: updatedMetadata,
+              proofData: {
+                metaproofData: updatedMetadata,
                 updatedAt: new Date().toISOString(),
               },
             },

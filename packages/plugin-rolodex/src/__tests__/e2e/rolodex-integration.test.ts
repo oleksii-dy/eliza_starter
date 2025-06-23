@@ -1,9 +1,9 @@
 import { type TestSuite, type IAgentRuntime, stringToUuid, type UUID } from '@elizaos/core';
-import type { EntityGraphService } from '../../services/EntityGraphService';
-import type { EntityResolutionService } from '../../services/EntityResolutionService';
-import type { RelationshipService } from '../../services/RelationshipService';
-import type { EntityService } from '../../services/EntityService';
-import type { FollowUpService } from '../../services/FollowUpService';
+import type { EntityGraphManager } from '../../managers/EntityGraphManager';
+import type { EntityResolutionManager } from '../../managers/EntityResolutionManager';
+import type { RelationshipOntologyManager } from '../../managers/RelationshipOntologyManager';
+import type { RolodexService } from '../../services/RolodexService';
+import type { FollowUpManager } from '../../managers/FollowUpManager';
 import { createTestWorld, createTestRoom } from './test-helpers';
 
 export class RolodexIntegrationTestSuite implements TestSuite {
@@ -24,10 +24,10 @@ export class RolodexIntegrationTestSuite implements TestSuite {
           // Create unique test identifiers
           const userId = stringToUuid(`test-user-${Date.now()}`);
 
-          // Get EntityGraphService
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+          // Get EntityGraphManager
+          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
           if (!entityGraphService) {
-            throw new Error('EntityGraphService not available');
+            throw new Error('EntityGraphManager not available');
           }
 
           // Create entity using runtime
@@ -87,9 +87,9 @@ export class RolodexIntegrationTestSuite implements TestSuite {
         console.log('🧪 Testing entity profile management...');
 
         try {
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
           if (!entityGraphService) {
-            throw new Error('EntityGraphService not available');
+            throw new Error('EntityGraphManager not available');
           }
 
           const testEntityId = stringToUuid(`profile-test-${Date.now()}`);
@@ -106,7 +106,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
             },
           });
 
-          // Track entity profile using EntityGraphService
+          // Track entity profile using EntityGraphManager
           const profile = await entityGraphService.trackEntity(
             testEntityId,
             'Profile Test User is a test user for profile management working in QA department as a tester',
@@ -161,9 +161,9 @@ export class RolodexIntegrationTestSuite implements TestSuite {
         console.log('🧪 Testing relationship creation and tracking...');
 
         try {
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
           if (!entityGraphService) {
-            throw new Error('EntityGraphService not available');
+            throw new Error('EntityGraphManager not available');
           }
 
           // Create two test entities
@@ -186,7 +186,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
 
           console.log('✓ Test entities created');
 
-          // Create relationship using EntityGraphService
+          // Create relationship using EntityGraphManager
           const relationship = await entityGraphService.analyzeInteraction(
             entity1Id,
             entity2Id,
@@ -245,12 +245,12 @@ export class RolodexIntegrationTestSuite implements TestSuite {
         console.log('🧪 Testing entity resolution service functionality...');
 
         try {
-          const resolutionService = runtime.getService('entity-resolution') as EntityResolutionService;
+          const resolutionService = runtime.getService('entity-resolution') as EntityResolutionManager;
           if (!resolutionService) {
-            throw new Error('EntityResolutionService not available');
+            throw new Error('EntityResolutionManager not available');
           }
 
-          console.log('✓ EntityResolutionService is available');
+          console.log('✓ EntityResolutionManager is available');
 
           // Create test entities with similar names for resolution testing
           const entity1Id = stringToUuid(`resolution-test1-${Date.now()}`);
@@ -340,12 +340,12 @@ export class RolodexIntegrationTestSuite implements TestSuite {
         console.log('🧪 Testing follow-up scheduling and management...');
 
         try {
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
           if (!entityGraphService) {
-            throw new Error('EntityGraphService not available');
+            throw new Error('EntityGraphManager not available');
           }
 
-          console.log('✓ EntityGraphService is available');
+          console.log('✓ EntityGraphManager is available');
 
           // Create test entity for follow-up
           const entityId = stringToUuid(`followup-test-${Date.now()}`);
@@ -476,15 +476,15 @@ export class RolodexIntegrationTestSuite implements TestSuite {
 
         try {
           // Verify all core services are available
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
-          const resolutionService = runtime.getService('entity-resolution') as EntityResolutionService;
+          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+          const resolutionService = runtime.getService('entity-resolution') as EntityResolutionManager;
 
           if (!entityGraphService) {
-            throw new Error('EntityGraphService not available');
+            throw new Error('EntityGraphManager not available');
           }
 
           if (!resolutionService) {
-            throw new Error('EntityResolutionService not available');
+            throw new Error('EntityResolutionManager not available');
           }
 
           console.log('✓ All core services are available');
@@ -513,7 +513,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
 
           console.log('✓ Entity created');
 
-          // Track entity profile using EntityGraphService
+          // Track entity profile using EntityGraphManager
           const profile = await entityGraphService.trackEntity(
             entityId,
             'Integration Test User is a test subject for cross-service integration',
@@ -549,7 +549,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
             throw new Error('Failed to create relationship');
           }
 
-          console.log('✓ Relationship created via EntityGraphService');
+          console.log('✓ Relationship created via EntityGraphManager');
 
           // Test entity resolution across services
           const resolutionCandidates = await resolutionService.resolveEntity(
@@ -563,9 +563,9 @@ export class RolodexIntegrationTestSuite implements TestSuite {
             throw new Error('Entity resolution failed');
           }
 
-          console.log('✓ Entity resolved via EntityResolutionService');
+          console.log('✓ Entity resolved via EntityResolutionManager');
 
-          // Schedule follow-up using EntityGraphService
+          // Schedule follow-up using EntityGraphManager
           const futureDate = new Date();
           futureDate.setDate(futureDate.getDate() + 1);
 
@@ -579,7 +579,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
             throw new Error('Failed to schedule follow-up');
           }
 
-          console.log('✓ Follow-up scheduled via EntityGraphService');
+          console.log('✓ Follow-up scheduled via EntityGraphManager');
 
           // Test trust management
           await entityGraphService.updateTrust(entityId, {
@@ -588,7 +588,7 @@ export class RolodexIntegrationTestSuite implements TestSuite {
             reason: 'Successful integration test',
           });
 
-          console.log('✓ Trust updated via EntityGraphService');
+          console.log('✓ Trust updated via EntityGraphManager');
 
           console.log('✅ Cross-service integration test PASSED');
         } catch (error) {

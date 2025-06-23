@@ -78,7 +78,7 @@ export const reflectAction = {
         };
         await callback(responseContent);
       }
-      return;
+      return Promise.resolve();
     }
 
     // Only generate response using LLM if no suitable response was found
@@ -119,6 +119,9 @@ export const reflectAction = {
     await runtime.createMemory(memory, 'messages');
 
     await callback(memory.content);
+    
+    // Return a promise
+    return Promise.resolve();
   },
   examples: [
     [

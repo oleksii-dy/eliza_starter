@@ -267,14 +267,29 @@ export class MessageBusService extends Service {
   }
 
   private async validateServerSubscription(message: MessageServiceMessage): Promise<boolean> {
-    if (!this.subscribedServers.has(message.server_id)) {
+    // For DM messages or messages without a server_id, default to the DEFAULT_SERVER_ID
+    const DEFAULT_SERVER_ID = '00000000-0000-0000-0000-000000000000' as UUID;
+    const serverIdToCheck = message.server_id || DEFAULT_SERVER_ID;
+
+    // Check if it's a DM message from metadata
+    const isDM = message.metadata?.isDm || message.metadata?.channelType === ChannelType.DM;
+
+    if (!message.server_id && isDM) {
       logger.debug(
-        `[${this.runtime.character.name}] MessageBusService: Agent not subscribed to server ${message.server_id}, ignoring message`
+        `[${this.runtime.character.name}] MessageBusService: DM message without server_id, using default server ${DEFAULT_SERVER_ID}`
+      );
+      // Update the message object to include the default server_id for downstream processing
+      message.server_id = DEFAULT_SERVER_ID;
+    }
+
+    if (!this.subscribedServers.has(serverIdToCheck)) {
+      logger.debug(
+        `[${this.runtime.character.name}] MessageBusService: Agent not subscribed to server ${serverIdToCheck}, ignoring message`
       );
       return false;
     }
     logger.info(
-      `[${this.runtime.character.name}] MessageBusService: Passed server subscription check for ${message.server_id}`
+      `[${this.runtime.character.name}] MessageBusService: Passed server subscription check for ${serverIdToCheck}`
     );
     return true;
   }
@@ -405,6 +420,10 @@ export class MessageBusService extends Service {
 
     const participants = await this.getChannelParticipants(message.channel_id);
 
+    logger.info(
+      `[${this.runtime.character.name}] MessageBusService: Participants in channel ${message.channel_id}: ${participants}`
+    );
+
     if (!participants.includes(this.runtime.agentId)) {
       logger.info(
         `[${this.runtime.character.name}] MessageBusService: Agent not a participant in channel ${message.channel_id}, ignoring message`
@@ -416,73 +435,95 @@ export class MessageBusService extends Service {
       `[${this.runtime.character.name} - ${this.runtime.agentId}] MessageBusService: Agent is a participant in channel ${message.channel_id}, proceeding with message processing`
     );
 
-    try {
-      if (!(await this.validateServerSubscription(message))) return;
-      if (!(await this.validateNotSelfMessage(message))) return;
-
+    if (!(await this.validateServerSubscription(message))) {
       logger.info(
-        `[${this.runtime.character.name}] MessageBusService: All checks passed, proceeding to create agent memory and emit MESSAGE_RECEIVED event`
+        `[${this.runtime.character.name}] MessageBusService: Agent not subscribed to server ${message.server_id}, ignoring message`
       );
-
-      const { agentWorldId, agentRoomId } = await this.ensureWorldAndRoomExist(message);
-      const agentAuthorEntityId = await this.ensureAuthorEntityExists(message);
-      const agentMemory = this.createAgentMemory(
-        message,
-        agentAuthorEntityId,
-        agentRoomId,
-        agentWorldId
-      );
-
-      // Check if this memory already exists (in case of duplicate processing)
-      const existingMemory = await this.runtime.getMemoryById(agentMemory.id as UUID);
-      if (existingMemory) {
-        logger.debug(
-          `[${this.runtime.character.name}] MessageBusService: Memory ${agentMemory.id} already exists, skipping duplicate processing`
-        );
-        return;
-      }
-
-      const callbackForCentralBus = async (responseContent: Content): Promise<Memory[]> => {
-        logger.info(
-          `[${this.runtime.character.name}] Agent generated response for message. Preparing to send back to bus.`
-        );
-
-        await this.runtime.createMemory(
-          {
-            entityId: this.runtime.agentId,
-            content: responseContent,
-            roomId: agentRoomId,
-            worldId: agentWorldId,
-            agentId: this.runtime.agentId,
-          },
-          'messages'
-        );
-
-        // Send response to central bus
-        await this.sendAgentResponseToBus(
-          agentRoomId,
-          agentWorldId,
-          responseContent,
-          agentMemory.id,
-          message
-        );
-
-        // The core runtime/bootstrap plugin will handle creating the agent's own memory of its response.
-        // So, we return an empty array here as this callback's primary job is to ferry the response externally.
-        return [];
-      };
-
-      await this.runtime.emitEvent(EventType.MESSAGE_RECEIVED, {
-        runtime: this.runtime,
-        message: agentMemory,
-        callback: callbackForCentralBus,
-      });
-    } catch (error) {
-      logger.error(
-        `[${this.runtime.character.name}] MessageBusService: Error processing incoming message:`,
-        error
-      );
+      return;
     }
+
+    if (!(await this.validateNotSelfMessage(message))) {
+      logger.info(
+        `[${this.runtime.character.name}] MessageBusService: Agent is the author of the message, ignoring message`
+      );
+      return;
+    }
+
+    logger.info(
+      `[${this.runtime.character.name}] MessageBusService: All checks passed, proceeding to create agent memory and emit MESSAGE_RECEIVED event`
+    );
+
+    const { agentWorldId, agentRoomId } = await this.ensureWorldAndRoomExist(message);
+
+    logger.info(
+      `[${this.runtime.character.name}] MessageBusService: Creating agent memory for message ${message.id}`
+    );
+
+    const agentAuthorEntityId = await this.ensureAuthorEntityExists(message);
+
+    logger.info(
+      `[${this.runtime.character.name}] MessageBusService: Author entity created for message ${message.id}`
+    );
+
+    const agentMemory = this.createAgentMemory(
+      message,
+      agentAuthorEntityId,
+      agentRoomId,
+      agentWorldId
+    );
+
+    logger.info(
+      `[${this.runtime.character.name}] MessageBusService: Agent memory created for message ${message.id}`
+    );
+
+    // Check if this memory already exists (in case of duplicate processing)
+    const existingMemory = await this.runtime.getMemoryById(agentMemory.id as UUID);
+    if (existingMemory) {
+      logger.debug(
+        `[${this.runtime.character.name}] MessageBusService: Memory ${agentMemory.id} already exists, skipping duplicate processing`
+      );
+      return;
+    }
+
+    const callbackForCentralBus = async (responseContent: Content): Promise<Memory[]> => {
+      logger.info(
+        `[${this.runtime.character.name}] Agent generated response for message. Preparing to send back to bus.`
+      );
+
+      await this.runtime.createMemory(
+        {
+          entityId: this.runtime.agentId,
+          content: responseContent,
+          roomId: agentRoomId,
+          worldId: agentWorldId,
+          agentId: this.runtime.agentId,
+        },
+        'messages'
+      );
+
+      // Send response to central bus
+      await this.sendAgentResponseToBus(
+        agentRoomId,
+        agentWorldId,
+        responseContent,
+        agentMemory.id,
+        message
+      );
+
+      // The core runtime/bootstrap plugin will handle creating the agent's own memory of its response.
+      // So, we return an empty array here as this callback's primary job is to ferry the response externally.
+      return [];
+    };
+
+    logger.info(
+      `[${this.runtime.character.name}] MessageBusService: Emitting MESSAGE_RECEIVED event for message ${message.id}`
+    );
+
+    await this.runtime.emitEvent(EventType.MESSAGE_RECEIVED, {
+      runtime: this.runtime,
+      message: agentMemory,
+      callback: callbackForCentralBus,
+    });
   }
 
   private async handleMessageDeleted(data: any) {

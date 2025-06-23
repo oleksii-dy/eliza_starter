@@ -1,9 +1,8 @@
 import { type TestSuite, type IAgentRuntime, stringToUuid } from '@elizaos/core';
-import type { EntityGraphService } from '../../services/EntityGraphService';
+import type { EntityGraphManager } from '../../managers/EntityGraphManager';
 
 export const followUpRuntimeTests: TestSuite = {
   name: 'Follow-up Management Runtime Tests',
-  description: 'Tests follow-up scheduling and execution using real runtime',
   
   tests: [
     {
@@ -11,9 +10,9 @@ export const followUpRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing follow-up scheduling from conversation...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         const roomId = stringToUuid(`test-room-${Date.now()}`);
@@ -32,7 +31,7 @@ export const followUpRuntimeTests: TestSuite = {
           createdAt: Date.now(),
         };
         
-        await runtime.processMessage(message);
+        await (runtime as any).processMessage(message);
         await new Promise(resolve => setTimeout(resolve, 3000));
         
         // Check if Nancy was created
@@ -67,9 +66,9 @@ export const followUpRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing multiple follow-up scheduling...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         const roomId = stringToUuid(`test-room-${Date.now()}`);
@@ -92,7 +91,7 @@ export const followUpRuntimeTests: TestSuite = {
             createdAt: Date.now(),
           };
           
-          await runtime.processMessage(message);
+          await (runtime as any).processMessage(message);
           await new Promise(resolve => setTimeout(resolve, 2500));
         }
         
@@ -128,9 +127,9 @@ export const followUpRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing follow-up completion tracking...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         const roomId = stringToUuid(`test-room-${Date.now()}`);
@@ -168,7 +167,7 @@ export const followUpRuntimeTests: TestSuite = {
           createdAt: Date.now(),
         };
         
-        await runtime.processMessage(completionMessage);
+        await (runtime as any).processMessage(completionMessage);
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Check follow-up status

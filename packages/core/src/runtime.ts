@@ -691,11 +691,36 @@ export class AgentRuntime implements IAgentRuntime {
     // After all plugins are registered, check if adapter is available
     // This is important for plugins that register adapters during their init() function
     if (!this.adapter) {
-      // Give plugins a moment to complete async initialization
-      // Some plugins (like SQL plugin) register adapters during init
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      this.logger.debug('Database adapter not yet available, waiting for plugin initialization...');
 
-      // Check again after brief delay
+      // Implement a more robust wait mechanism with retries and exponential backoff
+      const maxRetries = 10;
+      const baseDelay = 50; // Start with 50ms
+      const maxDelay = 1000; // Cap at 1 second
+      const totalTimeout = 5000; // Total timeout of 5 seconds
+      const startTime = Date.now();
+
+      for (let i = 0; i < maxRetries; i++) {
+        // Calculate delay with exponential backoff
+        const delay = Math.min(baseDelay * Math.pow(2, i), maxDelay);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+
+        // Check if adapter is now available
+        if (this.adapter) {
+          this.logger.debug(`Database adapter became available after ${i + 1} retries`);
+          break;
+        }
+
+        // Check if we've exceeded total timeout
+        if (Date.now() - startTime > totalTimeout) {
+          this.logger.error('Timeout waiting for database adapter initialization');
+          break;
+        }
+
+        this.logger.debug(`Still waiting for database adapter... (attempt ${i + 1}/${maxRetries})`);
+      }
+
+      // Final check after all retries
       if (!this.adapter) {
         this.logger.error(
           'Database adapter not initialized. Make sure @elizaos/plugin-sql is included in your plugins.'

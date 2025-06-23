@@ -1,9 +1,8 @@
 import { type TestSuite, type IAgentRuntime, stringToUuid } from '@elizaos/core';
-import type { EntityGraphService } from '../../services/EntityGraphService';
+import type { EntityGraphManager } from '../../managers/EntityGraphManager';
 
 export const entityExtractionRuntimeTests: TestSuite = {
   name: 'Entity Extraction Runtime Tests',
-  description: 'Tests entity extraction using real runtime and LLM',
   
   tests: [
     {
@@ -11,9 +10,9 @@ export const entityExtractionRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing entity extraction from simple introduction...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         // Create a test room
@@ -34,7 +33,7 @@ export const entityExtractionRuntimeTests: TestSuite = {
         };
 
         // Process the message - this should trigger entity extraction
-        await runtime.processMessage(message);
+        await (runtime as any).processMessage(message);
         
         // Wait for processing
         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -69,9 +68,9 @@ export const entityExtractionRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing multiple entity extraction...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         const roomId = stringToUuid(`test-room-${Date.now()}`);
@@ -94,7 +93,7 @@ export const entityExtractionRuntimeTests: TestSuite = {
             createdAt: Date.now(),
           };
           
-          await runtime.processMessage(message);
+          await (runtime as any).processMessage(message);
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
         
@@ -127,9 +126,9 @@ export const entityExtractionRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing entity information updates...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         const roomId = stringToUuid(`test-room-${Date.now()}`);
@@ -148,7 +147,7 @@ export const entityExtractionRuntimeTests: TestSuite = {
           createdAt: Date.now(),
         };
         
-        await runtime.processMessage(message1);
+        await (runtime as any).processMessage(message1);
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Get initial entity
@@ -173,7 +172,7 @@ export const entityExtractionRuntimeTests: TestSuite = {
           createdAt: Date.now() + 1000,
         };
         
-        await runtime.processMessage(message2);
+        await (runtime as any).processMessage(message2);
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Get updated entity

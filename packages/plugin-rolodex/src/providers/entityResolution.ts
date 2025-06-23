@@ -1,6 +1,6 @@
 import { type Provider, type IAgentRuntime, type Memory, type State, logger } from '@elizaos/core';
-import { EntityResolutionService } from '../services';
-import type { ResolutionContext } from '../services/EntityResolutionService';
+import { EntityResolutionManager } from '../managers';
+import type { ResolutionContext } from '../managers/EntityResolutionManager';
 
 export const entityResolutionProvider: Provider = {
   name: 'entityResolution',
@@ -8,9 +8,9 @@ export const entityResolutionProvider: Provider = {
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     try {
-      const resolutionService = runtime.getService('entityResolution') as EntityResolutionService;
+      const resolutionService = runtime.getService('entityResolution') as unknown as EntityResolutionManager;
       if (!resolutionService) {
-        logger.warn('[EntityResolutionProvider] EntityResolutionService not available');
+        logger.warn('[EntityResolutionProvider] EntityResolutionManager not available');
         return { text: '' };
       }
 
@@ -21,7 +21,7 @@ export const entityResolutionProvider: Provider = {
       // Check for potential identity conflicts or duplicates
       const resolutionContext: ResolutionContext = {
         roomId,
-        conversationHistory: state.data?.recentMessages || [],
+        conversationHistory: state.proofData?.recentMessages || [],
         platformContext: {
           platform: message.content.source || 'unknown',
         },
@@ -101,7 +101,7 @@ export const entityResolutionProvider: Provider = {
         }
 
         if (unverifiedPlatforms.length > 0) {
-          lines.push('**Unverified:**');
+          lines.push('**Unvalid:**');
           for (const platform of unverifiedPlatforms.slice(0, 2)) {
             const confidence = Math.round(platform.confidence * 100);
             lines.push(
@@ -145,14 +145,14 @@ export const entityResolutionProvider: Provider = {
           riskLevel,
           riskFactorCount: allRiskFactors.length,
         },
-        data: {
+        proofData: {
           resolutionCandidates,
           currentEntityMatch: currentEntity,
           riskFactors: allRiskFactors,
         },
       };
     } catch (error) {
-      logger.error('[EntityResolutionProvider] Error getting resolution data:', error);
+      logger.error('[EntityResolutionProvider] Error getting resolution proofData:', error);
       return { text: 'Unable to retrieve entity resolution information at this time.' };
     }
   },

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { EntityListView } from '../ui/entity-list-view';
-import { asUUID, Entity, Relationship } from '../../core-types';
+import { asUUID, Entity, Relationship } from '@elizaos/core';
 
 describe('EntityListView', () => {
   const mockEntities: Entity[] = [

@@ -3,7 +3,7 @@
 import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { vi } from 'vitest';
-import { logger, IAgentRuntime } from '../core-types';
+import { logger, IAgentRuntime } from '@elizaos/core';
 
 // Mock browser APIs for tests
 import './browser-mocks';

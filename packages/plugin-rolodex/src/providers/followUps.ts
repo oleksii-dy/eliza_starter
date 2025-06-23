@@ -1,12 +1,12 @@
 import { type Provider, type IAgentRuntime, type Memory, type State, logger } from '@elizaos/core';
-import { FollowUpService } from '../services';
+import { FollowUpManager } from '../managers';
 
 export const followUpsProvider: Provider = {
   name: 'FOLLOW_UPS',
   description: 'Provides information about upcoming follow-ups and reminders',
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     try {
-      const followUpService = runtime.getService('followup') as FollowUpService;
+      const followUpService = runtime.getService('followup') as unknown as FollowUpManager;
       if (!followUpService) {
         logger.warn('[FollowUpsProvider] FollowUpService not available');
         return { text: '' };
@@ -148,13 +148,13 @@ export const followUpsProvider: Provider = {
           upcomingCount: upcoming.length,
           suggestionsCount: suggestedEntities.length,
         },
-        data: {
+        proofData: {
           followUps: allFollowUps.map((f) => ({
             id: f.id,
             entityId: f.entityId,
             scheduledFor: f.scheduledFor,
             message: f.message,
-            metadata: f.metadata,
+            metaproofData: f.metadata,
           })),
           suggestions: suggestedEntities.slice(0, 5),
         },

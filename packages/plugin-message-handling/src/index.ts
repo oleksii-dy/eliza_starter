@@ -19,7 +19,6 @@ export const messageHandlingPlugin: Plugin = {
     actions.noneAction,
     actions.muteRoomAction,
     actions.unmuteRoomAction,
-    actions.updateSettingsAction,
   ],
   // this is jank, these events are not valid
   events: events as any as PluginEvents,
@@ -38,9 +37,7 @@ export const messageHandlingPlugin: Plugin = {
     providers.worldProvider,
   ],
   tests: testSuites,
-  testDependencies: [
-    '@elizaos/plugin-sql'
-  ]
+  testDependencies: ['@elizaos/plugin-sql'],
 };
 
 export default messageHandlingPlugin;

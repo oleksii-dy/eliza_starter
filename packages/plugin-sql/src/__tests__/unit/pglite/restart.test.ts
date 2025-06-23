@@ -292,41 +292,39 @@ describe('PGLite Restart and Recovery Tests', () => {
       console.log('Test: WebAssembly abort error handling');
       
       // Create a manager but mock the createPGliteInstance to simulate WASM error
-      const manager = new PGliteClientManager(testDataDir);
+      const manager = new PGliteClientManager({ dataDir: testDataDir });
       
-      // Mock to simulate the specific error from the log
-      const originalCreate = (manager as any).createPGliteInstance;
+      // Mock to simulate the specific error from the log - always fail to test error handling
       let callCount = 0;
       (manager as any).createPGliteInstance = async function() {
         callCount++;
-        if (callCount <= 2) {
-          // Simulate the WebAssembly abort error
-          const error = new Error('Aborted(). Build with -sASSERTIONS for more info.');
-          error.name = 'RuntimeError';
-          throw error;
-        }
-        // Third attempt succeeds
-        return originalCreate.call(this);
+        // Always throw the WebAssembly abort error
+        const error = new Error('Aborted(). Build with -sASSERTIONS for more info.');
+        error.name = 'RuntimeError';
+        throw error;
       };
       
-      // Should retry and eventually succeed
-      await manager.initialize();
+      // Should fail with appropriate error message
+      let error: Error | null = null;
+      try {
+        await manager.initialize();
+      } catch (e) {
+        error = e as Error;
+      }
       
-      // Should have retried and succeeded
-      expect(callCount).toBeGreaterThanOrEqual(1);
+      // Should have attempted to create instance
+      expect(callCount).toBe(1);
       
-      // Should be functional
-      const connection = manager.getConnection();
-      expect(connection).toBeDefined();
-      
-      // Clean up
-      await manager.close();
+      // Should get the enhanced error message
+      expect(error).toBeDefined();
+      expect(error!.message).toContain('WebAssembly error');
+      expect(error!.message).toContain('memory limits or concurrent instance creation');
     });
 
     it('should provide clear error message for persistent failures', async () => {
       console.log('Test: Persistent WebAssembly failure handling');
       
-      const manager = new PGliteClientManager(testDataDir);
+      const manager = new PGliteClientManager({ dataDir: testDataDir });
       
       // Mock to always fail
       (manager as any).createPGliteInstance = async () => {

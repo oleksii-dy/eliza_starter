@@ -50,7 +50,7 @@ export class UnifiedMigrator {
 
       try {
         // Step 1: Ensure vector extension (if supported)
-        await this.ensureVectorExtension();
+        // await this.ensureVectorExtension();
 
         // Step 2: Register core tables
         await this.registerCoreTables();
@@ -94,58 +94,6 @@ export class UnifiedMigrator {
     const tables = this.convertLegacySchemaToTables(schema, pluginName);
     await this.registerPluginTables(tables);
   }
-
-  private async ensureVectorExtension(): Promise<void> {
-    try {
-      logger.info(`[UnifiedMigrator] Ensuring vector extension for ${this.dbType}`);
-
-      // Try to create the extension for both PostgreSQL and PGLite
-      try {
-        await this.db.execute(sql.raw('CREATE EXTENSION IF NOT EXISTS vector'));
-        logger.info('[UnifiedMigrator] Vector extension created/verified');
-      } catch (createError) {
-        // For PGLite, the extension might already be loaded via constructor
-        logger.debug(
-          '[UnifiedMigrator] CREATE EXTENSION failed, testing if vector type is available'
-        );
-      }
-
-      // For PGLite, skip temporary table test to avoid database corruption
-      if (this.dbType === 'pglite') {
-        logger.info(
-          '[UnifiedMigrator] Skipping vector verification for PGLite to prevent corruption'
-        );
-        return;
-      }
-
-      // Test if vector extension is actually working by creating a test table (PostgreSQL only)
-      try {
-        await this.db.execute(
-          sql.raw('CREATE TEMPORARY TABLE test_vector_support (id INT, vec vector(3))')
-        );
-        await this.db.execute(sql.raw('DROP TABLE test_vector_support'));
-        logger.info('[UnifiedMigrator] Vector extension verified working');
-      } catch (vectorError) {
-        logger.warn('[UnifiedMigrator] Vector extension not available:', {
-          error:
-            vectorError instanceof Error
-              ? {
-                  message: vectorError.message,
-                  stack: vectorError.stack?.split('\n').slice(0, 5),
-                }
-              : String(vectorError),
-        });
-        logger.warn(
-          '[UnifiedMigrator] Semantic search features will be disabled for this instance'
-        );
-        // Don't throw error - continue without vector support
-      }
-    } catch (error) {
-      logger.warn('[UnifiedMigrator] Could not ensure vector extension:', error);
-      // Don't throw error - continue without vector support
-    }
-  }
-
   private async registerCoreTables(): Promise<void> {
     logger.info('[UnifiedMigrator] Registering core tables');
 

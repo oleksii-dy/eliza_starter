@@ -175,16 +175,16 @@ export const CORE_TABLES: TableSchema[] = [
       "dim_3072" vector(3072),
       "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
-    // Fallback SQL for PGLite - includes vector columns as PGLite now supports them
+    // Fallback SQL for PGLite - store embeddings as JSONB if vector extension is not available
     fallbackSql: `CREATE TABLE IF NOT EXISTS embeddings (
       id TEXT PRIMARY KEY,
       memory_id TEXT NOT NULL,
-      dim_384 vector(384),
-      dim_512 vector(512),
-      dim_768 vector(768),
-      dim_1024 vector(1024),
-      dim_1536 vector(1536),
-      dim_3072 vector(3072),
+      dim_384 JSONB,
+      dim_512 JSONB,
+      dim_768 JSONB,
+      dim_1024 JSONB,
+      dim_1536 JSONB,
+      dim_3072 JSONB,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
   },

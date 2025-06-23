@@ -10,7 +10,7 @@ import {
   RolodexEventType,
   type HealthEvent,
   type InteractionEvent
-} from './EventBridge';
+} from '../managers/EventBridge';
 import { RolodexService } from './RolodexService';
 
 export interface RelationshipHealth {
@@ -1182,7 +1182,7 @@ export class AutonomousRelationshipManager {
     }
 
     // Privacy setting not available, log instead
-    logger.info(`[AutonomousRelationshipManager] Would set privacy to ${decision.action === 'increase_privacy_restrictions' ? 'restricted' : 'public'} for ${entityId}`);
+    logger.info(`[AutonomousRelationshipManager] Would set privacy for ${entityId}`);
   }
 
   // ============================================================================
@@ -1483,7 +1483,7 @@ export class AutonomousRelationshipManager {
           id: decision.entityId,
           metadata: {
             ...contact.metadata,
-            tags: [...(contact.metadata?.tags || []), 'enhanced-monitoring'],
+            tags: [...(Array.isArray(contact.metadata?.tags) ? contact.metadata.tags : []), 'enhanced-monitoring'],
             customFields: {
               ...(contact.metadata?.customFields || {}),
               monitoringLevel: 'enhanced',

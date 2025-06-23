@@ -10,12 +10,13 @@ if (typeof WebAssembly === 'undefined') {
 }
 
 // Clear any PostgreSQL environment variables to ensure tests use PGLite
-process.env.POSTGRES_URL = '';
-process.env.POSTGRES_USER = '';
-process.env.POSTGRES_PASSWORD = '';
-process.env.POSTGRES_HOST = '';
-process.env.POSTGRES_PORT = '';
-process.env.POSTGRES_DATABASE = '';
+// Commented out to allow PostgreSQL testing when POSTGRES_URL is set
+// process.env.POSTGRES_URL = '';
+// process.env.POSTGRES_USER = '';
+// process.env.POSTGRES_PASSWORD = '';
+// process.env.POSTGRES_HOST = '';
+// process.env.POSTGRES_PORT = '';
+// process.env.POSTGRES_DATABASE = '';
 
 // Set test environment
 process.env.NODE_ENV = 'test';
@@ -31,6 +32,6 @@ process.on('unhandledRejection', (reason, promise) => {
   }
 });
 
-console.log('[TEST SETUP] Cleared PostgreSQL environment variables');
-console.log('[TEST SETUP] Tests will use PGLite for database operations'); 
+// console.log('[TEST SETUP] Cleared PostgreSQL environment variables');
+console.log('[TEST SETUP] Tests will use', process.env.POSTGRES_URL ? 'PostgreSQL' : 'PGLite', 'for database operations'); 
 console.log('[TEST SETUP] WebAssembly is available:', typeof WebAssembly !== 'undefined'); 

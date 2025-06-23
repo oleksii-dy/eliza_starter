@@ -71,10 +71,12 @@ export async function startAgent(
     settings: await loadEnvConfig(),
   };
 
-  // If in test mode and server has a database, use it
-  if (options.isTestMode && server.database) {
+  // Always use the server's database adapter if available
+  if (server.database) {
     runtimeOptions.adapter = server.database;
-    logger.debug('Using server database adapter for test agent runtime');
+    logger.debug('Using server database adapter for agent runtime');
+  } else {
+    logger.warn('No server database adapter available - agent may fail to initialize');
   }
 
   const runtime = new AgentRuntime(runtimeOptions);

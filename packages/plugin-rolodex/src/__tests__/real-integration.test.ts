@@ -13,7 +13,7 @@ import {
   waitForCondition
 } from './runtime-helper';
 import { RolodexService } from '../services/RolodexService';
-import type { IAgentRuntime, Memory, UUID } from '../core-types';
+import type { IAgentRuntime, Memory, UUID } from '@elizaos/core';
 import { stringToUuid } from '@elizaos/core';
 
 describe('Rolodex Plugin Real Integration Tests', () => {
@@ -326,7 +326,7 @@ describe('Rolodex Plugin Real Integration Tests', () => {
       };
 
       // Process message with action
-      await runtime.processMessage(message);
+      await (runtime as any).processMessage(message);
       
       // Wait for action processing
       await waitForCondition(async () => {

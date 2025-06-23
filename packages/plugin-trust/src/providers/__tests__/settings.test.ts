@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import { ChannelType } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
-import { settingsProvider } from '../settings';
+import { settingsProvider } from '../../../../plugin-secrets-manager/src/providers/settings';
 
 // Mock the @elizaos/core module
 vi.mock('@elizaos/core', async () => {
@@ -14,8 +14,8 @@ vi.mock('@elizaos/core', async () => {
     logger: {
       info: vi.fn(),
       error: vi.fn(),
-      debug: vi.fn()
-    }
+      debug: vi.fn(),
+    },
   };
 });
 
@@ -25,35 +25,35 @@ const createMockRuntime = (): IAgentRuntime => {
     serverId: 'server-1',
     metadata: {
       settings: {
-        'API_KEY': {
+        API_KEY: {
           name: 'API Key',
           description: 'API key for external service',
           required: true,
-          value: null
+          value: null,
         },
-        'WEBHOOK_URL': {
+        WEBHOOK_URL: {
           name: 'Webhook URL',
           description: 'URL for webhook notifications',
           required: false,
-          value: 'https://example.com/webhook'
-        }
-      }
-    }
+          value: 'https://example.com/webhook',
+        },
+      },
+    },
   };
 
   return {
     agentId: 'test-agent' as UUID,
     character: {
-      name: 'TestAgent'
+      name: 'TestAgent',
     },
     getRoom: vi.fn().mockResolvedValue({
       id: 'room-1',
       worldId: 'world-1',
-      type: ChannelType.GROUP
+      type: ChannelType.GROUP,
     }),
     getWorld: vi.fn().mockResolvedValue(mockWorld),
     updateWorld: vi.fn().mockResolvedValue(true),
-    getSetting: vi.fn()
+    getSetting: vi.fn(),
   } as any;
 };
 
@@ -62,17 +62,17 @@ const createMockMemory = (entityId: UUID, roomId: UUID = 'room-1' as UUID): Memo
     entityId,
     roomId,
     content: {
-      text: 'test message'
-    }
-  } as Memory);
+      text: 'test message',
+    },
+  }) as Memory;
 
 const createMockState = (): State =>
   ({
     values: {},
     data: {},
     text: '',
-    senderName: 'TestUser'
-  } as State);
+    senderName: 'TestUser',
+  }) as State;
 
 describe('settingsProvider', () => {
   let runtime: IAgentRuntime;
@@ -80,7 +80,7 @@ describe('settingsProvider', () => {
   beforeEach(async () => {
     runtime = createMockRuntime();
     vi.clearAllMocks();
-    
+
     // Set up the mocked functions
     const elizaCore = await import('@elizaos/core');
     (elizaCore.findWorldsForOwner as any) = vi.fn().mockResolvedValue([
@@ -89,29 +89,29 @@ describe('settingsProvider', () => {
         serverId: 'server-1',
         metadata: {
           settings: {
-            'API_KEY': {
+            API_KEY: {
               name: 'API Key',
               description: 'API key for external service',
               required: true,
-              value: null
-            }
-          }
-        }
-      }
+              value: null,
+            },
+          },
+        },
+      },
     ]);
     (elizaCore.getWorldSettings as any) = vi.fn().mockResolvedValue({
-      'API_KEY': {
+      API_KEY: {
         name: 'API Key',
         description: 'API key for external service',
         required: true,
-        value: null
+        value: null,
       },
-      'WEBHOOK_URL': {
+      WEBHOOK_URL: {
         name: 'Webhook URL',
         description: 'URL for webhook notifications',
         required: false,
-        value: 'https://example.com/webhook'
-      }
+        value: 'https://example.com/webhook',
+      },
     });
   });
 
@@ -128,7 +128,7 @@ describe('settingsProvider', () => {
 
   it('should handle missing world', async () => {
     (runtime.getWorld as any).mockResolvedValue(null);
-    
+
     const memory = createMockMemory('entity-1' as UUID);
     const state = createMockState();
 
@@ -141,15 +141,15 @@ describe('settingsProvider', () => {
     // Mock room with DM type and worldId (for DM onboarding flow)
     (runtime.getRoom as any).mockResolvedValue({
       id: 'dm-room-1',
-      worldId: 'world-1',  // DM rooms can have worldId in onboarding flow
-      type: ChannelType.DM
+      worldId: 'world-1', // DM rooms can have worldId in onboarding flow
+      type: ChannelType.DM,
     });
 
     const memory = createMockMemory('entity-1' as UUID, 'dm-room-1' as UUID);
     const state = createMockState();
 
     const result = await settingsProvider.get(runtime, memory, state);
-    
+
     expect(result.text).toContain('PRIORITY TASK: Onboarding');
     expect(result.text).toContain('1 required settings');
   });
@@ -157,18 +157,18 @@ describe('settingsProvider', () => {
   it('should show all settings configured when complete', async () => {
     const elizaCore = await import('@elizaos/core');
     (elizaCore.getWorldSettings as any) = vi.fn().mockResolvedValue({
-      'API_KEY': {
+      API_KEY: {
         name: 'API Key',
         description: 'API key for external service',
         required: true,
-        value: 'configured-key'
+        value: 'configured-key',
       },
-      'WEBHOOK_URL': {
+      WEBHOOK_URL: {
         name: 'Webhook URL',
         description: 'URL for webhook notifications',
         required: false,
-        value: 'https://example.com/webhook'
-      }
+        value: 'https://example.com/webhook',
+      },
     });
 
     const memory = createMockMemory('entity-1' as UUID);

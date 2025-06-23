@@ -49,7 +49,7 @@ export const character: Character = {
       TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
       OPENAI_API_KEY: process.env.OPENAI_API_KEY,
       ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
-      REASONING_SERVICE_PLANNING_ENABLED: 'true',
+      REASONING_SERVICE_PLANNING_ENABLED: false,
     },
   },
   system:

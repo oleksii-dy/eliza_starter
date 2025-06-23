@@ -1,5 +1,5 @@
 import { type Provider, type IAgentRuntime, type Memory, type State, logger } from '@elizaos/core';
-import { EntityService } from '../services';
+import { RolodexService } from '../services';
 
 export const entitiesProvider: Provider = {
   name: 'entities',
@@ -7,7 +7,7 @@ export const entitiesProvider: Provider = {
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     try {
-      const entityService = runtime.getService('entity') as EntityService;
+      const entityService = runtime.getService('entity') as RolodexService;
       if (!entityService) {
         logger.warn('[EntitiesProvider] EntityService not available');
         return { text: '' };
@@ -47,7 +47,7 @@ export const entitiesProvider: Provider = {
       const entitiesByType = new Map<string, any[]>();
 
       for (const { entity, profile } of allEntities) {
-        const type = profile.type || 'unknown';
+        const type = profile.proofType || 'unknown';
         const typeGroup = entitiesByType.get(type) || [];
         typeGroup.push({ entity, profile });
         entitiesByType.set(type, typeGroup);
@@ -78,7 +78,7 @@ export const entitiesProvider: Provider = {
           const lastUpdate = new Date(profile.updatedAt || profile.createdAt);
           const daysAgo = Math.floor((Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
 
-          lines.push(`- ${name} (${profile.type})`);
+          lines.push(`- ${name} (${profile.proofType})`);
           if (profile.summary) {
             lines.push(`  ${profile.summary}`);
           }
@@ -128,7 +128,7 @@ export const entitiesProvider: Provider = {
           typeCounts,
           taggedCount: taggedEntities.length,
         },
-        data: {
+        proofData: {
           entities: allEntities,
           byType: Object.fromEntries(entitiesByType),
           recentUpdates: recentEntities,

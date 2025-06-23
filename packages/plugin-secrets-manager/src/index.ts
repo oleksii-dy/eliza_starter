@@ -1,18 +1,20 @@
 import type { Plugin } from '@elizaos/core';
+import { generateEnvVarAction } from './actions/generateEnvVar';
+import { manageSecretAction } from './actions/manageSecret';
+import { setEnvVarAction } from './actions/setEnvVar';
 import { EnhancedSecretManager } from './enhanced-service';
-import { SecretFormService } from './services/secret-form-service';
-import { ActionChainService } from './services/action-chain-service';
 import { envStatusProvider } from './providers/envStatus';
 import { secretsInfoProvider } from './providers/secretsInfo';
 import { uxGuidanceProvider } from './providers/uxGuidanceProvider';
-import { setEnvVarAction } from './actions/setEnvVar';
-import { generateEnvVarAction } from './actions/generateEnvVar';
-import { manageSecretAction } from './actions/manageSecret';
+import { ActionChainService } from './services/action-chain-service';
+import { SecretFormService } from './services/secret-form-service';
 // TEMPORARILY DISABLED: Depends on removed services
 // import { requestSecretFormAction } from './actions/requestSecretForm';
+import { requestSecretFormAction } from './actions/requestSecretForm';
 import { runWorkflowAction } from './actions/runWorkflow';
+import { updateSettingsAction } from './actions/settings';
 import { e2eTestSuites } from './e2e';
-import { unitTestSuites } from './__tests__';
+import { settingsProvider } from './providers/settings';
 
 /**
  * Secrets and Environment Variable Management Plugin
@@ -36,14 +38,15 @@ export const envPlugin: Plugin = {
 
   dependencies: [],
 
-  providers: [envStatusProvider, secretsInfoProvider, uxGuidanceProvider],
+  providers: [envStatusProvider, secretsInfoProvider, uxGuidanceProvider, settingsProvider],
 
   actions: [
     setEnvVarAction,
     generateEnvVarAction,
     manageSecretAction,
-    // TEMPORARILY DISABLED: requestSecretFormAction,
+    requestSecretFormAction,
     runWorkflowAction,
+    updateSettingsAction,
   ],
 
   tests: e2eTestSuites,
@@ -60,18 +63,18 @@ export default envPlugin;
 
 // Export types for use by other plugins
 export type {
+  EncryptedSecret,
   EnvVarConfig,
   EnvVarMetadata,
   EnvVarUpdate,
   GenerationScript,
   GenerationScriptMetadata,
-  ValidationResult,
+  SecretAccessLog,
   SecretConfig,
   SecretContext,
   SecretMetadata,
   SecretPermission,
-  EncryptedSecret,
-  SecretAccessLog,
+  ValidationResult,
 } from './types';
 
 export type {
@@ -90,8 +93,8 @@ export { canGenerateEnvVar, generateScript, getGenerationDescription } from './g
 export { validateEnvVar, validationStrategies } from './validation';
 
 // Export services for direct access if needed
-export { EnvManagerService } from './service';
 export { EnhancedSecretManager } from './enhanced-service';
+export { EnvManagerService } from './service';
 
 // Export migration utilities
-export { SecretMigrationHelper, runMigration } from './migration';
+export { runMigration, SecretMigrationHelper } from './migration';

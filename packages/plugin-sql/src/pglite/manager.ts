@@ -1,8 +1,16 @@
-import { PGlite, type PGliteOptions } from '@electric-sql/pglite';
+import type { PGlite, PGliteOptions } from '@electric-sql/pglite';
 import { fuzzystrmatch } from '@electric-sql/pglite/contrib/fuzzystrmatch';
 import { vector } from '@electric-sql/pglite/vector';
 import { logger } from '@elizaos/core';
 import type { IDatabaseClientManager } from '../types';
+
+// Global singleton instance - only ONE PGLite instance should exist
+let globalPGLiteInstance: PGlite | null = null;
+let globalInstancePromise: Promise<PGlite> | null = null;
+let globalInstanceRefCount = 0;
+
+// Global singleton manager instance
+let globalManagerInstance: PGliteClientManager | null = null;
 
 /**
  * Class representing a database client manager for PGlite.
@@ -23,40 +31,62 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
   private startTime = Date.now();
   private readonly options: PGliteOptions;
 
-  // Enhanced instance management for WebAssembly stability
-  private static instanceRegistry = new Map<
-    string,
-    {
-      instance: PGlite;
-      refCount: number;
-      lastUsed: number;
-      dataDir: string;
+  /**
+   * Get the singleton instance of PGliteClientManager
+   * @param {PGliteOptions} options - The options to configure the PGlite client (used only on first call)
+   * @returns {PGliteClientManager} The singleton manager instance
+   */
+  public static getInstance(options?: PGliteOptions): PGliteClientManager {
+    if (!globalManagerInstance) {
+      if (!options) {
+        throw new Error('PGliteClientManager: Options required for first initialization');
+      }
+      logger.info('PGliteClientManager: Creating global singleton manager instance');
+      globalManagerInstance = new PGliteClientManager(options);
+    } else if (options) {
+      logger.warn('PGliteClientManager: Manager already initialized, ignoring new options');
     }
-  >();
-  private static lastInstanceCreationTime = 0;
-  private static readonly MIN_CREATION_INTERVAL = 2000; // 2 seconds between instances
-  private static readonly CLEANUP_DELAY = 3000; // 3 seconds delay before cleanup
-  private static shutdownPromises = new Map<string, Promise<void>>();
+    return globalManagerInstance;
+  }
 
   /**
-   * Constructor for creating a new instance of PGlite with the provided options.
-   * Initializes the PGlite client with additional extensions.
+   * Private constructor to enforce singleton pattern
    * @param {PGliteOptions} options - The options to configure the PGlite client.
    */
-  constructor(options: PGliteOptions) {
+  private constructor(options: PGliteOptions) {
+    // Only include extensions if they're available
+    const extensions: any = {};
+
+    try {
+      // Try to load vector extension
+      if (vector) {
+        extensions.vector = vector;
+        logger.debug('PGLiteClientManager: Vector extension loaded');
+      }
+    } catch (error) {
+      logger.warn('PGLiteClientManager: Vector extension not available:', error);
+    }
+
+    try {
+      // Try to load fuzzystrmatch extension
+      if (fuzzystrmatch) {
+        extensions.fuzzystrmatch = fuzzystrmatch;
+        logger.debug('PGLiteClientManager: Fuzzystrmatch extension loaded');
+      }
+    } catch (error) {
+      logger.warn('PGLiteClientManager: Fuzzystrmatch extension not available:', error);
+    }
+
     this.options = {
       ...options,
-      extensions: {
-        vector,
-        fuzzystrmatch,
-      },
+      extensions: Object.keys(extensions).length > 0 ? extensions : undefined,
       relaxedDurability: true,
     };
 
-    logger.debug('PGLiteClientManager: Creating with options:', {
+    logger.debug('PGLiteClientManager: Creating manager with options:', {
       dataDir: this.options.dataDir,
-      hasVectorExtension: !!this.options.extensions?.vector,
-      hasFuzzystrmatchExtension: !!this.options.extensions?.fuzzystrmatch,
+      hasVectorExtension: !!extensions.vector,
+      hasFuzzystrmatchExtension: !!extensions.fuzzystrmatch,
     });
 
     this.setupShutdownHandlers();
@@ -75,263 +105,249 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
   }
 
   /**
-   * Get a unique key for this instance based on its configuration
+   * Create or get the global PGLite instance
    */
-  private getInstanceKey(): string {
-    const dataDir = this.options.dataDir || ':memory:';
-    return `pglite_${dataDir}`;
-  }
-
-  /**
-   * Wait for any ongoing WebAssembly cleanup to complete
-   */
-  private async waitForWebAssemblyCleanup(): Promise<void> {
-    // First check if there's a graceful shutdown in progress
-    const { PGliteGracefulShutdown } = await import('./graceful-shutdown');
-    if (PGliteGracefulShutdown.getIsShuttingDown()) {
-      logger.info('PGLiteClientManager: Waiting for graceful shutdown to complete...');
-      await PGliteGracefulShutdown.waitForShutdown();
-      // Add extra delay after shutdown completes
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+  private async getOrCreateGlobalInstance(): Promise<PGlite> {
+    // If we already have a global instance, reuse it
+    if (globalPGLiteInstance) {
+      globalInstanceRefCount++;
+      logger.info(
+        `PGLiteClientManager: Reusing global PGLite instance (ref count: ${globalInstanceRefCount})`
+      );
+      return globalPGLiteInstance;
     }
 
-    const now = Date.now();
-    const timeSinceLastCreation = now - PGliteClientManager.lastInstanceCreationTime;
-
-    if (timeSinceLastCreation < PGliteClientManager.MIN_CREATION_INTERVAL) {
-      const waitTime = PGliteClientManager.MIN_CREATION_INTERVAL - timeSinceLastCreation;
-      logger.info(`PGLiteClientManager: Waiting ${waitTime}ms for WebAssembly cleanup`);
-      await new Promise((resolve) => setTimeout(resolve, waitTime));
+    // If instance creation is in progress, wait for it
+    if (globalInstancePromise) {
+      logger.info('PGLiteClientManager: Waiting for global instance creation in progress...');
+      const instance = await globalInstancePromise;
+      globalInstanceRefCount++;
+      return instance;
     }
-  }
 
-  /**
-   * Create a new PGLite instance with retry logic for WebAssembly errors
-   */
-  private async createPGliteInstance(): Promise<PGlite> {
-    const maxRetries = 3;
+    // Check if we have a stale WebAssembly module before creating new instance
+    if (typeof global !== 'undefined' && (global as any).Module) {
+      logger.warn('PGLiteClientManager: Detected existing WebAssembly module, cleaning up...');
+      await PGliteClientManager.forceCleanupGlobal();
+      // Add a delay after cleanup
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    // Create the global instance
+    logger.info('PGLiteClientManager: Creating global PGLite instance...');
+
+    // Try multiple times with increasing delays to handle WebAssembly module conflicts
+    const maxAttempts = 2;
     let lastError: Error | null = null;
 
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        await this.waitForWebAssemblyCleanup();
+        globalInstancePromise = (async () => {
+          logger.info(
+            `PGLiteClientManager: Initializing global PGLite instance (attempt ${attempt}/${maxAttempts})...`
+          );
+          logger.info('PGLiteClientManager: Options:', JSON.stringify(this.options, null, 2));
 
-        logger.info(
-          `PGLiteClientManager: Creating new PGLite instance (attempt ${attempt}/${maxRetries})`
-        );
-        const instance = new PGlite(this.options);
-        PGliteClientManager.lastInstanceCreationTime = Date.now();
+          // Try to import PGLite dynamically to catch any module loading issues
+          const { PGlite: PGLiteClass } = await import('@electric-sql/pglite');
+          logger.info('PGLiteClientManager: PGLite module loaded successfully');
 
-        // Wait for instance to be ready before returning
-        await instance.waitReady;
-        logger.info('PGLiteClientManager: New PGLite instance ready');
+          // Check if we're in a browser or Node environment
+          const isNode =
+            typeof process !== 'undefined' && process.versions && process.versions.node;
+          logger.info(
+            `PGLiteClientManager: Environment - Node: ${isNode}, Node version: ${process.version}`
+          );
 
-        return instance;
+          // For debugging: try with minimal options first
+          // Force in-memory database to avoid file system issues
+          const debugOptions = {
+            dataDir: ':memory:',
+            // Don't include extensions initially to isolate the issue
+          };
+          logger.info(
+            'PGLiteClientManager: Creating instance with debug options:',
+            JSON.stringify(debugOptions, null, 2)
+          );
+
+          // Check for Node.js v23 compatibility issues
+          const nodeVersion = process.version;
+          if (nodeVersion.startsWith('v23')) {
+            logger.warn(
+              'PGLiteClientManager: Node.js v23 detected - known WebAssembly compatibility issues with PGLite'
+            );
+            logger.warn('PGLiteClientManager: Recommended solutions:');
+            logger.warn('1. Use PostgreSQL instead: DATABASE_PROVIDER=postgres');
+            logger.warn('2. Downgrade to Node.js v22 or earlier');
+            logger.warn('3. Use a different runtime like Bun');
+          }
+
+          const instance = new PGLiteClass(debugOptions);
+
+          // Wait for instance to be ready
+          await instance.waitReady;
+          logger.info('PGLiteClientManager: Global PGLite instance is ready');
+
+          globalPGLiteInstance = instance;
+          globalInstanceRefCount = 1;
+
+          return instance;
+        })();
+
+        const result = await globalInstancePromise;
+        return result; // Success - return the instance
       } catch (error) {
+        logger.error(
+          `PGLiteClientManager: Failed to create global instance (attempt ${attempt}/${maxAttempts}):`,
+          error
+        );
+        logger.error('PGLiteClientManager: Error stack:', (error as Error).stack);
         lastError = error as Error;
-        logger.warn(`PGLiteClientManager: Failed to create instance on attempt ${attempt}:`, error);
 
-        if (attempt < maxRetries) {
-          // Progressive backoff: 2s, 4s, 6s
-          const backoffTime = 2000 * attempt;
-          logger.info(`PGLiteClientManager: Retrying in ${backoffTime}ms...`);
-          await new Promise((resolve) => setTimeout(resolve, backoffTime));
+        // Check if it's a WebAssembly error
+        if (error instanceof Error) {
+          if (
+            error.message.includes('WebAssembly') ||
+            error.message.includes('wasm') ||
+            error.message.includes('Aborted')
+          ) {
+            logger.error('PGLiteClientManager: WebAssembly abort error detected');
+
+            const nodeVersion = process.version;
+            if (nodeVersion.startsWith('v23')) {
+              logger.error('================== COMPATIBILITY ISSUE ==================');
+              logger.error('PGLite is not compatible with Node.js v23 on your system');
+              logger.error("This is a known issue with PGLite's WebAssembly module");
+              logger.error('');
+              logger.error('SOLUTIONS:');
+              logger.error('1. Use PostgreSQL instead:');
+              logger.error(
+                '   DATABASE_PROVIDER=postgres DATABASE_URL=postgresql://... bun run start'
+              );
+              logger.error('');
+              logger.error('2. Downgrade to Node.js v22 or earlier:');
+              logger.error('   nvm install 22 && nvm use 22');
+              logger.error('');
+              logger.error('3. Use Bun runtime instead of Node.js');
+              logger.error('========================================================');
+            }
+
+            // If this is not the last attempt, wait and retry
+            if (attempt < maxAttempts) {
+              const waitTime = attempt * 1000; // 1s, 2s
+              logger.info(`PGLiteClientManager: Waiting ${waitTime}ms before retry...`);
+              await new Promise((resolve) => setTimeout(resolve, waitTime));
+            }
+          } else {
+            // If it's not a WebAssembly error, don't retry
+            throw error;
+          }
         }
+      } finally {
+        globalInstancePromise = null;
       }
     }
 
-    throw new Error(
-      `PGLite initialization failed after ${maxRetries} attempts. ` +
-        `Last error: ${lastError?.message}. ` +
-        'This may be caused by WebAssembly resource conflicts. ' +
-        'Try waiting longer between restarts or clearing the data directory.'
+    // If we get here, all attempts failed
+    throw (
+      lastError || new Error('PGLiteClientManager: Failed to create instance after all attempts')
     );
   }
 
-  /**
-   * Get or create a shared instance for the same data directory
-   */
-  private async getOrCreateSharedInstance(): Promise<PGlite> {
-    const instanceKey = this.getInstanceKey();
-    const existing = PGliteClientManager.instanceRegistry.get(instanceKey);
-
-    if (existing) {
-      // Check if there's an ongoing shutdown for this instance
-      const shutdownPromise = PGliteClientManager.shutdownPromises.get(instanceKey);
-      if (shutdownPromise) {
-        logger.info(`PGLiteClientManager: Waiting for instance cleanup to complete...`);
-        await shutdownPromise;
-        // After cleanup, proceed to create new instance
-      } else {
-        // Reuse existing instance
-        existing.refCount++;
-        existing.lastUsed = Date.now();
-        logger.info(
-          `PGLiteClientManager: Reusing existing instance (ref count: ${existing.refCount})`
-        );
-        return existing.instance;
-      }
-    }
-
-    // Create new instance
-    const instance = await this.createPGliteInstance();
-
-    PGliteClientManager.instanceRegistry.set(instanceKey, {
-      instance,
-      refCount: 1,
-      lastUsed: Date.now(),
-      dataDir: this.options.dataDir || ':memory:',
-    });
-
-    logger.info(`PGLiteClientManager: Created new shared instance for ${instanceKey}`);
-    return instance;
-  }
-
   public async initialize(): Promise<void> {
-    try {
-      // Get or create the shared instance
-      this.client = await this.getOrCreateSharedInstance();
+    // Get the global singleton instance
+    this.client = await this.getOrCreateGlobalInstance();
 
-      logger.info('PGLiteClientManager: PGLite instance is ready');
-
-      // Try to create the vector extension (it might be loaded but not created)
-      let vectorExtensionWorking = false;
-
-      try {
-        // First try to create the extension
-        await this.client.exec('CREATE EXTENSION IF NOT EXISTS vector');
-        logger.info('PGLiteClientManager: Vector extension created successfully');
-        vectorExtensionWorking = true;
-      } catch (createError) {
-        logger.debug(
-          'PGLiteClientManager: CREATE EXTENSION vector failed, testing if already available'
-        );
-
-        // Test if the vector type is available even without explicit creation
-        try {
-          await this.client.exec(
-            'CREATE TEMPORARY TABLE test_extension_check (id int, vec vector(3))'
-          );
-          await this.client.exec('DROP TABLE test_extension_check');
-          logger.info('PGLiteClientManager: Vector extension verified working (already loaded)');
-          vectorExtensionWorking = true;
-        } catch (testError) {
-          logger.warn('PGLiteClientManager: Vector extension not working:', testError);
-        }
-      }
-
-      if (!vectorExtensionWorking) {
-        logger.warn(
-          'PGLiteClientManager: Vector extension is not available in this PGLite instance'
-        );
-        logger.warn('PGLiteClientManager: Semantic search features will be disabled');
-      }
-    } catch (error) {
-      logger.error('PGLiteClientManager: Failed to initialize PGLite', error);
-
-      // Check if it's a WebAssembly abort error
-      if (error instanceof Error && error.message.includes('Aborted()')) {
-        throw new Error(
-          'PGLite initialization failed due to WebAssembly error. ' +
-            'This may be caused by memory limits or concurrent instance creation. ' +
-            'Try running tests sequentially or with increased memory.'
-        );
-      }
-
-      throw error;
-    }
+    logger.info('PGLiteClientManager: Connected to global PGLite instance');
   }
 
   public async close(): Promise<void> {
     if (this.shuttingDown) {
-      // Already shutting down or closed, just return
       return;
     }
-    
+
     this.logPerformanceStats();
-
-    const instanceKey = this.getInstanceKey();
-    const existing = PGliteClientManager.instanceRegistry.get(instanceKey);
-
-    if (!existing) {
-      logger.debug('PGLiteClientManager: No shared instance to close');
-      this.shuttingDown = true;
-      this.client = null;
-      return;
-    }
-
-    existing.refCount--;
-    logger.info(`PGLiteClientManager: Decreasing ref count (now: ${existing.refCount})`);
-
-    // Don't actually close if there are other references
-    if (existing.refCount > 0) {
-      logger.info('PGLiteClientManager: Other references exist, not closing instance');
-      return;
-    }
-    
-    // Only set shutting down when we're actually going to close
     this.shuttingDown = true;
 
-    // Schedule cleanup with delay to allow WebAssembly to properly release resources
-    const shutdownPromise = this.scheduleInstanceCleanup(instanceKey, existing.instance);
-    PGliteClientManager.shutdownPromises.set(instanceKey, shutdownPromise);
+    // Decrease reference count
+    if (globalInstanceRefCount > 0) {
+      globalInstanceRefCount--;
+      logger.info(
+        `PGLiteClientManager: Decreased global instance ref count to ${globalInstanceRefCount}`
+      );
+    }
 
-    try {
-      await shutdownPromise;
-    } finally {
-      PGliteClientManager.shutdownPromises.delete(instanceKey);
+    // Don't actually close the global instance unless ref count is 0
+    if (globalInstanceRefCount > 0) {
+      logger.info('PGLiteClientManager: Other references exist, keeping global instance alive');
       this.client = null;
+      return;
     }
+
+    // Only close if this is the last reference AND we're doing a forced cleanup
+    logger.info('PGLiteClientManager: Reference count is 0, but not closing unless forced cleanup');
+    this.client = null;
   }
 
   /**
-   * Schedule instance cleanup with proper delay for WebAssembly resource release
-   */
-  private async scheduleInstanceCleanup(instanceKey: string, instance: PGlite): Promise<void> {
-    logger.info(
-      `PGLiteClientManager: Scheduling cleanup for ${instanceKey} in ${PGliteClientManager.CLEANUP_DELAY}ms`
-    );
-
-    // Remove from registry immediately to prevent reuse
-    PGliteClientManager.instanceRegistry.delete(instanceKey);
-
-    // Wait for cleanup delay to allow proper WebAssembly resource release
-    await new Promise((resolve) => setTimeout(resolve, PGliteClientManager.CLEANUP_DELAY));
-
-    try {
-      await instance.close();
-      logger.info(`PGLiteClientManager: Successfully closed instance ${instanceKey}`);
-    } catch (error) {
-      logger.debug(`PGLite close error for ${instanceKey} (may be already closed):`, error);
-    }
-  }
-
-  /**
-   * Force cleanup of all instances (for testing)
+   * Force cleanup of all global instances (for testing)
    */
   public static async forceCleanupAll(): Promise<void> {
-    logger.info('PGLiteClientManager: Force cleaning up all instances...');
+    return this.forceCleanupGlobal();
+  }
 
-    const cleanupPromises: Promise<void>[] = [];
+  /**
+   * Force cleanup of the global instance (only called during app shutdown)
+   */
+  public static async forceCleanupGlobal(): Promise<void> {
+    logger.info('PGLiteClientManager: Force cleaning up global instance...');
 
-    for (const [key, entry] of PGliteClientManager.instanceRegistry.entries()) {
-      const promise = (async () => {
-        try {
-          await entry.instance.close();
-          logger.debug(`Force closed instance: ${key}`);
-        } catch (error) {
-          logger.debug(`Force close error for ${key}:`, error);
-        }
-      })();
-      cleanupPromises.push(promise);
+    if (globalPGLiteInstance) {
+      try {
+        await globalPGLiteInstance.close();
+        logger.info('PGLiteClientManager: Global instance force closed');
+      } catch (error) {
+        logger.warn('PGLiteClientManager: Error force closing global instance:', error);
+      }
     }
 
-    await Promise.allSettled(cleanupPromises);
-    PGliteClientManager.instanceRegistry.clear();
-    PGliteClientManager.shutdownPromises.clear();
+    globalPGLiteInstance = null;
+    globalInstancePromise = null;
+    globalInstanceRefCount = 0;
+    globalManagerInstance = null;
 
-    // Additional delay to ensure WebAssembly cleanup
-    await new Promise((resolve) => setTimeout(resolve, PGliteClientManager.CLEANUP_DELAY));
+    // Try to force WebAssembly module cleanup
+    if (typeof global !== 'undefined' && (global as any).Module) {
+      logger.info(
+        'PGLiteClientManager: Attempting to clear WebAssembly module from global scope...'
+      );
+      try {
+        // Clear any PGLite-related WebAssembly modules
+        const globalAny = global as any;
+        if (globalAny.Module) {
+          delete globalAny.Module;
+        }
+        if (globalAny.PGlite) {
+          delete globalAny.PGlite;
+        }
+        // Clear require cache for PGLite module
+        const pgLiteModulePath = require.resolve('@electric-sql/pglite');
+        if (require.cache[pgLiteModulePath]) {
+          delete require.cache[pgLiteModulePath];
+        }
+      } catch (error) {
+        logger.debug('PGLiteClientManager: Error clearing module cache:', error);
+      }
+    }
+
+    // Force garbage collection if available
+    if (global.gc) {
+      logger.info('PGLiteClientManager: Running garbage collection...');
+      global.gc();
+    }
+
+    // Wait for WebAssembly cleanup
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     logger.info('PGLiteClientManager: Force cleanup completed');
   }
 
@@ -346,7 +362,8 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
       averageQueryTime: this.queryCount > 0 ? this.totalQueryTime / this.queryCount : 0,
       uptimeMs: uptime,
       queriesPerSecond: this.queryCount > 0 ? (this.queryCount / uptime) * 1000 : 0,
-      activeInstances: PGliteClientManager.instanceRegistry.size,
+      globalInstanceActive: !!globalPGLiteInstance,
+      globalRefCount: globalInstanceRefCount,
     };
   }
 
@@ -355,12 +372,13 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
    */
   public logPerformanceStats(): void {
     const stats = this.getPerformanceStats();
-    logger.info('PGlite Performance Stats:', {
+    logger.info('PGLite Performance Stats:', {
       queries: stats.queryCount,
       avgQueryTime: `${Math.round(stats.averageQueryTime)}ms`,
       qps: Math.round(stats.queriesPerSecond * 100) / 100,
       uptime: `${Math.round(stats.uptimeMs / 1000)}s`,
-      activeInstances: stats.activeInstances,
+      globalActive: stats.globalInstanceActive,
+      globalRefs: stats.globalRefCount,
     });
   }
 
@@ -376,7 +394,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
     // Graceful shutdown handlers
     const shutdown = async () => {
       if (!this.shuttingDown) {
-        logger.info('PGlite: Graceful shutdown initiated');
+        logger.info('PGLite: Graceful shutdown initiated');
         await this.close();
       }
     };

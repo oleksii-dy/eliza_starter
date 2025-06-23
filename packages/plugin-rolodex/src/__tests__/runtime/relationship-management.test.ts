@@ -1,9 +1,8 @@
 import { type TestSuite, type IAgentRuntime, stringToUuid } from '@elizaos/core';
-import type { EntityGraphService } from '../../services/EntityGraphService';
+import type { EntityGraphManager } from '../../managers/EntityGraphManager';
 
 export const relationshipManagementRuntimeTests: TestSuite = {
   name: 'Relationship Management Runtime Tests',
-  description: 'Tests relationship extraction and management using real runtime',
   
   tests: [
     {
@@ -11,9 +10,9 @@ export const relationshipManagementRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing relationship detection from conversation...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         const roomId = stringToUuid(`test-room-${Date.now()}`);
@@ -50,7 +49,7 @@ export const relationshipManagementRuntimeTests: TestSuite = {
           createdAt: Date.now(),
         };
         
-        await runtime.processMessage(message);
+        await (runtime as any).processMessage(message);
         await new Promise(resolve => setTimeout(resolve, 3000));
         
         // Check if relationship was created
@@ -74,9 +73,9 @@ export const relationshipManagementRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing relationship strength building...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         const roomId = stringToUuid(`test-room-${Date.now()}`);
@@ -117,7 +116,7 @@ export const relationshipManagementRuntimeTests: TestSuite = {
             createdAt: Date.now(),
           };
           
-          await runtime.processMessage(message);
+          await (runtime as any).processMessage(message);
           await new Promise(resolve => setTimeout(resolve, 1500));
         }
         
@@ -147,9 +146,9 @@ export const relationshipManagementRuntimeTests: TestSuite = {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing complex relationship network identification...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         const roomId = stringToUuid(`test-room-${Date.now()}`);
@@ -177,7 +176,7 @@ export const relationshipManagementRuntimeTests: TestSuite = {
           createdAt: Date.now(),
         };
         
-        await runtime.processMessage(message);
+        await (runtime as any).processMessage(message);
         await new Promise(resolve => setTimeout(resolve, 5000)); // Longer wait for complex processing
         
         // Search for key entities

@@ -7,7 +7,7 @@ import {
   type State,
   type HandlerCallback,
   type ActionResult,
-} from '../core-types';
+} from '@elizaos/core';
 
 /**
  * Action to check the current identity verification status

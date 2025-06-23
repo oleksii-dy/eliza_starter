@@ -16,7 +16,7 @@ import {
   type ActionResult,
   type UUID,
   stringToUuid,
-} from '../core-types';
+} from '@elizaos/core';
 import { RolodexService } from '../services';
 import type { FollowUp } from '../types';
 import { z } from 'zod';
@@ -206,7 +206,10 @@ export const scheduleFollowUpAction: Action = {
         }
       } else {
         // Use the message sender as the entity
-        entityId = message.entityId;
+        if (!message.entityId) {
+          throw new Error('No entity ID found for follow-up');
+        }
+        entityId = message.entityId as UUID;
       }
 
       // Schedule the follow-up

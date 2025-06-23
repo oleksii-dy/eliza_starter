@@ -19,8 +19,8 @@ import {
 describe('Rolodex Actions', () => {
   let mockRuntime: any;
   let mockRolodexService: any;
-  let mockEntityService: any;
-  let mockFollowUpService: any;
+  let mockRolodexService: any;
+  let mockFollowUpManager: any;
   let mockCallback: any;
   let mockMessage: Memory;
   let mockState: any;
@@ -50,7 +50,7 @@ describe('Rolodex Actions', () => {
       }),
     };
 
-    mockEntityService = {
+    mockRolodexService = {
       trackEntity: vi.fn().mockResolvedValue({
         entityId: stringToUuid('john'),
         type: 'person',
@@ -103,7 +103,7 @@ describe('Rolodex Actions', () => {
       }),
     };
 
-    mockFollowUpService = {
+    mockFollowUpManager = {
       scheduleFollowUp: vi.fn().mockResolvedValue({
         id: 'task-123',
         name: 'FOLLOW_UP',
@@ -120,9 +120,9 @@ describe('Rolodex Actions', () => {
     mockRuntime = createMockRuntime({
       getService: vi.fn((serviceName: string) => {
         if (serviceName === 'entity') {
-          return mockEntityService;
+          return mockRolodexService;
         } else if (serviceName === 'followup') {
-          return mockFollowUpService;
+          return mockFollowUpManager;
         } else if (serviceName === 'rolodex') {
           return mockRolodexService;
         }
@@ -362,7 +362,7 @@ describe('Rolodex Actions', () => {
 
       await removeEntityAction.handler(mockRuntime, message, mockState, undefined, mockCallback);
 
-      // We don't have removeEntity on mockEntityService, check callback instead
+      // We don't have removeEntity on mockRolodexService, check callback instead
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           text: expect.stringContaining('specify'),

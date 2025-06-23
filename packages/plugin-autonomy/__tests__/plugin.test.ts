@@ -34,7 +34,9 @@ describe('Auto Plugin Functional Integration', () => {
       expect(autoPlugin.init).toBeDefined();
       
       // Test plugin initialization
-      await expect(autoPlugin.init!(autoPlugin.config || {}, mockRuntime)).resolves.not.toThrow();
+      await expect(async () => {
+        await autoPlugin.init!(autoPlugin.config || {}, mockRuntime);
+      }).not.toThrow();
       
       // Verify services are configured
       expect(autoPlugin.services).toHaveLength(2);
@@ -48,7 +50,9 @@ describe('Auto Plugin Functional Integration', () => {
       });
       
       // Should not throw even without proper config
-      await expect(autoPlugin.init!({}, runtimeWithoutConfig)).resolves.not.toThrow();
+      await expect(async () => {
+        await autoPlugin.init!({}, runtimeWithoutConfig);
+      }).not.toThrow();
     });
   });
 
@@ -78,9 +82,9 @@ describe('Auto Plugin Functional Integration', () => {
         const mockCallback = vi.fn();
         
         // Test that reflection action executes without error
-        await expect(
-          reflectAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback)
-        ).resolves.not.toThrow();
+        await expect(async () => {
+          await reflectAction.handler(mockRuntime, mockMessage, mockState, {}, mockCallback);
+        }).not.toThrow();
         
         // Verify callback was called with reflection output
         expect(mockCallback).toHaveBeenCalled();
@@ -201,7 +205,9 @@ describe('Auto Plugin Functional Integration', () => {
         expect(serviceInstance.capabilityDescription).toBeDefined();
         
         // Test service can be stopped
-        await expect(serviceInstance.stop()).resolves.not.toThrow();
+        await expect(async () => {
+          await serviceInstance.stop();
+        }).not.toThrow();
       }
     });
 
@@ -216,7 +222,9 @@ describe('Auto Plugin Functional Integration', () => {
         expect(serviceInstance.capabilityDescription).toBeDefined();
         
         // Test service can be stopped
-        await expect(serviceInstance.stop()).resolves.not.toThrow();
+        await expect(async () => {
+          await serviceInstance.stop();
+        }).not.toThrow();
       }
     });
 

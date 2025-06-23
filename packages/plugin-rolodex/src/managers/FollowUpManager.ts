@@ -1,6 +1,6 @@
 import { type IAgentRuntime, type UUID, logger } from '@elizaos/core';
 import type { FollowUp } from '../types';
-import { EventBridge } from './EventBridge';
+import { EventBridge } from '../managers/EventBridge';
 
 export class FollowUpManager {
   private runtime: IAgentRuntime;

@@ -15,7 +15,7 @@ import {
   stringToUuid,
   ModelType,
   Relationship
-} from '../core-types';
+} from '@elizaos/core';
 
 import {
   RelationshipMatrix,
@@ -41,7 +41,7 @@ import {
   determineTrajectory
 } from '../ontology/dimension-calculator';
 
-import { EventBridge, RolodexEventType } from './EventBridge';
+import { EventBridge, RolodexEventType } from '../managers/EventBridge';
 
 /**
  * Service for managing multi-dimensional relationships

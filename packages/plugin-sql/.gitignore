@@ -183,3 +183,5 @@ debug-cache-db
 coverage/
 .test-eliza
 .eliza*
+
+.test-*

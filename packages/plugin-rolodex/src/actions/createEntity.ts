@@ -9,7 +9,7 @@ import {
   type HandlerCallback,
   type UUID,
   type ActionResult,
-} from '../core-types';
+} from '@elizaos/core';
 import type { EntityProfile } from '../types';
 
 export const createEntityAction: Action = {

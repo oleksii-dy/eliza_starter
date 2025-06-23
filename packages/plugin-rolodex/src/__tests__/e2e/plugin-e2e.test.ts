@@ -1,6 +1,6 @@
 import { type TestSuite, type IAgentRuntime, stringToUuid } from '@elizaos/core';
-import type { EntityGraphService } from '../../services/EntityGraphService';
-import type { FollowUpService } from '../../services/FollowUpService';
+import type { EntityGraphManager } from '../../managers/EntityGraphManager';
+import type { FollowUpManager } from '../../managers/FollowUpManager';
 import type { FollowUp } from '../../types';
 
 /**
@@ -17,8 +17,8 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing complete entity management workflow...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
-        const followUpService = runtime.getService('followUp') as FollowUpService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+        const followUpService = runtime.getService('followUp') as FollowUpManager;
         
         if (!entityGraphService || !followUpService) {
           throw new Error('Required services not available');
@@ -39,7 +39,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
           createdAt: Date.now(),
         };
 
-        await runtime.processMessage(introMessage);
+        await (runtime as any).processMessage(introMessage);
         await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for processing
 
         // 2. Verify entity was tracked
@@ -66,7 +66,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
           createdAt: Date.now() + 1000,
         };
 
-        await runtime.processMessage(secondMessage);
+        await (runtime as any).processMessage(secondMessage);
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // 4. Verify relationship was created
@@ -134,9 +134,9 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing natural language entity extraction...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         const roomId = stringToUuid(`test-room-nlp-${Date.now()}`);
@@ -160,7 +160,7 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
             createdAt: Date.now() + (index * 1000),
           };
 
-          await runtime.processMessage(message);
+          await (runtime as any).processMessage(message);
           await new Promise(resolve => setTimeout(resolve, 1500));
         }
 
@@ -203,9 +203,9 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing trust score evolution...');
         
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         const roomId = stringToUuid(`test-room-trust-${Date.now()}`);
@@ -284,8 +284,8 @@ export class RolodexPluginE2ETestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         console.log('🧪 Testing follow-up task management...');
         
-        const followUpService = runtime.getService('followUp') as FollowUpService;
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const followUpService = runtime.getService('followUp') as FollowUpManager;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         
         if (!followUpService || !entityGraphService) {
           throw new Error('Required services not available');

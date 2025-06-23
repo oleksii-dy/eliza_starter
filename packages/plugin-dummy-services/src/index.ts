@@ -38,3 +38,6 @@ export {
   DummySwapService,
   DummyTokenCreationService,
 };
+
+// Export mock database plugin
+export { mockDatabasePlugin, MockDatabaseAdapter } from './database';

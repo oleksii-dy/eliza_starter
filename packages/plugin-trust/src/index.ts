@@ -4,27 +4,27 @@ import { evaluateTrustAction } from './actions/evaluateTrust';
 import { recordTrustInteractionAction } from './actions/recordTrustInteraction';
 import { requestElevationAction } from './actions/requestElevation';
 import { updateRoleAction } from './actions/roles';
-import { updateSettingsAction } from './actions/settings';
 import { TrustDatabase } from './database/TrustDatabase';
 import { reflectionEvaluator } from './evaluators/reflection';
 import { trustChangeEvaluator } from './evaluators/trustChangeEvaluator';
 import { CoreTrustProvider } from './providers/CoreTrustProvider';
 import { roleProvider } from './providers/roles';
 import { securityStatusProvider } from './providers/securityStatus';
-import { settingsProvider } from './providers/settings';
 import { trustProfileProvider } from './providers/trustProfile';
 import * as schema from './schema';
 import { TrustService } from './services/TrustService';
 import { tests as e2eTests } from './tests';
-import type {
-  TrustRequirements
-} from './types/trust';
+import type { TrustRequirements } from './types/trust';
 
 // Export types
 export type {
-  AccessDecision, AccessRequest, ElevationRequest,
-  ElevationResult, Permission,
-  PermissionContext, PermissionDecision
+  AccessDecision,
+  AccessRequest,
+  ElevationRequest,
+  ElevationResult,
+  Permission,
+  PermissionContext,
+  PermissionDecision,
 } from './types/permissions';
 export * from './types/security';
 export * from './types/trust';
@@ -33,10 +33,13 @@ export * from './types/trust';
 export { TrustService };
 
 // Export middleware
-  export {
-    TrustMiddleware, getHighRiskActions, getTrustRequirement,
-    requiresElevatedTrust, updateTrustRequirement
-  } from './middleware';
+export {
+  TrustMiddleware,
+  getHighRiskActions,
+  getTrustRequirement,
+  requiresElevatedTrust,
+  updateTrustRequirement,
+} from './middleware';
 
 // Export evaluators
 export * from './evaluators/index';
@@ -103,7 +106,12 @@ export class TrustServiceWrapper extends Service {
 
   checkPermission(entityId: UUID, action: string, resource: string, context?: any) {
     if (!this.trustService) throw new Error('Trust service not initialized');
-    return this.trustService.checkPermission(entityId as UUID, action as UUID, resource as UUID, context);
+    return this.trustService.checkPermission(
+      entityId as UUID,
+      action as UUID,
+      resource as UUID,
+      context
+    );
   }
 
   detectThreats(content: string, entityId: UUID, context?: any) {
@@ -178,7 +186,7 @@ export class TrustServiceWrapper extends Service {
 const trustPlugin: Plugin = {
   name: 'trust',
   description: 'Comprehensive trust and security system for AI agents',
-  
+
   config: {
     defaultTrust: 50,
     trustDecayRate: 0.01,
@@ -190,18 +198,18 @@ const trustPlugin: Plugin = {
 
   init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
     logger.info('Initializing trust plugin...');
-    
+
     // Initialize services
     await runtime.registerService(TrustDatabaseServiceWrapper);
     await runtime.registerService(TrustServiceWrapper);
-    
+
     // Initialize core trust provider for @elizaos/core integration
     const trustService = runtime.getService('trust') as TrustServiceWrapper;
     if (trustService) {
       const provider = new CoreTrustProvider(runtime);
       await provider.initialize();
     }
-    
+
     logger.info('Trust plugin initialized successfully');
   },
 
@@ -209,28 +217,21 @@ const trustPlugin: Plugin = {
 
   actions: [
     updateRoleAction,
-    updateSettingsAction,
     recordTrustInteractionAction,
     evaluateTrustAction,
     requestElevationAction,
   ],
 
-  providers: [
-    roleProvider,
-    settingsProvider,
-    trustProfileProvider,
-    securityStatusProvider,
-  ],
+  providers: [roleProvider, trustProfileProvider, securityStatusProvider],
 
-  evaluators: [
-    reflectionEvaluator,
-    trustChangeEvaluator,
-  ],
+  evaluators: [reflectionEvaluator, trustChangeEvaluator],
 
-  tests: [{
-    name: 'trust-plugin-tests',
-    tests: e2eTests
-  }],
+  tests: [
+    {
+      name: 'trust-plugin-tests',
+      tests: e2eTests,
+    },
+  ],
 
   schema,
 };

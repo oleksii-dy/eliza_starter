@@ -2938,29 +2938,48 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    * @returns {Promise<UUID[]>} A Promise that resolves to an array of room IDs.
    */
   async getRoomsForParticipants(entityIds: UUID[]): Promise<UUID[]> {
+    if (!entityIds || entityIds.length === 0) {
+      return [];
+    }
+
     return this.withDatabase(async () => {
-      if (entityIds.length === 0) return [];
-
-      // Use raw SQL to avoid Drizzle UUID type issues
-      // PGLite doesn't support uuid arrays, need different approach
       const isPGLite = this.isPGLiteAdapter();
-      const result = isPGLite
-        ? await this.db.execute(sql`
-            SELECT DISTINCT p.room_id 
-            FROM participants p
-            INNER JOIN rooms r ON p.room_id = r.id
-            WHERE p.entity_id = ANY(${entityIds}) AND r.agent_id = ${this.agentId}
-          `)
-        : await this.db.execute(sql`
-            SELECT DISTINCT p.room_id 
-            FROM participants p
-            INNER JOIN rooms r ON p.room_id = r.id
-            WHERE p.entity_id = ANY(${entityIds}::uuid[]) AND r.agent_id = ${this.agentId}::uuid
-          `);
 
-      // Handle different result formats
-      const rows = Array.isArray(result) ? result : result.rows || [];
-      return rows.map((row: any) => row.room_id as UUID);
+      if (isPGLite) {
+        // For PGLite, use individual queries since it doesn't support array operations well
+        const results = [];
+        for (const entityId of entityIds) {
+          const result = await this.db.execute(sql`
+            SELECT DISTINCT p.room_id 
+            FROM participants p
+            INNER JOIN rooms r ON p.room_id = r.id
+            WHERE p.entity_id = ${entityId} AND r.agent_id = ${this.agentId}
+          `);
+          const rows = Array.isArray(result) ? result : result.rows || [];
+          results.push(...rows);
+        }
+
+        // Remove duplicates and return
+        const uniqueRoomIds = [...new Set(results.map((row: any) => row.room_id as UUID))];
+        return uniqueRoomIds;
+      } else {
+        // For PostgreSQL, use the same approach as PGLite for simplicity and compatibility
+        const results = [];
+        for (const entityId of entityIds) {
+          const result = await this.db.execute(sql`
+            SELECT DISTINCT p.room_id 
+            FROM participants p
+            INNER JOIN rooms r ON p.room_id = r.id
+            WHERE p.entity_id = ${entityId}::uuid AND r.agent_id = ${this.agentId}::uuid
+          `);
+          const rows = Array.isArray(result) ? result : result.rows || [];
+          results.push(...rows);
+        }
+
+        // Remove duplicates and return
+        const uniqueRoomIds = [...new Set(results.map((row: any) => row.room_id as UUID))];
+        return uniqueRoomIds;
+      }
     });
   }
 

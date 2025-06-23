@@ -23,7 +23,7 @@ import {
   type State,
   type UUID,
   type ActionResult,
-} from '../core-types';
+} from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -214,7 +214,6 @@ export const updateEntityAction: Action = {
 
       const result = await runtime.useModel(ModelType.TEXT_LARGE, {
         prompt,
-        stopSequences: [],
       });
 
       // Parse the generated data

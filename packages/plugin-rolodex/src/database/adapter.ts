@@ -1,6 +1,6 @@
 import { logger, stringToUuid } from '@elizaos/core';
 import type { EntityProfile, FollowUp, TrustEvent, InteractionEvent } from '../types';
-import { type IAgentRuntime, type UUID, type Relationship, asUUID } from '../core-types';
+import { type IAgentRuntime, type UUID, type Relationship, asUUID } from '@elizaos/core';
 import {
   SCHEMA_SQL,
   type DbEntity,

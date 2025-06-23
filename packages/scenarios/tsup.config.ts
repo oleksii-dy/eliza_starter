@@ -10,6 +10,7 @@ export default defineConfig({
   minify: false,
   esbuildOptions(options) {
     options.resolveExtensions = ['.ts', '.js'];
+    options.logLevel = 'warning'; // Suppress info-level messages like missing source maps
   },
   external: [
     '@elizaos/core',

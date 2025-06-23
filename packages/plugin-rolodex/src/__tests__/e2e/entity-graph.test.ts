@@ -1,5 +1,6 @@
 import { type TestSuite, type IAgentRuntime, stringToUuid, type UUID } from '@elizaos/core';
-import type { EntityGraphService } from '../../services/EntityGraphService';
+import { v4 as uuidv4 } from 'uuid';
+import { EntityGraphManager } from '../../managers/EntityGraphManager';
 
 const TEST_TIMEOUT = 30000;
 
@@ -9,9 +10,9 @@ export const entityGraphTests: TestSuite = {
     {
       name: 'Network Analysis Test',
       fn: async (runtime: IAgentRuntime) => {
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         // Create a network of entities
@@ -72,9 +73,9 @@ export const entityGraphTests: TestSuite = {
     {
       name: 'Community Detection Test',
       fn: async (runtime: IAgentRuntime) => {
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         // Create two distinct communities
@@ -171,9 +172,9 @@ export const entityGraphTests: TestSuite = {
     {
       name: 'Trust Management Test',
       fn: async (runtime: IAgentRuntime) => {
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         // Create entities for trust testing
@@ -240,9 +241,9 @@ export const entityGraphTests: TestSuite = {
     {
       name: 'Follow-up Scheduling Test',
       fn: async (runtime: IAgentRuntime) => {
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         // Create entity for follow-up testing

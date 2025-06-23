@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import { ChannelType, ModelType } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
-import { updateSettingsAction } from '../settings';
+import { updateSettingsAction } from '../../../../plugin-secrets-manager/src/actions/settings';
 
 // Mock the @elizaos/core module
 vi.mock('@elizaos/core', async () => {
@@ -17,8 +17,8 @@ vi.mock('@elizaos/core', async () => {
     logger: {
       info: vi.fn(),
       error: vi.fn(),
-      debug: vi.fn()
-    }
+      debug: vi.fn(),
+    },
   };
 });
 
@@ -28,47 +28,51 @@ const createMockRuntime = (): IAgentRuntime => {
     serverId: 'server-1',
     metadata: {
       settings: {
-        'API_KEY': {
+        API_KEY: {
           name: 'API Key',
           description: 'API key for external service',
           required: true,
-          value: null
+          value: null,
         },
-        'WEBHOOK_URL': {
+        WEBHOOK_URL: {
           name: 'Webhook URL',
           description: 'URL for webhook notifications',
           required: false,
-          value: null
-        }
-      }
-    }
+          value: null,
+        },
+      },
+    },
   };
 
   return {
     agentId: 'test-agent' as UUID,
     getWorld: vi.fn().mockResolvedValue(mockWorld),
     updateWorld: vi.fn().mockResolvedValue(true),
-    useModel: vi.fn()
+    useModel: vi.fn(),
   } as any;
 };
 
-const createMockMemory = (text: string, entityId: UUID, channelType: ChannelType = ChannelType.DM): Memory =>
+const createMockMemory = (
+  text: string,
+  entityId: UUID,
+  channelType: ChannelType = ChannelType.DM
+): Memory =>
   ({
     entityId,
     content: {
       text,
       channelType,
-      serverId: 'server-1'
+      serverId: 'server-1',
     },
-    roomId: 'room-1' as UUID
-  } as Memory);
+    roomId: 'room-1' as UUID,
+  }) as Memory;
 
 const createMockState = (text: string): State =>
   ({
     values: { content: text },
     data: {},
-    text
-  } as State);
+    text,
+  }) as State;
 
 describe('updateSettingsAction', () => {
   let runtime: IAgentRuntime;
@@ -77,7 +81,7 @@ describe('updateSettingsAction', () => {
   beforeEach(async () => {
     runtime = createMockRuntime();
     vi.clearAllMocks();
-    
+
     // Set up the mocked functions
     const elizaCore = await import('@elizaos/core');
     (elizaCore.findWorldsForOwner as any) = vi.fn().mockResolvedValue([
@@ -86,15 +90,15 @@ describe('updateSettingsAction', () => {
         serverId: 'server-1',
         metadata: {
           settings: {
-            'API_KEY': {
+            API_KEY: {
               name: 'API Key',
               description: 'API key for external service',
               required: true,
-              value: null
-            }
-          }
-        }
-      }
+              value: null,
+            },
+          },
+        },
+      },
     ]);
   });
 
@@ -106,13 +110,13 @@ describe('updateSettingsAction', () => {
       if (modelType === ModelType.OBJECT_LARGE) {
         // Return an object that extractValidSettings can traverse
         return Promise.resolve({
-          API_KEY: 'test-api-key-123'
+          API_KEY: 'test-api-key-123',
         });
       }
       // For other model calls (success/failure responses)
       return Promise.resolve('Settings updated successfully');
     });
-    
+
     // Mock getWorld to return updated settings after the update
     let getWorldCallCount = 0;
     (runtime.getWorld as Mock).mockImplementation(() => {
@@ -124,14 +128,14 @@ describe('updateSettingsAction', () => {
           serverId: 'server-1',
           metadata: {
             settings: {
-              'API_KEY': {
+              API_KEY: {
                 name: 'API Key',
                 description: 'API key for external service',
                 required: true,
-                value: null
-              }
-            }
-          }
+                value: null,
+              },
+            },
+          },
         });
       } else {
         // Third call - return updated settings
@@ -140,22 +144,19 @@ describe('updateSettingsAction', () => {
           serverId: 'server-1',
           metadata: {
             settings: {
-              'API_KEY': {
+              API_KEY: {
                 name: 'API Key',
                 description: 'API key for external service',
                 required: true,
-                value: 'test-api-key-123'
-              }
-            }
-          }
+                value: 'test-api-key-123',
+              },
+            },
+          },
         });
       }
     });
-    
-    const memory = createMockMemory(
-      'Set API_KEY to test-api-key-123',
-      testEntityId
-    );
+
+    const memory = createMockMemory('Set API_KEY to test-api-key-123', testEntityId);
     const state = createMockState('Set API_KEY to test-api-key-123');
     const callback = vi.fn();
 
@@ -166,9 +167,7 @@ describe('updateSettingsAction', () => {
     expect(result).toBeDefined();
     if (result && typeof result === 'object' && 'data' in result) {
       expect(result.data?.success).toBe(true);
-      expect(result.data?.updatedSettings).toEqual([
-        { key: 'API_KEY', value: 'test-api-key-123' }
-      ]);
+      expect(result.data?.updatedSettings).toEqual([{ key: 'API_KEY', value: 'test-api-key-123' }]);
     }
     expect(callback).toHaveBeenCalled();
   });
@@ -176,10 +175,10 @@ describe('updateSettingsAction', () => {
   it('should validate the action correctly', async () => {
     const validMemory = createMockMemory('test', testEntityId, ChannelType.DM);
     const state = {} as State;
-    
+
     // Should return true for DM channels when user has worlds with settings
     expect(await updateSettingsAction.validate(runtime, validMemory, state)).toBe(true);
-    
+
     // Should return false for non-DM channels
     const invalidMemory = createMockMemory('test', testEntityId, ChannelType.GROUP);
     expect(await updateSettingsAction.validate(runtime, invalidMemory, state)).toBe(false);
@@ -189,10 +188,7 @@ describe('updateSettingsAction', () => {
     // Mock getWorld to return null (simulating no settings found)
     (runtime.getWorld as Mock).mockResolvedValue(null);
 
-    const memory = createMockMemory(
-      'Set API_KEY to test',
-      testEntityId
-    );
+    const memory = createMockMemory('Set API_KEY to test', testEntityId);
     const state = createMockState('Set API_KEY to test');
     const callback = vi.fn();
 
@@ -205,7 +201,7 @@ describe('updateSettingsAction', () => {
     expect(callback).toHaveBeenCalledWith(
       expect.objectContaining({
         text: expect.any(String),
-        actions: expect.arrayContaining(['SETTING_UPDATE_ERROR'])
+        actions: expect.arrayContaining(['SETTING_UPDATE_ERROR']),
       })
     );
   });
@@ -219,10 +215,7 @@ describe('updateSettingsAction', () => {
       return Promise.resolve('No settings found');
     });
 
-    const memory = createMockMemory(
-      'Hello there',
-      testEntityId
-    );
+    const memory = createMockMemory('Hello there', testEntityId);
     const state = createMockState('Hello there');
     const callback = vi.fn();
 
@@ -234,7 +227,7 @@ describe('updateSettingsAction', () => {
     }
     expect(callback).toHaveBeenCalledWith(
       expect.objectContaining({
-        actions: expect.arrayContaining(['SETTING_UPDATE_FAILED'])
+        actions: expect.arrayContaining(['SETTING_UPDATE_FAILED']),
       })
     );
   });

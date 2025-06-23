@@ -1,6 +1,6 @@
-import { logger, Service, type IAgentRuntime, type UUID } from '@elizaos/core';
-import type { EnvVarMetadata, GenerationScriptMetadata, EnvVarConfig } from './types';
+import { logger, Service, type IAgentRuntime } from '@elizaos/core';
 import { canGenerateEnvVar } from './generation';
+import type { EnvVarConfig, EnvVarMetadata } from './types';
 
 /**
  * Environment Manager Service for handling environment variable configuration

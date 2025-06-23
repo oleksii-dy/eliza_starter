@@ -1,5 +1,5 @@
 import { type TestSuite, type IAgentRuntime, stringToUuid, type UUID } from '@elizaos/core';
-import type { EntityGraphService } from '../../services/EntityGraphService';
+import type { EntityGraphManager } from '../../managers/EntityGraphManager';
 import { createTestWorld, createTestRoom } from './test-helpers';
 
 export const realRelationshipInferenceTests: TestSuite = {
@@ -13,10 +13,10 @@ export const realRelationshipInferenceTests: TestSuite = {
         
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         // First create some entities
@@ -137,10 +137,10 @@ export const realRelationshipInferenceTests: TestSuite = {
         
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         // Create entities for complex relationship testing
@@ -233,10 +233,10 @@ export const realRelationshipInferenceTests: TestSuite = {
         
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         // Create two entities

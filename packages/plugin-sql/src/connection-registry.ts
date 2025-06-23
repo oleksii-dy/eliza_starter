@@ -10,7 +10,7 @@ import type { PgDatabaseAdapter } from './pg/adapter';
  * created in one instance but not visible in another.
  */
 class DatabaseConnectionRegistry {
-  private pgLiteManagers = new Map<string, PGliteClientManager>();
+  // PGLite manager is now a singleton, no need to track instances
   private postgresManagers = new Map<string, PostgresConnectionManager>();
   private adapters = new Map<UUID, PgliteDatabaseAdapter | PgDatabaseAdapter>();
   private migrationLocks = new Map<string, Promise<void>>();
@@ -25,16 +25,12 @@ class DatabaseConnectionRegistry {
       // Remove trailing slashes and normalize path
       normalizedDir = normalizedDir.replace(/\/+$/, '').replace(/\/\.$/, '');
     }
-    
+
     const key = normalizedDir;
 
-    if (!this.pgLiteManagers.has(key)) {
-      logger.info(`[ConnectionRegistry] Creating new PGLite manager for: ${key}`);
-      const manager = new PGliteClientManager({ dataDir });
-      this.pgLiteManagers.set(key, manager);
-    }
-
-    return this.pgLiteManagers.get(key)!;
+    // Always return the singleton manager instance
+    logger.info(`[ConnectionRegistry] Returning singleton PGLite manager for: ${key}`);
+    return PGliteClientManager.getInstance({ dataDir });
   }
 
   /**
@@ -78,15 +74,14 @@ class DatabaseConnectionRegistry {
   /**
    * Execute a migration with a lock to prevent concurrent migrations
    */
-  async withMigrationLock<T>(
-    connectionKey: string,
-    migrationFn: () => Promise<T>
-  ): Promise<T> {
+  async withMigrationLock<T>(connectionKey: string, migrationFn: () => Promise<T>): Promise<T> {
     const lockKey = `migration:${connectionKey}`;
-    
+
     // If a migration is already in progress, wait for it
     if (this.migrationLocks.has(lockKey)) {
-      logger.info(`[ConnectionRegistry] Migration already in progress for ${connectionKey}, waiting...`);
+      logger.info(
+        `[ConnectionRegistry] Migration already in progress for ${connectionKey}, waiting...`
+      );
       await this.migrationLocks.get(lockKey);
       logger.info(`[ConnectionRegistry] Previous migration completed for ${connectionKey}`);
       // Return early - the migration is already done
@@ -95,7 +90,10 @@ class DatabaseConnectionRegistry {
 
     // Create a new migration promise
     const migrationPromise = this.executeMigration(migrationFn);
-    this.migrationLocks.set(lockKey, migrationPromise.then(() => {}).catch(() => {}));
+    this.migrationLocks.set(
+      lockKey,
+      migrationPromise.then(() => {}).catch(() => {})
+    );
 
     try {
       const result = await migrationPromise;
@@ -141,15 +139,10 @@ class DatabaseConnectionRegistry {
       }
     }
 
-    // Close all managers
-    for (const [key, manager] of this.pgLiteManagers) {
-      try {
-        await manager.close();
-        logger.debug(`[ConnectionRegistry] Closed PGLite manager: ${key}`);
-      } catch (error) {
-        logger.error(`[ConnectionRegistry] Error closing PGLite manager ${key}:`, error);
-      }
-    }
+    // PGLite manager is now a singleton and will be closed by graceful shutdown
+    logger.info(
+      '[ConnectionRegistry] PGLite manager is singleton, will be closed by graceful shutdown'
+    );
 
     for (const [key, manager] of this.postgresManagers) {
       try {
@@ -162,7 +155,6 @@ class DatabaseConnectionRegistry {
 
     // Clear all maps
     this.adapters.clear();
-    this.pgLiteManagers.clear();
     this.postgresManagers.clear();
     this.migrationLocks.clear();
   }
@@ -173,7 +165,6 @@ class DatabaseConnectionRegistry {
   clearAll(): void {
     // Clear all maps without async cleanup
     this.adapters.clear();
-    this.pgLiteManagers.clear();
     this.postgresManagers.clear();
     this.migrationLocks.clear();
   }

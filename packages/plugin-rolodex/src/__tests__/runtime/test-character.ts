@@ -1,4 +1,4 @@
-import { type Character } from '../../core-types';
+import { type Character } from '@elizaos/core';
 
 export const testCharacter: Character = {
   name: 'RolodexTestAgent',

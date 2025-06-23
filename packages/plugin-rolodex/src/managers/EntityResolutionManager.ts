@@ -8,7 +8,7 @@ import {
   ModelType,
 } from '@elizaos/core';
 import type { EntityProfile, PlatformIdentity, TrustEvent, BehaviorProfile } from '../types';
-import { EventBridge, RolodexEventType, type EntityEvent } from './EventBridge';
+import { EventBridge, RolodexEventType, type EntityEvent } from '../managers/EventBridge';
 
 // Enhanced entity resolution interfaces
 export interface EntityResolutionCandidate {

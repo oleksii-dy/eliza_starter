@@ -1,5 +1,5 @@
 import { RolodexService } from '../services/RolodexService';
-import type { IAgentRuntime } from '../core-types';
+import type { IAgentRuntime } from '@elizaos/core';
 
 /**
  * Helper to create service instances for testing
@@ -13,6 +13,6 @@ export function createRolodexService(runtime: IAgentRuntime): RolodexService {
 }
 
 // Legacy compatibility - map old service names to RolodexService
-export const createEntityService = createRolodexService;
-export const createRelationshipService = createRolodexService;
-export const createFollowUpService = createRolodexService; 
+export const createRolodexService = createRolodexService;
+export const createRelationshipOntologyManager = createRolodexService;
+export const createFollowUpManager = createRolodexService; 

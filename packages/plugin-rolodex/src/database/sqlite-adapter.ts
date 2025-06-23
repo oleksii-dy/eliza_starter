@@ -1,13 +1,13 @@
 // @ts-ignore - Bun sqlite is available at runtime
 import { Database } from 'bun:sqlite';
 import { logger, stringToUuid } from '@elizaos/core';
-import { asUUID, type UUID, type IAgentRuntime } from '../core-types';
+import { asUUID, type UUID, type IAgentRuntime } from '@elizaos/core';
 import type {
   EntityProfile,
   FollowUp,
   TrustEvent,
 } from '../types';
-import type { Task, Relationship } from '../core-types';
+import type { Task, Relationship } from '@elizaos/core';
 import { DatabaseAdapter } from './adapter';
 
 export class SQLiteAdapter extends DatabaseAdapter {

@@ -29,7 +29,7 @@ export class RolodexRuntimeTestSuite implements TestSuite {
         
         const entityGraphService = runtime.getService('entityGraph');
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         const roomId = runtime.stringToUuid(`test-room-${Date.now()}`);
@@ -59,7 +59,7 @@ export class RolodexRuntimeTestSuite implements TestSuite {
             createdAt: Date.now() + (i * 1000), // Stagger timestamps
           };
           
-          await runtime.processMessage(message);
+          await (runtime as any).processMessage(message);
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
         

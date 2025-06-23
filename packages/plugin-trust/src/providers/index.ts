@@ -1,4 +1,4 @@
 export * from './roles';
-export * from './settings';
+export * from '../../../plugin-secrets-manager/src/providers/settings';
 export * from './trustProfile';
 export * from './securityStatus';

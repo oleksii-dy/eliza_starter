@@ -14,9 +14,9 @@ import {
   type Entity,
   type ActionResult,
   asUUID,
-} from '../core-types';
+} from '@elizaos/core';
 import { RolodexService } from '../services/RolodexService';
-import { RelationshipService } from '../services/RelationshipService';
+import { RelationshipOntologyManager } from '../managers/RelationshipOntologyManager';
 
 interface PlatformIdentity {
   platform: string;
@@ -31,7 +31,7 @@ interface RelationshipIndicator {
   type: 'friend' | 'colleague' | 'community' | 'family' | 'acquaintance';
   sentiment: 'positive' | 'negative' | 'neutral';
   confidence: number;
-  context: string;
+  metadata: string;
 }
 
 const extractionTemplate = `Analyze this conversation for relationship information and social connections.
@@ -59,9 +59,9 @@ export const relationshipExtractor: Evaluator = {
 
   handler: async (runtime: IAgentRuntime, message: Memory, state: any) => {
     try {
-      const relationshipService = runtime.getService('relationship') as RelationshipService;
+      const relationshipService = runtime.getService('relationship') as RelationshipOntologyManager;
       if (!relationshipService) {
-        logger.warn('RelationshipService not available');
+        logger.warn('RelationshipOntologyManager not available');
         return;
       }
 
@@ -147,7 +147,7 @@ Return empty array [] if no clear relationships are found.`;
 
   examples: [
     {
-      context: 'Extract relationships from conversation between Alice and Bob',
+      metadata: 'Extract relationships from conversation between Alice and Bob',
       messages: [
         {
           name: 'Alice',
@@ -161,7 +161,7 @@ Return empty array [] if no clear relationships are found.`;
       outcome: 'Identifies professional/collaborative relationship between Alice and Bob',
     },
     {
-      context: 'Extract friendship from user statement',
+      metadata: 'Extract friendship from user statement',
       messages: [
         {
           name: 'User',
@@ -388,7 +388,7 @@ function analyzeInteraction(messagesA: Memory[], messagesB: Memory[]): Relations
           type: 'friend',
           sentiment: determineSentiment(text),
           confidence: 0.8,
-          context: text.substring(0, 100),
+          metadata: text.substring(0, 100),
         });
       }
     }
@@ -399,7 +399,7 @@ function analyzeInteraction(messagesA: Memory[], messagesB: Memory[]): Relations
           type: 'colleague',
           sentiment: determineSentiment(text),
           confidence: 0.7,
-          context: text.substring(0, 100),
+          metadata: text.substring(0, 100),
         });
       }
     }
@@ -410,7 +410,7 @@ function analyzeInteraction(messagesA: Memory[], messagesB: Memory[]): Relations
           type: 'community',
           sentiment: determineSentiment(text),
           confidence: 0.6,
-          context: text.substring(0, 100),
+          metadata: text.substring(0, 100),
         });
       }
     }
@@ -421,7 +421,7 @@ function analyzeInteraction(messagesA: Memory[], messagesB: Memory[]): Relations
     indicators: indicators.map((ind) => ({
       type: ind.type,
       sentiment: ind.sentiment,
-      context: ind.context.substring(0, 30),
+      metadata: ind.context.substring(0, 30),
     })),
   });
 
@@ -583,7 +583,7 @@ async function updateRelationship(
 
 interface MentionedPerson {
   name: string;
-  context: string;
+  metadata: string;
   attributes: Record<string, any>;
 }
 
@@ -604,7 +604,7 @@ function extractMentionedPeople(text: string): MentionedPerson[] {
       if (match[1] && match[1].length > 3 && !match[1].match(/^(the|and|but|for|with)$/i)) {
         people.push({
           name: match[1],
-          context: match[0],
+          metadata: match[0],
           attributes: {},
         });
       }
@@ -659,7 +659,7 @@ async function createOrUpdateMentionedEntity(
     const mentions = (metadata.mentions || []) as any[];
     mentions.push({
       by: mentionedBy,
-      context: person.context,
+      metadata: person.context,
       timestamp: Date.now(),
     });
     metadata.mentions = mentions;
@@ -726,7 +726,7 @@ async function assessTrustIndicators(runtime: IAgentRuntime, entityId: UUID, mes
 interface PrivacyInfo {
   type: 'confidential' | 'doNotShare' | 'private';
   content: string;
-  context: string;
+  metadata: string;
 }
 
 function detectPrivacyBoundaries(text: string): PrivacyInfo | null {
@@ -745,7 +745,7 @@ function detectPrivacyBoundaries(text: string): PrivacyInfo | null {
       return {
         type: 'confidential',
         content: text,
-        context: 'Privacy boundary detected',
+        metadata: 'Privacy boundary detected',
       };
     }
   }

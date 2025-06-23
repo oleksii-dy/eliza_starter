@@ -3,8 +3,8 @@ import { RolodexIntegrationTestSuite } from './rolodex-integration.test';
 import { entityGraphTests } from './entity-graph.test';
 import { realEntityExtractionTests } from './real-entity-extraction.test';
 import { realRelationshipInferenceTests } from './real-relationship-inference.test';
-import type { EntityGraphService } from '../../services/EntityGraphService';
-import type { EntityResolutionService } from '../../services/EntityResolutionService';
+import type { EntityGraphManager } from '../../managers/EntityGraphManager';
+import type { EntityResolutionManager } from '../../managers/EntityResolutionManager';
 
 const rolodexIntegrationTestsInstance = new RolodexIntegrationTestSuite();
 
@@ -98,8 +98,8 @@ export class RolodexComprehensiveTestSuite implements TestSuite {
 
           console.log('✓ Team entities created');
 
-          // Step 2: Track entity profiles using EntityGraphService
-          const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+          // Step 2: Track entity profiles using EntityGraphManager
+          const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
           if (entityGraphService) {
             for (const member of teamMembers) {
               await entityGraphService.trackEntity(
@@ -113,7 +113,7 @@ export class RolodexComprehensiveTestSuite implements TestSuite {
             console.log('✓ Entity profiles tracked');
           }
 
-          // Step 3: Establish team relationships using EntityGraphService
+          // Step 3: Establish team relationships using EntityGraphManager
           const relationships = [
             { from: userId1, to: userId2, context: 'Alice manages Bob in the engineering team' },
             { from: userId1, to: userId3, context: 'Alice collaborates with Carol on product planning' },
@@ -132,7 +132,7 @@ export class RolodexComprehensiveTestSuite implements TestSuite {
             console.log('✓ Team relationships established');
           }
 
-          // Step 4: Schedule follow-ups using EntityGraphService
+          // Step 4: Schedule follow-ups using EntityGraphManager
           if (entityGraphService) {
             const followUpDate = new Date();
             followUpDate.setDate(followUpDate.getDate() + 7); // One week from now
@@ -152,7 +152,7 @@ export class RolodexComprehensiveTestSuite implements TestSuite {
           }
 
           // Step 5: Test entity resolution with similar names
-          const resolutionService = runtime.getService('entity-resolution') as EntityResolutionService;
+          const resolutionService = runtime.getService('entity-resolution') as EntityResolutionManager;
           if (resolutionService) {
             // Try to resolve "Bob" - should find "Bob Chen"
             const bobResolution = await resolutionService.resolveEntity(

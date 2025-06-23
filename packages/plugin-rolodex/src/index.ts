@@ -1,4 +1,4 @@
-import type { Plugin } from './core-types';
+import type { Plugin } from '@elizaos/core';
 import { RolodexService } from './services';
 import * as actions from './actions';
 import * as providers from './providers';

@@ -12,7 +12,7 @@ import {
   type Relationship,
   type ActionResult,
   type UUID,
-} from '../core-types';
+} from '@elizaos/core';
 import { type StandardActionResult, EntityNotFoundError, WorldNotFoundError } from '../types';
 import { findBestMatch } from '../utils/stringDistance';
 
@@ -220,7 +220,7 @@ export const removeEntityAction: Action = {
         prompt,
       });
 
-      const parsedResponse = parseKeyValueXml(response);
+      const parsedResponse = parseKeyValueXml(response as string);
 
       if (!parsedResponse?.entityName) {
         const errorText = 'Please specify which entity you want to remove.';
@@ -270,7 +270,7 @@ export const removeEntityAction: Action = {
       );
 
       if (!entity) {
-        throw new EntityNotFoundError(parsedResponse.entityName as any);
+        throw new EntityNotFoundError(parsedResponse.entityName);
       }
 
       // Determine if we should remove relationships

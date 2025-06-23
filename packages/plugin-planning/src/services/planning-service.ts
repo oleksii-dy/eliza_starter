@@ -603,7 +603,6 @@ Focus on:
         steps,
         executionModel: executionModel as any,
         state: { status: 'pending' },
-        constraints: context.constraints || [],
         metadata: {
           createdAt: Date.now(),
           estimatedDuration,

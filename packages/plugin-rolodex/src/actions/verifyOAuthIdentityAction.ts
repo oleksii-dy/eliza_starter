@@ -9,10 +9,10 @@ import {
   type State,
   type HandlerCallback,
   asUUID,
-} from '../core-types';
+} from '@elizaos/core';
 import { OAuthIdentityVerifier } from '../providers/OAuthIdentityVerifier';
-import { EntityGraphService } from '../services/EntityGraphService';
-import { EntityResolutionService } from '../services/EntityResolutionService';
+import { EntityGraphManager } from '../managers/EntityGraphManager';
+import { EntityResolutionManager } from '../managers/EntityResolutionManager';
 
 /**
  * Action to verify OAuth identity and link to current user's entity
@@ -50,8 +50,8 @@ export const verifyOAuthIdentityAction: Action = {
       logger.info('[verifyOAuthIdentityAction] Starting OAuth identity verification');
 
       // Get required services
-      const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
-      const entityResolutionService = runtime.getService('entityResolution') as EntityResolutionService;
+      const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
+      const entityResolutionService = runtime.getService('entityResolution') as EntityResolutionManager;
 
       if (!entityGraphService || !entityResolutionService) {
         if (callback) {

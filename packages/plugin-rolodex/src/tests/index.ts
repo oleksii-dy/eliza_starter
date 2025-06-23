@@ -1,4 +1,4 @@
-import type { TestSuite } from '../core-types';
+import type { TestSuite } from '@elizaos/core';
 import comprehensiveTests from '../__tests__/e2e';
 import runtimeTests from '../__tests__/runtime';
 

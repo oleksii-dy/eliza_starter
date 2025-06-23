@@ -1,5 +1,5 @@
 import { type TestSuite, type IAgentRuntime, stringToUuid } from '@elizaos/core';
-import type { EntityGraphService } from '../../services/EntityGraphService';
+import type { EntityGraphManager } from '../../managers/EntityGraphManager';
 import { createTestWorld, createTestRoom, waitForCondition } from './test-helpers';
 
 export const realEntityExtractionTests: TestSuite = {
@@ -13,10 +13,10 @@ export const realEntityExtractionTests: TestSuite = {
         
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         // Test cases with expected extractions
@@ -131,10 +131,10 @@ export const realEntityExtractionTests: TestSuite = {
         
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         // First, create a known entity
@@ -195,10 +195,10 @@ export const realEntityExtractionTests: TestSuite = {
         
         const worldId = await createTestWorld(runtime);
         const roomId = await createTestRoom(runtime, worldId);
-        const entityGraphService = runtime.getService('entityGraph') as EntityGraphService;
+        const entityGraphService = runtime.getService('entityGraph') as EntityGraphManager;
         
         if (!entityGraphService) {
-          throw new Error('EntityGraphService not available');
+          throw new Error('EntityGraphManager not available');
         }
 
         // Test edge cases and complex scenarios

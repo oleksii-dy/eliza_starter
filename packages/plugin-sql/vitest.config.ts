@@ -41,7 +41,7 @@ export default defineConfig({
     setupFiles: ['./src/__tests__/test-setup.ts'],
     env: {
       // Clear PostgreSQL connection during tests to force PGLite usage
-      POSTGRES_URL: '',
+      // POSTGRES_URL: '',
       POSTGRES_USER: '',
       POSTGRES_PASSWORD: '',
       NODE_ENV: 'test',

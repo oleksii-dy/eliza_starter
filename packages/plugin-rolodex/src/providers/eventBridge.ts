@@ -1,5 +1,5 @@
 import { logger, type Provider, type IAgentRuntime, type Memory, type State } from '@elizaos/core';
-import { EventBridge } from '../services/EventBridge';
+import { EventBridge } from '../managers/EventBridge';
 
 export const eventBridgeProvider: Provider = {
   name: 'EVENT_BRIDGE_STATUS',
@@ -69,7 +69,7 @@ export const eventBridgeProvider: Provider = {
           },
           eventStatistics: stats,
         },
-        data: {
+        proofData: {
           eventBridge: {
             stats,
             subscribedPlugins,

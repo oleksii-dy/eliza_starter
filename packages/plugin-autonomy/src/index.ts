@@ -143,6 +143,8 @@ export const autoPlugin: Plugin = {
       await apiServer.start();
       console.log(`Autonomy API server started on port ${port}`);
     }
+    // Always return a resolved promise
+    return Promise.resolve();
   },
 };
 

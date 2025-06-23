@@ -73,7 +73,19 @@ export class SchemaFactory {
   }
 
   vector(name: string, dimensions: number) {
-    // Both PGLite and PostgreSQL support pgvector extension
+    // For PGLite, use JSONB if vector extension is not available
+    if (this.dbType === 'pglite') {
+      // Check if vector extension is available
+      try {
+        // Try to use pgVector if available
+        return pgVector(name, { dimensions });
+      } catch (error) {
+        // Fall back to JSONB for storing vector data
+        console.warn(`Vector extension not available, using JSONB for ${name}`);
+        return pgJsonb(name);
+      }
+    }
+    // PostgreSQL with pgvector extension
     return pgVector(name, { dimensions });
   }
 

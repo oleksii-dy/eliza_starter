@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { EntityGraph } from '../ui/entity-graph';
-import { asUUID, Entity, Relationship } from '../../core-types';
+import { asUUID, Entity, Relationship } from '@elizaos/core';
 
 // Mock react-force-graph-2d
 vi.mock('react-force-graph-2d', () => ({

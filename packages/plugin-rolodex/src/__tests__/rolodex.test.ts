@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { stringToUuid } from '@elizaos/core';
 import type { EntityProfile } from '../types';
-import { asUUID } from '../core-types';
+import { asUUID } from '@elizaos/core';
 import { createRolodexService } from './test-service-helper';
 import type { RolodexService } from '../services/RolodexService';
 

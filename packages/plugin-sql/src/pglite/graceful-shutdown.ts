@@ -65,9 +65,9 @@ export class PGliteGracefulShutdown {
     try {
       // Get all adapters from the registry
       const adapters = connectionRegistry.getAllAdapters();
-      
+
       logger.info(`PGLite: Closing ${adapters.length} database adapters...`);
-      
+
       // Close all adapters first
       const adapterClosePromises = adapters.map(async (adapter) => {
         try {
@@ -76,20 +76,20 @@ export class PGliteGracefulShutdown {
           logger.debug('PGLite: Error closing adapter (may be already closed):', error);
         }
       });
-      
+
       await Promise.allSettled(adapterClosePromises);
-      
+
       // Clear the connection registry
       connectionRegistry.clearAll();
-      
+
       // Force cleanup all PGLite instances
       logger.info('PGLite: Forcing cleanup of all instances...');
-      await PGliteClientManager.forceCleanupAll();
-      
+      await PGliteClientManager.forceCleanupGlobal();
+
       // Additional delay to ensure WebAssembly cleanup
       logger.info('PGLite: Waiting for WebAssembly resource cleanup...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       logger.info('PGLite: Graceful shutdown completed');
     } catch (error) {
       logger.error('PGLite: Error during graceful shutdown:', error);

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { stringToUuid } from '@elizaos/core';
-import { asUUID } from '../core-types';
+import { asUUID } from '@elizaos/core';
 import { trackEntityAction } from '../actions/trackEntity';
 import { searchEntitiesAction } from '../actions/searchEntities';
 import { scheduleFollowUpAction } from '../actions/scheduleFollowUp';

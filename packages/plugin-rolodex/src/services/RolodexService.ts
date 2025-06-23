@@ -10,7 +10,7 @@ import type {
   Metadata,
   Relationship,
   UUID,
-} from '../core-types';
+} from '@elizaos/core';
 import { RelationshipType, type EntityRelationship } from '../types';
 
 // Import managers (not services)

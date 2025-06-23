@@ -13,7 +13,7 @@ import {
   composePrompt,
   asUUID,
   stringToUuid,
-} from '../core-types';
+} from '@elizaos/core';
 
 // Schema definitions for the reflection output
 const relationshipSchema = z.object({
@@ -184,9 +184,10 @@ async function handler(
     }),
     runtime.getEntitiesForRoom(roomId),
     runtime.getMemories({
+      tableName: 'messages',
       roomId,
       count: 30,
-      unique: true,
+      unique: false,
     }),
   ]);
 
@@ -261,7 +262,7 @@ async function handler(
           roomId,
           createdAt: Date.now(),
         };
-        await runtime.messageManager.createMemory(factMemory);
+        await runtime.createMemory(factMemory, 'messages');
       })
     );
 
