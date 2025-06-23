@@ -14,7 +14,10 @@ import {
 } from './plugin-metadata';
 
 // Build the provider to plugin map dynamically using plugin categories
-export const providerPluginMap = buildProviderPluginMap(installedPluginMetadata);
+export const providerPluginMap = { 
+  ...buildProviderPluginMap(installedPluginMetadata),
+  none: '' // No plugin needed for "No Voice" option
+};
 export { buildProviderPluginMap };
 
 // No voice option for agents that don't need speech capabilities
