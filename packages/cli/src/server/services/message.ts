@@ -524,7 +524,7 @@ export class MessageBusService extends Service {
       const serverApiUrl = `${baseUrl}/api/messaging/submit`;
       const response = await fetch(serverApiUrl, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
+        headers: { 'Content-Type': 'application/json', ...this.getAuthHeaders() },
         body: JSON.stringify(payloadToServer),
       });
 
