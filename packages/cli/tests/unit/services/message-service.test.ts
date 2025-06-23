@@ -11,11 +11,17 @@ mock.module('@elizaos/core', async () => {
   };
 });
 
+const originalFetch = global.fetch;
 const mockFetch = mock(async () => ({
   ok: true,
   json: async () => ({ success: true, data: { servers: [] } }),
 })) as any;
 (global as any).fetch = mockFetch;
+
+// Add in afterAll or similar:
+// afterAll(() => {
+//   (global as any).fetch = originalFetch;
+// });
 
 function createRuntime(token?: string): IAgentRuntime {
   const runtime: Partial<IAgentRuntime> = {
