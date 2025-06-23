@@ -7,6 +7,12 @@ export const trustProvider: Provider = {
   dynamic: true,
   get: async (runtime: IAgentRuntime, message: Memory, _state: State): Promise<ProviderResult> => {
     const service = runtime.getService<TrustService>(TrustService.serviceType);
+    if (!message.entityId) {
+      return {
+        values: { trustScore: 0 },
+        text: 'No entity ID provided for trust score lookup',
+      };
+    }
     const score = service?.getTrustScore(message.entityId) ?? 0;
     return {
       values: { trustScore: score },
