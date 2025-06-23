@@ -7,16 +7,18 @@ export interface VoiceModel {
   features?: string[];
 }
 
-// TODO: ELI2-218 Refactor this to use plugin categories when available
-// This hardcoded mapping will be replaced with a more flexible approach
-// that leverages plugin category metadata once implemented
+import {
+  buildProviderPluginMap,
+  installedPluginMetadata,
+  type PluginMetadata,
+} from './plugin-metadata';
 
-export const providerPluginMap: Record<string, string> = {
-  elevenlabs: '@elizaos/plugin-elevenlabs',
-  local: '@elizaos/plugin-local-ai',
-  openai: '@elizaos/plugin-openai',
-  none: '', // No plugin needed for "No Voice" option
+// Build the provider to plugin map dynamically using plugin categories
+export const providerPluginMap = { 
+  ...buildProviderPluginMap(installedPluginMetadata),
+  none: '' // No plugin needed for "No Voice" option
 };
+export { buildProviderPluginMap };
 
 // No voice option for agents that don't need speech capabilities
 export const noVoiceModel: VoiceModel[] = [{ value: 'none', label: 'No Voice', provider: 'none' }];
@@ -179,11 +181,22 @@ export const getVoiceModelByValue = (value: string): VoiceModel | undefined => {
   return getAllVoiceModels().find((model) => model.value === value);
 };
 
-export const getRequiredPluginForProvider = (provider: string): string | undefined => {
-  return providerPluginMap[provider];
+export const getRequiredPluginForProvider = (
+  provider: string,
+  metadata: PluginMetadata[] = installedPluginMetadata,
+): string | undefined => {
+  // Use the pre-built map for the default case to avoid re-computation.
+  if (metadata === installedPluginMetadata) {
+    return providerPluginMap[provider];
+  }
+
+  // Build the map on-demand only for custom metadata.
+  const map = buildProviderPluginMap(metadata);
+  return map[provider];
 };
 
-export const getAllRequiredPlugins = (): string[] => {
-  // Filter out empty strings (for "none" provider)
-  return Object.values(providerPluginMap).filter(Boolean);
+export const getAllRequiredPlugins = (
+  metadata: PluginMetadata[] = installedPluginMetadata,
+): string[] => {
+  return Object.values(buildProviderPluginMap(metadata)).filter(Boolean);
 };
