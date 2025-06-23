@@ -624,8 +624,9 @@ export function createChannelsRouter(
         // Get all participants
         const allParticipants = await serverInstance.getChannelParticipants(channelId);
 
-        // Cross-reference participants with the active agent registry
-        const agentParticipants = allParticipants.filter((id) => agents.has(id));
+// Cross-reference participants with the active agent registry
+// agents map contains all the active agents.
+const agentParticipants = allParticipants.filter((id) => agents.has(id));
 
         res.json({
           success: true,
