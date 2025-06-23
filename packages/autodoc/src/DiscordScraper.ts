@@ -12,7 +12,12 @@ export class DiscordScraper {
     }
     const url = `${endpoint}?package=${encodeURIComponent(packageName)}`;
     try {
-      const res = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+    
       if (!res.ok) {
         console.error('Failed to fetch discord issues:', res.statusText);
         return [];
