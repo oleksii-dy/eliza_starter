@@ -1,0 +1,30 @@
+{
+  "name": "@elizaos/plugin-trust",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "bun test",
+    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check ./src"
+  },
+  "dependencies": {
+    "@elizaos/core": "workspace:*"
+  },
+  "devDependencies": {
+    "prettier": "3.5.3",
+    "tsup": "8.5.0",
+    "typescript": "5.8.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
