@@ -2432,13 +2432,28 @@ export abstract class Service {
   /** Service configuration */
   config?: { [key: string]: any };
 
-  /** Start service connection */
-  static async start(_runtime: IAgentRuntime): Promise<Service> {
-    throw new Error('Not implemented');
+  /**
+   * Start service connection by creating an instance and invoking its instance
+   * `start` method when available.
+   */
+  static async start(runtime: IAgentRuntime): Promise<Service> {
+    const service = new (this as any)(runtime) as Service & {
+      start?: () => Promise<void> | void;
+    };
+    if (typeof service.start === 'function') {
+      await service.start();
+    }
+    return service;
   }
 
-  /** Stop service connection */
-  static async stop(_runtime: IAgentRuntime): Promise<unknown> {
-    throw new Error('Not implemented');
+  /**
+   * Stop service connection by retrieving the instance from the runtime and
+   * calling its `stop` method.
+   */
+  static async stop(runtime: IAgentRuntime): Promise<void> {
+    const service = runtime.getService(this.serviceType) as Service | null;
+    if (service) {
+      await service.stop();
+    }
   }
 }

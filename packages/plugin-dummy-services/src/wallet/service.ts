@@ -55,9 +55,7 @@ export class DummyWalletService extends Service implements IWalletService {
 
   public static async start(runtime: AgentRuntime): Promise<DummyWalletService> {
     console.log(`[${DummyWalletService.serviceType}] static start called - creating instance.`);
-    const instance = new DummyWalletService(runtime);
-    // No further async init in instance.start() currently needed for this simple map-based wallet
-    return instance;
+    return (await super.start(runtime)) as DummyWalletService;
   }
 
   public async start(): Promise<void> {

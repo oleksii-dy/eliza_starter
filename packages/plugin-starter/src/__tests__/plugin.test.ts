@@ -166,17 +166,14 @@ describe('StarterService', () => {
     expect(stopSpy).toHaveBeenCalled();
   });
 
-  it('should throw an error when stopping a non-existent service', async () => {
+  it('should handle stopping a non-existent service gracefully', async () => {
     const runtime = createRealRuntime();
-    // Don't register a service, so getService will return null
-
-    // We'll patch the getService function to ensure it returns null
+    // Ensure getService returns null
     const originalGetService = runtime.getService;
     runtime.getService = () => null;
 
-    await expect(StarterService.stop(runtime as any)).rejects.toThrow('Starter service not found');
+    await expect(StarterService.stop(runtime as any)).resolves.toBeUndefined();
 
-    // Restore original getService function
     runtime.getService = originalGetService;
   });
 });

@@ -14,15 +14,11 @@ export class DummyLpService extends ILpService {
   }
 
   static async start(runtime: IAgentRuntime): Promise<DummyLpService> {
-    const service = new DummyLpService(runtime);
-    return service;
+    return (await super.start(runtime)) as DummyLpService;
   }
 
   static async stop(runtime: IAgentRuntime): Promise<void> {
-    const service = runtime.getService<DummyLpService>(DummyLpService.serviceType);
-    if (service) {
-      await service.stop();
-    }
+    await super.stop(runtime);
   }
 
   async start(runtime: IAgentRuntime): Promise<void> {

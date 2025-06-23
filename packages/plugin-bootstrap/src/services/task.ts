@@ -44,7 +44,7 @@ export class TaskService extends Service {
    * @returns {Promise<Service>} A promise that resolves with the TaskService instance.
    */
   static async start(runtime: IAgentRuntime): Promise<Service> {
-    const service = new TaskService(runtime);
+    const service = (await super.start(runtime)) as TaskService;
     await service.startTimer();
     // await service.createTestTasks();
     return service;
@@ -293,10 +293,7 @@ export class TaskService extends Service {
    * @returns {Promise<void>} - A promise that resolves once the service has been stopped.
    */
   static async stop(runtime: IAgentRuntime) {
-    const service = runtime.getService(ServiceType.TASK);
-    if (service) {
-      await service.stop();
-    }
+    await super.stop(runtime);
   }
 
   /**

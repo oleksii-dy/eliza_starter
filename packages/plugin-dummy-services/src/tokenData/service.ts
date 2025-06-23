@@ -65,15 +65,11 @@ export class DummyTokenDataService extends Service implements ITokenDataService 
   }
 
   static async start(runtime: IAgentRuntime): Promise<DummyTokenDataService> {
-    const service = new DummyTokenDataService(runtime);
-    return service;
+    return (await super.start(runtime)) as DummyTokenDataService;
   }
 
   static async stop(runtime: IAgentRuntime): Promise<void> {
-    const service = runtime.getService<DummyTokenDataService>(DummyTokenDataService.serviceType);
-    if (service) {
-      await service.stop();
-    }
+    await super.stop(runtime);
   }
 
   async start(): Promise<void> {

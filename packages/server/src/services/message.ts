@@ -49,14 +49,13 @@ export class MessageBusService extends Service {
   }
 
   static async start(runtime: IAgentRuntime): Promise<Service> {
-    const service = new MessageBusService(runtime);
+    const service = (await super.start(runtime)) as MessageBusService;
     await service.connectToMessageBus();
     return service;
   }
 
   static async stop(runtime: IAgentRuntime): Promise<void> {
-    const service = new MessageBusService(runtime);
-    await service.stop();
+    await super.stop(runtime);
   }
 
   private async connectToMessageBus() {
