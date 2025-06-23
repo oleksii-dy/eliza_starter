@@ -218,4 +218,26 @@ export class GitManager {
       throw error;
     }
   }
+
+  /**
+   * Create a GitHub issue with the provided title and body.
+   * @param {string} title - Issue title
+   * @param {string} body - Issue description
+   * @param {string[]} labels - Optional labels
+   * @returns {Promise<number>} Issue number
+   */
+  public async createIssue(
+    title: string,
+    body: string,
+    labels: string[] = []
+  ): Promise<number> {
+    const { data } = await this.octokit.issues.create({
+      owner: this.repository.owner,
+      repo: this.repository.name,
+      title,
+      body,
+      labels,
+    });
+    return data.number;
+  }
 }

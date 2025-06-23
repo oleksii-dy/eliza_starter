@@ -103,6 +103,22 @@ The `Configuration` class represents a configuration object that holds various s
 
 The `main` function is the entry point of the documentation generation process. It creates instances of necessary classes, loads the configuration, retrieves files from a pull request if specified, traverses the directory, parses TypeScript files, analyzes JSDoc comments, and generates documentation using the `DocumentationGenerator`. It also handles error logging.
 
+## Discord Scraper Integration
+
+The documentation generator can enrich troubleshooting sections using our Discord scraper. Set the `DISCORD_SCRAPER_ENDPOINT` environment variable to a service that returns JSON data in the form:
+
+```json
+[
+  { "issue": "Problem description", "solution": "Community provided fix" }
+]
+```
+
+If configured, these known issues are appended under a **Known Issues from Discord** heading in the generated README.
+
+## Automatic TODO Issues
+
+When `CREATE_TODO_ISSUES` is set to `true`, each TODO comment discovered during documentation generation is opened as a GitHub issue with the `todo` label. The issue title is derived from the TODO comment, and the surrounding context is included in the description.
+
 ## Prompt Template Locations:
 
 - DocumentationGenerator
