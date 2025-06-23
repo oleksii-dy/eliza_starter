@@ -81,9 +81,6 @@ async function generateTestContent(sourcePath: string, testPath: string): Promis
   }
 
   testContent += `\ndescribe('${basename(sourcePath).replace('.ts', '')}', () => {\n  beforeEach(() => {\n    mock.restore();\n  });\n\n  afterEach(() => {\n    mock.restore();\n  });\n`;
-  beforeEach(() => {
-    mock.restore();
-  });
 
   afterEach(() => {
     mock.restore();
