@@ -15,6 +15,7 @@
 - Add post-processing support for character loading #3686
 - Submit update env for plugin viction #3701
 - ANTHROPIC_API_URL env #3711
+- Voice provider plugins are now resolved dynamically using plugin category metadata
 
 #### Fixes
 
