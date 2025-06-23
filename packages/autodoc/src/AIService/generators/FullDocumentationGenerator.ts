@@ -14,6 +14,8 @@ import { AIService } from '../AIService.js';
 import type { FileDocsGroup, OrganizedDocs } from '../types';
 import { CodeFormatter } from '../utils/CodeFormatter.js';
 import { DocumentOrganizer } from '../utils/DocumentOrganizer.js';
+import { DiscordScraper } from '../../DiscordScraper.js';
+import { GitManager } from '../../GitManager.js';
 
 /**
  * Interface representing a Frequently Asked Question (FAQ) with a question and its corresponding answer.
@@ -58,6 +60,7 @@ export class FullDocumentationGenerator {
   private codeFormatter: CodeFormatter;
   private documentOrganizer: DocumentOrganizer;
   private aiService: AIService;
+  private gitManager: GitManager;
 
   /**
    * Constructor for initializing the ChatOpenAI instance.
@@ -70,11 +73,13 @@ export class FullDocumentationGenerator {
    *
    * @param {Configuration} configuration - The configuration for the instance.
    */
-  constructor(private configuration: Configuration) {
+  constructor(private configuration: Configuration, gitManager?: GitManager) {
     this.typeScriptParser = new TypeScriptParser();
     this.codeFormatter = new CodeFormatter();
     this.documentOrganizer = new DocumentOrganizer();
     this.aiService = new AIService(configuration);
+    const { owner, name } = configuration.repository;
+    this.gitManager = gitManager ?? new GitManager({ owner, name });
   }
 
   public async generatePluginDocumentation({
@@ -329,10 +334,20 @@ export class FullDocumentationGenerator {
   /**
    * Generates troubleshooting guide based on documentation and common patterns
    */
-  // toDo - integrate w/ @Jin's discord scraper to pull solutions for known issues
   private async generateTroubleshooting(docs: OrganizedDocs, packageJson: any): Promise<string> {
     const prompt = `${PROMPT_TEMPLATES.troubleshooting}\n\nFor package: ${packageJson.name}\n\nWith content:\n${JSON.stringify(docs, null, 2)}`;
-    return await this.aiService.generateComment(prompt);
+    const aiResponse = await this.aiService.generateComment(prompt);
+
+    const discordIssues = await DiscordScraper.fetchKnownIssues(packageJson.name);
+    if (discordIssues.length === 0) {
+      return aiResponse;
+    }
+
+    const formatted = discordIssues
+      .map((d) => `- ${d.issue}\n  - Solution: ${d.solution}`)
+      .join('\n');
+
+    return `${aiResponse}\n\n### Known Issues from Discord\n${formatted}`;
   }
 
   private async generateFileUsageDoc(fileGroup: FileDocsGroup): Promise<string> {
@@ -357,7 +372,6 @@ export class FullDocumentationGenerator {
   /**
    * Generates TODO section documentation from found TODO comments
    */
-  // toDo - integrate w/ @Jin's discord scraper to auto create GH issues/bounties
   private async generateTodoSection(todoItems: TodoItem[]): Promise<TodoSection> {
     if (todoItems.length === 0) {
       return { todos: 'No TODO items found.', todoCount: 0 };
@@ -368,6 +382,19 @@ export class FullDocumentationGenerator {
       .join('\n')}`;
 
     const todos = await this.aiService.generateComment(prompt);
+
+    if (process.env.CREATE_TODO_ISSUES === 'true') {
+      for (const item of todoItems) {
+        const title = item.comment.split('\n')[0];
+        const body = `${item.fullContext}\n\nGenerated from TODO comment.`;
+        try {
+          await this.gitManager.createIssue(title, body, ['todo']);
+        } catch (err) {
+          console.error('Failed to create issue for TODO:', err);
+        }
+      }
+    }
+
     return { todos, todoCount: todoItems.length };
   }
 

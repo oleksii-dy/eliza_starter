@@ -20,7 +20,10 @@ export class PluginDocumentationGenerator {
     private gitManager: GitManager,
     private configuration: Configuration
   ) {
-    this.fullDocumentationGenerator = new FullDocumentationGenerator(configuration);
+    this.fullDocumentationGenerator = new FullDocumentationGenerator(
+      configuration,
+      gitManager
+    );
   }
 
   /**
