@@ -24,7 +24,7 @@ export const agentSelfModificationScenario: PluginScenario = {
       id: uuidv4() as any,
       name: 'User',
       role: 'assistant',
-      plugins: []
+      plugins: [],
     },
   ],
 

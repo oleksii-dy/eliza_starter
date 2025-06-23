@@ -69,7 +69,7 @@ export class TDDEngine {
    * Generate comprehensive test suite from requirements
    */
   async generateTestsFirst(
-    requirements: Requirement[]
+    requirements: Requirement[],
     context: ProjectContext
   ): Promise<TestSuite> {
     elizaLogger.info('[TDD] Generating comprehensive test suite from requirements');
@@ -316,7 +316,7 @@ export class TDDEngine {
    * Generate fix suggestions based on failure analysis
    */
   private async generateFixSuggestions(
-    failures: TestRunResult[]
+    failures: TestRunResult[],
     patterns: FailurePattern[]
   ): Promise<Fix[]> {
     const fixes: Fix[] = [];
@@ -342,7 +342,7 @@ export class TDDEngine {
    * Identify root cause of failures
    */
   private async identifyRootCause(
-    patterns: FailurePattern[]
+    patterns: FailurePattern[],
     failures: TestRunResult[]
   ): Promise<string | undefined> {
     // Use AI to analyze patterns and identify root cause

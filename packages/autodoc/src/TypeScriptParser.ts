@@ -100,9 +100,9 @@ export class TypeScriptParser {
       providers: string[];
       evaluators: string[];
     } = {
-      actions: []
-      providers: []
-      evaluators: []
+      actions: [],
+      providers: [],
+      evaluators: [],
     };
 
     if (ast && ast.body) {

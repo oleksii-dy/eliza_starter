@@ -536,8 +536,8 @@ async function createRealTestRuntime(): Promise<IAgentRuntime> {
     name: 'RealDatabaseTestAgent',
     bio: ['Test agent for real database integration testing'],
     system: 'You are a test agent for real database integration testing.',
-    messageExamples: []
-    postExamples: []
+    messageExamples: [],
+    postExamples: [],
     topics: ['testing', 'database', 'integration'],
     knowledge: [],
     plugins: ['@elizaos/plugin-sql'],
@@ -576,7 +576,7 @@ function createTestTrainingDataPoint(
     input: {
       prompt: 'Test prompt for integration',
       messageText: 'Hello, this is a test message',
-      conversationContext: []
+      conversationContext: [],
     },
     output: {
       decision: 'RESPOND',

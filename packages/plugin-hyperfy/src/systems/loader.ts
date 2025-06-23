@@ -1,17 +1,17 @@
-import * as THREE from "three";
-import { createEmoteFactory } from "../hyperfy/core/extras/createEmoteFactory.js";
-import { createNode } from "../hyperfy/core/extras/createNode.js";
-import { glbToNodes } from "../hyperfy/core/extras/glbToNodes.js";
-import { GLTFLoader } from "../hyperfy/core/libs/gltfloader/GLTFLoader.js";
-import { System } from "../hyperfy/core/systems/System.js";
-import { PuppeteerManager } from "../managers/puppeteer-manager.js";
-import { resolveUrl } from "../utils.js";
-import { AgentAvatar } from "./avatar.js";
+import * as THREE from 'three';
+import { createEmoteFactory } from '../hyperfy/core/extras/createEmoteFactory.js';
+import { createNode } from '../hyperfy/core/extras/createNode.js';
+import { glbToNodes } from '../hyperfy/core/extras/glbToNodes.js';
+import { GLTFLoader, GLTF } from '../hyperfy/core/libs/gltfloader/GLTFLoader.js';
+import { System } from '../hyperfy/core/systems/System.js';
+import { PuppeteerManager } from '../managers/puppeteer-manager.js';
+import { resolveUrl } from '../utils.js';
+import { AgentAvatar } from './avatar.js';
 
 // import { VRMLoaderPlugin } from "@pixiv/three-vrm";
 // --- Mock Browser Environment for Loaders ---
 // These might need adjustment based on GLTFLoader/VRMLoaderPlugin requirements
-if (typeof globalThis !== "undefined") {
+if (typeof globalThis !== 'undefined') {
   // Mock URL if not globally available or needs specific behavior
   // globalThis.URL = URL; // Usually available in modern Node
 
@@ -26,10 +26,10 @@ if (typeof globalThis !== "undefined") {
   // @ts-ignore - Mocking for GLTFLoader compatibility
   globalThis.document = globalThis.document || {
     createElementNS: (ns, type) => {
-      if (type === "img") {
+      if (type === 'img') {
         // Basic mock for image elements if texture loading is attempted (though we aim to bypass it)
         return {
-          src: "",
+          src: '',
           onload: () => {},
           onerror: () => {},
         };
@@ -38,11 +38,11 @@ if (typeof globalThis !== "undefined") {
       return { style: {} };
     },
     createElement: (type) => {
-      if (type === "img") {
-        return { src: "", onload: () => {}, onerror: () => {} };
+      if (type === 'img') {
+        return { src: '', onload: () => {}, onerror: () => {} };
       }
       // Basic canvas mock if needed
-      if (type === "canvas") {
+      if (type === 'canvas') {
         return { getContext: () => null, style: {} };
       }
       return { style: {} }; // Default
@@ -69,7 +69,7 @@ export class AgentLoader extends System {
     // --- Dummy Scene for Hooks ---
     // Create one dummy object to act as the scene target for all avatar loads
     this.dummyScene = new THREE.Object3D();
-    this.dummyScene.name = "AgentLoaderDummyScene";
+    this.dummyScene.name = 'AgentLoaderDummyScene';
     // -----------------------------
 
     // --- Attempt to register VRM plugin ---
@@ -91,7 +91,7 @@ export class AgentLoader extends System {
   execPreload() {
     // No-op for agent
     // ClientNetwork calls this after snapshot, so it must exist.
-    console.log("[AgentLoader] execPreload called (No-op).");
+    console.log('[AgentLoader] execPreload called (No-op).');
   }
   // ---------------------------
 
@@ -112,7 +112,7 @@ export class AgentLoader extends System {
     if (this.promises.has(key)) return this.promises.get(key);
 
     let resolvedUrl = await resolveUrl(url, this.world);
-    
+
     if (!resolvedUrl) {
       const error = new Error(`[AgentLoader] Failed to resolve URL: ${url}`);
       console.error(error.message);
@@ -122,12 +122,10 @@ export class AgentLoader extends System {
     const promise = fetch(resolvedUrl)
       .then(async (response) => {
         if (!response.ok) {
-          throw new Error(
-            `[AgentLoader] HTTP error ${response.status} for ${resolvedUrl}`
-          );
+          throw new Error(`[AgentLoader] HTTP error ${response.status} for ${resolvedUrl}`);
         }
 
-        if (type === "model" || type === "avatar" || type === "emote") {
+        if (type === 'model' || type === 'avatar' || type === 'emote') {
           const result = await this.parseGLB(type, key, resolvedUrl);
           return result;
         }
@@ -138,7 +136,7 @@ export class AgentLoader extends System {
           const code = await response.text();
 
           const forbiddenTypes = ['video', 'ui', 'image'];
-          const isForbidden = forbiddenTypes.some(type =>
+          const isForbidden = forbiddenTypes.some((type) =>
             new RegExp(`app\\.create\\s*\\(\\s*['"]${type}['"]\\s*(,|\\))`).test(code)
           );
 
@@ -152,16 +150,12 @@ export class AgentLoader extends System {
           return script;
         }
 
-        
         console.warn(`[AgentLoader] Unsupported type in load(): ${type}`);
         return null;
       })
       .catch((error) => {
         this.promises.delete(key);
-        console.error(
-          `[AgentLoader] Failed to load ${type} from ${resolvedUrl}`,
-          error
-        );
+        console.error(`[AgentLoader] Failed to load ${type} from ${resolvedUrl}`, error);
         throw error;
       });
 
@@ -170,37 +164,50 @@ export class AgentLoader extends System {
   }
 
   async parseGLB(type: string, key: string, url: string) {
-    const puppeteerManager = PuppeteerManager.getInstance()
-    const bytes = 
-      type === 'avatar' ? 
-        await puppeteerManager.loadVRMBytes(url) : 
-        await puppeteerManager.loadGlbBytes(url);
+    const puppeteerManager = PuppeteerManager.getInstance();
+    const bytes =
+      type === 'avatar'
+        ? await puppeteerManager.loadVRMBytes(url)
+        : await puppeteerManager.loadGlbBytes(url);
     const arrayBuffer = Uint8Array.from(bytes).buffer;
-  
-    const gltf: THREE.GLTF = await new Promise((ok, bad) =>
+
+    const gltf: GLTF = await new Promise((ok, bad) =>
       this.gltfLoader.parse(arrayBuffer, '', ok, bad)
     );
-  
+
     let result: any;
-  
+
     if (type === 'model') {
       const node = glbToNodes(gltf, this.world as any);
-      result = { gltf, toNodes() { return node.clone(true); } };
-  
+      result = {
+        gltf,
+        toNodes() {
+          return node.clone(true);
+        },
+      };
     } else if (type === 'emote') {
       const factory = createEmoteFactory(gltf, url);
-      result = { gltf, toClip(o) { return factory.toClip(o); } };
-  
+      result = {
+        gltf,
+        toClip(o) {
+          return factory.toClip(o);
+        },
+      };
     } else if (type === 'avatar') {
       const factory = undefined;
       const root = createNode('group', { id: '$root' });
       root.add(new AgentAvatar({ id: 'avatar', factory }));
-      result = { gltf, factory, toNodes() { return root.clone(true); } };
-  
+      result = {
+        gltf,
+        factory,
+        toNodes() {
+          return root.clone(true);
+        },
+      };
     } else {
       throw new Error(`[AgentLoader] Unsupported GLTF type: ${type}`);
     }
-  
+
     this.results.set(key, result);
     return result;
   }

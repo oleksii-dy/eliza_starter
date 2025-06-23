@@ -114,8 +114,8 @@ describe('MultiStageAIReviewer', () => {
 
     const context: VerificationContext = {
       projectPath: '/test/project',
-      requirements: []
-      constraints: []
+      requirements: [],
+      constraints: [],
       targetEnvironment: 'development',
       language: 'TypeScript',
     };

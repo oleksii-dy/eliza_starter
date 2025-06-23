@@ -224,7 +224,7 @@ describe('TrustDatabase', () => {
         },
         confidence: 0.85,
         interactionCount: 10,
-        evidence: []
+        evidence: [],
         lastCalculated: Date.now(),
         calculationMethod: 'weighted_average',
         trend: {
@@ -266,7 +266,7 @@ describe('TrustDatabase', () => {
         },
         confidence: 0.5,
         interactionCount: 1,
-        evidence: []
+        evidence: [],
         lastCalculated: Date.now() - 3600000,
         calculationMethod: 'default',
         trend: {

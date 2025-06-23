@@ -192,7 +192,7 @@ export class DocumentationGenerator {
           head: this.branchName,
           base: this.configuration.branch,
           labels: ['documentation', 'automated-pr'],
-          reviewers: this.configuration.pullRequestReviewers || []
+          reviewers: this.configuration.pullRequestReviewers || [],
         });
       }
     }
@@ -434,7 +434,7 @@ export class DocumentationGenerator {
       const sourceCode = fs.readFileSync(filePath, 'utf-8');
 
       // Find TODOs
-      this.jsDocAnalyzer.findTodoComments(ast, ast.comments || [] sourceCode);
+      this.jsDocAnalyzer.findTodoComments(ast, ast.comments || [], sourceCode);
       todoItems.push(...this.jsDocAnalyzer.todoItems);
 
       // Find env usages

@@ -8,12 +8,7 @@ import { VoteAction } from '../actions/gov-vote';
 import { ProposeAction } from '../actions/gov-propose';
 import { QueueAction } from '../actions/gov-queue';
 import { ExecuteAction } from '../actions/gov-execute';
-import { 
-  testnetChains, 
-  mainnetChains,
-  TESTNET_GOVERNORS,
-  MAINNET_GOVERNORS 
-} from './test-config';
+import { testnetChains, mainnetChains, TESTNET_GOVERNORS, MAINNET_GOVERNORS } from './test-config';
 
 // Test environment
 const TEST_PRIVATE_KEY = process.env.TEST_PRIVATE_KEY || generatePrivateKey();
@@ -36,13 +31,13 @@ describe('Governance Actions', () => {
     mockCacheManager.get.mockResolvedValue(null);
 
     const pk = TEST_PRIVATE_KEY as `0x${string}`;
-    
+
     // Initialize with both testnets and mainnets
     const customChains = {
       ...testnetChains,
       ...mainnetChains,
     };
-    
+
     wp = new WalletProvider(pk, mockCacheManager as any, customChains);
   });
 
@@ -117,17 +112,17 @@ describe('Governance Actions', () => {
 
         // Test connection to Compound Governor
         const publicClient = mainnetWp.getPublicClient('mainnet');
-        
+
         // Check if we can read from the governor contract
         const proposalCountAbi = parseAbi(['function proposalCount() view returns (uint256)']);
-        
+
         try {
           const count = await publicClient.readContract({
             address: MAINNET_GOVERNORS.mainnet.compound.governor,
             abi: proposalCountAbi,
             functionName: 'proposalCount',
           });
-          
+
           expect(typeof count).toBe('bigint');
           console.log(`Compound Governor has ${count} proposals`);
         } catch (error) {
@@ -230,7 +225,7 @@ describe('Governance Actions', () => {
     describe('Mainnet Proposal Creation', () => {
       it('should validate mainnet governor parameters', async () => {
         const publicClient = wp.getPublicClient('mainnet');
-        
+
         // Test that we can interact with mainnet contracts
         const blockNumber = await publicClient.getBlockNumber();
         expect(typeof blockNumber).toBe('bigint');
@@ -329,7 +324,7 @@ describe('Governance Actions', () => {
         // 1. Proposal is queued
         // 2. Timelock delay has passed
         // 3. Proposal hasn't been executed
-        
+
         const executeParams = {
           chain: 'sepolia' as any,
           governor: TESTNET_GOVERNORS.sepolia.governor,
@@ -341,9 +336,7 @@ describe('Governance Actions', () => {
         };
 
         // This would fail without a real queued proposal
-        await expect(
-          executeAction.execute(executeParams)
-        ).rejects.toThrow();
+        await expect(executeAction.execute(executeParams)).rejects.toThrow();
       });
     });
 
@@ -362,12 +355,12 @@ describe('Governance Actions', () => {
 
         const publicClient = mainnetWp.getPublicClient('mainnet');
         const gasPrice = await publicClient.getGasPrice();
-        
+
         // Estimate gas for a complex execution (multiple targets)
         const estimatedGas = 500000n; // Typical governor execution
         const estimatedCost = gasPrice * estimatedGas;
-        
-        console.log(`Estimated execution cost: ${estimatedCost / 10n**18n} ETH`);
+
+        console.log(`Estimated execution cost: ${estimatedCost / 10n ** 18n} ETH`);
         expect(estimatedCost).toBeGreaterThan(0n);
       });
     });
@@ -376,7 +369,7 @@ describe('Governance Actions', () => {
   describe('Cross-Chain Governance', () => {
     it('should support governance on multiple chains', () => {
       const chains = wp.getSupportedChains();
-      
+
       // Should support both testnets and mainnets
       expect(chains).toContain('sepolia');
       expect(chains).toContain('mainnet');
@@ -391,15 +384,11 @@ describe('Governance Actions', () => {
       // - Compound: GovernorBravo
       // - OpenZeppelin: Governor
       // - Aave: AaveGovernanceV2
-      
+
       // Test that our actions can handle different ABIs
-      const governorTypes = [
-        'GovernorBravo',
-        'Governor',
-        'AaveGovernanceV2',
-      ];
-      
-      governorTypes.forEach(type => {
+      const governorTypes = ['GovernorBravo', 'Governor', 'AaveGovernanceV2'];
+
+      governorTypes.forEach((type) => {
         expect(type).toBeDefined();
       });
     });
@@ -420,10 +409,10 @@ describe('Governance Actions', () => {
 
       // Test with COMP token (Compound governance token)
       const COMP_TOKEN = '0xc00e94Cb662C3520282E6f5717214004A7f26888' as Address;
-      
+
       const publicClient = mainnetWp.getPublicClient('mainnet');
       const balanceAbi = parseAbi(['function balanceOf(address) view returns (uint256)']);
-      
+
       try {
         const balance = await publicClient.readContract({
           address: COMP_TOKEN,
@@ -431,7 +420,7 @@ describe('Governance Actions', () => {
           functionName: 'balanceOf',
           args: [mainnetWp.getAddress()],
         });
-        
+
         console.log(`COMP balance: ${balance}`);
         expect(typeof balance).toBe('bigint');
       } catch (error) {
@@ -454,7 +443,7 @@ describe('Governance Actions', () => {
       // Check voting power in Compound Governor
       const votesAbi = parseAbi(['function getVotes(address) view returns (uint256)']);
       const publicClient = mainnetWp.getPublicClient('mainnet');
-      
+
       try {
         const votes = await publicClient.readContract({
           address: MAINNET_GOVERNORS.mainnet.compound.governor,
@@ -462,7 +451,7 @@ describe('Governance Actions', () => {
           functionName: 'getVotes',
           args: [mainnetWp.getAddress()],
         });
-        
+
         console.log(`Voting power: ${votes}`);
         expect(typeof votes).toBe('bigint');
       } catch (error) {
@@ -476,7 +465,7 @@ describe('Governance Actions', () => {
       // Governance contracts should have reentrancy protection
       // Test that multiple simultaneous calls are handled properly
       const voteAction = new VoteAction(wp);
-      
+
       const voteParams = {
         chain: 'sepolia' as any,
         governor: TESTNET_GOVERNORS.sepolia.governor,
@@ -485,14 +474,11 @@ describe('Governance Actions', () => {
       };
 
       // Try to vote twice simultaneously
-      const promises = [
-        voteAction.vote(voteParams),
-        voteAction.vote(voteParams),
-      ];
+      const promises = [voteAction.vote(voteParams), voteAction.vote(voteParams)];
 
       // Both should fail or one should fail with "already voted"
       const results = await Promise.allSettled(promises);
-      expect(results.some(r => r.status === 'rejected')).toBe(true);
+      expect(results.some((r) => r.status === 'rejected')).toBe(true);
     });
 
     it('should validate proposal state transitions', () => {
@@ -500,14 +486,14 @@ describe('Governance Actions', () => {
       // Pending -> Active -> Succeeded -> Queued -> Executed
       // or
       // Pending -> Active -> Defeated
-      
+
       const validTransitions = {
         Pending: ['Active'],
         Active: ['Succeeded', 'Defeated'],
         Succeeded: ['Queued'],
         Queued: ['Executed'],
-        Defeated: []
-        Executed: []
+        Defeated: [],
+        Executed: [],
       };
 
       Object.entries(validTransitions).forEach(([state, nextStates]) => {
@@ -519,11 +505,11 @@ describe('Governance Actions', () => {
     it('should handle proposal cancellation', async () => {
       // Test that proposals can be cancelled by authorized parties
       const proposeAction = new ProposeAction(wp);
-      
+
       // In real scenario, only proposer or guardian can cancel
       const cancelAbi = parseAbi(['function cancel(uint256 proposalId)']);
-      
+
       expect(cancelAbi).toBeDefined();
     });
   });
-}); 
+});

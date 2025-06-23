@@ -53,8 +53,8 @@ describe('Socket.IO End-to-End Message Flow', () => {
       id: 'test-char' as UUID,
       name: 'Test Agent',
       bio: ['Test bio'],
-      topics: []
-      plugins: []
+      topics: [],
+      plugins: [],
       settings: {
         secrets: {},
       },

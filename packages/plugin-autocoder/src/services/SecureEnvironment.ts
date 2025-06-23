@@ -151,7 +151,7 @@ export class SecureEnvironment extends Service {
         agentCredentials: new Map(),
         secrets: new Map(),
         sandboxConfig,
-        auditLog: []
+        auditLog: [],
         trustPolicies: new Map(),
       };
 

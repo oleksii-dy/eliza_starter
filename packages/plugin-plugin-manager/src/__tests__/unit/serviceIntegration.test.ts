@@ -55,9 +55,9 @@ class MockAutocoderService extends Service {
   async suggestPluginsForTask(task: string): Promise<string[]> {
     // Use plugin manager's recommendation system
     const recommendations = await this.pluginManager.recommendPlugins({
-      recentActions: []
-      currentCapabilities: []
-      failedActions: []
+      recentActions: [],
+      currentCapabilities: [],
+      failedActions: [],
       userIntent: task,
     });
 
@@ -121,10 +121,10 @@ describe('Plugin Manager Service Integration', () => {
   beforeEach(() => {
     runtime = {
       agentId: '00000000-0000-0000-0000-000000000000' as UUID,
-      plugins: []
-      actions: []
-      providers: []
-      evaluators: []
+      plugins: [],
+      actions: [],
+      providers: [],
+      evaluators: [],
       services: new Map(),
       events: new Map(),
 
@@ -219,7 +219,7 @@ describe('Plugin Manager Service Integration', () => {
         core: ['basic-action'],
         plugins: new Map(),
         coverage: {},
-        limitations: []
+        limitations: [],
       });
 
       vi.spyOn(pluginManager, 'installPluginFromRegistry').mockResolvedValue({
@@ -227,7 +227,7 @@ describe('Plugin Manager Service Integration', () => {
         version: '1.0.0',
         status: 'installed',
         path: './plugins/plugin-http',
-        requiredEnvVars: []
+        requiredEnvVars: [],
         installedAt: new Date(),
       });
 

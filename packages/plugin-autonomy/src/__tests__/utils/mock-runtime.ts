@@ -60,11 +60,11 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     name: 'TestAgent',
     bio: ['Test bio for mock agent'],
     system: 'Test system prompt',
-    messageExamples: []
-    postExamples: []
-    topics: []
-    knowledge: []
-    plugins: []
+    messageExamples: [],
+    postExamples: [],
+    topics: [],
+    knowledge: [],
+    plugins: [],
     ...character,
   };
 
@@ -220,7 +220,7 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
         },
         data: {
           message,
-          providers: providers || []
+          providers: providers || [],
         },
         text: `Current context for ${defaultCharacter.name}`,
       };
@@ -313,10 +313,10 @@ export function createMockRuntime(options: MockRuntimeOptions = {}): IAgentRunti
     registerEvaluator: vi.fn(),
 
     // Plugin operations
-    plugins: []
-    actions: []
-    providers: []
-    evaluators: []
+    plugins: [],
+    actions: [],
+    providers: [],
+    evaluators: [],
     services: new Map(),
 
     // Mock any other methods that might be called

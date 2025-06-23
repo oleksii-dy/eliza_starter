@@ -18,7 +18,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
         secrets: {},
       },
     },
-    plugins: []
+    plugins: [],
     getSetting: vi.fn((key: string) => {
       return settings.get(key) || null;
     }),

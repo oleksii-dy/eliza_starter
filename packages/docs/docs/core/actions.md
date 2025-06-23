@@ -159,8 +159,6 @@ interface ActionContext {
       actions: ['CUSTOM_ACTION'], // List of actions being performed
     };
 
-Here is a complete and up-to-date template for creating a custom action.
-
     // Return ActionResult for next action in chain
     return {
       values: {
@@ -174,7 +172,13 @@ Here is a complete and up-to-date template for creating a custom action.
       text: 'Summary of what was done',
     };
   },
+```
 
+## Complete Action Template
+
+Here is a complete and up-to-date template for creating a custom action:
+
+```typescript
 const customAction: Action = {
   name: 'CUSTOM_ACTION',
   description: 'Detailed description of when and how to use this action.',
@@ -184,11 +188,11 @@ const customAction: Action = {
   examples: [
     [
       {
-        name: '{{name1}}', // A variable representing the user's name
+        name: '\{\{name1\}\}', // A variable representing the user's name
         content: { text: 'A message that would trigger this action.' },
       },
       {
-        name: '{{name2}}', // A variable representing the agent's name
+        name: '\{\{name2\}\}', // A variable representing the agent's name
         content: {
           text: 'An example of the text response from the agent.',
           thought: 'An example of the internal thought process of the agent.',
@@ -340,7 +344,7 @@ Actions can be referenced in character files to define how an agent should respo
 "messageExamples": [
     [
         {
-            "name": "{{user1}}",
+            "name": "\{\{user1\}\}",
             "content": {
                 "text": "Can you help transfer some SOL?"
             }

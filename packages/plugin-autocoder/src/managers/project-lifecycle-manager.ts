@@ -153,7 +153,7 @@ export class ProjectLifecycleManager {
       // Clear process references
       childProcess: undefined,
       // Limit arrays
-      logs: []
+      logs: [],
       errors: project.errors.slice(-10),
       userNotifications: project.userNotifications.slice(-20),
     };

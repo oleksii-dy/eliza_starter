@@ -19,7 +19,7 @@ const mockTrustProfile: TrustProfile = {
     benevolence: 78,
     transparency: 72
   },
-  evidence: []
+  evidence: [],
   lastCalculated: Date.now(),
   calculationMethod: 'weighted_average',
   trend: {

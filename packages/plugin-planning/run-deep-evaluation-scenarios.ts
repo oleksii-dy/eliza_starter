@@ -106,9 +106,9 @@ class DeepTrackingRuntime {
       timestamp: Date.now(),
       phase,
       data: {},
-      actionCalls: []
-      planSteps: []
-      errors: []
+      actionCalls: [],
+      planSteps: [],
+      errors: [],
       duration: 0,
     };
   }
@@ -521,7 +521,7 @@ const deepEvaluationScenarios = [
     name: 'Simple Query - No Planning Required',
     description: 'Test that simple queries do not trigger complex planning',
     userRequest: 'What is the current time?',
-    expectedActions: []
+    expectedActions: [],
     expectedPlanSteps: 0,
     complexityLevel: 'simple',
     planningType: 'direct_action',
@@ -752,8 +752,8 @@ REASONING: (detailed explanation of the evaluation)`,
       const result: ScenarioResult = {
         scenario: scenario.name,
         userRequest: scenario.userRequest,
-        executionTrace: []
-        actualActionsCalled: []
+        executionTrace: [],
+        actualActionsCalled: [],
         expectedActions: scenario.expectedActions,
         planCreated: false,
         planExecuted: false,

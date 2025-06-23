@@ -13,6 +13,7 @@ import { logger } from '@elizaos/core';
  */
 export const capabilitiesProvider: Provider = {
   name: 'CAPABILITIES',
+  description: 'Lists all available agent capabilities and service descriptions. Use when agent needs to explain what it can do or reference available functionality.',
   get: async (runtime: IAgentRuntime, _message: Memory): Promise<ProviderResult> => {
     try {
       // Get all registered services

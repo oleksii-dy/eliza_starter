@@ -45,11 +45,11 @@ export default function AgentRoute() {
             : CoreAgentStatusEnum.INACTIVE,
       username: agentDataResponse.data.username || agentDataResponse.data.name || 'Unknown',
       bio: agentDataResponse.data.bio || '',
-      messageExamples: agentDataResponse.data.messageExamples || []
-      postExamples: agentDataResponse.data.postExamples || []
-      topics: agentDataResponse.data.topics || []
-      knowledge: agentDataResponse.data.knowledge || []
-      plugins: agentDataResponse.data.plugins || []
+      messageExamples: agentDataResponse.data.messageExamples || [],
+      postExamples: agentDataResponse.data.postExamples || [],
+      topics: agentDataResponse.data.topics || [],
+      knowledge: agentDataResponse.data.knowledge || [],
+      plugins: agentDataResponse.data.plugins || [],
       settings: agentDataResponse.data.settings || {},
       secrets: (agentDataResponse.data as any).secrets || {},
       style: agentDataResponse.data.style || {},

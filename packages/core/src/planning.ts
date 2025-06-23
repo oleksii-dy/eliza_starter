@@ -313,8 +313,8 @@ export function parsePlan(response: string): ActionPlan {
       createdAt: Date.now(),
       estimatedDuration: estimatedDuration ? parseInt(estimatedDuration, 10) : undefined,
       priority: 1,
-      constraints: []
-      tags: []
+      constraints: [],
+      tags: [],
     },
   };
 }
@@ -329,7 +329,7 @@ export function composePlanningPrompt(context: PlanningContext, state: State): s
     availableProviders: context.availableProviders,
     constraints: context.constraints,
     stateText: state.text || '',
-    steps: [] // Template placeholder
+    steps: [], // Template placeholder
   };
 
   return composePromptFromState({

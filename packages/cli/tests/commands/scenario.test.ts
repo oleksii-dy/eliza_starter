@@ -44,7 +44,7 @@ mockProject.loadProject.mockResolvedValue({
         bio: ['Test bio'],
         system: 'Test system',
       },
-      plugins: []
+      plugins: [],
     },
   ],
 });

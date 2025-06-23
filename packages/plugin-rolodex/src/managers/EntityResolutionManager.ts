@@ -266,7 +266,7 @@ export class EntityResolutionManager {
   async createEntityWithIdentity(
     name: string,
     context: ResolutionContext,
-    platformIdentities: PlatformIdentity[] = []
+    platformIdentities: PlatformIdentity[] = [],
     metadata: Record<string, any> = {}
   ): Promise<UUID> {
     const entityId = stringToUuid(`entity-${name}-${Date.now()}`);
@@ -297,14 +297,14 @@ export class EntityResolutionManager {
         platformIdentities: new Map(
           platformIdentities.map((identity) => [identity.platform, identity])
         ),
-        crossReferences: []
-        trustNetwork: []
+        crossReferences: [],
+        trustNetwork: [],
         behaviorFingerprint: {
-          communicationStyle: []
-          activityPatterns: []
-          responseTimeProfile: []
-          sentimentProfile: []
-          topicAffinities: []
+          communicationStyle: [],
+          activityPatterns: [],
+          responseTimeProfile: [],
+          sentimentProfile: [],
+          topicAffinities: [],
         },
       };
 
@@ -466,7 +466,7 @@ export class EntityResolutionManager {
             timestamp: Date.now(),
             entityId: proposal.primaryEntityId,
             entity: mergedEntity,
-            mergedEntities: candidateEntities.filter((e) => e) as Entity[]
+            mergedEntities: candidateEntities.filter((e) => e) as Entity[],
             source: 'entity-resolution',
             confidence: proposal.confidence,
             metadata: {
@@ -493,7 +493,7 @@ export class EntityResolutionManager {
    */
   async mergeEntities(
     primaryId: UUID,
-    candidateIds: UUID[]
+    candidateIds: UUID[],
     options: {
       strategy?: string;
       preserveHistory?: boolean;
@@ -507,18 +507,18 @@ export class EntityResolutionManager {
         candidateEntityIds: candidateIds,
         confidence: 1, // High confidence since this is a direct call
         mergeStrategy: options.strategy === 'automatic' ? 'absorb' : 'merge',
-        conflictResolution: []
-        preservedData: []
+        conflictResolution: [],
+        preservedData: [],
         riskAssessment: {
           dataLossRisk: 0.2,
           trustImpactRisk: 0.2,
           relationshipImpactRisk: 0.3,
-          overallRisk: 0.23
-        }
+          overallRisk: 0.23,
+        },
       };
 
       const success = await this.executeMerge(proposal);
-      
+
       if (!success) {
         throw new Error('Merge execution failed');
       }
@@ -553,9 +553,9 @@ export class EntityResolutionManager {
           entityId: entity.id as UUID,
           entity,
           confidence: 0, // Will be calculated in scoreCandidate
-          matchFactors: []
-          riskFactors: []
-          crossPlatformIndicators: []
+          matchFactors: [],
+          riskFactors: [],
+          crossPlatformIndicators: [],
         });
       }
 
@@ -568,9 +568,9 @@ export class EntityResolutionManager {
               entityId: entity.id as UUID,
               entity,
               confidence: 0,
-              matchFactors: []
-              riskFactors: []
-              crossPlatformIndicators: []
+              matchFactors: [],
+              riskFactors: [],
+              crossPlatformIndicators: [],
             });
           }
         }
@@ -661,7 +661,12 @@ export class EntityResolutionManager {
     // Platform identity match
     const platformIdentities = entity.metadata?.platformIdentities || {};
     for (const [platform, identity] of Object.entries(platformIdentities)) {
-      if (typeof identity === 'object' && identity !== null && 'handle' in identity && identity.handle === identifier) {
+      if (
+        typeof identity === 'object' &&
+        identity !== null &&
+        'handle' in identity &&
+        identity.handle === identifier
+      ) {
         factors.push({
           type: 'platform_identity',
           confidence: 'verified' in identity && identity.verified ? 1.0 : 0.8,
@@ -749,7 +754,7 @@ export class EntityResolutionManager {
   }
 
   private async applyContextualDisambiguation(
-    candidates: EntityResolutionCandidate[]
+    candidates: EntityResolutionCandidate[],
     context: ResolutionContext
   ): Promise<EntityResolutionCandidate[]> {
     // Apply context-based scoring adjustments
@@ -778,7 +783,7 @@ export class EntityResolutionManager {
   }
 
   private async detectAndHandleConflicts(
-    candidates: EntityResolutionCandidate[]
+    candidates: EntityResolutionCandidate[],
     context: ResolutionContext
   ): Promise<EntityResolutionCandidate[]> {
     // Group candidates by confidence level
@@ -905,7 +910,7 @@ export class EntityResolutionManager {
     return entities;
   }
 
-  private async calculateNameSimilarity(names: string[] identifier: string): Promise<number> {
+  private async calculateNameSimilarity(names: string[], identifier: string): Promise<number> {
     try {
       const prompt = `Compare these names and determine similarity to "${identifier}":
 Names: ${names.join(', ')}
@@ -1016,15 +1021,14 @@ Respond with only the numeric score (e.g., "0.65")`;
         for (const [platform, identity] of Object.entries(entityPlatforms)) {
           if (
             otherPlatforms[platform] &&
-            typeof identity === 'object' && identity !== null &&
-            typeof otherPlatforms[platform] === 'object' && otherPlatforms[platform] !== null
+            typeof identity === 'object' &&
+            identity !== null &&
+            typeof otherPlatforms[platform] === 'object' &&
+            otherPlatforms[platform] !== null
           ) {
             const id = identity as PlatformIdentity;
             const otherId = otherPlatforms[platform] as PlatformIdentity;
-            if (
-              id.handle === otherId.handle ||
-              id.userId === otherId.userId
-            ) {
+            if (id.handle === otherId.handle || id.userId === otherId.userId) {
               similarEntities.push(otherEntity);
               break;
             }
@@ -1054,11 +1058,15 @@ Respond with only the numeric score (e.g., "0.65")`;
           const identity1 = platformIdentities[platform1];
           const identity2 = platformIdentities[platform2];
 
-          if (typeof identity1 === 'object' && identity1 !== null && 
-              typeof identity2 === 'object' && identity2 !== null) {
+          if (
+            typeof identity1 === 'object' &&
+            identity1 !== null &&
+            typeof identity2 === 'object' &&
+            identity2 !== null
+          ) {
             const id1 = identity1 as any;
             const id2 = identity2 as any;
-            
+
             // Check for conflicting verification status
             if (
               id1.verified !== id2.verified &&
@@ -1281,7 +1289,7 @@ Respond with only the numeric score (e.g., "0.65")`;
         confidence,
         mergeStrategy: confidence > 0.9 ? 'absorb' : 'merge',
         conflictResolution,
-        preservedData: []
+        preservedData: [],
         riskAssessment,
       };
 
@@ -1434,7 +1442,7 @@ Respond with only the numeric score (e.g., "0.65")`;
     }
   }
 
-  private async redirectRelationships(candidateIds: UUID[] primaryId: UUID): Promise<void> {
+  private async redirectRelationships(candidateIds: UUID[], primaryId: UUID): Promise<void> {
     try {
       // This would integrate with the relationship service to redirect relationships
       // For now, we'll log the intention since we don't have direct access to relationships

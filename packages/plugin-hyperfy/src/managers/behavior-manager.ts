@@ -1,24 +1,34 @@
-import { ChannelType, Content, HandlerCallback, IAgentRuntime, Memory, ModelType, UUID, composePromptFromState, createUniqueUuid, parseKeyValueXml } from "@elizaos/core";
+import {
+  ChannelType,
+  Content,
+  HandlerCallback,
+  IAgentRuntime,
+  Memory,
+  ModelType,
+  UUID,
+  composePromptFromState,
+  createUniqueUuid,
+  parseKeyValueXml,
+} from '@elizaos/core';
 
 const logger = {
   info: console.info,
   error: console.error,
   warn: console.warn,
-  debug: console.debug
+  debug: console.debug,
 };
-import { HyperfyService } from "../service";
-import { autoTemplate } from "../templates";
-import { agentActivityLock } from "./guards";
-import { getHyperfyActions, formatActions } from "../utils";
+import { HyperfyService } from '../service';
+import { autoTemplate } from '../templates';
+import { agentActivityLock } from './guards';
+import { getHyperfyActions, formatActions } from '../utils';
 
 const TIME_INTERVAL_MIN = 15000; // 15 seconds
 const TIME_INTERVAL_MAX = 30000; // 30 seconds
 
-
 export class BehaviorManager {
   private isRunning: boolean = false;
   private runtime: IAgentRuntime;
-  
+
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
   }
@@ -28,30 +38,27 @@ export class BehaviorManager {
    */
   public start(): void {
     if (this.isRunning) {
-      logger.warn("[BehaviorManager] Already running");
+      logger.warn('[BehaviorManager] Already running');
       return;
     }
 
     this.isRunning = true;
     logger.info(`[BehaviorManager] Starting behavior loop for player`);
 
-    this.runLoop().catch((err) =>
-      logger.error("[BehaviorManager] Fatal error in run loop:", err)
-    );
+    this.runLoop().catch((err) => logger.error('[BehaviorManager] Fatal error in run loop:', err));
   }
-
 
   /**
    * Stops the behavior loop
    */
   public stop(): void {
     if (!this.isRunning) {
-      logger.warn("[BehaviorManager] Not running");
+      logger.warn('[BehaviorManager] Not running');
       return;
     }
 
     this.isRunning = false;
-    logger.info("[BehaviorManager] Stopped behavior loop");
+    logger.info('[BehaviorManager] Stopped behavior loop');
   }
 
   /**
@@ -62,11 +69,12 @@ export class BehaviorManager {
       try {
         await this.executeBehavior();
       } catch (error) {
-        logger.error("[BehaviorManager] Error in behavior:", error);
+        logger.error('[BehaviorManager] Error in behavior:', error);
       }
 
       // Short delay between behaviors
-      const delay = TIME_INTERVAL_MIN + Math.floor(Math.random() * (TIME_INTERVAL_MAX - TIME_INTERVAL_MIN));
+      const delay =
+        TIME_INTERVAL_MIN + Math.floor(Math.random() * (TIME_INTERVAL_MAX - TIME_INTERVAL_MIN));
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
@@ -81,31 +89,31 @@ export class BehaviorManager {
   private async executeBehavior(): Promise<void> {
     const service = this.getService();
     if (!service) {
-      logger.error("[BehaviorManager] Cannot start — service not available");
+      logger.error('[BehaviorManager] Cannot start — service not available');
       return;
     }
 
     const world = service.getWorld();
     if (!world) {
-      logger.error("[BehaviorManager] Cannot start — world not found");
+      logger.error('[BehaviorManager] Cannot start — world not found');
       return;
     }
 
     const player = world.entities?.player;
     if (!player) {
-      logger.error("[BehaviorManager] Cannot start — player entity not found");
+      logger.error('[BehaviorManager] Cannot start — player entity not found');
       return;
     }
     // TODO: There may be slow post-processing in the bootstrap plugin's message handler.
     // Investigate long tail after message handling, especially in emitEvent or runtime methods.
     if (agentActivityLock.isActive()) {
-      logger.info("[BehaviorManager] Skipping behavior — message activity in progress");
+      logger.info('[BehaviorManager] Skipping behavior — message activity in progress');
       return;
     }
 
     const _currentWorldId = service.currentWorldId;
-    
-    const elizaRoomId = createUniqueUuid(this.runtime, _currentWorldId || 'hyperfy-unknown-world')
+
+    const elizaRoomId = createUniqueUuid(this.runtime, _currentWorldId || 'hyperfy-unknown-world');
     const entityId = createUniqueUuid(this.runtime, this.runtime.agentId);
 
     const newMessage: Memory = {
@@ -121,19 +129,15 @@ export class BehaviorManager {
 
     const state = await this.runtime.composeState(newMessage);
 
-    const actionsData = await getHyperfyActions(
-      this.runtime, 
-      newMessage, 
-      state, [
-        'HYPERFY_GOTO_ENTITY',
-        'HYPERFY_WALK_RANDOMLY',
-        'HYPERFY_USE_ITEM',
-        'HYPERFY_UNUSE_ITEM',
-        'HYPERFY_AMBIENT_SPEECH',
-        'REPLY',
-        'IGNORE',
-      ]
-    );
+    const actionsData = await getHyperfyActions(this.runtime, newMessage, state, [
+      'HYPERFY_GOTO_ENTITY',
+      'HYPERFY_WALK_RANDOMLY',
+      'HYPERFY_USE_ITEM',
+      'HYPERFY_UNUSE_ITEM',
+      'HYPERFY_AMBIENT_SPEECH',
+      'REPLY',
+      'IGNORE',
+    ]);
 
     const actionsText = actionsData.length > 0 ? formatActions(actionsData) : '';
 
@@ -146,14 +150,14 @@ export class BehaviorManager {
 
     const parsedXml = parseKeyValueXml(response);
 
-    console.log('****** response\n', parsedXml)
+    console.log('****** response\n', parsedXml);
 
     const responseMemory = {
       content: {
         thought: parsedXml?.thought || '',
         text: parsedXml?.text || '',
-        actions: parsedXml?.actions || []
-        providers: parsedXml?.providers || []
+        actions: parsedXml?.actions || [],
+        providers: parsedXml?.providers || [],
         emote: parsedXml?.emote || '',
       },
       entityId: createUniqueUuid(this.runtime, this.runtime.agentId),
@@ -171,11 +175,13 @@ export class BehaviorManager {
       serverId: 'hyperfy',
       type: ChannelType.WORLD,
       worldId: _currentWorldId || createUniqueUuid(this.runtime, 'hyperfy-unknown-world'),
-      userId: world.entities.player?.data?.id as UUID || createUniqueUuid(this.runtime, 'unknown-player')
-    })
+      userId:
+        (world.entities.player?.data?.id as UUID) ||
+        createUniqueUuid(this.runtime, 'unknown-player'),
+    });
 
     const callback: HandlerCallback = async (responseContent: Content): Promise<Memory[]> => {
-      console.info(`[Hyperfy Auto Callback] Received response: ${JSON.stringify(responseContent)}`)
+      console.info(`[Hyperfy Auto Callback] Received response: ${JSON.stringify(responseContent)}`);
       const emote = responseContent.emote as string;
       const callbackMemory: Memory = {
         id: createUniqueUuid(this.runtime, Date.now().toString()),
@@ -184,7 +190,7 @@ export class BehaviorManager {
         content: {
           ...responseContent,
           channelType: ChannelType.WORLD,
-          emote
+          emote,
         },
         roomId: elizaRoomId,
         createdAt: Date.now(),
@@ -199,21 +205,14 @@ export class BehaviorManager {
 
       if (responseContent.text) {
         const messageManager = service.getMessageManager();
-        messageManager.sendMessage(responseContent.text)
+        messageManager.sendMessage(responseContent.text);
       }
-      
+
       return [];
     };
-    
-    await this.runtime.processActions(
-      newMessage,
-      [responseMemory],
-      state,
-      callback
-    );
 
-    await this.runtime.evaluate(newMessage, state, true, callback, [
-      responseMemory,
-    ]);
+    await this.runtime.processActions(newMessage, [responseMemory], state, callback);
+
+    await this.runtime.evaluate(newMessage, state, true, callback, [responseMemory]);
   }
 }

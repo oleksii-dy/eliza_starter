@@ -734,7 +734,7 @@ export class KnowledgeService extends Service {
     logger.debug('KnowledgeService: Advanced search called with options:', options);
 
     if (!options.query || options.query.trim().length === 0) {
-      return { results: [] totalCount: 0, hasMore: false };
+      return { results: [], totalCount: 0, hasMore: false };
     }
 
     // Generate embedding for the query
@@ -836,7 +836,7 @@ export class KnowledgeService extends Service {
     const results: BatchOperationResult = {
       successful: 0,
       failed: 0,
-      results: []
+      results: [],
     };
 
     // Process items in parallel with concurrency control
@@ -1232,9 +1232,7 @@ export class KnowledgeService extends Service {
       if (ingestionResult.extractedText && ingestionResult.extractedText.length > 0) {
         // Process the extracted text as knowledge
         const knowledgeOptions: AddKnowledgeOptions = {
-          clientDocumentId: stringToUuid(
-            this.runtime.agentId + options.url + Date.now()
-          ) as UUID,
+          clientDocumentId: stringToUuid(this.runtime.agentId + options.url + Date.now()) as UUID,
           contentType: 'text/html',
           originalFilename: `${ingestionResult.title || 'web-page'}.html`,
           worldId: options.metadata?.worldId || this.runtime.agentId,
@@ -1252,7 +1250,7 @@ export class KnowledgeService extends Service {
         };
 
         const result = await this.addKnowledge(knowledgeOptions);
-        
+
         // Update the result with document information
         ingestionResult.document = {
           id: knowledgeOptions.clientDocumentId,
@@ -1281,30 +1279,30 @@ export class KnowledgeService extends Service {
    */
   private getContentTypeFromPath(filePath: string): string {
     const extension = filePath.split('.').pop()?.toLowerCase();
-    
+
     const contentTypeMap: Record<string, string> = {
-      'md': 'text/markdown',
-      'txt': 'text/plain',
-      'js': 'application/javascript',
-      'ts': 'application/typescript',
-      'json': 'application/json',
-      'yaml': 'application/yaml',
-      'yml': 'application/yaml',
-      'html': 'text/html',
-      'css': 'text/css',
-      'py': 'text/x-python',
-      'java': 'text/x-java-source',
-      'c': 'text/x-c',
-      'cpp': 'text/x-c++',
-      'h': 'text/x-c',
-      'hpp': 'text/x-c++',
-      'xml': 'application/xml',
-      'sql': 'text/x-sql',
-      'sh': 'application/x-sh',
-      'bash': 'application/x-sh',
-      'pdf': 'application/pdf',
-      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'doc': 'application/msword',
+      md: 'text/markdown',
+      txt: 'text/plain',
+      js: 'application/javascript',
+      ts: 'application/typescript',
+      json: 'application/json',
+      yaml: 'application/yaml',
+      yml: 'application/yaml',
+      html: 'text/html',
+      css: 'text/css',
+      py: 'text/x-python',
+      java: 'text/x-java-source',
+      c: 'text/x-c',
+      cpp: 'text/x-c++',
+      h: 'text/x-c',
+      hpp: 'text/x-c++',
+      xml: 'application/xml',
+      sql: 'text/x-sql',
+      sh: 'application/x-sh',
+      bash: 'application/x-sh',
+      pdf: 'application/pdf',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      doc: 'application/msword',
     };
 
     return contentTypeMap[extension || ''] || 'text/plain';

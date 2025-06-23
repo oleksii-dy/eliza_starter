@@ -420,7 +420,7 @@ export class TogetherReasoningService extends Service implements CustomReasoning
       actions: parsed?.actions
         ? parsed.actions.split(',').map((a: string) => a.trim())
         : ['IGNORE'],
-      providers: parsed?.providers ? parsed.providers.split(',').map((p: string) => p.trim()) : []
+      providers: parsed?.providers ? parsed.providers.split(',').map((p: string) => p.trim()) : [],
       text: parsed?.text || '',
     };
   }

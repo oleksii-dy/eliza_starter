@@ -116,7 +116,7 @@ export class N8nToPluginService extends Service {
       spec,
       status: 'pending',
       progress: 0,
-      mappings: []
+      mappings: [],
       startedAt: new Date(),
     };
 
@@ -874,17 +874,17 @@ export const plugin: Plugin = {
   name: '${job.spec.name}',
   description: '${job.spec.description}',
   actions: [
-    ${Array.from(job.generatedCode!.actions.keys())
+    ${Array.from(job.generatedCode!.actions.keys()).map(n => this.toPascalCase(n)).join(',\n    ')}
       .map((n) => this.toPascalCase(n))
       .join(',\n    ')}
   ],
   providers: [
-    ${Array.from(job.generatedCode!.providers.keys())
+    ${Array.from(job.generatedCode!.providers.keys()).map(n => this.toPascalCase(n)).join(',\n    ')}
       .map((n) => this.toPascalCase(n))
       .join(',\n    ')}
   ],
   services: [
-    ${Array.from(job.generatedCode!.services.keys())
+    ${Array.from(job.generatedCode!.services.keys()).map(n => this.toPascalCase(n)).join(',\n    ')}
       .map((n) => this.toPascalCase(n))
       .join(',\n    ')}
   ],

@@ -37,9 +37,9 @@ const testCharacter: Character = {
       { name: 'MVPTestAgent', content: { text: 'testing MVP response' } },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   topics: ['testing', 'mvp', 'reasoning', 'service-validation'],
-  plugins: []
+  plugins: [],
   settings: {
     REASONING_SERVICE_ENABLED: 'true',
     REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',

@@ -136,7 +136,7 @@ export async function fetchMediaData(attachments: Media[]): Promise<MediaData[]>
  * @returns {Promise<Media[]>} - Returns a new array of processed attachments with added description, title, and text properties
  */
 export async function processAttachments(
-  attachments: Media[]
+  attachments: Media[],
   runtime: IAgentRuntime
 ): Promise<Media[]> {
   if (!attachments || attachments.length === 0) {
@@ -458,7 +458,7 @@ const messageReceivedHandler = async ({
                 ...parsedXml,
                 thought: parsedXml.thought || '',
                 actions: parsedXml.actions || ['IGNORE'],
-                providers: parsedXml.providers || []
+                providers: parsedXml.providers || [],
                 text: parsedXml.text || '',
                 simple: parsedXml.simple || false,
               };
@@ -881,7 +881,7 @@ const postGeneratedHandler = async ({
       responseContent = {
         thought: parsedXml.thought || '',
         actions: parsedXml.actions || ['IGNORE'],
-        providers: parsedXml.providers || []
+        providers: parsedXml.providers || [],
         text: parsedXml.text || '',
         simple: parsedXml.simple || false,
       };

@@ -530,7 +530,7 @@ Generate a unified diff patch that fixes this issue.`;
    * Save benchmark report
    */
   private async saveReport(report: BenchmarkReport, runId: string): Promise<void> {
-    const reportDir = path.join(
+    const reportDir = path.join(process.cwd(), '.eliza-temp', 'swe-bench-work', 'distributed', runId);
       process.cwd(),
       '.eliza-temp',
       'swe-bench-work',

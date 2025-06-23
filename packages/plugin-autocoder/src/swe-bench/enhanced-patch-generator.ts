@@ -278,7 +278,7 @@ export class EnhancedPatchGenerator {
         lastVerificationResult = {
           patch: await this.repoManager.generateDiff(repoPath),
           verificationScore: verificationResult.score,
-          errors: verificationResult.errors || []
+          errors: verificationResult.errors || [],
         };
 
         elizaLogger.info('[ENHANCED-PATCH] Learning from verification failures');
@@ -372,7 +372,7 @@ export class EnhancedPatchGenerator {
     const requirements: Requirement[] = analysis.requirements.map((req, i) => ({
       id: `req-${i}`,
       description: req,
-      acceptanceCriteria: analysis.test_requirements || []
+      acceptanceCriteria: analysis.test_requirements || [],
       priority: 'must' as const,
       category: 'functional',
       testable: true,
@@ -385,8 +385,8 @@ export class EnhancedPatchGenerator {
       requirements,
       architecture: {
         pattern: 'layered' as const,
-        components: []
-        dataFlow: []
+        components: [],
+        dataFlow: [],
       },
     };
 
@@ -914,7 +914,7 @@ Code Quality Issues:
         ...(baseContext.verification_requirements || {}),
         minScore: 85, // Higher bar for quality
         maxComplexity: 8, // Stricter complexity limit
-        requiredValidators: baseContext.verification_requirements?.requiredValidators || []
+        requiredValidators: baseContext.verification_requirements?.requiredValidators || [],
       },
     };
   }

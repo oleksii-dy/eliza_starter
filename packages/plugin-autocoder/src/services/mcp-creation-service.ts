@@ -320,7 +320,7 @@ export class MCPCreationService extends Service {
   private async generateTools(
     projectPath: string,
     tools: MCPProjectConfig['tools'],
-    toolsGenerated: string[]
+    toolsGenerated: string[],
     filesCreated: string[]
   ): Promise<void> {
     const toolsDir = path.join(projectPath, 'src/mcp-server/tools');
@@ -737,7 +737,7 @@ export class MCPCreationService extends Service {
   private async generateResources(
     projectPath: string,
     resources: MCPProjectConfig['resources'],
-    resourcesGenerated: string[]
+    resourcesGenerated: string[],
     filesCreated: string[]
   ): Promise<void> {
     const resourcesDir = path.join(projectPath, 'src/mcp-server/resources');
@@ -769,7 +769,7 @@ export class MCPCreationService extends Service {
    */
   private async updateServerFile(
     projectPath: string,
-    toolsGenerated: string[]
+    toolsGenerated: string[],
     resourcesGenerated: string[]
   ): Promise<void> {
     const serverPath = path.join(projectPath, 'src/mcp-server/index.ts');

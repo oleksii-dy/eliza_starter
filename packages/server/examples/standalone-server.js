@@ -36,7 +36,7 @@ const exampleCharacter = {
       },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   people: []
   topics: ['general assistance', 'questions', 'help'],
       style: {

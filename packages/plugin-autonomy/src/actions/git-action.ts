@@ -241,5 +241,5 @@ ${operation === 'clone' ? `Repository is now available at: ${targetPath}` : ''}`
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };

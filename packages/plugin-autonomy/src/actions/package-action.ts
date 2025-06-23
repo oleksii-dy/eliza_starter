@@ -282,5 +282,5 @@ ${output.trim()}
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };

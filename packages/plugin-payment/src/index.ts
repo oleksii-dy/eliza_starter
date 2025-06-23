@@ -64,9 +64,9 @@ export const paymentPlugin: Plugin = {
 
   actions: [researchAction, sendPaymentAction],
 
-  evaluators: []
+  evaluators: [],
 
-  providers: []
+  providers: [],
 
   scenarios: scenarios,
 

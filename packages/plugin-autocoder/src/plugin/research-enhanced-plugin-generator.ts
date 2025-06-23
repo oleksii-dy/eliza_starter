@@ -242,8 +242,8 @@ Respond with a JSON architecture specification:
             name: spec.name,
             type: spec.category,
             purpose: spec.description,
-            interfaces: []
-            dependencies: spec.dependencies || []
+            interfaces: [],
+            dependencies: spec.dependencies || [],
           },
         ],
         dataFlow: 'Standard ElizaOS plugin data flow',
@@ -690,7 +690,7 @@ Generate complete, production-ready test code.`;
     return {
       path: testPath,
       content: this.extractCodeFromResponse(content),
-      coverage: [] // Could be populated with coverage analysis
+      coverage: [], // Could be populated with coverage analysis
     };
   }
 
@@ -699,7 +699,7 @@ Generate complete, production-ready test code.`;
    */
   private async generatePluginDocumentation(
     spec: PluginSpecification,
-    files: PluginFile[]
+    files: PluginFile[],
     guidance: ImplementationGuidance
   ): Promise<{ readme: string; documentation: string }> {
     const readmePrompt = `Generate a comprehensive README.md for the ${spec.name} ElizaOS plugin.
@@ -829,7 +829,7 @@ Format as markdown.`;
    * Verify generated plugin code
    */
   private async verifyGeneratedPlugin(
-    files: PluginFile[]
+    files: PluginFile[],
     spec: PluginSpecification
   ): Promise<number> {
     try {

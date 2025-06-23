@@ -92,7 +92,7 @@ class FragmentRepository {
   }
 
   async searchByEmbedding(
-    embedding: number[]
+    embedding: number[],
     filters: { agentId?: UUID; worldId?: UUID; roomId?: UUID },
     limit: number = 10
   ): Promise<KnowledgeFragment[]> {
@@ -201,7 +201,7 @@ describe('FragmentRepository', () => {
     // Create a mock database object with chainable methods
     const createChainableMock = () => {
       const mock: any = {
-        _data: []
+        _data: [],
         _returnValue: null,
         _shouldThrow: null,
         _isSelect: false,

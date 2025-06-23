@@ -32,7 +32,7 @@ describe('AgentRuntime Plugin Migrations', () => {
       character: mockCharacter,
       adapter: mockDatabaseAdapter,
       settings: {},
-      plugins: []
+      plugins: [],
     });
 
     // Replace the runtime's logger with our mock
@@ -60,9 +60,9 @@ describe('AgentRuntime Plugin Migrations', () => {
       const mockSqlPlugin: Plugin = {
         name: '@elizaos/plugin-sql',
         description: 'SQL plugin',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
       };
 
       const runtimeAny = runtime as any;
@@ -86,9 +86,9 @@ describe('AgentRuntime Plugin Migrations', () => {
       const mockTodoPlugin: Plugin = {
         name: 'todo',
         description: 'Todo plugin',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         schema: {
           todos: {},
           todo_tags: {},
@@ -119,9 +119,9 @@ describe('AgentRuntime Plugin Migrations', () => {
       const mockSqlPlugin: Plugin & { runPluginMigrations?: Function } = {
         name: '@elizaos/plugin-sql',
         description: 'SQL plugin',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         runPluginMigrations: mockRunPluginMigrations,
       };
 
@@ -129,9 +129,9 @@ describe('AgentRuntime Plugin Migrations', () => {
       const mockTodoPlugin: Plugin = {
         name: 'todo',
         description: 'Todo plugin',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         schema: {
           todos: {},
           todo_tags: {},
@@ -173,9 +173,9 @@ describe('AgentRuntime Plugin Migrations', () => {
       const mockSqlPlugin: Plugin & { runPluginMigrations?: Function } = {
         name: '@elizaos/plugin-sql',
         description: 'SQL plugin',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         schema: { core_tables: {} } as any,
         runPluginMigrations: mockRunPluginMigrations,
       };
@@ -183,27 +183,27 @@ describe('AgentRuntime Plugin Migrations', () => {
       const mockTodoPlugin: Plugin = {
         name: 'todo',
         description: 'Todo plugin',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         schema: { todos: {} } as any,
       };
 
       const mockTrustPlugin: Plugin = {
         name: 'trust',
         description: 'Trust plugin',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         schema: { trust_profiles: {} } as any,
       };
 
       const mockBootstrapPlugin: Plugin = {
         name: 'bootstrap',
         description: 'Bootstrap plugin',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         // No schema
       };
 
@@ -255,9 +255,9 @@ describe('AgentRuntime Plugin Migrations', () => {
       const mockSqlPlugin: Plugin & { runPluginMigrations?: Function } = {
         name: '@elizaos/plugin-sql',
         description: 'SQL plugin',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         schema: { test_tables: {} } as any,
         runPluginMigrations: mockRunPluginMigrations,
       };
@@ -294,9 +294,9 @@ describe('AgentRuntime Plugin Migrations', () => {
       const mockSqlPlugin: Plugin & { runPluginMigrations?: Function } = {
         name: '@elizaos/plugin-sql',
         description: 'SQL plugin',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         runPluginMigrations: mockRunPluginMigrations,
       };
 
@@ -306,9 +306,9 @@ describe('AgentRuntime Plugin Migrations', () => {
       const mockTodoPlugin: Plugin = {
         name: 'todo',
         description: 'Todo plugin',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         schema: { todos: {} } as any,
       };
 
@@ -338,26 +338,26 @@ describe('AgentRuntime Plugin Migrations', () => {
       const pluginWithSchema: Plugin = {
         name: 'with-schema',
         description: 'Plugin with schema',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         schema: { test_table: {} } as any,
       };
 
       const pluginWithoutSchema: Plugin = {
         name: 'without-schema',
         description: 'Plugin without schema',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
       };
 
       const pluginWithEmptySchema: Plugin = {
         name: 'empty-schema',
         description: 'Plugin with empty schema',
-        actions: []
-        providers: []
-        services: []
+        actions: [],
+        providers: [],
+        services: [],
         schema: {},
       };
 

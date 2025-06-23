@@ -184,7 +184,7 @@ Return JSON: {"hasEvolutionTrigger": boolean, "triggerType": string, "reasoning"
         name: currentCharacter.name,
         system: currentCharacter.system || 'No system prompt defined',
         bio: Array.isArray(currentCharacter.bio) ? currentCharacter.bio : [currentCharacter.bio],
-        currentTopics: currentCharacter.topics || []
+        currentTopics: currentCharacter.topics || [],
         messageExampleCount: currentCharacter.messageExamples?.length || 0,
       };
 
@@ -378,5 +378,5 @@ Return JSON analysis with specific, measurable reasoning for any suggested modif
       outcome:
         'Character develops empathetic communication style and adds supportive message examples',
     },
-  ] as EvaluationExample[]
+  ] as EvaluationExample[],
 };

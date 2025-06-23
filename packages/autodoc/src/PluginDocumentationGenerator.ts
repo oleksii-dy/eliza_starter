@@ -31,9 +31,9 @@ export class PluginDocumentationGenerator {
    * @param {EnvUsage[]} envUsages - List of environment variable usages
    */
   public async generate(
-    existingDocs: ASTQueueItem[]
+    existingDocs: ASTQueueItem[],
     branchName?: string,
-    todoItems: TodoItem[] = []
+    todoItems: TodoItem[] = [],
     envUsages: EnvUsage[] = []
   ): Promise<void> {
     // Read package.json

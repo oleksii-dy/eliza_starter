@@ -32,9 +32,9 @@ const testCharacter: Character = {
       { name: 'TogetherAIAutomationTestAgent', content: { text: 'testing automation response' } }
     ]
   ],
-  postExamples: []
+  postExamples: [],
   topics: ['testing', 'automation', 'together-ai', 'service-validation'],
-  plugins: []
+  plugins: [],
   settings: {
     REASONING_SERVICE_ENABLED: 'true',
     TOGETHER_AI_API_KEY: 'test-api-key-together',

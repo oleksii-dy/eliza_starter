@@ -94,7 +94,7 @@ describe('settings utilities', () => {
         validation: undefined,
         public: false,
         secret: false,
-        dependsOn: []
+        dependsOn: [],
         onSetAction: undefined,
         visibleIf: undefined,
       });

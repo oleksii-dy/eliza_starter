@@ -71,7 +71,7 @@ Make sure to include the \`\`\`json\`\`\` tags around the JSON object.
 async function getRecentInteractions(
   runtime: IAgentRuntime,
   sourceEntityId: UUID,
-  candidateEntities: Entity[]
+  candidateEntities: Entity[],
   roomId: UUID,
   relationships: Relationship[]
 ): Promise<{ entity: Entity; interactions: Memory[]; count: number }[]> {
@@ -222,7 +222,7 @@ export async function findEntityByName(
   // Use LLM to analyze and resolve the entity
   const result = await runtime.useModel(ModelType.TEXT_SMALL, {
     prompt,
-    stopSequences: []
+    stopSequences: [],
   });
 
   // Parse LLM response

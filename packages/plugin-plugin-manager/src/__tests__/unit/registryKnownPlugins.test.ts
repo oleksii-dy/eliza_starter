@@ -11,10 +11,10 @@ describe('Registry Known Plugins Validation', () => {
   beforeAll(async () => {
     mockRuntime = {
       agentId: 'test-agent-id' as any,
-      plugins: []
-      actions: []
-      providers: []
-      evaluators: []
+      plugins: [],
+      actions: [],
+      providers: [],
+      evaluators: [],
       services: new Map(),
       getSetting: (key: string) => process.env[key],
       useModel: async () => 'mock response',
@@ -200,8 +200,8 @@ describe('Registry Known Plugins Validation', () => {
       }
 
       // Log packages that don't follow plugin naming convention
-      const nonPluginPackages = Object.keys(registryData).filter((name) =>
-        name.startsWith('@elizaos/') && !name.startsWith('@elizaos/plugin-')
+      const nonPluginPackages = Object.keys(registryData).filter(
+        (name) => name.startsWith('@elizaos/') && !name.startsWith('@elizaos/plugin-')
       );
 
       if (nonPluginPackages.length > 0) {

@@ -848,9 +848,9 @@ const productionPerformanceEvaluator: Evaluator = {
     const analysis = {
       healthScore: 0,
       grade: 'F',
-      recommendations: []
-      strengths: []
-      concerns: []
+      recommendations: [],
+      strengths: [],
+      concerns: [],
     };
 
     let totalScore = 0;
@@ -1017,10 +1017,10 @@ const productionPluginWithEnvVars: Plugin = {
 const productionPluginNoEnvVars: Plugin = {
   name: 'production-plugin-no-env-vars',
   description: 'Production-ready plugin that works without special environment variables',
-  services: []
-  actions: []
-  providers: []
-  evaluators: []
+  services: [],
+  actions: [],
+  providers: [],
+  evaluators: [],
 
   init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
     console.log('production-plugin-no-env-vars: Starting initialization (no env vars required)');
@@ -1050,9 +1050,9 @@ const productionTestCharacter: Character = {
       },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   topics: ['production', 'testing', 'configuration', 'plugins', 'performance'],
-  knowledge: []
+  knowledge: [],
   plugins: ['production-plugin-with-env-vars', 'production-plugin-no-env-vars'],
   settings: {
     DATABASE_URL: 'postgresql://test:test@localhost:5432/production_testdb',
@@ -1338,7 +1338,7 @@ export async function testProductionPluginConfiguration(runtime: IAgentRuntime):
     const productionPluginWithBadEnvVars: Plugin = {
       name: 'production-plugin-bad-env-vars',
       description: 'Plugin that tests environment variable validation',
-      services: []
+      services: [],
 
       init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
         // This should fail due to invalid DATABASE_URL format

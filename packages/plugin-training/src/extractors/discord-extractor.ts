@@ -96,8 +96,8 @@ export class DiscordExtractor {
     if (allMessages.length === 0) {
       elizaLogger.warn('⚠️ No messages found in knowledge repository');
       return {
-        conversations: []
-        users: []
+        conversations: [],
+        users: [],
         stats: this.stats
       };
     }
@@ -619,8 +619,8 @@ export class DiscordExtractor {
    * Extract conversation threads from messages
    */
   private async extractConversationThreads(
-    messages: DiscordMessage[]
-    trackedUsers: TrackedUser[]
+    messages: DiscordMessage[],
+    trackedUsers: TrackedUser[],
     channels: Map<string, DiscordChannel>
   ): Promise<ConversationThread[]> {
     const trackedUserIds = new Set(trackedUsers.map(u => u.userId));
@@ -672,7 +672,7 @@ export class DiscordExtractor {
   /**
    * Thread individual messages into conversation groups
    */
-  private threadMessages(messages: DiscordMessage[] trackedUserIds: Set<string>): DiscordMessage[][] {
+  private threadMessages(messages: DiscordMessage[], trackedUserIds: Set<string>): DiscordMessage[][] {
     const threads: DiscordMessage[][] = [];
     let currentThread: DiscordMessage[] = [];
     
@@ -733,7 +733,7 @@ export class DiscordExtractor {
   /**
    * Calculate conversation quality score
    */
-  private calculateConversationQuality(messages: DiscordMessage[] trackedUsers: TrackedUser[]): number {
+  private calculateConversationQuality(messages: DiscordMessage[], trackedUsers: TrackedUser[]): number {
     let score = 0;
     
     // Base score for message count
@@ -790,8 +790,8 @@ export class DiscordExtractor {
    * Save extraction results to files
    */
   async saveResults(
-    conversations: ConversationThread[]
-    users: TrackedUser[]
+    conversations: ConversationThread[],
+    users: TrackedUser[],
     stats: ExtractionStats
   ): Promise<void> {
     // Save conversations

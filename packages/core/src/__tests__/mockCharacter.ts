@@ -20,7 +20,7 @@ import type { Character } from '@elizaos/core';
 export const mockCharacter: Character = {
   name: 'Eliza',
   username: 'eliza',
-  plugins: []
+  plugins: [],
   settings: {
     secrets: {},
     voice: {

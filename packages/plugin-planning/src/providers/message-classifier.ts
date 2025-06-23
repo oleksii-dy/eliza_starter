@@ -2,11 +2,12 @@ import { Provider, ModelType } from '@elizaos/core';
 
 export const messageClassifierProvider: Provider = {
   name: 'messageClassifier',
-  description: 'Classifies messages using LLM to determine planning requirements',
+  description:
+    'Classifies incoming messages by complexity and planning requirements using intelligent LLM analysis. Use to determine if strategic planning, sequential execution, or direct action is needed.',
 
   get: async (runtime, message, state) => {
     const text = message.content.text || '';
-    
+
     if (!text.trim()) {
       return {
         text: 'Message classified as: general (empty message)',
@@ -15,8 +16,8 @@ export const messageClassifierProvider: Provider = {
           confidence: 0.1,
           complexity: 'simple',
           planningRequired: false,
-          stakeholders: []
-          constraints: []
+          stakeholders: [],
+          constraints: [],
         },
       };
     }
@@ -70,19 +71,36 @@ CONFIDENCE: [0.0-1.0]`;
       // Parse LLM response
       const responseText = response as string;
       const lines = responseText.split('\n');
-      
+
       const parseField = (prefix: string): string[] => {
-        const line = lines.find(l => l.startsWith(prefix));
+        const line = lines.find((l) => l.startsWith(prefix));
         if (!line) return [];
         const value = line.substring(prefix.length).trim();
-        return value ? value.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+        return value
+          ? value
+              .split(',')
+              .map((s) => s.trim())
+              .filter((s) => s.length > 0)
+          : [];
       };
 
-      const complexity = lines.find(l => l.startsWith('COMPLEXITY:'))?.substring(11).trim() || 'simple';
-      const planningType = lines.find(l => l.startsWith('PLANNING:'))?.substring(9).trim() || 'direct_action';
-      const confidenceStr = lines.find(l => l.startsWith('CONFIDENCE:'))?.substring(11).trim() || '0.5';
+      const complexity =
+        lines
+          .find((l) => l.startsWith('COMPLEXITY:'))
+          ?.substring(11)
+          .trim() || 'simple';
+      const planningType =
+        lines
+          .find((l) => l.startsWith('PLANNING:'))
+          ?.substring(9)
+          .trim() || 'direct_action';
+      const confidenceStr =
+        lines
+          .find((l) => l.startsWith('CONFIDENCE:'))
+          ?.substring(11)
+          .trim() || '0.5';
       const confidence = Math.min(1.0, Math.max(0.0, parseFloat(confidenceStr) || 0.5));
-      
+
       const capabilities = parseField('CAPABILITIES:');
       const stakeholders = parseField('STAKEHOLDERS:');
       const constraints = parseField('CONSTRAINTS:');
@@ -110,7 +128,7 @@ CONFIDENCE: [0.0-1.0]`;
           classification: legacyClassification,
           confidence,
           originalText: text,
-          
+
           // Enhanced fields for real planning
           complexity,
           planningType,
@@ -119,20 +137,23 @@ CONFIDENCE: [0.0-1.0]`;
           stakeholders,
           constraints,
           dependencies,
-          
+
           // Analysis metadata
           analyzedAt: Date.now(),
-          modelUsed: 'TEXT_SMALL'
+          modelUsed: 'TEXT_SMALL',
         },
       };
-
     } catch (error) {
       // Fallback to simple rule-based classification if LLM fails
       const text_lower = text.toLowerCase();
       let classification = 'general';
       let confidence = 0.5;
 
-      if (text_lower.includes('strategy') || text_lower.includes('plan') || text_lower.includes('strategic')) {
+      if (
+        text_lower.includes('strategy') ||
+        text_lower.includes('plan') ||
+        text_lower.includes('strategic')
+      ) {
         classification = 'strategic';
         confidence = 0.7;
       } else if (text_lower.includes('analyze') || text_lower.includes('analysis')) {
@@ -154,10 +175,10 @@ CONFIDENCE: [0.0-1.0]`;
           originalText: text,
           complexity: 'simple',
           planningRequired: false,
-          stakeholders: []
-          constraints: []
+          stakeholders: [],
+          constraints: [],
           error: error.message,
-          fallback: true
+          fallback: true,
         },
       };
     }

@@ -221,8 +221,8 @@ export class PluginCreationService extends Service {
       specification,
       status: 'pending',
       createdAt: new Date(),
-      logs: []
-      errors: []
+      logs: [],
+      errors: [],
       outputPath: path.join(
         process.cwd(),
         '.eliza-temp',

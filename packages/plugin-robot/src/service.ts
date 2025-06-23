@@ -8,7 +8,20 @@ import {
   ModelType,
   type Metadata,
 } from '@elizaos/core';
-import { VisionServiceType, type SceneDescription, type VisionFrame, type CameraInfo, type VisionConfig, type DetectedObject, type PersonInfo, type BoundingBox, VisionMode, type EnhancedSceneDescription, type ScreenCapture, type TileAnalysis } from './types';
+import {
+  VisionServiceType,
+  type SceneDescription,
+  type VisionFrame,
+  type CameraInfo,
+  type VisionConfig,
+  type DetectedObject,
+  type PersonInfo,
+  type BoundingBox,
+  VisionMode,
+  type EnhancedSceneDescription,
+  type ScreenCapture,
+  type TileAnalysis,
+} from './types';
 import { VisionModels } from './vision-models';
 import { VisionModelsEnhanced } from './vision-models-enhanced';
 import { FaceRecognition } from './face-recognition';
@@ -34,7 +47,8 @@ interface CameraDevice {
 export class VisionService extends Service {
   static override serviceType: ServiceTypeName = VisionServiceType.VISION;
   static readonly serviceName = 'VISION';
-  override capabilityDescription = 'Provides visual perception through camera integration and scene analysis.';
+  override capabilityDescription =
+    'Provides visual perception through camera integration and scene analysis.';
 
   private visionConfig: VisionConfig;
   private camera: CameraDevice | null = null;
@@ -49,14 +63,14 @@ export class VisionService extends Service {
   private faceRecognition: FaceRecognition;
   private entityTracker: EntityTracker;
   private audioCapture: AudioCaptureService | null = null;
-  
+
   // Screen vision components
   private screenCapture: ScreenCaptureService;
   private florence2: Florence2Model;
   private ocrService: OCRService;
   private lastScreenCapture: ScreenCapture | null = null;
   private lastEnhancedScene: EnhancedSceneDescription | null = null;
-  
+
   // Add tracking for last update times
   private lastTfUpdateTime = 0;
   private lastVlmUpdateTime = 0;
@@ -82,44 +96,61 @@ export class VisionService extends Service {
 
   constructor(runtime: IAgentRuntime) {
     super(runtime);
-    
+
     // Load configuration from runtime settings
     this.visionConfig = {
       ...this.DEFAULT_CONFIG,
       cameraName: runtime.getSetting('CAMERA_NAME') || runtime.getSetting('VISION_CAMERA_NAME'),
-      pixelChangeThreshold: Number(runtime.getSetting('PIXEL_CHANGE_THRESHOLD') || 
-                                  runtime.getSetting('VISION_PIXEL_CHANGE_THRESHOLD')) || 
-                                  this.DEFAULT_CONFIG.pixelChangeThreshold,
-      enableObjectDetection: runtime.getSetting('ENABLE_OBJECT_DETECTION') === 'true' ||
-                            runtime.getSetting('VISION_ENABLE_OBJECT_DETECTION') === 'true',
-      enablePoseDetection: runtime.getSetting('ENABLE_POSE_DETECTION') === 'true' ||
-                          runtime.getSetting('VISION_ENABLE_POSE_DETECTION') === 'true',
-      tfUpdateInterval: Number(runtime.getSetting('TF_UPDATE_INTERVAL') || 
-                              runtime.getSetting('VISION_TF_UPDATE_INTERVAL')) || 
-                              this.DEFAULT_CONFIG.tfUpdateInterval,
-      vlmUpdateInterval: Number(runtime.getSetting('VLM_UPDATE_INTERVAL') || 
-                               runtime.getSetting('VISION_VLM_UPDATE_INTERVAL')) || 
-                               this.DEFAULT_CONFIG.vlmUpdateInterval,
-      tfChangeThreshold: Number(runtime.getSetting('TF_CHANGE_THRESHOLD') || 
-                               runtime.getSetting('VISION_TF_CHANGE_THRESHOLD')) || 
-                               this.DEFAULT_CONFIG.tfChangeThreshold,
-      vlmChangeThreshold: Number(runtime.getSetting('VLM_CHANGE_THRESHOLD') || 
-                                runtime.getSetting('VISION_VLM_CHANGE_THRESHOLD')) || 
-                                this.DEFAULT_CONFIG.vlmChangeThreshold,
-      visionMode: (runtime.getSetting('VISION_MODE') as VisionMode) || this.DEFAULT_CONFIG.visionMode,
-      screenCaptureInterval: Number(runtime.getSetting('SCREEN_CAPTURE_INTERVAL') || 
-                                   runtime.getSetting('VISION_SCREEN_CAPTURE_INTERVAL')) || 
-                                   this.DEFAULT_CONFIG.screenCaptureInterval,
-      ocrEnabled: runtime.getSetting('OCR_ENABLED') === 'true' ||
-                  runtime.getSetting('VISION_OCR_ENABLED') === 'true',
-      florence2Enabled: runtime.getSetting('FLORENCE2_ENABLED') === 'true' ||
-                        runtime.getSetting('VISION_FLORENCE2_ENABLED') === 'true',
+      pixelChangeThreshold:
+        Number(
+          runtime.getSetting('PIXEL_CHANGE_THRESHOLD') ||
+            runtime.getSetting('VISION_PIXEL_CHANGE_THRESHOLD')
+        ) || this.DEFAULT_CONFIG.pixelChangeThreshold,
+      enableObjectDetection:
+        runtime.getSetting('ENABLE_OBJECT_DETECTION') === 'true' ||
+        runtime.getSetting('VISION_ENABLE_OBJECT_DETECTION') === 'true',
+      enablePoseDetection:
+        runtime.getSetting('ENABLE_POSE_DETECTION') === 'true' ||
+        runtime.getSetting('VISION_ENABLE_POSE_DETECTION') === 'true',
+      tfUpdateInterval:
+        Number(
+          runtime.getSetting('TF_UPDATE_INTERVAL') ||
+            runtime.getSetting('VISION_TF_UPDATE_INTERVAL')
+        ) || this.DEFAULT_CONFIG.tfUpdateInterval,
+      vlmUpdateInterval:
+        Number(
+          runtime.getSetting('VLM_UPDATE_INTERVAL') ||
+            runtime.getSetting('VISION_VLM_UPDATE_INTERVAL')
+        ) || this.DEFAULT_CONFIG.vlmUpdateInterval,
+      tfChangeThreshold:
+        Number(
+          runtime.getSetting('TF_CHANGE_THRESHOLD') ||
+            runtime.getSetting('VISION_TF_CHANGE_THRESHOLD')
+        ) || this.DEFAULT_CONFIG.tfChangeThreshold,
+      vlmChangeThreshold:
+        Number(
+          runtime.getSetting('VLM_CHANGE_THRESHOLD') ||
+            runtime.getSetting('VISION_VLM_CHANGE_THRESHOLD')
+        ) || this.DEFAULT_CONFIG.vlmChangeThreshold,
+      visionMode:
+        (runtime.getSetting('VISION_MODE') as VisionMode) || this.DEFAULT_CONFIG.visionMode,
+      screenCaptureInterval:
+        Number(
+          runtime.getSetting('SCREEN_CAPTURE_INTERVAL') ||
+            runtime.getSetting('VISION_SCREEN_CAPTURE_INTERVAL')
+        ) || this.DEFAULT_CONFIG.screenCaptureInterval,
+      ocrEnabled:
+        runtime.getSetting('OCR_ENABLED') === 'true' ||
+        runtime.getSetting('VISION_OCR_ENABLED') === 'true',
+      florence2Enabled:
+        runtime.getSetting('FLORENCE2_ENABLED') === 'true' ||
+        runtime.getSetting('VISION_FLORENCE2_ENABLED') === 'true',
     };
 
     this.visionModels = new VisionModels();
     this.visionModelsEnhanced = new VisionModelsEnhanced();
     this.faceRecognition = new FaceRecognition();
-    
+
     // Initialize entity tracker with a default world ID
     const worldId = runtime.getSetting('WORLD_ID') || 'default-world';
     this.entityTracker = new EntityTracker(worldId);
@@ -140,7 +171,7 @@ export class VisionService extends Service {
 
   private async checkCameraTools(): Promise<{ available: boolean; tool: string }> {
     const platform = process.platform;
-    
+
     try {
       if (platform === 'darwin') {
         // Check if imagesnap is installed
@@ -165,8 +196,9 @@ export class VisionService extends Service {
   private async initialize(): Promise<void> {
     try {
       // Initialize vision models if enabled
-      const useEnhancedModels = this.visionConfig.enableObjectDetection || this.visionConfig.enablePoseDetection;
-      
+      const useEnhancedModels =
+        this.visionConfig.enableObjectDetection || this.visionConfig.enablePoseDetection;
+
       if (useEnhancedModels) {
         try {
           // Try to initialize TensorFlow models first
@@ -176,7 +208,9 @@ export class VisionService extends Service {
           );
           logger.info('[VisionService] Using TensorFlow.js models for advanced detection');
         } catch (tfError) {
-          logger.warn('[VisionService] TensorFlow.js not available, falling back to enhanced heuristics');
+          logger.warn(
+            '[VisionService] TensorFlow.js not available, falling back to enhanced heuristics'
+          );
           // Fall back to enhanced heuristics
           await this.visionModelsEnhanced.initialize(
             this.visionConfig.enableObjectDetection || false,
@@ -187,14 +221,18 @@ export class VisionService extends Service {
       }
 
       // Initialize screen vision if enabled
-      if (this.visionConfig.visionMode === VisionMode.SCREEN || 
-          this.visionConfig.visionMode === VisionMode.BOTH) {
+      if (
+        this.visionConfig.visionMode === VisionMode.SCREEN ||
+        this.visionConfig.visionMode === VisionMode.BOTH
+      ) {
         await this.initializeScreenVision();
       }
 
       // Initialize camera if enabled
-      if (this.visionConfig.visionMode === VisionMode.CAMERA || 
-          this.visionConfig.visionMode === VisionMode.BOTH) {
+      if (
+        this.visionConfig.visionMode === VisionMode.CAMERA ||
+        this.visionConfig.visionMode === VisionMode.BOTH
+      ) {
         await this.initializeCameraVision();
       }
 
@@ -211,23 +249,23 @@ export class VisionService extends Service {
   private async initializeScreenVision(): Promise<void> {
     try {
       logger.info('[VisionService] Initializing screen vision...');
-      
+
       // Initialize Florence-2 if enabled
       if (this.visionConfig.florence2Enabled) {
         await this.florence2.initialize();
       }
-      
+
       // Initialize OCR if enabled
       if (this.visionConfig.ocrEnabled) {
         await this.ocrService.initialize();
       }
-      
+
       // Get screen info
       const screenInfo = await this.screenCapture.getScreenInfo();
       if (screenInfo) {
         logger.info(`[VisionService] Screen resolution: ${screenInfo.width}x${screenInfo.height}`);
       }
-      
+
       logger.info('[VisionService] Screen vision initialized');
     } catch (error) {
       logger.error('[VisionService] Failed to initialize screen vision:', error);
@@ -239,8 +277,11 @@ export class VisionService extends Service {
     const toolCheck = await this.checkCameraTools();
     if (!toolCheck.available) {
       const platform = process.platform;
-      const toolName = platform === 'darwin' ? 'imagesnap' : platform === 'linux' ? 'fswebcam' : 'ffmpeg';
-      logger.warn(`[VisionService] Camera capture tool '${toolName}' not found. Install it to enable camera functionality.`);
+      const toolName =
+        platform === 'darwin' ? 'imagesnap' : platform === 'linux' ? 'fswebcam' : 'ffmpeg';
+      logger.warn(
+        `[VisionService] Camera capture tool '${toolName}' not found. Install it to enable camera functionality.`
+      );
       logger.warn(`[VisionService] For macOS: brew install imagesnap`);
       logger.warn(`[VisionService] For Linux: sudo apt-get install fswebcam`);
       logger.warn(`[VisionService] For Windows: Install ffmpeg and add to PATH`);
@@ -259,8 +300,9 @@ export class VisionService extends Service {
 
   private async initializeAudioCapture(): Promise<void> {
     const enableMicrophone = this.runtime.getSetting('ENABLE_MICROPHONE') === 'true';
-    const transcriptionInterval = Number(this.runtime.getSetting('TRANSCRIPTION_INTERVAL')) || 30000;
-    
+    const transcriptionInterval =
+      Number(this.runtime.getSetting('TRANSCRIPTION_INTERVAL')) || 30000;
+
     if (!enableMicrophone) {
       logger.info('[VisionService] Microphone capture disabled');
       return;
@@ -272,11 +314,15 @@ export class VisionService extends Service {
         transcriptionInterval,
         device: this.runtime.getSetting('AUDIO_DEVICE'),
       };
-      
+
       this.audioCapture = new AudioCaptureService(this.runtime, audioConfig);
       await this.audioCapture.initialize();
-      
-      logger.info('[VisionService] Audio capture initialized with transcription every', transcriptionInterval, 'ms');
+
+      logger.info(
+        '[VisionService] Audio capture initialized with transcription every',
+        transcriptionInterval,
+        'ms'
+      );
     } catch (error) {
       logger.error('[VisionService] Failed to initialize audio capture:', error);
       // Don't fail the whole service if audio fails
@@ -285,15 +331,19 @@ export class VisionService extends Service {
 
   private startProcessing(): void {
     // Start camera processing if enabled
-    if ((this.visionConfig.visionMode === VisionMode.CAMERA || 
-         this.visionConfig.visionMode === VisionMode.BOTH) && 
-        this.camera) {
+    if (
+      (this.visionConfig.visionMode === VisionMode.CAMERA ||
+        this.visionConfig.visionMode === VisionMode.BOTH) &&
+      this.camera
+    ) {
       this.startFrameProcessing();
     }
-    
+
     // Start screen processing if enabled
-    if (this.visionConfig.visionMode === VisionMode.SCREEN || 
-        this.visionConfig.visionMode === VisionMode.BOTH) {
+    if (
+      this.visionConfig.visionMode === VisionMode.SCREEN ||
+      this.visionConfig.visionMode === VisionMode.BOTH
+    ) {
       this.startScreenProcessing();
     }
   }
@@ -327,9 +377,9 @@ export class VisionService extends Service {
 
       // Convert to standardized format
       const frame = await this.processFrameData(frameData);
-      
+
       // Check if scene has changed significantly
-      const changePercentage = this.lastFrame 
+      const changePercentage = this.lastFrame
         ? await this.calculatePixelChange(this.lastFrame, frame)
         : 100;
 
@@ -386,10 +436,13 @@ export class VisionService extends Service {
     return (changedPixels / totalPixels) * 100;
   }
 
-  private async updateSceneDescription(frame: VisionFrame, changePercentage: number): Promise<void> {
+  private async updateSceneDescription(
+    frame: VisionFrame,
+    changePercentage: number
+  ): Promise<void> {
     try {
       const currentTime = Date.now();
-      
+
       // Convert frame to base64 for VLM
       const jpegBuffer = await sharp(frame.data, {
         raw: {
@@ -397,66 +450,97 @@ export class VisionService extends Service {
           height: frame.height,
           channels: 4,
         },
-      }).jpeg().toBuffer();
+      })
+        .jpeg()
+        .toBuffer();
 
       const base64Image = jpegBuffer.toString('base64');
       const imageUrl = `data:image/jpeg;base64,${base64Image}`;
 
       // Determine if we should update VLM description
       const timeSinceVlmUpdate = currentTime - this.lastVlmUpdateTime;
-      const shouldUpdateVlm = 
+      const shouldUpdateVlm =
         timeSinceVlmUpdate >= this.visionConfig.vlmUpdateInterval! || // Time threshold
-        changePercentage >= this.visionConfig.vlmChangeThreshold!;    // Change threshold
+        changePercentage >= this.visionConfig.vlmChangeThreshold!; // Change threshold
 
       let description = this.lastTfDescription;
-      
+
       if (shouldUpdateVlm) {
         // Use VLM to describe the scene
         description = await this.describeSceneWithVLM(imageUrl);
         this.lastVlmUpdateTime = currentTime;
         this.lastTfDescription = description;
-        logger.debug(`[VisionService] VLM updated: ${timeSinceVlmUpdate}ms since last update, ${changePercentage.toFixed(1)}% change`);
+        logger.debug(
+          `[VisionService] VLM updated: ${timeSinceVlmUpdate}ms since last update, ${changePercentage.toFixed(1)}% change`
+        );
       }
 
       // Determine if we should update TensorFlow detections
       const timeSinceTfUpdate = currentTime - this.lastTfUpdateTime;
-      const shouldUpdateTf = 
-        timeSinceTfUpdate >= this.visionConfig.tfUpdateInterval! ||   // Time threshold
-        changePercentage >= this.visionConfig.tfChangeThreshold!;     // Change threshold
+      const shouldUpdateTf =
+        timeSinceTfUpdate >= this.visionConfig.tfUpdateInterval! || // Time threshold
+        changePercentage >= this.visionConfig.tfChangeThreshold!; // Change threshold
 
       let detectedObjects: DetectedObject[] = [];
       let people: PersonInfo[] = [];
 
-      if (shouldUpdateTf && (this.visionConfig.enableObjectDetection || this.visionConfig.enablePoseDetection)) {
+      if (
+        shouldUpdateTf &&
+        (this.visionConfig.enableObjectDetection || this.visionConfig.enablePoseDetection)
+      ) {
         this.lastTfUpdateTime = currentTime;
-        logger.debug(`[VisionService] TF updating: ${timeSinceTfUpdate}ms since last update, ${changePercentage.toFixed(1)}% change`);
+        logger.debug(
+          `[VisionService] TF updating: ${timeSinceTfUpdate}ms since last update, ${changePercentage.toFixed(1)}% change`
+        );
 
         // Use advanced computer vision if enabled
         if (this.visionConfig.enableObjectDetection) {
           if (this.visionModels.hasObjectDetection()) {
-            detectedObjects = await this.visionModels.detectObjects(frame.data, frame.width, frame.height);
+            detectedObjects = await this.visionModels.detectObjects(
+              frame.data,
+              frame.width,
+              frame.height
+            );
             logger.debug(`[VisionService] VisionModels detected ${detectedObjects.length} objects`);
           } else if (this.visionModelsEnhanced.hasObjectDetection()) {
-            detectedObjects = await this.visionModelsEnhanced.detectObjects(frame.data, frame.width, frame.height, description);
-            logger.debug(`[VisionService] VisionModelsEnhanced detected ${detectedObjects.length} objects`);
+            detectedObjects = await this.visionModelsEnhanced.detectObjects(
+              frame.data,
+              frame.width,
+              frame.height,
+              description
+            );
+            logger.debug(
+              `[VisionService] VisionModelsEnhanced detected ${detectedObjects.length} objects`
+            );
           }
         }
 
         if (this.visionConfig.enablePoseDetection) {
           if (this.visionModels.hasPoseDetection()) {
-            const poses = await this.visionModels.detectPoses(frame.data, frame.width, frame.height);
+            const poses = await this.visionModels.detectPoses(
+              frame.data,
+              frame.width,
+              frame.height
+            );
             people = this.visionModels.convertPosesToPersonInfo(poses);
-            logger.debug(`[VisionService] VisionModels detected ${people.length} people with poses`);
+            logger.debug(
+              `[VisionService] VisionModels detected ${people.length} people with poses`
+            );
           } else if (this.visionModelsEnhanced.hasPoseDetection()) {
-            people = await this.visionModelsEnhanced.detectPoses(frame.data, frame.width, frame.height, description);
+            people = await this.visionModelsEnhanced.detectPoses(
+              frame.data,
+              frame.width,
+              frame.height,
+              description
+            );
             logger.debug(`[VisionService] VisionModelsEnhanced detected ${people.length} people`);
           }
         }
 
         // If no people detected via pose but objects detected, check for person objects
         if (people.length === 0 && detectedObjects.length > 0) {
-          const personObjects = detectedObjects.filter(obj => obj.type === 'person');
-          people = personObjects.map(obj => ({
+          const personObjects = detectedObjects.filter((obj) => obj.type === 'person');
+          people = personObjects.map((obj) => ({
             id: `person-${obj.id}`,
             pose: 'unknown' as const,
             facing: 'unknown' as const,
@@ -477,48 +561,54 @@ export class VisionService extends Service {
       // Face recognition and entity tracking
       const faceProfiles = new Map<string, string>();
       const enableFaceRecognition = this.runtime.getSetting('ENABLE_FACE_RECOGNITION') === 'true';
-      
+
       if (enableFaceRecognition && people.length > 0) {
         try {
           // Detect faces in the frame
-          const faces = await this.faceRecognition.detectFaces(frame.data, frame.width, frame.height);
-          
+          const faces = await this.faceRecognition.detectFaces(
+            frame.data,
+            frame.width,
+            frame.height
+          );
+
           // Match faces to people based on bounding box overlap
           for (const face of faces) {
             const faceBox = face.detection.box;
-            
+
             // Find the person this face belongs to
             for (const person of people) {
-              const overlap = this.calculateBoxOverlap(
-                person.boundingBox,
-                {
-                  x: Math.round(faceBox.x),
-                  y: Math.round(faceBox.y),
-                  width: Math.round(faceBox.width),
-                  height: Math.round(faceBox.height),
-                }
-              );
-              
-              if (overlap > 0.5) { // 50% overlap threshold
+              const overlap = this.calculateBoxOverlap(person.boundingBox, {
+                x: Math.round(faceBox.x),
+                y: Math.round(faceBox.y),
+                width: Math.round(faceBox.width),
+                height: Math.round(faceBox.height),
+              });
+
+              if (overlap > 0.5) {
+                // 50% overlap threshold
                 // Recognize or register the face
                 const match = await this.faceRecognition.recognizeFace(face.descriptor);
                 let profileId: string;
-                
+
                 if (match) {
                   profileId = match.profileId;
-                  logger.debug(`[VisionService] Recognized face: ${profileId} (distance: ${match.distance})`);
+                  logger.debug(
+                    `[VisionService] Recognized face: ${profileId} (distance: ${match.distance})`
+                  );
                 } else {
                   // Register new face
                   profileId = await this.faceRecognition.addOrUpdateFace(face.descriptor, {
                     attributes: {
                       age: face.ageGender?.age.toString(),
                       gender: face.ageGender?.gender,
-                      emotion: face.expressions ? this.getDominantExpression(face.expressions) : undefined,
-                    }
+                      emotion: face.expressions
+                        ? this.getDominantExpression(face.expressions)
+                        : undefined,
+                    },
                   });
                   logger.info(`[VisionService] New face registered: ${profileId}`);
                 }
-                
+
                 faceProfiles.set(person.id, profileId);
                 break;
               }
@@ -552,27 +642,36 @@ export class VisionService extends Service {
         logger.info('[VisionService] Scene Analysis Complete:');
         logger.info(`  VLM Description: ${description.substring(0, 100)}...`);
         logger.info(`  Change: ${changePercentage.toFixed(1)}%`);
-        logger.info(`  Updates: ${shouldUpdateVlm ? 'VLM' : ''}${shouldUpdateVlm && shouldUpdateTf ? ' + ' : ''}${shouldUpdateTf ? 'TF' : ''}`);
-        logger.info(`  Detection Mode: ${this.visionConfig.enableObjectDetection ? 'Advanced CV' : 'Motion-based'}`);
-        
+        logger.info(
+          `  Updates: ${shouldUpdateVlm ? 'VLM' : ''}${shouldUpdateVlm && shouldUpdateTf ? ' + ' : ''}${shouldUpdateTf ? 'TF' : ''}`
+        );
+        logger.info(
+          `  Detection Mode: ${this.visionConfig.enableObjectDetection ? 'Advanced CV' : 'Motion-based'}`
+        );
+
         if (detectedObjects.length > 0) {
           logger.info(`  Objects: ${detectedObjects.length} detected`);
-          
+
           // Group objects by type for summary
-          const objectSummary = detectedObjects.reduce((acc, obj) => {
-            acc[obj.type] = (acc[obj.type] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
-          
+          const objectSummary = detectedObjects.reduce(
+            (acc, obj) => {
+              acc[obj.type] = (acc[obj.type] || 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>
+          );
+
           for (const [type, count] of Object.entries(objectSummary)) {
             logger.info(`    - ${count} ${type}(s)`);
           }
         }
-        
+
         if (people.length > 0) {
           logger.info(`  People: ${people.length} detected`);
           for (const person of people) {
-            logger.info(`    - Person: ${person.pose} pose, facing ${person.facing}, confidence: ${person.confidence.toFixed(2)}`);
+            logger.info(
+              `    - Person: ${person.pose} pose, facing ${person.facing}, confidence: ${person.confidence.toFixed(2)}`
+            );
           }
         }
       }
@@ -585,14 +684,15 @@ export class VisionService extends Service {
     try {
       // Try to use IMAGE_DESCRIPTION model type first
       const result = await this.runtime.useModel(ModelType.IMAGE_DESCRIPTION, imageUrl);
-      
+
       if (result && typeof result === 'object' && 'description' in result) {
         return result.description as string;
       }
 
       // Fallback to generic text model with image
       const textResult = await this.runtime.useModel(ModelType.TEXT_LARGE, {
-        prompt: 'Describe what you see in this image. Include details about people, objects, and the overall scene.',
+        prompt:
+          'Describe what you see in this image. Include details about people, objects, and the overall scene.',
         image: imageUrl,
       });
 
@@ -609,15 +709,17 @@ export class VisionService extends Service {
     const objects: DetectedObject[] = [];
     const blockSize = 64; // Larger blocks for less noise
     const motionThreshold = 50; // Higher threshold for more significant changes
-    
+
     // Divide frame into blocks and detect motion regions
-    for (let y = 0; y < frame.height - blockSize; y += blockSize / 2) { // Overlap blocks
+    for (let y = 0; y < frame.height - blockSize; y += blockSize / 2) {
+      // Overlap blocks
       for (let x = 0; x < frame.width - blockSize; x += blockSize / 2) {
         let blockMotion = 0;
         let pixelCount = 0;
 
         // Check motion in this block
-        for (let by = 0; by < blockSize; by += 2) { // Sample every other pixel for speed
+        for (let by = 0; by < blockSize; by += 2) {
+          // Sample every other pixel for speed
           for (let bx = 0; bx < blockSize; bx += 2) {
             const px = x + bx;
             const py = y + by;
@@ -642,7 +744,8 @@ export class VisionService extends Service {
 
         // If significant motion in block, consider it an object
         const motionPercentage = (blockMotion / pixelCount) * 100;
-        if (motionPercentage > 30) { // 30% of sampled pixels show motion
+        if (motionPercentage > 30) {
+          // 30% of sampled pixels show motion
           objects.push({
             id: `motion-${x}-${y}-${frame.timestamp}`,
             type: 'motion-object',
@@ -660,13 +763,13 @@ export class VisionService extends Service {
 
     // Merge adjacent motion blocks into larger objects
     const merged = this.mergeAdjacentObjects(objects);
-    
+
     // Filter out very small objects (likely noise)
-    const filtered = merged.filter(obj => {
+    const filtered = merged.filter((obj) => {
       const area = obj.boundingBox.width * obj.boundingBox.height;
       return area > 2000; // Minimum area threshold
     });
-    
+
     return filtered;
   }
 
@@ -692,10 +795,10 @@ export class VisionService extends Service {
           if (used.has(j)) continue;
 
           const other = objects[j];
-          
+
           // Check if adjacent to any object in cluster
           for (const clusterObj of cluster) {
-            const isAdjacent = 
+            const isAdjacent =
               Math.abs(clusterObj.boundingBox.x - other.boundingBox.x) <= mergeDistance &&
               Math.abs(clusterObj.boundingBox.y - other.boundingBox.y) <= mergeDistance;
 
@@ -711,10 +814,10 @@ export class VisionService extends Service {
 
       // Merge cluster into single object
       if (cluster.length > 0) {
-        const minX = Math.min(...cluster.map(o => o.boundingBox.x));
-        const minY = Math.min(...cluster.map(o => o.boundingBox.y));
-        const maxX = Math.max(...cluster.map(o => o.boundingBox.x + o.boundingBox.width));
-        const maxY = Math.max(...cluster.map(o => o.boundingBox.y + o.boundingBox.height));
+        const minX = Math.min(...cluster.map((o) => o.boundingBox.x));
+        const minY = Math.min(...cluster.map((o) => o.boundingBox.y));
+        const maxX = Math.max(...cluster.map((o) => o.boundingBox.x + o.boundingBox.width));
+        const maxY = Math.max(...cluster.map((o) => o.boundingBox.y + o.boundingBox.height));
         const avgConfidence = cluster.reduce((sum, o) => sum + o.confidence, 0) / cluster.length;
 
         merged.push({
@@ -750,9 +853,12 @@ export class VisionService extends Service {
     }
   }
 
-  private async detectPeopleFromMotion(frame: VisionFrame, objects: DetectedObject[]): Promise<PersonInfo[]> {
+  private async detectPeopleFromMotion(
+    frame: VisionFrame,
+    objects: DetectedObject[]
+  ): Promise<PersonInfo[]> {
     const people: PersonInfo[] = [];
-    const personCandidates = objects.filter(o => o.type === 'person-candidate');
+    const personCandidates = objects.filter((o) => o.type === 'person-candidate');
 
     for (let i = 0; i < personCandidates.length; i++) {
       const candidate = personCandidates[i];
@@ -762,7 +868,7 @@ export class VisionService extends Service {
       // if width > height, likely sitting/lying
       const aspectRatio = box.width / box.height;
       let pose: 'standing' | 'sitting' | 'lying' | 'unknown' = 'unknown';
-      
+
       if (aspectRatio < 0.6) {
         pose = 'standing';
       } else if (aspectRatio > 1.2) {
@@ -816,14 +922,14 @@ export class VisionService extends Service {
       // Capture screen
       const capture = await this.screenCapture.captureScreen();
       this.lastScreenCapture = capture;
-      
+
       // Process active tile
       const activeTile = this.screenCapture.getActiveTile();
       if (activeTile && activeTile.data) {
         const tileAnalysis = await this.analyzeTile(activeTile);
         activeTile.analysis = tileAnalysis;
       }
-      
+
       // Update enhanced scene description
       await this.updateEnhancedSceneDescription();
     } catch (error) {
@@ -835,23 +941,23 @@ export class VisionService extends Service {
     const analysis: TileAnalysis = {
       timestamp: Date.now(),
     };
-    
+
     try {
       // Run Florence-2 analysis if enabled
       if (this.visionConfig.florence2Enabled && tile.data) {
         analysis.florence2 = await this.florence2.analyzeTile(tile);
         analysis.summary = analysis.florence2.caption;
       }
-      
+
       // Run OCR if enabled
       if (this.visionConfig.ocrEnabled && tile.data) {
         analysis.ocr = await this.ocrService.extractFromTile(tile);
         analysis.text = analysis.ocr.fullText;
       }
-      
+
       // Extract objects from Florence-2 results
       if (analysis.florence2?.objects) {
-        analysis.objects = analysis.florence2.objects.map(obj => ({
+        analysis.objects = analysis.florence2.objects.map((obj) => ({
           id: `screen-obj-${Date.now()}-${Math.random()}`,
           type: obj.label,
           confidence: obj.confidence,
@@ -861,19 +967,19 @@ export class VisionService extends Service {
     } catch (error) {
       logger.error('[VisionService] Error analyzing tile:', error);
     }
-    
+
     return analysis;
   }
 
   private async updateEnhancedSceneDescription(): Promise<void> {
     if (!this.lastScreenCapture) return;
-    
+
     const enhancedScene: EnhancedSceneDescription = {
       ...(this.lastSceneDescription || {
         timestamp: Date.now(),
         description: '',
-        objects: []
-        people: []
+        objects: [],
+        people: [],
         sceneChanged: false,
         changePercentage: 0,
       }),
@@ -883,33 +989,34 @@ export class VisionService extends Service {
         activeTile: this.screenCapture.getActiveTile()?.analysis,
         gridSummary: '',
         focusedApp: '',
-        uiElements: []
+        uiElements: [],
       },
     };
-    
+
     // Aggregate OCR from all processed tiles
-    const processedTiles = this.lastScreenCapture.tiles.filter(t => t.analysis?.ocr);
+    const processedTiles = this.lastScreenCapture.tiles.filter((t) => t.analysis?.ocr);
     if (processedTiles.length > 0) {
       enhancedScene.screenAnalysis!.fullScreenOCR = processedTiles
-        .map(t => t.analysis!.ocr!.fullText)
+        .map((t) => t.analysis!.ocr!.fullText)
         .join('\n');
     }
-    
+
     // Generate grid summary
     if (this.lastScreenCapture.tiles.length > 0) {
-      const tilesWithContent = this.lastScreenCapture.tiles.filter(t => t.analysis);
+      const tilesWithContent = this.lastScreenCapture.tiles.filter((t) => t.analysis);
       enhancedScene.screenAnalysis!.gridSummary = `Screen divided into ${this.lastScreenCapture.tiles.length} tiles, ${tilesWithContent.length} analyzed`;
     }
-    
+
     // Detect focused application (heuristic based on UI elements)
     if (enhancedScene.screenAnalysis!.activeTile?.florence2?.objects) {
-      const windows = enhancedScene.screenAnalysis!.activeTile.florence2.objects
-        .filter(obj => obj.label === 'window');
+      const windows = enhancedScene.screenAnalysis!.activeTile.florence2.objects.filter(
+        (obj) => obj.label === 'window'
+      );
       if (windows.length > 0) {
         enhancedScene.screenAnalysis!.focusedApp = 'Desktop Application';
       }
     }
-    
+
     this.lastEnhancedScene = enhancedScene;
   }
 
@@ -936,30 +1043,34 @@ export class VisionService extends Service {
   }
 
   public async setVisionMode(mode: VisionMode): Promise<void> {
-    logger.info(`[VisionService] Changing vision mode from ${this.visionConfig.visionMode} to ${mode}`);
-    
+    logger.info(
+      `[VisionService] Changing vision mode from ${this.visionConfig.visionMode} to ${mode}`
+    );
+
     // Stop current processing
     this.stopProcessing();
-    
+
     // Update configuration
     this.visionConfig.visionMode = mode;
-    
+
     // Reinitialize based on new mode
     if (mode === VisionMode.OFF) {
       logger.info('[VisionService] Vision disabled');
       return;
     }
-    
+
     // Initialize components for new mode
     if ((mode === VisionMode.CAMERA || mode === VisionMode.BOTH) && !this.camera) {
       await this.initializeCameraVision();
     }
-    
-    if ((mode === VisionMode.SCREEN || mode === VisionMode.BOTH) && 
-        (!this.florence2.isInitialized() || !this.ocrService.isInitialized())) {
+
+    if (
+      (mode === VisionMode.SCREEN || mode === VisionMode.BOTH) &&
+      (!this.florence2.isInitialized() || !this.ocrService.isInitialized())
+    ) {
       await this.initializeScreenVision();
     }
-    
+
     // Start processing for new mode
     this.startProcessing();
   }
@@ -969,7 +1080,7 @@ export class VisionService extends Service {
       clearInterval(this.frameProcessingInterval);
       this.frameProcessingInterval = null;
     }
-    
+
     if (this.screenProcessingInterval) {
       clearInterval(this.screenProcessingInterval);
       this.screenProcessingInterval = null;
@@ -978,7 +1089,7 @@ export class VisionService extends Service {
 
   public getCameraInfo(): CameraInfo | null {
     if (!this.camera) return null;
-    
+
     return {
       id: this.camera.id,
       name: this.camera.name,
@@ -1032,7 +1143,7 @@ export class VisionService extends Service {
 
   async stop(): Promise<void> {
     logger.info('[VisionService] Stopping...');
-    
+
     this.stopProcessing();
 
     // Stop audio capture if active
@@ -1048,11 +1159,11 @@ export class VisionService extends Service {
     this.lastEnhancedScene = null;
     this.isProcessing = false;
     this.isProcessingScreen = false;
-    
+
     // Dispose of models
     await this.florence2.dispose();
     await this.ocrService.dispose();
-    
+
     logger.info('[VisionService] Stopped.');
   }
 
@@ -1060,7 +1171,7 @@ export class VisionService extends Service {
     try {
       // Get list of available cameras
       const cameras = await this.listCameras();
-      
+
       if (cameras.length === 0) {
         logger.warn('[VisionService] No cameras detected');
         return null;
@@ -1069,15 +1180,15 @@ export class VisionService extends Service {
       // If camera name is specified, try to find it
       if (this.visionConfig.cameraName) {
         const searchName = this.visionConfig.cameraName.toLowerCase();
-        const matchedCamera = cameras.find(cam => 
-          cam.name.toLowerCase().includes(searchName)
-        );
-        
+        const matchedCamera = cameras.find((cam) => cam.name.toLowerCase().includes(searchName));
+
         if (matchedCamera) {
           return this.createCameraDevice(matchedCamera);
         }
-        
-        logger.warn(`[VisionService] Camera "${this.visionConfig.cameraName}" not found, using default`);
+
+        logger.warn(
+          `[VisionService] Camera "${this.visionConfig.cameraName}" not found, using default`
+        );
       }
 
       // Use first available camera
@@ -1090,14 +1201,14 @@ export class VisionService extends Service {
 
   private async listCameras(): Promise<CameraInfo[]> {
     const platform = process.platform;
-    
+
     try {
       if (platform === 'darwin') {
         // macOS: Use system_profiler
         const { stdout } = await execAsync('system_profiler SPCameraDataType -json');
         const data = JSON.parse(stdout);
         const cameras: CameraInfo[] = [];
-        
+
         if (data.SPCameraDataType && Array.isArray(data.SPCameraDataType)) {
           for (const camera of data.SPCameraDataType) {
             cameras.push({
@@ -1107,14 +1218,14 @@ export class VisionService extends Service {
             });
           }
         }
-        
+
         return cameras;
       } else if (platform === 'linux') {
         // Linux: Use v4l2
         const { stdout } = await execAsync('v4l2-ctl --list-devices');
         const cameras: CameraInfo[] = [];
         const lines = stdout.split('\n');
-        
+
         let currentName = '';
         for (const line of lines) {
           if (line && !line.startsWith('\t')) {
@@ -1129,7 +1240,7 @@ export class VisionService extends Service {
             });
           }
         }
-        
+
         return cameras;
       } else if (platform === 'win32') {
         // Windows: Use PowerShell
@@ -1138,7 +1249,7 @@ export class VisionService extends Service {
         );
         const devices = JSON.parse(stdout);
         const cameras: CameraInfo[] = [];
-        
+
         if (Array.isArray(devices)) {
           for (const device of devices) {
             cameras.push({
@@ -1148,10 +1259,10 @@ export class VisionService extends Service {
             });
           }
         }
-        
+
         return cameras;
       }
-      
+
       return [];
     } catch (error) {
       logger.error('[VisionService] Error listing cameras:', error);
@@ -1161,13 +1272,13 @@ export class VisionService extends Service {
 
   private createCameraDevice(info: CameraInfo): CameraDevice {
     const platform = process.platform;
-    
+
     return {
       id: info.id,
       name: info.name,
       capture: async () => {
         const tempFile = path.join(process.cwd(), `temp_capture_${Date.now()}.jpg`);
-        
+
         try {
           if (platform === 'darwin') {
             // macOS: Use imagesnap
@@ -1182,7 +1293,9 @@ export class VisionService extends Service {
           } else if (platform === 'linux') {
             // Linux: Use fswebcam
             try {
-              await execAsync(`fswebcam -d /dev/video${info.id} -r 1280x720 --jpeg 85 "${tempFile}"`);
+              await execAsync(
+                `fswebcam -d /dev/video${info.id} -r 1280x720 --jpeg 85 "${tempFile}"`
+              );
             } catch (error: any) {
               if (error.message.includes('command not found')) {
                 throw new Error('fswebcam not installed. Run: sudo apt-get install fswebcam');
@@ -1192,7 +1305,9 @@ export class VisionService extends Service {
           } else if (platform === 'win32') {
             // Windows: Use DirectShow via ffmpeg
             try {
-              await execAsync(`ffmpeg -f dshow -i video="${info.name}" -frames:v 1 -q:v 2 "${tempFile}" -y`);
+              await execAsync(
+                `ffmpeg -f dshow -i video="${info.name}" -frames:v 1 -q:v 2 "${tempFile}" -y`
+              );
             } catch (error: any) {
               if (error.message.includes('not recognized') || error.message.includes('not found')) {
                 throw new Error('ffmpeg not installed. Download from ffmpeg.org and add to PATH');
@@ -1202,13 +1317,13 @@ export class VisionService extends Service {
           } else {
             throw new Error(`Unsupported platform: ${platform}`);
           }
-          
+
           // Read the captured image
           const imageBuffer = await fs.readFile(tempFile);
-          
+
           // Clean up temp file
           await fs.unlink(tempFile).catch(() => {});
-          
+
           return imageBuffer;
         } catch (error) {
           // Clean up temp file on error

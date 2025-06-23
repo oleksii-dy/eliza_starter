@@ -16,52 +16,59 @@ describe('Self Modification E2E Tests', () => {
         name: 'TestAgent',
         bio: ['Original bio'],
         topics: ['topic1', 'topic2'],
-        system: 'Original system prompt'
+        system: 'Original system prompt',
       },
-      actions: []
-      evaluators: []
-      providers: []
+      actions: [],
+      evaluators: [],
+      providers: [],
       services: new Map(),
       getService: (name: string) => {
         if (name === 'character-file-manager') {
           return {
             validateModification: (mod: any) => ({ valid: true, errors: [] }),
             applyModification: async (mod: any) => ({ success: true }),
-            createBackup: async () => 'backup-path'
+            createBackup: async () => 'backup-path',
           };
         }
         return null;
       },
       createMemory: async () => ({ id: asUUID(uuidv4()) }),
-      getMemories: async () => []
+      getMemories: async () => [],
       getSetting: () => 'admin-user-id',
       getCache: async () => null,
       setCache: async () => {},
-      useModel: async () => '{"isModificationRequest": true, "requestType": "explicit", "confidence": 0.8}'
+      useModel: async () =>
+        '{"isModificationRequest": true, "requestType": "explicit", "confidence": 0.8}',
     } as any;
 
     // Add mock actions
-    mockRuntime.actions = [{
-      name: 'MODIFY_CHARACTER',
-      validate: async () => true,
-      handler: async () => ({ success: true })
-    }];
+    mockRuntime.actions = [
+      {
+        name: 'MODIFY_CHARACTER',
+        validate: async () => true,
+        handler: async () => ({ success: true }),
+      },
+    ];
 
     // Add mock evaluators
-    mockRuntime.evaluators = [{
-      name: 'CHARACTER_EVOLUTION',
-      validate: async () => true,
-      handler: async () => {}
-    }];
+    mockRuntime.evaluators = [
+      {
+        name: 'CHARACTER_EVOLUTION',
+        validate: async () => true,
+        handler: async () => {},
+      },
+    ];
 
     // Add mock providers
-    mockRuntime.providers = [{
-      name: 'CHARACTER_EVOLUTION',
-      get: async () => ({
-        text: 'CHARACTER EVOLUTION CONTEXT',
-        values: { hasEvolutionCapability: true }
-      })
-    }];
+    mockRuntime.providers = [
+      {
+        name: 'CHARACTER_EVOLUTION',
+        get: async () => ({
+          text: 'CHARACTER EVOLUTION CONTEXT',
+          values: { hasEvolutionCapability: true },
+        }),
+      },
+    ];
 
     return mockRuntime;
   };
@@ -84,9 +91,7 @@ describe('Self Modification E2E Tests', () => {
     expect(evolutionEvaluator).toBeDefined();
 
     // Verify providers are registered
-    const evolutionProvider = runtime.providers.find(
-      (p: any) => p.name === 'CHARACTER_EVOLUTION'
-    );
+    const evolutionProvider = runtime.providers.find((p: any) => p.name === 'CHARACTER_EVOLUTION');
     expect(evolutionProvider).toBeDefined();
   });
 
@@ -106,7 +111,7 @@ describe('Self Modification E2E Tests', () => {
           source: 'test',
         },
         createdAt: Date.now(),
-      }
+      },
     ];
 
     // Create state with message count

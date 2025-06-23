@@ -109,10 +109,10 @@ export const versionManagementTests: TestCase[] = [
           {
             name: 'OLD_API_ACTION',
             description: 'Action with v1 API',
-            similes: []
+            similes: [],
             validate: async () => true,
             handler: async () => ({ text: 'v1 response format' }),
-            examples: []
+            examples: [],
           },
         ],
       };
@@ -125,13 +125,13 @@ export const versionManagementTests: TestCase[] = [
           {
             name: 'NEW_API_ACTION', // Different action name
             description: 'Action with v2 API',
-            similes: []
+            similes: [],
             validate: async () => true,
             handler: async () => ({
               text: 'v2 response format',
               data: { version: 2, breaking: true },
             }),
-            examples: []
+            examples: [],
           },
         ],
       };

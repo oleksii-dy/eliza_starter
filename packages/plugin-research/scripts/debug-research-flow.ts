@@ -56,11 +56,11 @@ const createRuntime = (researchService?: ResearchService): IAgentRuntime => {
 
     messageManager: {
       createMemory: async () => true,
-      getMemories: async () => []
+      getMemories: async () => [],
       updateMemory: async () => true,
       deleteMemory: async () => true,
-      searchMemories: async () => []
-      getLastMessages: async () => []
+      searchMemories: async () => [],
+      getLastMessages: async () => [],
     },
 
     composeState: async () => ({
@@ -69,10 +69,10 @@ const createRuntime = (researchService?: ResearchService): IAgentRuntime => {
       text: '',
     }),
 
-    actions: []
-    providers: []
-    evaluators: []
-    plugins: []
+    actions: [],
+    providers: [],
+    evaluators: [],
+    plugins: [],
 
     logger: elizaLogger,
   } as any;

@@ -83,7 +83,7 @@ export const followRoomAction: Action = {
         const response = await runtime.useModel(ModelType.TEXT_SMALL, {
           runtime,
           prompt: shouldFollowPrompt,
-          stopSequences: []
+          stopSequences: [],
         });
 
         const cleanedResponse = response.trim().toLowerCase();
@@ -467,5 +467,5 @@ export const followRoomAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 } as Action;

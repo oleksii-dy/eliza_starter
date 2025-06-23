@@ -22,52 +22,55 @@ export const planningScenariosSuite: TestSuite = {
         // Create real memory with planning request
         const roomId = uuidv4() as UUID;
         const userId = uuidv4() as UUID;
-        
-        const message = await runtime.createMemory({
-          entityId: userId,
-          roomId,
-          content: {
-            text: 'Create a plan to analyze customer feedback and generate a response',
-            source: 'test',
-            actions: ['CREATE_PLAN', 'EXECUTE_PLAN']
-          }
-        }, 'messages');
+
+        const message = await runtime.createMemory(
+          {
+            entityId: userId,
+            roomId,
+            content: {
+              text: 'Create a plan to analyze customer feedback and generate a response',
+              source: 'test',
+              actions: ['CREATE_PLAN', 'EXECUTE_PLAN'],
+            },
+          },
+          'messages'
+        );
 
         // Create real state using runtime
         const state = await runtime.composeState(message, ['messageClassifier']);
-        
+
         // Create simple plan using planning service
         const responseContent = {
           text: 'I will create a plan to analyze the feedback',
-          actions: ['ANALYZE_INPUT', 'PROCESS_ANALYSIS', 'EXECUTE_FINAL']
+          actions: ['ANALYZE_INPUT', 'PROCESS_ANALYSIS', 'EXECUTE_FINAL'],
         };
-        
+
         const plan = await planningService.createSimplePlan(
-          runtime, 
-          message, 
-          state, 
+          runtime,
+          message,
+          state,
           responseContent
         );
-        
+
         if (!plan) {
           throw new Error('Failed to create simple plan');
         }
-        
+
         // Validate plan structure
         if (plan.steps.length !== 3) {
           throw new Error(`Expected 3 steps, got ${plan.steps.length}`);
         }
-        
+
         // Verify plan contains expected actions
-        const actionNames = plan.steps.map(s => s.actionName);
+        const actionNames = plan.steps.map((s) => s.actionName);
         if (!actionNames.includes('ANALYZE_INPUT')) {
           throw new Error('Plan missing ANALYZE_INPUT action');
         }
-        
+
         console.log('✅ Simple plan creation test passed');
-      }
+      },
     },
-    
+
     {
       name: 'Should create comprehensive plans using real LLM',
       fn: async (runtime: IAgentRuntime) => {
@@ -80,47 +83,54 @@ export const planningScenariosSuite: TestSuite = {
         const context = {
           goal: 'Develop a customer retention strategy based on feedback analysis',
           constraints: [
-            { type: 'time' as const, value: '2 weeks', description: 'Must complete within 2 weeks' },
-            { type: 'resource' as const, value: 'limited', description: 'Limited budget available' }
+            {
+              type: 'time' as const,
+              value: '2 weeks',
+              description: 'Must complete within 2 weeks',
+            },
+            {
+              type: 'resource' as const,
+              value: 'limited',
+              description: 'Limited budget available',
+            },
           ],
-          availableActions: runtime.actions.map(a => a.name),
-          availableProviders: runtime.providers.map(p => p.name),
+          availableActions: runtime.actions.map((a) => a.name),
+          availableProviders: runtime.providers.map((p) => p.name),
           preferences: {
             executionModel: 'sequential' as const,
             maxSteps: 5,
-            timeoutMs: 30000
-          }
+            timeoutMs: 30000,
+          },
         };
-        
+
         // Use real LLM to create comprehensive plan
-        const comprehensivePlan = await planningService.createComprehensivePlan(
-          runtime,
-          context
-        );
-        
+        const comprehensivePlan = await planningService.createComprehensivePlan(runtime, context);
+
         // Validate plan using planning service
         const validation = await planningService.validatePlan(runtime, comprehensivePlan);
         if (!validation.valid) {
           throw new Error(`Plan validation failed: ${validation.issues?.join(', ')}`);
         }
-        
+
         // Verify plan has reasonable number of steps
         if (comprehensivePlan.steps.length < 2 || comprehensivePlan.steps.length > 8) {
           throw new Error(`Unexpected step count: ${comprehensivePlan.steps.length}`);
         }
-        
+
         // Verify all actions exist in runtime
         for (const step of comprehensivePlan.steps) {
-          const action = runtime.actions.find(a => a.name === step.actionName);
+          const action = runtime.actions.find((a) => a.name === step.actionName);
           if (!action) {
             throw new Error(`Action '${step.actionName}' not found in runtime`);
           }
         }
-        
-        console.log(`✅ Comprehensive plan creation test passed with ${comprehensivePlan.steps.length} steps`);
-      }
+
+        console.log(
+          `✅ Comprehensive plan creation test passed with ${comprehensivePlan.steps.length} steps`
+        );
+      },
     },
-    
+
     {
       name: 'Should execute plans with real runtime integration',
       fn: async (runtime: IAgentRuntime) => {
@@ -132,24 +142,27 @@ export const planningScenariosSuite: TestSuite = {
         // Create test room and user
         const roomId = uuidv4() as UUID;
         const userId = uuidv4() as UUID;
-        
+
         // Ensure room exists
         await runtime.ensureRoomExists({
           id: roomId,
           name: 'Planning Test Room',
           type: 'GROUP',
-          source: 'test'
+          source: 'test',
         });
-        
-        const message = await runtime.createMemory({
-          entityId: userId,
-          roomId,
-          content: {
-            text: 'Execute a simple two-step process',
-            source: 'test'
-          }
-        }, 'messages');
-        
+
+        const message = await runtime.createMemory(
+          {
+            entityId: userId,
+            roomId,
+            content: {
+              text: 'Execute a simple two-step process',
+              source: 'test',
+            },
+          },
+          'messages'
+        );
+
         // Create a simple plan for execution
         const simplePlan = {
           id: uuidv4() as UUID,
@@ -159,14 +172,14 @@ export const planningScenariosSuite: TestSuite = {
               id: uuidv4() as UUID,
               actionName: 'REPLY',
               parameters: { text: 'Step 1 executing' },
-              dependencies: []
+              dependencies: [],
             },
             {
-              id: uuidv4() as UUID, 
+              id: uuidv4() as UUID,
               actionName: 'REPLY',
               parameters: { text: 'Step 2 executing' },
-              dependencies: []
-            }
+              dependencies: [],
+            },
           ],
           executionModel: 'sequential' as const,
           state: { status: 'pending' as const },
@@ -174,94 +187,94 @@ export const planningScenariosSuite: TestSuite = {
             createdAt: Date.now(),
             estimatedDuration: 10000,
             priority: 1,
-            tags: ['test']
-          }
+            tags: ['test'],
+          },
         };
-        
+
         // Execute plan using real runtime
-        const executionResult = await planningService.executePlan(
-          runtime,
-          simplePlan,
-          message
-        );
-        
+        const executionResult = await planningService.executePlan(runtime, simplePlan, message);
+
         // Verify execution results
         if (!executionResult.success) {
-          throw new Error(`Plan execution failed: ${executionResult.errors?.map(e => e.message).join(', ')}`);
+          throw new Error(
+            `Plan execution failed: ${executionResult.errors?.map((e) => e.message).join(', ')}`
+          );
         }
-        
+
         if (executionResult.completedSteps !== 2) {
           throw new Error(`Expected 2 completed steps, got ${executionResult.completedSteps}`);
         }
-        
+
         if (executionResult.results.length !== 2) {
           throw new Error(`Expected 2 results, got ${executionResult.results.length}`);
         }
-        
+
         console.log(`✅ Plan execution test passed in ${executionResult.duration}ms`);
-      }
+      },
     },
-    
+
     {
       name: 'Should integrate with message handling system',
       fn: async (runtime: IAgentRuntime) => {
         // Test that planning service integrates with message processing
         const roomId = uuidv4() as UUID;
         const userId = uuidv4() as UUID;
-        
+
         await runtime.ensureRoomExists({
           id: roomId,
           name: 'Message Integration Test',
           type: 'DM',
-          source: 'test'
+          source: 'test',
         });
-        
+
         // Create message that should trigger planning
-        const planningMessage = await runtime.createMemory({
-          entityId: userId,
-          roomId,
-          content: {
-            text: 'I need you to analyze data, create a report, and email it to stakeholders',
-            source: 'test'
-          }
-        }, 'messages');
-        
+        const planningMessage = await runtime.createMemory(
+          {
+            entityId: userId,
+            roomId,
+            content: {
+              text: 'I need you to analyze data, create a report, and email it to stakeholders',
+              source: 'test',
+            },
+          },
+          'messages'
+        );
+
         // Process message through runtime (this should use planning service)
         await runtime.processMessage(planningMessage);
-        
+
         // Wait for processing to complete
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         // Retrieve response messages
         const messages = await runtime.getMemories({
           roomId,
-          count: 10
+          count: 10,
         });
-        
+
         // Should have at least the original message plus agent response
         if (messages.length < 2) {
           throw new Error(`Expected at least 2 messages, got ${messages.length}`);
         }
-        
+
         // Find agent response
-        const agentResponse = messages.find(m => 
-          m.entityId === runtime.agentId && 
-          m.id !== planningMessage.id
+        const agentResponse = messages.find(
+          (m) => m.entityId === runtime.agentId && m.id !== planningMessage.id
         );
-        
+
         if (!agentResponse) {
           throw new Error('No agent response found');
         }
-        
+
         if (!agentResponse.content.text) {
           throw new Error('Agent response has no text content');
         }
-        
+
         console.log('✅ Message handling integration test passed');
         console.log(`Agent response: ${agentResponse.content.text}`);
-      }
+      },
     },
-    
+
     {
       name: 'Should handle plan adaptation and error recovery',
       fn: async (runtime: IAgentRuntime) => {
@@ -279,14 +292,14 @@ export const planningScenariosSuite: TestSuite = {
               id: uuidv4() as UUID,
               actionName: 'NONEXISTENT_ACTION', // This will fail
               parameters: {},
-              dependencies: []
+              dependencies: [],
             },
             {
               id: uuidv4() as UUID,
               actionName: 'REPLY',
               parameters: { text: 'Recovery step' },
-              dependencies: []
-            }
+              dependencies: [],
+            },
           ],
           executionModel: 'sequential' as const,
           state: { status: 'pending' as const },
@@ -294,42 +307,42 @@ export const planningScenariosSuite: TestSuite = {
             createdAt: Date.now(),
             estimatedDuration: 5000,
             priority: 1,
-            tags: ['error-test']
-          }
+            tags: ['error-test'],
+          },
         };
-        
+
         // Validate plan (should catch the missing action)
         const validation = await planningService.validatePlan(runtime, problematicPlan);
         if (validation.valid) {
           throw new Error('Plan validation should have failed for nonexistent action');
         }
-        
-        if (!validation.issues?.some(issue => issue.includes('NONEXISTENT_ACTION'))) {
+
+        if (!validation.issues?.some((issue) => issue.includes('NONEXISTENT_ACTION'))) {
           throw new Error('Validation should have flagged the nonexistent action');
         }
-        
+
         // Test adaptation
         const adaptedPlan = await planningService.adaptPlan(
           runtime,
           problematicPlan,
           0, // Current step index
-          [] // No previous results
+          [], // No previous results
           new Error('Action not found')
         );
-        
+
         // Verify adaptation occurred
         if (adaptedPlan.id !== problematicPlan.id) {
           throw new Error('Adapted plan should maintain same ID');
         }
-        
+
         if (!adaptedPlan.metadata.adaptations) {
           throw new Error('Adapted plan should have adaptation metadata');
         }
-        
+
         console.log('✅ Plan adaptation and error recovery test passed');
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
 
 export default planningScenariosSuite;

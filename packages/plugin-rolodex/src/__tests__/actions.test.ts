@@ -69,7 +69,7 @@ describe('Rolodex Actions', () => {
         metadata: {
           type: 'person',
           summary: 'A helpful person',
-          tags: []
+          tags: [],
           platforms: {},
           bio: 'A helpful person',
         },
@@ -79,7 +79,7 @@ describe('Rolodex Actions', () => {
         type: 'person',
         names: ['John'],
         summary: 'A helpful person',
-        tags: []
+        tags: [],
         platforms: {},
         metadata: {
           bio: 'A helpful person',
@@ -94,7 +94,7 @@ describe('Rolodex Actions', () => {
             type: 'person',
             names: ['Sarah'],
             summary: 'Test person',
-            tags: []
+            tags: [],
             platforms: {},
             metadata: {},
           },
@@ -107,7 +107,7 @@ describe('Rolodex Actions', () => {
         type: 'person',
         names: ['Sarah'],
         summary: 'Updated bio',
-        tags: []
+        tags: [],
         platforms: {},
         metadata: { bio: 'Updated bio' },
         createdAt: new Date().toISOString(),
@@ -118,7 +118,7 @@ describe('Rolodex Actions', () => {
         type: 'person',
         names: ['Sarah'],
         summary: 'Test entity',
-        tags: []
+        tags: [],
         platforms: {},
         metadata: { bio: 'Test entity' },
         createdAt: new Date().toISOString(),

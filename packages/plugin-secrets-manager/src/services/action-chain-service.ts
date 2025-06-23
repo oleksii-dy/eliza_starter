@@ -155,7 +155,7 @@ export class ActionChainService extends Service {
       worldId,
       agentId: this.runtime.agentId,
       data: new Map(),
-      history: []
+      history: [],
       workflow,
       currentStep: 0,
     };
@@ -193,7 +193,7 @@ export class ActionChainService extends Service {
       sessionId: context.sessionId,
       completedSteps: 0,
       totalSteps: workflow.steps.length,
-      results: []
+      results: [],
     };
 
     for (let i = 0; i < workflow.steps.length; i++) {
@@ -371,7 +371,7 @@ export class ActionChainService extends Service {
    * Execute success actions
    */
   private async executeSuccessActions(
-    actionNames: string[]
+    actionNames: string[],
     context: ActionChainContext
   ): Promise<void> {
     for (const actionName of actionNames) {
@@ -387,7 +387,7 @@ export class ActionChainService extends Service {
    * Execute failure actions
    */
   private async executeFailureActions(
-    actionNames: string[]
+    actionNames: string[],
     context: ActionChainContext
   ): Promise<void> {
     for (const actionName of actionNames) {

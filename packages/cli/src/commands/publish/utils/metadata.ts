@@ -20,7 +20,7 @@ export async function generatePackageMetadata(
     publishedAt: new Date().toISOString(),
     publishedBy: username,
     dependencies: packageJson.dependencies || {},
-    tags: packageJson.keywords || []
+    tags: packageJson.keywords || [],
     license: packageJson.license || 'UNLICENSED',
   };
 

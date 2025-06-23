@@ -11,11 +11,11 @@ class ProductionTestRuntime implements IAgentRuntime {
     name: 'Production Test Agent',
     bio: ['Test agent for production E2E testing'],
     system: 'You are a test agent for production research testing',
-    messageExamples: []
-    postExamples: []
-    topics: []
-    knowledge: []
-    plugins: []
+    messageExamples: [],
+    postExamples: [],
+    topics: [],
+    knowledge: [],
+    plugins: [],
   };
 
   providers = [];
@@ -458,7 +458,7 @@ describe('Research Service Error Handling', () => {
 
     // Should handle shutdown gracefully - just await without throwing
     await service.stop();
-    
+
     // If we get here, the method didn't throw
     expect(true).toBe(true);
   });

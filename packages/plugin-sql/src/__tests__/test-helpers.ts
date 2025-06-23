@@ -69,7 +69,7 @@ export async function createTestDatabase(
         knowledge: [],
         topics: [],
         messageExamples: [],
-        postExamples: []
+        postExamples: [],
       };
 
       // Initialize adapter with migrations (will use test schema)
@@ -134,7 +134,7 @@ export async function createTestDatabase(
     knowledge: [],
     topics: [],
     messageExamples: [],
-    postExamples: []
+    postExamples: [],
   };
 
   // Initialize adapter with migrations (will use test_ prefix for tables)
@@ -240,7 +240,7 @@ export async function createIsolatedTestDatabase(
         knowledge: [],
         topics: [],
         messageExamples: [],
-        postExamples: []
+        postExamples: [],
       };
 
       // Initialize adapter with migrations
@@ -318,7 +318,7 @@ export async function createIsolatedTestDatabase(
     knowledge: [],
     topics: [],
     messageExamples: [],
-    postExamples: []
+    postExamples: [],
   };
 
   // Re-initialize adapter after cleanup to ensure fresh state

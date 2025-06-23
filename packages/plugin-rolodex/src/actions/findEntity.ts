@@ -29,8 +29,8 @@ function levenshteinDistance(str1: string, str2: string): number {
       } else {
         matrix[i][j] = Math.min(
           matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+          matrix[i][j - 1] + 1, // insertion
+          matrix[i - 1][j] + 1 // deletion
         );
       }
     }
@@ -47,7 +47,7 @@ async function findEntityByName(
 ): Promise<Entity | null> {
   try {
     // Get entities from room if roomId provided, otherwise get all entities
-    const entities = roomId 
+    const entities = roomId
       ? await runtime.getEntitiesForRoom(roomId)
       : await runtime.getEntitiesByIds([]);
 
@@ -62,12 +62,12 @@ async function findEntityByName(
     for (const entity of entities) {
       for (const name of entity.names) {
         const nameLower = name.toLowerCase().trim();
-        
+
         // Exact match gets highest priority
         if (nameLower === searchLower) {
           return entity;
         }
-        
+
         // Check if search term is contained in name
         if (nameLower.includes(searchLower) || searchLower.includes(nameLower)) {
           const distance = levenshteinDistance(searchLower, nameLower);
@@ -76,11 +76,11 @@ async function findEntityByName(
             bestMatch = entity;
           }
         }
-        
+
         // Calculate edit distance for fuzzy matching
         const distance = levenshteinDistance(searchLower, nameLower);
-        const similarity = 1 - (distance / Math.max(searchLower.length, nameLower.length));
-        
+        const similarity = 1 - distance / Math.max(searchLower.length, nameLower.length);
+
         if (similarity > 0.6 && distance < bestScore) {
           bestScore = distance;
           bestMatch = entity;
@@ -309,23 +309,23 @@ function extractSearchQuery(text: string): string | null {
   return null;
 }
 
-function formatEntityDetails(entity: any, components: any[] relationships: any[]): string {
+function formatEntityDetails(entity: any, components: any[], relationships: any[]): string {
   let details = `**${entity.names[0]}**\n`;
   details += `- ID: ${entity.id}\n`;
   details += `- Names: ${entity.names.join(', ')}\n`;
-  
+
   if (entity.metadata) {
     details += `- Metadata: ${JSON.stringify(entity.metadata, null, 2)}\n`;
   }
-  
+
   if (components.length > 0) {
-    details += `- Components: ${components.map(c => c.type).join(', ')}\n`;
+    details += `- Components: ${components.map((c) => c.type).join(', ')}\n`;
   }
-  
+
   if (relationships.length > 0) {
     details += `- Relationships: ${relationships.length} connections\n`;
   }
-  
+
   return details;
 }
 
@@ -348,17 +348,17 @@ interface SearchResult {
   score: number;
 }
 
-function searchEntitiesFuzzy(entities: any[] query: string): SearchResult[] {
+function searchEntitiesFuzzy(entities: any[], query: string): SearchResult[] {
   const queryLower = query.toLowerCase();
   const results: SearchResult[] = [];
 
   for (const entity of entities) {
     let bestScore = 0;
-    
+
     // Check all names for matches
     for (const name of entity.names) {
       const nameLower = name.toLowerCase();
-      
+
       // Exact match
       if (nameLower === queryLower) {
         bestScore = Math.max(bestScore, 1.0);
@@ -375,14 +375,15 @@ function searchEntitiesFuzzy(entities: any[] query: string): SearchResult[] {
       else {
         const distance = calculateSimpleDistance(queryLower, nameLower);
         const maxLen = Math.max(queryLower.length, nameLower.length);
-        const similarity = 1 - (distance / maxLen);
+        const similarity = 1 - distance / maxLen;
         if (similarity > 0.5) {
           bestScore = Math.max(bestScore, similarity * 0.6);
         }
       }
     }
-    
-    if (bestScore > 0.3) { // Minimum threshold
+
+    if (bestScore > 0.3) {
+      // Minimum threshold
       results.push({ entity, score: bestScore });
     }
   }
@@ -394,27 +395,29 @@ function searchEntitiesFuzzy(entities: any[] query: string): SearchResult[] {
 function calculateSimpleDistance(a: string, b: string): number {
   if (a.length === 0) return b.length;
   if (b.length === 0) return a.length;
-  
-  const matrix = Array(a.length + 1).fill(null).map(() => Array(b.length + 1).fill(null));
-  
+
+  const matrix = Array(a.length + 1)
+    .fill(null)
+    .map(() => Array(b.length + 1).fill(null));
+
   for (let i = 0; i <= a.length; i++) {
     matrix[i][0] = i;
   }
-  
+
   for (let j = 0; j <= b.length; j++) {
     matrix[0][j] = j;
   }
-  
+
   for (let i = 1; i <= a.length; i++) {
     for (let j = 1; j <= b.length; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
       matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1,     // deletion
-        matrix[i][j - 1] + 1,     // insertion
+        matrix[i - 1][j] + 1, // deletion
+        matrix[i][j - 1] + 1, // insertion
         matrix[i - 1][j - 1] + cost // substitution
       );
     }
   }
-  
+
   return matrix[a.length][b.length];
 }

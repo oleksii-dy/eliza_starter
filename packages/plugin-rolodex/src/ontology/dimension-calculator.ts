@@ -229,7 +229,7 @@ export async function extractRelationshipEvidence(
  * Calculate strength factors from interactions
  */
 export function calculateStrengthFactors(
-  messages: Memory[]
+  messages: Memory[],
   relationshipMetadata?: RelationshipMetadata
 ): StrengthFactors {
   const now = Date.now();
@@ -358,14 +358,14 @@ export function determineTrajectory(
  * Calculate composite relationship from multiple dimensions
  */
 export function calculateCompositeRelationship(
-  dimensions: RelationshipDimension[]
+  dimensions: RelationshipDimension[],
   metadata: RelationshipMetadata
 ): CompositeRelationship {
   if (dimensions.length === 0) {
     return {
       overallStrength: 0,
       primaryDimension: null,
-      secondaryDimensions: []
+      secondaryDimensions: [],
       complexity: 0,
       trajectory: 'stable',
       narrativeSummary: 'No established relationship dimensions.'
@@ -426,7 +426,7 @@ export function calculateCompositeRelationship(
  */
 function generateRelationshipNarrative(
   primary: RelationshipDimension,
-  secondary: RelationshipDimension[]
+  secondary: RelationshipDimension[],
   overallStrength: number,
   complexity: number,
   trajectory: string,
@@ -528,7 +528,7 @@ function getArticle(word: string): string {
  */
 export function updateDimension(
   dimension: RelationshipDimension,
-  newEvidence: RelationshipEvidence[]
+  newEvidence: RelationshipEvidence[],
   factors: StrengthFactors,
   config: RelationshipAnalysisConfig = DEFAULT_ANALYSIS_CONFIG
 ): RelationshipDimension {
@@ -567,7 +567,7 @@ export function updateDimension(
 export function createRelationshipMatrix(
   sourceEntityId: string,
   targetEntityId: string,
-  dimensions: RelationshipDimension[]
+  dimensions: RelationshipDimension[],
   metadata: RelationshipMetadata
 ): RelationshipMatrix {
   const composite = calculateCompositeRelationship(dimensions, metadata);

@@ -197,7 +197,7 @@ export class ValidationError extends TrainingError {
 export class DataValidationError extends ValidationError {
   readonly code = 'VALIDATION_ERROR';
 
-  constructor(dataType: string, issues: string[] context: Record<string, any> = {}) {
+  constructor(dataType: string, issues: string[], context: Record<string, any> = {}) {
     super(
       'data',
       dataType,

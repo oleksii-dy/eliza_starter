@@ -120,7 +120,7 @@ export class UniversalPaymentService extends Service implements IUniversalWallet
         return {
             totalValueUsd: 0,
             chains: this.chainSupport,
-            assets: []
+            assets: [],
             breakdown: {
                 tokens: 0,
                 defi: 0,
@@ -332,7 +332,7 @@ export class UniversalPaymentService extends Service implements IUniversalWallet
                 rpcUrls: ['https://eth.public-rpc.com'],
                 blockExplorerUrls: ['https://etherscan.io'],
                 isTestnet: false,
-                bridgeSupport: []
+                bridgeSupport: [],
             },
         ];
     }

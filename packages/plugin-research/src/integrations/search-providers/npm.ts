@@ -9,75 +9,97 @@ const NPMPackageSchema = z.object({
   description: z.string().optional(),
   version: z.string(),
   keywords: z.array(z.string()).optional(),
-  author: z.union([
-    z.string(),
-    z.object({
-      name: z.string(),
-      email: z.string().optional(),
-    })
-  ]).optional(),
-  maintainers: z.array(z.object({
-    name: z.string(),
-    email: z.string().optional(),
-  })).optional(),
-  repository: z.union([
-    z.string(),
-    z.object({
-      type: z.string().optional(),
-      url: z.string(),
-    })
-  ]).optional(),
+  author: z
+    .union([
+      z.string(),
+      z.object({
+        name: z.string(),
+        email: z.string().optional(),
+      }),
+    ])
+    .optional(),
+  maintainers: z
+    .array(
+      z.object({
+        name: z.string(),
+        email: z.string().optional(),
+      })
+    )
+    .optional(),
+  repository: z
+    .union([
+      z.string(),
+      z.object({
+        type: z.string().optional(),
+        url: z.string(),
+      }),
+    ])
+    .optional(),
   homepage: z.string().optional(),
   license: z.string().optional(),
   readme: z.string().optional(),
-  'dist-tags': z.object({
-    latest: z.string(),
-  }).optional(),
+  'dist-tags': z
+    .object({
+      latest: z.string(),
+    })
+    .optional(),
   time: z.record(z.string()).optional(),
 });
 
 const NPMSearchSchema = z.object({
-  objects: z.array(z.object({
-    package: z.object({
-      name: z.string(),
-      version: z.string(),
-      description: z.string().optional(),
-      keywords: z.array(z.string()).optional(),
-      author: z.union([
-        z.string(),
-        z.object({
-          name: z.string(),
-          email: z.string().optional(),
-        })
-      ]).optional(),
-      maintainers: z.array(z.object({
-        username: z.string(),
-        email: z.string().optional(),
-      })).optional(),
-      repository: z.union([
-        z.string(),
-        z.object({
-          type: z.string().optional(),
-          url: z.string(),
-        })
-      ]).optional(),
-      links: z.object({
-        npm: z.string().optional(),
-        homepage: z.string().optional(),
-        repository: z.string().optional(),
-        bugs: z.string().optional(),
-      }).optional(),
-    }),
-    score: z.object({
-      final: z.number(),
-      detail: z.object({
-        quality: z.number(),
-        popularity: z.number(),
-        maintenance: z.number(),
+  objects: z.array(
+    z.object({
+      package: z.object({
+        name: z.string(),
+        version: z.string(),
+        description: z.string().optional(),
+        keywords: z.array(z.string()).optional(),
+        author: z
+          .union([
+            z.string(),
+            z.object({
+              name: z.string(),
+              email: z.string().optional(),
+            }),
+          ])
+          .optional(),
+        maintainers: z
+          .array(
+            z.object({
+              username: z.string(),
+              email: z.string().optional(),
+            })
+          )
+          .optional(),
+        repository: z
+          .union([
+            z.string(),
+            z.object({
+              type: z.string().optional(),
+              url: z.string(),
+            }),
+          ])
+          .optional(),
+        links: z
+          .object({
+            npm: z.string().optional(),
+            homepage: z.string().optional(),
+            repository: z.string().optional(),
+            bugs: z.string().optional(),
+          })
+          .optional(),
       }),
-    }),
-    searchScore: z.number().optional(),
-  })),
+      score: z.object({
+        final: z.number(),
+        detail: z.object({
+          quality: z.number(),
+          popularity: z.number(),
+          maintenance: z.number(),
+        }),
+      }),
+      searchScore: z.number().optional(),
+    })
+  ),
   total: z.number(),
   time: z.string(),
 });
@@ -132,10 +154,10 @@ export class NPMSearchProvider {
       });
 
       const searchData = NPMSearchSchema.parse(searchResponse.data);
-      
+
       // Get detailed information if requested
       let results: SearchResult[] = [];
-      
+
       if (this.config.includeDetails) {
         // Get detailed package info for top results
         const topPackages = searchData.objects.slice(0, Math.min(limit, 10));
@@ -160,12 +182,16 @@ export class NPMSearchProvider {
     } catch (error) {
       const duration = Date.now() - startTime;
       elizaLogger.error(`[NPM] Search failed after ${duration}ms:`, error);
-      
+
       // Wrap the error to prevent serialization issues
       if (axios.isAxiosError(error)) {
-        throw new Error(`NPM search failed: ${error.message} (${error.response?.status || 'no status'})`);
+        throw new Error(
+          `NPM search failed: ${error.message} (${error.response?.status || 'no status'})`
+        );
       }
-      throw new Error(`NPM search failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `NPM search failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -183,8 +209,10 @@ export class NPMSearchProvider {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         elizaLogger.debug(`[NPM] Package ${packageName} not found`);
       } else {
-        elizaLogger.warn(`[NPM] Failed to get details for ${packageName}:`, 
-          error instanceof Error ? error.message : String(error));
+        elizaLogger.warn(
+          `[NPM] Failed to get details for ${packageName}:`,
+          error instanceof Error ? error.message : String(error)
+        );
       }
       return null;
     }
@@ -192,12 +220,15 @@ export class NPMSearchProvider {
 
   private convertToSearchResult(item: any, details?: any): SearchResult {
     const pkg = item.package;
-    const score = item.score || { final: 0.5, detail: { quality: 0.5, popularity: 0.5, maintenance: 0.5 } };
-    
+    const score = item.score || {
+      final: 0.5,
+      detail: { quality: 0.5, popularity: 0.5, maintenance: 0.5 },
+    };
+
     // Use detailed info if available, fallback to search result data
     const packageData = details || pkg;
     const packageUrl = `https://www.npmjs.com/package/${pkg.name}`;
-    
+
     // Extract author information
     let author = '';
     if (packageData.author) {
@@ -233,9 +264,10 @@ export class NPMSearchProvider {
     // Add quality metrics
     let qualityInfo = '';
     if (score.detail) {
-      qualityInfo = `\nQuality: ${(score.detail.quality * 100).toFixed(0)}% | ` +
-                   `Popularity: ${(score.detail.popularity * 100).toFixed(0)}% | ` +
-                   `Maintenance: ${(score.detail.maintenance * 100).toFixed(0)}%`;
+      qualityInfo =
+        `\nQuality: ${(score.detail.quality * 100).toFixed(0)}% | ` +
+        `Popularity: ${(score.detail.popularity * 100).toFixed(0)}% | ` +
+        `Maintenance: ${(score.detail.maintenance * 100).toFixed(0)}%`;
     }
 
     return {
@@ -247,7 +279,7 @@ export class NPMSearchProvider {
       provider: 'npm',
       metadata: {
         language: 'javascript',
-        author: author ? [author] : []
+        author: author ? [author] : [],
         type: 'package',
         domain: 'npmjs.com',
       },
@@ -311,7 +343,7 @@ export class NPMSearchProvider {
   /**
    * Search for packages with specific keywords
    */
-  async searchByKeywords(keywords: string[] maxResults?: number): Promise<SearchResult[]> {
+  async searchByKeywords(keywords: string[], maxResults?: number): Promise<SearchResult[]> {
     const query = `keywords:${keywords.join(',')}`;
     return this.search(query, maxResults);
   }
@@ -324,7 +356,7 @@ export class NPMSearchProvider {
     if (category) {
       query += ` ${category}`;
     }
-    
+
     return this.search(query, maxResults);
   }
 }

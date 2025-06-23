@@ -22,8 +22,8 @@ export const agentTemplates: AgentTemplate[] = [
       name: '',
       username: '',
       system: '',
-      bio: []
-      topics: []
+      bio: [],
+      topics: [],
       plugins: [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openai',

@@ -239,8 +239,8 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         name: 'empty-server',
         description: 'MCP server with no tools',
         outputDir: tempDir,
-        tools: []
-        resources: []
+        tools: [],
+        resources: [],
       };
 
       const result = await service.createMCPProject(config);
@@ -256,7 +256,7 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         name: 'resource-server',
         description: 'MCP server with only resources',
         outputDir: tempDir,
-        tools: []
+        tools: [],
         resources: [
           {
             name: 'config',

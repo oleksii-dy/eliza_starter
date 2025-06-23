@@ -1,10 +1,4 @@
-import {
-  IAgentRuntime,
-  Service,
-  ServiceType,
-  logger,
-  UUID,
-} from '@elizaos/core';
+import { IAgentRuntime, Service, ServiceType, logger, UUID } from '@elizaos/core';
 import {
   IUniversalWalletService,
   UniversalPortfolio,
@@ -58,7 +52,8 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
     WalletCapability.SESSION_KEYS,
   ];
 
-  public readonly capabilityDescription = 'CrossMint enterprise blockchain platform with MPC wallets, X.402 payments, NFT infrastructure, and cross-chain support';
+  public readonly capabilityDescription =
+    'CrossMint enterprise blockchain platform with MPC wallets, X.402 payments, NFT infrastructure, and cross-chain support';
 
   private crossMintService!: RealCrossMintService;
 
@@ -86,7 +81,7 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
         // Create placeholder balance entries for each wallet
         const chain = this.getChainFromWalletType(wallet.type);
         const nativeSymbol = this.getNativeSymbol(chain);
-        
+
         // Note: CrossMint balance information would need to be retrieved via blockchain RPC
         // For now, we provide wallet structure without balance data
         const tokenBalance: UniversalTokenBalance = {
@@ -131,8 +126,8 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
     try {
       // Find or create wallet for the chain
       const wallets = await this.crossMintService.listWallets();
-      const wallet = wallets.find(w => this.getChainFromWalletType(w.type) === params.chain);
-      
+      const wallet = wallets.find((w) => this.getChainFromWalletType(w.type) === params.chain);
+
       if (!wallet) {
         throw new CrossMintError(`No wallet found for chain: ${params.chain}`);
       }
@@ -175,8 +170,10 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
         chain: params.chain,
       });
     }
-    
-    throw new CrossMintError('Raw transaction sending not supported by CrossMint. Use transfer() for token transfers.');
+
+    throw new CrossMintError(
+      'Raw transaction sending not supported by CrossMint. Use transfer() for token transfers.'
+    );
   }
 
   async swap(params: SwapParams): Promise<UniversalTransactionResult> {
@@ -192,13 +189,13 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
     // CrossMint doesn't provide simulation APIs, but we can do basic validation
     const chain = params.chain || 'ethereum';
     const isChainSupported = this.isChainSupported(chain);
-    
+
     if (!isChainSupported) {
       return {
         success: false,
         gasUsed: '0',
         gasPrice: '0',
-        changes: []
+        changes: [],
         warnings: [`Unsupported chain: ${chain}`],
         error: `Chain ${chain} is not supported by CrossMint`,
       };
@@ -210,20 +207,20 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
         success: false,
         gasUsed: '0',
         gasPrice: '0',
-        changes: []
-        warnings: []
+        changes: [],
+        warnings: [],
         error: 'Missing recipient address',
       };
     }
 
     // Estimate gas based on transaction type and chain
     const estimatedGas = this.estimateGasForChain(chain, params);
-    
+
     return {
       success: true,
       gasUsed: estimatedGas.toString(),
       gasPrice: '0', // CrossMint abstracts away gas pricing
-      changes: []
+      changes: [],
       warnings: ['Simulation is estimated - CrossMint handles gas internally'],
     };
   }
@@ -231,7 +228,7 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
   async estimateGas(params: UniversalTransactionParams): Promise<GasEstimate> {
     const chain = params.chain || 'ethereum';
     const estimatedGas = this.estimateGasForChain(chain, params);
-    
+
     return {
       gasLimit: estimatedGas.toString(),
       gasPrice: '0', // CrossMint abstracts gas pricing
@@ -284,7 +281,7 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
   async getTransaction(hash: string, chain?: string): Promise<UniversalTransactionResult> {
     try {
       const transaction = await this.crossMintService.getTransaction(hash);
-      
+
       return {
         hash: transaction.hash || transaction.id,
         status: this.mapTransactionStatus(transaction.status),
@@ -302,7 +299,7 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
 
   // Multi-chain support
   async getSupportedChains(): Promise<ChainInfo[]> {
-    return this.chainSupport.map(chainId => ({
+    return this.chainSupport.map((chainId) => ({
       id: chainId,
       name: this.getChainName(chainId),
       nativeToken: {
@@ -363,7 +360,7 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
   private getBridgeSupport(chainId: string): string[] {
     // CrossMint supports cross-chain operations for these chains
     const allChains = this.chainSupport;
-    return allChains.filter(chain => chain !== chainId);
+    return allChains.filter((chain) => chain !== chainId);
   }
 
   async switchChain(chainId: string): Promise<void> {
@@ -381,17 +378,23 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
   async createPaymentRequest(params: PaymentRequestParams): Promise<UniversalPaymentRequest> {
     // Payment requests are not supported by the basic CrossMint service
     // This would need to be implemented via X402Service or another payment provider
-    throw new Error('Payment requests not supported by CrossMint service. Use HybridCrossMintUniversalWalletService for X402 payment protocol support.');
+    throw new Error(
+      'Payment requests not supported by CrossMint service. Use HybridCrossMintUniversalWalletService for X402 payment protocol support.'
+    );
   }
 
   async processPayment(request: UniversalPaymentRequest): Promise<PaymentResult> {
     // Payment processing is not supported by the basic CrossMint service
-    throw new Error('Payment processing not supported by CrossMint service. Use HybridCrossMintUniversalWalletService for X402 payment protocol support.');
+    throw new Error(
+      'Payment processing not supported by CrossMint service. Use HybridCrossMintUniversalWalletService for X402 payment protocol support.'
+    );
   }
 
   async verifyPayment(paymentId: string): Promise<PaymentVerification> {
     // Payment verification is not supported by the basic CrossMint service
-    throw new Error('Payment verification not supported by CrossMint service. Use HybridCrossMintUniversalWalletService for X402 payment protocol support.');
+    throw new Error(
+      'Payment verification not supported by CrossMint service. Use HybridCrossMintUniversalWalletService for X402 payment protocol support.'
+    );
   }
 
   // Wallet management
@@ -419,22 +422,24 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
   }
 
   async importWallet(params: WalletImportParams): Promise<WalletInstance> {
-    throw new CrossMintError('Wallet import not supported by CrossMint (MPC wallets are generated, not imported)');
+    throw new CrossMintError(
+      'Wallet import not supported by CrossMint (MPC wallets are generated, not imported)'
+    );
   }
 
   async getWallets(filter?: WalletFilter): Promise<WalletInstance[]> {
     try {
       const wallets = await this.crossMintService.listWallets();
-      
+
       return wallets
-        .filter(wallet => {
+        .filter((wallet) => {
           const walletChain = this.getChainFromWalletType(wallet.type);
           if (filter?.chain && walletChain !== filter.chain) return false;
           if (filter?.isActive !== undefined && true !== filter.isActive) return false;
           if (filter?.type && this.mapWalletType(wallet.type) !== filter.type) return false;
           return true;
         })
-        .map(wallet => ({
+        .map((wallet) => ({
           id: `wallet-${wallet.address}` as UUID,
           address: wallet.address,
           type: this.mapWalletType(wallet.type),
@@ -570,9 +575,9 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
   // Service lifecycle
   static async start(runtime: IAgentRuntime): Promise<CrossMintUniversalWalletService> {
     logger.info('Starting CrossMint Universal Wallet Service...');
-    
+
     const service = new CrossMintUniversalWalletService(runtime);
-    
+
     logger.info('CrossMint Universal Wallet Service started successfully');
     return service;
   }

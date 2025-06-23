@@ -96,7 +96,7 @@ export const autocoderPlugin: Plugin = {
   ],
 
   // Optional: Specify dependencies if needed
-  // dependencies: []
+  // dependencies: [],
 };
 
 // Export actions

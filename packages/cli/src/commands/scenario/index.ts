@@ -158,8 +158,8 @@ scenarioCommand
                   actionCounts: {},
                   responseLatency: { min: 0, max: 0, average: 0, p95: 0 },
                 },
-                verificationResults: []
-                transcript: []
+                verificationResults: [],
+                transcript: [],
               });
             }
           }
@@ -485,7 +485,7 @@ scenarioCommand
   });
 */
 
-function displayResults(results: any[] options: any): void {
+function displayResults(results: any[], options: any): void {
   console.log('\n🧪 ElizaOS Scenario Test Results');
   console.log('═'.repeat(60));
 
@@ -624,7 +624,7 @@ function displayResults(results: any[] options: any): void {
 }
 
 async function saveResultsToFile(
-  results: any[]
+  results: any[],
   outputPath: string,
   format: string
 ): Promise<void> {

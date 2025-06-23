@@ -1,8 +1,8 @@
-import type { 
-  PluginEnvironmentValidation, 
-  AgentConfigParameter, 
-  PluginScenario, 
-  ScenarioCharacter 
+import type {
+  PluginEnvironmentValidation,
+  AgentConfigParameter,
+  PluginScenario,
+  ScenarioCharacter,
 } from '../types/scenario';
 import type { IAgentRuntime } from '../types/runtime';
 import { logger } from '../logger';
@@ -15,20 +15,20 @@ export class PluginEnvironmentValidator {
    * Validates environment variables for a single plugin
    */
   static async validatePluginEnvironment(
-    pluginName: string, 
+    pluginName: string,
     runtime: IAgentRuntime
   ): Promise<PluginEnvironmentValidation> {
     const result: PluginEnvironmentValidation = {
       isValid: true,
-      missingVars: []
-      warnings: []
-      pluginName
+      missingVars: [],
+      warnings: [],
+      pluginName,
     };
 
     try {
       // Get plugin configuration from package.json
       const agentConfig = await this.getPluginAgentConfig(pluginName, runtime);
-      
+
       if (!agentConfig?.pluginParameters) {
         // No environment requirements found
         return result;
@@ -37,24 +37,28 @@ export class PluginEnvironmentValidator {
       // Check each required environment variable
       for (const [varName, config] of Object.entries(agentConfig.pluginParameters)) {
         const value = runtime.getSetting(varName);
-        
+
         if (config.required && (!value || value === '')) {
           result.isValid = false;
           result.missingVars.push(varName);
         } else if (!config.required && (!value || value === '')) {
           result.warnings.push(`Optional environment variable ${varName} is not set`);
         }
-        
+
         // Validate type if value exists
         if (value && config.type) {
           const typeValid = this.validateEnvironmentVariableType(value, config.type);
           if (!typeValid) {
-            result.warnings.push(`Environment variable ${varName} has invalid type (expected ${config.type})`);
+            result.warnings.push(
+              `Environment variable ${varName} has invalid type (expected ${config.type})`
+            );
           }
         }
       }
     } catch (error) {
-      result.warnings.push(`Failed to validate plugin ${pluginName}: ${error instanceof Error ? error.message : String(error)}`);
+      result.warnings.push(
+        `Failed to validate plugin ${pluginName}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     return result;
@@ -93,7 +97,7 @@ export class PluginEnvironmentValidator {
    * Determines if a scenario can run based on environment validation
    */
   static canScenarioRun(validations: PluginEnvironmentValidation[]): boolean {
-    return validations.every(validation => validation.isValid);
+    return validations.every((validation) => validation.isValid);
   }
 
   /**
@@ -106,16 +110,16 @@ export class PluginEnvironmentValidator {
     missingVars: string[];
     affectedPlugins: string[];
   } {
-    const missingVars = validations.flatMap(v => v.missingVars);
+    const missingVars = validations.flatMap((v) => v.missingVars);
     const warningCount = validations.reduce((count, v) => count + v.warnings.length, 0);
-    const affectedPlugins = validations.filter(v => !v.isValid).map(v => v.pluginName);
+    const affectedPlugins = validations.filter((v) => !v.isValid).map((v) => v.pluginName);
 
     return {
-      allValid: validations.every(v => v.isValid),
+      allValid: validations.every((v) => v.isValid),
       missingCount: missingVars.length,
       warningCount,
       missingVars,
-      affectedPlugins
+      affectedPlugins,
     };
   }
 
@@ -123,14 +127,14 @@ export class PluginEnvironmentValidator {
    * Attempts to get plugin agentConfig from package.json
    */
   private static async getPluginAgentConfig(
-    pluginName: string, 
+    pluginName: string,
     runtime: IAgentRuntime
   ): Promise<{ pluginParameters?: Record<string, AgentConfigParameter> } | null> {
     try {
       // Try to find the plugin's package.json
       // This would typically be resolved from node_modules or plugin registry
       // For now, we'll attempt to use a generic approach
-      
+
       if (typeof require !== 'undefined') {
         const packageJsonPath = require.resolve(`${pluginName}/package.json`);
         const packageJson = require(packageJsonPath);
@@ -173,7 +177,7 @@ export class PluginEnvironmentValidator {
    */
   private static extractRequiredVariables(validations: PluginEnvironmentValidation[]): string[] {
     const required = new Set<string>();
-    
+
     for (const validation of validations) {
       for (const varName of validation.missingVars) {
         required.add(varName);

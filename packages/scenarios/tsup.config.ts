@@ -37,6 +37,8 @@ export default defineConfig({
     '@elizaos/plugin-mcp',
     '@elizaos/plugin-ngrok',
     '@elizaos/plugin-tasks',
+    'ssh2',
+    'cpu-features',
   ],
   bundle: true,
   target: 'es2022',

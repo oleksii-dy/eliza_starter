@@ -1,10 +1,10 @@
 import { logger } from '@elizaos/core';
 import { ChildProcess } from 'child_process';
-import type { 
-  PluginScenario, 
-  ScenarioExecutionResult, 
+import type {
+  PluginScenario,
+  ScenarioExecutionResult,
   PluginTestResults,
-  PluginEnvironmentValidation 
+  PluginEnvironmentValidation,
 } from '@elizaos/core';
 import { ScenarioRuntimeValidator } from '@elizaos/core';
 import type { TestCommandOptions } from '../types';
@@ -32,13 +32,13 @@ export async function runScenarioTests(
 ): Promise<ScenarioTestResult> {
   const startTime = performance.now();
   let serverProcess: ChildProcess | null = null;
-  
+
   const result: ScenarioTestResult = {
     success: false,
     failed: false,
-    results: []
+    results: [],
     environmentValidations: new Map(),
-    skippedScenarios: []
+    skippedScenarios: [],
   };
 
   try {
@@ -70,9 +70,9 @@ export async function runScenarioTests(
     logger.info('Starting test server...');
     serverProcess = await startTestServer({
       port: _options.port || 3000,
-      projectPath: process.cwd()
+      projectPath: process.cwd(),
     });
-    
+
     // 3. Create test agent runtime with all plugins
     logger.info('Creating test agent runtime...');
     const runtime = await createTestAgent(plugins, _options.port || 3000);
@@ -96,7 +96,9 @@ export async function runScenarioTests(
     }
 
     if (validationResults.skipped.length > 0) {
-      logger.warn(`Skipping ${validationResults.skipped.length} scenarios due to missing requirements:`);
+      logger.warn(
+        `Skipping ${validationResults.skipped.length} scenarios due to missing requirements:`
+      );
       for (const { scenario, reason } of validationResults.skipped) {
         logger.warn(`  ❌ ${scenario.name}: ${reason}`);
       }
@@ -106,8 +108,8 @@ export async function runScenarioTests(
 
     // 5. Execute scenarios by plugin
     for (const [pluginName, scenarios] of pluginScenarioMap) {
-      const executableScenarios = scenarios.filter(s => 
-        validationResults.executable.some(es => es.id === s.id)
+      const executableScenarios = scenarios.filter((s) =>
+        validationResults.executable.some((es) => es.id === s.id)
       );
 
       if (executableScenarios.length === 0) {
@@ -128,7 +130,7 @@ export async function runScenarioTests(
     }
 
     // 6. Calculate overall success
-    const overallSuccess = result.results.every(r => r.summary.overallSuccess);
+    const overallSuccess = result.results.every((r) => r.summary.overallSuccess);
     result.success = overallSuccess;
     result.failed = !overallSuccess;
 
@@ -138,7 +140,7 @@ export async function runScenarioTests(
     const totalSkipped = result.skippedScenarios.length;
 
     const duration = ((performance.now() - startTime) / 1000).toFixed(2);
-    
+
     logger.info(`\n📊 Scenario test summary:`);
     logger.info(`  Total scenarios: ${allScenarios.length}`);
     logger.info(`  Executed: ${totalExecuted}`);
@@ -151,9 +153,10 @@ export async function runScenarioTests(
     } else {
       logger.error('❌ Some scenario tests failed');
     }
-
   } catch (error) {
-    logger.error(`Scenario test execution failed: ${error instanceof Error ? error.message : String(error)}`);
+    logger.error(
+      `Scenario test execution failed: ${error instanceof Error ? error.message : String(error)}`
+    );
     result.failed = true;
     result.success = false;
   } finally {
@@ -171,19 +174,19 @@ export async function runScenarioTests(
  */
 async function executePluginScenarios(
   pluginName: string,
-  scenarios: PluginScenario[]
+  scenarios: PluginScenario[],
   runtime: any, // IAgentRuntime
   options: TestCommandOptions
 ): Promise<PluginTestResults> {
   const results: ScenarioExecutionResult[] = [];
-  
+
   for (const scenario of scenarios) {
     logger.info(`  Running scenario: ${scenario.name}`);
-    
+
     try {
       const result = await executeScenario(scenario, runtime, options);
       results.push(result);
-      
+
       if (result.passed) {
         logger.success(`    ✅ ${scenario.name} passed (score: ${result.score.toFixed(2)})`);
       } else {
@@ -195,8 +198,10 @@ async function executePluginScenarios(
         }
       }
     } catch (error) {
-      logger.error(`    💥 ${scenario.name} crashed: ${error instanceof Error ? error.message : String(error)}`);
-      
+      logger.error(
+        `    💥 ${scenario.name} crashed: ${error instanceof Error ? error.message : String(error)}`
+      );
+
       // Create a failed result for the crashed scenario
       results.push({
         scenarioId: scenario.id,
@@ -212,31 +217,31 @@ async function executePluginScenarios(
           actionCount: 0,
           tokenUsage: { input: 0, output: 0, total: 0 },
           responseLatency: { min: 0, max: 0, average: 0, p95: 0 },
-          memoryUsage: { peak: 0, average: 0, operations: 0 }
+          memoryUsage: { peak: 0, average: 0, operations: 0 },
         },
-        verificationResults: []
-        transcript: []
-        errors: [error instanceof Error ? error.message : String(error)]
+        verificationResults: [],
+        transcript: [],
+        errors: [error instanceof Error ? error.message : String(error)],
       });
     }
   }
 
-  const passedScenarios = results.filter(r => r.passed).length;
+  const passedScenarios = results.filter((r) => r.passed).length;
   const overallSuccess = results.length > 0 && passedScenarios === results.length;
 
   return {
     pluginName,
-    testSuites: [] // Scenarios are separate from test suites
+    testSuites: [], // Scenarios are separate from test suites
     scenarios: results,
-    environmentValidation: [] // This would be populated by the caller
+    environmentValidation: [], // This would be populated by the caller
     summary: {
       totalTests: 0,
       passedTests: 0,
       totalScenarios: results.length,
       passedScenarios,
       skippedScenarios: 0,
-      overallSuccess
-    }
+      overallSuccess,
+    },
   };
 }
 
@@ -260,22 +265,22 @@ async function executeScenario(
 
     // 1. Create character instances for scenario participants
     const characterRuntimes = new Map<string, any>();
-    
+
     if (scenario.characters && scenario.characters.length > 0) {
       logger.debug(`    Creating ${scenario.characters.length} character runtimes...`);
-      
+
       for (const character of scenario.characters) {
         try {
           // For now, we'll use the main runtime as a placeholder
           // In a full implementation, we would create separate runtime instances
           characterRuntimes.set(character.id, runtime);
-          
+
           transcript.push({
             timestamp: Date.now(),
             type: 'character_created',
             characterId: character.id,
             characterName: character.name,
-            role: character.role
+            role: character.role,
           });
         } catch (error) {
           const errorMsg = `Failed to create character runtime for ${character.name}: ${error instanceof Error ? error.message : String(error)}`;
@@ -288,17 +293,17 @@ async function executeScenario(
     // 2. Execute scenario script steps
     if (scenario.script && scenario.script.steps && scenario.script.steps.length > 0) {
       logger.debug(`    Executing ${scenario.script.steps.length} scenario steps...`);
-      
+
       for (let i = 0; i < scenario.script.steps.length; i++) {
         const step = scenario.script.steps[i];
-        
+
         try {
           transcript.push({
             timestamp: Date.now(),
             type: 'step_start',
             stepIndex: i,
             stepType: step.type,
-            stepId: step.id
+            stepId: step.id,
           });
 
           // Execute the step based on its type
@@ -308,9 +313,8 @@ async function executeScenario(
             timestamp: Date.now(),
             type: 'step_complete',
             stepIndex: i,
-            stepId: step.id
+            stepId: step.id,
           });
-
         } catch (error) {
           const errorMsg = `Step ${i} (${step.id}) failed: ${error instanceof Error ? error.message : String(error)}`;
           errors.push(errorMsg);
@@ -321,7 +325,7 @@ async function executeScenario(
             type: 'step_error',
             stepIndex: i,
             stepId: step.id,
-            error: errorMsg
+            error: errorMsg,
           });
         }
       }
@@ -330,7 +334,7 @@ async function executeScenario(
     // 3. Run verification rules if no critical errors occurred
     if (errors.length === 0 && scenario.verification && scenario.verification.rules) {
       logger.debug(`    Running ${scenario.verification.rules.length} verification rules...`);
-      
+
       for (const rule of scenario.verification.rules) {
         try {
           // For now, we'll mark all verifications as passed
@@ -339,44 +343,43 @@ async function executeScenario(
             ruleId: rule.id,
             passed: true,
             score: 1.0,
-            reason: `Verification rule ${rule.id} executed successfully`
+            reason: `Verification rule ${rule.id} executed successfully`,
           };
-          
+
           verificationResults.push(ruleResult);
           score += ruleResult.score;
-          
+
           transcript.push({
             timestamp: Date.now(),
             type: 'verification_complete',
             ruleId: rule.id,
             passed: ruleResult.passed,
-            score: ruleResult.score
+            score: ruleResult.score,
           });
-
         } catch (error) {
           const errorMsg = `Verification rule ${rule.id} failed: ${error instanceof Error ? error.message : String(error)}`;
           errors.push(errorMsg);
-          
+
           verificationResults.push({
             ruleId: rule.id,
             passed: false,
             score: 0,
-            reason: errorMsg
+            reason: errorMsg,
           });
 
           transcript.push({
             timestamp: Date.now(),
             type: 'verification_error',
             ruleId: rule.id,
-            error: errorMsg
+            error: errorMsg,
           });
         }
       }
-      
+
       // Calculate average score
       if (verificationResults.length > 0) {
         score = score / verificationResults.length;
-        passed = verificationResults.every(r => r.passed);
+        passed = verificationResults.every((r) => r.passed);
       }
     } else if (errors.length === 0) {
       // No verification rules, but no errors - consider it passed
@@ -384,17 +387,18 @@ async function executeScenario(
       score = 1.0;
     }
 
-    logger.debug(`    Scenario execution completed. Passed: ${passed}, Score: ${score.toFixed(2)}, Errors: ${errors.length}`);
-
+    logger.debug(
+      `    Scenario execution completed. Passed: ${passed}, Score: ${score.toFixed(2)}, Errors: ${errors.length}`
+    );
   } catch (error) {
     const errorMsg = `Scenario execution failed: ${error instanceof Error ? error.message : String(error)}`;
     errors.push(errorMsg);
     logger.error(`    ${errorMsg}`);
-    
+
     transcript.push({
       timestamp: Date.now(),
       type: 'execution_error',
-      error: errorMsg
+      error: errorMsg,
     });
   }
 
@@ -403,8 +407,8 @@ async function executeScenario(
 
   // Count actual metrics from transcript
   const stepCount = scenario.script?.steps?.length || 0;
-  const messageCount = transcript.filter(t => t.type === 'message_sent').length;
-  const actionCount = transcript.filter(t => t.type === 'action_executed').length;
+  const messageCount = transcript.filter((t) => t.type === 'message_sent').length;
+  const actionCount = transcript.filter((t) => t.type === 'action_executed').length;
 
   return {
     scenarioId: scenario.id,
@@ -420,19 +424,22 @@ async function executeScenario(
       actionCount,
       tokenUsage: { input: 0, output: 0, total: 0 }, // Would be collected from actual LLM calls
       responseLatency: { min: 0, max: 0, average: 0, p95: 0 },
-      memoryUsage: { peak: 0, average: 0, operations: 0 }
+      memoryUsage: { peak: 0, average: 0, operations: 0 },
     },
-    verificationResults: scenario.verification?.rules?.map(rule => {
-      const result = verificationResults.find(vr => vr.ruleId === rule.id);
-      return result || {
-        ruleId: rule.id,
-        passed: false,
-        score: 0,
-        reason: 'Verification rule not executed due to errors'
-      };
-    }) || []
+    verificationResults:
+      scenario.verification?.rules?.map((rule) => {
+        const result = verificationResults.find((vr) => vr.ruleId === rule.id);
+        return (
+          result || {
+            ruleId: rule.id,
+            passed: false,
+            score: 0,
+            reason: 'Verification rule not executed due to errors',
+          }
+        );
+      }) || [],
     transcript,
-    errors
+    errors,
   };
 }
 
@@ -449,58 +456,60 @@ async function executeScenarioStep(
     case 'message':
       if (step.fromCharacter && step.content) {
         // const _runtime = characterRuntimes.get(step.fromCharacter) || mainRuntime;
-        
+
         transcript.push({
           timestamp: Date.now(),
           type: 'message_sent',
           fromCharacter: step.fromCharacter,
-          content: step.content
+          content: step.content,
         });
-        
+
         // In a full implementation, this would send an actual message
-        logger.debug(`      Message from ${step.fromCharacter}: ${step.content.substring(0, 50)}...`);
+        logger.debug(
+          `      Message from ${step.fromCharacter}: ${step.content.substring(0, 50)}...`
+        );
       }
       break;
-      
+
     case 'action':
       if (step.actionName && step.fromCharacter) {
         // const _runtime = characterRuntimes.get(step.fromCharacter) || mainRuntime;
-        
+
         transcript.push({
           timestamp: Date.now(),
           type: 'action_executed',
           fromCharacter: step.fromCharacter,
           actionName: step.actionName,
-          parameters: step.parameters
+          parameters: step.parameters,
         });
-        
+
         // In a full implementation, this would execute the actual action
         logger.debug(`      Action ${step.actionName} from ${step.fromCharacter}`);
       }
       break;
-      
+
     case 'wait':
       if (step.duration) {
-        await new Promise(resolve => setTimeout(resolve, step.duration));
-        
+        await new Promise((resolve) => setTimeout(resolve, step.duration));
+
         transcript.push({
           timestamp: Date.now(),
           type: 'wait_complete',
-          duration: step.duration
+          duration: step.duration,
         });
-        
+
         logger.debug(`      Waited ${step.duration}ms`);
       }
       break;
-      
+
     default:
       transcript.push({
         timestamp: Date.now(),
         type: 'step_skipped',
         stepType: step.type,
-        reason: `Unknown step type: ${step.type}`
+        reason: `Unknown step type: ${step.type}`,
       });
-      
+
       logger.debug(`      Skipped unknown step type: ${step.type}`);
       break;
   }

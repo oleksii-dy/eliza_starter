@@ -162,8 +162,8 @@ const teeStarterPlugin: Plugin = {
   services: [
     /* StarterService */
   ],
-  actions: []
-  providers: []
+  actions: [],
+  providers: [],
 };
 
 export default teeStarterPlugin;

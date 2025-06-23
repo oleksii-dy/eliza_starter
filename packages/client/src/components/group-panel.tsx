@@ -249,7 +249,7 @@ export default function GroupPanel({ onClose, channelId }: GroupPanelProps) {
     }));
   }, [allAvailableSelectableAgents, isLoadingAgents, isErrorAgents]);
 
-  const STABLE_EMPTY_COMBOBOX_OPTIONS_ARRAY = useMemo(() => [] []);
+  const STABLE_EMPTY_COMBOBOX_OPTIONS_ARRAY = useMemo(() => [], []);
 
   const initialSelectedComboboxOptions: ComboboxOption[] = useMemo(() => {
     if (isLoadingAgents) return STABLE_EMPTY_COMBOBOX_OPTIONS_ARRAY;

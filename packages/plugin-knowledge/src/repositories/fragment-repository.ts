@@ -84,7 +84,7 @@ export class FragmentRepository {
    * Search fragments by embedding similarity
    */
   async searchByEmbedding(
-    embedding: number[]
+    embedding: number[],
     options: SearchOptions = {}
   ): Promise<SearchResult[]> {
     const { agentId, roomId, worldId, entityId, limit = 20, threshold = 0.7 } = options;

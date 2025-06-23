@@ -143,7 +143,7 @@ export const settingsProvider: Provider = {
         logger.error('No room found for settings provider');
         return {
           data: {
-            settings: []
+            settings: [],
           },
           values: {
             settings: 'Error: Room not found',
@@ -156,7 +156,7 @@ export const settingsProvider: Provider = {
         logger.debug('No world found for settings provider -- settings provider will be skipped');
         return {
           data: {
-            settings: []
+            settings: [],
           },
           values: {
             settings: 'Room does not have a worldId -- settings provider will be skipped',
@@ -234,7 +234,7 @@ export const settingsProvider: Provider = {
         return isOnboarding
           ? {
               data: {
-                settings: []
+                settings: [],
               },
               values: {
                 settings:
@@ -244,7 +244,7 @@ export const settingsProvider: Provider = {
             }
           : {
               data: {
-                settings: []
+                settings: [],
               },
               values: {
                 settings: 'Error: No configuration access',
@@ -258,7 +258,7 @@ export const settingsProvider: Provider = {
         return isOnboarding
           ? {
               data: {
-                settings: []
+                settings: [],
               },
               values: {
                 settings:
@@ -268,7 +268,7 @@ export const settingsProvider: Provider = {
             }
           : {
               data: {
-                settings: []
+                settings: [],
               },
               values: {
                 settings: 'Configuration has not been completed yet.',
@@ -293,7 +293,7 @@ export const settingsProvider: Provider = {
       logger.error(`Critical error in settings provider: ${error}`);
       return {
         data: {
-          settings: []
+          settings: [],
         },
         values: {
           settings: 'Error retrieving configuration information. Please try again later.',

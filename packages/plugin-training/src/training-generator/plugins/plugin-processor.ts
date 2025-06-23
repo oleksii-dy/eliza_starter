@@ -602,7 +602,7 @@ For this action, I need to:
       userQuery,
       context: {
         fileTree: `src/actions/${path.basename(action.file)}`,
-        relatedFiles: []
+        relatedFiles: [],
         targetFile: file,
         repositoryContext: `ElizaOS Plugin: ${analysis.name}`
       },
@@ -649,7 +649,7 @@ For this service, I need to:
       userQuery,
       context: {
         fileTree: `src/services/${path.basename(service.file)}`,
-        relatedFiles: []
+        relatedFiles: [],
         targetFile: file,
         repositoryContext: `ElizaOS Plugin: ${analysis.name}`
       },

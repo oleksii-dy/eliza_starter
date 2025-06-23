@@ -62,54 +62,54 @@ async function testWithMinimalRuntime() {
       name: 'ResearchBot',
       bio: ['Research assistant'],
       system: 'You are a research assistant.',
-      messageExamples: []
-      postExamples: []
-      topics: []
-      knowledge: []
-      plugins: []
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      knowledge: [],
+      plugins: [],
     },
     getSetting: (key: string) => process.env[key] || null,
     getService: () => null,
-    providers: []
-    actions: []
-    evaluators: []
-    plugins: []
+    providers: [],
+    actions: [],
+    evaluators: [],
+    plugins: [],
     services: new Map(),
     messageManager: {
       createMemory: async () => asUUID('22222222-2222-2222-2222-222222222222'),
-      getMemories: async () => []
-      getMemoriesByRoomIds: async () => []
-      getCachedEmbeddings: async () => []
-      searchMemoriesByEmbedding: async () => []
+      getMemories: async () => [],
+      getMemoriesByRoomIds: async () => [],
+      getCachedEmbeddings: async () => [],
+      searchMemoriesByEmbedding: async () => [],
     },
     // Add all other required managers
     descriptionManager: {
       createMemory: async () => asUUID('33333333-3333-3333-3333-333333333333'),
-      getMemories: async () => []
-      getMemoriesByRoomIds: async () => []
-      getCachedEmbeddings: async () => []
-      searchMemoriesByEmbedding: async () => []
+      getMemories: async () => [],
+      getMemoriesByRoomIds: async () => [],
+      getCachedEmbeddings: async () => [],
+      searchMemoriesByEmbedding: async () => [],
     },
     documentsManager: {
       createMemory: async () => asUUID('44444444-4444-4444-4444-444444444444'),
-      getMemories: async () => []
-      getMemoriesByRoomIds: async () => []
-      getCachedEmbeddings: async () => []
-      searchMemoriesByEmbedding: async () => []
+      getMemories: async () => [],
+      getMemoriesByRoomIds: async () => [],
+      getCachedEmbeddings: async () => [],
+      searchMemoriesByEmbedding: async () => [],
     },
     knowledgeManager: {
       createMemory: async () => asUUID('55555555-5555-5555-5555-555555555555'),
-      getMemories: async () => []
-      getMemoriesByRoomIds: async () => []
-      getCachedEmbeddings: async () => []
-      searchMemoriesByEmbedding: async () => []
+      getMemories: async () => [],
+      getMemoriesByRoomIds: async () => [],
+      getCachedEmbeddings: async () => [],
+      searchMemoriesByEmbedding: async () => [],
     },
     loreManager: {
       createMemory: async () => asUUID('66666666-6666-6666-6666-666666666666'),
-      getMemories: async () => []
-      getMemoriesByRoomIds: async () => []
-      getCachedEmbeddings: async () => []
-      searchMemoriesByEmbedding: async () => []
+      getMemories: async () => [],
+      getMemoriesByRoomIds: async () => [],
+      getCachedEmbeddings: async () => [],
+      searchMemoriesByEmbedding: async () => [],
     },
     // Add useModel for text generation
     useModel: async (modelType: string, params: any) => {

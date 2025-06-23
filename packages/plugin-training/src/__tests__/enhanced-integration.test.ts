@@ -33,10 +33,10 @@ const testCharacter: Character = {
       { name: 'EnhancedReasoningTestAgent', content: { text: 'testing enhanced response' } },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   topics: ['testing', 'enhanced-reasoning', 'integration', 'database'],
-  knowledge: []
-  plugins: []
+  knowledge: [],
+  plugins: [],
   settings: {
     ENHANCED_REASONING_ENABLED: 'true',
     REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',

@@ -26,7 +26,7 @@ async function runE2ETests() {
       return null;
     },
     createMemory: async () => {},
-    getMemories: async () => []
+    getMemories: async () => [],
     composeState: async () => ({ 
       values: {
         visionAvailable: visionService?.isActive() || false,

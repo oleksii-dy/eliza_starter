@@ -69,7 +69,7 @@ describe('TrustMiddleware', () => {
         text: 'Action completed successfully'
       }),
       similes: ['test', 'action'],
-      examples: []
+      examples: [],
     };
 
     // Create test message
@@ -254,8 +254,8 @@ describe('TrustMiddleware', () => {
             description: 'Another test action',
             validate: vi.fn().mockResolvedValue(true),
             handler: vi.fn().mockResolvedValue({ values: {}, data: {}, text: 'Done' }),
-            similes: []
-            examples: []
+            similes: [],
+            examples: [],
           }
         ]
       };

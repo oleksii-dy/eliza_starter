@@ -31,7 +31,7 @@ interface ProviderResult {
  */
 export const walletProvider: Provider = {
   name: 'solana-wallet',
-  description: 'your solana wallet information',
+  description: 'Solana wallet balance, portfolio value, and holdings when agent needs to check wallet status or perform financial operations',
   // it's not slow we always have this data
   // but we don't always need this data, let's free up the context
   dynamic: true,

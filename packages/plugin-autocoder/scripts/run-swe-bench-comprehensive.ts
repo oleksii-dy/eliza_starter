@@ -47,11 +47,11 @@ async function runComprehensiveBenchmark() {
     character: {
       name: 'SWEBenchAgent',
       bio: ['Agent for comprehensive SWE-bench evaluation'],
-      knowledge: []
-      messageExamples: []
-      postExamples: []
-      topics: []
-      plugins: []
+      knowledge: [],
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      plugins: [],
     },
   } as any;
 

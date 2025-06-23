@@ -21,7 +21,7 @@ export const healthMonitoringTests: TestCase[] = [
           {
             name: 'HEAVY_COMPUTATION',
             description: 'Performs heavy computation',
-            similes: []
+            similes: [],
             validate: async () => true,
             handler: async () => {
               // Simulate heavy work
@@ -36,7 +36,7 @@ export const healthMonitoringTests: TestCase[] = [
                 data: { result, duration },
               };
             },
-            examples: []
+            examples: [],
           },
         ],
       };
@@ -66,7 +66,7 @@ export const healthMonitoringTests: TestCase[] = [
           {
             name: 'UNSTABLE_ACTION',
             description: 'Action that might crash',
-            similes: []
+            similes: [],
             validate: async () => true,
             handler: async () => {
               crashCount++;
@@ -75,7 +75,7 @@ export const healthMonitoringTests: TestCase[] = [
               }
               return { text: 'Action completed successfully' };
             },
-            examples: []
+            examples: [],
           },
         ],
       };
@@ -124,7 +124,7 @@ export const healthMonitoringTests: TestCase[] = [
           {
             name: 'LEAKY_ACTION',
             description: 'Action that leaks memory',
-            similes: []
+            similes: [],
             validate: async () => true,
             handler: async () => {
               // Simulate memory leak by holding references
@@ -138,7 +138,7 @@ export const healthMonitoringTests: TestCase[] = [
 
               return { text: 'Action completed (with leak)' };
             },
-            examples: []
+            examples: [],
           },
         ],
       };
@@ -177,14 +177,14 @@ export const healthMonitoringTests: TestCase[] = [
           {
             name: 'SLOW_ACTION',
             description: 'Action that runs slowly',
-            similes: []
+            similes: [],
             validate: async () => true,
             handler: async () => {
               // Simulate slow operation
               await new Promise((resolve) => setTimeout(resolve, 3000));
               return { text: 'Slow action completed' };
             },
-            examples: []
+            examples: [],
           },
         ],
       };

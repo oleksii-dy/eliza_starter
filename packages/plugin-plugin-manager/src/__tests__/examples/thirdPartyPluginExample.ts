@@ -83,7 +83,7 @@ export const capabilityAwarePlugin: Plugin = {
           return { text: 'Executing without database support' };
         }
       },
-      examples: []
+      examples: [],
     },
   ],
 };
@@ -213,7 +213,7 @@ export const pluginModifierPlugin: Plugin = {
           };
         }
       },
-      examples: []
+      examples: [],
     },
   ],
 };
@@ -265,9 +265,9 @@ export const integrationPatterns = {
     if (!pluginManager) return [];
 
     const recommendations = await pluginManager.recommendPlugins({
-      recentActions: []
-      currentCapabilities: []
-      failedActions: []
+      recentActions: [],
+      currentCapabilities: [],
+      failedActions: [],
       userIntent: task,
     });
 

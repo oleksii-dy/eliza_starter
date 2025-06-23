@@ -47,7 +47,7 @@ export class ConfigurationManager {
       return {
         valid: false,
         errors: ['Configuration must be a valid object'],
-        warnings: []
+        warnings: [],
         suggestions: ['Provide configuration as an object with key-value pairs'],
       };
     }

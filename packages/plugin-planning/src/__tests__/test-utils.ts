@@ -12,10 +12,10 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       name: 'TestAgent',
       bio: ['Test bio for planning tests'],
       system: 'You are a test agent for planning system validation',
-      messageExamples: []
-      postExamples: []
+      messageExamples: [],
+      postExamples: [],
       topics: ['planning', 'testing'],
-      knowledge: []
+      knowledge: [],
       plugins: ['@elizaos/plugin-planning'],
     } as Character,
 
@@ -55,8 +55,9 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
         if (params.prompt?.includes('Create a comprehensive action plan')) {
           // Return properly formatted XML for comprehensive planning
           const goal = params.prompt.match(/GOAL: ([^\n]+)/)?.[1] || 'Test comprehensive goal';
-          const executionModel = params.prompt.match(/EXECUTION MODEL: ([^\n]+)/)?.[1] || 'sequential';
-          
+          const executionModel =
+            params.prompt.match(/EXECUTION MODEL: ([^\n]+)/)?.[1] || 'sequential';
+
           let steps = '';
           if (goal.includes('timeline')) {
             steps = `<step>
@@ -133,7 +134,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
 <description>Default step</description>
 </step>`;
           }
-          
+
           return `<plan>
 <goal>${goal}</goal>
 <execution_model>${executionModel}</execution_model>
@@ -143,7 +144,7 @@ ${steps}
 <estimated_duration>30000</estimated_duration>
 </plan>`;
         }
-        
+
         if (params.prompt?.includes('adapt plan')) {
           return `<plan>
 <goal>Adapted plan goal</goal>
@@ -160,7 +161,7 @@ ${steps}
 <estimated_duration>5000</estimated_duration>
 </plan>`;
         }
-        
+
         if (params.prompt?.includes('plan')) {
           return JSON.stringify({
             goal: 'Test planning goal',
@@ -189,7 +190,7 @@ ${steps}
         description: 'Send a text response',
         handler: vi.fn().mockResolvedValue({ text: 'Mock reply response' }),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       },
       {
         name: 'THINK',
@@ -197,7 +198,7 @@ ${steps}
         description: 'Internal thinking process',
         handler: vi.fn().mockResolvedValue({ thought: 'Mock thinking process' }),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       },
       {
         name: 'SEND_EMAIL',
@@ -205,7 +206,7 @@ ${steps}
         description: 'Send an email message',
         handler: vi.fn().mockResolvedValue({ text: 'Email sent successfully' }),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       },
       {
         name: 'SEARCH',
@@ -213,7 +214,7 @@ ${steps}
         description: 'Search for information',
         handler: vi.fn().mockResolvedValue({ text: 'Search results found' }),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       },
     ],
 
@@ -242,7 +243,7 @@ ${steps}
         userName: 'TestUser',
       },
       data: {
-        conversationHistory: []
+        conversationHistory: [],
         providers: {},
       },
       text: 'Current state context',
@@ -370,7 +371,7 @@ export function createMockActionPlan(overrides: any = {}): any {
       },
     ],
     executionModel: 'sequential',
-    constraints: []
+    constraints: [],
     createdAt: Date.now(),
     estimatedDuration: 5000,
     ...overrides,

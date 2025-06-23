@@ -27,7 +27,7 @@ export const selectivePersonalityChangesScenario: PluginScenario = {
       id: uuidv4() as any,
       name: 'Mixed Request User',
       role: 'assistant',
-      plugins: []
+      plugins: [],
     },
   ],
 

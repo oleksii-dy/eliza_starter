@@ -86,8 +86,8 @@ async function extractConfirmationIntent(
     }
 
     const messageHistory = formatMessages({
-      messages: state.data?.messages || []
-      entities: state.data?.entities || []
+      messages: state.data?.messages || [],
+      entities: state.data?.entities || [],
     });
 
     const pendingTaskText = `
@@ -110,7 +110,7 @@ ${pendingTask.recurring ? `Recurring: ${pendingTask.recurring}` : ''}
 
     const result = await runtime.useModel(ModelType.TEXT_SMALL, {
       prompt,
-      stopSequences: []
+      stopSequences: [],
     });
 
     const parsedResult = parseKeyValueXml(result) as ConfirmationResponse | null;
@@ -257,7 +257,7 @@ export const confirmTodoAction: Action = {
         isUrgent: pendingTodo.taskType === 'one-off' ? pendingTodo.urgent : false,
         dueDate: pendingTodo.dueDate ? new Date(pendingTodo.dueDate) : undefined,
         metadata: pendingTodo.metadata || {},
-        tags: pendingTodo.tags || []
+        tags: pendingTodo.tags || [],
       });
 
       if (!createdTodoId) {
@@ -362,8 +362,7 @@ export const confirmTodoAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };
 
 export default confirmTodoAction;
-

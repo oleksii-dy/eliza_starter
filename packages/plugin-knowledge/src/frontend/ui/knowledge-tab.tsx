@@ -338,7 +338,7 @@ const useKnowledgeDocuments = (
   enabled: boolean = true,
   includeEmbedding: boolean = false
 ) => {
-  return useQuery<Memory[] Error>({
+  return useQuery<Memory[], Error>({
     queryKey: ['agents', agentId, 'knowledge', 'documents', { includeEmbedding }],
     queryFn: async () => {
       const response = await apiClient.getKnowledgeDocuments(agentId, { includeEmbedding });
@@ -351,10 +351,10 @@ const useKnowledgeDocuments = (
 const useKnowledgeChunks = (agentId: UUID, enabled: boolean = true, documentIdFilter?: UUID) => {
   // Query to get fragments (chunks)
   const {
-    data: chunks = []
+    data: chunks = [],
     isLoading: chunksLoading,
     error: chunksError,
-  } = useQuery<Memory[] Error>({
+  } = useQuery<Memory[], Error>({
     queryKey: ['agents', agentId, 'knowledge', 'chunks', { documentIdFilter }],
     queryFn: async () => {
       const response = await apiClient.getKnowledgeChunks(agentId, {
@@ -367,10 +367,10 @@ const useKnowledgeChunks = (agentId: UUID, enabled: boolean = true, documentIdFi
 
   // Query to get documents
   const {
-    data: documents = []
+    data: documents = [],
     isLoading: documentsLoading,
     error: documentsError,
-  } = useQuery<Memory[] Error>({
+  } = useQuery<Memory[], Error>({
     queryKey: ['agents', agentId, 'knowledge', 'documents-for-graph'],
     queryFn: async () => {
       const response = await apiClient.getKnowledgeDocuments(agentId, { includeEmbedding: false });
@@ -440,14 +440,14 @@ export function KnowledgeTab({ agentId }: { agentId: UUID }) {
 
   // List mode: use useKnowledgeDocuments to get only documents
   const {
-    data: documentsOnly = []
+    data: documentsOnly = [],
     isLoading: documentsLoading,
     error: documentsError,
   } = useKnowledgeDocuments(agentId, viewMode === 'list' && !showSearch, false);
 
   // Graph mode: use useKnowledgeChunks to get documents and fragments
   const {
-    data: graphMemories = []
+    data: graphMemories = [],
     isLoading: graphLoading,
     error: graphError,
   } = useKnowledgeChunks(agentId, viewMode === 'graph' && !showSearch, documentIdFilter);

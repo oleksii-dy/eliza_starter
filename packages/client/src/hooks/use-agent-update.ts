@@ -42,9 +42,9 @@ export function useAgentUpdate(initialAgent: Agent) {
         } else if (key === 'style' && value) {
           // Handle style object specially - it's nested but needs direct update
           updateField('style', {
-            all: value.all || []
-            chat: value.chat || []
-            post: value.post || []
+            all: value.all || [],
+            chat: value.chat || [],
+            post: value.post || [],
           });
         } else if (Array.isArray(value)) {
           // Handle arrays directly to ensure they fully replace existing arrays

@@ -756,7 +756,7 @@ export class BridgeAggregator {
             const symbol = await client.readContract({
                 address: token,
                 abi: [{
-                    inputs: []
+                    inputs: [],
                     name: 'symbol',
                     outputs: [{ type: 'string' }],
                     stateMutability: 'view',

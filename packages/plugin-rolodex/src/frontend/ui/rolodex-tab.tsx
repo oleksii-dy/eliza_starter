@@ -390,7 +390,7 @@ const useRelationships = (agentId: UUID, enabled: boolean = true) => {
 const useKnowledgeChunks = (agentId: UUID, enabled: boolean = true, documentIdFilter?: UUID) => {
   // Query to get fragments (chunks)
   const {
-    data: chunks = []
+    data: chunks = [],
     isLoading: chunksLoading,
     error: chunksError,
   } = useQuery<Memory[] Error>({
@@ -406,7 +406,7 @@ const useKnowledgeChunks = (agentId: UUID, enabled: boolean = true, documentIdFi
 
   // Query to get documents
   const {
-    data: documents = []
+    data: documents = [],
     isLoading: documentsLoading,
     error: documentsError,
   } = useQuery<Memory[] Error>({
@@ -474,27 +474,27 @@ export function RolodexTab({ agentId }: { agentId: UUID }) {
 
   // List mode: use useKnowledgeDocuments to get only documents
   const {
-    data: documentsOnly = []
+    data: documentsOnly = [],
     isLoading: documentsLoading,
     error: documentsError,
   } = useKnowledgeDocuments(agentId, viewMode === 'list', false);
 
   // Graph mode: use useKnowledgeChunks to get documents and fragments
   const {
-    data: graphMemories = []
+    data: graphMemories = [],
     isLoading: graphLoading,
     error: graphError,
   } = useKnowledgeChunks(agentId, viewMode === 'graph', documentIdFilter);
 
   // Entity mode: get entities and relationships
   const {
-    data: entities = []
+    data: entities = [],
     isLoading: entitiesLoading,
     error: entitiesError,
   } = useEntities(agentId, viewMode === 'entities');
 
   const {
-    data: relationships = []
+    data: relationships = [],
     isLoading: relationshipsLoading,
     error: relationshipsError,
   } = useRelationships(agentId, viewMode === 'entities');

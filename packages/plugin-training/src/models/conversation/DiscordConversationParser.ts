@@ -247,8 +247,8 @@ ${style.description}`,
         .map((msg) => msg.content)
         .filter((content) => content.length > 0),
       topics: topics,
-      knowledge: []
-      plugins: []
+      knowledge: [],
+      plugins: [],
       settings: {
         discordUserId: userId,
         averageMessageLength: messageAnalysis.avgLength,
@@ -463,7 +463,7 @@ ${style.description}`,
    * Create entity ID mappings
    */
   private createEntityMappings(
-    messages: DiscordMessage[]
+    messages: DiscordMessage[],
     conversationData: DiscordConversationExport
   ): void {
     const userIds = new Set(messages.map((msg) => msg.author.id));
@@ -484,7 +484,7 @@ ${style.description}`,
    */
   private async createTrainingExample(
     currentMessage: DiscordMessage,
-    messageHistory: DiscordMessage[]
+    messageHistory: DiscordMessage[],
     conversationData: DiscordConversationExport,
     messageIndex: number
   ): Promise<ConversationTrainingExample | null> {

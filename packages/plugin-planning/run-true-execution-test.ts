@@ -317,9 +317,9 @@ async function runTrueExecutionTests() {
       userRequest: scenario.userRequest,
       planCreated: false,
       planExecuted: false,
-      actionExecutions: []
+      actionExecutions: [],
       totalExecutionTime: 0,
-      measurableOutcomes: []
+      measurableOutcomes: [],
       success: false,
       qualityScore: 0,
       reasoning: ''
@@ -360,7 +360,7 @@ async function runTrueExecutionTests() {
         // Create comprehensive plan
         const planningContext = {
           goal: scenario.userRequest,
-          constraints: []
+          constraints: [],
           availableActions: runtime.actions.map((a: any) => a.name),
           availableProviders: runtime.providers.map((p: any) => p.name),
           preferences: {

@@ -2,7 +2,7 @@ import { type Provider, type IAgentRuntime, type Memory, type State, logger } fr
 
 export const trustProfileProvider: Provider = {
   name: 'trustProfile',
-  description: 'Provides trust profile information for entities in the current context',
+  description: 'Provides detailed trust assessment and interaction history for users when agent needs to make trust-based decisions, evaluate credibility, or personalize responses based on established relationships',
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
     try {

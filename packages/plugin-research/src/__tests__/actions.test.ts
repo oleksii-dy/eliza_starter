@@ -37,11 +37,11 @@ function createTestRuntime(): IAgentRuntime {
       name: 'TestAgent',
       bio: ['Test bio'],
       system: 'Test system prompt',
-      messageExamples: []
-      postExamples: []
-      topics: []
-      knowledge: []
-      plugins: []
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      knowledge: [],
+      plugins: [],
     },
     getSetting: (key: string) => {
       const settings: Record<string, string> = {
@@ -65,15 +65,15 @@ function createTestRuntime(): IAgentRuntime {
     updateState: async () => true,
     messageManager: {
       createMemory: async () => true,
-      getMemories: async () => []
+      getMemories: async () => [],
       updateMemory: async () => true,
       deleteMemory: async () => true,
-      searchMemories: async () => []
-      getLastMessages: async () => []
+      searchMemories: async () => [],
+      getLastMessages: async () => [],
     },
-    actions: []
-    providers: []
-    evaluators: []
+    actions: [],
+    providers: [],
+    evaluators: [],
     logger: {
       info: () => {},
       warn: () => {},

@@ -147,7 +147,7 @@ async function testPluginIntegration() {
       testsRun: 4,
       testsPassed: 4,
       testsFailed: 0,
-      issues: []
+      issues: [],
     }
   };
 }

@@ -76,7 +76,7 @@ export interface StatusSummary {
 
 export const uxGuidanceProvider: Provider = {
   name: 'UX_GUIDANCE',
-  description: 'Provides contextual UX guidance and suggestions for secret management',
+  description: 'Provides interactive UI guidance, contextual help suggestions, and smart workflows for secure secret management when user needs assistance with API keys or configuration',
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> => {
     elizaLogger.info('[UXGuidanceProvider] Generating UX guidance');
@@ -96,23 +96,28 @@ export const uxGuidanceProvider: Provider = {
       if (!secretsManager || !actionChainService) {
         return {
           text: JSON.stringify({
-            suggestions: [{
-              id: 'service-unavailable',
-              type: 'troubleshooting',
-              title: 'Get Help',
-              description: 'Secret management services are not available. Please contact support.',
-              priority: 'high',
-              dismissible: false,
-            }],
-            quickActions: []
+            suggestions: [
+              {
+                id: 'service-unavailable',
+                type: 'troubleshooting',
+                title: 'Get Help',
+                description:
+                  'Secret management services are not available. Please contact support.',
+                priority: 'high',
+                dismissible: false,
+              },
+            ],
+            quickActions: [],
             contextualHelp: {
               currentContext: 'service-error',
-              relevantDocs: []
-              commonTasks: []
-              troubleshooting: [{
-                issue: 'Service unavailable',
-                solution: 'Contact support for assistance'
-              }]
+              relevantDocs: [],
+              commonTasks: [],
+              troubleshooting: [
+                {
+                  issue: 'Service unavailable',
+                  solution: 'Contact support for assistance',
+                },
+              ],
             },
             statusSummary: {
               totalSecrets: 0,
@@ -121,26 +126,31 @@ export const uxGuidanceProvider: Provider = {
               weakSecrets: 0,
               lastActivity: 'Unknown',
               securityScore: 0,
-            }
+            },
           }),
           data: {
-            suggestions: [{
-              id: 'service-unavailable',
-              type: 'troubleshooting',
-              title: 'Get Help',
-              description: 'Secret management services are not available. Please contact support.',
-              priority: 'high',
-              dismissible: false,
-            }],
-            quickActions: []
+            suggestions: [
+              {
+                id: 'service-unavailable',
+                type: 'troubleshooting',
+                title: 'Get Help',
+                description:
+                  'Secret management services are not available. Please contact support.',
+                priority: 'high',
+                dismissible: false,
+              },
+            ],
+            quickActions: [],
             contextualHelp: {
               currentContext: 'service-error',
-              relevantDocs: []
-              commonTasks: []
-              troubleshooting: [{
-                issue: 'Service unavailable',
-                solution: 'Contact support for assistance'
-              }]
+              relevantDocs: [],
+              commonTasks: [],
+              troubleshooting: [
+                {
+                  issue: 'Service unavailable',
+                  solution: 'Contact support for assistance',
+                },
+              ],
             },
             statusSummary: {
               totalSecrets: 0,
@@ -149,8 +159,8 @@ export const uxGuidanceProvider: Provider = {
               weakSecrets: 0,
               lastActivity: 'Unknown',
               securityScore: 0,
-            }
-          }
+            },
+          },
         };
       }
 
@@ -213,8 +223,8 @@ export const uxGuidanceProvider: Provider = {
         ],
         contextualHelp: {
           currentContext: 'error',
-          relevantDocs: []
-          commonTasks: []
+          relevantDocs: [],
+          commonTasks: [],
           troubleshooting: [
             {
               issue: 'Service unavailable',
@@ -280,8 +290,8 @@ function generateStatusSummary(
 
 function generateSuggestions(
   userSecrets: Record<string, any>,
-  missingSecrets: any[]
-  workflows: any[]
+  missingSecrets: any[],
+  workflows: any[],
   statusSummary: StatusSummary
 ): UXSuggestion[] {
   const suggestions: UXSuggestion[] = [];
@@ -356,7 +366,7 @@ function generateSuggestions(
 
 function generateQuickActions(
   userSecrets: Record<string, any>,
-  missingSecrets: any[]
+  missingSecrets: any[],
   workflows: any[]
 ): QuickAction[] {
   const actions: QuickAction[] = [
@@ -423,7 +433,7 @@ function generateContextualHelp(
   const messageText = message.content.text?.toLowerCase() || '';
 
   let currentContext = 'general';
-  
+
   // Check for specific contexts first (more specific patterns win)
   if (messageText.includes('api key')) {
     currentContext = 'api-keys';
@@ -433,7 +443,11 @@ function generateContextualHelp(
     currentContext = 'secrets';
   } else if (messageText.includes('help')) {
     currentContext = 'help';
-  } else if (messageText.includes('error') || messageText.includes('problem') || messageText.includes('broken')) {
+  } else if (
+    messageText.includes('error') ||
+    messageText.includes('problem') ||
+    messageText.includes('broken')
+  ) {
     currentContext = 'troubleshooting';
   }
 

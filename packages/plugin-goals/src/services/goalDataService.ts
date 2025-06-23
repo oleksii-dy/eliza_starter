@@ -152,7 +152,7 @@ export class GoalDataService {
 
       return filteredGoals.map((goal) => ({
         ...goal,
-        tags: tagsByGoal[goal.id] || []
+        tags: tagsByGoal[goal.id] || [],
         createdAt: new Date(goal.createdAt),
         updatedAt: new Date(goal.updatedAt),
         completedAt: goal.completedAt ? new Date(goal.completedAt) : null,

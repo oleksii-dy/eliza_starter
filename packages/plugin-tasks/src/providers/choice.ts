@@ -28,6 +28,8 @@ interface OptionObject {
  */
 export const choiceProvider: Provider = {
   name: 'CHOICE',
+  description:
+    'Provides pending choice-based tasks requiring user selection. Use when agent needs to present available options and await user decisions on task workflows.',
   get: async (runtime: IAgentRuntime, message: Memory): Promise<ProviderResult> => {
     try {
       // Get all pending tasks for this room with options
@@ -39,7 +41,7 @@ export const choiceProvider: Provider = {
       if (!pendingTasks || pendingTasks.length === 0) {
         return {
           data: {
-            tasks: []
+            tasks: [],
           },
           values: {
             tasks: 'No pending choices for the moment.',
@@ -54,7 +56,7 @@ export const choiceProvider: Provider = {
       if (tasksWithOptions.length === 0) {
         return {
           data: {
-            tasks: []
+            tasks: [],
           },
           values: {
             tasks: 'No pending choices for the moment.',
@@ -109,7 +111,7 @@ export const choiceProvider: Provider = {
       logger.error('Error in options provider:', error);
       return {
         data: {
-          tasks: []
+          tasks: [],
         },
         values: {
           tasks: 'There was an error retrieving pending tasks with options.',

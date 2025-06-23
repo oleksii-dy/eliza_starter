@@ -23,8 +23,8 @@ describe('createTodoAction', () => {
       values: {},
       text: '',
       data: {
-        messages: []
-        entities: []
+        messages: [],
+        entities: [],
         room: { id: 'room-1', name: 'Test Room', worldId: 'world-1' },
       },
     };
@@ -48,64 +48,64 @@ describe('createTodoAction', () => {
 
   it('should validate correctly', async () => {
     setupMocks();
-    const message: Memory = { 
-      entityId: 'user-1' as UUID, 
+    const message: Memory = {
+      entityId: 'user-1' as UUID,
       roomId: 'room-1' as UUID,
-      content: { text: 'create a todo' }
+      content: { text: 'create a todo' },
     } as any;
-    
+
     const isValid = await createTodoAction.validate(mockRuntime, message);
     expect(typeof isValid).toBe('boolean');
   });
 
   it('should handle missing roomId gracefully', async () => {
     setupMocks();
-    const message: Memory = { 
+    const message: Memory = {
       entityId: 'user-1' as UUID,
-      content: { text: 'create a todo', source: 'test' }
+      content: { text: 'create a todo', source: 'test' },
     } as any;
-    
+
     let callbackCalled = false;
     const testCallback: HandlerCallback = async () => {
       callbackCalled = true;
       return [];
     };
-    
+
     await createTodoAction.handler(mockRuntime, message, mockState, {}, testCallback);
     expect(callbackCalled).toBe(true);
   });
 
   it('should handle missing entityId gracefully', async () => {
     setupMocks();
-    const message: Memory = { 
+    const message: Memory = {
       roomId: 'room-1' as UUID,
-      content: { text: 'create a todo', source: 'test' }
+      content: { text: 'create a todo', source: 'test' },
     } as any;
-    
+
     let callbackCalled = false;
     const testCallback: HandlerCallback = async () => {
       callbackCalled = true;
       return [];
     };
-    
+
     await createTodoAction.handler(mockRuntime, message, mockState, {}, testCallback);
     expect(callbackCalled).toBe(true);
   });
 
   it('should handle empty AI response gracefully', async () => {
     setupMocks();
-    const message: Memory = { 
+    const message: Memory = {
       entityId: 'user-1' as UUID,
       roomId: 'room-1' as UUID,
-      content: { text: 'create a todo', source: 'test' }
+      content: { text: 'create a todo', source: 'test' },
     } as any;
-    
+
     let callbackCalled = false;
     const testCallback: HandlerCallback = async () => {
       callbackCalled = true;
       return [];
     };
-    
+
     await createTodoAction.handler(mockRuntime, message, mockState, {}, testCallback);
     expect(callbackCalled).toBe(true);
   });
@@ -114,12 +114,12 @@ describe('createTodoAction', () => {
     expect(createTodoAction.examples).toBeDefined();
     expect(Array.isArray(createTodoAction.examples)).toBe(true);
     expect(createTodoAction.examples!.length).toBeGreaterThan(0);
-    
+
     // Check first example structure
     const firstExample = createTodoAction.examples![0];
     expect(Array.isArray(firstExample)).toBe(true);
     expect(firstExample.length).toBeGreaterThan(0);
-    
+
     // Check example message structure
     const firstMessage = firstExample[0];
     expect(firstMessage).toHaveProperty('name');

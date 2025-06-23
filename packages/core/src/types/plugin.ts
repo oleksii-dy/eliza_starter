@@ -526,7 +526,7 @@ export const ACTION_CONFIG_PRESETS = {
   BALANCE_READ: {
     defaultEnabled: true,
     userConfigurable: true,
-    requiredCapabilities: []
+    requiredCapabilities: [],
     requiresPrivateKey: false,
     category: 'other' as const,
   },

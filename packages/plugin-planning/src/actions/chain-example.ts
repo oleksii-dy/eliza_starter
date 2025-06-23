@@ -258,7 +258,7 @@ export const chainExampleAction: Action = {
       const initialState = {
         chainStartTime: Date.now(),
         originalMessage: message.content.text,
-        steps: []
+        steps: [],
       };
 
       // In a real implementation, this would be handled by the ActionExecutorService
@@ -494,7 +494,7 @@ export const createPlanAction: Action = {
                 name: 'Repository Setup',
                 description: 'Create GitHub repository with proper documentation',
                 action: 'CREATE_GITHUB_REPO',
-                dependencies: []
+                dependencies: [],
                 estimatedDuration: '30 minutes',
               },
             ],
@@ -552,7 +552,7 @@ export const createPlanAction: Action = {
       const planState = {
         planId: plan.id,
         currentPhase: 0,
-        completedTasks: []
+        completedTasks: [],
         plan: plan,
       };
 

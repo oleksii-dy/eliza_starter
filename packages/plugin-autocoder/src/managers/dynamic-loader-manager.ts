@@ -115,7 +115,7 @@ export class DynamicLoaderManager {
       const loadedComponent: DynamicLoadResult = {
         success: true,
         exports,
-        dependencies: []
+        dependencies: [],
         error: undefined,
       };
 
@@ -129,7 +129,7 @@ export class DynamicLoaderManager {
       return {
         success: false,
         exports: null,
-        dependencies: []
+        dependencies: [],
         error: error instanceof Error ? error.message : String(error),
       };
     }

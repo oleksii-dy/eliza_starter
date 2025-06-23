@@ -11,7 +11,7 @@ import type { SecretContext } from '../types';
 export const secretsInfoProvider: Provider = {
   name: 'secretsInfo',
   description:
-    'Provides information about available secrets at different levels (global, world, user)',
+    'Provides comprehensive inventory of available API keys and secrets across all permission levels when agent needs to assess configuration status or help users understand their secret management setup',
 
   get: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     elizaLogger.debug('[SecretsInfo] Fetching secrets information');
@@ -113,9 +113,9 @@ export const secretsInfoProvider: Provider = {
           globalSecretCount: results.global?.count || 0,
           worldSecretCount: results.world?.count || 0,
           userSecretCount: results.user?.count || 0,
-          globalSecretKeys: results.global?.keys || []
-          worldSecretKeys: results.world?.keys || []
-          userSecretKeys: results.user?.keys || []
+          globalSecretKeys: results.global?.keys || [],
+          worldSecretKeys: results.world?.keys || [],
+          userSecretKeys: results.user?.keys || [],
         },
         data: results,
       };

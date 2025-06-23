@@ -32,9 +32,9 @@ const testCharacter: Character = {
       { name: 'TrainingRecordingTestAgent', content: { text: 'testing recording response' } },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   topics: ['testing', 'recording', 'filesystem', 'service-validation'],
-  plugins: []
+  plugins: [],
   settings: {
     REASONING_SERVICE_ENABLED: 'true',
     REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',
@@ -51,7 +51,7 @@ function createTestTrainingDataPoint(overrides: any = {}) {
     inputData: {
       messageText: 'Test message',
       prompt: 'Test prompt for training data recording',
-      conversationContext: []
+      conversationContext: [],
       state: {},
     },
     outputData: {
@@ -59,7 +59,7 @@ function createTestTrainingDataPoint(overrides: any = {}) {
       reasoning: 'Test reasoning',
       confidence: 0.95,
     },
-    conversationContext: []
+    conversationContext: [],
     stateData: {},
     metadata: {
       roomId: uuidv4() as UUID,

@@ -167,7 +167,7 @@ export async function runE2eTests(
       logger.info('Setting up server properties...');
       server.startAgent = async (character) => {
         logger.info(`Starting agent for character ${character.name}`);
-        return startAgent(character, server!, undefined, [] { isTestMode: true });
+        return startAgent(character, server!, undefined, [], { isTestMode: true });
       };
       server.loadCharacterTryPath = loadCharacterTryPath;
       server.jsonToCharacter = jsonToCharacter;
@@ -303,7 +303,7 @@ export async function runE2eTests(
                 originalCharacter,
                 server,
                 agent.init,
-                agent.plugins || []
+                agent.plugins || [],
                 { isTestMode: true } // Pass isTestMode for project tests as well
               );
 

@@ -10,7 +10,7 @@ describe('Simple Test', () => {
     const pluginStructure = {
       name: 'lowlevel-testing',
       description: 'Tests real service implementations',
-      tests: []
+      tests: [],
     };
 
     expect(pluginStructure.name).toBe('lowlevel-testing');

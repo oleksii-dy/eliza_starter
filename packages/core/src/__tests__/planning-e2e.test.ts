@@ -66,7 +66,7 @@ function createE2ERuntime(): AgentRuntime {
           text: success ? 'Room muted' : 'Failed to mute room',
         };
       },
-      similes: []
+      similes: [],
       effects: {
         provides: ['room_mute_status'],
         requires: ['room_context'],
@@ -103,7 +103,7 @@ function createE2ERuntime(): AgentRuntime {
           text: success ? 'Room followed' : 'Failed to follow room',
         };
       },
-      similes: []
+      similes: [],
       effects: {
         provides: ['room_follow_status'],
         requires: ['room_context'],
@@ -139,7 +139,7 @@ function createE2ERuntime(): AgentRuntime {
           text: `Updated ${key} to ${value}`,
         };
       },
-      similes: []
+      similes: [],
       effects: {
         provides: ['settings_update'],
         requires: ['settings_context'],
@@ -179,7 +179,7 @@ function createE2ERuntime(): AgentRuntime {
           text: replyText,
         };
       },
-      similes: []
+      similes: [],
       effects: {
         provides: ['user_response'],
         requires: ['message_context'],
@@ -199,7 +199,7 @@ function createE2ERuntime(): AgentRuntime {
             analysis: {
               sentiment: 'neutral',
               intent: 'request',
-              entities: []
+              entities: [],
             },
           },
           values: {
@@ -209,7 +209,7 @@ function createE2ERuntime(): AgentRuntime {
           text: 'Message analyzed',
         };
       },
-      similes: []
+      similes: [],
     },
     {
       name: 'FETCH_DATA',
@@ -238,7 +238,7 @@ function createE2ERuntime(): AgentRuntime {
           text: `Fetched ${dataType} data`,
         };
       },
-      similes: []
+      similes: [],
     },
   ];
 
@@ -305,9 +305,9 @@ describe('Planning E2E Tests', () => {
 
       const context: PlanningContext = {
         goal: 'Mute the current room and inform the user',
-        constraints: []
+        constraints: [],
         availableActions: ['MUTE_ROOM', 'REPLY'],
-        availableProviders: []
+        availableProviders: [],
       };
 
       // Generate plan
@@ -362,7 +362,7 @@ describe('Planning E2E Tests', () => {
         ],
         executionModel: 'sequential',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [] tags: [] },
+        metadata: { createdAt: Date.now(), constraints: [], tags: [] },
       };
 
       const result = await (runtime as any).executePlan(plan, message);
@@ -415,7 +415,7 @@ describe('Planning E2E Tests', () => {
         ],
         executionModel: 'parallel',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [] tags: [] },
+        metadata: { createdAt: Date.now(), constraints: [], tags: [] },
       };
 
       const startTime = Date.now();
@@ -456,7 +456,7 @@ describe('Planning E2E Tests', () => {
         ],
         executionModel: 'sequential',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [] tags: [] },
+        metadata: { createdAt: Date.now(), constraints: [], tags: [] },
       };
 
       const result = await (runtime as any).executePlan(plan, message);
@@ -485,9 +485,9 @@ describe('Planning E2E Tests', () => {
 
           const context: PlanningContext = {
             goal: scenario.goal,
-            constraints: []
+            constraints: [],
             availableActions: runtime.actions.map((a) => a.name),
-            availableProviders: []
+            availableProviders: [],
           };
 
           const startTime = Date.now();
@@ -504,7 +504,7 @@ describe('Planning E2E Tests', () => {
               })),
               executionModel: scenario.complexity === 'complex' ? 'parallel' : 'sequential',
               state: { status: 'pending' },
-              metadata: { createdAt: Date.now(), constraints: [] tags: scenario.tags },
+              metadata: { createdAt: Date.now(), constraints: [], tags: scenario.tags },
             };
 
             const result = await (runtime as any).executePlan(plan, message);
@@ -576,7 +576,7 @@ Average Duration: ${avgDuration.toFixed(2)}ms
         ],
         executionModel: 'sequential',
         state: { status: 'pending' },
-        metadata: { createdAt: Date.now(), constraints: [] tags: ['room-management'] },
+        metadata: { createdAt: Date.now(), constraints: [], tags: ['room-management'] },
       };
 
       const responses: any[] = [];

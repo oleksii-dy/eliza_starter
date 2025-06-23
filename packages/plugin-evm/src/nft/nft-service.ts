@@ -68,14 +68,14 @@ const ERC721_ABI = [
         type: 'function'
     },
     {
-        inputs: []
+        inputs: [],
         name: 'name',
         outputs: [{ name: '', type: 'string' }],
         stateMutability: 'view',
         type: 'function'
     },
     {
-        inputs: []
+        inputs: [],
         name: 'symbol',
         outputs: [{ name: '', type: 'string' }],
         stateMutability: 'view',
@@ -88,7 +88,7 @@ const ERC721_ABI = [
             { name: 'tokenId', type: 'uint256' }
         ],
         name: 'transferFrom',
-        outputs: []
+        outputs: [],
         stateMutability: 'nonpayable',
         type: 'function'
     },
@@ -98,7 +98,7 @@ const ERC721_ABI = [
             { name: 'tokenId', type: 'uint256' }
         ],
         name: 'safeTransferFrom',
-        outputs: []
+        outputs: [],
         stateMutability: 'nonpayable',
         type: 'function'
     },
@@ -108,7 +108,7 @@ const ERC721_ABI = [
             { name: 'approved', type: 'bool' }
         ],
         name: 'setApprovalForAll',
-        outputs: []
+        outputs: [],
         stateMutability: 'nonpayable',
         type: 'function'
     }
@@ -357,7 +357,7 @@ export class NFTService {
                     description: nft.description,
                     imageUrl: nft.cached_file_url,
                     animationUrl: nft.cached_animation_url,
-                    attributes: nft.metadata?.attributes || []
+                    attributes: nft.metadata?.attributes || [],
                     chain: this.getChainFromId(chainId),
                     owner: walletAddress,
                     collection: nft.collection ? {

@@ -224,7 +224,7 @@ export const requestSecretFormAction: Action = {
 // Helper function to extract parameters from natural language
 function extractRequestParams(text: string): RequestSecretFormParams {
   const params: RequestSecretFormParams = {
-    secrets: []
+    secrets: [],
     mode: 'requester',
   };
 

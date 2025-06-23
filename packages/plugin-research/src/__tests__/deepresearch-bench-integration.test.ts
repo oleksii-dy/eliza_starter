@@ -14,11 +14,11 @@ class MockRuntime implements IAgentRuntime {
     name: 'DeepResearch Test Agent',
     bio: ['Research agent for testing'],
     system: 'You are a research assistant.',
-    messageExamples: []
-    postExamples: []
-    topics: []
-    knowledge: []
-    plugins: []
+    messageExamples: [],
+    postExamples: [],
+    topics: [],
+    knowledge: [],
+    plugins: [],
   };
 
   providers: any[] = [];
@@ -115,7 +115,7 @@ PRIORITY: medium`;
   // Implement required interface methods
   async processActions(
     message: Memory,
-    responses: Memory[]
+    responses: Memory[],
     state?: State,
     callback?: any
   ): Promise<void> {}
@@ -130,7 +130,7 @@ PRIORITY: medium`;
   }
   async composeState(
     message: Memory,
-    includeList?: string[]
+    includeList?: string[],
     onlyInclude?: boolean,
     skipCache?: boolean
   ): Promise<State> {
@@ -212,18 +212,18 @@ PRIORITY: medium`;
     countMemories: async (roomId: string) => 0,
     removeMemory: async (id: string) => {},
     removeAllMemories: async (roomId: string) => {},
-    searchMemoriesByEmbedding: async (params: any) => []
+    searchMemoriesByEmbedding: async (params: any) => [],
   };
 
   descriptionManager = {
-    getMemories: async (params: any) => []
+    getMemories: async (params: any) => [],
     createMemory: async (memory: Memory) => memory,
     removeMemory: async (id: string) => {},
   };
 
   documentsManager = {
     createMemory: async (memory: Memory) => memory,
-    getMemories: async (params: any) => []
+    getMemories: async (params: any) => [],
     removeMemory: async (id: string) => {},
   };
 
@@ -301,7 +301,7 @@ describe('DeepResearch Bench Integration', () => {
             heading: 'Introduction',
             level: 1,
             content: 'Test intro with citations [1]. This content references sources.',
-            findings: []
+            findings: [],
             citations: [
               {
                 id: '1',
@@ -378,7 +378,7 @@ describe('DeepResearch Bench Integration', () => {
             depth: 0.8,
             instructionFollowing: 0.8,
             readability: 0.8,
-            breakdown: []
+            breakdown: [],
           },
           factScore: {
             citationAccuracy: 0.8,
@@ -388,12 +388,12 @@ describe('DeepResearch Bench Integration', () => {
             disputedCitations: 0,
             citationCoverage: 0.8,
             sourceCredibility: 0.8,
-            breakdown: []
+            breakdown: [],
           },
           timestamp: Date.now(),
           evaluatorVersion: '1.0',
         },
-        exportFormats: []
+        exportFormats: [],
       } as any;
 
       // Export in DeepResearch format
@@ -492,7 +492,7 @@ describe('DeepResearch Bench Integration', () => {
             heading: 'Introduction',
             level: 1,
             content: 'Test intro with citations [1]. This content references sources.',
-            findings: []
+            findings: [],
             citations: [
               {
                 id: '1',
@@ -569,7 +569,7 @@ describe('DeepResearch Bench Integration', () => {
             depth: 0.8,
             instructionFollowing: 0.8,
             readability: 0.8,
-            breakdown: []
+            breakdown: [],
           },
           factScore: {
             citationAccuracy: 0.8,
@@ -579,12 +579,12 @@ describe('DeepResearch Bench Integration', () => {
             disputedCitations: 0,
             citationCoverage: 0.8,
             sourceCredibility: 0.8,
-            breakdown: []
+            breakdown: [],
           },
           timestamp: Date.now(),
           evaluatorVersion: '1.0',
         },
-        exportFormats: []
+        exportFormats: [],
       } as any;
 
       // Evaluate (mocked for testing)

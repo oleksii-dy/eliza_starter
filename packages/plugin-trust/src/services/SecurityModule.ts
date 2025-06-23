@@ -1,8 +1,4 @@
-import { 
-  type IAgentRuntime, 
-  logger, 
-  type Memory as CoreMemory
-} from '@elizaos/core';
+import { type IAgentRuntime, logger, type Memory as CoreMemory } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
 import {
   SecurityEventType,
@@ -16,7 +12,7 @@ import {
   type CoordinationDetection,
   type CredentialTheftDetection,
   type Memory,
-  type Action
+  type Action,
 } from '../types/security';
 import { type PermissionContext } from '../types/permissions';
 import { TrustEvidenceType, type TrustInteraction, type TrustContext } from '../types/trust';
@@ -123,10 +119,10 @@ export class SecurityModule {
   async initialize(runtime: IAgentRuntime, trustEngine: any): Promise<void> {
     this.runtime = runtime;
     this.trustEngine = trustEngine;
-    
+
     // Initialize behavioral profiling
     await this.loadBehavioralProfiles();
-    
+
     console.log('SecurityModule initialized with real threat detection');
   }
 
@@ -159,10 +155,14 @@ export class SecurityModule {
     // Normalize risk score
     riskScore = Math.min(riskScore, 1.0);
 
-    const severity: 'low' | 'medium' | 'high' | 'critical' = 
-      riskScore >= 0.8 ? 'critical' :
-      riskScore >= 0.6 ? 'high' :
-      riskScore >= 0.3 ? 'medium' : 'low';
+    const severity: 'low' | 'medium' | 'high' | 'critical' =
+      riskScore >= 0.8
+        ? 'critical'
+        : riskScore >= 0.6
+          ? 'high'
+          : riskScore >= 0.3
+            ? 'medium'
+            : 'low';
 
     // Detected if any pattern matched
     const detected = threats.length > 0;
@@ -173,9 +173,7 @@ export class SecurityModule {
       type: 'prompt_injection',
       severity,
       action: detected ? 'block' : 'allow',
-      details: detected ? 
-        'Block or flag for manual review' : 
-        'Monitor for additional context'
+      details: detected ? 'Block or flag for manual review' : 'Monitor for additional context',
     };
   }
 
@@ -184,7 +182,7 @@ export class SecurityModule {
     const factors: string[] = [];
 
     // Check for urgency keywords
-    const urgencyMatches = this.URGENCY_KEYWORDS.filter(keyword => 
+    const urgencyMatches = this.URGENCY_KEYWORDS.filter((keyword) =>
       content.toLowerCase().includes(keyword)
     );
     if (urgencyMatches.length > 0) {
@@ -193,7 +191,7 @@ export class SecurityModule {
     }
 
     // Check for authority keywords
-    const authorityMatches = this.AUTHORITY_KEYWORDS.filter(keyword => 
+    const authorityMatches = this.AUTHORITY_KEYWORDS.filter((keyword) =>
       content.toLowerCase().includes(keyword)
     );
     if (authorityMatches.length > 0) {
@@ -202,7 +200,7 @@ export class SecurityModule {
     }
 
     // Check for intimidation keywords
-    const intimidationMatches = this.INTIMIDATION_KEYWORDS.filter(keyword => 
+    const intimidationMatches = this.INTIMIDATION_KEYWORDS.filter((keyword) =>
       content.toLowerCase().includes(keyword)
     );
     if (intimidationMatches.length > 0) {
@@ -211,7 +209,7 @@ export class SecurityModule {
     }
 
     // Check for credential requests
-    const hasCredentialRequest = this.CREDENTIAL_PATTERNS.some(pattern => pattern.test(content));
+    const hasCredentialRequest = this.CREDENTIAL_PATTERNS.some((pattern) => pattern.test(content));
     if (hasCredentialRequest) {
       riskScore += 0.3;
       factors.push('Requesting credentials or sensitive information');
@@ -223,7 +221,10 @@ export class SecurityModule {
       factors.push('Combined urgency and authority pressure');
     }
 
-    if (intimidationMatches.length > 0 && (urgencyMatches.length > 0 || authorityMatches.length > 0)) {
+    if (
+      intimidationMatches.length > 0 &&
+      (urgencyMatches.length > 0 || authorityMatches.length > 0)
+    ) {
       riskScore += 0.15; // Bonus for intimidation + other factors
       factors.push('Intimidation combined with pressure tactics');
     }
@@ -231,10 +232,14 @@ export class SecurityModule {
     // Normalize risk score
     riskScore = Math.min(riskScore, 1.0);
 
-    const severity: 'low' | 'medium' | 'high' | 'critical' = 
-      riskScore >= 0.7 ? 'critical' :
-      riskScore >= 0.5 ? 'high' :
-      riskScore >= 0.3 ? 'medium' : 'low';
+    const severity: 'low' | 'medium' | 'high' | 'critical' =
+      riskScore >= 0.7
+        ? 'critical'
+        : riskScore >= 0.5
+          ? 'high'
+          : riskScore >= 0.3
+            ? 'medium'
+            : 'low';
 
     return {
       detected: riskScore >= 0.3,
@@ -242,9 +247,10 @@ export class SecurityModule {
       type: 'social_engineering',
       severity,
       action: riskScore >= 0.5 ? 'block' : riskScore >= 0.3 ? 'require_verification' : 'allow',
-      details: riskScore >= 0.3 ? 
-        `Social engineering indicators detected: ${factors.join('; ')}` : 
-        'No significant social engineering patterns detected'
+      details:
+        riskScore >= 0.3
+          ? `Social engineering indicators detected: ${factors.join('; ')}`
+          : 'No significant social engineering patterns detected',
     };
   }
 
@@ -258,7 +264,7 @@ export class SecurityModule {
         severity: 'low',
         action: 'log_only',
         details: 'No entity ID provided for threat assessment',
-        recommendation: 'Continue normal monitoring'
+        recommendation: 'Continue normal monitoring',
       };
     }
 
@@ -267,10 +273,10 @@ export class SecurityModule {
 
     // Get behavioral profile
     const profile = await this.getBehavioralProfile(entityId);
-    
+
     // Analyze recent message patterns
     const messages = this.messageHistory.get(entityId) || [];
-    const recentMessages = messages.filter(m => {
+    const recentMessages = messages.filter((m) => {
       const messageTime = (m as any).timestamp || (m as any).createdAt || 0;
       return Date.now() - messageTime < 3600000; // Last hour
     });
@@ -303,15 +309,20 @@ export class SecurityModule {
     // Calculate overall threat level
     const riskFactorValues = Object.values(riskFactors);
     const maxRisk = riskFactorValues.length > 0 ? Math.max(...riskFactorValues) : 0;
-    const avgRisk = riskFactorValues.length > 0 
-      ? riskFactorValues.reduce((a, b) => a + b, 0) / riskFactorValues.length 
-      : 0;
-    const threatScore = (maxRisk * 0.7) + (avgRisk * 0.3);
+    const avgRisk =
+      riskFactorValues.length > 0
+        ? riskFactorValues.reduce((a, b) => a + b, 0) / riskFactorValues.length
+        : 0;
+    const threatScore = maxRisk * 0.7 + avgRisk * 0.3;
 
-    const severity: 'low' | 'medium' | 'high' | 'critical' = 
-      threatScore >= 0.8 ? 'critical' :
-      threatScore >= 0.6 ? 'high' :
-      threatScore >= 0.3 ? 'medium' : 'low';
+    const severity: 'low' | 'medium' | 'high' | 'critical' =
+      threatScore >= 0.8
+        ? 'critical'
+        : threatScore >= 0.6
+          ? 'high'
+          : threatScore >= 0.3
+            ? 'medium'
+            : 'low';
 
     return {
       detected: threatScore >= 0.3, // Lower threshold for detection
@@ -320,20 +331,20 @@ export class SecurityModule {
       severity,
       action: threatScore >= 0.5 ? 'require_verification' : 'log_only',
       details: this.getRecommendationForThreat(severity, riskFactors),
-      recommendation: this.getRecommendationForThreat(severity, riskFactors)
+      recommendation: this.getRecommendationForThreat(severity, riskFactors),
     };
   }
 
   async storeMemory(message: any): Promise<void> {
     const entityId = message.entityId as UUID;
     const messages = this.messageHistory.get(entityId) || [];
-    
+
     messages.push({
-      id: message.id || `msg_${Date.now()}` as UUID,
+      id: message.id || (`msg_${Date.now()}` as UUID),
       entityId,
       content: message.content?.text || '',
       timestamp: message.createdAt || Date.now(),
-      roomId: message.roomId
+      roomId: message.roomId,
     } as Memory);
 
     // Keep last 100 messages per entity
@@ -350,13 +361,13 @@ export class SecurityModule {
   async storeAction(action: any): Promise<void> {
     const entityId = action.entityId as UUID;
     const actions = this.actionHistory.get(entityId) || [];
-    
+
     actions.push({
-      id: action.id || `action_${Date.now()}` as UUID,
+      id: action.id || (`action_${Date.now()}` as UUID),
       entityId,
-      type: action.type || action.name || 'unknown' as UUID,
+      type: action.type || action.name || ('unknown' as UUID),
       timestamp: action.timestamp || Date.now(),
-      result: action.success !== false ? 'success' : 'failure'
+      result: action.success !== false ? 'success' : 'failure',
     });
 
     // Keep last 50 actions per entity
@@ -367,19 +378,19 @@ export class SecurityModule {
     this.actionHistory.set(entityId, actions);
   }
 
-  async detectMultiAccountPattern(entities: UUID[] timeWindow: number = 3600000): Promise<any> {
+  async detectMultiAccountPattern(entities: UUID[], timeWindow: number = 3600000): Promise<any> {
     const patterns: any[] = [];
-    
+
     for (let i = 0; i < entities.length; i++) {
       for (let j = i + 1; j < entities.length; j++) {
         const similarity = await this.calculateBehavioralSimilarity(entities[i], entities[j]);
-        
+
         if (similarity.score > 0.8) {
           patterns.push({
             entities: [entities[i], entities[j]],
             similarity: similarity.score,
             factors: similarity.factors,
-            confidence: similarity.score
+            confidence: similarity.score,
           });
         }
       }
@@ -389,8 +400,8 @@ export class SecurityModule {
       type: 'multi_account',
       detected: patterns.length > 0,
       patterns,
-      confidence: patterns.length > 0 ? Math.max(...patterns.map(p => p.confidence)) : 0,
-      linkedAccounts: patterns.flatMap(p => p.entities)
+      confidence: patterns.length > 0 ? Math.max(...patterns.map((p) => p.confidence)) : 0,
+      linkedAccounts: patterns.flatMap((p) => p.entities),
     };
   }
 
@@ -399,14 +410,17 @@ export class SecurityModule {
 
     // Check for similar usernames
     for (const existing of existingUsers) {
-      const similarity = this.calculateStringSimilarity(username.toLowerCase(), existing.toLowerCase());
-      
+      const similarity = this.calculateStringSimilarity(
+        username.toLowerCase(),
+        existing.toLowerCase()
+      );
+
       if (similarity > 0.8 && username !== existing) {
         suspiciousPatterns.push({
           type: 'similar_username',
           target: existing,
           similarity,
-          pattern: username
+          pattern: username,
         });
       }
     }
@@ -419,25 +433,27 @@ export class SecurityModule {
       type: 'impersonation',
       detected: suspiciousPatterns.length > 0,
       patterns: suspiciousPatterns,
-      confidence: suspiciousPatterns.length > 0 ? 
-        Math.max(...suspiciousPatterns.map(p => p.similarity || 0.5)) : 0,
-      impersonator: username
+      confidence:
+        suspiciousPatterns.length > 0
+          ? Math.max(...suspiciousPatterns.map((p) => p.similarity || 0.5))
+          : 0,
+      impersonator: username,
     };
   }
 
-  async detectPhishing(messages: any[] entityId: UUID): Promise<any> {
+  async detectPhishing(messages: any[], entityId: UUID): Promise<any> {
     const phishingIndicators: any[] = [];
-    
+
     for (const message of messages) {
       const content = message.content?.text || message.content || '';
-      
+
       // Check for credential requests
-      const credentialRequest = this.CREDENTIAL_PATTERNS.some(pattern => pattern.test(content));
+      const credentialRequest = this.CREDENTIAL_PATTERNS.some((pattern) => pattern.test(content));
       if (credentialRequest) {
         phishingIndicators.push({
           type: 'credential_request',
           message: message.id,
-          confidence: 0.8
+          confidence: 0.8,
         });
       }
 
@@ -447,7 +463,7 @@ export class SecurityModule {
         phishingIndicators.push({
           type: 'urgent_financial',
           message: message.id,
-          confidence: urgentFinancial.confidence
+          confidence: urgentFinancial.confidence,
         });
       }
 
@@ -458,7 +474,7 @@ export class SecurityModule {
           type: 'suspicious_links',
           message: message.id,
           links: suspiciousLinks,
-          confidence: 0.7
+          confidence: 0.7,
         });
       }
     }
@@ -467,8 +483,10 @@ export class SecurityModule {
       type: 'phishing',
       detected: phishingIndicators.length > 0,
       indicators: phishingIndicators,
-      confidence: phishingIndicators.length > 0 ? 
-        Math.max(...phishingIndicators.map(i => i.confidence)) : 0
+      confidence:
+        phishingIndicators.length > 0
+          ? Math.max(...phishingIndicators.map((i) => i.confidence))
+          : 0,
     };
   }
 
@@ -485,10 +503,10 @@ export class SecurityModule {
           sourceEntityId: entityId,
           type: TrustEvidenceType.SECURITY_VIOLATION,
           impact,
-          metadata: { 
+          metadata: {
             securityEvent: event,
-            ...context 
-          }
+            ...context,
+          },
         });
       } catch (error) {
         console.error('Failed to log trust impact:', error);
@@ -509,46 +527,56 @@ export class SecurityModule {
     const context: SecurityContext = {
       entityId: entityId as UUID,
       timestamp: Date.now(),
-      requestedAction: 'emergency_elevation_check'
+      requestedAction: 'emergency_elevation_check',
     };
-    
+
     const assessment = await this.assessThreatLevel(context);
-    
+
     // Calculate risk score based on severity
-    const riskScore = assessment.severity === 'critical' ? 90 :
-                      assessment.severity === 'high' ? 70 :
-                      assessment.severity === 'medium' ? 50 :
-                      30;
-    
+    const riskScore =
+      assessment.severity === 'critical'
+        ? 90
+        : assessment.severity === 'high'
+          ? 70
+          : assessment.severity === 'medium'
+            ? 50
+            : 30;
+
     return {
       riskScore,
       threatLevel: assessment.severity,
-      activeThreats: []
-      recommendations: assessment.recommendation ? [assessment.recommendation] : []
+      activeThreats: [],
+      recommendations: assessment.recommendation ? [assessment.recommendation] : [],
     };
   }
 
-  async analyzeContent(content: string, entityId: UUID, context: SecurityContext): Promise<SecurityCheck> {
+  async analyzeContent(
+    content: string,
+    entityId: UUID,
+    context: SecurityContext
+  ): Promise<SecurityCheck> {
     // Combine all security checks
     const promptInjection = await this.detectPromptInjection(content, context);
     const socialEngineering = await this.detectSocialEngineering(content, context);
-    
+
     // Return the most severe result
     if (promptInjection.severity === 'critical' || socialEngineering.severity === 'critical') {
       return promptInjection.severity === 'critical' ? promptInjection : socialEngineering;
     }
-    
+
     if (promptInjection.detected || socialEngineering.detected) {
-      return promptInjection.confidence > socialEngineering.confidence ? promptInjection : socialEngineering;
+      return promptInjection.confidence > socialEngineering.confidence
+        ? promptInjection
+        : socialEngineering;
     }
-    
+
     return {
       detected: false,
       confidence: 0.9,
       type: 'none',
       severity: 'low',
       action: 'allow',
-      details: 'No threats detected'
+      details: 'No threats detected',
     };
   }
 
@@ -559,7 +587,7 @@ export class SecurityModule {
 
   private async getBehavioralProfile(entityId: UUID): Promise<BehavioralProfile> {
     let profile = this.behavioralProfiles.get(entityId);
-    
+
     if (!profile) {
       profile = {
         id: `profile_${entityId}` as UUID,
@@ -568,35 +596,35 @@ export class SecurityModule {
         vocabularyComplexity: 0,
         messageLengthMean: 0,
         messageLengthStdDev: 0,
-        activeHours: []
-        commonPhrases: []
+        activeHours: [],
+        commonPhrases: [],
         interactionPatterns: {},
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       this.behavioralProfiles.set(entityId, profile);
     }
-    
+
     return profile;
   }
 
   private async updateBehavioralProfile(entityId: UUID, message: any): Promise<void> {
     const profile = await this.getBehavioralProfile(entityId);
     const content = message.content?.text || '';
-    
+
     // Update message length statistics
     const length = content.length;
     const currentMean = profile.messageLengthMean;
     const messageCount = profile.interactionPatterns.messageCount || 0;
-    
+
     profile.messageLengthMean = (currentMean * messageCount + length) / (messageCount + 1);
     profile.interactionPatterns.messageCount = messageCount + 1;
-    
+
     // Update active hours
     const hour = new Date(message.createdAt || Date.now()).getHours();
     if (!profile.activeHours.includes(hour)) {
       profile.activeHours.push(hour);
     }
-    
+
     profile.updatedAt = new Date();
     this.behavioralProfiles.set(entityId, profile);
   }
@@ -606,7 +634,7 @@ export class SecurityModule {
       /you are now (a|an|the)?\s*(admin|administrator|owner|manager)/i,
       /change your role to/i,
       /assume the role of/i,
-      /act as (a|an|the)?\s*(admin|owner|manager)/i
+      /act as (a|an|the)?\s*(admin|owner|manager)/i,
     ];
 
     for (const pattern of rolePatterns) {
@@ -623,7 +651,7 @@ export class SecurityModule {
       /grant me (all|admin|administrator|root|sudo)/i,
       /give me (full|complete|all) (access|permissions)/i,
       /bypass (security|permissions|restrictions)/i,
-      /override (security|permissions|access control)/i
+      /override (security|permissions|access control)/i,
     ];
 
     for (const pattern of escalationPatterns) {
@@ -635,7 +663,10 @@ export class SecurityModule {
     return { detected: false, confidence: 0 };
   }
 
-  private async detectCredentialTheftPrivate(messages: Memory[] entityId: UUID): Promise<{ detected: boolean; confidence: number }> {
+  private async detectCredentialTheftPrivate(
+    messages: Memory[],
+    entityId: UUID
+  ): Promise<{ detected: boolean; confidence: number }> {
     for (const message of messages) {
       // The content field in the stored message is already a string (we store it as such in storeMemory)
       const content = (message as any).content || '';
@@ -648,7 +679,10 @@ export class SecurityModule {
     return { detected: false, confidence: 0 };
   }
 
-  private analyzeSocialEngineering(messages: Memory[]): { score: number; factors: SocialEngineeringFactors } {
+  private analyzeSocialEngineering(messages: Memory[]): {
+    score: number;
+    factors: SocialEngineeringFactors;
+  } {
     const factors: SocialEngineeringFactors = {
       urgency: 0,
       authority: 0,
@@ -657,37 +691,41 @@ export class SecurityModule {
       reciprocity: 0,
       commitment: 0,
       socialProof: 0,
-      scarcity: 0
+      scarcity: 0,
     };
 
     for (const message of messages) {
       // The content field in the stored message is already a string (we store it as such in storeMemory)
       const content = ((message as any).content || '').toLowerCase();
-      
+
       // Check urgency
-      if (this.URGENCY_KEYWORDS.some(keyword => content.includes(keyword))) {
+      if (this.URGENCY_KEYWORDS.some((keyword) => content.includes(keyword))) {
         factors.urgency = Math.min(factors.urgency + 0.3, 1.0);
       }
-      
+
       // Check authority
-      if (this.AUTHORITY_KEYWORDS.some(keyword => content.includes(keyword))) {
+      if (this.AUTHORITY_KEYWORDS.some((keyword) => content.includes(keyword))) {
         factors.authority = Math.min(factors.authority + 0.3, 1.0);
       }
-      
+
       // Check intimidation
-      if (this.INTIMIDATION_KEYWORDS.some(keyword => content.includes(keyword))) {
+      if (this.INTIMIDATION_KEYWORDS.some((keyword) => content.includes(keyword))) {
         factors.intimidation = Math.min(factors.intimidation + 0.4, 1.0);
       }
     }
 
-    const score = Object.values(factors).reduce((sum, val) => sum + val, 0) / Object.keys(factors).length;
+    const score =
+      Object.values(factors).reduce((sum, val) => sum + val, 0) / Object.keys(factors).length;
     return { score, factors };
   }
 
-  private async calculateBehavioralSimilarity(entityA: UUID, entityB: UUID): Promise<{ score: number; factors: string[] }> {
+  private async calculateBehavioralSimilarity(
+    entityA: UUID,
+    entityB: UUID
+  ): Promise<{ score: number; factors: string[] }> {
     const profileA = await this.getBehavioralProfile(entityA);
     const profileB = await this.getBehavioralProfile(entityB);
-    
+
     const factors: string[] = [];
     let similarity = 0;
     let comparisons = 0;
@@ -707,7 +745,7 @@ export class SecurityModule {
     comparisons++;
 
     // Compare active hours
-    const commonHours = profileA.activeHours.filter(hour => profileB.activeHours.includes(hour));
+    const commonHours = profileA.activeHours.filter((hour) => profileB.activeHours.includes(hour));
     if (commonHours.length > profileA.activeHours.length * 0.7) {
       similarity += 0.3;
       factors.push('similar_active_hours');
@@ -716,31 +754,31 @@ export class SecurityModule {
 
     return {
       score: comparisons > 0 ? similarity / comparisons : 0,
-      factors
+      factors,
     };
   }
 
   private calculateStringSimilarity(str1: string, str2: string): number {
     const longer = str1.length > str2.length ? str1 : str2;
     const shorter = str1.length > str2.length ? str2 : str1;
-    
+
     if (longer.length === 0) return 1.0;
-    
+
     const editDistance = this.levenshteinDistance(longer, shorter);
     return (longer.length - editDistance) / longer.length;
   }
 
   private levenshteinDistance(str1: string, str2: string): number {
     const matrix: number[][] = [];
-    
+
     for (let i = 0; i <= str2.length; i++) {
       matrix[i] = [i];
     }
-    
+
     for (let j = 0; j <= str1.length; j++) {
       matrix[0][j] = j;
     }
-    
+
     for (let i = 1; i <= str2.length; i++) {
       for (let j = 1; j <= str1.length; j++) {
         if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
@@ -754,48 +792,67 @@ export class SecurityModule {
         }
       }
     }
-    
+
     return matrix[str2.length][str1.length];
   }
 
   private detectCharacterSubstitution(username: string, existingUsers: string[]): any[] {
     const substitutions: any[] = [];
     const commonSubstitutions = [
-      ['0', 'o'], ['1', 'i'], ['1', 'l'], ['3', 'e'], ['4', 'a'],
-      ['5', 's'], ['7', 't'], ['@', 'a'], ['!', 'i'], ['$', 's']
+      ['0', 'o'],
+      ['1', 'i'],
+      ['1', 'l'],
+      ['3', 'e'],
+      ['4', 'a'],
+      ['5', 's'],
+      ['7', 't'],
+      ['@', 'a'],
+      ['!', 'i'],
+      ['$', 's'],
     ];
-    
+
     for (const existing of existingUsers) {
       let substitutedName = username.toLowerCase();
-      
+
       for (const [char, replacement] of commonSubstitutions) {
         substitutedName = substitutedName.replace(new RegExp(char, 'g'), replacement);
       }
-      
+
       if (substitutedName === existing.toLowerCase() && username !== existing) {
         substitutions.push({
           type: 'character_substitution',
           target: existing,
           similarity: 0.9,
-          pattern: username
+          pattern: username,
         });
       }
     }
-    
+
     return substitutions;
   }
 
   private detectUrgentFinancialRequest(content: string): { detected: boolean; confidence: number } {
-    const financialKeywords = ['money', 'payment', 'transfer', 'send', 'wire', 'crypto', 'bitcoin', 'wallet'];
+    const financialKeywords = [
+      'money',
+      'payment',
+      'transfer',
+      'send',
+      'wire',
+      'crypto',
+      'bitcoin',
+      'wallet',
+    ];
     const urgencyKeywords = ['urgent', 'immediately', 'now', 'asap', 'quickly'];
-    
-    const hasFinancial = financialKeywords.some(keyword => content.toLowerCase().includes(keyword));
-    const hasUrgency = urgencyKeywords.some(keyword => content.toLowerCase().includes(keyword));
-    
+
+    const hasFinancial = financialKeywords.some((keyword) =>
+      content.toLowerCase().includes(keyword)
+    );
+    const hasUrgency = urgencyKeywords.some((keyword) => content.toLowerCase().includes(keyword));
+
     if (hasFinancial && hasUrgency) {
       return { detected: true, confidence: 0.85 };
     }
-    
+
     return { detected: false, confidence: 0 };
   }
 
@@ -803,50 +860,56 @@ export class SecurityModule {
     const linkPattern = /https?:\/\/[^\s]+/g;
     const links = content.match(linkPattern) || [];
     const suspiciousLinks: string[] = [];
-    
+
     for (const link of links) {
       // Check for URL shorteners
       if (/bit\.ly|tinyurl|goo\.gl|t\.co/i.test(link)) {
         suspiciousLinks.push(link);
         continue;
       }
-      
+
       // Check for homograph attacks
-      if (/[а-яА-Я]/.test(link)) { // Cyrillic characters
+      if (/[а-яА-Я]/.test(link)) {
+        // Cyrillic characters
         suspiciousLinks.push(link);
         continue;
       }
-      
+
       // Check for suspicious TLDs
       if (/\.(tk|ml|ga|cf)$/i.test(link)) {
         suspiciousLinks.push(link);
       }
     }
-    
+
     return suspiciousLinks;
   }
 
-  private getRecommendationForThreat(severity: string, riskFactors: Record<string, number>): string {
+  private getRecommendationForThreat(
+    severity: string,
+    riskFactors: Record<string, number>
+  ): string {
     const recommendations: string[] = [];
-    
+
     if (severity === 'critical') {
       recommendations.push('Immediate action required: Block entity and review all interactions');
     } else if (severity === 'high') {
-      recommendations.push('High risk detected: Monitor closely and require additional verification');
+      recommendations.push(
+        'High risk detected: Monitor closely and require additional verification'
+      );
     }
-    
+
     if (riskFactors.credentialTheft > 0) {
       recommendations.push('Potential credential theft attempt detected');
     }
-    
+
     if (riskFactors.multiAccount > 0) {
       recommendations.push('Multi-account abuse pattern detected');
     }
-    
+
     if (riskFactors.socialEngineering > 0) {
       recommendations.push('Social engineering tactics identified');
     }
-    
+
     return recommendations.join('. ') || 'Continue normal monitoring';
   }
 
@@ -863,8 +926,8 @@ export class SecurityModule {
    */
   getRecentMessages(entityId: UUID): Memory[] {
     const messages = this.messageHistory.get(entityId) || [];
-    return messages.filter(m => 
-      Date.now() - (m as any).createdAt < 3600000 // Last hour - use createdAt instead of timestamp
+    return messages.filter(
+      (m) => Date.now() - (m as any).createdAt < 3600000 // Last hour - use createdAt instead of timestamp
     );
   }
 }

@@ -4,7 +4,7 @@ import { MCP_SERVICE_NAME } from "./types";
 
 export const provider: Provider = {
   name: "MCP",
-  description: "Information about connected MCP servers, tools, and resources",
+  description: "Available MCP servers, tools, and resources when agent needs to interact with external MCP-compatible services and APIs",
 
   get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;

@@ -17,10 +17,10 @@ const testCharacter: Character = {
   name: 'TestAgent',
   bio: ['Test agent for configuration testing'],
   system: 'You are a test agent',
-  messageExamples: []
-  postExamples: []
-  topics: []
-  knowledge: []
+  messageExamples: [],
+  postExamples: [],
+  topics: [],
+  knowledge: [],
   plugins: ['test-plugin'],
   settings: {},
   secrets: {},
@@ -63,9 +63,9 @@ const testCharacter: Character = {
 // Mock plugin components for testing
 const mockAction: Action = {
   name: 'TEST_ACTION',
-  similes: []
+  similes: [],
   description: 'Test action for configuration testing',
-  examples: []
+  examples: [],
   validate: vi.fn().mockResolvedValue(true),
   handler: vi.fn().mockResolvedValue({ text: 'Test action executed' }),
 };
@@ -79,7 +79,7 @@ const mockProvider: Provider = {
 const mockEvaluator: Evaluator = {
   name: 'TEST_EVALUATOR',
   description: 'Test evaluator for configuration testing',
-  examples: []
+  examples: [],
   validate: vi.fn().mockResolvedValue(true),
   handler: vi.fn().mockResolvedValue(null),
 };
@@ -334,7 +334,7 @@ describe('Runtime Configuration System E2E Tests', () => {
         'TEST_ACTION',
         'action',
         { enabled: false },
-        []
+        [],
         enabledComponents
       );
 
@@ -646,7 +646,7 @@ describe('Runtime Configuration System E2E Tests', () => {
         'NON_EXISTENT_COMPONENT',
         'action',
         { enabled: true },
-        []
+        [],
         enabledComponents
       );
 

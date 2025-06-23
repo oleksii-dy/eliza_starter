@@ -171,14 +171,17 @@ describe('Real Action Chaining Integration', () => {
           // Analyze all previous action results
           const summary = {
             totalActions: previousResults.length,
-            actionsExecuted: previousResults.map((r: ActionResult) => r.data?.actionName || 'unknown'),
+            actionsExecuted: previousResults.map(
+              (r: ActionResult) => r.data?.actionName || 'unknown'
+            ),
             userProcessed: previousResults.some((r: ActionResult) => r.values?.userName),
             profileSaved: previousResults.some((r: ActionResult) => r.values?.profileSaved),
             workflowComplete: true,
           };
 
           const userName =
-            previousResults.find((r: ActionResult) => r.values?.userName)?.values?.userName || 'Unknown';
+            previousResults.find((r: ActionResult) => r.values?.userName)?.values?.userName ||
+            'Unknown';
 
           if (callback) {
             await callback({
@@ -313,7 +316,7 @@ describe('Real Action Chaining Integration', () => {
         handler: async () => {
           throw new Error('Simulated chain failure');
         },
-        similes: []
+        similes: [],
       };
 
       runtime.registerAction(failingAction);

@@ -381,7 +381,7 @@ export class RealScenarioTestRunner {
           scenario: scenario.id,
           status: 'failed',
           duration: 0,
-          transcript: []
+          transcript: [],
           errors: [error instanceof Error ? error.message : String(error)],
         });
 
@@ -450,7 +450,7 @@ export class RealScenarioTestRunner {
       testWorldId: stringToUuid(`test-world-${scenario.id}`),
       testRoomId: stringToUuid(`test-room-${scenario.id}`),
       startTime,
-      transcript: []
+      transcript: [],
       metrics: {
         messageCount: 0,
         stepCount: 0,
@@ -460,7 +460,7 @@ export class RealScenarioTestRunner {
       server: null!,
       agentRuntimes: new Map(),
       dbPath,
-      realMessages: []
+      realMessages: [],
       messagePromises: new Map(),
       database: null!,
     };
@@ -628,11 +628,11 @@ export class RealScenarioTestRunner {
         name: actor.name,
         bio: [actor.bio || `Test actor for ${context.scenario.name}`],
         system: actor.system || 'You are a helpful test agent.',
-        messageExamples: []
-        postExamples: []
-        topics: []
-        knowledge: []
-        plugins: actor.plugins || []
+        messageExamples: [],
+        postExamples: [],
+        topics: [],
+        knowledge: [],
+        plugins: actor.plugins || [],
         settings: actor.settings || {},
         secrets: {},
       };
@@ -838,7 +838,7 @@ export class RealScenarioTestRunner {
       if (agentId !== actorId) {
         // Process message in the receiving agent
         const state = await agentRuntime.composeState(message);
-        await agentRuntime.processActions(message, [] state);
+        await agentRuntime.processActions(message, [], state);
       }
     }
 
@@ -1032,7 +1032,7 @@ export class RealScenarioTestRunner {
     }
   }
 
-  private filterScenarios(scenarios: Scenario[] options: TestRunnerOptions): Scenario[] {
+  private filterScenarios(scenarios: Scenario[], options: TestRunnerOptions): Scenario[] {
     let filtered = [...scenarios];
 
     if (options.filter) {

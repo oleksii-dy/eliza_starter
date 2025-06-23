@@ -400,8 +400,8 @@ describe('Utils Comprehensive Tests', () => {
 
       const result = parseKeyValueXml(xml);
       expect(result).toEqual({
-        actions: []
-        providers: []
+        actions: [],
+        providers: [],
       });
     });
   });
@@ -909,7 +909,7 @@ describe('Utils Comprehensive Tests', () => {
             agentId: 'agent-123' as any,
           },
         ],
-        recentMessagesData: []
+        recentMessagesData: [],
         values: {},
         data: {},
         text: '',
@@ -932,8 +932,8 @@ describe('Utils Comprehensive Tests', () => {
         bio: '',
         senderName: '',
         actors: '',
-        actorsData: []
-        recentMessagesData: []
+        actorsData: [],
+        recentMessagesData: [],
         values: {},
         data: {},
         text: '',

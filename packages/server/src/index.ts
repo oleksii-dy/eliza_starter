@@ -736,11 +736,11 @@ export class AgentServer {
               : [runtime.character.bio || ''],
             system: runtime.character.system,
             settings: runtime.character.settings || {},
-            plugins: runtime.character.plugins || []
-            topics: runtime.character.topics || []
-            knowledge: runtime.character.knowledge || []
-            messageExamples: runtime.character.messageExamples || []
-            postExamples: runtime.character.postExamples || []
+            plugins: runtime.character.plugins || [],
+            topics: runtime.character.topics || [],
+            knowledge: runtime.character.knowledge || [],
+            messageExamples: runtime.character.messageExamples || [],
+            postExamples: runtime.character.postExamples || [],
             style: runtime.character.style || {},
             enabled: true,
             status: AgentStatus.ACTIVE,

@@ -7,7 +7,7 @@ import { join } from 'path';
 describe('PostgreSQL Initialization Tests', () => {
   let mockRuntime: AgentRuntime;
   let originalEnv: NodeJS.ProcessEnv;
-  
+
   // Check if actual PostgreSQL is available
   const hasActualPostgres = !!process.env.POSTGRES_URL;
 
@@ -26,11 +26,11 @@ describe('PostgreSQL Initialization Tests', () => {
         name: 'Test Agent',
         bio: ['Test bio'],
         system: 'Test system',
-        messageExamples: []
-        postExamples: []
-        topics: []
-        knowledge: []
-        plugins: []
+        messageExamples: [],
+        postExamples: [],
+        topics: [],
+        knowledge: [],
+        plugins: [],
       },
       getSetting: vi.fn(),
       registerDatabaseAdapter: vi.fn(),
@@ -44,28 +44,31 @@ describe('PostgreSQL Initialization Tests', () => {
     vi.clearAllMocks();
   });
 
-  it.skipIf(!hasActualPostgres)('should initialize with PostgreSQL when POSTGRES_URL is provided', async () => {
-    if (!hasActualPostgres) {
-      console.log('[PostgreSQL Init Tests] Skipping - POSTGRES_URL not set');
-      return;
+  it.skipIf(!hasActualPostgres)(
+    'should initialize with PostgreSQL when POSTGRES_URL is provided',
+    async () => {
+      if (!hasActualPostgres) {
+        console.log('[PostgreSQL Init Tests] Skipping - POSTGRES_URL not set');
+        return;
+      }
+
+      // Re-import plugin after resetting modules
+      const { plugin: freshPlugin } = await import('../../index');
+
+      const postgresUrl = process.env.POSTGRES_URL!;
+      (mockRuntime.getSetting as any).mockImplementation((key: string) => {
+        if (key === 'POSTGRES_URL') return postgresUrl;
+        return undefined;
+      });
+
+      await freshPlugin.init?.({}, mockRuntime);
+
+      expect(mockRuntime.registerDatabaseAdapter).toHaveBeenCalled();
+      const adapter = (mockRuntime.registerDatabaseAdapter as any).mock.calls[0][0];
+      expect(adapter).toBeDefined();
+      expect(adapter.constructor.name).toBe('PgDatabaseAdapter');
     }
-
-    // Re-import plugin after resetting modules
-    const { plugin: freshPlugin } = await import('../../index');
-
-    const postgresUrl = process.env.POSTGRES_URL!;
-    (mockRuntime.getSetting as any).mockImplementation((key: string) => {
-      if (key === 'POSTGRES_URL') return postgresUrl;
-      return undefined;
-    });
-
-    await freshPlugin.init?.({}, mockRuntime);
-
-    expect(mockRuntime.registerDatabaseAdapter).toHaveBeenCalled();
-    const adapter = (mockRuntime.registerDatabaseAdapter as any).mock.calls[0][0];
-    expect(adapter).toBeDefined();
-    expect(adapter.constructor.name).toBe('PgDatabaseAdapter');
-  });
+  );
 
   it('should skip initialization if database adapter already exists', async () => {
     // Re-import plugin after resetting modules

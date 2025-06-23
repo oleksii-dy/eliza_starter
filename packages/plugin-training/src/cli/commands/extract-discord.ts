@@ -13,7 +13,11 @@ export function extractDiscordCommand(program: Command) {
     .requiredOption('-r, --repo-path <path>', 'Path to elizaos/knowledge repository')
     .option('-o, --output-dir <path>', 'Output directory for extracted data', './discord-data')
     .option('--min-messages <number>', 'Minimum messages per conversation', '3')
-    .option('--max-gap-hours <number>', 'Maximum hour gap between messages in same conversation', '2')
+    .option(
+      '--max-gap-hours <number>',
+      'Maximum hour gap between messages in same conversation',
+      '2'
+    )
     .option('--min-conversation-length <number>', 'Minimum conversation length', '3')
     .option('--min-user-messages <number>', 'Minimum messages per user to track', '50')
     .option('--top-users <number>', 'Number of top users to track', '50')
@@ -29,7 +33,7 @@ export function extractDiscordCommand(program: Command) {
     .action(async (options) => {
       try {
         elizaLogger.info('🚀 Starting Discord conversation extraction...');
-        
+
         // Validate repository path
         const repoPath = path.resolve(options.repoPath);
         try {
@@ -38,7 +42,7 @@ export function extractDiscordCommand(program: Command) {
           elizaLogger.error(`❌ Repository path not found: ${repoPath}`);
           process.exit(1);
         }
-        
+
         // Create configuration
         const config: ExtractionConfig = {
           repoPath,
@@ -57,9 +61,9 @@ export function extractDiscordCommand(program: Command) {
           minQualityScore: parseFloat(options.minQualityScore),
           requireMultipleSpeakers: options.requireMultipleSpeakers,
           anonymizeUsers: false,
-          excludeSensitiveChannels: []
+          excludeSensitiveChannels: [],
         };
-        
+
         elizaLogger.info('📋 Extraction configuration:');
         elizaLogger.info(`  Repository: ${config.repoPath}`);
         elizaLogger.info(`  Output: ${config.outputDir}`);
@@ -68,27 +72,27 @@ export function extractDiscordCommand(program: Command) {
         elizaLogger.info(`  Min user messages: ${config.minUserMessages}`);
         elizaLogger.info(`  Top users to track: ${config.topUserCount}`);
         elizaLogger.info(`  Quality threshold: ${config.minQualityScore}`);
-        
+
         // Initialize extractor
         const extractor = new DiscordExtractor(config);
-        
+
         // Extract conversations
         const { conversations, users, stats } = await extractor.extractConversations();
-        
+
         // Analyze personalities if requested
         let enhancedUsers = users;
         if (options.analyzePersonalities) {
           elizaLogger.info('🧠 Analyzing user personalities...');
           const analyzer = new PersonalityAnalyzer();
-          
+
           // Get all messages for personality analysis
-          const allMessages = conversations.flatMap(c => c.messages);
+          const allMessages = conversations.flatMap((c) => c.messages);
           enhancedUsers = await analyzer.analyzePersonalities(users, conversations, allMessages);
         }
-        
+
         // Save results
         await extractor.saveResults(conversations, enhancedUsers, stats);
-        
+
         // Display summary
         elizaLogger.info('\n📊 Extraction Summary:');
         elizaLogger.info(`  Total messages processed: ${stats.totalMessages.toLocaleString()}`);
@@ -99,25 +103,29 @@ export function extractDiscordCommand(program: Command) {
         elizaLogger.info(`  Users tracked: ${stats.trackedUsers.toLocaleString()}`);
         elizaLogger.info(`  Channels covered: ${stats.channelsCovered.toLocaleString()}`);
         elizaLogger.info(`  Date range: ${stats.dateRange.earliest} to ${stats.dateRange.latest}`);
-        elizaLogger.info(`  Average conversation length: ${stats.averageConversationLength.toFixed(1)} messages`);
+        elizaLogger.info(
+          `  Average conversation length: ${stats.averageConversationLength.toFixed(1)} messages`
+        );
         elizaLogger.info(`  Average quality score: ${stats.averageQualityScore.toFixed(2)}`);
-        
+
         // Save summary report
         const reportPath = path.join(config.outputDir, 'extraction-report.md');
         await generateReport(stats, enhancedUsers, conversations, reportPath);
         elizaLogger.info(`📄 Generated report: ${reportPath}`);
-        
+
         elizaLogger.info('\n✅ Discord extraction completed successfully!');
         elizaLogger.info(`📁 Results saved to: ${config.outputDir}`);
-        
+
         // Next steps suggestion
         elizaLogger.info('\n💡 Next steps:');
         elizaLogger.info('  1. Review the extraction report');
         elizaLogger.info('  2. Generate training data: eliza-training generate-conversation-data');
         elizaLogger.info('  3. Train model: eliza-training train-model');
-        
       } catch (error) {
-        elizaLogger.error('❌ Error extracting Discord conversations:', error instanceof Error ? error.message : String(error));
+        elizaLogger.error(
+          '❌ Error extracting Discord conversations:',
+          error instanceof Error ? error.message : String(error)
+        );
         process.exit(1);
       }
     });
@@ -128,8 +136,8 @@ export function extractDiscordCommand(program: Command) {
  */
 async function generateReport(
   stats: any,
-  users: any[]
-  conversations: any[]
+  users: any[],
+  conversations: any[],
   reportPath: string
 ): Promise<void> {
   const report = `# Discord Conversation Extraction Report
@@ -150,14 +158,14 @@ This report summarizes the extraction of Discord conversations from the elizaos/
 ### Conversations
 - **Total Conversations**: ${stats.totalConversations.toLocaleString()}
 - **Quality Conversations**: ${stats.qualityConversations.toLocaleString()}
-- **Quality Rate**: ${(stats.qualityConversations / stats.totalConversations * 100).toFixed(1)}%
+- **Quality Rate**: ${((stats.qualityConversations / stats.totalConversations) * 100).toFixed(1)}%
 - **Average Length**: ${stats.averageConversationLength.toFixed(1)} messages
 - **Average Quality Score**: ${stats.averageQualityScore.toFixed(2)}
 
 ### Users
 - **Total Users**: ${stats.totalUsers.toLocaleString()}
 - **Tracked Users**: ${stats.trackedUsers.toLocaleString()}
-- **Tracking Rate**: ${(stats.trackedUsers / stats.totalUsers * 100).toFixed(1)}%
+- **Tracking Rate**: ${((stats.trackedUsers / stats.totalUsers) * 100).toFixed(1)}%
 
 ### Coverage
 - **Channels Covered**: ${stats.channelsCovered.toLocaleString()}
@@ -167,13 +175,21 @@ This report summarizes the extraction of Discord conversations from the elizaos/
 
 | Rank | Username | Display Name | Messages | Conversations | Avg Length | Frequency |
 |------|----------|--------------|----------|---------------|------------|-----------|
-${users.slice(0, 20).map((user, i) => 
-  `| ${i + 1} | ${user.username} | ${user.displayName} | ${user.messageCount} | ${user.conversationCount} | ${user.averageMessageLength.toFixed(1)} | ${user.conversationFrequency.toFixed(2)}/day |`
-).join('\n')}
+${users
+  .slice(0, 20)
+  .map(
+    (user, i) =>
+      `| ${i + 1} | ${user.username} | ${user.displayName} | ${user.messageCount} | ${user.conversationCount} | ${user.averageMessageLength.toFixed(1)} | ${user.conversationFrequency.toFixed(2)}/day |`
+  )
+  .join('\n')}
 
 ## Personality Analysis
 
-${users.filter(u => u.personalityProfile).slice(0, 10).map(user => `
+${users
+  .filter((u) => u.personalityProfile)
+  .slice(0, 10)
+  .map(
+    (user) => `
 ### ${user.displayName} (${user.username})
 
 - **Communication Style**: ${user.personalityProfile?.communicationStyle.join(', ') || 'N/A'}
@@ -183,7 +199,9 @@ ${users.filter(u => u.personalityProfile).slice(0, 10).map(user => `
 - **Helpfulness Score**: ${(user.personalityProfile?.helpfulness * 100).toFixed(0)}%
 - **Leadership Score**: ${(user.personalityProfile?.leadership * 100).toFixed(0)}%
 - **Common Phrases**: ${user.personalityProfile?.commonPhrases.slice(0, 5).join(', ') || 'N/A'}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 ## Quality Distribution
 
@@ -197,7 +215,10 @@ ${generateChannelDistribution(conversations)}
 
 ### Training Data Generation
 - Target **${Math.min(10000, conversations.length * 2)}** instruction examples
-- Focus on **${users.slice(0, 50).map(u => u.username).join(', ')}**
+- Focus on **${users
+    .slice(0, 50)
+    .map((u) => u.username)
+    .join(', ')}**
 - Use conversations with quality score > 0.5
 
 ### Model Training
@@ -233,28 +254,30 @@ function generateQualityDistribution(conversations: any[]): string {
   const bins = [0, 0.2, 0.4, 0.6, 0.8, 1.0];
   const distribution = bins.slice(0, -1).map((min, i) => {
     const max = bins[i + 1];
-    const count = conversations.filter(c => c.qualityScore >= min && c.qualityScore < max).length;
-    const percentage = (count / conversations.length * 100).toFixed(1);
+    const count = conversations.filter((c) => c.qualityScore >= min && c.qualityScore < max).length;
+    const percentage = ((count / conversations.length) * 100).toFixed(1);
     return `- **${min.toFixed(1)} - ${max.toFixed(1)}**: ${count} conversations (${percentage}%)`;
   });
-  
+
   return distribution.join('\n');
 }
 
 function generateChannelDistribution(conversations: any[]): string {
   const channelCounts = new Map<string, number>();
-  
+
   for (const conv of conversations) {
     const channel = conv.channelName || 'Unknown';
     channelCounts.set(channel, (channelCounts.get(channel) || 0) + 1);
   }
-  
+
   const sorted = Array.from(channelCounts.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 15);
-  
-  return sorted.map(([channel, count]) => {
-    const percentage = (count / conversations.length * 100).toFixed(1);
-    return `- **#${channel}**: ${count} conversations (${percentage}%)`;
-  }).join('\n');
+
+  return sorted
+    .map(([channel, count]) => {
+      const percentage = ((count / conversations.length) * 100).toFixed(1);
+      return `- **#${channel}**: ${count} conversations (${percentage}%)`;
+    })
+    .join('\n');
 }

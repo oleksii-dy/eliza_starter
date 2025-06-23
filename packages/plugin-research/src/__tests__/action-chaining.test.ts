@@ -38,11 +38,11 @@ function createSimpleRuntime(serviceOverrides?: Partial<ResearchService>): IAgen
       name: 'TestAgent',
       bio: ['Test bio'],
       system: 'Test system prompt',
-      messageExamples: []
-      postExamples: []
-      topics: []
-      knowledge: []
-      plugins: []
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      knowledge: [],
+      plugins: [],
     },
     getSetting: (key: string) => {
       const settings: Record<string, string> = {
@@ -112,15 +112,15 @@ PRIORITY: medium`;
     updateState: async () => true,
     messageManager: {
       createMemory: async () => true,
-      getMemories: async () => []
+      getMemories: async () => [],
       updateMemory: async () => true,
       deleteMemory: async () => true,
-      searchMemories: async () => []
-      getLastMessages: async () => []
+      searchMemories: async () => [],
+      getLastMessages: async () => [],
     },
-    actions: []
-    providers: []
-    evaluators: []
+    actions: [],
+    providers: [],
+    evaluators: [],
     logger: {
       info: () => {},
       warn: () => {},
@@ -343,9 +343,9 @@ describe('Action Chaining Integration Tests', () => {
           title: 'Quantum Cryptography Research',
           abstract: 'Test abstract',
           summary: 'Test summary',
-          sections: []
-          citations: []
-          bibliography: []
+          sections: [],
+          citations: [],
+          bibliography: [],
           generatedAt: Date.now(),
           wordCount: 1000,
           readingTime: 5,
@@ -356,7 +356,7 @@ describe('Action Chaining Integration Tests', () => {
               depth: 0.8,
               instructionFollowing: 0.8,
               readability: 0.8,
-              breakdown: []
+              breakdown: [],
             },
             factScore: {
               citationAccuracy: 0.8,
@@ -366,12 +366,12 @@ describe('Action Chaining Integration Tests', () => {
               disputedCitations: 0,
               citationCoverage: 0.8,
               sourceCredibility: 0.8,
-              breakdown: []
+              breakdown: [],
             },
             timestamp: Date.now(),
             evaluatorVersion: '1.0',
           },
-          exportFormats: []
+          exportFormats: [],
         } as ResearchReport;
       }
 
@@ -509,9 +509,9 @@ describe('Action Chaining Integration Tests', () => {
           title: 'AI Safety Research',
           abstract: 'Safety abstract',
           summary: 'Safety summary',
-          sections: []
-          citations: []
-          bibliography: []
+          sections: [],
+          citations: [],
+          bibliography: [],
           generatedAt: Date.now(),
           wordCount: 1500,
           readingTime: 7,
@@ -522,7 +522,7 @@ describe('Action Chaining Integration Tests', () => {
               depth: 0.8,
               instructionFollowing: 0.8,
               readability: 0.8,
-              breakdown: []
+              breakdown: [],
             },
             factScore: {
               citationAccuracy: 0.8,
@@ -532,12 +532,12 @@ describe('Action Chaining Integration Tests', () => {
               disputedCitations: 0,
               citationCoverage: 0.8,
               sourceCredibility: 0.8,
-              breakdown: []
+              breakdown: [],
             },
             timestamp: Date.now(),
             evaluatorVersion: '1.0',
           },
-          exportFormats: []
+          exportFormats: [],
         } as ResearchReport;
       }
 
@@ -548,9 +548,9 @@ describe('Action Chaining Integration Tests', () => {
           title: 'AI Ethics Research',
           abstract: 'Ethics abstract',
           summary: 'Ethics summary',
-          sections: []
-          citations: []
-          bibliography: []
+          sections: [],
+          citations: [],
+          bibliography: [],
           generatedAt: Date.now(),
           wordCount: 1200,
           readingTime: 6,
@@ -561,7 +561,7 @@ describe('Action Chaining Integration Tests', () => {
               depth: 0.8,
               instructionFollowing: 0.8,
               readability: 0.8,
-              breakdown: []
+              breakdown: [],
             },
             factScore: {
               citationAccuracy: 0.8,
@@ -571,12 +571,12 @@ describe('Action Chaining Integration Tests', () => {
               disputedCitations: 0,
               citationCoverage: 0.8,
               sourceCredibility: 0.8,
-              breakdown: []
+              breakdown: [],
             },
             timestamp: Date.now(),
             evaluatorVersion: '1.0',
           },
-          exportFormats: []
+          exportFormats: [],
         } as ResearchReport;
       }
 
@@ -613,8 +613,8 @@ describe('Action Chaining Integration Tests', () => {
           phase: ResearchPhase.SEARCHING,
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          findings: []
-          sources: []
+          findings: [],
+          sources: [],
           metadata: {
             domain: ResearchDomain.GENERAL,
             taskType: TaskType.EXPLORATORY,
@@ -622,7 +622,7 @@ describe('Action Chaining Integration Tests', () => {
             language: 'en',
             queryPlan: {
               mainQuery: 'research machine learning',
-              subQueries: []
+              subQueries: [],
               searchStrategy: {
                 approach: SearchApproach.BREADTH_FIRST,
                 sourceTypes: [SourceType.WEB, SourceType.ACADEMIC],
@@ -635,9 +635,9 @@ describe('Action Chaining Integration Tests', () => {
               adaptiveRefinement: true,
               domainSpecificApproach: {
                 methodology: 'general',
-                keyTerms: []
-                authoritySource: []
-                evaluationFocus: []
+                keyTerms: [],
+                authoritySource: [],
+                evaluationFocus: [],
               },
             },
             evaluationCriteria: {
@@ -645,32 +645,32 @@ describe('Action Chaining Integration Tests', () => {
                 name: 'comprehensiveness',
                 description: 'Coverage of the topic',
                 weight: 0.25,
-                rubric: []
+                rubric: [],
                 scoringMethod: ScoringMethod.SCALE,
               },
               depth: {
                 name: 'depth',
                 description: 'Depth of analysis',
                 weight: 0.25,
-                rubric: []
+                rubric: [],
                 scoringMethod: ScoringMethod.SCALE,
               },
               instructionFollowing: {
                 name: 'instructionFollowing',
                 description: 'Following instructions',
                 weight: 0.25,
-                rubric: []
+                rubric: [],
                 scoringMethod: ScoringMethod.SCALE,
               },
               readability: {
                 name: 'readability',
                 description: 'Readability of content',
                 weight: 0.25,
-                rubric: []
+                rubric: [],
                 scoringMethod: ScoringMethod.SCALE,
               },
             },
-            iterationHistory: []
+            iterationHistory: [],
             performanceMetrics: {
               totalDuration: 0,
               phaseBreakdown: {} as Record<ResearchPhase, PhaseTiming>,
@@ -696,7 +696,7 @@ describe('Action Chaining Integration Tests', () => {
                 query,
                 purpose: 'refinement',
                 priority: 1,
-                dependsOn: []
+                dependsOn: [],
                 searchProviders: ['web'],
                 expectedResultType: ResultType.FACTUAL,
                 completed: false,

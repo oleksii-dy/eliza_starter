@@ -718,7 +718,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           messageExamples: agent.messageExamples || [],
           postExamples: agent.postExamples || [],
           style: agent.style || {},
-          plugins: agent.plugins || []
+          plugins: agent.plugins || [],
         };
 
         logger.debug(`[BaseDrizzleAdapter] Creating agent using Drizzle:`, agentData.name);
@@ -1282,7 +1282,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           names: typeof row.names === 'string' ? JSON.parse(row.names) : row.names || [],
           metadata:
             typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata || {},
-          components: []
+          components: [],
         };
         entityComponents[entityId] = [];
       }

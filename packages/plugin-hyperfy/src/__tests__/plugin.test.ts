@@ -40,7 +40,7 @@ function createRealRuntime() {
     character: {
       name: 'Test Character',
       system: 'You are a helpful assistant for testing.',
-      plugins: []
+      plugins: [],
       settings: {},
     },
     getSetting: (key: string) => null,
@@ -49,7 +49,7 @@ function createRealRuntime() {
       get: async (key: string) => null,
       set: async (key: string, value: any) => true,
       delete: async (key: string) => true,
-      getKeys: async (pattern: string) => []
+      getKeys: async (pattern: string) => [],
     },
     getService: (serviceType: string) => {
       // Log the service request for debugging

@@ -34,9 +34,9 @@ const testCharacter: Character = {
       { name: 'TrainingServiceTestAgent', content: { text: 'testing response' } },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   topics: ['testing', 'training', 'service-validation'],
-  plugins: []
+  plugins: [],
   settings: {
     REASONING_SERVICE_ENABLED: 'true',
     REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',

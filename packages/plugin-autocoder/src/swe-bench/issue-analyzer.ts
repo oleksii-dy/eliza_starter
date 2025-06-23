@@ -149,7 +149,7 @@ export class IssueAnalyzer {
       test_framework: testFramework,
       build_system: buildSystem,
       relevant_files: relevantFiles,
-      code_patterns: [] // Could be extended to detect common patterns
+      code_patterns: [], // Could be extended to detect common patterns
     };
   }
 
@@ -287,7 +287,7 @@ export class IssueAnalyzer {
    * Assess issue complexity
    */
   private assessComplexity(
-    requirements: string[]
+    requirements: string[],
     affectedFiles: string[]
   ): 'low' | 'medium' | 'high' {
     const reqCount = requirements.length;
@@ -303,7 +303,7 @@ export class IssueAnalyzer {
    */
   private generateApproach(
     instance: SWEBenchInstance,
-    requirements: string[]
+    requirements: string[],
     affectedFiles: string[]
   ): string {
     const parts: string[] = [];

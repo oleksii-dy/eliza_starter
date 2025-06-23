@@ -45,7 +45,7 @@ const productionCharacter: Character = {
       },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   topics: ['production', 'training', 'validation', 'deployment'],
   plugins: ['@elizaos/plugin-sql'], // Required for database adapter
   settings: {
@@ -290,7 +290,7 @@ describe('Production Validation Tests', () => {
             modelType,
             inputData: {
               messageText: `Production test input ${i + 1} for ${modelType}`,
-              conversationContext: []
+              conversationContext: [],
               state: {},
             },
             outputData:
@@ -306,7 +306,7 @@ describe('Production Validation Tests', () => {
                       code: `// Production code ${i + 1}\nfunction example() { return true; }`,
                       explanation: `Production explanation ${i + 1}`,
                     },
-            conversationContext: []
+            conversationContext: [],
             stateData: {},
             metadata: {
               agentId: runtime.agentId,
@@ -376,14 +376,14 @@ describe('Production Validation Tests', () => {
             modelType: 'should_respond',
             inputData: {
               messageText: `${level.quality} quality message ${i + 1}`,
-              conversationContext: []
+              conversationContext: [],
             },
             outputData: {
               decision: 'RESPOND',
               reasoning: `${level.quality} quality reasoning`,
               confidence: level.confidence,
             },
-            conversationContext: []
+            conversationContext: [],
             stateData: {},
             metadata: {
               agentId: runtime.agentId,

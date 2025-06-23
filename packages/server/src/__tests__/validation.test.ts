@@ -156,9 +156,9 @@ describe('Validation Functions', () => {
       const mockRuntime = {
         agentId: '123e4567-e89b-12d3-a456-426614174000' as UUID,
         character: {},
-        providers: []
-        actions: []
-        evaluators: []
+        providers: [],
+        actions: [],
+        evaluators: [],
         services: new Map(),
       } as unknown as IAgentRuntime;
       const agentId = '123e4567-e89b-12d3-a456-426614174000' as UUID;

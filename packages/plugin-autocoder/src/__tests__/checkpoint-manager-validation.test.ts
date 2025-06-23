@@ -40,7 +40,7 @@ vi.mock('../swe-bench/validation/result-parser', () => ({
       confidence: 0.9,
       parseMethod: 'json',
       framework: 'jest',
-      warnings: []
+      warnings: [],
     }),
   })),
 }));

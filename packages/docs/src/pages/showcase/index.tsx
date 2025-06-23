@@ -27,9 +27,9 @@ function ShowcaseHeader() {
 }
 
 function filterUsers(
-  users: User[]
+  users: User[],
   search: string,
-  selectedTags: string[]
+  selectedTags: string[],
   operator: 'OR' | 'AND'
 ) {
   // First deduplicate the input array

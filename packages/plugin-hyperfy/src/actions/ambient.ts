@@ -118,5 +118,5 @@ export const hyperfyAmbientSpeechAction = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 } as Action;

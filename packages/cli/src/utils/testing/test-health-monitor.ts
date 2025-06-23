@@ -126,10 +126,10 @@ export class TestHealthMonitor {
       totalTests: 0,
       passedTests: 0,
       failedTests: 0,
-      flakyTests: []
+      flakyTests: [],
       averageRuntime: 0,
-      slowestTests: []
-      testHistory: []
+      slowestTests: [],
+      testHistory: [],
     };
   }
 

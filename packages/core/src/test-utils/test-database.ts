@@ -769,7 +769,7 @@ export class TestDatabaseManager {
         return;
       },
 
-      async addParticipantsRoom(entityIds: any[] roomId: any) {
+      async addParticipantsRoom(entityIds: any[], roomId: any) {
         for (const entityId of entityIds) {
           const participantId = `${entityId}-${roomId}`;
           storage.participants.set(participantId, { entityId, roomId });

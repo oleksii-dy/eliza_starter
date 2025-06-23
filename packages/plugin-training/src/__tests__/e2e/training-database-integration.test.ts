@@ -475,11 +475,11 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
       name: 'DatabaseTestAgent',
       bio: ['Test agent for database integration testing'],
       system: 'You are a test agent for database integration testing',
-      messageExamples: []
-      postExamples: []
-      topics: []
-      knowledge: []
-      plugins: []
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      knowledge: [],
+      plugins: [],
     },
 
     getSetting: (key: string) => {
@@ -527,7 +527,7 @@ async function createTestRuntime(): Promise<IAgentRuntime> {
                 model_type: 'should_respond',
                 input_data: { messageText: 'Hello' },
                 output_data: { decision: 'RESPOND' },
-                conversation_context: []
+                conversation_context: [],
                 state_data: {},
                 metadata: { roomId: 'room-1' },
                 tags: ['model:should_respond'],
@@ -579,7 +579,7 @@ function createTestTrainingDataPoint(
     input: {
       prompt: 'Test prompt',
       messageText: 'Hello world',
-      conversationContext: []
+      conversationContext: [],
     },
     output: {
       decision: 'RESPOND',

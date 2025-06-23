@@ -32,11 +32,11 @@ async function createRealElizaRuntime(): Promise<AgentRuntime> {
       name: 'TestAgent',
       bio: ['A test agent for MVP validation'],
       system: 'You are a test agent for validating custom reasoning MVP.',
-      messageExamples: []
-      postExamples: []
+      messageExamples: [],
+      postExamples: [],
       topics: ['testing', 'validation'],
-      knowledge: []
-      plugins: [] // Will be added after runtime creation
+      knowledge: [],
+      plugins: [], // Will be added after runtime creation
     };
 
     // Create database adapter

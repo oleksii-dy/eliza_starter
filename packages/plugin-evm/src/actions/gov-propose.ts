@@ -123,9 +123,9 @@ export const proposeAction = {
       const proposeParams: ProposeProposalParams = {
         chain: options.chain as SupportedChain,
         governor: options.governor as Address,
-        targets: options.targets as Address[]
+        targets: options.targets as Address[],
         values: (options.values as string[]).map((v) => BigInt(v)),
-        calldatas: options.calldatas as `0x${string}`[]
+        calldatas: options.calldatas as `0x${string}`[],
         description: String(options.description),
       };
 

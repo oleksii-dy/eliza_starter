@@ -61,7 +61,7 @@ export async function runCypressTests(
       port,
       projectPath,
       character: config.character,
-      plugins: config.plugins || []
+      plugins: config.plugins || [],
     });
 
     // Wait for server to be ready

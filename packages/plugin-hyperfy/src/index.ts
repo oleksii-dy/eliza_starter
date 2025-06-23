@@ -1,9 +1,7 @@
 import 'ses';
 
 import type { Plugin } from '@elizaos/core';
-import {
-  logger
-} from '@elizaos/core';
+import { logger } from '@elizaos/core';
 import { HyperfyService } from './service';
 import { z } from 'zod';
 // import { hyperfyChatAction } from './actions/chat';
@@ -24,9 +22,8 @@ import { characterProvider } from './providers/character';
 import { hyperfyEvents } from './events';
 
 // --- Hardcoded values matching agent/index.mjs ---
-const HYPERFY_WS_URL = process.env.WS_URL || 'wss://chill.hyperfy.xyz/ws'
+const HYPERFY_WS_URL = process.env.WS_URL || 'wss://chill.hyperfy.xyz/ws';
 // ---------------------------------------------
-
 
 // Define the plugin configuration schema (optional, adjust as needed)
 // Renamed this one to avoid conflict
@@ -51,19 +48,19 @@ export const hyperfyPlugin: Plugin = {
       // Store validated config for service use (runtime.pluginConfigs is usually the way)
     } catch (error) {
       if (error instanceof z.ZodError) {
-        logger.error(`Invalid Hyperfy plugin configuration: ${error.errors.map((e) => e.message).join(', ')}`);
+        logger.error(
+          `Invalid Hyperfy plugin configuration: ${error.errors.map((e) => e.message).join(', ')}`
+        );
         // Decide if this is a fatal error
         // throw new Error(`Invalid Hyperfy plugin configuration...`);
       } else {
-         logger.error('Unknown error during Hyperfy plugin init:', error);
+        logger.error('Unknown error during Hyperfy plugin init:', error);
         // throw error;
       }
       // Allow initialization to continue even if config fails, service might get config later
     }
   },
-  services: [
-    HyperfyService
-  ],
+  services: [HyperfyService],
   events: hyperfyEvents,
   actions: [
     hyperfyScenePerceptionAction,
@@ -75,15 +72,10 @@ export const hyperfyPlugin: Plugin = {
     hyperfyAmbientSpeechAction,
     hyperfyEditEntityAction,
     replyAction,
-    ignoreAction
+    ignoreAction,
   ],
-  providers: [
-    hyperfyProvider,
-    hyperfyEmoteProvider,
-    hyperfyActionsProvider,
-    characterProvider
-  ],
-  routes: []
+  providers: [hyperfyProvider, hyperfyEmoteProvider, hyperfyActionsProvider, characterProvider],
+  routes: [],
 };
 
 export default hyperfyPlugin;

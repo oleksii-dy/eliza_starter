@@ -76,21 +76,21 @@ const ERC20_ABI = [
     {
         name: 'decimals',
         type: 'function',
-        inputs: []
+        inputs: [],
         outputs: [{ name: '', type: 'uint8' }],
         stateMutability: 'view',
     },
     {
         name: 'symbol',
         type: 'function',
-        inputs: []
+        inputs: [],
         outputs: [{ name: '', type: 'string' }],
         stateMutability: 'view',
     },
     {
         name: 'name',
         type: 'function',
-        inputs: []
+        inputs: [],
         outputs: [{ name: '', type: 'string' }],
         stateMutability: 'view',
     },
@@ -331,14 +331,14 @@ export class EVMChainAdapter implements ChainAdapter {
                 success: !!result.data,
                 gasUsed: '21000', // Default estimation
                 gasPrice: (await this.publicClient.getGasPrice()).toString(),
-                changes: [] // Would need more sophisticated state tracking
+                changes: [], // Would need more sophisticated state tracking
             };
         } catch (error) {
             return {
                 success: false,
                 gasUsed: '0',
                 gasPrice: '0',
-                changes: []
+                changes: [],
                 error: error instanceof Error ? error.message : 'Simulation failed',
             };
         }
@@ -829,7 +829,7 @@ export class EVMUniversalWalletService extends Service implements IUniversalWall
                     decimals: chain?.nativeCurrency?.decimals || 18,
                 },
                 rpcUrls: [this.getRpcUrl(chainId)],
-                blockExplorerUrls: [] // TODO: Add explorer URLs
+                blockExplorerUrls: [], // TODO: Add explorer URLs
                 isTestnet: false, // TODO: Determine based on chainId
                 bridgeSupport: ['lifi', 'across', 'wormhole'],
             };

@@ -89,7 +89,7 @@ export const testResearchAction: Action = {
         category: 'action',
         requirements: ['Handle user requests', 'Validate inputs', 'Return structured responses'],
         features: ['Input validation', 'Error handling', 'Logging'],
-        dependencies: []
+        dependencies: [],
         outputFormat: 'typescript',
       };
 
@@ -199,5 +199,5 @@ Please check the logs for more details and ensure all required services are prop
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };

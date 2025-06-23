@@ -29,7 +29,7 @@ export const shellProvider: Provider = {
           currentWorkingDirectory: 'N/A',
         },
         text: addHeader('# Shell Status', 'Shell service is not available.'),
-        data: { history: [] cwd: 'N/A' },
+        data: { history: [], cwd: 'N/A' },
       };
     }
 

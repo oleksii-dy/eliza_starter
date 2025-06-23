@@ -33,9 +33,9 @@ const testCharacter: Character = {
       { name: 'ReasoningProxyTestAgent', content: { text: 'testing proxy response' } },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   topics: ['testing', 'reasoning', 'proxy', 'service-validation'],
-  plugins: []
+  plugins: [],
   settings: {
     TOGETHER_API_KEY: 'test-api-key-proxy',
     ELIZAOS_FINETUNED_MODEL: 'test-finetuned-model',

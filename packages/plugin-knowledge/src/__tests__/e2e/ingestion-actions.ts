@@ -23,7 +23,7 @@ export class IngestionActionsTestSuite implements TestSuite {
 
         // Test validation
         const isValid = await ingestGitHubAction.validate(runtime, mockMessage);
-        
+
         if (!isValid) {
           throw new Error('GitHub ingestion action should validate for GitHub URLs');
         }
@@ -48,7 +48,7 @@ export class IngestionActionsTestSuite implements TestSuite {
 
         // Test validation
         const isValid = await ingestWebPageAction.validate(runtime, mockMessage);
-        
+
         if (!isValid) {
           throw new Error('Web page ingestion action should validate for web URLs');
         }
@@ -74,7 +74,7 @@ export class IngestionActionsTestSuite implements TestSuite {
         // Test that actions don't validate for irrelevant messages
         const githubValid = await ingestGitHubAction.validate(runtime, mockMessage);
         const webPageValid = await ingestWebPageAction.validate(runtime, mockMessage);
-        
+
         if (githubValid) {
           throw new Error('GitHub action should not validate for non-GitHub messages');
         }
@@ -100,13 +100,13 @@ export class IngestionActionsTestSuite implements TestSuite {
             if (!options.subdirectories || !options.subdirectories.includes('packages/docs/docs')) {
               throw new Error(`Expected subdirectories to include packages/docs/docs`);
             }
-            
+
             return {
               totalFiles: 5,
               processedFiles: 5,
               skippedFiles: 0,
-              errors: []
-              documents: []
+              errors: [],
+              documents: [],
             };
           },
         };
@@ -156,11 +156,12 @@ export class IngestionActionsTestSuite implements TestSuite {
             if (options.url !== 'https://eliza.how/docs/intro') {
               throw new Error(`Expected URL to be extracted correctly, got: ${options.url}`);
             }
-            
+
             return {
               url: options.url,
               title: 'Introduction',
-              extractedText: 'This is the introduction page with enough content to meet requirements.',
+              extractedText:
+                'This is the introduction page with enough content to meet requirements.',
               textLength: 75,
               document: {
                 id: 'test-doc-id',

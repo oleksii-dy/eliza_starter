@@ -30,7 +30,7 @@ export class ThinkingBlockGenerator {
       request: event.originalRequest || '',
       context: event.context,
       solution: success,
-      files: success.files || []
+      files: success.files || [],
       outcome: event.outcome,
     });
 
@@ -70,7 +70,7 @@ export class ThinkingBlockGenerator {
       request: event.originalRequest || '',
       context: event.context,
       solution: success,
-      files: success.files || []
+      files: success.files || [],
       outcome: event.outcome,
     });
 

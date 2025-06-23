@@ -26,7 +26,7 @@ export class RealEvaluationEngine {
   private instances: Map<string, SWEBenchInstance> = new Map();
 
   constructor(config: EvaluationConfig) {
-    this.workDir =
+    this.workDir = config.output_dir || path.join(process.cwd(), '.eliza-temp', 'swe-bench-real-eval');
       config.output_dir || path.join(process.cwd(), '.eliza-temp', 'swe-bench-real-eval');
     this.cacheDir = config.cache_dir || path.join(this.workDir, 'cache');
     this.timeout = config.timeout_per_instance || 300; // 5 minutes default
@@ -785,7 +785,7 @@ export class RealEvaluationEngine {
    * Run a command with timeout and logging
    */
   private async runCommand(
-    command: string[]
+    command: string[],
     cwd: string,
     logFile: string,
     description: string,
@@ -851,7 +851,7 @@ export class RealEvaluationEngine {
    * Format raw results into final evaluation results with enhanced error handling
    */
   private formatResults(
-    rawResults: RawEvaluationResults[]
+    rawResults: RawEvaluationResults[],
     patches: PatchSubmission[]
   ): EvaluationResults {
     try {

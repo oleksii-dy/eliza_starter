@@ -37,9 +37,9 @@ const testCharacter: Character = {
       { name: 'TestTrainingAgent', content: { text: 'test response' } },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   topics: ['testing', 'training', 'plugin-validation'],
-  plugins: []
+  plugins: [],
   settings: {
     REASONING_SERVICE_ENABLED: 'true',
     REASONING_SERVICE_COLLECT_TRAINING_DATA: 'true',
@@ -301,7 +301,7 @@ describe('Comprehensive Plugin Integration E2E Tests', () => {
         modelType: 'should_respond' as const,
         inputData: { messageText: 'Hello, how are you?' },
         outputData: { decision: 'RESPOND', confidence: 0.95 },
-        conversationContext: []
+        conversationContext: [],
         stateData: { roomId: uuidv4() },
         metadata: { source: 'e2e-test' },
         tags: ['test', 'validation'],
@@ -336,7 +336,7 @@ describe('Comprehensive Plugin Integration E2E Tests', () => {
           modelType: 'should_respond',
           inputData: { messageText: `Test message ${i}` },
           outputData: { decision: 'RESPOND', confidence: 0.9 },
-          conversationContext: []
+          conversationContext: [],
           stateData: {},
           metadata: { test: true },
           tags: ['e2e-test'],

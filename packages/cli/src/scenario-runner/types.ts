@@ -162,9 +162,16 @@ export interface ScenarioResult {
   endTime: number;
   duration: number;
   passed: boolean;
+  completed: boolean; // Whether the scenario finished execution
+  success: boolean; // Whether the scenario was successful
   score?: number;
+  error?: string; // Error message if failed
   metrics: ScenarioMetrics;
   verificationResults: VerificationResult[];
+  verification?: {
+    overallScore: number;
+    [key: string]: any;
+  };
   transcript: ScenarioMessage[];
   errors?: string[];
   warnings?: string[];

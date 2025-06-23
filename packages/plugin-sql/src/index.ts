@@ -5,7 +5,11 @@ import { PostgresConnectionManager } from './pg/manager';
 import { PgDatabaseAdapter } from './pg/adapter';
 import { connectionRegistry } from './connection-registry';
 import { resolvePgliteDir } from './utils';
-import { createAdaptiveDatabaseAdapter, getRecommendedAdaptiveConfig, type AdaptiveConfig } from './adaptive-adapter';
+import {
+  createAdaptiveDatabaseAdapter,
+  getRecommendedAdaptiveConfig,
+  type AdaptiveConfig,
+} from './adaptive-adapter';
 
 /**
  * Creates a database adapter based on the provided configuration.
@@ -44,10 +48,10 @@ export async function createDatabaseAdapter(
 /**
  * Creates an adaptive database adapter that automatically selects the best
  * available database based on environment compatibility.
- * 
+ *
  * This function provides automatic fallback from PGLite to PostgreSQL
  * when WebAssembly compatibility issues are detected.
- * 
+ *
  * @param config - Adaptive configuration options
  * @param agentId - The unique identifier for the agent
  * @returns Promise<DatabaseAdapter> - The best available database adapter
@@ -57,16 +61,16 @@ export async function createAdaptiveDatabaseAdapterV2(
   agentId: UUID
 ): Promise<DatabaseAdapter> {
   logger.info('[Adaptive Database V2] Starting adaptive adapter selection for agent:', agentId);
-  
+
   try {
     const adapter = await createAdaptiveDatabaseAdapter(config, agentId);
     await adapter.init();
-    
+
     logger.info('[Adaptive Database V2] Successfully initialized adaptive adapter:', {
       adapterType: adapter.constructor.name,
       agentId,
     });
-    
+
     return adapter;
   } catch (error) {
     logger.error('[Adaptive Database V2] Failed to create adaptive adapter:', error);
@@ -101,7 +105,9 @@ export const plugin: Plugin = {
     // If initialization is in progress for this runtime, wait for it
     const existingPromise = runtimeInitializationPromises.get(runtimeId);
     if (existingPromise) {
-      logger.info(`[plugin-sql] Initialization already in progress for runtime ${runtimeId}, waiting...`);
+      logger.info(
+        `[plugin-sql] Initialization already in progress for runtime ${runtimeId}, waiting...`
+      );
       await existingPromise;
       return;
     }
@@ -174,7 +180,7 @@ async function performInitialization(runtime: any): Promise<void> {
 
   // Use adaptive adapter selection with automatic fallback
   logger.info('[plugin-sql] Starting adaptive adapter selection...');
-  
+
   const postgresUrl = runtime.getSetting('POSTGRES_URL');
   const adaptiveConfig: AdaptiveConfig = {
     ...getRecommendedAdaptiveConfig(),
@@ -185,20 +191,25 @@ async function performInitialization(runtime: any): Promise<void> {
 
   try {
     const adapter = await createAdaptiveDatabaseAdapterV2(adaptiveConfig, runtime.agentId);
-    
+
     // Register adapter with runtime
     logger.info('[plugin-sql] Registering adaptive adapter with runtime...');
     runtime.registerDatabaseAdapter(adapter);
-    
-    // Wait for adapter to be ready  
-    await adapter.waitForReady();
-    
+
+    // Wait for adapter to be ready (if supported)
+    if ('waitForReady' in adapter && typeof adapter.waitForReady === 'function') {
+      await adapter.waitForReady();
+    }
+
     logger.info('[plugin-sql] Adaptive adapter initialized and ready:', {
       adapterType: adapter.constructor.name,
     });
   } catch (adaptiveError) {
-    logger.error('[plugin-sql] Adaptive adapter failed, falling back to legacy logic:', adaptiveError);
-    
+    logger.error(
+      '[plugin-sql] Adaptive adapter failed, falling back to legacy logic:',
+      adaptiveError
+    );
+
     // Fallback to legacy logic if adaptive approach fails
     if (postgresUrl) {
       // Use PostgreSQL adapter
@@ -220,35 +231,36 @@ async function performInitialization(runtime: any): Promise<void> {
       // Use PGLite adapter
       logger.info('[plugin-sql] Using PGLite adapter (legacy fallback)');
 
-    // Resolve PGLite directory
-    const pglitePath = resolvePgliteDir(
-      runtime.getSetting('PGLITE_PATH') || runtime.getSetting('DATABASE_PATH')
-    );
+      // Resolve PGLite directory
+      const pglitePath = resolvePgliteDir(
+        runtime.getSetting('PGLITE_PATH') || runtime.getSetting('DATABASE_PATH')
+      );
 
-    logger.info(`[plugin-sql] PGLite path: ${pglitePath}`);
+      logger.info(`[plugin-sql] PGLite path: ${pglitePath}`);
 
-    const manager = connectionRegistry.getPGLiteManager(pglitePath);
+      const manager = connectionRegistry.getPGLiteManager(pglitePath);
 
-    // Initialize the manager first
-    try {
-      await manager.initialize();
-    } catch (error) {
-      logger.error('[plugin-sql] Failed to initialize PGLite manager:', error);
-      throw error;
+      // Initialize the manager first
+      try {
+        await manager.initialize();
+      } catch (error) {
+        logger.error('[plugin-sql] Failed to initialize PGLite manager:', error);
+        throw error;
+      }
+
+      const adapter = new PgliteDatabaseAdapter(runtime.agentId, manager, pglitePath);
+
+      // Register adapter with runtime
+      logger.info('[plugin-sql] Registering PGLite adapter with runtime...');
+      runtime.registerDatabaseAdapter(adapter);
+
+      // Initialize adapter and wait for it to be ready
+      logger.info('[plugin-sql] Initializing PGLite adapter...');
+      await adapter.init();
+      await adapter.waitForReady();
+
+      logger.info('[plugin-sql] PGLite adapter initialized and ready');
     }
-
-    const adapter = new PgliteDatabaseAdapter(runtime.agentId, manager, pglitePath);
-
-    // Register adapter with runtime
-    logger.info('[plugin-sql] Registering PGLite adapter with runtime...');
-    runtime.registerDatabaseAdapter(adapter);
-
-    // Initialize adapter and wait for it to be ready
-    logger.info('[plugin-sql] Initializing PGLite adapter...');
-    await adapter.init();
-    await adapter.waitForReady();
-
-    logger.info('[plugin-sql] PGLite adapter initialized and ready');
   }
 
   logger.info('[plugin-sql] SQL plugin initialized successfully');

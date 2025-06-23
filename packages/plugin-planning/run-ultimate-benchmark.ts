@@ -33,7 +33,8 @@ const ultimateBenchmark: UltimateBenchmarkCase = {
   id: 'realm-ultimate-001',
   name: 'Enterprise Digital Transformation Planning',
   category: 'ultimate-challenge',
-  description: 'Complete enterprise-level project planning with multiple stakeholders, dependencies, and constraints',
+  description:
+    'Complete enterprise-level project planning with multiple stakeholders, dependencies, and constraints',
   userInput: `We need to plan a complete digital transformation for our enterprise. This involves:
     1. Migrating our legacy systems to cloud infrastructure
     2. Implementing new AI-powered customer service tools
@@ -47,25 +48,38 @@ const ultimateBenchmark: UltimateBenchmarkCase = {
     The project has a $2M budget, 6-month timeline, and needs approval from the board. 
     Please create a comprehensive strategic plan that addresses all stakeholders, 
     manages dependencies, mitigates risks, and ensures successful execution.`,
-    
+
   scenarioContext: {
     domain: 'Enterprise Digital Transformation',
-    stakeholders: ['Board', 'IT Team', 'Legal', 'Security', 'Business Units', 'Employees', 'External Vendors'],
+    stakeholders: [
+      'Board',
+      'IT Team',
+      'Legal',
+      'Security',
+      'Business Units',
+      'Employees',
+      'External Vendors',
+    ],
     constraints: ['$2M Budget', '6-month Timeline', 'Zero Downtime', 'Compliance Requirements'],
-    dependencies: ['Legacy System Assessment', 'Vendor Negotiations', 'Training Development', 'Security Audits']
+    dependencies: [
+      'Legacy System Assessment',
+      'Vendor Negotiations',
+      'Training Development',
+      'Security Audits',
+    ],
   },
-  
+
   expectedOutcomes: {
     planComplexity: 'high',
     minSteps: 8,
     maxSteps: 15,
     requiredCapabilities: [
       'stakeholder management',
-      'risk assessment', 
+      'risk assessment',
       'resource planning',
       'timeline coordination',
       'compliance validation',
-      'technical implementation'
+      'technical implementation',
     ],
     successCriteria: [
       'comprehensive plan created',
@@ -73,9 +87,9 @@ const ultimateBenchmark: UltimateBenchmarkCase = {
       'risks identified and mitigated',
       'timeline and budget considered',
       'compliance requirements included',
-      'execution strategy defined'
-    ]
-  }
+      'execution strategy defined',
+    ],
+  },
 };
 
 class UltimateBenchmarkRuntime {
@@ -89,12 +103,12 @@ class UltimateBenchmarkRuntime {
     riskFactorsIdentified: string[];
     implementationPhases: string[];
   } = {
-    stakeholdersCovered: []
-    constraintsAddressed: []
-    riskFactorsIdentified: []
-    implementationPhases: []
+    stakeholdersCovered: [],
+    constraintsAddressed: [],
+    riskFactorsIdentified: [],
+    implementationPhases: [],
   };
-  
+
   metrics: {
     startTime: number;
     endTime?: number;
@@ -121,33 +135,39 @@ class UltimateBenchmarkRuntime {
   recordResponse(response: string) {
     this.responses.push(response);
     this.log(`📤 Response: ${response}`);
-    
+
     // Analyze response for stakeholder coverage, constraints, etc.
     this.analyzeResponse(response);
   }
 
   analyzeResponse(response: string) {
     const responseLower = response.toLowerCase();
-    
+
     // Check stakeholder coverage
     const stakeholders = ['board', 'it', 'legal', 'security', 'business', 'employees', 'vendors'];
-    stakeholders.forEach(stakeholder => {
-      if (responseLower.includes(stakeholder) && !this.planAnalysis.stakeholdersCovered.includes(stakeholder)) {
+    stakeholders.forEach((stakeholder) => {
+      if (
+        responseLower.includes(stakeholder) &&
+        !this.planAnalysis.stakeholdersCovered.includes(stakeholder)
+      ) {
         this.planAnalysis.stakeholdersCovered.push(stakeholder);
       }
     });
 
     // Check constraint consideration
     const constraints = ['budget', 'timeline', 'downtime', 'compliance'];
-    constraints.forEach(constraint => {
-      if (responseLower.includes(constraint) && !this.planAnalysis.constraintsAddressed.includes(constraint)) {
+    constraints.forEach((constraint) => {
+      if (
+        responseLower.includes(constraint) &&
+        !this.planAnalysis.constraintsAddressed.includes(constraint)
+      ) {
         this.planAnalysis.constraintsAddressed.push(constraint);
       }
     });
 
     // Check risk identification
     const riskIndicators = ['risk', 'mitigation', 'contingency', 'backup', 'rollback'];
-    riskIndicators.forEach(risk => {
+    riskIndicators.forEach((risk) => {
       if (responseLower.includes(risk) && !this.planAnalysis.riskFactorsIdentified.includes(risk)) {
         this.planAnalysis.riskFactorsIdentified.push(risk);
       }
@@ -155,8 +175,11 @@ class UltimateBenchmarkRuntime {
 
     // Check implementation phases
     const phases = ['assessment', 'migration', 'training', 'integration', 'testing', 'deployment'];
-    phases.forEach(phase => {
-      if (responseLower.includes(phase) && !this.planAnalysis.implementationPhases.includes(phase)) {
+    phases.forEach((phase) => {
+      if (
+        responseLower.includes(phase) &&
+        !this.planAnalysis.implementationPhases.includes(phase)
+      ) {
         this.planAnalysis.implementationPhases.push(phase);
       }
     });
@@ -165,14 +188,15 @@ class UltimateBenchmarkRuntime {
   finalize() {
     this.metrics.endTime = Date.now();
     this.metrics.duration = this.metrics.endTime - this.metrics.startTime;
-    
+
     // Calculate comprehensiveness score
     const stakeholderScore = this.planAnalysis.stakeholdersCovered.length / 7;
     const constraintScore = this.planAnalysis.constraintsAddressed.length / 4;
     const riskScore = Math.min(this.planAnalysis.riskFactorsIdentified.length / 3, 1);
     const phaseScore = this.planAnalysis.implementationPhases.length / 6;
-    
-    this.metrics.comprehensiveness = (stakeholderScore + constraintScore + riskScore + phaseScore) / 4;
+
+    this.metrics.comprehensiveness =
+      (stakeholderScore + constraintScore + riskScore + phaseScore) / 4;
   }
 
   getUltimateReport() {
@@ -182,7 +206,7 @@ class UltimateBenchmarkRuntime {
       metrics: this.metrics,
       planAnalysis: this.planAnalysis,
       totalLogs: this.logs.length,
-      comprehensiveness: this.metrics.comprehensiveness
+      comprehensiveness: this.metrics.comprehensiveness,
     };
   }
 }
@@ -211,7 +235,7 @@ async function runUltimateBenchmark() {
     // Ultimate Classification Test
     console.log('🧠 Phase 1: Ultimate Message Classification');
     console.log('==========================================');
-    
+
     const classifier = planningPlugin.providers?.[0];
     if (!classifier) {
       throw new Error('Message classifier provider not found');
@@ -223,21 +247,25 @@ async function runUltimateBenchmark() {
       roomId: 'boardroom',
     };
 
-    const classificationResult = await classifier.get(runtime as any, mockMessage as any, {} as any);
+    const classificationResult = await classifier.get(
+      runtime as any,
+      mockMessage as any,
+      {} as any
+    );
     runtime.log(`Classification: ${classificationResult.values?.messageClassification}`);
     runtime.log(`Complexity: ${classificationResult.values?.complexity}`);
     runtime.log(`Multi-step detected: ${classificationResult.values?.hasMultiStep}`);
     runtime.log(`Strategic planning required: ${classificationResult.values?.hasStrategic}`);
     runtime.log(`Complex task identified: ${classificationResult.values?.hasComplexTask}`);
-    
+
     console.log('✅ Ultimate classification analysis completed');
     console.log('');
 
     // Ultimate Plan Creation Test
     console.log('📋 Phase 2: Ultimate Plan Creation');
     console.log('===================================');
-    
-    const createPlanAction = planningPlugin.actions?.find(a => a.name === 'CREATE_PLAN');
+
+    const createPlanAction = planningPlugin.actions?.find((a) => a.name === 'CREATE_PLAN');
     if (!createPlanAction) {
       throw new Error('CREATE_PLAN action not found');
     }
@@ -269,7 +297,7 @@ async function runUltimateBenchmark() {
     runtime.recordAction('CREATE_PLAN');
     runtime.metrics.planComplexity = planResult.values?.plan?.complexity;
     runtime.metrics.stepCount = planResult.values?.plan?.steps?.length;
-    
+
     console.log(`✅ Ultimate plan created!`);
     console.log(`   🎯 Complexity: ${runtime.metrics.planComplexity}`);
     console.log(`   📊 Steps: ${runtime.metrics.stepCount}`);
@@ -279,8 +307,8 @@ async function runUltimateBenchmark() {
     // Ultimate Plan Execution Test
     console.log('⚡ Phase 3: Ultimate Plan Execution');
     console.log('===================================');
-    
-    const executePlanAction = planningPlugin.actions?.find(a => a.name === 'EXECUTE_PLAN');
+
+    const executePlanAction = planningPlugin.actions?.find((a) => a.name === 'EXECUTE_PLAN');
     if (!executePlanAction) {
       throw new Error('EXECUTE_PLAN action not found');
     }
@@ -288,15 +316,19 @@ async function runUltimateBenchmark() {
     const stateWithPlan = {
       values: { ...classificationResult.values, ...planResult.values },
       data: { ...classificationResult.data, ...planResult.data },
-      text: ''
+      text: '',
     };
 
-    const shouldExecute = await executePlanAction.validate(runtime as any, mockMessage as any, stateWithPlan);
+    const shouldExecute = await executePlanAction.validate(
+      runtime as any,
+      mockMessage as any,
+      stateWithPlan
+    );
     console.log(`🎯 Execution validation: ${shouldExecute ? '✅ Valid' : '❌ Invalid'}`);
 
     if (shouldExecute) {
       console.log('🚀 Executing ultimate plan...');
-      
+
       const executionResult = await executePlanAction.handler(
         runtime as any,
         mockMessage as any,
@@ -315,29 +347,30 @@ async function runUltimateBenchmark() {
     console.log('');
     console.log('📈 Phase 4: Ultimate Benchmark Validation');
     console.log('=========================================');
-    
+
     const report = runtime.getUltimateReport();
-    
+
     // Action validation
     const requiredActions = ['CREATE_PLAN', 'EXECUTE_PLAN'];
-    const actionMatches = requiredActions.filter(action => 
-      runtime.actions.includes(action)
-    );
+    const actionMatches = requiredActions.filter((action) => runtime.actions.includes(action));
     const actionScore = actionMatches.length / requiredActions.length;
 
     // Step count validation
     const stepCount = runtime.metrics.stepCount || 0;
-    const stepCountValid = stepCount >= testCase.expectedOutcomes.minSteps && 
-                          stepCount <= testCase.expectedOutcomes.maxSteps;
-    const stepScore = stepCountValid ? 1.0 : Math.max(0.5, stepCount / testCase.expectedOutcomes.maxSteps);
+    const stepCountValid =
+      stepCount >= testCase.expectedOutcomes.minSteps &&
+      stepCount <= testCase.expectedOutcomes.maxSteps;
+    const stepScore = stepCountValid
+      ? 1.0
+      : Math.max(0.5, stepCount / testCase.expectedOutcomes.maxSteps);
 
     // Comprehensiveness validation
     const comprehensivenessScore = runtime.metrics.comprehensiveness || 0;
 
     // Success criteria validation
     const successCriteria = testCase.expectedOutcomes.successCriteria;
-    const criteriaMatches = successCriteria.filter(criteria => {
-      return runtime.responses.some(response => 
+    const criteriaMatches = successCriteria.filter((criteria) => {
+      return runtime.responses.some((response) =>
         response.toLowerCase().includes(criteria.toLowerCase().split(' ')[0])
       );
     });
@@ -348,10 +381,16 @@ async function runUltimateBenchmark() {
 
     console.log('🎯 ULTIMATE BENCHMARK RESULTS');
     console.log('============================');
-    console.log(`📊 Action Execution: ${(actionScore * 100).toFixed(1)}% (${actionMatches.length}/${requiredActions.length})`);
-    console.log(`📈 Step Count: ${(stepScore * 100).toFixed(1)}% (${stepCount} steps, valid: ${stepCountValid})`);
+    console.log(
+      `📊 Action Execution: ${(actionScore * 100).toFixed(1)}% (${actionMatches.length}/${requiredActions.length})`
+    );
+    console.log(
+      `📈 Step Count: ${(stepScore * 100).toFixed(1)}% (${stepCount} steps, valid: ${stepCountValid})`
+    );
     console.log(`🎭 Comprehensiveness: ${(comprehensivenessScore * 100).toFixed(1)}%`);
-    console.log(`✅ Success Criteria: ${(criteriaScore * 100).toFixed(1)}% (${criteriaMatches.length}/${successCriteria.length})`);
+    console.log(
+      `✅ Success Criteria: ${(criteriaScore * 100).toFixed(1)}% (${criteriaMatches.length}/${successCriteria.length})`
+    );
     console.log('');
     console.log(`🏆 ULTIMATE SCORE: ${(ultimateScore * 100).toFixed(1)}%`);
     console.log(`⏱️ Execution Time: ${runtime.metrics.duration}ms`);
@@ -360,10 +399,18 @@ async function runUltimateBenchmark() {
     // Detailed analysis
     console.log('🔍 DETAILED ANALYSIS');
     console.log('===================');
-    console.log(`👥 Stakeholders Covered: ${report.planAnalysis.stakeholdersCovered.join(', ') || 'None detected'}`);
-    console.log(`⚠️ Constraints Addressed: ${report.planAnalysis.constraintsAddressed.join(', ') || 'None detected'}`);
-    console.log(`🛡️ Risk Factors Identified: ${report.planAnalysis.riskFactorsIdentified.join(', ') || 'None detected'}`);
-    console.log(`🔄 Implementation Phases: ${report.planAnalysis.implementationPhases.join(', ') || 'None detected'}`);
+    console.log(
+      `👥 Stakeholders Covered: ${report.planAnalysis.stakeholdersCovered.join(', ') || 'None detected'}`
+    );
+    console.log(
+      `⚠️ Constraints Addressed: ${report.planAnalysis.constraintsAddressed.join(', ') || 'None detected'}`
+    );
+    console.log(
+      `🛡️ Risk Factors Identified: ${report.planAnalysis.riskFactorsIdentified.join(', ') || 'None detected'}`
+    );
+    console.log(
+      `🔄 Implementation Phases: ${report.planAnalysis.implementationPhases.join(', ') || 'None detected'}`
+    );
     console.log('');
 
     // Final assessment
@@ -386,7 +433,6 @@ async function runUltimateBenchmark() {
     }
 
     return ultimateScore >= 0.7;
-
   } catch (error) {
     console.error('💥 Ultimate benchmark failed:', error.message);
     runtime.finalize();
@@ -394,11 +440,15 @@ async function runUltimateBenchmark() {
   }
 }
 
-runUltimateBenchmark().then(success => {
-  console.log('');
-  console.log(success ? '🎊 Ultimate benchmark completed successfully!' : '💔 Ultimate benchmark failed');
-  process.exit(success ? 0 : 1);
-}).catch(error => {
-  console.error('Fatal error in ultimate benchmark:', error);
-  process.exit(1);
-});
+runUltimateBenchmark()
+  .then((success) => {
+    console.log('');
+    console.log(
+      success ? '🎊 Ultimate benchmark completed successfully!' : '💔 Ultimate benchmark failed'
+    );
+    process.exit(success ? 0 : 1);
+  })
+  .catch((error) => {
+    console.error('Fatal error in ultimate benchmark:', error);
+    process.exit(1);
+  });

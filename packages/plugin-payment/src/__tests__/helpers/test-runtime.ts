@@ -1,5 +1,5 @@
-import { 
-  type IAgentRuntime, 
+import {
+  type IAgentRuntime,
   type UUID,
   elizaLogger,
   stringToUuid,
@@ -25,20 +25,20 @@ export interface TestRuntimeOptions {
 // Create a more realistic test database
 export const createTestDatabase = () => {
   const data = new Map<string, any[]>();
-  
+
   // Initialize tables
   const tables = [
     'paymentTransactions',
-    'paymentRequests', 
+    'paymentRequests',
     'userWallets',
     'dailySpending',
     'priceCache',
     'paymentWebhooks',
     'paymentSettings',
   ];
-  
-  tables.forEach(table => data.set(table, []));
-  
+
+  tables.forEach((table) => data.set(table, []));
+
   const db = {
     select: () => ({
       from: (table: any) => {
@@ -82,12 +82,12 @@ export const createTestDatabase = () => {
             tableName = 'paymentTransactions';
           }
         }
-        
+
         return {
           where: (condition: any) => ({
             limit: (n: number) => {
               const records = data.get(tableName) || [];
-              
+
               // Handle Drizzle eq() conditions
               let filtered = records;
               if (condition && typeof condition === 'object') {
@@ -107,7 +107,7 @@ export const createTestDatabase = () => {
                   filtered = records.filter((r: any) => r[fieldName] === value);
                 }
               }
-              
+
               return Promise.resolve(filtered.slice(0, n));
             },
             orderBy: (order: any) => ({
@@ -115,33 +115,33 @@ export const createTestDatabase = () => {
                 offset: (o: number) => {
                   const records = data.get(tableName) || [];
                   return Promise.resolve(records.slice(o, o + n));
-                }
-              })
-            })
+                },
+              }),
+            }),
           }),
           orderBy: (order: any) => ({
             limit: (n: number) => ({
               offset: (o: number) => {
                 const records = data.get(tableName) || [];
                 return Promise.resolve(records.slice(o, o + n));
-              }
-            })
+              },
+            }),
           }),
           limit: (n: number) => {
             const records = data.get(tableName) || [];
             return Promise.resolve(records.slice(0, n));
-          }
+          },
         };
-      }
+      },
     }),
-    
+
     insert: (table: any) => ({
       values: (values: any) => {
         // Make values() return a thenable object that can be awaited directly
         const insertFunc = async () => {
           // Direct insert without conflict handling
           let tableName = 'unknown';
-          
+
           if (typeof table === 'string') {
             tableName = table;
           } else if (table.name) {
@@ -179,7 +179,7 @@ export const createTestDatabase = () => {
               tableName = 'dailySpending';
             }
           }
-          
+
           const records = data.get(tableName) || [];
           const record = Array.isArray(values) ? values[0] : values;
           records.push({
@@ -191,7 +191,7 @@ export const createTestDatabase = () => {
           data.set(tableName, records);
           return { insertedId: record.id };
         };
-        
+
         // Return an object that can be awaited directly or chained
         return {
           then: (resolve: any, reject: any) => insertFunc().then(resolve, reject),
@@ -234,10 +234,10 @@ export const createTestDatabase = () => {
                   tableName = 'priceCache';
                 }
               }
-              
+
               const records = data.get(tableName) || [];
               const record = Array.isArray(values) ? values[0] : values;
-              
+
               // Find existing record
               const index = records.findIndex((r: any) => {
                 // Check conflict targets
@@ -249,7 +249,7 @@ export const createTestDatabase = () => {
                 }
                 return false;
               });
-              
+
               if (index >= 0) {
                 // Update existing
                 records[index] = {
@@ -266,16 +266,16 @@ export const createTestDatabase = () => {
                   updatedAt: new Date(),
                 });
               }
-              
+
               data.set(tableName, records);
               return { insertedId: record.id };
-            }
+            },
           }),
-          execute: insertFunc
+          execute: insertFunc,
         };
-      }
+      },
     }),
-    
+
     update: (table: any) => ({
       set: (values: any) => ({
         where: async (condition: any) => {
@@ -311,20 +311,20 @@ export const createTestDatabase = () => {
               tableName = 'dailySpending';
             }
           }
-          
+
           const records = data.get(tableName) || [];
-          
+
           // Simple update - in real implementation would parse condition
           records.forEach((record: any) => {
             Object.assign(record, values, { updatedAt: new Date() });
           });
-          
+
           data.set(tableName, records);
           return { rowsAffected: records.length };
-        }
-      })
+        },
+      }),
     }),
-    
+
     delete: (table: any) => ({
       where: async (condition: any) => {
         // Extract table name
@@ -359,24 +359,24 @@ export const createTestDatabase = () => {
             tableName = 'dailySpending';
           }
         }
-        
+
         const records = data.get(tableName) || [];
         // In a real implementation, would filter based on condition
         data.set(tableName, []);
         return { rowsAffected: records.length };
-      }
+      },
     }),
-    
+
     // Helper to get data for testing
     _getData: () => data,
   };
-  
+
   return db;
 };
 
 export async function createTestRuntime(options: TestRuntimeOptions = {}): Promise<IAgentRuntime> {
   const db = createTestDatabase();
-  
+
   // Default test character
   const defaultCharacter: Character = {
     id: stringToUuid('test-character'),
@@ -388,7 +388,7 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
       model: 'gpt-3.5-turbo',
       embeddingModel: 'text-embedding-3-small',
     },
-    plugins: []
+    plugins: [],
     ...options.character,
   };
 
@@ -423,7 +423,7 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
     getService: (name: string) => {
       if (name === 'database') {
         return {
-          getDatabase: () => db
+          getDatabase: () => db,
         };
       }
       return services.get(name);
@@ -441,23 +441,23 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
     },
     ensureParticipantInRoom: async () => {},
     ensureConnection: async () => {},
-    getMemories: async () => []
+    getMemories: async () => [],
     messageManager: {
-      createMemory: async () => ({} as Memory),
-      getMemories: async () => []
-      searchMemoriesByEmbedding: async () => []
+      createMemory: async () => ({}) as Memory,
+      getMemories: async () => [],
+      searchMemoriesByEmbedding: async () => [],
     },
     descriptionManager: {
       getDescription: async () => '',
     },
     loreManager: {
-      getLore: async () => []
+      getLore: async () => [],
     },
     documentsManager: {
-      getDocuments: async () => []
+      getDocuments: async () => [],
     },
     knowledgeManager: {
-      getKnowledge: async () => []
+      getKnowledge: async () => [],
     },
     services,
   } as any;
@@ -468,7 +468,7 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
       if (plugin.init) {
         await plugin.init(defaultSettings, runtime);
       }
-      
+
       // Register plugin services
       if (plugin.services) {
         // First pass: initialize services that don't depend on others
@@ -480,7 +480,7 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
               servicesToInit.push(ServiceClass);
               continue;
             }
-            
+
             // Services are class constructors
             const service = new (ServiceClass as any)();
             if (service.initialize) {
@@ -488,10 +488,13 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
             }
             services.set(service.serviceName || service.name || ServiceClass.serviceName, service);
           } catch (error) {
-            elizaLogger.warn(`Failed to initialize service ${(ServiceClass as any).serviceName || 'unknown'}:`, error);
+            elizaLogger.warn(
+              `Failed to initialize service ${(ServiceClass as any).serviceName || 'unknown'}:`,
+              error
+            );
           }
         }
-        
+
         // Second pass: initialize services that depend on others
         for (const ServiceClass of servicesToInit) {
           try {
@@ -501,7 +504,10 @@ export async function createTestRuntime(options: TestRuntimeOptions = {}): Promi
             }
             services.set(service.serviceName || service.name || ServiceClass.serviceName, service);
           } catch (error) {
-            elizaLogger.warn(`Failed to initialize service ${(ServiceClass as any).serviceName || 'unknown'}:`, error);
+            elizaLogger.warn(
+              `Failed to initialize service ${(ServiceClass as any).serviceName || 'unknown'}:`,
+              error
+            );
           }
         }
       }
@@ -542,4 +548,4 @@ export function createTestMemory(overrides: Partial<Memory> = {}): Memory {
 
 export function createTestUserId(): UUID {
   return asUUID(stringToUuid(`user-${Date.now()}-${Math.random()}`));
-} 
+}

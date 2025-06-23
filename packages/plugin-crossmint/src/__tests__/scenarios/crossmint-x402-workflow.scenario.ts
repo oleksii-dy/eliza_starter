@@ -7,7 +7,8 @@ import type { PluginScenario } from '@elizaos/core';
 export const crossmintX402WorkflowScenario: PluginScenario = {
   id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   name: 'CrossMint Enterprise + X.402 Payment Workflow',
-  description: 'Test real CrossMint wallet operations, NFT minting, and X.402 payment protocol integration',
+  description:
+    'Test real CrossMint wallet operations, NFT minting, and X.402 payment protocol integration',
   category: 'integration',
   tags: ['crossmint', 'x402', 'enterprise', 'blockchain', 'payments', 'mpc-wallets'],
 
@@ -16,49 +17,49 @@ export const crossmintX402WorkflowScenario: PluginScenario = {
       id: 'f1e2d3c4-b5a6-7890-9876-543210fedcba',
       name: 'Enterprise Agent',
       role: 'subject',
-      plugins: ['@elizaos/plugin-crossmint']
+      plugins: ['@elizaos/plugin-crossmint'],
     },
     {
       id: 'a9b8c7d6-e5f4-3210-9876-543210abcdef',
       name: 'Enterprise User',
       role: 'assistant',
-      plugins: []
-    }
+      plugins: [],
+    },
   ],
 
   script: {
-        steps: [
-          {
-            type: 'message',
-            content: 'I need to create an MPC wallet on Ethereum for our enterprise operations'
-          },
-          { type: 'wait', duration: 3000 },
-          {
-            type: 'message',
-            content: 'Now create an X.402 payment request for 25 USDC for our service fee'
-          },
-          { type: 'wait', duration: 3000 },
-          {
-            type: 'message',
-            content: 'Check the status of that payment request'
-          },
-          { type: 'wait', duration: 2000 },
-          {
-            type: 'message',
-            content: 'Show me my wallet portfolio and balances'
-          },
-          { type: 'wait', duration: 2000 },
-          {
-            type: 'message',
-            content: 'Create an NFT collection called "Enterprise Assets" on Polygon'
-          }
-        ]
+    steps: [
+      {
+        type: 'message',
+        content: 'I need to create an MPC wallet on Ethereum for our enterprise operations',
+      },
+      { type: 'wait', duration: 3000 },
+      {
+        type: 'message',
+        content: 'Now create an X.402 payment request for 25 USDC for our service fee',
+      },
+      { type: 'wait', duration: 3000 },
+      {
+        type: 'message',
+        content: 'Check the status of that payment request',
+      },
+      { type: 'wait', duration: 2000 },
+      {
+        type: 'message',
+        content: 'Show me my wallet portfolio and balances',
+      },
+      { type: 'wait', duration: 2000 },
+      {
+        type: 'message',
+        content: 'Create an NFT collection called "Enterprise Assets" on Polygon',
+      },
+    ],
   },
 
   setup: {
     roomType: 'dm',
     roomName: 'Enterprise Blockchain Operations',
-    context: 'Enterprise user managing blockchain operations with CrossMint and X.402 payments'
+    context: 'Enterprise user managing blockchain operations with CrossMint and X.402 payments',
   },
 
   verification: {
@@ -77,8 +78,8 @@ export const crossmintX402WorkflowScenario: PluginScenario = {
             5. Confirms the wallet is active and secure
           `,
           priority: 'high',
-          category: 'functionality'
-        }
+          category: 'functionality',
+        },
       },
       {
         id: 'x402-payment-request',
@@ -94,8 +95,8 @@ export const crossmintX402WorkflowScenario: PluginScenario = {
             5. Sets appropriate expiration time
           `,
           priority: 'high',
-          category: 'functionality'
-        }
+          category: 'functionality',
+        },
       },
       {
         id: 'payment-status-check',
@@ -110,8 +111,8 @@ export const crossmintX402WorkflowScenario: PluginScenario = {
             4. Confirms X.402 compliance
           `,
           priority: 'medium',
-          category: 'functionality'
-        }
+          category: 'functionality',
+        },
       },
       {
         id: 'portfolio-display',
@@ -126,8 +127,8 @@ export const crossmintX402WorkflowScenario: PluginScenario = {
             4. Lists supported blockchain networks
           `,
           priority: 'medium',
-          category: 'functionality'
-        }
+          category: 'functionality',
+        },
       },
       {
         id: 'nft-collection-creation',
@@ -142,8 +143,8 @@ export const crossmintX402WorkflowScenario: PluginScenario = {
             4. Provides collection details and contract address
           `,
           priority: 'medium',
-          category: 'functionality'
-        }
+          category: 'functionality',
+        },
       },
       {
         id: 'enterprise-capabilities-demonstration',
@@ -159,8 +160,8 @@ export const crossmintX402WorkflowScenario: PluginScenario = {
             5. Shows understanding of business use cases
           `,
           priority: 'high',
-          category: 'integration'
-        }
+          category: 'integration',
+        },
       },
       {
         id: 'error-handling-and-validation',
@@ -175,10 +176,10 @@ export const crossmintX402WorkflowScenario: PluginScenario = {
             4. Maintains professional communication throughout
           `,
           priority: 'medium',
-          category: 'functionality'
-        }
-      }
-    ]
+          category: 'functionality',
+        },
+      },
+    ],
   },
 
   // Environment requirements
@@ -186,8 +187,8 @@ export const crossmintX402WorkflowScenario: PluginScenario = {
     'CROSSMINT_API_KEY',
     'CROSSMINT_PROJECT_ID',
     'CROSSMINT_ENVIRONMENT',
-    'X402_FACILITATOR_URL'
-  ]
+    'X402_FACILITATOR_URL',
+  ],
 };
 
 export default crossmintX402WorkflowScenario;

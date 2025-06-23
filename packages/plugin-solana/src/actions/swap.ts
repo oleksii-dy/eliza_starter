@@ -131,7 +131,9 @@ export const executeSwap: Action = {
       }
 
       // Get wallet info for context using wallet provider
-      const walletProvider = await runtime.providers.find(p => p.name === 'solana-wallet')?.get(runtime, message, state);
+      const walletProvider = await runtime.providers
+        .find((p) => p.name === 'solana-wallet')
+        ?.get(runtime, message, state);
       state.values.walletInfo = walletProvider?.data || {};
 
       const swapPrompt = composePromptFromState({
@@ -157,7 +159,7 @@ export const executeSwap: Action = {
         return {
           success: false,
           message: 'Please specify a valid amount to swap',
-          data: { error: 'Invalid amount' }
+          data: { error: 'Invalid amount' },
         };
       }
 
@@ -166,7 +168,7 @@ export const executeSwap: Action = {
         return {
           success: false,
           message: 'Please specify the token you want to swap from',
-          data: { error: 'Input token not specified' }
+          data: { error: 'Input token not specified' },
         };
       }
 
@@ -175,7 +177,7 @@ export const executeSwap: Action = {
         return {
           success: false,
           message: 'Please specify the token you want to swap to',
-          data: { error: 'Output token not specified' }
+          data: { error: 'Output token not specified' },
         };
       }
 
@@ -184,8 +186,10 @@ export const executeSwap: Action = {
       const outputToken = response.outputTokenCA || response.outputTokenSymbol || '';
 
       // Get swap quote
-      callback?.({ text: `Getting quote for swapping ${response.amount} ${inputToken} to ${outputToken}...` });
-      
+      callback?.({
+        text: `Getting quote for swapping ${response.amount} ${inputToken} to ${outputToken}...`,
+      });
+
       const quote = await jupiterService.getSwapQuote(
         inputToken,
         outputToken,
@@ -202,36 +206,37 @@ export const executeSwap: Action = {
 
       // Show quote to user
       callback?.({
-        text: `Quote received:\n` +
-              `• Rate: 1 ${inputToken} = ${priceImpact.rate.toFixed(6)} ${outputToken}\n` +
-              `• Expected output: ${priceImpact.minimumReceived.toFixed(6)} ${outputToken}\n` +
-              `• Price impact: ${priceImpact.priceImpactPct.toFixed(2)}%\n` +
-              `Executing swap...`
+        text:
+          `Quote received:\n` +
+          `• Rate: 1 ${inputToken} = ${priceImpact.rate.toFixed(6)} ${outputToken}\n` +
+          `• Expected output: ${priceImpact.minimumReceived.toFixed(6)} ${outputToken}\n` +
+          `• Price impact: ${priceImpact.priceImpactPct.toFixed(2)}%\n` +
+          `Executing swap...`,
       });
 
       // Get wallet public key from getWalletKey utility
-      const { publicKey: walletPubkey } = await import('../keypairUtils.js').then(m => m.getWalletKey(runtime, false));
+      const { publicKey: walletPubkey } = await import('../keypairUtils.js').then((m) =>
+        m.getWalletKey(runtime, false)
+      );
       if (!walletPubkey) {
         throw new Error('Wallet public key not available');
       }
 
       // Execute swap
-      const txSignature = await jupiterService.executeSwap(
-        walletPubkey,
-        quote
-      );
+      const txSignature = await jupiterService.executeSwap(walletPubkey, quote);
 
       callback?.({
-        text: `✅ Swap completed successfully!\n` +
-              `Transaction: ${txSignature}\n` +
-              `View on Solscan: https://solscan.io/tx/${txSignature}`,
-        content: { 
-          success: true, 
+        text:
+          `✅ Swap completed successfully!\n` +
+          `Transaction: ${txSignature}\n` +
+          `View on Solscan: https://solscan.io/tx/${txSignature}`,
+        content: {
+          success: true,
           transactionId: txSignature,
           inputToken,
           outputToken,
           amount: response.amount,
-          outputAmount: priceImpact.minimumReceived
+          outputAmount: priceImpact.minimumReceived,
         },
       });
 
@@ -248,7 +253,7 @@ export const executeSwap: Action = {
           outputTokenSymbol: outputToken,
           priceImpactPct: priceImpact.priceImpactPct,
           rate: priceImpact.rate,
-        }
+        },
       };
     } catch (error) {
       if (error instanceof Error) {
@@ -260,7 +265,7 @@ export const executeSwap: Action = {
         return {
           success: false,
           message: `Swap failed: ${error.message}`,
-          data: { error: error.message }
+          data: { error: error.message },
         };
       }
       throw error;
@@ -312,5 +317,5 @@ export const executeSwap: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };

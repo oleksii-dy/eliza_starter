@@ -135,7 +135,7 @@ async function extractEnvVarValues(
   try {
     const result = await runtime.useModel(ModelType.TEXT_LARGE, {
       prompt,
-      stopSequences: []
+      stopSequences: [],
     });
 
     // Custom parsing for arrays since parseJSONObjectFromText only handles objects
@@ -363,7 +363,7 @@ export const setEnvVarAction: Action = {
 
         const response = await runtime.useModel(ModelType.TEXT_LARGE, {
           prompt,
-          stopSequences: []
+          stopSequences: [],
         });
 
         const responseContent = parseJSONObjectFromText(response);
@@ -387,7 +387,7 @@ export const setEnvVarAction: Action = {
 
         const response = await runtime.useModel(ModelType.TEXT_LARGE, {
           prompt,
-          stopSequences: []
+          stopSequences: [],
         });
 
         const responseContent = parseJSONObjectFromText(response);
@@ -454,7 +454,7 @@ export const setEnvVarAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };
 
 export default setEnvVarAction;

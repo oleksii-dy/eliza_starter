@@ -35,15 +35,12 @@ export class CoreIdentityProvider implements IIdentityManager {
       logger.debug('[CoreIdentityProvider] Resolving entity:', { identifier, context });
 
       // Try to resolve using the EntityResolutionManager
-      const resolved = await this.entityResolutionService.resolveEntity(
-        identifier,
-        {
-          roomId: context.metadata?.roomId,
-          platformContext: {
-            platform: context.source || 'unknown',
-          },
-        }
-      );
+      const resolved = await this.entityResolutionService.resolveEntity(identifier, {
+        roomId: context.metadata?.roomId,
+        platformContext: {
+          platform: context.source || 'unknown',
+        },
+      });
 
       if (!resolved || resolved.length === 0) {
         return {
@@ -59,9 +56,10 @@ export class CoreIdentityProvider implements IIdentityManager {
       const bestMatch = resolved[0];
 
       // Build reason from match factors
-      const reason = bestMatch.matchFactors.length > 0 
-        ? `Entity resolved successfully: ${bestMatch.matchFactors[0].evidence}`
-        : 'Entity resolved successfully';
+      const reason =
+        bestMatch.matchFactors.length > 0
+          ? `Entity resolved successfully: ${bestMatch.matchFactors[0].evidence}`
+          : 'Entity resolved successfully';
 
       // Convert to core format
       return {
@@ -69,7 +67,7 @@ export class CoreIdentityProvider implements IIdentityManager {
         entityId: bestMatch.entityId,
         confidence: bestMatch.confidence || 0.8,
         reason,
-        alternativeMatches: resolved.slice(1).map(alt => alt.entityId),
+        alternativeMatches: resolved.slice(1).map((alt) => alt.entityId),
         metadata: {
           source: context.source,
           originalProfile: bestMatch,
@@ -96,11 +94,9 @@ export class CoreIdentityProvider implements IIdentityManager {
   async getIdentityProfile(entityId: UUID): Promise<IdentityProfile | null> {
     try {
       // Get entity from EntityGraphManager
-      const entity = await this.entityGraphService.trackEntity(
-        entityId,
-        'Profile lookup',
-        { updateExisting: false }
-      );
+      const entity = await this.entityGraphService.trackEntity(entityId, 'Profile lookup', {
+        updateExisting: false,
+      });
 
       if (!entity) {
         return null;
@@ -138,10 +134,10 @@ export class CoreIdentityProvider implements IIdentityManager {
         trustScore: entity.trustScore || 0.5,
         verificationLevel: this.calculateVerificationLevel(entity),
         platformIdentityIds,
-        relationships: relationships.map(rel => ({
+        relationships: relationships.map((rel) => ({
           targetEntityId: rel.targetEntityId,
-          type: rel.metadata?.type as string || 'unknown',
-          strength: rel.metadata?.strength as number || 0.5,
+          type: (rel.metadata?.type as string) || 'unknown',
+          strength: (rel.metadata?.strength as number) || 0.5,
           verified: rel.metadata?.verified === true,
           metadata: rel.metadata || {},
         })),
@@ -168,13 +164,14 @@ export class CoreIdentityProvider implements IIdentityManager {
    */
   async verifyIdentity(entityId: UUID, proof: VerificationProof): Promise<VerificationResult> {
     try {
-      logger.info('[CoreIdentityProvider] Verifying identity:', { entityId, type: proof.proofType });
-
-      const entity = await this.entityGraphService.trackEntity(
+      logger.info('[CoreIdentityProvider] Verifying identity:', {
         entityId,
-        'Identity verification',
-        { updateExisting: false }
-      );
+        type: proof.proofType,
+      });
+
+      const entity = await this.entityGraphService.trackEntity(entityId, 'Identity verification', {
+        updateExisting: false,
+      });
 
       if (!entity) {
         return {
@@ -186,7 +183,12 @@ export class CoreIdentityProvider implements IIdentityManager {
       }
 
       // Handle different proof types
-      let verificationResult: { verified: boolean; confidence: number; reason: string; metadata: any };
+      let verificationResult: {
+        verified: boolean;
+        confidence: number;
+        reason: string;
+        metadata: any;
+      };
 
       switch (proof.proofType) {
         case 'oauth':
@@ -318,13 +320,15 @@ export class CoreIdentityProvider implements IIdentityManager {
 
       for (const result of searchResults) {
         const entity = result.entity;
-        
+
         // Check if this entity has the specific platform identity
         const platformData = entity.platforms?.[platform];
         if (!platformData) continue;
 
-        const entityPlatformId = typeof platformData === 'string' ? platformData : 
-          platformData.id || platformData.username || platformData.handle;
+        const entityPlatformId =
+          typeof platformData === 'string'
+            ? platformData
+            : platformData.id || platformData.username || platformData.handle;
 
         if (entityPlatformId === platformId) {
           const profile = await this.getIdentityProfile(entity.entityId);
@@ -355,11 +359,9 @@ export class CoreIdentityProvider implements IIdentityManager {
       // Get all entity profiles
       const profiles: EntityProfile[] = [];
       for (const entityId of entityIds) {
-        const entity = await this.entityGraphService.trackEntity(
-          entityId,
-          'Merge analysis',
-          { updateExisting: false }
-        );
+        const entity = await this.entityGraphService.trackEntity(entityId, 'Merge analysis', {
+          updateExisting: false,
+        });
         if (entity) {
           profiles.push(entity);
         }
@@ -381,7 +383,7 @@ export class CoreIdentityProvider implements IIdentityManager {
         entityIds,
         confidence: mergeAnalysis.confidence,
         reason: mergeAnalysis.reason,
-        conflicts: mergeAnalysis.conflicts || []
+        conflicts: mergeAnalysis.conflicts || [],
         primaryEntityId: mergeAnalysis.primaryEntityId || entityIds[0],
         strategy: mergeAnalysis.strategy || 'conservative',
         estimatedRisk: mergeAnalysis.risk || 'medium',
@@ -414,7 +416,7 @@ export class CoreIdentityProvider implements IIdentityManager {
       // Execute merge using EntityResolutionManager
       const mergeResult = await this.entityResolutionService.mergeEntities(
         proposal.primaryEntityId,
-        proposal.entityIds.filter(id => id !== proposal.primaryEntityId),
+        proposal.entityIds.filter((id) => id !== proposal.primaryEntityId),
         {
           strategy: proposal.strategy,
           preserveHistory: true,
@@ -426,8 +428,8 @@ export class CoreIdentityProvider implements IIdentityManager {
         return {
           success: false,
           primaryEntityId: proposal.primaryEntityId,
-          mergedEntityIds: []
-          conflicts: mergeResult.conflicts || []
+          mergedEntityIds: [],
+          conflicts: mergeResult.conflicts || [],
           rollbackData: null,
           metadata: { error: mergeResult.error },
         };
@@ -448,8 +450,8 @@ export class CoreIdentityProvider implements IIdentityManager {
       return {
         confidence: 1.0,
         primaryEntityId: proposal.primaryEntityId,
-        mergedEntityIds: proposal.entityIds.filter(id => id !== proposal.primaryEntityId),
-        conflicts: []
+        mergedEntityIds: proposal.entityIds.filter((id) => id !== proposal.primaryEntityId),
+        conflicts: [],
         rollbackData: mergeResult.rollbackData,
         metadata: {
           proposal,
@@ -469,12 +471,10 @@ export class CoreIdentityProvider implements IIdentityManager {
   async getEntityHistory(entityId: UUID): Promise<any> {
     try {
       // Get entity and relationships
-      const entity = await this.entityGraphService.trackEntity(
-        entityId,
-        'History lookup',
-        { updateExisting: false }
-      );
-      
+      const entity = await this.entityGraphService.trackEntity(entityId, 'History lookup', {
+        updateExisting: false,
+      });
+
       if (!entity) {
         throw new Error(`Entity ${entityId} not found`);
       }
@@ -501,7 +501,7 @@ export class CoreIdentityProvider implements IIdentityManager {
       }
 
       // Add relationship events
-      relationships.forEach(rel => {
+      relationships.forEach((rel) => {
         if (rel.createdAt) {
           events.push({
             timestamp: rel.createdAt,
@@ -545,15 +545,12 @@ export class CoreIdentityProvider implements IIdentityManager {
       }
       if (query.alias) searchText += query.alias + ' ';
 
-      const searchResults = await this.entityGraphService.searchEntities(
-        searchText.trim(),
-        {
-          type: query.entityType,
-          minTrust: query.minTrustScore,
-          limit: query.limit || 20,
-          offset: query.offset || 0,
-        }
-      );
+      const searchResults = await this.entityGraphService.searchEntities(searchText.trim(), {
+        type: query.entityType,
+        minTrust: query.minTrustScore,
+        limit: query.limit || 20,
+        offset: query.offset || 0,
+      });
 
       const results: any[] = [];
 
@@ -659,18 +656,20 @@ export class CoreIdentityProvider implements IIdentityManager {
       return {
         valid: false,
         errors: [`Validation failed: ${error.message}`],
-        warnings: []
+        warnings: [],
       };
     }
   }
 
   // === Private Helper Methods ===
 
-  private calculateVerificationLevel(entity: EntityProfile): 'unverified' | 'basic' | 'verified' | 'high_trust' {
+  private calculateVerificationLevel(
+    entity: EntityProfile
+  ): 'unverified' | 'basic' | 'verified' | 'high_trust' {
     const verifiedPlatforms = Object.values(entity.platforms || {}).filter(
       (p: any) => p.verified === true
     ).length;
-    
+
     const trustScore = entity.trustScore || 0.5;
 
     if (verifiedPlatforms >= 2 && trustScore >= 0.8) {
@@ -684,7 +683,10 @@ export class CoreIdentityProvider implements IIdentityManager {
     }
   }
 
-  private async verifyOAuthProof(entity: EntityProfile, proof: VerificationProof): Promise<{
+  private async verifyOAuthProof(
+    entity: EntityProfile,
+    proof: VerificationProof
+  ): Promise<{
     verified: boolean;
     confidence: number;
     reason: string;
@@ -719,7 +721,10 @@ export class CoreIdentityProvider implements IIdentityManager {
     }
   }
 
-  private async verifyCryptographicProof(entity: EntityProfile, proof: VerificationProof): Promise<{
+  private async verifyCryptographicProof(
+    entity: EntityProfile,
+    proof: VerificationProof
+  ): Promise<{
     verified: boolean;
     confidence: number;
     reason: string;
@@ -734,7 +739,10 @@ export class CoreIdentityProvider implements IIdentityManager {
     };
   }
 
-  private async verifyBehavioralProof(entity: EntityProfile, proof: VerificationProof): Promise<{
+  private async verifyBehavioralProof(
+    entity: EntityProfile,
+    proof: VerificationProof
+  ): Promise<{
     verified: boolean;
     confidence: number;
     reason: string;
@@ -752,7 +760,10 @@ export class CoreIdentityProvider implements IIdentityManager {
     };
   }
 
-  private async verifySocialProof(entity: EntityProfile, proof: VerificationProof): Promise<{
+  private async verifySocialProof(
+    entity: EntityProfile,
+    proof: VerificationProof
+  ): Promise<{
     verified: boolean;
     confidence: number;
     reason: string;
@@ -812,16 +823,23 @@ export class CoreIdentityProvider implements IIdentityManager {
     // This functionality is handled by getIdentityProfile
     const profile = await this.getIdentityProfile(entityId);
     if (!profile) return [];
-    
-    return Object.entries(profile.platformIdentities || {}).map(([platform, data]: [string, any]) => ({
-      platform,
-      platformId: data.platformId,
-      verified: data.verified || false,
-      metadata: data.metadata || {}
-    }));
+
+    return Object.entries(profile.platformIdentities || {}).map(
+      ([platform, data]: [string, any]) => ({
+        platform,
+        platformId: data.platformId,
+        verified: data.verified || false,
+        metadata: data.metadata || {},
+      })
+    );
   }
 
-  async createIdentityLink(entityId: UUID, platform: string, platformId: string, metadata?: any): Promise<void> {
+  async createIdentityLink(
+    entityId: UUID,
+    platform: string,
+    platformId: string,
+    metadata?: any
+  ): Promise<void> {
     await this.linkPlatformIdentity(entityId, platform, platformId, false, metadata);
   }
 }

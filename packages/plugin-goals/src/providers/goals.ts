@@ -95,7 +95,7 @@ export const goalsProvider: Provider = {
           activeGoals: activeGoals.map((g) => ({
             id: g.id,
             name: g.name,
-            tags: g.tags || []
+            tags: g.tags || [],
           })),
           recentCompleted: recentCompleted.map((g) => ({
             id: g.id,

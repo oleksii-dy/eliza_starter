@@ -227,7 +227,7 @@ export const choiceAction: Action = {
 
       const result = await runtime.useModel(ModelType.TEXT_SMALL, {
         prompt,
-        stopSequences: []
+        stopSequences: [],
       });
 
       const parsed = parseJSONObjectFromText(result);
@@ -411,7 +411,7 @@ export const choiceAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };
 
 export default choiceAction;

@@ -9,7 +9,7 @@ describe('Event Handler Management (Consolidated)', () => {
   beforeEach(() => {
     mockRuntime = {
       agentId: 'test-agent-id' as UUID,
-      plugins: []
+      plugins: [],
       events: new Map(),
       registerEvent: vi.fn((event: string, handler: Function) => {
         const handlers = mockRuntime.events.get(event) || [];
@@ -32,9 +32,9 @@ describe('Event Handler Management (Consolidated)', () => {
         return Promise.resolve();
       }),
       // Add other necessary mocks
-      actions: []
-      providers: []
-      evaluators: []
+      actions: [],
+      providers: [],
+      evaluators: [],
       services: new Map(),
       getService: vi.fn(() => null), // Mock getService to return null
     } as any;

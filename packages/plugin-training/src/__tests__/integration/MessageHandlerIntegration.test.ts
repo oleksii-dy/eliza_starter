@@ -33,9 +33,9 @@ const testCharacter: Character = {
       { name: 'MessageHandlerTestAgent', content: { text: 'testing message handler response' } },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   topics: ['testing', 'message-handling', 'integration', 'hooks'],
-  plugins: []
+  plugins: [],
   settings: {
     REASONING_SERVICE_ENABLED: 'true',
     TOGETHER_AI_API_KEY: 'test-api-key',

@@ -16,10 +16,10 @@ describe('RegistryService', () => {
       getSetting: (key: string) => process.env[key],
       getService: (name: string) => null,
       services: new Map(),
-      plugins: []
-      actions: []
-      providers: []
-      evaluators: []
+      plugins: [],
+      actions: [],
+      providers: [],
+      evaluators: [],
     } as any;
 
     pluginManagerService = await PluginManagerService.start(mockRuntime);
@@ -171,9 +171,9 @@ describe('RegistryService', () => {
     });
 
     it('should handle invalid package names', async () => {
-      await expect(pluginManagerService.getPluginInfoFromRegistry('invalid package name!')).rejects.toThrow(
-        'Invalid plugin name'
-      );
+      await expect(
+        pluginManagerService.getPluginInfoFromRegistry('invalid package name!')
+      ).rejects.toThrow('Invalid plugin name');
     });
 
     it('should cache plugin metadata', async () => {
@@ -207,7 +207,9 @@ describe('RegistryService', () => {
   describe('validatePackage', () => {
     it('should validate a proper package structure', async () => {
       // Test with a real path that doesn't exist
-      const result = await (pluginManagerService as any).registryManager.validatePackage('/non/existent/path');
+      const result = await (pluginManagerService as any).registryManager.validatePackage(
+        '/non/existent/path'
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
@@ -215,7 +217,9 @@ describe('RegistryService', () => {
 
     it('should detect missing required fields', async () => {
       // Test with current directory which likely has a package.json
-      const result = await (pluginManagerService as any).registryManager.validatePackage(process.cwd());
+      const result = await (pluginManagerService as any).registryManager.validatePackage(
+        process.cwd()
+      );
 
       // Should either be valid or have specific errors
       expect(result).toHaveProperty('valid');
@@ -238,13 +242,13 @@ describe('RegistryService', () => {
 
       // Results should be the same
       expect(cachedResults).toEqual(results);
-      
+
       // Second search should be much faster (from cache)
       expect(duration).toBeLessThan(50); // Should be almost instant from cache
 
       // Test with a different query
       const results2 = await pluginManagerService.searchPlugins('twitter');
-      
+
       // Should be different results (or both could be empty, but that's ok)
       // Only check if both have results
       if (results.length > 0 && results2.length > 0) {

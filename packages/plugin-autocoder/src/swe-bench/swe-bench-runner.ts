@@ -384,9 +384,9 @@ export class SWEBenchRunner {
         validation_details: {
           compilation_success: true,
           test_pass_rate: 1.0,
-          requirements_met: success ? ['Issue resolved'] : []
+          requirements_met: success ? ['Issue resolved'] : [],
           requirements_missed: success ? [] : ['Tests still failing'],
-          performance_issues: []
+          performance_issues: [],
         },
       };
     } catch (error) {
@@ -415,7 +415,7 @@ export class SWEBenchRunner {
    * Filter instances based on options
    */
   private async filterInstances(
-    instances: SWEBenchInstance[]
+    instances: SWEBenchInstance[],
     options: BenchmarkOptions
   ): Promise<SWEBenchInstance[]> {
     let filtered = [...instances];

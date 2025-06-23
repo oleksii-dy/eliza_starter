@@ -14,32 +14,32 @@ export function createMockRuntime(overrides: any = {}): IAgentRuntime {
     run: vi.fn().mockResolvedValue({ changes: 1 }),
     get: vi.fn().mockResolvedValue(null),
   };
-  
+
   const baseRuntime = {
     agentId: 'test-agent-id' as UUID,
     character: overrides.character || {
       name: 'TestAgent',
       bio: ['A test agent'],
-      messageExamples: []
-      postExamples: []
-      topics: []
-      knowledge: []
-      plugins: []
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      knowledge: [],
+      plugins: [],
     },
-    providers: []
-    actions: []
-    evaluators: []
-    plugins: []
+    providers: [],
+    actions: [],
+    evaluators: [],
+    plugins: [],
     services: new Map(),
     events: new Map(),
-    routes: []
-    
+    routes: [],
+
     // Database
     db: mockDb,
     databaseAdapter: {
-      db: mockDb
+      db: mockDb,
     },
-    
+
     // Core methods
     getSetting: vi.fn((key: string) => {
       const settings: Record<string, string> = {
@@ -56,14 +56,14 @@ export function createMockRuntime(overrides: any = {}): IAgentRuntime {
       data: {},
       text: '',
     }),
-    
+
     // Database methods
     getMemories: vi.fn().mockResolvedValue([]),
     createMemory: vi.fn().mockResolvedValue('test-memory-id' as UUID),
-    
+
     // Service methods
     getService: vi.fn().mockReturnValue(null),
-    
+
     // Logger
     logger: {
       info: vi.fn(),
@@ -71,7 +71,7 @@ export function createMockRuntime(overrides: any = {}): IAgentRuntime {
       warn: vi.fn(),
       debug: vi.fn(),
     },
-    
+
     // Apply overrides
     ...overrides,
   };
@@ -121,7 +121,7 @@ export function createMockWallet(overrides: Partial<CustodialWallet> = {}): Cust
     network: 'base-sepolia',
     name: 'Test Wallet',
     ownerId: 'user-123' as UUID,
-    permissions: []
+    permissions: [],
     status: 'active',
     createdAt: Date.now(),
     requiredTrustLevel: 50,

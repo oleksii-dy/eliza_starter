@@ -19,7 +19,7 @@ async function saveExecutionRecord(
   messageContext: Memory,
   thought: string,
   text: string,
-  actions?: string[]
+  actions?: string[],
   attachments?: Media[]
 ): Promise<void> {
   const memory: Memory = {

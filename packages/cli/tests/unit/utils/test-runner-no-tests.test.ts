@@ -26,7 +26,7 @@ describe('TestRunner - Plugin Without Tests', () => {
 
     mockRuntime = {
       character: { name: 'Test Agent' } as Character,
-      plugins: []
+      plugins: [],
     } as unknown as IAgentRuntime;
   });
 
@@ -87,7 +87,7 @@ describe('TestRunner - Plugin Without Tests', () => {
     const pluginWithEmptyTests: Plugin = {
       name: 'plugin-empty-tests',
       description: 'A plugin with empty test array',
-      tests: []
+      tests: [],
     };
 
     const projectAgent: ProjectAgent = {

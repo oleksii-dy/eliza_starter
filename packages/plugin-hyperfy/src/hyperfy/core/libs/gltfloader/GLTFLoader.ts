@@ -3,7 +3,10 @@
  * This wraps the Three.js GLTFLoader with Hyperfy-specific extensions
  */
 
-import { GLTFLoader as ThreeGLTFLoader, GLTF as ThreeGLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {
+  GLTFLoader as ThreeGLTFLoader,
+  GLTF as ThreeGLTF,
+} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 import * as THREE from 'three';
@@ -63,7 +66,7 @@ export class GLTFLoader extends ThreeGLTFLoader {
     url: string,
     onLoad: (gltf: GLTF) => void,
     onProgress?: (event: ProgressEvent) => void,
-    onError?: (error: Error) => void
+    onError?: (event: ErrorEvent) => void
   ): void {
     super.load(
       url,
@@ -93,7 +96,7 @@ export class GLTFLoader extends ThreeGLTFLoader {
     data: ArrayBuffer | string,
     path: string,
     onLoad: (gltf: GLTF) => void,
-    onError?: (error: Error) => void
+    onError?: (event: ErrorEvent) => void
   ): void {
     super.parse(
       data,
@@ -122,7 +125,7 @@ export class GLTFLoader extends ThreeGLTFLoader {
         // Process materials for better compatibility
         if (child.material) {
           if (Array.isArray(child.material)) {
-            child.material.forEach(mat => this.processMaterial(mat));
+            child.material.forEach((mat) => this.processMaterial(mat));
           } else {
             this.processMaterial(child.material);
           }
@@ -148,8 +151,8 @@ export class GLTFLoader extends ThreeGLTFLoader {
           clip.name = `Animation_${index}`;
         }
         // Store original duration for reference
-        clip.userData = clip.userData || {};
-        clip.userData.originalDuration = clip.duration;
+        (clip as any).userData = (clip as any).userData || {};
+        (clip as any).userData.originalDuration = clip.duration;
       });
     }
 
@@ -165,15 +168,17 @@ export class GLTFLoader extends ThreeGLTFLoader {
    */
   private processMaterial(material: THREE.Material): void {
     // Enable transparency support if needed
-    if (material instanceof THREE.MeshStandardMaterial || 
-        material instanceof THREE.MeshPhysicalMaterial) {
+    if (
+      material instanceof THREE.MeshStandardMaterial ||
+      material instanceof THREE.MeshPhysicalMaterial
+    ) {
       if (material.map && material.map.format === THREE.RGBAFormat) {
         material.transparent = true;
       }
-      
+
       // Optimize for performance
       material.side = THREE.FrontSide; // Default to front side only
-      
+
       // Store original values
       material.userData.originalSide = material.side;
       material.userData.originalTransparent = material.transparent;
@@ -202,4 +207,4 @@ export class GLTFLoader extends ThreeGLTFLoader {
 }
 
 // Re-export as default
-export default GLTFLoader; 
+export default GLTFLoader;

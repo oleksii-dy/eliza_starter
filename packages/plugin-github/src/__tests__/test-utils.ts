@@ -1,6 +1,6 @@
 /**
  * @fileoverview GitHub Plugin Test Utilities
- * 
+ *
  * This file provides GitHub-specific test utilities and extensions to the centralized
  * mock system from @elizaos/core/test-utils. It preserves all existing functionality
  * while leveraging the more comprehensive centralized system.
@@ -28,23 +28,23 @@ function baseMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime 
   const defaultCharacter: Character = {
     name: 'TestAgent',
     bio: ['A test agent'],
-    messageExamples: []
-    postExamples: []
-    topics: []
-    knowledge: []
-    plugins: []
+    messageExamples: [],
+    postExamples: [],
+    topics: [],
+    knowledge: [],
+    plugins: [],
   };
 
   const baseRuntime = {
     agentId: 'test-agent-id' as UUID,
     character: overrides.character || defaultCharacter,
-    providers: []
-    actions: []
-    evaluators: []
-    plugins: []
+    providers: [],
+    actions: [],
+    evaluators: [],
+    plugins: [],
     services: new Map(),
     events: new Map(),
-    routes: []
+    routes: [],
 
     // Core methods
     getSetting: vi.fn().mockReturnValue('test-value'),
@@ -107,7 +107,7 @@ const GITHUB_RUNTIME_DEFAULTS: Partial<IAgentRuntime> = {
     };
     return githubSettings[key] || null;
   }),
-  
+
   useModel: vi.fn().mockImplementation((modelType, params) => {
     if (modelType === ModelType.TEXT_SMALL) {
       return Promise.resolve('Never gonna give you up, never gonna let you down');
@@ -134,7 +134,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
   const githubOverrides: Partial<IAgentRuntime> = {
     ...GITHUB_RUNTIME_DEFAULTS,
     ...overrides,
-    
+
     // Handle character overrides specially
     character: {
       name: 'Test Character',
@@ -146,7 +146,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
 
   // Use the centralized mock runtime with GitHub-specific defaults
   const runtime = baseMockRuntime(githubOverrides);
-  
+
   return runtime;
 }
 
@@ -178,7 +178,7 @@ export function createMockState(overrides: MockStateOverrides = {}): State {
       ...overrides.data,
     },
   };
-  
+
   return baseMockState({
     ...githubStateDefaults,
     ...overrides,
@@ -222,7 +222,7 @@ export function setupTest(
 
 /**
  * Type definition for the mock runtime
- * 
+ *
  * @deprecated Use IAgentRuntime directly from @elizaos/core types.
  * This type is maintained for backward compatibility only.
  */
@@ -245,7 +245,7 @@ export interface MockRuntime {
 
 /**
  * Add spy on logger for common usage in tests
- * 
+ *
  * @returns A function to restore the original logger methods
  */
 export function setupLoggerSpies() {

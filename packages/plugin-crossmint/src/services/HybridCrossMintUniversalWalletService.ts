@@ -1,10 +1,4 @@
-import {
-  IAgentRuntime,
-  Service,
-  ServiceType,
-  logger,
-  UUID,
-} from '@elizaos/core';
+import { IAgentRuntime, Service, ServiceType, logger, UUID } from '@elizaos/core';
 import {
   IUniversalWalletService,
   UniversalPortfolio,
@@ -36,7 +30,10 @@ import { RealX402Service, X402Error } from './RealX402Service';
  * Hybrid CrossMint + X.402 Universal Wallet Service
  * Combines real CrossMint API for wallet operations with real X.402 protocol for payments
  */
-export class HybridCrossMintUniversalWalletService extends Service implements IUniversalWalletService {
+export class HybridCrossMintUniversalWalletService
+  extends Service
+  implements IUniversalWalletService
+{
   static override readonly serviceType = ServiceType.WALLET;
   static serviceName = 'hybrid-crossmint-universal-wallet';
 
@@ -49,7 +46,8 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
     WalletCapability.MULTISIG,
   ];
 
-  public readonly capabilityDescription = 'Hybrid CrossMint + X.402 service with real API integrations';
+  public readonly capabilityDescription =
+    'Hybrid CrossMint + X.402 service with real API integrations';
 
   private crossMintService!: RealCrossMintService;
   private x402Service!: RealX402Service;
@@ -59,11 +57,11 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
     if (runtime) {
       const crossMintService = runtime.getService<RealCrossMintService>('real-crossmint');
       const x402Service = runtime.getService<RealX402Service>('real-x402');
-      
+
       if (!crossMintService) {
         throw new RealCrossMintError('Real CrossMint service not available. Ensure it is loaded.');
       }
-      
+
       if (!x402Service) {
         throw new X402Error('Real X.402 service not available. Ensure it is loaded.');
       }
@@ -124,8 +122,8 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
   async transfer(params: UniversalTransferParams): Promise<UniversalTransactionResult> {
     try {
       const wallets = await this.crossMintService.listWallets();
-      const wallet = wallets.find(w => this.getChainFromWalletType(w.type) === params.chain);
-      
+      const wallet = wallets.find((w) => this.getChainFromWalletType(w.type) === params.chain);
+
       if (!wallet) {
         throw new RealCrossMintError(`No wallet found for chain: ${params.chain}`);
       }
@@ -165,7 +163,7 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
         chain: params.chain,
       });
     }
-    
+
     throw new RealCrossMintError('Raw transaction sending requires to/value parameters');
   }
 
@@ -183,7 +181,7 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
       success: true,
       gasUsed: '21000',
       gasPrice: '0',
-      changes: []
+      changes: [],
       warnings: ['Simulation not available for CrossMint transactions'],
     };
   }
@@ -201,7 +199,7 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
   async getTransaction(hash: string, chain?: string): Promise<UniversalTransactionResult> {
     try {
       const transaction = await this.crossMintService.getTransaction(hash);
-      
+
       return {
         hash: transaction.hash || transaction.id,
         status: this.mapTransactionStatus(transaction.status),
@@ -219,7 +217,7 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
 
   // Multi-chain support
   async getSupportedChains(): Promise<ChainInfo[]> {
-    return this.chainSupport.map(chainId => ({
+    return this.chainSupport.map((chainId) => ({
       id: chainId,
       name: this.getChainName(chainId),
       nativeToken: {
@@ -227,10 +225,10 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
         name: this.getNativeName(chainId),
         decimals: chainId === 'solana' ? 9 : 18,
       },
-      rpcUrls: []
-      blockExplorerUrls: []
+      rpcUrls: [],
+      blockExplorerUrls: [],
       isTestnet: false,
-      bridgeSupport: []
+      bridgeSupport: [],
     }));
   }
 
@@ -284,7 +282,7 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
   async verifyPayment(paymentId: string): Promise<PaymentVerification> {
     try {
       const status = await this.x402Service.getPaymentStatus(paymentId);
-      
+
       return {
         valid: status.status === 'completed',
         paymentId: status.paymentId as UUID,
@@ -293,7 +291,9 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
         currency: status.currency,
         network: 'ethereum', // Default network since CoinbaseFacilitatorResponse doesn't include network
         confirmations: status.confirmations || 0,
-        settlementTime: status.settledAt ? new Date(status.settledAt).getTime() - new Date(status.createdAt).getTime() : undefined,
+        settlementTime: status.settledAt
+          ? new Date(status.settledAt).getTime() - new Date(status.createdAt).getTime()
+          : undefined,
         x402Compliant: true,
       };
     } catch (error) {
@@ -327,21 +327,24 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
   }
 
   async importWallet(params: WalletImportParams): Promise<WalletInstance> {
-    throw new RealCrossMintError('Wallet import not supported by CrossMint (MPC wallets are generated)');
+    throw new RealCrossMintError(
+      'Wallet import not supported by CrossMint (MPC wallets are generated)'
+    );
   }
 
   async getWallets(filter?: WalletFilter): Promise<WalletInstance[]> {
     try {
       const wallets = await this.crossMintService.listWallets();
-      
+
       return wallets
-        .filter(wallet => {
-          if (filter?.chain && this.getChainFromWalletType(wallet.type) !== filter.chain) return false;
+        .filter((wallet) => {
+          if (filter?.chain && this.getChainFromWalletType(wallet.type) !== filter.chain)
+            return false;
           if (filter?.isActive !== undefined && true !== filter.isActive) return false;
           if (filter?.type && this.mapWalletType(wallet.type) !== filter.type) return false;
           return true;
         })
-        .map(wallet => ({
+        .map((wallet) => ({
           id: `wallet-${wallet.address}` as UUID,
           address: wallet.address,
           type: this.mapWalletType(wallet.type),
@@ -417,25 +420,41 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
 
   private getNativeSymbol(chain: string): string {
     switch (chain) {
-      case 'ethereum': return 'ETH';
-      case 'polygon': return 'MATIC';
-      case 'arbitrum': case 'optimism': case 'base': return 'ETH';
-      case 'bsc': return 'BNB';
-      case 'solana': return 'SOL';
-      default: return 'ETH';
+      case 'ethereum':
+        return 'ETH';
+      case 'polygon':
+        return 'MATIC';
+      case 'arbitrum':
+      case 'optimism':
+      case 'base':
+        return 'ETH';
+      case 'bsc':
+        return 'BNB';
+      case 'solana':
+        return 'SOL';
+      default:
+        return 'ETH';
     }
   }
 
   private getNativeName(chain: string): string {
     switch (chain) {
-      case 'ethereum': return 'Ethereum';
-      case 'polygon': return 'Polygon';
-      case 'arbitrum': return 'Arbitrum';
-      case 'optimism': return 'Optimism';
-      case 'base': return 'Base';
-      case 'bsc': return 'BNB Smart Chain';
-      case 'solana': return 'Solana';
-      default: return 'Ethereum';
+      case 'ethereum':
+        return 'Ethereum';
+      case 'polygon':
+        return 'Polygon';
+      case 'arbitrum':
+        return 'Arbitrum';
+      case 'optimism':
+        return 'Optimism';
+      case 'base':
+        return 'Base';
+      case 'bsc':
+        return 'BNB Smart Chain';
+      case 'solana':
+        return 'Solana';
+      default:
+        return 'Ethereum';
     }
   }
 
@@ -446,9 +465,9 @@ export class HybridCrossMintUniversalWalletService extends Service implements IU
   // Service lifecycle
   static async start(runtime: IAgentRuntime): Promise<HybridCrossMintUniversalWalletService> {
     logger.info('Starting Hybrid CrossMint + X.402 Universal Wallet Service...');
-    
+
     const service = new HybridCrossMintUniversalWalletService(runtime);
-    
+
     logger.info('Hybrid CrossMint + X.402 Universal Wallet Service started successfully');
     return service;
   }

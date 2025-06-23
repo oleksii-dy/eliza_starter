@@ -122,7 +122,7 @@ export interface IDatabaseAdapter {
 
   getMemoryById(id: UUID): Promise<Memory | null>;
 
-  getMemoriesByIds(ids: UUID[] tableName?: string): Promise<Memory[]>;
+  getMemoriesByIds(ids: UUID[], tableName?: string): Promise<Memory[]>;
 
   getMemoriesByRoomIds(params: {
     tableName: string;
@@ -228,7 +228,7 @@ export interface IDatabaseAdapter {
 
   getParticipantsForRoom(roomId: UUID): Promise<UUID[]>;
 
-  addParticipantsRoom(entityIds: UUID[] roomId: UUID): Promise<boolean>;
+  addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean>;
 
   getParticipantUserState(roomId: UUID, entityId: UUID): Promise<'FOLLOWED' | 'MUTED' | null>;
 

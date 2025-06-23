@@ -64,13 +64,13 @@ export function EntityTab({ agentId }: { agentId: UUID }) {
   const [filterTrust, setFilterTrust] = useState<'all' | 'trusted' | 'suspicious'>('all');
 
   const {
-    data: entities = []
+    data: entities = [],
     isLoading: entitiesLoading,
     error: entitiesError,
   } = useEntities(agentId);
 
   const {
-    data: relationships = []
+    data: relationships = [],
     isLoading: relationshipsLoading,
     error: relationshipsError,
   } = useRelationships(agentId);

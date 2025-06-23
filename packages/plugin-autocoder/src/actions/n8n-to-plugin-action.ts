@@ -116,7 +116,7 @@ function generatePluginName(description: string): string {
 // Helper to wait for workflows to complete
 async function waitForWorkflows(
   service: N8nWorkflowService,
-  jobIds: string[]
+  jobIds: string[],
   timeout: number
 ): Promise<void> {
   const startTime = Date.now();
@@ -130,7 +130,7 @@ async function waitForWorkflows(
     if (allCompleted) {
       return;
     }
-
+    await new Promise(resolve => setTimeout(resolve, 1000));
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
@@ -186,7 +186,7 @@ export const createPluginAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('n8n-to-plugin');
@@ -266,7 +266,7 @@ export const checkPluginStatusAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('n8n-to-plugin');
@@ -358,7 +358,7 @@ export const createPluginWithWorkflowsAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const service = runtime.getService('n8n-to-plugin');

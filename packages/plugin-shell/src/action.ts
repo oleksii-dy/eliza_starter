@@ -119,7 +119,7 @@ async function saveExecutionRecord(
   messageContext: Memory, // To get roomId, worldId
   thought: string,
   text: string,
-  actions?: string[]
+  actions?: string[],
   attachments?: Media[] // Added attachments parameter
 ): Promise<void> {
   const memory: Memory = {

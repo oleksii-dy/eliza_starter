@@ -1,10 +1,11 @@
 import { getElizaCharacter } from '@/src/characters/eliza';
 import { AgentServer, jsonToCharacter, loadCharacterTryPath } from '@elizaos/server';
 import { configureDatabaseSettings, findNextAvailablePort, resolvePgliteDir } from '@/src/utils';
-import { logger, type Character, type ProjectAgent, getTempLogPath } from '@elizaos/core';
+import { logger, type Character, type ProjectAgent } from '@elizaos/core';
 import { startAgent, stopAgent } from './agent-start';
 import { gracefulShutdownHandler } from '@/src/utils/graceful-shutdown';
 import { LogArchiver } from '@/src/utils/log-archiver';
+import { getTempLogPath } from '../../../utils/log-archiver';
 
 /**
  * Server start options

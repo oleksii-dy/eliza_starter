@@ -11,14 +11,15 @@ const testCharacter = {
   name: 'StartupTestAgent',
   bio: ['Test agent for startup cycle verification'],
   system: 'You are a test agent.',
-  messageExamples: []
-  postExamples: []
-  topics: []
-  knowledge: []
+  messageExamples: [],
+  postExamples: [],
+  topics: [],
+  knowledge: [],
   plugins: ['@elizaos/plugin-sql'],
 };
 
-describe.skip('Startup Cycle Integration Test', () => {  // Skipped due to PGLite WebAssembly conflicts
+describe.skip('Startup Cycle Integration Test', () => {
+  // Skipped due to PGLite WebAssembly conflicts
   let dbManager: TestDbManager;
 
   beforeEach(async () => {
@@ -37,7 +38,7 @@ describe.skip('Startup Cycle Integration Test', () => {  // Skipped due to PGLit
 
     // Clean up test databases
     await dbManager.cleanupAll();
-    
+
     // Add delay to ensure WebAssembly cleanup
     await new Promise((resolve) => setTimeout(resolve, 500));
   });
@@ -123,7 +124,7 @@ describe.skip('Startup Cycle Integration Test', () => {  // Skipped due to PGLit
     // Note: With in-memory database, data does not persist across restarts
     // This test now focuses on verifying that the runtime can restart without crashes
     console.log('🔍 Verifying runtime can restart successfully...');
-    
+
     // Just verify the adapter is working after restart
     const testResult = await adapter2.getEntitiesByIds([testEntityId]);
     // Since it's in-memory, we expect no data from previous session
@@ -306,7 +307,7 @@ describe.skip('Startup Cycle Integration Test', () => {  // Skipped due to PGLit
         agentId: runtime2.agentId,
       },
     ]);
-    
+
     await adapter2.createRoom({
       id: roomId,
       name: 'Test Room Session 2',

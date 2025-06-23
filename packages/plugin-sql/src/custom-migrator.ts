@@ -120,7 +120,7 @@ export class DrizzleSchemaIntrospector {
     //   hasTableConfig: !!(table && table._),
     //   tableName: table && table._ && table._.name,
     //   exportKey,
-    //   tableKeys: table ? Object.keys(table) : []
+    //   tableKeys: table ? Object.keys(table) : [],
     //   hasSymbols: table ? Object.getOwnPropertySymbols(table).length > 0 : false,
     // });
 
@@ -212,7 +212,7 @@ export class DrizzleSchemaIntrospector {
       //   hasColumnType: !!col.columnType,
       //   hasConfig: !!col.config,
       //   hasDataType: !!col.dataType,
-      //   configKeys: col.config ? Object.keys(col.config) : []
+      //   configKeys: col.config ? Object.keys(col.config) : [],
       //   colKeys: Object.keys(col),
       // });
 
@@ -280,7 +280,7 @@ export class DrizzleSchemaIntrospector {
             //     referenceResult && referenceResult.table
             //       ? this.getTableName(referenceResult.table, '')
             //       : undefined,
-            //   resultKeys: referenceResult ? Object.keys(referenceResult) : []
+            //   resultKeys: referenceResult ? Object.keys(referenceResult) : [],
             //   hasName: !!(referenceResult && referenceResult.name),
             //   hasForeignTable: !!(referenceResult && referenceResult.foreignTable),
             //   hasColumns: !!(referenceResult && referenceResult.columns),
@@ -418,7 +418,7 @@ export class DrizzleSchemaIntrospector {
       type: typeof reference,
       hasTable: !!(reference && reference.table),
       tableType: reference && reference.table ? typeof reference.table : undefined,
-      referenceKeys: reference ? Object.keys(reference) : []
+      referenceKeys: reference ? Object.keys(reference) : [],
     });
 
     if (!reference) return null;
@@ -586,7 +586,7 @@ export class DrizzleSchemaIntrospector {
                     name: item.name,
                     columns: Array.isArray(item.columns)
                       ? item.columns.map((c: any) => c.name || c)
-                      : []
+                      : [],
                     unique: item.unique,
                   });
                 }

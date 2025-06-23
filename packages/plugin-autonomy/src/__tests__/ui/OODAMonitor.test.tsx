@@ -256,7 +256,7 @@ describe('OODAMonitor Component', () => {
       phase: OODAPhase.ORIENTING,
       startTime: Date.now() - 10000,
       endTime: null,
-      observations: []
+      observations: [],
       orientation: {
         currentGoals: []
         strategies: []
@@ -383,7 +383,7 @@ describe('OODAMonitor Component', () => {
       phase: OODAPhase.ORIENTING,
       startTime: Date.now() - 10000,
       endTime: null,
-      observations: []
+      observations: [],
       orientation: {
         currentGoals: [
           {
@@ -405,7 +405,7 @@ describe('OODAMonitor Component', () => {
             createdAt: Date.now() - 5000,
           },
         ],
-        strategies: []
+        strategies: [],
         worldModel: {},
       },
       decisions: []
@@ -474,13 +474,13 @@ describe('OODAMonitor Component', () => {
       phase: OODAPhase.ACTING,
       startTime: Date.now() - 10000,
       endTime: null,
-      observations: []
+      observations: [],
       orientation: {
         currentGoals: []
         strategies: []
         worldModel: {},
       },
-      decisions: []
+      decisions: [],
       actions: [
         {
           id: 'action-1',
@@ -515,7 +515,7 @@ describe('OODAMonitor Component', () => {
       phase: OODAPhase.ACTING,
       startTime: Date.now() - 10000,
       endTime: null,
-      observations: []
+      observations: [],
       orientation: {
         currentGoals: []
         strategies: []

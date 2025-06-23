@@ -373,7 +373,7 @@ describeWithToken('E2E: GitHub Plugin with Real GitHub API', () => {
         repository: null,
         issues: { open: 0, closed: 0 },
         pullRequests: { open: 0, merged: 0 },
-        activity: []
+        activity: [],
       };
 
       // Get repository details

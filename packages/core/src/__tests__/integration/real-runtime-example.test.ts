@@ -40,13 +40,13 @@ describe('Real Runtime Integration Testing Examples', () => {
           name: 'TestAgent',
           system: 'You are a helpful test agent.',
           bio: ['I help with testing ElizaOS functionality.'],
-          messageExamples: []
-          postExamples: []
+          messageExamples: [],
+          postExamples: [],
           topics: ['testing', 'validation'],
-          knowledge: []
-          plugins: []
+          knowledge: [],
+          plugins: [],
         },
-        plugins: []
+        plugins: [],
         apiKeys: { TEST_API_KEY: 'test-key' },
       });
 
@@ -90,13 +90,13 @@ describe('Real Runtime Integration Testing Examples', () => {
           name: 'HealthTestAgent',
           system: 'Health check agent',
           bio: ['Testing agent health'],
-          messageExamples: []
-          postExamples: []
-          topics: []
-          knowledge: []
-          plugins: []
+          messageExamples: [],
+          postExamples: [],
+          topics: [],
+          knowledge: [],
+          plugins: [],
         },
-        plugins: []
+        plugins: [],
         apiKeys: { API_KEY: 'test' },
       });
 
@@ -123,12 +123,12 @@ describe('Real Runtime Integration Testing Examples', () => {
               { name: 'SmartAgent', content: { text: 'Hello! How can I help?' } },
             ],
           ],
-          postExamples: []
+          postExamples: [],
           topics: ['general', 'assistance'],
-          knowledge: []
-          plugins: []
+          knowledge: [],
+          plugins: [],
         },
-        plugins: []
+        plugins: [],
         apiKeys: { OPENAI_API_KEY: 'test-key' },
       });
 
@@ -150,7 +150,7 @@ describe('Real Runtime Integration Testing Examples', () => {
         {
           roomId: 'test-room-2',
           entityId: 'test-user-1',
-          expectedActions: [] // Would specify expected actions if testing action execution
+          expectedActions: [], // Would specify expected actions if testing action execution
         }
       );
 
@@ -227,11 +227,11 @@ describe('Real Runtime Integration Testing Examples', () => {
             name: 'PlanningAgent',
             system: 'You help users plan their day effectively.',
             bio: ['I am a planning assistant that helps organize tasks and schedules.'],
-            messageExamples: []
-            postExamples: []
+            messageExamples: [],
+            postExamples: [],
             topics: ['planning', 'scheduling', 'productivity'],
-            knowledge: []
-            plugins: []
+            knowledge: [],
+            plugins: [],
           },
         }
       );
@@ -289,7 +289,7 @@ describe('Real Runtime Integration Testing Examples', () => {
             }),
           },
         ],
-        evaluators: []
+        evaluators: [],
       };
 
       const result = await runIntegrationTest(
@@ -358,13 +358,13 @@ describe('Real Runtime Integration Testing Examples', () => {
             name: 'ErrorTestAgent',
             system: 'Error testing agent',
             bio: ['Testing error conditions'],
-            messageExamples: []
-            postExamples: []
-            topics: []
-            knowledge: []
-            plugins: []
+            messageExamples: [],
+            postExamples: [],
+            topics: [],
+            knowledge: [],
+            plugins: [],
           },
-          plugins: []
+          plugins: [],
           apiKeys: {},
         });
 
@@ -460,13 +460,13 @@ describe('Real Runtime Integration Testing Examples', () => {
             name: `PerfTestAgent${i}`,
             system: 'Performance testing agent',
             bio: [`Performance test agent ${i}`],
-            messageExamples: []
-            postExamples: []
-            topics: []
-            knowledge: []
-            plugins: []
+            messageExamples: [],
+            postExamples: [],
+            topics: [],
+            knowledge: [],
+            plugins: [],
           },
-          plugins: []
+          plugins: [],
           apiKeys: { API_KEY: 'test' },
         });
 

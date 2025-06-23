@@ -22,7 +22,7 @@ const HELLO_WORLD_TABLES: TableSchema[] = [
         created_at TIMESTAMP DEFAULT NOW() NOT NULL
       )
     `,
-    dependencies: []
+    dependencies: [],
   },
   {
     name: 'greetings',
@@ -38,7 +38,7 @@ const HELLO_WORLD_TABLES: TableSchema[] = [
         updated_at TIMESTAMP DEFAULT NOW() NOT NULL
       )
     `,
-    dependencies: []
+    dependencies: [],
   },
 ];
 

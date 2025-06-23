@@ -109,8 +109,8 @@ describe('Action Chaining: GitHub Plugin', () => {
         html_url: 'https://github.com/user/awesome-project/issues/3',
         created_at: new Date().toISOString(),
         user: { login: 'test-user' },
-        labels: []
-        assignees: []
+        labels: [],
+        assignees: [],
         comments: 0,
         body: 'Created after checking rate limit and searching',
       }),
@@ -399,8 +399,8 @@ describe('Action Chaining: GitHub Plugin', () => {
       const searchAction = actions.find((a) => a.name === 'SEARCH_GITHUB_REPOSITORIES')!;
 
       let accumulatedState: any = {
-        allRepositories: []
-        searchQueries: []
+        allRepositories: [],
+        searchQueries: [],
       };
 
       // Perform multiple searches

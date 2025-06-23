@@ -38,11 +38,11 @@ describe('Character Loader', () => {
   const validCharacter: Character = {
     name: 'Test Character',
     bio: 'A test character for validation',
-    messageExamples: []
-    postExamples: []
+    messageExamples: [],
+    postExamples: [],
     topics: ['AI', 'Testing'],
-    knowledge: []
-    plugins: []
+    knowledge: [],
+    plugins: [],
     settings: {},
     style: {},
   };

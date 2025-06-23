@@ -38,7 +38,7 @@ const calculateEntityMetrics = (entity: Entity, relationships: Relationship[]) =
 // Get relationship details between entities
 const getRelationshipDetails = (
   entityId: UUID,
-  relationships: Relationship[]
+  relationships: Relationship[],
   entities: Entity[]
 ) => {
   const directRelationships = relationships.filter(

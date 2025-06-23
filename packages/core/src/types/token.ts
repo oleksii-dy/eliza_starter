@@ -88,7 +88,7 @@ export abstract class ITokenDataService extends Service {
    * @param chain The blockchain the tokens reside on.
    * @returns A Promise resolving to an array of TokenData. May not include all requested if some are not found.
    */
-  abstract getTokensByAddresses(addresses: string[] chain: string): Promise<TokenData[]>;
+  abstract getTokensByAddresses(addresses: string[], chain: string): Promise<TokenData[]>;
 
   // Future potential methods:
   // getHistoricalPriceData(address: string, chain: string, timeFrame: string): Promise<any[]>;

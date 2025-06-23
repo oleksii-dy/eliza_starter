@@ -91,10 +91,10 @@ export class AgentEnvironment extends System {
       const geometry = new THREE.SphereGeometry(1000, 60, 40);
       const material = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
       this.sky = new THREE.Mesh(geometry, material);
-      this.sky.geometry.computeBoundsTree();
-      this.sky.material.fog = false;
-      this.sky.material.toneMapped = false;
-      this.sky.material.needsUpdate = true;
+      // Note: computeBoundsTree is not available on standard BufferGeometry
+      (this.sky.material as THREE.MeshBasicMaterial).fog = false;
+      (this.sky.material as THREE.MeshBasicMaterial).toneMapped = false;
+      (this.sky.material as THREE.MeshBasicMaterial).needsUpdate = true;
       this.sky.matrixAutoUpdate = false;
       this.sky.matrixWorldAutoUpdate = false;
       this.sky.visible = false;
@@ -119,7 +119,7 @@ export class AgentEnvironment extends System {
       bgUUID = await puppeteerManager.registerTexture(bgUrl, 'map');
     }
     if (bgUUID) {
-      this.sky.material.userData.materialId = bgUUID;
+      (this.sky.material as THREE.MeshBasicMaterial).userData.materialId = bgUUID;
       this.sky.visible = true;
     } else {
       this.sky.visible = false;

@@ -23,7 +23,7 @@ export const worldTestEntity: Entity = {
   id: worldTestEntityId,
   names: ['World Test Entity'],
   agentId: worldTestAgentId,
-  components: []
+  components: [],
   metadata: {
     type: 'user',
   },

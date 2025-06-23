@@ -32,7 +32,7 @@ describe('Agent Integration Tests', () => {
       name: 'Test Agent',
       bio: 'A test agent for running tests.',
       system: 'You are a helpful assistant.',
-      plugins: []
+      plugins: [],
       settings: { testSetting: 'test value' },
       createdAt: new Date().getTime(),
       updatedAt: new Date().getTime(),
@@ -62,11 +62,11 @@ describe('Agent Integration Tests', () => {
           username: 'integration-create',
           system: 'System message',
           bio: ['Bio line 1'],
-          messageExamples: []
-          postExamples: []
-          topics: []
-          knowledge: []
-          plugins: []
+          messageExamples: [],
+          postExamples: [],
+          topics: [],
+          knowledge: [],
+          plugins: [],
           settings: {},
           style: {},
         };
@@ -90,11 +90,11 @@ describe('Agent Integration Tests', () => {
           username: 'duplicate-name-1',
           system: 'System message',
           bio: ['Bio line 1'],
-          messageExamples: []
-          postExamples: []
-          topics: []
-          knowledge: []
-          plugins: []
+          messageExamples: [],
+          postExamples: [],
+          topics: [],
+          knowledge: [],
+          plugins: [],
           settings: {},
           style: {},
         };
@@ -110,11 +110,11 @@ describe('Agent Integration Tests', () => {
           username: 'duplicate-name-2',
           system: 'System message',
           bio: ['Bio line 1'],
-          messageExamples: []
-          postExamples: []
-          topics: []
-          knowledge: []
-          plugins: []
+          messageExamples: [],
+          postExamples: [],
+          topics: [],
+          knowledge: [],
+          plugins: [],
           settings: {},
           style: {},
         };

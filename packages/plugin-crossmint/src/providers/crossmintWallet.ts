@@ -13,7 +13,7 @@ import { CrossMintUniversalWalletService } from '../services/CrossMintUniversalW
  */
 export const crossmintWalletProvider: Provider = {
   name: 'CROSSMINT_WALLET',
-  description: 'Provides CrossMint wallet information and capabilities',
+  description: 'Provides CrossMint MPC wallet status, supported blockchain networks, and enterprise infrastructure capabilities when agent needs to manage cross-chain transactions or X.402 payments',
   position: 5,
 
   get: async (runtime: IAgentRuntime, message: Memory, state: State) => {

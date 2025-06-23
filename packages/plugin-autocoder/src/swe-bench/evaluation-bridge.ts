@@ -43,7 +43,7 @@ export class EvaluationBridge {
   /**
    * Evaluate patches using real Multi-SWE-bench evaluation
    */
-  async evaluate(patches: PatchSubmission[] config: EvaluationConfig): Promise<EvaluationResults> {
+  async evaluate(patches: PatchSubmission[], config: EvaluationConfig): Promise<EvaluationResults> {
     elizaLogger.info(`[EVAL-BRIDGE] Evaluating ${patches.length} patches`);
 
     // Check if we should use mock evaluation (only for explicit testing)
@@ -281,7 +281,7 @@ export class EvaluationBridge {
    * Format raw results into final evaluation results
    */
   private formatResults(
-    rawResults: RawEvaluationResults[]
+    rawResults: RawEvaluationResults[],
     patches: PatchSubmission[]
   ): EvaluationResults {
     const instanceResults: InstanceResult[] = rawResults.map((raw) => ({

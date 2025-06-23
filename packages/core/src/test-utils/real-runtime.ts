@@ -208,7 +208,7 @@ export class RuntimeTestHarness {
       const messageId = await runtime.createMemory(memory, 'messages');
 
       // Process message with real runtime - this executes actual logic
-      const responses = await runtime.processActions(memory, [] undefined, undefined);
+      const responses = await runtime.processActions(memory, [], undefined, undefined);
 
       const responseTime = Date.now() - startTime;
 
@@ -216,8 +216,8 @@ export class RuntimeTestHarness {
       const result: TestResult = {
         scenarioName: `Process: "${messageText}"`,
         passed: true,
-        errors: []
-        executedActions: []
+        errors: [],
+        executedActions: [],
         createdMemories: Array.isArray(responses) ? responses.length : 0,
         responseTime,
       };
@@ -251,7 +251,7 @@ export class RuntimeTestHarness {
         scenarioName: `Process: "${messageText}"`,
         passed: false,
         errors: [`Runtime error: ${error instanceof Error ? error.message : String(error)}`],
-        executedActions: []
+        executedActions: [],
         createdMemories: 0,
         responseTime: Date.now() - startTime,
       };
@@ -415,16 +415,16 @@ export async function createTestRuntime(config: Partial<RealRuntimeConfig> = {})
     name: 'TestAgent',
     system: 'You are a helpful test agent.',
     bio: ['I am a test agent used for integration testing.'],
-    messageExamples: []
-    postExamples: []
+    messageExamples: [],
+    postExamples: [],
     topics: ['testing'],
-    knowledge: []
-    plugins: []
+    knowledge: [],
+    plugins: [],
   };
 
   const runtime = await harness.createTestRuntime({
     character: defaultCharacter,
-    plugins: []
+    plugins: [],
     apiKeys: { OPENAI_API_KEY: 'test-key' },
     ...config,
   });
@@ -452,8 +452,8 @@ export async function runIntegrationTest(
     return {
       scenarioName: testName,
       passed: true,
-      errors: []
-      executedActions: []
+      errors: [],
+      executedActions: [],
       createdMemories: 0,
       responseTime: Date.now() - startTime,
     };
@@ -462,7 +462,7 @@ export async function runIntegrationTest(
       scenarioName: testName,
       passed: false,
       errors: [error instanceof Error ? error.message : String(error)],
-      executedActions: []
+      executedActions: [],
       createdMemories: 0,
       responseTime: Date.now() - startTime,
     };

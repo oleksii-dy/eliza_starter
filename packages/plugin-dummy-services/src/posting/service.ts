@@ -46,7 +46,7 @@ export class DummyPostService extends Service implements IPostService {
       roomId: asUUID(uuid()), // Each post is like its own "room"
       createdAt: Date.now(),
       likes: 0,
-      replies: []
+      replies: [],
       reposts: 0,
     };
     this.posts.set(newPost.id, newPost);
@@ -66,7 +66,7 @@ export class DummyPostService extends Service implements IPostService {
       roomId: parentPost.roomId,
       createdAt: Date.now(),
       likes: 0,
-      replies: []
+      replies: [],
       reposts: 0,
     };
     parentPost.replies.push(replyPost);

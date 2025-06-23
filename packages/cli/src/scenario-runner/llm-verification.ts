@@ -28,7 +28,7 @@ export class LLMVerificationEngine {
           passed: false,
           score: 0,
           reason: `Verification failed due to error: ${error instanceof Error ? error.message : String(error)}`,
-          evidence: []
+          evidence: [],
         });
       }
     }
@@ -196,7 +196,7 @@ If any field is missing, use "Not provided" for text fields and 0.5 for confiden
         passed: false,
         score: 0,
         reason: `Failed to parse verification response: ${error instanceof Error ? error.message : String(error)}`,
-        evidence: []
+        evidence: [],
       };
     }
   }

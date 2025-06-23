@@ -66,10 +66,10 @@ export const auton8nIntegrationTests: TestCase[] = [
             {
               name: 'STEP_1_ACTION',
               description: 'Execute step 1',
-              similes: []
+              similes: [],
               validate: async () => true,
               handler: async () => ({ text: 'Step 1 completed' }),
-              examples: []
+              examples: [],
             },
           ],
         },
@@ -80,10 +80,10 @@ export const auton8nIntegrationTests: TestCase[] = [
             {
               name: 'STEP_2_ACTION',
               description: 'Execute step 2',
-              similes: []
+              similes: [],
               validate: async () => true,
               handler: async () => ({ text: 'Step 2 completed' }),
-              examples: []
+              examples: [],
             },
           ],
         },
@@ -155,13 +155,13 @@ export const auton8nIntegrationTests: TestCase[] = [
           {
             name: 'DEPENDENT_ACTION',
             description: 'Uses base data',
-            similes: []
+            similes: [],
             validate: async () => true,
             handler: async (runtime: IAgentRuntime) => {
               // Would access BASE_DATA_PROVIDER in real scenario
               return { text: 'Processed base data' };
             },
-            examples: []
+            examples: [],
           },
         ],
       };
@@ -203,7 +203,7 @@ export const auton8nIntegrationTests: TestCase[] = [
           {
             name: 'FAULTY_ACTION',
             description: 'Might fail',
-            similes: []
+            similes: [],
             validate: async () => true,
             handler: async () => {
               if (Math.random() > 0.5) {
@@ -211,7 +211,7 @@ export const auton8nIntegrationTests: TestCase[] = [
               }
               return { text: 'Success' };
             },
-            examples: []
+            examples: [],
           },
         ],
       };
@@ -306,9 +306,9 @@ export const auton8nIntegrationTests: TestCase[] = [
         // Search for alternatives
         for (const slowPlugin of slowPlugins) {
           const alternatives = await pluginManager.recommendPlugins({
-            recentActions: []
+            recentActions: [],
             currentCapabilities: [slowPlugin.pluginName],
-            failedActions: []
+            failedActions: [],
             userIntent: `faster alternative to ${slowPlugin.pluginName}`,
           });
 

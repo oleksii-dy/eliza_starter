@@ -72,7 +72,7 @@ export interface IAgentRuntime extends IDatabaseAdapter {
 
   processActions(
     message: Memory,
-    responses: Memory[]
+    responses: Memory[],
     state?: State,
     callback?: HandlerCallback
   ): Promise<void>;
@@ -91,7 +91,7 @@ export interface IAgentRuntime extends IDatabaseAdapter {
 
   registerEvaluator(evaluator: Evaluator): void;
 
-  ensureConnections(entities: Entity[] rooms: Room[] source: string, world: World): Promise<void>;
+  ensureConnections(entities: Entity[], rooms: Room[], source: string, world: World): Promise<void>;
   ensureConnection({
     entityId,
     roomId,
@@ -128,7 +128,7 @@ export interface IAgentRuntime extends IDatabaseAdapter {
 
   composeState(
     message: Memory,
-    includeList?: string[]
+    includeList?: string[],
     onlyInclude?: boolean,
     skipCache?: boolean
   ): Promise<State>;
@@ -153,7 +153,7 @@ export interface IAgentRuntime extends IDatabaseAdapter {
 
   getEvent(event: string): ((params: any) => Promise<void>)[] | undefined;
 
-  emitEvent(event: string | string[] params: any): Promise<void>;
+  emitEvent(event: string | string[], params: any): Promise<void>;
   // In-memory task definition methods
   registerTaskWorker(taskHandler: TaskWorker): void;
   getTaskWorker(name: string): TaskWorker | undefined;

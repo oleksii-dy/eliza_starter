@@ -49,7 +49,7 @@ export function useSocketChat({
       text: string,
       serverId: UUID,
       source: string,
-      attachments?: any[]
+      attachments?: any[],
       tempMessageId?: string,
       metadata?: Record<string, any>,
       overrideChannelId?: UUID

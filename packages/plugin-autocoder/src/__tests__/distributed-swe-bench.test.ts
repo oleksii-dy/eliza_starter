@@ -27,7 +27,7 @@ describe('Distributed SWE-bench', () => {
         knowledge: [],
         messageExamples: [],
         postExamples: [],
-        topics: [],
+        topics: [],,
         plugins: [],
       },
       getSetting: vi.fn(),

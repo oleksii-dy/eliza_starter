@@ -13,8 +13,8 @@ import {
     waitForTransactionReceipt
 } from 'viem';
 import { mainnet, polygon, arbitrum, optimism, base } from 'viem/chains';
-import { aaveV3PoolABI } from '../abi/aaveV3Pool';
-import { getChainById } from '../core/chains/config';
+// ABI import removed - using inline AAVE_POOL_ABI instead
+import { getChainConfig } from '../core/chains/config';
 import { elizaLogger as logger } from '@elizaos/core';
 
 interface TransactionResult {
@@ -142,7 +142,7 @@ const AAVE_POOL_ABI = [
             { name: 'referralCode', type: 'uint16' }
         ],
         name: 'supply',
-        outputs: []
+        outputs: [],
         stateMutability: 'nonpayable',
         type: 'function'
     },
@@ -166,7 +166,7 @@ const AAVE_POOL_ABI = [
             { name: 'onBehalfOf', type: 'address' }
         ],
         name: 'borrow',
-        outputs: []
+        outputs: [],
         stateMutability: 'nonpayable',
         type: 'function'
     },
@@ -228,7 +228,7 @@ const COMPOUND_V3_ABI = [
             { name: 'amount', type: 'uint256' }
         ],
         name: 'supply',
-        outputs: []
+        outputs: [],
         stateMutability: 'nonpayable',
         type: 'function'
     },
@@ -238,7 +238,7 @@ const COMPOUND_V3_ABI = [
             { name: 'amount', type: 'uint256' }
         ],
         name: 'withdraw',
-        outputs: []
+        outputs: [],
         stateMutability: 'nonpayable',
         type: 'function'
     },
@@ -694,7 +694,7 @@ export class DeFiService {
         // Create actual transaction
         const walletClient = createWalletClient({
             account: params.walletAddress,
-            chain: getChainById(params.chainId),
+            chain: getChainConfig(params.chainId).chain,
             transport: http()
         });
 
@@ -726,7 +726,7 @@ export class DeFiService {
                 // Supply to Aave
                 const aaveContract = getContract({
                     address: protocol.address,
-                    abi: aaveV3PoolABI,
+                    abi: AAVE_POOL_ABI,
                     client: walletClient
                 });
 
@@ -740,7 +740,7 @@ export class DeFiService {
                 // Borrow from Aave
                 const aaveContract = getContract({
                     address: protocol.address,
-                    abi: aaveV3PoolABI,
+                    abi: AAVE_POOL_ABI,
                     client: walletClient
                 });
 
@@ -867,7 +867,7 @@ export class DeFiService {
             const symbol = await client.readContract({
                 address,
                 abi: [{
-                    inputs: []
+                    inputs: [],
                     name: 'symbol',
                     outputs: [{ type: 'string' }],
                     stateMutability: 'view',

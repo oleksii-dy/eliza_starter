@@ -49,24 +49,26 @@ Format as JSON:
     try {
       const response = await this.runtime.useModel(ModelType.TEXT_LARGE, {
         messages: [
-          { 
-            role: 'system', 
-            content: 'You are a research query analyst. Extract query intent and relevance criteria precisely.' 
+          {
+            role: 'system',
+            content:
+              'You are a research query analyst. Extract query intent and relevance criteria precisely.',
           },
-          { role: 'user', content: prompt }
+          { role: 'user', content: prompt },
         ],
         temperature: 0.3,
       });
 
-      const responseContent = typeof response === 'string' ? response : (response as any).content || '';
+      const responseContent =
+        typeof response === 'string' ? response : (response as any).content || '';
       const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
-      
+
       if (jsonMatch) {
         const analysis = JSON.parse(jsonMatch[0]);
         elizaLogger.info(`[RelevanceAnalyzer] Query analysis complete:`, {
           intent: analysis.queryIntent,
           keyTopicsCount: analysis.keyTopics?.length || 0,
-          requiredElementsCount: analysis.requiredElements?.length || 0
+          requiredElementsCount: analysis.requiredElements?.length || 0,
         });
         return analysis;
       }
@@ -78,8 +80,8 @@ Format as JSON:
     return {
       queryIntent: query,
       keyTopics: this.extractKeywordsFromQuery(query),
-      requiredElements: []
-      exclusionCriteria: []
+      requiredElements: [],
+      exclusionCriteria: [],
     };
   }
 
@@ -87,7 +89,7 @@ Format as JSON:
    * Score search result relevance before content extraction
    */
   async scoreSearchResultRelevance(
-    result: SearchResult, 
+    result: SearchResult,
     queryAnalysis: RelevanceAnalysis
   ): Promise<RelevanceScore> {
     elizaLogger.debug(`[RelevanceAnalyzer] Scoring search result: ${result.title}`);
@@ -122,30 +124,32 @@ Format as JSON:
     try {
       const response = await this.runtime.useModel(ModelType.TEXT_LARGE, {
         messages: [
-          { 
-            role: 'system', 
-            content: 'You are a search result relevance scorer. Be critical - only high relevance should get high scores.' 
+          {
+            role: 'system',
+            content:
+              'You are a search result relevance scorer. Be critical - only high relevance should get high scores.',
           },
-          { role: 'user', content: prompt }
+          { role: 'user', content: prompt },
         ],
         temperature: 0.2,
       });
 
-      const responseContent = typeof response === 'string' ? response : (response as any).content || '';
+      const responseContent =
+        typeof response === 'string' ? response : (response as any).content || '';
       const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
-      
+
       if (jsonMatch) {
         const score = JSON.parse(jsonMatch[0]);
         const finalScore = (score.queryAlignment + score.topicRelevance + score.specificity) / 3;
-        
+
         elizaLogger.debug(`[RelevanceAnalyzer] Search result scored:`, {
           url: result.url,
           score: finalScore,
           breakdown: {
             queryAlignment: score.queryAlignment,
             topicRelevance: score.topicRelevance,
-            specificity: score.specificity
-          }
+            specificity: score.specificity,
+          },
         });
 
         return {
@@ -153,7 +157,7 @@ Format as JSON:
           reasoning: score.reasoning,
           queryAlignment: score.queryAlignment,
           topicRelevance: score.topicRelevance,
-          specificity: score.specificity
+          specificity: score.specificity,
         };
       }
     } catch (error) {
@@ -170,7 +174,7 @@ Format as JSON:
       reasoning: `Fallback keyword scoring: title=${titleScore.toFixed(2)}, snippet=${snippetScore.toFixed(2)}`,
       queryAlignment: fallbackScore,
       topicRelevance: fallbackScore,
-      specificity: 0.5
+      specificity: 0.5,
     };
   }
 
@@ -215,26 +219,28 @@ Format as JSON:
     try {
       const response = await this.runtime.useModel(ModelType.TEXT_LARGE, {
         messages: [
-          { 
-            role: 'system', 
-            content: 'You are a research finding relevance judge. Be strict - only findings that directly address the query should score high.' 
+          {
+            role: 'system',
+            content:
+              'You are a research finding relevance judge. Be strict - only findings that directly address the query should score high.',
           },
-          { role: 'user', content: prompt }
+          { role: 'user', content: prompt },
         ],
         temperature: 0.2,
       });
 
-      const responseContent = typeof response === 'string' ? response : (response as any).content || '';
+      const responseContent =
+        typeof response === 'string' ? response : (response as any).content || '';
       const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
-      
+
       if (jsonMatch) {
         const score = JSON.parse(jsonMatch[0]);
         const finalScore = (score.queryAlignment + score.topicRelevance + score.specificity) / 3;
-        
+
         elizaLogger.debug(`[RelevanceAnalyzer] Finding scored:`, {
           score: finalScore,
           category: finding.category,
-          sourceUrl: finding.source.url
+          sourceUrl: finding.source.url,
         });
 
         return {
@@ -242,7 +248,7 @@ Format as JSON:
           reasoning: score.reasoning,
           queryAlignment: score.queryAlignment,
           topicRelevance: score.topicRelevance,
-          specificity: score.specificity
+          specificity: score.specificity,
         };
       }
     } catch (error) {
@@ -256,7 +262,7 @@ Format as JSON:
       reasoning: `Fallback keyword scoring: ${keywordScore.toFixed(2)}`,
       queryAlignment: keywordScore,
       topicRelevance: keywordScore,
-      specificity: 0.5
+      specificity: 0.5,
     };
   }
 
@@ -264,14 +270,16 @@ Format as JSON:
    * Verify that extracted findings actually answer the research query
    */
   async verifyQueryAnswering(
-    findings: ResearchFinding[]
+    findings: ResearchFinding[],
     originalQuery: string
   ): Promise<{
     coverage: number;
     gaps: string[];
     recommendations: string[];
   }> {
-    elizaLogger.info(`[RelevanceAnalyzer] Verifying query answering for ${findings.length} findings`);
+    elizaLogger.info(
+      `[RelevanceAnalyzer] Verifying query answering for ${findings.length} findings`
+    );
 
     const findingSummaries = findings
       .slice(0, 20) // Limit for prompt size
@@ -300,24 +308,26 @@ Format as JSON:
     try {
       const response = await this.runtime.useModel(ModelType.TEXT_LARGE, {
         messages: [
-          { 
-            role: 'system', 
-            content: 'You are a research completeness assessor. Evaluate if findings actually answer the research question.' 
+          {
+            role: 'system',
+            content:
+              'You are a research completeness assessor. Evaluate if findings actually answer the research question.',
           },
-          { role: 'user', content: prompt }
+          { role: 'user', content: prompt },
         ],
         temperature: 0.3,
       });
 
-      const responseContent = typeof response === 'string' ? response : (response as any).content || '';
+      const responseContent =
+        typeof response === 'string' ? response : (response as any).content || '';
       const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
-      
+
       if (jsonMatch) {
         const assessment = JSON.parse(jsonMatch[0]);
         elizaLogger.info(`[RelevanceAnalyzer] Query answering assessment:`, {
           coverage: assessment.coverage,
           gapsCount: assessment.gaps?.length || 0,
-          recommendationsCount: assessment.recommendations?.length || 0
+          recommendationsCount: assessment.recommendations?.length || 0,
         });
         return assessment;
       }
@@ -328,26 +338,46 @@ Format as JSON:
     return {
       coverage: findings.length > 0 ? 0.5 : 0,
       gaps: ['Unable to assess coverage'],
-      recommendations: ['Manual review recommended']
+      recommendations: ['Manual review recommended'],
     };
   }
 
   private extractKeywordsFromQuery(query: string): string[] {
     // Simple keyword extraction as fallback
-    const words = query.toLowerCase()
+    const words = query
+      .toLowerCase()
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
-      .filter(word => word.length > 3)
-      .filter(word => !['what', 'how', 'why', 'when', 'where', 'which', 'that', 'this', 'with', 'from', 'they', 'have', 'been', 'will', 'are'].includes(word));
-    
+      .filter((word) => word.length > 3)
+      .filter(
+        (word) =>
+          ![
+            'what',
+            'how',
+            'why',
+            'when',
+            'where',
+            'which',
+            'that',
+            'this',
+            'with',
+            'from',
+            'they',
+            'have',
+            'been',
+            'will',
+            'are',
+          ].includes(word)
+      );
+
     return words.slice(0, 5);
   }
 
   private calculateKeywordScore(text: string, keywords: string[]): number {
     if (!keywords.length) return 0.5;
-    
+
     const lowerText = text.toLowerCase();
-    const matches = keywords.filter(keyword => lowerText.includes(keyword.toLowerCase()));
+    const matches = keywords.filter((keyword) => lowerText.includes(keyword.toLowerCase()));
     return matches.length / keywords.length;
   }
 }

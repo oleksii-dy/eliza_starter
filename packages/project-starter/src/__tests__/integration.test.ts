@@ -91,7 +91,7 @@ describe('Integration: Runtime Initialization', () => {
     // Create a custom mock runtime for this test
     const customMockRuntime = {
       character: { ...character },
-      plugins: []
+      plugins: [],
       registerPlugin: vi.fn().mockImplementation((plugin: Plugin) => {
         // In a real runtime, registering the plugin would call its init method,
         // but since we're testing init itself, we just need to record the call

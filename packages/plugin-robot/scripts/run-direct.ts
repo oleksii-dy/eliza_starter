@@ -54,9 +54,9 @@ async function main() {
       descriptionManager: db,
       documentsManager: db,
       knowledgeManager: db,
-      providers: []
-      actions: []
-      evaluators: []
+      providers: [],
+      actions: [],
+      evaluators: [],
       services: new Map(),
       fetch: globalThis.fetch,
       useModel: async (type: ModelType, input: any) => {

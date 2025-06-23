@@ -53,11 +53,11 @@ export class AgentManager {
       name: actor.name,
       bio: actor.personality?.traits || ['An actor in a scenario'],
       system: actor.personality?.systemPrompt || this.primaryRuntime.character.system,
-      messageExamples: []
-      postExamples: []
-      topics: actor.personality?.interests || []
-      knowledge: actor.knowledge || []
-      plugins: this.primaryRuntime.character.plugins || []
+      messageExamples: [],
+      postExamples: [],
+      topics: actor.personality?.interests || [],
+      knowledge: actor.knowledge || [],
+      plugins: this.primaryRuntime.character.plugins || [],
       settings: {
         ...this.primaryRuntime.character.settings,
         ...actor.settings,
@@ -71,8 +71,8 @@ export class AgentManager {
     const instance: AgentInstance = {
       actor,
       runtime,
-      messageQueue: []
-      actionHistory: []
+      messageQueue: [],
+      actionHistory: [],
     };
 
     this.agents.set(actor.id, instance);
@@ -162,7 +162,7 @@ export class AgentManager {
       const originalProcessActions = isolatedRuntime.processActions.bind(isolatedRuntime);
       isolatedRuntime.processActions = async (
         message: Memory,
-        responses: Memory[]
+        responses: Memory[],
         state?: State,
         callback?: HandlerCallback
       ) => {

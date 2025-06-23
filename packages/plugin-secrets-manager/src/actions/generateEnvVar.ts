@@ -281,7 +281,7 @@ export const generateEnvVarAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };
 
 export default generateEnvVarAction;

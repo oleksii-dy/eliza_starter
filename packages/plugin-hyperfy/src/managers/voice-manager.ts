@@ -83,7 +83,7 @@ export class VoiceManager {
       const playerId = data.participant;
       if (!this.userStates.has(playerId)) {
         this.userStates.set(playerId, {
-          buffers: []
+          buffers: [],
           totalLength: 0,
           lastActive: Date.now(),
           transcriptionText: '',

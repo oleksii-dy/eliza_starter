@@ -44,12 +44,7 @@ Respond with a JSON markdown block containing only the extracted values.`;
 
 export const stakeSOL: Action = {
   name: 'STAKE_SOL',
-  similes: [
-    'STAKE_SOLANA',
-    'DELEGATE_SOL',
-    'STAKE_TO_VALIDATOR',
-    'EARN_STAKING_REWARDS',
-  ],
+  similes: ['STAKE_SOLANA', 'DELEGATE_SOL', 'STAKE_TO_VALIDATOR', 'EARN_STAKING_REWARDS'],
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     // Check if this is a system/agent action
     if (message.entityId === runtime.agentId) {
@@ -78,7 +73,7 @@ export const stakeSOL: Action = {
 
       // Require moderate trust (70) for staking operations (can be recovered)
       const requiredTrust = 70;
-      
+
       if (trust.overallTrust < requiredTrust) {
         logger.warn(
           `[Stake] Insufficient trust for stake: ${trust.overallTrust.toFixed(1)} < ${requiredTrust} for entity ${message.entityId}`
@@ -125,24 +120,26 @@ export const stakeSOL: Action = {
         return {
           success: false,
           message: 'Please specify a valid amount of SOL to stake',
-          data: { error: 'Invalid stake amount' }
+          data: { error: 'Invalid stake amount' },
         };
       }
 
       const connection = new Connection(
         runtime.getSetting('SOLANA_RPC_URL') || 'https://api.mainnet-beta.solana.com'
       );
-      
+
       const { keypair: walletKeypair } = await getWalletKey(runtime, true);
       if (!walletKeypair) {
-        callback?.({ text: 'Failed to access wallet. Please ensure your wallet is configured correctly.' });
+        callback?.({
+          text: 'Failed to access wallet. Please ensure your wallet is configured correctly.',
+        });
         return {
           success: false,
           message: 'Failed to access wallet',
-          data: { error: 'Wallet not available' }
+          data: { error: 'Wallet not available' },
         };
       }
-      
+
       const transactionService = runtime.getService<TransactionService>('transaction');
 
       // Create a new stake account
@@ -150,23 +147,18 @@ export const stakeSOL: Action = {
       const lamports = response.amount * LAMPORTS_PER_SOL;
 
       // Use a default validator if none provided
-      const validatorPubkey = response.validatorAddress 
+      const validatorPubkey = response.validatorAddress
         ? new PublicKey(response.validatorAddress)
         : new PublicKey('7Np41oeYqPefeNQEHSv1UDhYrehxin3NStELsSKCT4K2'); // Example: Marinade validator
 
       // Get minimum rent exemption
-      const rentExemption = await connection.getMinimumBalanceForRentExemption(
-        StakeProgram.space
-      );
+      const rentExemption = await connection.getMinimumBalanceForRentExemption(StakeProgram.space);
 
-             // Create stake account
+      // Create stake account
       const createAccountTx = StakeProgram.createAccount({
         fromPubkey: walletKeypair.publicKey,
         stakePubkey: stakeAccount.publicKey,
-        authorized: new Authorized(
-          walletKeypair.publicKey,
-          walletKeypair.publicKey
-        ),
+        authorized: new Authorized(walletKeypair.publicKey, walletKeypair.publicKey),
         lockup: new Lockup(0, 0, walletKeypair.publicKey),
         lamports: lamports + rentExemption,
       });
@@ -182,18 +174,18 @@ export const stakeSOL: Action = {
       if (transactionService) {
         // Create a new transaction and add all instructions
         const transaction = new Transaction();
-        
+
         // Add create account instructions
         if ('instructions' in createAccountTx && Array.isArray(createAccountTx.instructions)) {
-          createAccountTx.instructions.forEach(ix => transaction.add(ix));
+          createAccountTx.instructions.forEach((ix) => transaction.add(ix));
         }
-        
+
         // Add delegate instruction
         transaction.add(delegateInstruction);
-        
+
         const signature = await transactionService.sendTransaction(transaction, [walletKeypair], {
           priorityFee: 10000,
-          simulateFirst: true
+          simulateFirst: true,
         });
 
         logger.info('Stake delegation successful', {
@@ -221,7 +213,7 @@ export const stakeSOL: Action = {
       } else {
         // Fallback to direct transaction handling
         const transaction = new Transaction();
-        createAccountTx.instructions.forEach(ix => transaction.add(ix));
+        createAccountTx.instructions.forEach((ix) => transaction.add(ix));
         transaction.add(delegateInstruction);
 
         const { blockhash } = await connection.getLatestBlockhash();
@@ -234,11 +226,11 @@ export const stakeSOL: Action = {
 
         callback?.({
           text: `Successfully staked ${response.amount} SOL! Transaction ID: ${signature}`,
-          content: { 
-            success: true, 
+          content: {
+            success: true,
             txid: signature,
             stakeAccount: stakeAccount.publicKey.toBase58(),
-            validator: validatorPubkey.toBase58()
+            validator: validatorPubkey.toBase58(),
           },
         });
 
@@ -250,7 +242,7 @@ export const stakeSOL: Action = {
             amount: response.amount.toString(),
             stakeAccount: stakeAccount.publicKey.toBase58(),
             validator: validatorPubkey.toBase58(),
-          }
+          },
         };
       }
     } catch (error) {
@@ -263,7 +255,7 @@ export const stakeSOL: Action = {
       return {
         success: false,
         message: `Staking failed: ${errorMessage}`,
-        data: { error: errorMessage }
+        data: { error: errorMessage },
       };
     }
   },
@@ -298,5 +290,5 @@ export const stakeSOL: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
-}; 
+  ] as ActionExample[][],
+};

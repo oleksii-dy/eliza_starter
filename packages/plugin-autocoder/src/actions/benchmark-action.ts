@@ -46,7 +46,7 @@ export const runBenchmarkAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     // Check if we're in testing/development mode

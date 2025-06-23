@@ -267,5 +267,5 @@ Command executed successfully at ${new Date().toISOString()}.`;
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };

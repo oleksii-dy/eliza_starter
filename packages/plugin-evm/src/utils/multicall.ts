@@ -54,9 +54,9 @@ export class MulticallService {
             const results = await client.multicall({
                 contracts: calls.map(call => ({
                     address: call.target,
-                    abi: [] // We're using raw calldata
+                    abi: [], // We're using raw calldata
                     functionName: 'raw',
-                    args: []
+                    args: [],
                     // @ts-ignore - viem types don't expose raw calldata directly
                     callData: call.callData
                 })),
@@ -78,7 +78,7 @@ export class MulticallService {
      */
     async batchMulticall(
         chainId: number,
-        calls: MulticallParams[]
+        calls: MulticallParams[],
         batchSize = 50
     ): Promise<MulticallResult[]> {
         const results: MulticallResult[] = [];
@@ -93,7 +93,7 @@ export class MulticallService {
     }
 
     async aggregate(
-        calls: MulticallCall[]
+        calls: MulticallCall[],
         chainId: number,
         client: PublicClient
     ): Promise<MulticallResult[]> {
@@ -105,7 +105,7 @@ export class MulticallService {
     }
 
     async tryAggregate(
-        calls: MulticallCall[]
+        calls: MulticallCall[],
         chainId: number,
         client: PublicClient
     ): Promise<MulticallResult[]> {

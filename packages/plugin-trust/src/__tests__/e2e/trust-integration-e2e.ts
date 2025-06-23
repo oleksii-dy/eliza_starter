@@ -8,7 +8,7 @@ export class TrustIntegrationE2ETests implements TestSuite {
     {
       name: 'Trust evaluators process messages correctly',
       fn: async (runtime: IAgentRuntime) => {
-        const evaluator = runtime.evaluators.find(e => e.name === 'trustChangeEvaluator');
+        const evaluator = runtime.evaluators.find((e) => e.name === 'trustChangeEvaluator');
         if (!evaluator) {
           throw new Error('Trust change evaluator not found');
         }
@@ -21,9 +21,9 @@ export class TrustIntegrationE2ETests implements TestSuite {
           agentId: runtime.agentId,
           content: {
             text: 'Thank you so much for your help! That solved my problem perfectly.',
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         // Validate evaluator can process the message
@@ -42,19 +42,19 @@ export class TrustIntegrationE2ETests implements TestSuite {
         );
 
         console.log('✅ Trust evaluator processed message successfully');
-      }
+      },
     },
 
     {
       name: 'Trust profile provider returns comprehensive data',
       fn: async (runtime: IAgentRuntime) => {
-        const provider = runtime.providers.find(p => p.name === 'trustProfile');
+        const provider = runtime.providers.find((p) => p.name === 'trustProfile');
         if (!provider) {
           throw new Error('Trust profile provider not found');
         }
 
         const entityId = `profile-test-${Date.now()}` as UUID;
-        
+
         // First, create some trust history
         const trustService = runtime.getService('trust') as any;
         await trustService.updateTrust(entityId, 'HELPFUL_ACTION', 10);
@@ -68,9 +68,9 @@ export class TrustIntegrationE2ETests implements TestSuite {
           agentId: runtime.agentId,
           content: {
             text: 'Check trust profile',
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         // Get trust profile
@@ -89,13 +89,13 @@ export class TrustIntegrationE2ETests implements TestSuite {
         }
 
         console.log('✅ Trust profile provider returned comprehensive data');
-      }
+      },
     },
 
     {
       name: 'Reflection evaluator processes conversation history',
       fn: async (runtime: IAgentRuntime) => {
-        const evaluator = runtime.evaluators.find(e => e.name === 'reflectionEvaluator');
+        const evaluator = runtime.evaluators.find((e) => e.name === 'reflectionEvaluator');
         if (!evaluator) {
           throw new Error('Reflection evaluator not found');
         }
@@ -113,9 +113,9 @@ export class TrustIntegrationE2ETests implements TestSuite {
             agentId: runtime.agentId,
             content: {
               text: `Message ${i}: User is discussing technical topics`,
-              source: 'test'
+              source: 'test',
             },
-            createdAt: Date.now() - (10 - i) * 60000 // Space out by 1 minute
+            createdAt: Date.now() - (10 - i) * 60000, // Space out by 1 minute
           });
         }
 
@@ -132,16 +132,20 @@ export class TrustIntegrationE2ETests implements TestSuite {
           agentId: runtime.agentId,
           content: {
             text: 'That was a great technical discussion!',
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         // Check if evaluator can process
-        const canProcess = await evaluator.validate(runtime, finalMessage, { values: {}, data: {}, text: '' });
-        
+        const canProcess = await evaluator.validate(runtime, finalMessage, {
+          values: {},
+          data: {},
+          text: '',
+        });
+
         console.log('✅ Reflection evaluator ready to process conversation history');
-      }
+      },
     },
 
     {
@@ -158,9 +162,9 @@ export class TrustIntegrationE2ETests implements TestSuite {
           agentId: runtime.agentId,
           content: {
             text: 'Hello, I need help with something',
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         // Store message
@@ -168,7 +172,7 @@ export class TrustIntegrationE2ETests implements TestSuite {
 
         // Get trust service
         const trustService = runtime.getService('trust') as any;
-        
+
         // Record the message for behavioral analysis
         await trustService.recordMemory(message);
 
@@ -180,9 +184,9 @@ export class TrustIntegrationE2ETests implements TestSuite {
           agentId: runtime.agentId,
           content: {
             text: 'Thank you for your assistance!',
-            source: 'test'
+            source: 'test',
           },
-          createdAt: Date.now() + 1000
+          createdAt: Date.now() + 1000,
         };
 
         // Process follow-up
@@ -196,7 +200,7 @@ export class TrustIntegrationE2ETests implements TestSuite {
         }
 
         console.log('✅ Trust system successfully integrated with message processing');
-      }
+      },
     },
 
     {
@@ -224,12 +228,7 @@ export class TrustIntegrationE2ETests implements TestSuite {
 
         // Build trust through positive interactions
         for (let i = 0; i < 10; i++) {
-          await trustService.updateTrust(
-            entityId,
-            'HELPFUL_ACTION',
-            5,
-            { interaction: i }
-          );
+          await trustService.updateTrust(entityId, 'HELPFUL_ACTION', 5, { interaction: i });
         }
 
         // Check improved trust
@@ -249,9 +248,9 @@ export class TrustIntegrationE2ETests implements TestSuite {
         }
 
         console.log('✅ Trust-based access control working end-to-end');
-      }
-    }
+      },
+    },
   ];
 }
 
-export const trustIntegrationE2ETests = new TrustIntegrationE2ETests(); 
+export const trustIntegrationE2ETests = new TrustIntegrationE2ETests();

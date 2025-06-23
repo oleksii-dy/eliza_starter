@@ -26,7 +26,7 @@ export class CoverageAnalyzer {
       branches: { total: 100, covered: coverage * 0.9, percentage: coverage * 0.9 },
       functions: { total: 100, covered: coverage, percentage: coverage },
       lines: { total: 100, covered: coverage, percentage: coverage },
-      uncoveredLines: []
+      uncoveredLines: [],
     };
   }
 

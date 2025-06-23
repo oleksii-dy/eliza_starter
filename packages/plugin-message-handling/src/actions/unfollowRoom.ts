@@ -383,5 +383,5 @@ export const unfollowRoomAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 } as Action;

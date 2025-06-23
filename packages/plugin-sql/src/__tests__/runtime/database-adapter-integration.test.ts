@@ -73,7 +73,7 @@ describe('Database Adapter Real Runtime Integration', () => {
         name: agentName,
         bio: 'First agent',
         system: 'Test agent 1',
-        plugins: []
+        plugins: [],
         settings: {},
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -85,7 +85,7 @@ describe('Database Adapter Real Runtime Integration', () => {
         name: agentName, // Same name, different ID
         bio: 'Second agent',
         system: 'Test agent 2',
-        plugins: []
+        plugins: [],
         settings: {},
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -416,7 +416,7 @@ describe('Database Adapter Real Runtime Integration', () => {
         name: 'Original Agent',
         bio: 'Original agent',
         system: 'Original system',
-        plugins: []
+        plugins: [],
         settings: {},
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -428,7 +428,7 @@ describe('Database Adapter Real Runtime Integration', () => {
         name: 'Duplicate Agent',
         bio: 'Duplicate agent',
         system: 'Duplicate system',
-        plugins: []
+        plugins: [],
         settings: {},
         createdAt: Date.now(),
         updatedAt: Date.now(),

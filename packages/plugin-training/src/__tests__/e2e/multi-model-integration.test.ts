@@ -39,10 +39,10 @@ describe('Multi-Model Integration Tests', () => {
         name: 'MultiModelTestAgent',
         bio: ['Test agent for multi-model training system'],
         system: 'Test agent for validating multi-model training integration',
-        messageExamples: []
-        postExamples: []
+        messageExamples: [],
+        postExamples: [],
         topics: ['testing', 'training', 'models'],
-        knowledge: []
+        knowledge: [],
         plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-training'],
       },
     });
@@ -257,11 +257,11 @@ describe('Multi-Model Integration Tests', () => {
             timestamp: '2024-01-15T10:00:00.000Z',
             author: { id: 'user1', username: 'alice', displayName: 'Alice', bot: false },
             content: "Hey everyone! How's the project going?",
-            attachments: []
-            embeds: []
-            mentions: []
+            attachments: [],
+            embeds: [],
+            mentions: [],
             reference: null,
-            reactions: []
+            reactions: [],
             url: 'https://discord.com/channels/123/456/1001',
           },
           {
@@ -269,11 +269,11 @@ describe('Multi-Model Integration Tests', () => {
             timestamp: '2024-01-15T10:02:00.000Z',
             author: { id: 'user2', username: 'bob', displayName: 'Bob', bot: false },
             content: "It's going well! We just finished the conversation parsing module.",
-            attachments: []
-            embeds: []
+            attachments: [],
+            embeds: [],
             mentions: [{ id: 'user1', username: 'alice' }],
             reference: { messageId: '1001' },
-            reactions: []
+            reactions: [],
             url: 'https://discord.com/channels/123/456/1002',
           },
           {
@@ -282,9 +282,9 @@ describe('Multi-Model Integration Tests', () => {
             author: { id: 'user3', username: 'charlie', displayName: 'Charlie', bot: false },
             content:
               "<thinking>\nThe user is asking about complex topics, so I should provide a detailed explanation with proper reasoning.\n</thinking>\n\nThat's awesome! The parsing looks really comprehensive. I love how it handles thinking blocks and creates character profiles for each user.",
-            attachments: []
-            embeds: []
-            mentions: []
+            attachments: [],
+            embeds: [],
+            mentions: [],
             reference: { messageId: '1002' },
             reactions: [{ emoji: '🧠', count: 2 }],
             url: 'https://discord.com/channels/123/456/1003',

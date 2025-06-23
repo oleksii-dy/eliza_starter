@@ -25,7 +25,7 @@ export const memoryTestEntity: Entity = {
   id: memoryTestEntityId,
   names: ['Memory Test Entity'],
   agentId: memoryTestAgentId,
-  components: []
+  components: [],
   metadata: {
     type: 'user',
     worldId: memoryTestWorldId,

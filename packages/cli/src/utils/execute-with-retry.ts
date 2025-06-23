@@ -12,7 +12,7 @@ interface ExecuteOptions extends SpawnOptions {
  */
 export async function executeWithRetry(
   command: string,
-  args: string[]
+  args: string[],
   options: ExecuteOptions = {}
 ): Promise<{ stdout: string; stderr: string; code: number }> {
   const { maxRetries = 1, retryDelay = 1000, timeout = 300000, ...spawnOptions } = options;
@@ -42,7 +42,7 @@ export async function executeWithRetry(
  */
 function executeCommand(
   command: string,
-  args: string[]
+  args: string[],
   options: SpawnOptions & { timeout?: number }
 ): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve, reject) => {

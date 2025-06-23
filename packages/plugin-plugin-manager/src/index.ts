@@ -58,7 +58,7 @@ export const pluginManagerPlugin: Plugin = {
   ],
 
   // Enhanced dependencies including trust system
-  dependencies: [] // Made optional - these will be loaded if available but not required
+  dependencies: [], // Made optional - these will be loaded if available but not required
 
   actions: [
     loadPluginAction,
@@ -80,7 +80,7 @@ export const pluginManagerPlugin: Plugin = {
     listRegistryPluginsAction,
   ],
 
-  providers: [] // All providers have been migrated to actions
+  providers: [], // All providers have been migrated to actions
 
   tests: [pluginManagerScenariosSuite, fullLifecycleE2ETest],
 

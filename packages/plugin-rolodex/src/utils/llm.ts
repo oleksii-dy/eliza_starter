@@ -132,7 +132,7 @@ Respond ONLY with the JSON object, no additional text, no markdown formatting, n
   /**
    * Batch generate text for multiple prompts
    */
-  async batchGenerateText(prompts: string[] modelType = ModelType.TEXT_LARGE): Promise<string[]> {
+  async batchGenerateText(prompts: string[], modelType = ModelType.TEXT_LARGE): Promise<string[]> {
     // Process in parallel with concurrency limit
     const BATCH_SIZE = 5;
     const results: string[] = [];
@@ -248,49 +248,65 @@ ${fields.join(',\n')}
       // Try to get the shape if it's an object schema
       if ('shape' in schema && typeof schema.shape === 'function') {
         const shape = schema.shape();
-        
+
         // Check if this is the EntityExtractionSchema
         if ('entities' in shape) {
-          return JSON.stringify({
-            entities: [{
-              type: 'person',
-              names: ['John Doe'],
-              summary: 'A software engineer',
-              tags: ['developer', 'engineer'],
-              platforms: { github: 'johndoe' },
-              metadata: { role: 'Senior Engineer' }
-            }]
-          }, null, 2);
+          return JSON.stringify(
+            {
+              entities: [
+                {
+                  type: 'person',
+                  names: ['John Doe'],
+                  summary: 'A software engineer',
+                  tags: ['developer', 'engineer'],
+                  platforms: { github: 'johndoe' },
+                  metadata: { role: 'Senior Engineer' },
+                },
+              ],
+            },
+            null,
+            2
+          );
         }
-        
+
         // Check if this is the RelationshipInferenceSchema
         if ('relationships' in shape) {
-          return JSON.stringify({
-            relationships: [{
-              sourceEntity: 'Alice',
-              targetEntity: 'Bob',
-              type: 'colleague',
-              confidence: 0.85,
-              evidence: 'They work on the same team',
-              sentiment: 0.7
-            }]
-          }, null, 2);
+          return JSON.stringify(
+            {
+              relationships: [
+                {
+                  sourceEntity: 'Alice',
+                  targetEntity: 'Bob',
+                  type: 'colleague',
+                  confidence: 0.85,
+                  evidence: 'They work on the same team',
+                  sentiment: 0.7,
+                },
+              ],
+            },
+            null,
+            2
+          );
         }
-        
+
         // Check if this is the TrustAnalysisSchema
         if ('trustDelta' in shape) {
-          return JSON.stringify({
-            trustDelta: 0.1,
-            reason: 'Consistent helpful behavior',
-            indicators: ['helpful', 'reliable'],
-            riskLevel: 'low'
-          }, null, 2);
+          return JSON.stringify(
+            {
+              trustDelta: 0.1,
+              reason: 'Consistent helpful behavior',
+              indicators: ['helpful', 'reliable'],
+              riskLevel: 'low',
+            },
+            null,
+            2
+          );
         }
       }
     } catch (error) {
       // If we can't determine the schema type, return default
     }
-    
+
     // Default example
     return '{}';
   }

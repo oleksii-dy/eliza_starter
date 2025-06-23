@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { 
+import {
   elizaLogger,
   type IAgentRuntime,
   type Memory,
@@ -15,9 +15,9 @@ import { PaymentService } from '../services/PaymentService';
 import { researchAction } from '../actions/researchAction';
 import { PaymentMethod, PaymentStatus } from '../types';
 import { paymentPlugin } from '../index';
-import { 
-  paymentTransactions, 
-  paymentRequests, 
+import {
+  paymentTransactions,
+  paymentRequests,
   userWallets,
   dailySpending,
 } from '../database/schema';
@@ -33,7 +33,7 @@ const createMockDatabase = () => {
   data.set('payment_requests', []);
   data.set('user_wallets', []);
   data.set('daily_spending', []);
-  
+
   return {
     select: () => ({
       from: (table: any) => ({
@@ -53,7 +53,7 @@ const createMockDatabase = () => {
               }
               const records = data.get(tableName) || [];
               return Promise.resolve(records.slice(0, n)).then(resolve);
-            }
+            },
           }),
           orderBy: (order: any) => ({
             limit: (n: number) => ({
@@ -72,41 +72,41 @@ const createMockDatabase = () => {
                   }
                   const records = data.get(tableName) || [];
                   return Promise.resolve(records.slice(o, o + n)).then(resolve);
-                }
-              })
-            })
-          })
+                },
+              }),
+            }),
+          }),
         }),
         // Add orderBy at top level for getPaymentHistory
         orderBy: (order: any) => ({
           limit: (n: number) => ({
             offset: (o: number) => {
               return Promise.resolve([]);
-            }
-          })
-        })
-      })
+            },
+          }),
+        }),
+      }),
     }),
-    
+
     insert: (table: any) => ({
       values: async (values: any) => {
         const tableName = table.name || 'unknown';
         const records = data.get(tableName) || [];
         records.push(values);
         data.set(tableName, records);
-      }
+      },
     }),
-    
+
     update: (table: any) => ({
       set: (values: any) => ({
-        where: (condition: any) => Promise.resolve()
-      })
+        where: (condition: any) => Promise.resolve(),
+      }),
     }),
-    
+
     delete: (table: any) => ({
-      where: (condition: any) => Promise.resolve()
+      where: (condition: any) => Promise.resolve(),
     }),
-    
+
     // For direct SQL-like access
     prepare: (sql: string) => ({
       get: (id: string) => {
@@ -115,8 +115,8 @@ const createMockDatabase = () => {
           return wallets.find((w: any) => w.userId === id);
         }
         return null;
-      }
-    })
+      },
+    }),
   };
 };
 
@@ -160,12 +160,14 @@ class MockDatabaseService {
 // Mock Crossmint services for testing
 class MockCrossmintService {
   async listWallets() {
-    return [{
-      address: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
-      type: 'evm-mpc-wallet',
-      linkedUser: 'test-user',
-      createdAt: new Date().toISOString(),
-    }];
+    return [
+      {
+        address: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
+        type: 'evm-mpc-wallet',
+        linkedUser: 'test-user',
+        createdAt: new Date().toISOString(),
+      },
+    ];
   }
 
   async createWallet(params: any) {
@@ -203,18 +205,20 @@ class MockCrossmintService {
 
 class MockCrossmintWalletService {
   async getBalances(owner?: string) {
-    return [{
-      address: 'native',
-      symbol: 'ETH',
-      name: 'Ethereum',
-      decimals: 18,
-      balance: '1.5',
-      balanceFormatted: '1.500000',
-      valueUsd: 3750,
-      priceUsd: 2500,
-      chain: 'ethereum',
-      isNative: true,
-    }];
+    return [
+      {
+        address: 'native',
+        symbol: 'ETH',
+        name: 'Ethereum',
+        decimals: 18,
+        balance: '1.5',
+        balanceFormatted: '1.500000',
+        valueUsd: 3750,
+        priceUsd: 2500,
+        chain: 'ethereum',
+        isNative: true,
+      },
+    ];
   }
 
   async transfer(params: any) {
@@ -260,9 +264,9 @@ const mockCrossmintPlugin: Plugin = {
   name: '@elizaos/plugin-crossmint',
   description: 'Mock Crossmint plugin for testing',
   services: [MockCrossmintService as any, MockCrossmintWalletService as any],
-  actions: []
-  providers: []
-  evaluators: []
+  actions: [],
+  providers: [],
+  evaluators: [],
 };
 
 describe('Payment Plugin Runtime Integration', () => {
@@ -273,7 +277,7 @@ describe('Payment Plugin Runtime Integration', () => {
 
   beforeAll(async () => {
     elizaLogger.info('Setting up runtime integration test');
-    
+
     // Create test character
     const testCharacter: Character = {
       id: stringToUuid('test-payment-agent'),
@@ -290,10 +294,10 @@ describe('Payment Plugin Runtime Integration', () => {
 
     // Create mock database
     mockDb = createMockDatabase();
-    
+
     // Create mock database service
     mockDbService = new MockDatabaseService();
-    
+
     // Create mock runtime
     runtime = {
       agentId: asUUID(stringToUuid('test-agent')),
@@ -316,9 +320,10 @@ describe('Payment Plugin Runtime Integration', () => {
       setSetting: vi.fn(),
       getService: (name: string) => {
         if (name === 'payment') return paymentService;
-        if (name === 'database') return {
-          getDatabase: () => mockDbService
-        };
+        if (name === 'database')
+          return {
+            getDatabase: () => mockDbService,
+          };
         return null;
       },
       registerAction: vi.fn(),
@@ -329,7 +334,7 @@ describe('Payment Plugin Runtime Integration', () => {
     // Initialize payment service
     paymentService = new PaymentService();
     await paymentService.initialize(runtime);
-    
+
     expect(paymentService).toBeDefined();
     expect(paymentService).toBeInstanceOf(PaymentService);
   });
@@ -369,7 +374,7 @@ describe('Payment Plugin Runtime Integration', () => {
 
       for (const request of invalidRequests) {
         const result = await paymentService.processPayment(request, runtime);
-        
+
         // processPayment returns a result with status FAILED instead of throwing
         expect(result.status).toBe(PaymentStatus.FAILED);
         expect(result.error).toBeDefined();
@@ -378,7 +383,7 @@ describe('Payment Plugin Runtime Integration', () => {
 
     it('should generate unique verification codes', async () => {
       const codes = new Set<string>();
-      
+
       // Generate multiple codes to ensure uniqueness
       for (let i = 0; i < 10; i++) {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -390,14 +395,14 @@ describe('Payment Plugin Runtime Integration', () => {
 
     it('should check wallet encryption', async () => {
       const userId = asUUID(stringToUuid('test-user-encryption'));
-      
+
       // Force wallet creation
       try {
         await paymentService.getUserBalance(userId, runtime);
       } catch (error) {
         // Expected to fail due to no real wallet service
       }
-      
+
       // Check that wallet would be encrypted if created
       const encryptionKey = runtime.getSetting('WALLET_ENCRYPTION_KEY');
       expect(encryptionKey).toBeDefined();
@@ -416,11 +421,11 @@ describe('Payment Plugin Runtime Integration', () => {
 
     it('should have proper capabilities', async () => {
       const capabilities = await paymentService.getCapabilities();
-      
+
       expect(capabilities.supportedMethods.length).toBeGreaterThan(0);
       expect(capabilities.supportedMethods).toContain(PaymentMethod.ETH);
       expect(capabilities.supportedMethods).toContain(PaymentMethod.USDC_ETH);
-      
+
       expect(capabilities.features.autoApproval).toBe(true);
       expect(capabilities.limits.dailyLimit).toBe(1000);
     });
@@ -461,7 +466,7 @@ describe('Payment Plugin Runtime Integration', () => {
 
       expect(callback).toHaveBeenCalled();
       const response = callback.mock.calls[0][0];
-      
+
       // Should mention payment or funds issue
       const text = response.text?.toLowerCase() || '';
       expect(text).toMatch(/payment|insufficient|funds|wallet|error/);
@@ -472,7 +477,7 @@ describe('Payment Plugin Runtime Integration', () => {
     it('should load CrossmintAdapter when Crossmint services are available', async () => {
       const paymentService = runtime.getService('payment') as PaymentService;
       const capabilities = await paymentService.getCapabilities();
-      
+
       // Check if Crossmint payment methods are supported
       expect(capabilities.supportedMethods).toContain(PaymentMethod.ETH);
       expect(capabilities.supportedMethods).toContain(PaymentMethod.USDC_ETH);
@@ -481,7 +486,7 @@ describe('Payment Plugin Runtime Integration', () => {
 
     it('should process payment with CrossmintAdapter', async () => {
       const paymentService = runtime.getService('payment') as PaymentService;
-      
+
       const paymentRequest = {
         id: asUUID('00000000-0000-0000-0000-000000000001'),
         userId: asUUID('00000000-0000-0000-0000-000000000002'),
@@ -490,18 +495,18 @@ describe('Payment Plugin Runtime Integration', () => {
         amount: BigInt(1000000), // 1 USDC
         method: PaymentMethod.USDC_ETH,
         recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
-        metadata: { 
+        metadata: {
           test: true,
           adapter: 'crossmint',
         },
       };
 
       const result = await paymentService.processPayment(paymentRequest, runtime);
-      
+
       expect(result).toBeDefined();
       expect(result.id).toBe(paymentRequest.id);
       expect(result.status).toBeDefined();
-      
+
       // Check if it attempted to use Crossmint (would fail due to missing wallet)
       if (result.status === PaymentStatus.FAILED) {
         expect(result.error).toBeDefined();
@@ -510,10 +515,10 @@ describe('Payment Plugin Runtime Integration', () => {
 
     it('should get user balance through CrossmintAdapter', async () => {
       const paymentService = runtime.getService('payment') as PaymentService;
-      
+
       const userId = asUUID('00000000-0000-0000-0000-000000000002');
       const balances = await paymentService.getUserBalance(userId, runtime);
-      
+
       expect(balances).toBeDefined();
       expect(balances).toBeInstanceOf(Map);
     });
@@ -522,17 +527,17 @@ describe('Payment Plugin Runtime Integration', () => {
   describe('Service Interactions', () => {
     it('should use price oracle for currency conversion', async () => {
       const priceOracleService = runtime.getService('priceOracle') as PriceOracleService;
-      
+
       // Test ETH to USD conversion
       const ethAmount = BigInt('1000000000000000000'); // 1 ETH
       const usdValue = await priceOracleService.convertToUSD(ethAmount, PaymentMethod.ETH);
-      
+
       expect(usdValue).toBeGreaterThan(0);
     });
 
     it('should handle payment with auto-approval', async () => {
       const paymentService = runtime.getService('payment') as PaymentService;
-      
+
       // Small payment under auto-approval threshold
       const paymentRequest = {
         id: asUUID('00000000-0000-0000-0000-000000000003'),
@@ -545,7 +550,7 @@ describe('Payment Plugin Runtime Integration', () => {
       };
 
       const result = await paymentService.processPayment(paymentRequest, runtime);
-      
+
       expect(result).toBeDefined();
       // Should not require confirmation due to auto-approval
       expect(result.metadata?.pendingReason).not.toBe('USER_CONFIRMATION_REQUIRED');
@@ -553,7 +558,7 @@ describe('Payment Plugin Runtime Integration', () => {
 
     it('should require confirmation for large payments', async () => {
       const paymentService = runtime.getService('payment') as PaymentService;
-      
+
       // Large payment over auto-approval threshold
       const paymentRequest = {
         id: asUUID('00000000-0000-0000-0000-000000000004'),
@@ -567,7 +572,7 @@ describe('Payment Plugin Runtime Integration', () => {
       };
 
       const result = await paymentService.processPayment(paymentRequest, runtime);
-      
+
       expect(result).toBeDefined();
       expect(result.status).toBe(PaymentStatus.PENDING);
       expect(result.metadata?.pendingReason).toBe('USER_CONFIRMATION_REQUIRED');
@@ -577,7 +582,7 @@ describe('Payment Plugin Runtime Integration', () => {
   describe('Error Handling', () => {
     it('should handle missing wallet adapter gracefully', async () => {
       const paymentService = runtime.getService('payment') as PaymentService;
-      
+
       // Try unsupported payment method
       const paymentRequest = {
         id: asUUID('00000000-0000-0000-0000-000000000005'),
@@ -590,7 +595,7 @@ describe('Payment Plugin Runtime Integration', () => {
       };
 
       const result = await paymentService.processPayment(paymentRequest, runtime);
-      
+
       expect(result).toBeDefined();
       expect(result.status).toBe(PaymentStatus.FAILED);
       expect(result.error).toContain('not supported');
@@ -603,7 +608,7 @@ describe('Payment Plugin Runtime Integration', () => {
       db.values = vi.fn().mockRejectedValue(new Error('Database error'));
 
       const paymentService = runtime.getService('payment') as PaymentService;
-      
+
       const paymentRequest = {
         id: asUUID('00000000-0000-0000-0000-000000000006'),
         userId: asUUID('00000000-0000-0000-0000-000000000002'),
@@ -615,7 +620,7 @@ describe('Payment Plugin Runtime Integration', () => {
       };
 
       const result = await paymentService.processPayment(paymentRequest, runtime);
-      
+
       expect(result).toBeDefined();
       expect(result.status).toBe(PaymentStatus.FAILED);
     });
@@ -625,7 +630,7 @@ describe('Payment Plugin Runtime Integration', () => {
     it('should support multiple payment methods across adapters', async () => {
       const paymentService = runtime.getService('payment') as PaymentService;
       const capabilities = await paymentService.getCapabilities();
-      
+
       // Should support methods from multiple adapters
       const expectedMethods = [
         PaymentMethod.USDC_ETH,
@@ -633,15 +638,15 @@ describe('Payment Plugin Runtime Integration', () => {
         PaymentMethod.SOL,
         PaymentMethod.USDC_SOL,
       ];
-      
-      expectedMethods.forEach(method => {
+
+      expectedMethods.forEach((method) => {
         expect(capabilities.supportedMethods).toContain(method);
       });
     });
 
     it('should select correct adapter for payment method', async () => {
       const paymentService = runtime.getService('payment') as PaymentService;
-      
+
       // Test Ethereum payment (should use Crossmint or EVM adapter)
       const ethPayment = {
         id: asUUID('00000000-0000-0000-0000-000000000007'),
@@ -655,7 +660,7 @@ describe('Payment Plugin Runtime Integration', () => {
 
       const ethResult = await paymentService.processPayment(ethPayment, runtime);
       expect(ethResult).toBeDefined();
-      
+
       // Test Solana payment (should use Crossmint or Solana adapter)
       const solPayment = {
         id: asUUID('00000000-0000-0000-0000-000000000008'),
@@ -675,13 +680,13 @@ describe('Payment Plugin Runtime Integration', () => {
   describe('Settings Management', () => {
     it('should update payment settings', async () => {
       const paymentService = runtime.getService('payment') as PaymentService;
-      
+
       // Update settings
       await paymentService.updateSettings({
         autoApprovalThreshold: 25,
         maxDailySpend: 2000,
       });
-      
+
       const settings = paymentService.getSettings();
       expect(settings.autoApprovalThreshold).toBe(25);
       expect(settings.maxDailySpend).toBe(2000);
@@ -689,13 +694,13 @@ describe('Payment Plugin Runtime Integration', () => {
 
     it('should persist settings to runtime', async () => {
       const paymentService = runtime.getService('payment') as PaymentService;
-      
+
       await paymentService.updateSettings({
         requireConfirmation: true,
       });
-      
+
       const runtimeSetting = runtime.getSetting('PAYMENT_REQUIRE_CONFIRMATION');
       expect(runtimeSetting).toBe('true');
     });
   });
-}); 
+});

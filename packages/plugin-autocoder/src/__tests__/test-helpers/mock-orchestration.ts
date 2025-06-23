@@ -18,7 +18,7 @@ export function createMockRuntime(): IAgentRuntime {
             id: 'research-1',
             status: 'completed',
             report: 'Test research report',
-            findings: []
+            findings: [],
           }),
         };
       }
@@ -61,8 +61,8 @@ export function mockAnthropicClient() {
 export const plugin = {
   name: 'test-plugin',
   description: 'A test plugin',
-  actions: []
-  providers: []
+  actions: [],
+  providers: [],
 };
 \`\`\`
 

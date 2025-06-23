@@ -4,7 +4,7 @@ import path from 'path';
 import type { ScenarioResult, ScenarioRunOptions } from '../../scenario-runner/types.js';
 
 export function displayScenarioResults(
-  results: ScenarioResult[]
+  results: ScenarioResult[],
   options: ScenarioRunOptions
 ): void {
   console.log('\n📊 Scenario Test Results');
@@ -66,7 +66,7 @@ function displaySingleResult(result: ScenarioResult, options: ScenarioRunOptions
   }
 }
 
-function displaySummary(results: ScenarioResult[] options: ScenarioRunOptions): void {
+function displaySummary(results: ScenarioResult[], options: ScenarioRunOptions): void {
   console.log('\n📈 Summary');
   console.log('-'.repeat(30));
 
@@ -115,7 +115,7 @@ function displayBenchmarkSummary(results: ScenarioResult[]): void {
 }
 
 export async function saveResults(
-  results: ScenarioResult[]
+  results: ScenarioResult[],
   outputPath: string,
   format: 'json' | 'text' | 'html'
 ): Promise<void> {
@@ -136,7 +136,7 @@ export async function saveResults(
   }
 }
 
-async function saveJsonResults(results: ScenarioResult[] outputPath: string): Promise<void> {
+async function saveJsonResults(results: ScenarioResult[], outputPath: string): Promise<void> {
   const reportData = {
     timestamp: new Date().toISOString(),
     summary: {
@@ -151,7 +151,7 @@ async function saveJsonResults(results: ScenarioResult[] outputPath: string): Pr
   await fs.writeFile(outputPath, JSON.stringify(reportData, null, 2));
 }
 
-async function saveTextResults(results: ScenarioResult[] outputPath: string): Promise<void> {
+async function saveTextResults(results: ScenarioResult[], outputPath: string): Promise<void> {
   const lines: string[] = [];
 
   lines.push('Scenario Test Results');
@@ -199,7 +199,7 @@ async function saveTextResults(results: ScenarioResult[] outputPath: string): Pr
   await fs.writeFile(outputPath, lines.join('\n'));
 }
 
-async function saveHtmlResults(results: ScenarioResult[] outputPath: string): Promise<void> {
+async function saveHtmlResults(results: ScenarioResult[], outputPath: string): Promise<void> {
   const passed = results.filter((r) => r.passed).length;
   const failed = results.length - passed;
   const totalDuration = results.reduce((sum, r) => sum + r.duration, 0);

@@ -334,7 +334,7 @@ export const enhancedExecutePlanAction: Action = {
     };
   },
 
-  examples: []
+  examples: [],
 };
 
 // Helper functions
@@ -344,7 +344,7 @@ function getAvailableActions(runtime: any): string[] {
   return actions.map((action: any) => ({
     name: action.name,
     description: action.description,
-    similes: action.similes || []
+    similes: action.similes || [],
   }));
 }
 
@@ -419,12 +419,12 @@ function parsePlanFromLLMResponse(response: string, userRequest: string): any {
           { number: 1, action: 'ANALYZE_REQUEST', description: 'Analyze the request' },
           { number: 2, action: 'EXECUTE_ACTION', description: 'Execute the required actions' }
         ],
-        stakeholders: planData.stakeholders || []
-        constraints: planData.constraints || []
-        risks: planData.risks || []
-        success_criteria: planData.success_criteria || []
+        stakeholders: planData.stakeholders || [],
+        constraints: planData.constraints || [],
+        risks: planData.risks || [],
+        success_criteria: planData.success_criteria || [],
         estimated_duration: planData.estimated_duration || 'Unknown',
-        resources_needed: planData.resources_needed || []
+        resources_needed: planData.resources_needed || [],
       };
     }
   } catch (error) {
@@ -441,8 +441,8 @@ function parsePlanFromLLMResponse(response: string, userRequest: string): any {
       { number: 3, action: 'PROVIDE_RESPONSE', description: 'Provide results to user' }
     ],
     stakeholders: ['user'],
-    constraints: []
-    risks: []
+    constraints: [],
+    risks: [],
     success_criteria: ['request completed'],
     estimated_duration: '15 minutes',
     resources_needed: ['system access']
@@ -511,8 +511,8 @@ function fallbackPlanning(userRequest: string, analysis: any, callback: any): an
     complexity: analysis.complexity || 'medium',
     steps: steps,
     stakeholders: ['user'],
-    constraints: []
-    risks: []
+    constraints: [],
+    risks: [],
   };
 
   if (callback) {
@@ -539,9 +539,9 @@ export const enhancedPlanningPlugin: Plugin = {
 
   actions: [enhancedCreatePlanAction, enhancedExecutePlanAction],
 
-  services: []
+  services: [],
   
-  evaluators: []
+  evaluators: [],
 };
 
 export default enhancedPlanningPlugin;

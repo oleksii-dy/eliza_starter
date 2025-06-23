@@ -173,7 +173,7 @@ export class RealmBenchAdapter {
           success: false,
           duration: 0,
           stepsExecuted: 0,
-          actionsPerformed: []
+          actionsPerformed: [],
           planGenerated: null,
           error: error.message,
           metrics: {

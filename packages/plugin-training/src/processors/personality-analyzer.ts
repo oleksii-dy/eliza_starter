@@ -17,8 +17,8 @@ export class PersonalityAnalyzer {
    * Analyze personality profiles for tracked users
    */
   async analyzePersonalities(
-    users: TrackedUser[]
-    conversations: ConversationThread[]
+    users: TrackedUser[],
+    conversations: ConversationThread[],
     allMessages: DiscordMessage[]
   ): Promise<TrackedUser[]> {
     elizaLogger.info('🧠 Analyzing user personalities...');
@@ -62,8 +62,8 @@ export class PersonalityAnalyzer {
    */
   private async buildPersonalityProfile(
     user: TrackedUser,
-    userMessages: DiscordMessage[]
-    userConversations: ConversationThread[]
+    userMessages: DiscordMessage[],
+    userConversations: ConversationThread[],
     allMessages: DiscordMessage[]
   ): Promise<PersonalityProfile> {
     
@@ -231,8 +231,8 @@ export class PersonalityAnalyzer {
    */
   private analyzeResponsePatterns(
     user: TrackedUser,
-    userMessages: DiscordMessage[]
-    userConversations: ConversationThread[]
+    userMessages: DiscordMessage[],
+    userConversations: ConversationThread[],
     allMessages: DiscordMessage[]
   ): ResponsePattern[] {
     const patterns: ResponsePattern[] = [];
@@ -395,7 +395,7 @@ export class PersonalityAnalyzer {
    * Assess leadership score
    */
   private assessLeadership(
-    messages: DiscordMessage[]
+    messages: DiscordMessage[],
     userConversations: ConversationThread[]
   ): number {
     let leadershipScore = 0;
@@ -463,7 +463,7 @@ export class PersonalityAnalyzer {
    */
   private async analyzeRelationships(
     user: TrackedUser,
-    userMessages: DiscordMessage[]
+    userMessages: DiscordMessage[],
     userConversations: ConversationThread[]
   ): Promise<UserRelationship[]> {
     const relationships = new Map<string, UserRelationship>();
@@ -484,7 +484,7 @@ export class PersonalityAnalyzer {
             interactionCount: 0,
             positiveInteractions: 0,
             lastInteraction: message.timestamp,
-            topics: []
+            topics: [],
           });
         }
         

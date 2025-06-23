@@ -256,7 +256,7 @@ export class ScenarioTestHarness {
   }
 
   async sendBatchMessagesAndWaitForResponses(
-    messages: string[]
+    messages: string[],
     roomId?: UUID,
     userId?: UUID
   ): Promise<AgentResponse[]> {

@@ -770,7 +770,7 @@ export const githubPlugin: Plugin = {
   actions: githubActions,
   providers: githubProviders,
   // Tests are loaded separately to avoid bundling test framework code in production
-  tests: []
+  tests: [],
 };
 
 // Export individual components for external use

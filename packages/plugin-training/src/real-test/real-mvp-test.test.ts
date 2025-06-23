@@ -19,11 +19,11 @@ describe('Real MVP Plugin - ZERO LARP', () => {
       name: 'Real MVP Test Agent',
       bio: ['Testing real MVP functionality'],
       system: 'You are a test agent for real MVP testing.',
-      messageExamples: []
-      postExamples: []
-      topics: []
-      knowledge: []
-      plugins: []
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      knowledge: [],
+      plugins: [],
     };
 
     runtime = new AgentRuntime({

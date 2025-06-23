@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { ScenarioRunner } from '../src/scenario-runner/index.js';
 import { type Scenario } from '../src/scenario-runner/types.js';
 import { AgentServer } from '@elizaos/server';
-import { type IAgentRuntime, type Character, UUID } from '@elizaos/core';
+import { type IAgentRuntime, type Character, UUID, mockCharacter } from '@elizaos/core';
 // Import from scenarios package instead of local scenarios
 // import { truthVsLieScenario } from '../scenarios/truth-vs-lie.js';
 
@@ -11,26 +11,9 @@ describe('ScenarioRunner Integration Tests', () => {
   let mockRuntime: IAgentRuntime;
   let scenarioRunner: ScenarioRunner;
 
-  const mockCharacter: Character = {
+  const mockCharacter: Character = createMockCharacter({
     id: 'test-agent' as UUID,
-    name: 'Test Agent',
-    username: 'testagent',
-    system: 'You are a helpful test agent.',
-    settings: {
-      secrets: {},
-    },
-    plugins: []
-    bio: []
-    messageExamples: []
-    postExamples: []
-    topics: []
-    knowledge: []
-    style: {
-      all: []
-      chat: []
-      post: []
-    },
-  };
+  });
 
   beforeEach(async () => {
     // Create mock runtime with all necessary methods
@@ -41,8 +24,8 @@ describe('ScenarioRunner Integration Tests', () => {
         db: ':memory:',
       } as any,
       token: 'test-token',
-      actions: []
-      providers: []
+      actions: [],
+      providers: [],
 
       // Mock core methods
       initialize: vi.fn().mockResolvedValue(undefined),
@@ -194,11 +177,11 @@ describe('ScenarioRunner Integration Tests', () => {
       id: '',
       name: 'Invalid Scenario',
       description: 'Missing required fields',
-      actors: [] // No actors
+      actors: [], // No actors
       setup: {},
       execution: {},
       verification: {
-        rules: [] // No verification rules
+        rules: [], // No verification rules
       },
     };
 

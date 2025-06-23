@@ -31,7 +31,7 @@ try {
         topics: [],
         knowledge: [],
         clients: [],
-        plugins: []
+        plugins: [],
     };
     console.log('✅ Test character created');
     

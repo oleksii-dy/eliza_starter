@@ -27,10 +27,10 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
       name: 'TestAgent',
       bio: ['Test agent for workflow actions'],
       system: 'Test system',
-      messageExamples: []
-      postExamples: []
-      topics: []
-      knowledge: []
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      knowledge: [],
       plugins: [
         '@elizaos/plugin-trust',
         '@elizaos/plugin-rolodex',
@@ -76,7 +76,7 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
             benevolence: 0.6,
             transparency: 0.7,
           },
-          evidence: []
+          evidence: [],
           lastUpdated: Date.now(),
           version: 1,
         };
@@ -95,7 +95,7 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
             benevolence: 0.5,
             transparency: 0.5,
           },
-          evidence: []
+          evidence: [],
           lastUpdated: Date.now(),
           version: 1,
         };
@@ -151,7 +151,7 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
               linkedAt: new Date().toISOString(),
             },
           },
-          relationships: []
+          relationships: [],
           metadata: {},
           createdAt: Date.now(),
           lastUpdated: Date.now(),
@@ -175,7 +175,7 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
         ],
         confidence: 0.85,
         reason: 'High similarity in platform identities',
-        conflicts: []
+        conflicts: [],
         suggestedPrimary: asUUID('550e8400-e29b-41d4-a716-446655440502'),
         mergeStrategy: 'conservative',
         estimatedRisk: 'low',
@@ -185,7 +185,7 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
         success: true,
         primaryEntityId: asUUID('550e8400-e29b-41d4-a716-446655440502'),
         mergedEntityIds: [asUUID('550e8400-e29b-41d4-a716-446655440503')],
-        conflicts: []
+        conflicts: [],
         rollbackData: null,
         metadata: {},
       }),
@@ -194,8 +194,8 @@ const createMockRuntime = (): Partial<IAgentRuntime> => {
     getPaymentProvider: vi.fn(() => ({
       getPaymentProfile: vi.fn().mockResolvedValue({
         entityId: asUUID('test-entity'),
-        preferredMethods: []
-        transactionHistory: []
+        preferredMethods: [],
+        transactionHistory: [],
         totalTransactions: 5,
         riskLevel: 'low',
         trustScore: 0.65,

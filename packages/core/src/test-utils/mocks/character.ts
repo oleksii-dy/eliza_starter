@@ -191,7 +191,7 @@ export function createMinimalMockCharacter(
       ],
     ],
     topics: ['testing'],
-    plugins: []
+    plugins: [],
     ...overrides,
   });
 }

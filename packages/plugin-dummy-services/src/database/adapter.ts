@@ -193,7 +193,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     return this.memories.get(id) || null;
   }
 
-  async getMemoriesByIds(ids: UUID[] tableName?: string): Promise<Memory[]> {
+  async getMemoriesByIds(ids: UUID[], tableName?: string): Promise<Memory[]> {
     return ids
       .map((id) => this.memories.get(id))
       .filter((memory) => memory !== undefined) as Memory[];
@@ -445,7 +445,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
     return entityIds;
   }
 
-  async addParticipantsRoom(entityIds: UUID[] roomId: UUID): Promise<boolean> {
+  async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
     const participants = this.participants.get(roomId) || [];
 
     for (const entityId of entityIds) {
@@ -503,7 +503,7 @@ export class MockDatabaseAdapter extends DatabaseAdapter<any> implements IDataba
       sourceEntityId: params.sourceEntityId,
       targetEntityId: params.targetEntityId,
       agentId: 'mock-agent' as UUID,
-      tags: params.tags || []
+      tags: params.tags || [],
       metadata: params.metadata || {},
     };
     this.relationships.set(key, relationship);

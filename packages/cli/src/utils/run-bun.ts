@@ -8,7 +8,7 @@ import { displayBunInstallationTipCompact } from './bun-installation-helper';
  * @param {string} cwd - The current working directory in which to run the command.
  * @returns {Promise<void>} A Promise that resolves when the command has finished running.
  */
-export async function runBunCommand(args: string[] cwd: string): Promise<void> {
+export async function runBunCommand(args: string[], cwd: string): Promise<void> {
   const finalArgs = [...args];
 
   // In CI environments, optimize bun install with appropriate flags

@@ -210,7 +210,7 @@ export class ExplainableVerificationEngine {
       score: 0,
       reason: 'Rule type not supported by explainable verification',
       ruleName: rule.description || rule.id,
-      evidence: []
+      evidence: [],
     };
   }
 

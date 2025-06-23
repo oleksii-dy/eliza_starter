@@ -437,10 +437,10 @@ export const plugin${pluginName
       .join('')}: Plugin = {
   name: 'plugin-${pluginName}',
   version: '0.1.0',
-  actions: []
-  providers: []
-  evaluators: []
-  services: []
+  actions: [],
+  providers: [],
+  evaluators: [],
+  services: [],
 };
 
 export default plugin${pluginName

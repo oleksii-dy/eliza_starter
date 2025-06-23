@@ -261,7 +261,7 @@ async function loadExtractedData(inputDir: string): Promise<{
 /**
  * Generate statistics about the instruction examples
  */
-function generateStatistics(examples: InstructionExample[] users: TrackedUser[]): GenerationStats {
+function generateStatistics(examples: InstructionExample[], users: TrackedUser[]): GenerationStats {
   const userDistribution: Record<string, number> = {};
   const topicDistribution: Record<string, number> = {};
   const channelDistribution: Record<string, number> = {};

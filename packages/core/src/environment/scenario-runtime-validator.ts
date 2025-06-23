@@ -1,7 +1,7 @@
-import type { 
-  PluginScenario, 
+import type {
+  PluginScenario,
   PluginEnvironmentValidation,
-  ScenarioCharacter 
+  ScenarioCharacter,
 } from '../types/scenario';
 import type { IAgentRuntime } from '../types/runtime';
 import type { Plugin } from '../types/plugin';
@@ -27,21 +27,23 @@ export class ScenarioRuntimeValidator {
     const result = {
       canRun: true,
       skipReason: undefined as string | undefined,
-      environmentValidations: [] as PluginEnvironmentValidation[]
-      missingPlugins: [] as string[]
-      warnings: [] as string[]
+      environmentValidations: [] as PluginEnvironmentValidation[],
+      missingPlugins: [] as string[],
+      warnings: [] as string[],
     };
 
     try {
       // 1. Validate environment variables for all plugins
       result.environmentValidations = await PluginEnvironmentValidator.validateScenarioEnvironment(
-        scenario, 
+        scenario,
         runtime
       );
 
       // 2. Check if all required environment variables are available
-      const envSummary = PluginEnvironmentValidator.getEnvironmentSummary(result.environmentValidations);
-      
+      const envSummary = PluginEnvironmentValidator.getEnvironmentSummary(
+        result.environmentValidations
+      );
+
       if (!envSummary.allValid) {
         result.canRun = false;
         result.skipReason = `Missing required environment variables: ${envSummary.missingVars.join(', ')}`;
@@ -49,7 +51,7 @@ export class ScenarioRuntimeValidator {
       }
 
       // 3. Check if all required plugins are available in runtime
-      const availablePlugins = new Set(runtime.plugins.map(p => p.name));
+      const availablePlugins = new Set(runtime.plugins.map((p) => p.name));
       const requiredPlugins = this.getAllRequiredPlugins(scenario);
 
       for (const pluginName of requiredPlugins) {
@@ -66,7 +68,9 @@ export class ScenarioRuntimeValidator {
 
       // 4. Add warnings for optional environment variables
       if (envSummary.warningCount > 0) {
-        result.warnings.push(`${envSummary.warningCount} optional environment variables are not configured`);
+        result.warnings.push(
+          `${envSummary.warningCount} optional environment variables are not configured`
+        );
       }
 
       // 5. Validate character configurations
@@ -80,7 +84,6 @@ export class ScenarioRuntimeValidator {
       if (characterValidation.warnings.length > 0) {
         result.warnings.push(...characterValidation.warnings);
       }
-
     } catch (error) {
       result.canRun = false;
       result.skipReason = `Validation error: ${error instanceof Error ? error.message : String(error)}`;
@@ -93,7 +96,7 @@ export class ScenarioRuntimeValidator {
    * Validates multiple scenarios and returns execution plan
    */
   static async validateScenarios(
-    scenarios: PluginScenario[]
+    scenarios: PluginScenario[],
     runtime: IAgentRuntime
   ): Promise<{
     executable: PluginScenario[];
@@ -108,7 +111,7 @@ export class ScenarioRuntimeValidator {
 
     for (const scenario of scenarios) {
       const validation = await this.validateScenario(scenario, runtime);
-      
+
       environmentValidations.set(scenario.id, validation.environmentValidations);
 
       if (validation.canRun) {
@@ -117,9 +120,9 @@ export class ScenarioRuntimeValidator {
           warnings.push(`Scenario ${scenario.name}: ${validation.warnings.join('; ')}`);
         }
       } else {
-        skipped.push({ 
-          scenario, 
-          reason: validation.skipReason || 'Unknown validation error'
+        skipped.push({
+          scenario,
+          reason: validation.skipReason || 'Unknown validation error',
         });
       }
     }
@@ -128,7 +131,7 @@ export class ScenarioRuntimeValidator {
       executable,
       skipped,
       warnings,
-      environmentValidations
+      environmentValidations,
     };
   }
 
@@ -137,7 +140,7 @@ export class ScenarioRuntimeValidator {
    */
   private static getAllRequiredPlugins(scenario: PluginScenario): Set<string> {
     const plugins = new Set<string>();
-    
+
     for (const character of scenario.characters) {
       for (const plugin of character.plugins) {
         plugins.add(plugin);
@@ -158,14 +161,14 @@ export class ScenarioRuntimeValidator {
     const warnings: string[] = [];
 
     // Check for duplicate character IDs
-    const characterIds = characters.map(c => c.id);
+    const characterIds = characters.map((c) => c.id);
     const uniqueIds = new Set(characterIds);
-    
+
     if (characterIds.length !== uniqueIds.size) {
       return {
         isValid: false,
         reason: 'Duplicate character IDs found in scenario',
-        warnings
+        warnings,
       };
     }
 
@@ -174,7 +177,7 @@ export class ScenarioRuntimeValidator {
       return {
         isValid: false,
         reason: 'Scenario must have at least one character',
-        warnings
+        warnings,
       };
     }
 
@@ -195,14 +198,14 @@ export class ScenarioRuntimeValidator {
         return {
           isValid: false,
           reason: `Character ${character.id} is missing required name`,
-          warnings
+          warnings,
         };
       }
     }
 
     return {
       isValid: true,
-      warnings
+      warnings,
     };
   }
 
@@ -210,7 +213,7 @@ export class ScenarioRuntimeValidator {
    * Creates a summary report of scenario validation results
    */
   static createValidationReport(
-    scenarios: PluginScenario[]
+    scenarios: PluginScenario[],
     validationResults: {
       executable: PluginScenario[];
       skipped: Array<{ scenario: PluginScenario; reason: string }>;
@@ -219,7 +222,7 @@ export class ScenarioRuntimeValidator {
     }
   ): string {
     const lines: string[] = [];
-    
+
     lines.push('# Scenario Validation Report');
     lines.push('');
     lines.push(`Total scenarios: ${scenarios.length}`);
@@ -254,10 +257,13 @@ export class ScenarioRuntimeValidator {
 
     // Environment variable summary
     const allEnvValidations = Array.from(validationResults.environmentValidations.values()).flat();
-    const allMissingVars = new Set(allEnvValidations.flatMap(v => v.missingVars));
+    const allMissingVars = new Set(allEnvValidations.flatMap((v) => v.missingVars));
     const allWarningVars = new Set(
-      allEnvValidations.flatMap(v => 
-        v.warnings.filter(w => w.includes('not set')).map(w => w.match(/(\w+) is not set/)?.[1]).filter(Boolean)
+      allEnvValidations.flatMap((v) =>
+        v.warnings
+          .filter((w) => w.includes('not set'))
+          .map((w) => w.match(/(\w+) is not set/)?.[1])
+          .filter(Boolean)
       )
     );
 

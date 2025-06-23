@@ -252,7 +252,7 @@ export class EntityGraphManager {
           type: 'unknown',
           names: [`Entity ${entityId.substring(0, 8)}`],
           summary: context.substring(0, 200),
-          tags: []
+          tags: [],
           platforms: {},
           metadata: {
             context: context,
@@ -432,7 +432,7 @@ export class EntityGraphManager {
         sourceEntityId: sourceId,
         targetEntityId: targetId,
         agentId: asUUID(this.runtime.agentId),
-        tags: []
+        tags: [],
         metadata: {
           type: inferred.type,
           strength: existing

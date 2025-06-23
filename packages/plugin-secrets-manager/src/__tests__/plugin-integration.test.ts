@@ -79,7 +79,7 @@ const createMockRuntime = (): IAgentRuntime => {
         components.set(component.entityId, userComponents);
       }),
     },
-    plugins: []
+    plugins: [],
     // ... other runtime properties
   } as any;
   

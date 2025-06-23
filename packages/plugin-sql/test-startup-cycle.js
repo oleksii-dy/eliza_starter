@@ -15,9 +15,9 @@ const testCharacter = {
   name: 'StartupTestAgent',
   bio: ['Test agent for startup cycle verification'],
   system: 'You are a test agent.',
-  messageExamples: []
-  postExamples: []
-  topics: []
+  messageExamples: [],
+  postExamples: [],
+  topics: [],
   knowledge: [],
   plugins: ['@elizaos/plugin-sql'],
   id: 'test-agent-startup',

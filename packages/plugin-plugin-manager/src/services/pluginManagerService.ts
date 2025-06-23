@@ -439,15 +439,15 @@ export class PluginManagerService extends Service implements PluginRegistry {
     config?: PluginManagerConfig
   ): Promise<PluginManagerService> {
     const service = new PluginManagerService(runtime, config);
-    
+
     // Initialize internal managers (not exposed as services)
     await service.initializeInternalManagers();
-    
-            // Only log in non-test environments
-        if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
-            logger.info('[PluginManagerService] Initialized with simplified architecture.');
-        }
-    
+
+    // Only log in non-test environments
+    if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+      logger.info('[PluginManagerService] Initialized with simplified architecture.');
+    }
+
     return service;
   }
 
@@ -490,8 +490,8 @@ export class PluginManagerService extends Service implements PluginRegistry {
         name: plugin.name,
         status: PluginStatus.LOADED,
         plugin,
-        missingEnvVars: []
-        buildLog: []
+        missingEnvVars: [],
+        buildLog: [],
         createdAt: Date.now(),
         loadedAt: Date.now(),
         components: {
@@ -544,17 +544,17 @@ export class PluginManagerService extends Service implements PluginRegistry {
 
     this.dependencyResolver = new DependencyResolverManager(this.runtime);
     this.versionManager = new VersionManager(this.runtime);
-    
+
     // Initialize managers that need async setup
     this.installationManager = new InstallationManager(this.runtime);
     await this.installationManager.initialize();
-    
+
     this.configurationManager = new ConfigurationManager(this.runtime);
     await this.configurationManager.initialize();
-    
+
     this.registryManager = new RegistryManager(this.runtime);
     await this.registryManager.initialize();
-    
+
     this.healthMonitoringManager = new HealthMonitoringManager(this.runtime);
     await this.healthMonitoringManager.initialize();
   }
@@ -736,8 +736,8 @@ export class PluginManagerService extends Service implements PluginRegistry {
       name: plugin.name,
       status: PluginStatus.READY,
       plugin,
-      missingEnvVars: []
-      buildLog: []
+      missingEnvVars: [],
+      buildLog: [],
       createdAt: Date.now(),
       components: {
         actions: new Set(),
@@ -955,18 +955,18 @@ export class PluginManagerService extends Service implements PluginRegistry {
 
   async stop(): Promise<void> {
     logger.info('[PluginManagerService] Stopping...');
-    
+
     // Clean up managers
     await this.healthMonitoringManager?.cleanup();
     await this.registryManager?.cleanup();
     await this.configurationManager?.cleanup();
     await this.installationManager?.cleanup();
-    
+
     // Clear caches
     this.modelCache.clear();
     this.capabilityCache = null;
     this.taskHistory = [];
-    
+
     logger.info('[PluginManagerService] Stopped');
   }
 
@@ -1320,7 +1320,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
     try {
       const rankedPlugins = await this._rankPluginsByContext(
         allPlugins,
-        context.currentCapabilities || []
+        context.currentCapabilities || [],
         context.recentActions || []
       );
       return rankedPlugins.slice(0, 5).map((rp) => ({
@@ -1352,10 +1352,10 @@ export class PluginManagerService extends Service implements PluginRegistry {
       logger.info('[PluginManagerService:Capability] Analyzing current capabilities');
     }
     const profile: CapabilityProfile = {
-      core: []
+      core: [],
       plugins: new Map(),
       coverage: {},
-      limitations: []
+      limitations: [],
     };
 
     // In a real implementation, this would be a much more sophisticated analysis
@@ -1391,7 +1391,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
   // --- Merged Private/Helper Functions ---
 
   private async _evaluatePluginRelevance(
-    plugins: PluginSearchResult[]
+    plugins: PluginSearchResult[],
     context: AgentContext,
     userQuery?: string
   ): Promise<RankedPlugin[]> {
@@ -1416,8 +1416,8 @@ export class PluginManagerService extends Service implements PluginRegistry {
   }
 
   private async _rankPluginsByContext(
-    plugins: PluginSearchResult[]
-    agentCapabilities: string[]
+    plugins: PluginSearchResult[],
+    agentCapabilities: string[],
     recentTasks: string[]
   ): Promise<RankedPlugin[]> {
     const prompt = `You are an expert at analyzing plugin ecosystems...`; // full prompt
@@ -1430,7 +1430,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
   }
 
   private _buildEvaluationPrompt(
-    plugins: PluginSearchResult[]
+    plugins: PluginSearchResult[],
     context: AgentContext,
     userQuery?: string
   ): string {
@@ -1452,7 +1452,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
         plugin: p,
         relevanceScore: 1 - i * 0.1,
         reasoning: 'Basic ranking',
-        capabilities: []
+        capabilities: [],
       }));
     }
   }
@@ -1744,12 +1744,12 @@ export class PluginManagerService extends Service implements PluginRegistry {
   /**
    * Check plugin dependencies
    */
-  async checkPluginDependencies(pluginNames: string[] options?: any): Promise<any> {
+  async checkPluginDependencies(pluginNames: string[], options?: any): Promise<any> {
     return this.dependencyResolver.resolveDependencies(pluginNames, options);
   }
 
   // Health Monitoring Methods
-  
+
   /**
    * Perform a health check on a specific plugin
    */

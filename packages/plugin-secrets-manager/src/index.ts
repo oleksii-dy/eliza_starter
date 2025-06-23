@@ -36,7 +36,7 @@ export const envPlugin: Plugin = {
 
   services: [EnhancedSecretManager, SecretFormService, ActionChainService],
 
-  dependencies: []
+  dependencies: [],
 
   providers: [envStatusProvider, secretsInfoProvider, uxGuidanceProvider, settingsProvider],
 

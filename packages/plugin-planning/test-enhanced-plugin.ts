@@ -42,7 +42,7 @@ function createEnhancedMockRuntime(): MockRuntime {
       { name: 'RESOURCE_PROVIDER', description: 'Available resources and capacity information' }
     ],
     
-    logs: []
+    logs: [],
     
     // Mock LLM that returns realistic planning responses
     useModel: async (modelType: string, params: any) => {

@@ -21,7 +21,7 @@ import { addHeader } from '@elizaos/core';
 export const attachmentsProvider: Provider = {
   name: 'ATTACHMENTS',
   description:
-    'List of attachments sent during the current conversation, including names, descriptions, and summaries',
+    'Provides contextual information about files, images, documents, and media shared in the conversation when agent needs to reference, analyze, or respond to visual or document content',
   dynamic: true,
   get: async (runtime: IAgentRuntime, message: Memory) => {
     // Start with any attachments in the current message

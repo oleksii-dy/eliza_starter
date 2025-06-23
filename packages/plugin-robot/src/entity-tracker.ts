@@ -1,12 +1,12 @@
 import { logger, type IAgentRuntime, type UUID } from '@elizaos/core';
-import type { 
-  TrackedEntity, 
-  EntityAppearance, 
+import type {
+  TrackedEntity,
+  EntityAppearance,
   EntityAttributes,
   WorldState,
   DetectedObject,
   PersonInfo,
-  BoundingBox
+  BoundingBox,
 } from './types';
 
 export class EntityTracker {
@@ -14,20 +14,20 @@ export class EntityTracker {
   private readonly POSITION_THRESHOLD = 100; // pixels
   private readonly MISSING_THRESHOLD = 5000; // 5 seconds
   private readonly CLEANUP_THRESHOLD = 60000; // 1 minute
-  
+
   constructor(worldId: string) {
     this.worldState = {
       worldId,
       entities: new Map(),
       lastUpdate: Date.now(),
-      activeEntities: []
-      recentlyLeft: []
+      activeEntities: [],
+      recentlyLeft: [],
     };
   }
 
   async updateEntities(
-    detectedObjects: DetectedObject[]
-    people: PersonInfo[]
+    detectedObjects: DetectedObject[],
+    people: PersonInfo[],
     faceProfiles?: Map<string, string>, // Maps person ID to face profile ID
     runtime?: IAgentRuntime
   ): Promise<TrackedEntity[]> {
@@ -100,11 +100,13 @@ export class EntityTracker {
         firstSeen: timestamp,
         lastSeen: timestamp,
         lastPosition: person.boundingBox,
-        appearances: [{
-          timestamp,
-          boundingBox: person.boundingBox,
-          confidence: person.confidence,
-        }],
+        appearances: [
+          {
+            timestamp,
+            boundingBox: person.boundingBox,
+            confidence: person.confidence,
+          },
+        ],
         attributes: {
           faceId: faceProfileId,
         },
@@ -113,15 +115,12 @@ export class EntityTracker {
 
       this.worldState.entities.set(entityId, newEntity);
       logger.info(`[EntityTracker] New person entity created: ${entityId}`);
-      
+
       return newEntity;
     }
   }
 
-  private async trackObject(
-    obj: DetectedObject,
-    timestamp: number
-  ): Promise<TrackedEntity> {
+  private async trackObject(obj: DetectedObject, timestamp: number): Promise<TrackedEntity> {
     // Try to match with existing entities
     const matchedEntity = this.findMatchingEntity(obj.boundingBox, 'object');
 
@@ -150,11 +149,13 @@ export class EntityTracker {
         firstSeen: timestamp,
         lastSeen: timestamp,
         lastPosition: obj.boundingBox,
-        appearances: [{
-          timestamp,
-          boundingBox: obj.boundingBox,
-          confidence: obj.confidence,
-        }],
+        appearances: [
+          {
+            timestamp,
+            boundingBox: obj.boundingBox,
+            confidence: obj.confidence,
+          },
+        ],
         attributes: {
           objectType: obj.type,
         },
@@ -163,7 +164,7 @@ export class EntityTracker {
 
       this.worldState.entities.set(entityId, newEntity);
       logger.debug(`[EntityTracker] New object entity created: ${entityId} (${obj.type})`);
-      
+
       return newEntity;
     }
   }
@@ -193,7 +194,7 @@ export class EntityTracker {
 
       // Calculate position distance
       const distance = this.calculateDistance(entity.lastPosition, boundingBox);
-      
+
       if (distance < this.POSITION_THRESHOLD && distance < minDistance) {
         minDistance = distance;
         bestMatch = entity;
@@ -213,10 +214,7 @@ export class EntityTracker {
       y: box2.y + box2.height / 2,
     };
 
-    return Math.sqrt(
-      Math.pow(center1.x - center2.x, 2) + 
-      Math.pow(center1.y - center2.y, 2)
-    );
+    return Math.sqrt(Math.pow(center1.x - center2.x, 2) + Math.pow(center1.y - center2.y, 2));
   }
 
   private updateWorldState(seenEntityIds: Set<string>, timestamp: number): void {
@@ -226,22 +224,21 @@ export class EntityTracker {
 
     // Check for entities that left
     for (const [entityId, entity] of this.worldState.entities) {
-      if (!seenEntityIds.has(entityId) && 
-          this.worldState.activeEntities.includes(entityId)) {
+      if (!seenEntityIds.has(entityId) && this.worldState.activeEntities.includes(entityId)) {
         // Entity just left the scene
         this.worldState.recentlyLeft.push({
           entityId,
           leftAt: timestamp,
           lastPosition: entity.lastPosition,
         });
-        
+
         logger.info(`[EntityTracker] Entity left scene: ${entityId}`);
       }
     }
 
     // Clean up old "recently left" entries
     this.worldState.recentlyLeft = this.worldState.recentlyLeft.filter(
-      entry => timestamp - entry.leftAt < this.CLEANUP_THRESHOLD
+      (entry) => timestamp - entry.leftAt < this.CLEANUP_THRESHOLD
     );
 
     // Clean up very old entities
@@ -276,7 +273,7 @@ export class EntityTracker {
         // For now, we'll just log the entity creation
         // In a real implementation, this would integrate with runtime.createEntity
         logger.debug(`[EntityTracker] Would sync entity ${entity.id} with runtime`);
-        
+
         // TODO: When runtime supports entity management:
         // const existing = await runtime.getEntity(entity.id as UUID);
         // if (!existing) {
@@ -297,7 +294,7 @@ export class EntityTracker {
 
   getActiveEntities(): TrackedEntity[] {
     return this.worldState.activeEntities
-      .map(id => this.worldState.entities.get(id))
+      .map((id) => this.worldState.entities.get(id))
       .filter(Boolean) as TrackedEntity[];
   }
 
@@ -307,11 +304,11 @@ export class EntityTracker {
 
   getRecentlyLeft(): Array<{ entity: TrackedEntity; leftAt: number }> {
     return this.worldState.recentlyLeft
-      .map(entry => ({
+      .map((entry) => ({
         entity: this.worldState.entities.get(entry.entityId),
         leftAt: entry.leftAt,
       }))
-      .filter(entry => entry.entity) as Array<{ entity: TrackedEntity; leftAt: number }>;
+      .filter((entry) => entry.entity) as Array<{ entity: TrackedEntity; leftAt: number }>;
   }
 
   // Name assignment
@@ -338,8 +335,8 @@ export class EntityTracker {
       totalEntities: entities.length,
       activeEntities: this.worldState.activeEntities.length,
       recentlyLeft: this.worldState.recentlyLeft.length,
-      people: entities.filter(e => e.entityType === 'person').length,
-      objects: entities.filter(e => e.entityType === 'object').length,
+      people: entities.filter((e) => e.entityType === 'person').length,
+      objects: entities.filter((e) => e.entityType === 'object').length,
     };
   }
-} 
+}

@@ -156,13 +156,13 @@ export interface IAgentRuntime {
   getService<T = any>(service: string): T | null;
   composeState(
     message: Memory,
-    includeList?: string[]
+    includeList?: string[],
     onlyInclude?: boolean,
     skipCache?: boolean
   ): Promise<State>;
   processActions(
     message: Memory,
-    responses: Memory[]
+    responses: Memory[],
     state?: State,
     callback?: HandlerCallback
   ): Promise<void>;

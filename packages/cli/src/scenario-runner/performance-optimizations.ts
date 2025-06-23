@@ -166,7 +166,7 @@ RESULT_3: PASS | Score: 0.8 | Reason: Security compliance maintained`;
           passed: false,
           score: 0,
           reason: 'Batch processing failed',
-          evidence: []
+          evidence: [],
         };
       }
 
@@ -181,7 +181,7 @@ RESULT_3: PASS | Score: 0.8 | Reason: Security compliance maintained`;
         passed: statusPart === 'PASS',
         score: parseFloat(scorePart) || 0,
         reason: reasonPart || 'No reason provided',
-        evidence: []
+        evidence: [],
       };
     });
   }

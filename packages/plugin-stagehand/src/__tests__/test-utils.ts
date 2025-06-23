@@ -29,10 +29,10 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       name: 'Stagehand Test Character',
       bio: ['This is a test character for testing stagehand functionality'],
       system: 'You are a test agent for stagehand automation',
-      messageExamples: []
-      postExamples: []
+      messageExamples: [],
+      postExamples: [],
       topics: ['web-automation', 'testing'],
-      knowledge: []
+      knowledge: [],
       plugins: ['@elizaos/plugin-stagehand'],
     },
 

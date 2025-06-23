@@ -56,7 +56,7 @@ export class ScenarioGenerator {
    * Generate training scenarios for file creation
    */
   async generateFileCreationScenarios(
-    files: ExtractedFile[] 
+    files: ExtractedFile[], 
     repositoryType: 'core' | 'plugin' = 'core',
     options: Partial<ScenarioGenerationOptions> = {}
   ): Promise<TrainingScenario[]> {
@@ -102,7 +102,7 @@ export class ScenarioGenerator {
    */
   private async createFileScenario(
     targetFile: ExtractedFile, 
-    allFiles: ExtractedFile[] 
+    allFiles: ExtractedFile[], 
     repositoryType: 'core' | 'plugin',
     options: ScenarioGenerationOptions
   ): Promise<TrainingScenario> {
@@ -195,7 +195,7 @@ Generate only the user request, nothing else.`;
    */
   private async generateThinkingProcess(
     targetFile: ExtractedFile, 
-    relatedFiles: ExtractedFile[] 
+    relatedFiles: ExtractedFile[], 
     userQuery: string,
     repositoryType: 'core' | 'plugin'
   ): Promise<string> {

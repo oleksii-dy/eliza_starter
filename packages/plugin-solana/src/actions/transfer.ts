@@ -138,7 +138,7 @@ export default {
   ],
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     logger.log('Validating transfer from entity:', message.entityId);
-    
+
     // Check if this is a system/agent action
     if (message.entityId === runtime.agentId) {
       return true;
@@ -166,7 +166,7 @@ export default {
 
       // Require high trust (80) for financial transfers
       const requiredTrust = 80;
-      
+
       if (trust.overallTrust < requiredTrust) {
         logger.warn(
           `[Transfer] Insufficient trust for transfer: ${trust.overallTrust.toFixed(1)} < ${requiredTrust} for entity ${message.entityId}`
@@ -214,7 +214,7 @@ export default {
       return {
         success: false,
         message: 'Need a valid recipient address and amount to transfer.',
-        data: { error: 'Invalid transfer content' }
+        data: { error: 'Invalid transfer content' },
       };
     }
 
@@ -230,10 +230,10 @@ export default {
         return {
           success: false,
           message: 'Failed to access wallet',
-          data: { error: 'Wallet not available' }
+          data: { error: 'Wallet not available' },
         };
       }
-      
+
       const connection = new Connection(
         runtime.getSetting('SOLANA_RPC_URL') || 'https://api.mainnet-beta.solana.com'
       );
@@ -335,16 +335,17 @@ export default {
 
       return {
         success: true,
-        message: content.tokenAddress === null 
-          ? `Sent ${content.amount} SOL to ${content.recipient}. Transaction: ${signature}`
-          : `Sent ${content.amount} tokens to ${content.recipient}. Transaction: ${signature}`,
+        message:
+          content.tokenAddress === null
+            ? `Sent ${content.amount} SOL to ${content.recipient}. Transaction: ${signature}`
+            : `Sent ${content.amount} tokens to ${content.recipient}. Transaction: ${signature}`,
         data: {
           transactionId: signature,
           amount: content.amount.toString(),
           recipient: content.recipient,
           tokenAddress: content.tokenAddress || undefined,
-          sender: senderKeypair.publicKey.toBase58()
-        }
+          sender: senderKeypair.publicKey.toBase58(),
+        },
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -358,7 +359,7 @@ export default {
       return {
         success: false,
         message: `Transfer failed: ${errorMessage}`,
-        data: { error: errorMessage }
+        data: { error: errorMessage },
       };
     }
   },
@@ -394,5 +395,5 @@ export default {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 } as Action;

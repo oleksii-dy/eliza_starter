@@ -11,11 +11,11 @@ function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntim
       name: 'TestAgent',
       bio: ['Test bio'],
       system: 'Test system prompt',
-      messageExamples: []
-      postExamples: []
-      topics: []
-      knowledge: []
-      plugins: []
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      knowledge: [],
+      plugins: [],
     },
     getSetting: vi.fn((key: string) => {
       const settings: Record<string, string> = {

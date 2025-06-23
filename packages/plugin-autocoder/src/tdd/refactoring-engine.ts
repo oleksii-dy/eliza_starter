@@ -126,8 +126,8 @@ Return as JSON array.`;
         description: r.description,
         before: r.before || '',
         after: r.after || '',
-        benefits: r.benefits || []
-        risks: r.risks || []
+        benefits: r.benefits || [],
+        risks: r.risks || [],
         confidence: r.confidence || 0.5,
       }));
     } catch (error) {

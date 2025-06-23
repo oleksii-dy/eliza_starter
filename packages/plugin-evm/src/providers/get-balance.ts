@@ -33,7 +33,7 @@ If no token is mentioned or it's not a balance inquiry, return:
 export const tokenBalanceProvider: Provider = {
   name: 'TOKEN_BALANCE',
   description:
-    'Token balance indicates specific erc20 token balance when onchain actions are requested e.g. transfer, swap, bridge',
+    'Provides ERC20 token balance information when agent needs to check holdings before executing blockchain operations like transfers, swaps, or bridges. Essential for validating sufficient funds exist for requested transactions.',
   dynamic: true,
   get: async (runtime: IAgentRuntime, message: Memory): Promise<ProviderResult> => {
     try {

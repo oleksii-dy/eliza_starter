@@ -206,7 +206,7 @@ export class FirecrawlContentExtractor {
           url: startUrl,
           crawlerOptions: {
             maxCrawledLinks: maxPages,
-            includes: [] // Add patterns to include
+            includes: [], // Add patterns to include
             excludes: ['*/tag/*', '*/category/*', '*/page/*'], // Common pagination patterns
           },
           pageOptions: {

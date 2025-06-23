@@ -1,8 +1,4 @@
-import {
-  logger,
-  stringToUuid,
-  ModelType,
-} from '@elizaos/core';
+import { logger, stringToUuid, ModelType } from '@elizaos/core';
 
 import {
   type Evaluator,
@@ -59,7 +55,9 @@ export const relationshipExtractor: Evaluator = {
 
   handler: async (runtime: IAgentRuntime, message: Memory, state: any) => {
     try {
-      const relationshipService = runtime.getService('relationship') as unknown as RelationshipOntologyManager;
+      const relationshipService = runtime.getService(
+        'relationship'
+      ) as unknown as RelationshipOntologyManager;
       if (!relationshipService) {
         logger.warn('RelationshipOntologyManager not available');
         return;
@@ -304,7 +302,7 @@ async function handleDispute(runtime: IAgentRuntime, dispute: DisputeInfo, messa
 
 async function analyzeRelationships(
   runtime: IAgentRuntime,
-  messages: Memory[]
+  messages: Memory[],
   rolodexService: RolodexService
 ) {
   // Group messages by sender
@@ -334,7 +332,7 @@ async function analyzeRelationships(
   }
 }
 
-function analyzeInteraction(messagesA: Memory[] messagesB: Memory[]): RelationshipIndicator[] {
+function analyzeInteraction(messagesA: Memory[], messagesB: Memory[]): RelationshipIndicator[] {
   const indicators: RelationshipIndicator[] = [];
 
   logger.info('[RelationshipExtraction] analyzeInteraction called', {

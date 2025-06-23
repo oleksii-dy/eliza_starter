@@ -40,7 +40,7 @@ const createMockRuntime = (): IAgentRuntime => {
           already_known: false,
         },
       ],
-      relationships: []
+      relationships: [],
     }),
     addEmbeddingToMemory: vi.fn().mockImplementation((memory) => ({
       ...memory,

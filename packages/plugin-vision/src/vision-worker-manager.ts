@@ -387,7 +387,7 @@ export class VisionWorkerManager {
       timestamp: Date.now(),
       description: florence2Captions.join('. '),
       objects: allObjects,
-      people: [] // Could be populated by TensorFlow worker
+      people: [], // Could be populated by TensorFlow worker
       sceneChanged: true,
       changePercentage: 100,
       screenCapture: this.latestScreenCapture || undefined,

@@ -36,8 +36,8 @@ describe('Agent Message Handling Integration Tests', () => {
       id: 'test-agent' as UUID,
       name: 'Test Agent',
       bio: ['A test agent for message handling'],
-      topics: []
-      plugins: []
+      topics: [],
+      plugins: [],
       system: 'You are a helpful assistant. Always respond to messages when asked.',
       settings: {
         secrets: {},

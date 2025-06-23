@@ -180,12 +180,12 @@ export class ScenarioManifestValidator {
       name: scenario.name,
       description: scenario.description,
       category: scenario.category || 'general',
-      tags: scenario.tags || []
+      tags: scenario.tags || [],
       plugins: pluginDeps,
       environment: envReqs,
       actors: scenario.actors.map((actor) => ({
         role: actor.role,
-        plugins: actor.plugins || []
+        plugins: actor.plugins || [],
         config: actor.settings,
       })),
       setup: scenario.setup,
@@ -201,7 +201,7 @@ export class ScenarioManifestValidator {
         name: plugin.name,
         available: this.pluginCache.get(plugin.name),
         compatible: true,
-        errors: []
+        errors: [],
       };
     }
 
@@ -214,7 +214,7 @@ export class ScenarioManifestValidator {
         name: plugin.name,
         available: true,
         compatible: true,
-        errors: []
+        errors: [],
       };
     } catch (error) {
       this.pluginCache.set(plugin.name, false);
@@ -236,7 +236,7 @@ export class ScenarioManifestValidator {
         present: value !== undefined,
         valid: this.validateEnvValue(env, value),
         value: value ? '***' : undefined,
-        errors: []
+        errors: [],
       };
     }
 
@@ -348,7 +348,7 @@ export class ConsolidatedScenarioTestRunner {
           scenario: scenario.id,
           status: 'failed',
           duration: 0,
-          transcript: []
+          transcript: [],
           errors: [error.message],
         });
 
@@ -399,7 +399,7 @@ export class ConsolidatedScenarioTestRunner {
     return finalResult;
   }
 
-  private filterScenarios(scenarios: Scenario[] options: TestRunnerOptions): Scenario[] {
+  private filterScenarios(scenarios: Scenario[], options: TestRunnerOptions): Scenario[] {
     let filtered = [...scenarios];
 
     if (options.filter) {
@@ -436,7 +436,7 @@ export class ConsolidatedScenarioTestRunner {
       roomId: `scenario-room-${Date.now()}`,
       worldId: `scenario-world-${Date.now()}`,
       startTime,
-      transcript: []
+      transcript: [],
       metrics: {
         messageCount: 0,
         stepCount: 0,

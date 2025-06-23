@@ -622,7 +622,7 @@ export class TestProcessManager {
   /**
    * Spawn a process with proper error handling and cleanup
    */
-  spawn(command: string, args: string[] options: any = {}): any {
+  spawn(command: string, args: string[], options: any = {}): any {
     const { spawn } = require('child_process');
 
     // Force stdio to 'ignore' to prevent hanging streams on Windows

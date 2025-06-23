@@ -85,8 +85,8 @@ export class ResearchLogger {
   }
 
   async initializeSession(
-    projectId: string, 
-    originalQuery: string, 
+    projectId: string,
+    originalQuery: string,
     queryAnalysis: RelevanceAnalysis
   ): Promise<void> {
     elizaLogger.info(`[ResearchLogger] Initializing session for project: ${projectId}`);
@@ -96,9 +96,9 @@ export class ResearchLogger {
       originalQuery,
       startTime: Date.now(),
       queryAnalysis,
-      searchLogs: []
-      extractionLogs: []
-      findingLogs: []
+      searchLogs: [],
+      extractionLogs: [],
+      findingLogs: [],
       summary: {
         totalSearches: 0,
         totalResults: 0,
@@ -108,9 +108,9 @@ export class ResearchLogger {
         totalFindings: 0,
         relevantFindings: 0,
         overallRelevance: 0,
-        gaps: []
-        recommendations: []
-      }
+        gaps: [],
+        recommendations: [],
+      },
     };
 
     this.sessions.set(projectId, session);
@@ -123,7 +123,7 @@ export class ResearchLogger {
     projectId: string,
     query: string,
     provider: string,
-    results: SearchResult[]
+    results: SearchResult[],
     relevanceScores?: Map<string, RelevanceScore>
   ): Promise<void> {
     const session = this.sessions.get(projectId);
@@ -138,15 +138,15 @@ export class ResearchLogger {
       originalQuery: session.originalQuery,
       provider,
       resultsCount: results.length,
-      results: results.map(result => ({
+      results: results.map((result) => ({
         title: result.title,
         url: result.url,
         snippet: result.snippet,
         relevanceScore: relevanceScores?.get(result.url),
         processed: false,
         contentExtracted: false,
-        findingsExtracted: 0
-      }))
+        findingsExtracted: 0,
+      })),
     };
 
     session.searchLogs.push(searchLog);
@@ -154,10 +154,14 @@ export class ResearchLogger {
     session.summary.totalResults += results.length;
 
     // Count relevant results (score >= 0.6)
-    const relevantCount = searchLog.results.filter(r => (r.relevanceScore?.score || 0) >= 0.6).length;
+    const relevantCount = searchLog.results.filter(
+      (r) => (r.relevanceScore?.score || 0) >= 0.6
+    ).length;
     session.summary.relevantResults += relevantCount;
 
-    elizaLogger.info(`[ResearchLogger] Search logged: ${relevantCount}/${results.length} relevant results`);
+    elizaLogger.info(
+      `[ResearchLogger] Search logged: ${relevantCount}/${results.length} relevant results`
+    );
   }
 
   async logContentExtraction(
@@ -173,7 +177,9 @@ export class ResearchLogger {
     const session = this.sessions.get(projectId);
     if (!session) return;
 
-    elizaLogger.info(`[ResearchLogger] Logging content extraction: ${url} (${success ? 'success' : 'failed'})`);
+    elizaLogger.info(
+      `[ResearchLogger] Logging content extraction: ${url} (${success ? 'success' : 'failed'})`
+    );
 
     const extractionLog: ContentExtractionLog = {
       timestamp: Date.now(),
@@ -184,7 +190,7 @@ export class ResearchLogger {
       success,
       contentLength,
       error,
-      relevanceScore
+      relevanceScore,
     };
 
     session.extractionLogs.push(extractionLog);
@@ -196,7 +202,7 @@ export class ResearchLogger {
 
     // Update search log
     for (const searchLog of session.searchLogs) {
-      const result = searchLog.results.find(r => r.url === url);
+      const result = searchLog.results.find((r) => r.url === url);
       if (result) {
         result.processed = true;
         result.contentExtracted = success;
@@ -204,7 +210,9 @@ export class ResearchLogger {
       }
     }
 
-    elizaLogger.debug(`[ResearchLogger] Content extraction logged: ${sourceTitle} - ${contentLength} chars`);
+    elizaLogger.debug(
+      `[ResearchLogger] Content extraction logged: ${sourceTitle} - ${contentLength} chars`
+    );
   }
 
   async logFindingExtraction(
@@ -222,11 +230,13 @@ export class ResearchLogger {
     const session = this.sessions.get(projectId);
     if (!session) return;
 
-    elizaLogger.info(`[ResearchLogger] Logging finding extraction: ${sourceUrl} (${findings.length} findings)`);
+    elizaLogger.info(
+      `[ResearchLogger] Logging finding extraction: ${sourceUrl} (${findings.length} findings)`
+    );
 
-    const findingsWithScores = findings.map(finding => ({
+    const findingsWithScores = findings.map((finding) => ({
       ...finding,
-      relevanceScore: findingRelevanceScores?.get(finding.content)
+      relevanceScore: findingRelevanceScores?.get(finding.content),
     }));
 
     const findingLog: FindingExtractionLog = {
@@ -237,31 +247,37 @@ export class ResearchLogger {
       contentLength,
       findingsExtracted: findings.length,
       findings: findingsWithScores,
-      queryAlignment: findingsWithScores.reduce((sum, f) => sum + (f.relevanceScore?.queryAlignment || f.relevance), 0) / Math.max(findings.length, 1)
+      queryAlignment:
+        findingsWithScores.reduce(
+          (sum, f) => sum + (f.relevanceScore?.queryAlignment || f.relevance),
+          0
+        ) / Math.max(findings.length, 1),
     };
 
     session.findingLogs.push(findingLog);
     session.summary.totalFindings += findings.length;
 
     // Count relevant findings (relevance >= 0.7)
-    const relevantCount = findings.filter(f => f.relevance >= 0.7).length;
+    const relevantCount = findings.filter((f) => f.relevance >= 0.7).length;
     session.summary.relevantFindings += relevantCount;
 
     // Update search log
     for (const searchLog of session.searchLogs) {
-      const result = searchLog.results.find(r => r.url === sourceUrl);
+      const result = searchLog.results.find((r) => r.url === sourceUrl);
       if (result) {
         result.findingsExtracted = findings.length;
         break;
       }
     }
 
-    elizaLogger.info(`[ResearchLogger] Finding extraction logged: ${relevantCount}/${findings.length} relevant findings`);
+    elizaLogger.info(
+      `[ResearchLogger] Finding extraction logged: ${relevantCount}/${findings.length} relevant findings`
+    );
   }
 
   async finalizeSession(
     projectId: string,
-    gaps: string[]
+    gaps: string[],
     recommendations: string[]
   ): Promise<ResearchSession> {
     const session = this.sessions.get(projectId);
@@ -270,8 +286,12 @@ export class ResearchLogger {
     elizaLogger.info(`[ResearchLogger] Finalizing session for project: ${projectId}`);
 
     // Calculate overall relevance
-    const totalRelevanceScore = session.findingLogs.reduce((sum, log) => sum + log.queryAlignment, 0);
-    session.summary.overallRelevance = totalRelevanceScore / Math.max(session.findingLogs.length, 1);
+    const totalRelevanceScore = session.findingLogs.reduce(
+      (sum, log) => sum + log.queryAlignment,
+      0
+    );
+    session.summary.overallRelevance =
+      totalRelevanceScore / Math.max(session.findingLogs.length, 1);
 
     session.summary.gaps = gaps;
     session.summary.recommendations = recommendations;
@@ -291,7 +311,7 @@ export class ResearchLogger {
       relevantFindings: session.summary.relevantFindings,
       overallRelevance: session.summary.overallRelevance,
       gaps: gaps.length,
-      recommendations: recommendations.length
+      recommendations: recommendations.length,
     });
 
     return session;
@@ -304,7 +324,7 @@ export class ResearchLogger {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .substring(0, 50);
-      
+
       const filename = `${timestamp}_${sanitizedQuery}_research-log.json`;
       const filepath = path.join(this.logsDir, filename);
 
@@ -314,17 +334,20 @@ export class ResearchLogger {
         metadata: {
           savedAt: Date.now(),
           version: '1.0',
-          description: 'Comprehensive research session log with relevance tracking'
+          description: 'Comprehensive research session log with relevance tracking',
         },
         analysis: {
           relevanceByPhase: {
-            searchResults: session.summary.relevantResults / Math.max(session.summary.totalResults, 1),
-            contentExtraction: session.summary.successfulExtractions / Math.max(session.summary.totalSources, 1),
-            findingExtraction: session.summary.relevantFindings / Math.max(session.summary.totalFindings, 1)
+            searchResults:
+              session.summary.relevantResults / Math.max(session.summary.totalResults, 1),
+            contentExtraction:
+              session.summary.successfulExtractions / Math.max(session.summary.totalSources, 1),
+            findingExtraction:
+              session.summary.relevantFindings / Math.max(session.summary.totalFindings, 1),
           },
           bottlenecks: this.identifyBottlenecks(session),
-          recommendations: this.generateTechnicalRecommendations(session)
-        }
+          recommendations: this.generateTechnicalRecommendations(session),
+        },
       };
 
       await fs.writeFile(filepath, JSON.stringify(logData, null, 2), 'utf-8');
@@ -335,7 +358,6 @@ export class ResearchLogger {
       const summaryContent = this.generateSummaryReport(session);
       await fs.writeFile(summaryPath, summaryContent, 'utf-8');
       elizaLogger.info(`[ResearchLogger] Summary report saved to: ${summaryPath}`);
-
     } catch (error) {
       elizaLogger.error('[ResearchLogger] Failed to save session log:', error);
     }
@@ -344,18 +366,25 @@ export class ResearchLogger {
   private identifyBottlenecks(session: ResearchSession): string[] {
     const bottlenecks: string[] = [];
 
-    const relevanceRatio = session.summary.relevantResults / Math.max(session.summary.totalResults, 1);
-    const extractionRatio = session.summary.successfulExtractions / Math.max(session.summary.totalSources, 1);
-    const findingRatio = session.summary.relevantFindings / Math.max(session.summary.totalFindings, 1);
+    const relevanceRatio =
+      session.summary.relevantResults / Math.max(session.summary.totalResults, 1);
+    const extractionRatio =
+      session.summary.successfulExtractions / Math.max(session.summary.totalSources, 1);
+    const findingRatio =
+      session.summary.relevantFindings / Math.max(session.summary.totalFindings, 1);
 
     if (relevanceRatio < 0.5) {
-      bottlenecks.push('Low search result relevance - improve query generation or search provider selection');
+      bottlenecks.push(
+        'Low search result relevance - improve query generation or search provider selection'
+      );
     }
-    
+
     if (extractionRatio < 0.7) {
-      bottlenecks.push('Poor content extraction success rate - improve extraction methods or fallbacks');
+      bottlenecks.push(
+        'Poor content extraction success rate - improve extraction methods or fallbacks'
+      );
     }
-    
+
     if (findingRatio < 0.6) {
       bottlenecks.push('Low finding relevance - improve extraction prompts or relevance filtering');
     }
@@ -371,13 +400,15 @@ export class ResearchLogger {
     const recommendations: string[] = [];
 
     // Search quality recommendations
-    const avgResultsPerSearch = session.summary.totalResults / Math.max(session.summary.totalSearches, 1);
+    const avgResultsPerSearch =
+      session.summary.totalResults / Math.max(session.summary.totalSearches, 1);
     if (avgResultsPerSearch < 10) {
       recommendations.push('Increase search breadth - too few results per search');
     }
 
     // Finding quality recommendations
-    const avgFindingsPerSource = session.summary.totalFindings / Math.max(session.summary.successfulExtractions, 1);
+    const avgFindingsPerSource =
+      session.summary.totalFindings / Math.max(session.summary.successfulExtractions, 1);
     if (avgFindingsPerSource < 2) {
       recommendations.push('Improve finding extraction - too few findings per source');
     }
@@ -409,38 +440,46 @@ export class ResearchLogger {
 ## Results Summary
 - **Searches:** ${session.summary.totalSearches}
 - **Total Results:** ${session.summary.totalResults}
-- **Relevant Results:** ${session.summary.relevantResults} (${(session.summary.relevantResults / Math.max(session.summary.totalResults, 1) * 100).toFixed(1)}%)
+- **Relevant Results:** ${session.summary.relevantResults} (${((session.summary.relevantResults / Math.max(session.summary.totalResults, 1)) * 100).toFixed(1)}%)
 - **Sources Processed:** ${session.summary.totalSources}
-- **Successful Extractions:** ${session.summary.successfulExtractions} (${(session.summary.successfulExtractions / Math.max(session.summary.totalSources, 1) * 100).toFixed(1)}%)
+- **Successful Extractions:** ${session.summary.successfulExtractions} (${((session.summary.successfulExtractions / Math.max(session.summary.totalSources, 1)) * 100).toFixed(1)}%)
 - **Total Findings:** ${session.summary.totalFindings}
-- **Relevant Findings:** ${session.summary.relevantFindings} (${(session.summary.relevantFindings / Math.max(session.summary.totalFindings, 1) * 100).toFixed(1)}%)
+- **Relevant Findings:** ${session.summary.relevantFindings} (${((session.summary.relevantFindings / Math.max(session.summary.totalFindings, 1)) * 100).toFixed(1)}%)
 
 ## Relevance Score
 **Overall Relevance:** ${(session.summary.overallRelevance * 100).toFixed(1)}%
 
 ## Identified Gaps
-${session.summary.gaps.map(gap => `- ${gap}`).join('\n')}
+${session.summary.gaps.map((gap) => `- ${gap}`).join('\n')}
 
 ## Recommendations
-${session.summary.recommendations.map(rec => `- ${rec}`).join('\n')}
+${session.summary.recommendations.map((rec) => `- ${rec}`).join('\n')}
 
 ## Search Details
-${session.searchLogs.map((log, i) => `
+${session.searchLogs
+  .map(
+    (log, i) => `
 ### Search ${i + 1}: ${log.query}
 - Provider: ${log.provider}
 - Results: ${log.resultsCount}
-- Relevant: ${log.results.filter(r => (r.relevanceScore?.score || 0) >= 0.6).length}
-`).join('\n')}
+- Relevant: ${log.results.filter((r) => (r.relevanceScore?.score || 0) >= 0.6).length}
+`
+  )
+  .join('\n')}
 
 ## Content Extraction
-${session.extractionLogs.map((log, i) => `
+${session.extractionLogs
+  .map(
+    (log, i) => `
 ### Extraction ${i + 1}: ${log.sourceTitle}
 - URL: ${log.url}
 - Method: ${log.method}
 - Success: ${log.success ? 'Yes' : 'No'}
 - Content Length: ${log.contentLength} chars
 ${log.error ? `- Error: ${log.error}` : ''}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 `;
   }
 

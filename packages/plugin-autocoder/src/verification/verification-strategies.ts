@@ -31,7 +31,7 @@ abstract class BaseValidator implements Validator {
   protected createStageResult(
     passed: boolean,
     score: number,
-    findings: VerificationFinding[]
+    findings: VerificationFinding[],
     duration: number
   ): VerificationStageResult {
     return {
@@ -173,7 +173,7 @@ export class TypeScriptValidator extends BaseValidator {
     const findings: VerificationFinding[] = [];
 
     if (context.language !== 'TypeScript') {
-      return this.createStageResult(true, 100, [] 0);
+      return this.createStageResult(true, 100, [], 0);
     }
 
     // Write files to temp directory
@@ -338,7 +338,7 @@ export class ESLintValidator extends BaseValidator {
                 ecmaVersion: 2021,
                 sourceType: 'module',
               },
-              plugins: context.language === 'TypeScript' ? ['@typescript-eslint'] : []
+              plugins: context.language === 'TypeScript' ? ['@typescript-eslint'] : [],
               rules: {
                 'no-unused-vars': 'warn',
                 'no-console': 'warn',
@@ -501,7 +501,7 @@ export class UnitTestValidator extends BaseValidator {
         errors: results.testResults
           .filter((r: any) => r.status === 'failed')
           .map((r: any) => r.message),
-        warnings: []
+        warnings: [],
         duration: results.testResults.reduce((sum: number, r: any) => sum + r.duration, 0),
         totalTests: results.numTotalTests,
         passedTests: results.numPassedTests,
@@ -514,7 +514,7 @@ export class UnitTestValidator extends BaseValidator {
         success: false,
         output: '',
         errors: [error instanceof Error ? error.message : String(error)],
-        warnings: []
+        warnings: [],
         duration: 0,
         totalTests: 0,
         passedTests: 0,
@@ -870,7 +870,7 @@ export class CoverageValidator extends BaseValidator {
     return functions;
   }
 
-  private findTestedFunctions(testFiles: any[] functions: string[]): string[] {
+  private findTestedFunctions(testFiles: any[], functions: string[]): string[] {
     const tested: string[] = [];
 
     for (const testFile of testFiles) {

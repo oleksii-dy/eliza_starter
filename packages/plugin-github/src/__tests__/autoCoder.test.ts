@@ -67,7 +67,7 @@ describe('Auto-Coder Action Tests', () => {
           requiredFiles: ['README.md'],
           estimatedChanges: 3,
           riskLevel: 'low',
-          dependencies: []
+          dependencies: [],
         })
       ),
       processAction: vi.fn(),
@@ -114,7 +114,7 @@ describe('Auto-Coder Action Tests', () => {
           title: 'Add documentation',
           body: 'Please add documentation for the new feature',
           assignee: null,
-          labels: []
+          labels: [],
           user: { login: 'testuser' },
         },
         repository: {
@@ -140,7 +140,7 @@ describe('Auto-Coder Action Tests', () => {
             requiredFiles: ['README.md'],
             estimatedChanges: 3,
             riskLevel: 'low',
-            dependencies: []
+            dependencies: [],
           })
         )
         .mockResolvedValueOnce(
@@ -232,10 +232,10 @@ describe('Auto-Coder Action Tests', () => {
           reasoning: 'This requires major architectural changes',
           issueType: 'refactor',
           summary: 'This requires major architectural changes',
-          requiredFiles: []
+          requiredFiles: [],
           estimatedChanges: 100,
           riskLevel: 'high',
-          dependencies: []
+          dependencies: [],
         })
       );
 
@@ -245,7 +245,7 @@ describe('Auto-Coder Action Tests', () => {
           title: 'Refactor entire codebase',
           body: 'We need to refactor everything',
           assignee: null,
-          labels: []
+          labels: [],
           user: { login: 'testuser' },
         },
         repository: {
@@ -278,7 +278,7 @@ describe('Auto-Coder Action Tests', () => {
           title: 'Fix bug',
           body: 'There is a bug',
           assignee: { login: 'other-user' },
-          labels: []
+          labels: [],
           user: { login: 'testuser' },
         },
         repository: {
@@ -338,7 +338,7 @@ describe('Auto-Coder Action Tests', () => {
             requiredFiles: ['README.md'],
             estimatedChanges: 1,
             riskLevel: 'low',
-            dependencies: []
+            dependencies: [],
           })
         )
         .mockResolvedValueOnce(
@@ -372,7 +372,7 @@ describe('Auto-Coder Action Tests', () => {
           title: 'Create README',
           body: 'Please create a README file',
           assignee: null,
-          labels: []
+          labels: [],
           user: { login: 'testuser' },
         },
         repository: {
@@ -418,7 +418,7 @@ describe('Auto-Coder Action Tests', () => {
           number: 123,
           title: 'Bug in login',
           body: '@TestAgent can you fix the login bug?',
-          labels: []
+          labels: [],
           user: { login: 'testuser' },
         },
         repository: {
@@ -487,7 +487,7 @@ describe('Auto-Coder Action Tests', () => {
         issue: {
           number: 123,
           title: 'Question about API',
-          labels: []
+          labels: [],
           user: { login: 'testuser' },
         },
         comment: {
@@ -539,7 +539,7 @@ describe('Auto-Coder Action Tests', () => {
           number: 123,
           title: 'Test',
           body: '@TestAgent help',
-          labels: []
+          labels: [],
           user: { login: 'testuser' },
         },
         repository: {

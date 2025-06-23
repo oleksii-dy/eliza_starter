@@ -13,7 +13,7 @@ import { CrossMintService } from '../services/CrossMintService';
  */
 export const crossmintPaymentsProvider: Provider = {
   name: 'CROSSMINT_PAYMENTS',
-  description: 'Provides CrossMint X.402 payment information and capabilities',
+  description: 'Provides recent X.402 payment request history and HTTP-native payment protocol capabilities when agent needs to process blockchain payments or verify transaction status',
   dynamic: true, // Only when explicitly requested
   position: 15,
 

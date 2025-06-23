@@ -15,7 +15,7 @@ export default defineConfig({
     'zod',
     'bun:test'
   ],
-  noExternal: []
+  noExternal: [],
   ignoreWatch: ['src/**/*.test.ts', 'src/**/*.test.js'],
   // Exclude test files from build
   onSuccess: async () => {

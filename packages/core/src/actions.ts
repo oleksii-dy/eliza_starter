@@ -9,7 +9,7 @@ import type { Action, ActionExample } from './types';
  * @param count - The number of examples to generate.
  * @returns A string containing formatted examples of conversations.
  */
-export const composeActionExamples = (actionsData: Action[] count: number): string => {
+export const composeActionExamples = (actionsData: Action[], count: number): string => {
   // Handle edge cases
   if (!actionsData.length || count <= 0) {
     return '';

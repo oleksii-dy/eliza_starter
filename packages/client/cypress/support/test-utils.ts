@@ -18,11 +18,11 @@ export const generateMockAgent = (overrides?: Partial<Agent>): Agent => {
     name,
     username: overrides?.username || name.toLowerCase().replace(/\s/g, ''),
     bio: overrides?.bio || 'This is a test agent',
-    messageExamples: overrides?.messageExamples || []
-    postExamples: overrides?.postExamples || []
+    messageExamples: overrides?.messageExamples || [],
+    postExamples: overrides?.postExamples || [],
     topics: overrides?.topics || ['testing', 'automation'],
-    knowledge: overrides?.knowledge || []
-    plugins: overrides?.plugins || []
+    knowledge: overrides?.knowledge || [],
+    plugins: overrides?.plugins || [],
     settings: overrides?.settings || {
       avatar: 'https://via.placeholder.com/150',
     },

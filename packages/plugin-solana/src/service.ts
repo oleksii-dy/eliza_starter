@@ -185,7 +185,7 @@ export class SolanaService extends Service {
       logger.log('solana::updateWalletData - no Public Key yet');
       return {
         totalUsd: '0',
-        items: []
+        items: [],
       };
     }
 

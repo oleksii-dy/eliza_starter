@@ -116,7 +116,7 @@ export const spawnSubAgentAction: Action = {
       await callback?.({
         text: `❌ Failed to spawn sub-agent: ${error instanceof Error ? error.message : String(error)}\n\nPlease check the system status and try again.`,
         thought: `Sub-agent spawning failed due to: ${error instanceof Error ? error.message : String(error)}`,
-        actions: []
+        actions: [],
       });
 
       throw error;
@@ -225,7 +225,7 @@ export const monitorTaskAction: Action = {
       await callback?.({
         text: `❌ Failed to retrieve task status: ${error instanceof Error ? error.message : String(error)}`,
         thought: `Task monitoring failed: ${error instanceof Error ? error.message : String(error)}`,
-        actions: []
+        actions: [],
       });
     }
   },
@@ -314,7 +314,7 @@ export const terminateTaskAction: Action = {
         await callback?.({
           text: `❌ Task not found: ${taskId}`,
           thought: `Task ${taskId} not found`,
-          actions: []
+          actions: [],
         });
         return;
       }
@@ -336,7 +336,7 @@ export const terminateTaskAction: Action = {
       await callback?.({
         text: `❌ Failed to terminate task: ${error instanceof Error ? error.message : String(error)}`,
         thought: `Task termination failed: ${error instanceof Error ? error.message : String(error)}`,
-        actions: []
+        actions: [],
       });
     }
   },
@@ -441,7 +441,7 @@ Only return the JSON object, no other text.
       priority: ['low', 'medium', 'high', 'critical'].includes(extracted.priority)
         ? extracted.priority
         : 'medium',
-      files: Array.isArray(extracted.files) ? extracted.files : []
+      files: Array.isArray(extracted.files) ? extracted.files : [],
     };
   } catch (error) {
     elizaLogger.warn('LLM extraction failed, using fallback logic:', error);

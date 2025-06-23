@@ -157,7 +157,7 @@ async function fixScenarioFile(filePath: string) {
     const otherCount = (
       originalContent.match(
         /type:\s*['"](interaction_count|plugin_state|trust_verified|trust_impact)['"]/g
-      ) || []
+      ) || [],
     ).length;
 
     if (actionTakenCount > 0) {

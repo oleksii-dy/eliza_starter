@@ -69,7 +69,7 @@ export class RealOCRService {
     if (!tile.data) {
       return {
         text: '',
-        blocks: []
+        blocks: [],
         fullText: '',
       };
     }

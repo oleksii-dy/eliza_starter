@@ -119,8 +119,8 @@ export class Florence2Local {
     
     return {
       caption,
-      objects: [] // Would be populated by actual object detection
-      regions: []
+      objects: [], // Would be populated by actual object detection
+      regions: [],
       tags: this.extractTagsFromCaption(caption),
     };
   }
@@ -180,8 +180,8 @@ export class Florence2Local {
     
     return {
       caption,
-      objects: []
-      regions: []
+      objects: [],
+      regions: [],
       tags: this.extractTagsFromCaption(caption),
     };
   }

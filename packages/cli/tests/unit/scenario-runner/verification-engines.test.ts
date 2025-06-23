@@ -30,7 +30,7 @@ describe('HybridVerificationEngine', () => {
         id: 'test-scenario',
         name: 'Test Scenario',
         description: 'Test',
-        actors: []
+        actors: [],
         setup: {},
         execution: {},
         verification: { rules: [] },
@@ -158,7 +158,7 @@ describe('ExplainableVerificationEngine', () => {
         id: 'test-scenario',
         name: 'Test Scenario',
         description: 'Test',
-        actors: []
+        actors: [],
         setup: {},
         execution: {},
         verification: { rules: [] },
@@ -247,7 +247,7 @@ describe('SecureVerificationEngine', () => {
         id: 'test-scenario',
         name: 'Test Scenario',
         description: 'Test',
-        actors: []
+        actors: [],
         setup: {},
         execution: {},
         verification: { rules: [] },
@@ -344,7 +344,7 @@ describe('VersionedVerificationEngine', () => {
         id: 'test-scenario',
         name: 'Test Scenario',
         description: 'Test',
-        actors: []
+        actors: [],
         setup: {},
         execution: {},
         verification: { rules: [] },
@@ -510,7 +510,7 @@ describe('PerformanceOptimizer', () => {
     it('should batch multiple LLM verifications', async () => {
       const mockContext: ScenarioContext = {
         scenario: { id: 'test', name: 'Test' },
-        transcript: []
+        transcript: [],
       } as any;
 
       const promises = [];
@@ -528,7 +528,7 @@ describe('PerformanceOptimizer', () => {
     it('should process batch when timeout is reached', async () => {
       const mockContext: ScenarioContext = {
         scenario: { id: 'test', name: 'Test' },
-        transcript: []
+        transcript: [],
       } as any;
 
       const result = await optimizer.batchLLMVerification(

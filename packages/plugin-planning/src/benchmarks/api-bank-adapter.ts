@@ -87,19 +87,25 @@ export interface ApiBankResult {
 export interface ApiBankReport {
   totalTests: number;
   passedTests: number;
-  levelBreakdown: Record<number, {
-    total: number;
-    passed: number;
-    successRate: number;
-    avgApiAccuracy: number;
-    avgResponseQuality: number;
-  }>;
-  categoryBreakdown: Record<string, {
-    total: number;
-    passed: number;
-    successRate: number;
-    avgComplexity: number;
-  }>;
+  levelBreakdown: Record<
+    number,
+    {
+      total: number;
+      passed: number;
+      successRate: number;
+      avgApiAccuracy: number;
+      avgResponseQuality: number;
+    }
+  >;
+  categoryBreakdown: Record<
+    string,
+    {
+      total: number;
+      passed: number;
+      successRate: number;
+      avgComplexity: number;
+    }
+  >;
   overallMetrics: {
     averageApiCallAccuracy: number;
     averageParameterAccuracy: number;
@@ -128,7 +134,7 @@ export class ApiBankAdapter {
 
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
-    
+
     const planningService = runtime.getService<IPlanningService>('planning');
     if (!planningService) {
       throw new Error('Planning service is required for API-Bank testing');
@@ -145,7 +151,7 @@ export class ApiBankAdapter {
 
       // Load Level 1 & 2 test cases
       await this.loadLevel1And2Tests(path.join(apiBankDataPath, 'lv1-lv2-samples'));
-      
+
       // Load Level 3 test cases
       await this.loadLevel3Tests(path.join(apiBankDataPath, 'lv3-samples'));
 
@@ -166,22 +172,24 @@ export class ApiBankAdapter {
     const startTime = Date.now();
     const results: ApiBankResult[] = [];
 
-    logger.info(`[ApiBankAdapter] Starting API-Bank benchmark with ${this.testCases.length} test cases`);
+    logger.info(
+      `[ApiBankAdapter] Starting API-Bank benchmark with ${this.testCases.length} test cases`
+    );
 
     for (const testCase of this.testCases) {
       try {
         const result = await this.runTestCase(testCase);
         results.push(result);
-        
+
         logger.info(
           `[ApiBankAdapter] Test ${testCase.id} (Level ${testCase.level}): ` +
-          `${result.success ? 'PASS' : 'FAIL'} ` +
-          `(API: ${(result.apiCallAccuracy * 100).toFixed(1)}%, ` +
-          `Response: ${(result.responseQuality * 100).toFixed(1)}%)`
+            `${result.success ? 'PASS' : 'FAIL'} ` +
+            `(API: ${(result.apiCallAccuracy * 100).toFixed(1)}%, ` +
+            `Response: ${(result.responseQuality * 100).toFixed(1)}%)`
         );
       } catch (error) {
         logger.error(`[ApiBankAdapter] Test ${testCase.id} failed:`, error);
-        
+
         results.push({
           testCaseId: testCase.id,
           level: testCase.level,
@@ -190,7 +198,7 @@ export class ApiBankAdapter {
           parameterAccuracy: 0,
           responseQuality: 0,
           planGenerated: null,
-          actualApiCalls: []
+          actualApiCalls: [],
           actualResponse: '',
           error: error.message,
           metrics: {
@@ -205,10 +213,10 @@ export class ApiBankAdapter {
     }
 
     const report = this.generateReport(results);
-    
+
     logger.info(
       `[ApiBankAdapter] Benchmark completed: ${report.passedTests}/${report.totalTests} passed ` +
-      `(${((report.passedTests / report.totalTests) * 100).toFixed(1)}%)`
+        `(${((report.passedTests / report.totalTests) * 100).toFixed(1)}%)`
     );
 
     return report;
@@ -222,13 +230,17 @@ export class ApiBankAdapter {
     let planningTime = 0;
     let executionTime = 0;
     let planGenerated: ActionPlan | null = null;
-    const actualApiCalls: Array<{ api_name: string; parameters: Record<string, any>; result: any }> = [];
+    const actualApiCalls: Array<{
+      api_name: string;
+      parameters: Record<string, any>;
+      result: any;
+    }> = [];
     let actualResponse = '';
 
     try {
       // Create test message from dialog history
       const lastUserMessage = testCase.dialog_history
-        .filter(entry => entry.role === 'User')
+        .filter((entry) => entry.role === 'User')
         .pop();
 
       if (!lastUserMessage) {
@@ -262,7 +274,7 @@ export class ApiBankAdapter {
 
       // Step 1: Create comprehensive plan
       const planningStartTime = Date.now();
-      
+
       const planningContext: PlanningContext = {
         goal: `Handle user request: ${lastUserMessage.text}`,
         constraints: [
@@ -297,7 +309,7 @@ export class ApiBankAdapter {
 
       // Step 2: Execute the plan with API call tracking
       const executionStartTime = Date.now();
-      
+
       const executionResult = await this.planningService.executePlan(
         this.runtime,
         planGenerated,
@@ -315,7 +327,7 @@ export class ApiBankAdapter {
               }
             }
           }
-          
+
           if (content.text) {
             actualResponse = content.text;
           }
@@ -408,12 +420,12 @@ export class ApiBankAdapter {
         return;
       }
 
-      const files = fs.readdirSync(samplesPath).filter(f => f.endsWith('.txt'));
-      
+      const files = fs.readdirSync(samplesPath).filter((f) => f.endsWith('.txt'));
+
       for (const file of files) {
         const filePath = path.join(samplesPath, file);
         const content = fs.readFileSync(filePath, 'utf-8');
-        
+
         // Parse Level 3 scenarios
         const scenarios = this.parseLevel3Scenarios(content, file);
         this.testCases.push(...scenarios);
@@ -427,13 +439,13 @@ export class ApiBankAdapter {
    * Load tests from a directory of JSONL files
    */
   private async loadTestsFromDirectory(dirPath: string, level: 1 | 2): Promise<void> {
-    const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.jsonl'));
-    
+    const files = fs.readdirSync(dirPath).filter((f) => f.endsWith('.jsonl'));
+
     for (const file of files) {
       const filePath = path.join(dirPath, file);
       const content = fs.readFileSync(filePath, 'utf-8');
       const lines = content.trim().split('\n');
-      
+
       const dialogHistory: ApiBankDialogEntry[] = [];
       for (const line of lines) {
         try {
@@ -456,21 +468,21 @@ export class ApiBankAdapter {
    */
   private parseLevel3Scenarios(content: string, filename: string): ApiBankTestCase[] {
     const scenarios: ApiBankTestCase[] = [];
-    
+
     // Level 3 files contain complex multi-turn scenarios
     // This is a simplified parser - in production, you'd want more robust parsing
-    const lines = content.split('\n').filter(line => line.trim());
-    
+    const lines = content.split('\n').filter((line) => line.trim());
+
     let currentScenario: Partial<ApiBankTestCase> = {};
     let dialogHistory: ApiBankDialogEntry[] = [];
-    
+
     for (const line of lines) {
       if (line.startsWith('Scenario:') || line.startsWith('Case:')) {
         // Save previous scenario
         if (currentScenario.id && dialogHistory.length > 0) {
           scenarios.push(this.completeLevel3TestCase(currentScenario, dialogHistory));
         }
-        
+
         // Start new scenario
         currentScenario = {
           id: `level3-${filename}-${scenarios.length + 1}`,
@@ -490,12 +502,12 @@ export class ApiBankAdapter {
         });
       }
     }
-    
+
     // Save last scenario
     if (currentScenario.id && dialogHistory.length > 0) {
       scenarios.push(this.completeLevel3TestCase(currentScenario, dialogHistory));
     }
-    
+
     return scenarios;
   }
 
@@ -535,7 +547,7 @@ export class ApiBankAdapter {
   ): ApiBankTestCase {
     const apis = this.extractApis(dialogHistory);
     const category = this.extractCategory(filename);
-    
+
     return {
       id: `level${level}-${filename.replace('.jsonl', '')}`,
       level,
@@ -564,13 +576,13 @@ export class ApiBankAdapter {
         return;
       }
 
-      const files = fs.readdirSync(apisPath).filter(f => f.endsWith('.py'));
-      
+      const files = fs.readdirSync(apisPath).filter((f) => f.endsWith('.py'));
+
       for (const file of files) {
         const apiName = file.replace('.py', '');
         const filePath = path.join(apisPath, file);
         const content = fs.readFileSync(filePath, 'utf-8');
-        
+
         // Extract API description from Python docstring
         const description = this.extractApiDescription(content);
         this.apiDescriptions.set(apiName, description);
@@ -585,13 +597,13 @@ export class ApiBankAdapter {
    */
   private extractApis(dialogHistory: ApiBankDialogEntry[]): string[] {
     const apis = new Set<string>();
-    
+
     for (const entry of dialogHistory) {
       if (entry.role === 'API' && entry.api_name) {
         apis.add(entry.api_name);
       }
     }
-    
+
     return Array.from(apis);
   }
 
@@ -604,8 +616,8 @@ export class ApiBankAdapter {
     expected_result: any;
   }> {
     return dialogHistory
-      .filter(entry => entry.role === 'API')
-      .map(entry => ({
+      .filter((entry) => entry.role === 'API')
+      .map((entry) => ({
         api_name: entry.api_name || '',
         parameters: entry.param_dict || {},
         expected_result: entry.result?.output,
@@ -616,7 +628,7 @@ export class ApiBankAdapter {
    * Extract final response from dialog
    */
   private extractFinalResponse(dialogHistory: ApiBankDialogEntry[]): string {
-    const aiResponses = dialogHistory.filter(entry => entry.role === 'AI');
+    const aiResponses = dialogHistory.filter((entry) => entry.role === 'AI');
     return aiResponses.length > 0 ? aiResponses[aiResponses.length - 1].text || '' : '';
   }
 
@@ -641,8 +653,8 @@ export class ApiBankAdapter {
    */
   private buildDialogContext(dialogHistory: ApiBankDialogEntry[]): Record<string, any> {
     const context: Record<string, any> = {
-      previousInteractions: []
-      apiCallHistory: []
+      previousInteractions: [],
+      apiCallHistory: [],
     };
 
     for (const entry of dialogHistory) {
@@ -669,16 +681,16 @@ export class ApiBankAdapter {
   private getRelevantActions(availableApis: string[]): string[] {
     // Map API names to available actions
     const actionMap: Record<string, string> = {
-      'calculator': 'CALCULATE',
-      'search_engine': 'SEARCH',
-      'weather': 'GET_WEATHER',
-      'calendar': 'MANAGE_CALENDAR',
-      'email': 'SEND_EMAIL',
-      'reminder': 'SET_REMINDER',
+      calculator: 'CALCULATE',
+      search_engine: 'SEARCH',
+      weather: 'GET_WEATHER',
+      calendar: 'MANAGE_CALENDAR',
+      email: 'SEND_EMAIL',
+      reminder: 'SET_REMINDER',
     };
 
     const actions = ['REPLY', 'THINK']; // Always available
-    
+
     for (const api of availableApis) {
       if (actionMap[api]) {
         actions.push(actionMap[api]);
@@ -695,7 +707,7 @@ export class ApiBankAdapter {
    * Get available providers from runtime
    */
   private getAvailableProviders(): string[] {
-    return this.runtime.providers.map(p => p.name);
+    return this.runtime.providers.map((p) => p.name);
   }
 
   /**
@@ -717,15 +729,15 @@ export class ApiBankAdapter {
     actualApiCalls: Array<{ api_name: string; parameters: Record<string, any>; result: any }>
   ): number {
     const expectedCalls = testCase.ground_truth.api_calls;
-    
+
     if (expectedCalls.length === 0) {
       return actualApiCalls.length === 0 ? 1.0 : 0.0;
     }
 
     let correctCalls = 0;
-    
+
     for (const expected of expectedCalls) {
-      const actual = actualApiCalls.find(call => call.api_name === expected.api_name);
+      const actual = actualApiCalls.find((call) => call.api_name === expected.api_name);
       if (actual) {
         correctCalls++;
       }
@@ -742,7 +754,7 @@ export class ApiBankAdapter {
     actualApiCalls: Array<{ api_name: string; parameters: Record<string, any>; result: any }>
   ): number {
     const expectedCalls = testCase.ground_truth.api_calls;
-    
+
     if (expectedCalls.length === 0) {
       return 1.0;
     }
@@ -751,12 +763,12 @@ export class ApiBankAdapter {
     let totalParameters = 0;
 
     for (const expected of expectedCalls) {
-      const actual = actualApiCalls.find(call => call.api_name === expected.api_name);
-      
+      const actual = actualApiCalls.find((call) => call.api_name === expected.api_name);
+
       if (actual) {
         const expectedParams = Object.keys(expected.parameters);
         const actualParams = Object.keys(actual.parameters);
-        
+
         for (const param of expectedParams) {
           totalParameters++;
           if (actualParams.includes(param)) {
@@ -781,9 +793,9 @@ export class ApiBankAdapter {
 
     const expectedWords = expected.toLowerCase().split(/\s+/);
     const actualWords = actual.toLowerCase().split(/\s+/);
-    
-    const intersection = expectedWords.filter(word => actualWords.includes(word));
-    
+
+    const intersection = expectedWords.filter((word) => actualWords.includes(word));
+
     if (expectedWords.length === 0) {
       return actualWords.length === 0 ? 1.0 : 0.0;
     }
@@ -807,9 +819,9 @@ export class ApiBankAdapter {
     score += stepScore * 0.3;
 
     // Score based on using available APIs
-    const planActions = plan.steps.map(s => s.actionName);
-    const apiUsage = testCase.available_apis.some(api => 
-      planActions.some(action => action.toLowerCase().includes(api.toLowerCase()))
+    const planActions = plan.steps.map((s) => s.actionName);
+    const apiUsage = testCase.available_apis.some((api) =>
+      planActions.some((action) => action.toLowerCase().includes(api.toLowerCase()))
     );
     if (apiUsage) {
       score += 0.2;
@@ -823,19 +835,21 @@ export class ApiBankAdapter {
    */
   private generateReport(results: ApiBankResult[]): ApiBankReport {
     const totalTests = results.length;
-    const passedTests = results.filter(r => r.success).length;
+    const passedTests = results.filter((r) => r.success).length;
 
     // Level breakdown
     const levelBreakdown: ApiBankReport['levelBreakdown'] = {};
     for (let level = 1; level <= 3; level++) {
-      const levelResults = results.filter(r => r.level === level);
+      const levelResults = results.filter((r) => r.level === level);
       if (levelResults.length > 0) {
         levelBreakdown[level] = {
           total: levelResults.length,
-          passed: levelResults.filter(r => r.success).length,
-          successRate: levelResults.filter(r => r.success).length / levelResults.length,
-          avgApiAccuracy: levelResults.reduce((sum, r) => sum + r.apiCallAccuracy, 0) / levelResults.length,
-          avgResponseQuality: levelResults.reduce((sum, r) => sum + r.responseQuality, 0) / levelResults.length,
+          passed: levelResults.filter((r) => r.success).length,
+          successRate: levelResults.filter((r) => r.success).length / levelResults.length,
+          avgApiAccuracy:
+            levelResults.reduce((sum, r) => sum + r.apiCallAccuracy, 0) / levelResults.length,
+          avgResponseQuality:
+            levelResults.reduce((sum, r) => sum + r.responseQuality, 0) / levelResults.length,
         };
       }
     }
@@ -843,7 +857,7 @@ export class ApiBankAdapter {
     // Category breakdown
     const categoryBreakdown: ApiBankReport['categoryBreakdown'] = {};
     const categoryMap = new Map<string, ApiBankResult[]>();
-    
+
     for (const result of results) {
       const category = result.testCaseId.split('-')[1] || 'unknown';
       if (!categoryMap.has(category)) {
@@ -855,18 +869,21 @@ export class ApiBankAdapter {
     for (const [category, categoryResults] of categoryMap) {
       categoryBreakdown[category] = {
         total: categoryResults.length,
-        passed: categoryResults.filter(r => r.success).length,
-        successRate: categoryResults.filter(r => r.success).length / categoryResults.length,
-        avgComplexity: categoryResults.reduce((sum, r) => sum + r.level, 0) / categoryResults.length,
+        passed: categoryResults.filter((r) => r.success).length,
+        successRate: categoryResults.filter((r) => r.success).length / categoryResults.length,
+        avgComplexity:
+          categoryResults.reduce((sum, r) => sum + r.level, 0) / categoryResults.length,
       };
     }
 
     // Overall metrics
     const overallMetrics = {
       averageApiCallAccuracy: results.reduce((sum, r) => sum + r.apiCallAccuracy, 0) / totalTests,
-      averageParameterAccuracy: results.reduce((sum, r) => sum + r.parameterAccuracy, 0) / totalTests,
+      averageParameterAccuracy:
+        results.reduce((sum, r) => sum + r.parameterAccuracy, 0) / totalTests,
       averageResponseQuality: results.reduce((sum, r) => sum + r.responseQuality, 0) / totalTests,
-      averageToolUseAccuracy: results.reduce((sum, r) => sum + r.metrics.toolUseAccuracy, 0) / totalTests,
+      averageToolUseAccuracy:
+        results.reduce((sum, r) => sum + r.metrics.toolUseAccuracy, 0) / totalTests,
       averagePlanQuality: results.reduce((sum, r) => sum + r.metrics.planQuality, 0) / totalTests,
     };
 
@@ -880,12 +897,15 @@ export class ApiBankAdapter {
       .map(([category]) => category);
 
     const commonErrors = results
-      .filter(r => r.error)
-      .reduce((acc, r) => {
-        const error = r.error!;
-        acc[error] = (acc[error] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      .filter((r) => r.error)
+      .reduce(
+        (acc, r) => {
+          const error = r.error!;
+          acc[error] = (acc[error] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
     const sortedErrors = Object.entries(commonErrors)
       .sort(([, a], [, b]) => b - a)
@@ -893,15 +913,15 @@ export class ApiBankAdapter {
       .map(([error]) => error);
 
     const recommendations: string[] = [];
-    
+
     if (overallMetrics.averageApiCallAccuracy < 0.7) {
       recommendations.push('Improve API selection and tool use planning');
     }
-    
+
     if (overallMetrics.averageParameterAccuracy < 0.6) {
       recommendations.push('Enhance parameter extraction and validation');
     }
-    
+
     if (overallMetrics.averageResponseQuality < 0.5) {
       recommendations.push('Improve response generation quality and relevance');
     }

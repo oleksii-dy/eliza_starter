@@ -123,11 +123,11 @@ class BenchmarkRuntime {
     name: 'Benchmark Runner',
     bio: ['Automated benchmark execution agent'],
     system: 'You are an automated research benchmark runner',
-    messageExamples: []
-    postExamples: []
-    topics: []
-    knowledge: []
-    plugins: []
+    messageExamples: [],
+    postExamples: [],
+    topics: [],
+    knowledge: [],
+    plugins: [],
   };
 
   providers = [];

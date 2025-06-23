@@ -1,0 +1,56 @@
+import { World } from './World'
+
+// Core client systems
+import { Client } from './systems/Client'
+import { ClientLiveKit } from './systems/ClientLiveKit'
+import { ClientPointer } from './systems/ClientPointer'
+import { ClientPrefs } from './systems/ClientPrefs'
+import { ClientControls } from './systems/ClientControls'
+import { ClientNetwork } from './systems/ClientNetwork'
+import { ClientLoader } from './systems/ClientLoader'
+import { ClientGraphics } from './systems/ClientGraphics'
+import { ClientEnvironment } from './systems/ClientEnvironment'
+import { ClientAudio } from './systems/ClientAudio'
+import { ClientStats } from './systems/ClientStats'
+import { ClientBuilder } from './systems/ClientBuilder'
+import { ClientActions } from './systems/ClientActions'
+import { ClientTarget } from './systems/ClientTarget'
+import { ClientUI } from './systems/ClientUI'
+import { LODs } from './systems/LODs'
+import { Nametags } from './systems/Nametags'
+import { Particles } from './systems/Particles'
+
+// Import RPG plugin
+import { HyperfyRPGPlugin } from '../rpg'
+
+export async function createRPGClientWorld() {
+  const world = new World()
+  
+  // Register core client systems
+  world.register('client', Client)
+  world.register('livekit', ClientLiveKit)
+  world.register('pointer', ClientPointer)
+  world.register('prefs', ClientPrefs)
+  world.register('controls', ClientControls)
+  world.register('network', ClientNetwork)
+  world.register('loader', ClientLoader)
+  world.register('graphics', ClientGraphics)
+  world.register('environment', ClientEnvironment)
+  world.register('audio', ClientAudio)
+  world.register('stats', ClientStats)
+  world.register('builder', ClientBuilder)
+  world.register('actions', ClientActions)
+  world.register('target', ClientTarget)
+  world.register('ui', ClientUI)
+  world.register('lods', LODs)
+  world.register('nametags', Nametags)
+  world.register('particles', Particles)
+  
+  // Initialize RPG plugin
+  console.log('[RPGClientWorld] Initializing RPG plugin...')
+  await HyperfyRPGPlugin.init(world)
+  
+  console.log('[RPGClientWorld] Created client world with RPG systems')
+  
+  return world
+} 

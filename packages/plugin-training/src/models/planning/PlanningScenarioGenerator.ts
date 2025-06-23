@@ -566,7 +566,7 @@ export class PlanningScenarioGenerator {
         id: i,
         title: `Step ${i}: ${this.generateStepTitle(baseScenario, i, stepCount)}`,
         description: `Detailed implementation of step ${i}`,
-        dependencies: i > 1 ? [i - 1] : []
+        dependencies: i > 1 ? [i - 1] : [],
         estimated_time: this.generateStepTime(complexity),
         resources_needed: this.selectRandomSubset(resources, 2),
         success_metrics: [`Step ${i} completion criteria met`],
@@ -681,7 +681,7 @@ Let me break this down into a strategic plan with clear steps, dependencies, and
     return {
       overview: `${originalPlan.reasoning} Adapted for additional constraints: ${newConstraints.slice(-1)[0]}`,
       steps: originalPlan.steps,
-      success_criteria: originalPlan.steps[0]?.success_metrics || []
+      success_criteria: originalPlan.steps[0]?.success_metrics || [],
       risk_assessment: `Increased risk due to: ${newConstraints.slice(-1)[0]}`,
       contingencies: [`Address constraint: ${newConstraints.slice(-1)[0]}`],
     };

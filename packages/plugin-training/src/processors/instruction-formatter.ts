@@ -24,7 +24,7 @@ export class InstructionFormatter {
    * Generate instruction tuning examples from conversations
    */
   async generateInstructionExamples(
-    conversations: ConversationThread[]
+    conversations: ConversationThread[],
     users: TrackedUser[]
   ): Promise<InstructionExample[]> {
     elizaLogger.info('🎯 Generating instruction tuning examples...');
@@ -304,7 +304,7 @@ export class InstructionFormatter {
   /**
    * Balance examples per user to ensure fair representation
    */
-  private balanceUserExamples(examples: InstructionExample[] users: TrackedUser[]): InstructionExample[] {
+  private balanceUserExamples(examples: InstructionExample[], users: TrackedUser[]): InstructionExample[] {
     const examplesPerUser = Math.floor(this.config.maxExamples / users.length);
     const userExamples = new Map<string, InstructionExample[]>();
     

@@ -103,8 +103,8 @@ async function extractGoalInfo(
 ): Promise<GoalInput | null> {
   try {
     const messageHistory = formatMessages({
-      messages: state.data.messages || []
-      entities: state.data.entities || []
+      messages: state.data.messages || [],
+      entities: state.data.entities || [],
     });
 
     const prompt = composePrompt({
@@ -117,7 +117,7 @@ async function extractGoalInfo(
 
     const result = await runtime.useModel(ModelType.TEXT_LARGE, {
       prompt,
-      stopSequences: []
+      stopSequences: [],
     });
 
     logger.debug('Extract goal result:', result);
@@ -170,7 +170,7 @@ async function checkForSimilarGoal(
 
     const result = await runtime.useModel(ModelType.TEXT_SMALL, {
       prompt,
-      stopSequences: []
+      stopSequences: [],
     });
 
     const parsedResult = parseKeyValueXml(result) as SimilarityCheckResult | null;
@@ -361,7 +361,7 @@ export const createGoalAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };
 
 export default createGoalAction;

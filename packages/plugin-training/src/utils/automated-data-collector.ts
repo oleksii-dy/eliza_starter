@@ -83,7 +83,7 @@ export class AutomatedDataCollector {
         type: 'plugin-creation',
         request: event.originalRequest,
         solution: event.outcome.implementation || '',
-        files: event.outcome.files || []
+        files: event.outcome.files || [],
         quality: this.assessQuality(event),
         metadata: {
           complexity: 0.7,
@@ -156,7 +156,7 @@ export class AutomatedDataCollector {
         type: 'mcp-creation',
         request: event.originalRequest,
         solution: event.outcome.implementation || '',
-        files: event.outcome.files || []
+        files: event.outcome.files || [],
         quality: this.assessQuality(event),
         metadata: {
           complexity: 0.7,

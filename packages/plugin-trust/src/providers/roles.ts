@@ -27,7 +27,7 @@ import {
  */
 export const roleProvider: Provider = {
   name: 'ROLES',
-  description: 'Roles in the server, default are OWNER, ADMIN and MEMBER (as well as NONE)',
+  description: 'Provides hierarchical role information for server members when agent needs to understand permissions, authority levels, or access control context in group interactions',
   get: async (runtime: IAgentRuntime, message: Memory, state: State): Promise<ProviderResult> => {
     const room = state.data.room ?? (await runtime.getRoom(message.roomId));
     if (!room) {
@@ -37,7 +37,7 @@ export const roleProvider: Provider = {
     if (room.type !== ChannelType.GROUP) {
       return {
         data: {
-          roles: []
+          roles: [],
         },
         values: {
           roles:
@@ -65,7 +65,7 @@ export const roleProvider: Provider = {
       );
       return {
         data: {
-          roles: []
+          roles: [],
         },
         values: {
           roles: 'No role information available for this server.',
@@ -80,7 +80,7 @@ export const roleProvider: Provider = {
       logger.info(`No roles found for server ${serverId}`);
       return {
         data: {
-          roles: []
+          roles: [],
         },
         values: {
           roles: 'No role information available for this server.',
@@ -163,7 +163,7 @@ export const roleProvider: Provider = {
     if (owners.length === 0 && admins.length === 0 && members.length === 0) {
       return {
         data: {
-          roles: []
+          roles: [],
         },
         values: {
           roles: 'No role information available for this server.',

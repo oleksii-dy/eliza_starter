@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import plugin from '../plugin';
 import { logger } from '@elizaos/core';
 
@@ -94,8 +94,8 @@ describe('Plugin Events', () => {
           id: 'test-world-id',
           name: 'Test World',
         },
-        rooms: []
-        entities: []
+        rooms: [],
+        entities: [],
         source: 'test',
         runtime: {},
       };
@@ -127,8 +127,8 @@ describe('Plugin Events', () => {
           id: 'test-entity-id',
           name: 'Test Entity',
         },
-        rooms: []
-        entities: []
+        rooms: [],
+        entities: [],
         source: 'test',
         runtime: {},
       };

@@ -184,5 +184,5 @@ export const reflectAction = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 } as Action;

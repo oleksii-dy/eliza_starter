@@ -245,7 +245,7 @@ export const worldProvider: Provider = {
           resourceStatus: context.orientation?.resourceStatus,
           metrics: context.metrics,
           recentObservations,
-          environmentalFactors: context.orientation?.environmentalFactors || []
+          environmentalFactors: context.orientation?.environmentalFactors || [],
         },
         data: {
           fullContext: context,

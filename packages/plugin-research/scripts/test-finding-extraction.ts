@@ -15,39 +15,44 @@ const mockRuntime: IAgentRuntime = {
   },
   getSetting: (key: string) => process.env[key],
   useModel: async (modelType: ModelTypeName, params: any) => {
-    console.log('Mock LLM called with:', { modelType, prompt: params.messages?.[1]?.content?.substring(0, 200) });
-    
+    console.log('Mock LLM called with:', {
+      modelType,
+      prompt: params.messages?.[1]?.content?.substring(0, 200),
+    });
+
     // Test different response scenarios
     const query = params.messages?.[1]?.content || '';
-    
+
     // Test 1: Valid findings
     if (query.includes('Space Situational Awareness')) {
       return JSON.stringify([
         {
-          content: "Space Situational Awareness (SSA) involves tracking and monitoring objects in Earth's orbit to prevent collisions and ensure space safety.",
+          content:
+            "Space Situational Awareness (SSA) involves tracking and monitoring objects in Earth's orbit to prevent collisions and ensure space safety.",
           relevance: 0.8,
           confidence: 0.9,
-          category: "fact"
+          category: 'fact',
         },
         {
-          content: "The Aerospace Corporation provides advanced SSA capabilities through sensor networks and data analytics platforms.",
+          content:
+            'The Aerospace Corporation provides advanced SSA capabilities through sensor networks and data analytics platforms.',
           relevance: 0.7,
           confidence: 0.85,
-          category: "fact"
-        }
+          category: 'fact',
+        },
       ]);
     }
-    
+
     // Test 2: Empty array response
     if (query.includes('Efficient Data Extraction')) {
       return '[]';
     }
-    
+
     // Test 3: Invalid JSON
     if (query.includes('Invalid JSON Test')) {
       return 'This is not valid JSON';
     }
-    
+
     // Default: return empty array
     return '[]';
   },
@@ -61,9 +66,9 @@ const mockRuntime: IAgentRuntime = {
 
 async function testFindingExtraction() {
   console.log('Testing finding extraction with content sanitization...\n');
-  
+
   const service = new ResearchService(mockRuntime);
-  
+
   // Test cases with different content types
   const testCases = [
     {
@@ -133,13 +138,13 @@ async function testFindingExtraction() {
       content: 'Too short',
     },
   ];
-  
+
   // Create a test project
   const project = {
     id: 'test-project',
     query: 'space situational awareness data extraction',
-    sources: []
-    findings: []
+    sources: [],
+    findings: [],
     status: 'active' as const,
     phase: 'analysis' as const,
     metadata: {
@@ -148,23 +153,26 @@ async function testFindingExtraction() {
       depth: 'comprehensive' as const,
     },
   };
-  
+
   // Test each case
   for (const testCase of testCases) {
     console.log(`\n--- Testing: ${testCase.name} ---`);
     console.log(`Source: ${testCase.source.title}`);
     console.log(`URL: ${testCase.source.url}`);
     console.log(`Content length: ${testCase.content.length} chars`);
-    
+
     try {
       // Call the private method through the service (in real usage this would be internal)
       const findings = await (service as any).extractFindingsWithRelevance(
         testCase.source,
         project.query,
         testCase.content,
-        { queryIntent: 'Research space situational awareness and data extraction', keyTopics: ['SSA', 'data'] }
+        {
+          queryIntent: 'Research space situational awareness and data extraction',
+          keyTopics: ['SSA', 'data'],
+        }
       );
-      
+
       console.log(`\nFindings extracted: ${findings.length}`);
       findings.forEach((finding: any, index: number) => {
         console.log(`\nFinding ${index + 1}:`);
@@ -177,9 +185,9 @@ async function testFindingExtraction() {
       console.error('Error during extraction:', error);
     }
   }
-  
+
   console.log('\n\n--- Content Sanitization Test ---');
-  
+
   // Test the sanitization function directly
   const contentWithIssues = `
     <p>This &amp; that &ndash; testing &hellip;</p>
@@ -192,7 +200,7 @@ async function testFindingExtraction() {
     Special chars: \x00\x1F
     Excessive punctuation!!!!!!!!!
   `;
-  
+
   const sanitized = (service as any).sanitizeContentForLLM(contentWithIssues);
   console.log('Original length:', contentWithIssues.length);
   console.log('Sanitized length:', sanitized.length);
@@ -201,4 +209,4 @@ async function testFindingExtraction() {
 }
 
 // Run the test
-testFindingExtraction().catch(console.error); 
+testFindingExtraction().catch(console.error);

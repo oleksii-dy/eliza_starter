@@ -16,8 +16,8 @@ const defaultCharacter: Partial<Agent> = getTemplateById('none')?.template || {
   name: '',
   username: '',
   system: '',
-  bio: [] as string[]
-  topics: [] as string[]
+  bio: [],
+  topics: [],
   plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-message-handling'],
   settings: { secrets: {} },
 };
@@ -36,14 +36,14 @@ export default function AgentCreator() {
   const ensureRequiredFields = (character: Agent): Agent => {
     return {
       ...character,
-      bio: character.bio ?? []
-      messageExamples: character.messageExamples ?? []
-      postExamples: character.postExamples ?? []
-      topics: character.topics ?? []
-      plugins: character.plugins ?? []
+      bio: character.bio ?? [],
+      messageExamples: character.messageExamples ?? [],
+      postExamples: character.postExamples ?? [],
+      topics: character.topics ?? [],
+      plugins: character.plugins ?? [],
       style: {
-        all: character.style?.all ?? []
-        chat: character.style?.chat ?? []
+        all: character.style?.all ?? [],
+        chat: character.style?.chat ?? [],
         post: character.style?.post ?? []
       },
       settings: character.settings ?? { secrets: {} },

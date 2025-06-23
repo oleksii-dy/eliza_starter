@@ -146,13 +146,13 @@ describe('getWorlds functionality', () => {
     mockCharacter = {
       id: 'agent-1' as UUID,
       name: 'Test Agent',
-      plugins: []
-      bio: []
-      knowledge: []
-      messageExamples: []
-      postExamples: []
-      topics: []
-      style: { all: [] chat: [] post: [] },
+      plugins: [],
+      bio: [],
+      knowledge: [],
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      style: { all: [], chat: [], post: [] },
     };
 
     runtime = new AgentRuntime({

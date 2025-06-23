@@ -28,7 +28,7 @@ export const coreIdentityPreservationScenario: PluginScenario = {
       id: uuidv4() as any,
       name: 'Style-Focused User',
       role: 'assistant',
-      plugins: []
+      plugins: [],
     },
   ],
 

@@ -122,16 +122,16 @@ try {
  * Dependencies required for different generation types
  */
 export const generationDependencies = {
-  private_key: [] // crypto is built-in
+  private_key: [], // crypto is built-in
   secret: {
     uuid: ['uuid'],
-    hex_32: []
-    base64_32: []
-    jwt_secret: []
+    hex_32: [],
+    base64_32: [],
+    jwt_secret: [],
   },
   config: {
-    port: []
-    database_name: []
+    port: [],
+    database_name: [],
   },
 };
 

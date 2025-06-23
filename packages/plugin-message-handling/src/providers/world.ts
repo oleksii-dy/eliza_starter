@@ -13,7 +13,7 @@ import {
  */
 export const worldProvider: Provider = {
   name: 'WORLD',
-  description: 'World and environment information',
+  description: 'Provides comprehensive world context including channel hierarchy, participant counts, and environment structure when agent needs situational awareness for navigation or relationship management',
   dynamic: true,
 
   get: async (runtime: IAgentRuntime, message: Memory) => {
@@ -89,12 +89,12 @@ export const worldProvider: Provider = {
       };
 
       const channelsByType: Record<string, RoomInfo[]> = {
-        text: []
-        voice: []
-        dm: []
-        feed: []
-        thread: []
-        other: []
+        text: [],
+        voice: [],
+        dm: [],
+        feed: [],
+        thread: [],
+        other: [],
       };
 
       // Categorize rooms by type

@@ -360,7 +360,7 @@ Generate a response in JSON format with "description" and "readme" fields.
       totalPlugins: enhancedPlugins.length,
       totalEnvVars: 0,
       commonEnvVars: {} as Record<string, number>,
-      pluginComplexity: [] as any[]
+      pluginComplexity: [] as any[],
       enhancedPlugins: enhancedPlugins.map(p => ({
         name: p.name,
         version: p.version,

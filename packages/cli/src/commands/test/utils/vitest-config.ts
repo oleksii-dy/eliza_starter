@@ -14,8 +14,8 @@ export function createVitestConfig(_targetPath: string, pluginName?: string): an
           singleFork: true,
         },
       },
-      include: []
-      exclude: []
+      include: [],
+      exclude: [],
     },
   };
 

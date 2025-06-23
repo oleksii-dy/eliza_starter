@@ -150,9 +150,9 @@ describe('Planning Integration Tests', () => {
       
       const planningContext: PlanningContext = {
         goal: 'Process multiple tasks',
-        constraints: []
+        constraints: [],
         availableActions: ['TASK_A', 'TASK_B', 'TASK_C'],
-        availableProviders: []
+        availableProviders: [],
         preferences: {
           executionModel: 'parallel',
           maxSteps: 10,
@@ -179,9 +179,9 @@ describe('Planning Integration Tests', () => {
       
       const planningContext: PlanningContext = {
         goal: 'Coordinate dependent tasks',
-        constraints: []
+        constraints: [],
         availableActions: ['SETUP', 'PROCESS', 'FINALIZE'],
-        availableProviders: []
+        availableProviders: [],
         preferences: {
           executionModel: 'dag',
           maxSteps: 8,
@@ -211,7 +211,7 @@ describe('Planning Integration Tests', () => {
       mockRuntime.actions = [
         {
           name: 'REPLY',
-          similes: []
+          similes: [],
           description: 'Send a reply',
           handler: vi.fn().mockImplementation(async (runtime, message, state, options, callback) => {
             // Call the callback if provided
@@ -224,11 +224,11 @@ describe('Planning Integration Tests', () => {
             return { text: options.text || 'Reply sent' };
           }),
           validate: vi.fn().mockResolvedValue(true),
-          examples: []
+          examples: [],
         },
         {
           name: 'THINK',
-          similes: []
+          similes: [],
           description: 'Think about something',
           handler: vi.fn().mockImplementation(async (runtime, message, state, options, callback) => {
             // Call the callback if provided
@@ -241,7 +241,7 @@ describe('Planning Integration Tests', () => {
             return { text: `Thought: ${options.thought || 'Processing'}` };
           }),
           validate: vi.fn().mockResolvedValue(true),
-          examples: []
+          examples: [],
         },
       ];
       
@@ -263,7 +263,7 @@ describe('Planning Integration Tests', () => {
           },
         ],
         executionModel: 'sequential',
-        constraints: []
+        constraints: [],
         createdAt: Date.now(),
         estimatedDuration: 5000,
       };
@@ -299,7 +299,7 @@ describe('Planning Integration Tests', () => {
           },
         ],
         executionModel: 'sequential',
-        constraints: []
+        constraints: [],
         createdAt: Date.now(),
         estimatedDuration: 5000,
       };
@@ -307,11 +307,11 @@ describe('Planning Integration Tests', () => {
       // Mock a failing action
       mockRuntime.actions = [{
         name: 'FAILING_ACTION',
-        similes: []
+        similes: [],
         description: 'An action that fails',
         handler: vi.fn().mockRejectedValue(new Error('Action failed')),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       }];
 
       const mockCallback = vi.fn();
@@ -348,7 +348,7 @@ describe('Planning Integration Tests', () => {
           },
         ],
         executionModel: 'sequential',
-        constraints: []
+        constraints: [],
         createdAt: Date.now(),
         estimatedDuration: 5000,
       };
@@ -357,7 +357,7 @@ describe('Planning Integration Tests', () => {
       mockRuntime.actions = [
         {
           name: 'SET_VALUE',
-          similes: []
+          similes: [],
           description: 'Set a value in working memory',
           handler: vi.fn().mockImplementation(async (runtime, message, state, options, callback) => {
             const { key, value, context } = options;
@@ -375,11 +375,11 @@ describe('Planning Integration Tests', () => {
             return { text: `Set ${key} = ${value}` };
           }),
           validate: vi.fn().mockResolvedValue(true),
-          examples: []
+          examples: [],
         },
         {
           name: 'GET_VALUE',
-          similes: []
+          similes: [],
           description: 'Get a value from working memory',
           handler: vi.fn().mockImplementation(async (runtime, message, state, options, callback) => {
             const { key, context } = options;
@@ -395,7 +395,7 @@ describe('Planning Integration Tests', () => {
             return { text: `Retrieved ${key} = ${value}` };
           }),
           validate: vi.fn().mockResolvedValue(true),
-          examples: []
+          examples: [],
         },
       ];
 
@@ -427,7 +427,7 @@ describe('Planning Integration Tests', () => {
           },
         ],
         executionModel: 'sequential',
-        constraints: []
+        constraints: [],
         createdAt: Date.now(),
         estimatedDuration: 1000,
       };
@@ -451,7 +451,7 @@ describe('Planning Integration Tests', () => {
           },
         ],
         executionModel: 'sequential',
-        constraints: []
+        constraints: [],
         createdAt: Date.now(),
         estimatedDuration: 1000,
       };
@@ -488,7 +488,7 @@ describe('Planning Integration Tests', () => {
           },
         ],
         executionModel: 'dag',
-        constraints: []
+        constraints: [],
         createdAt: Date.now(),
         estimatedDuration: 2000,
       };
@@ -515,7 +515,7 @@ describe('Planning Integration Tests', () => {
           },
         ],
         executionModel: 'sequential',
-        constraints: []
+        constraints: [],
         createdAt: Date.now(),
         estimatedDuration: 1000,
       };
@@ -523,7 +523,7 @@ describe('Planning Integration Tests', () => {
       const failureContext = {
         failedStep: originalPlan.steps[0],
         error: 'Primary action unavailable',
-        remainingSteps: []
+        remainingSteps: [],
       };
 
       const newPlan = await planningService.adaptPlan(
@@ -565,7 +565,7 @@ describe('Planning Integration Tests', () => {
           },
         ],
         executionModel: 'sequential',
-        constraints: []
+        constraints: [],
         createdAt: Date.now(),
         estimatedDuration: 3000,
       };
@@ -602,9 +602,9 @@ describe('Planning Integration Tests', () => {
       const emptyPlan: ActionPlan = {
         id: asUUID(uuidv4()),
         goal: 'Empty plan',
-        steps: []
+        steps: [],
         executionModel: 'sequential',
-        constraints: []
+        constraints: [],
         createdAt: Date.now(),
         estimatedDuration: 0,
       };
@@ -629,7 +629,7 @@ describe('Planning Integration Tests', () => {
         goal: '', // Empty goal
         constraints: null as any, // Invalid constraints
         availableActions: undefined as any, // Missing actions
-        availableProviders: []
+        availableProviders: [],
         preferences: {} as any, // Missing required preferences
       };
 
@@ -671,7 +671,7 @@ describe('Planning Integration Tests', () => {
           expectedOutput: `Result ${i}`,
         })),
         executionModel: 'sequential',
-        constraints: []
+        constraints: [],
         createdAt: Date.now(),
         estimatedDuration: 100000,
       };
@@ -715,14 +715,14 @@ describe('Planning Integration Tests', () => {
       // Mock a slow action
       mockRuntime.actions = [{
         name: 'SLOW_ACTION',
-        similes: []
+        similes: [],
         description: 'A slow action',
         handler: vi.fn().mockImplementation(async () => {
           await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
           return { text: 'Slow result' };
         }),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       }];
 
       const message = createMockMemory();

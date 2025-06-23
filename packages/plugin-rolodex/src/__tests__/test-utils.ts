@@ -82,14 +82,14 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
     // Service operations
     getService: vi.fn((name: string) => {
       const services: Record<string, any> = {
-        'entity': {
+        entity: {
           trackEntity: vi.fn().mockResolvedValue({
             entityId: stringToUuid('test-entity-id'),
             agentId: stringToUuid('test-agent'),
             names: ['Test Entity'],
             type: 'person',
             summary: 'Test entity',
-            tags: []
+            tags: [],
             platforms: {},
             metadata: {},
             createdAt: new Date().toISOString(),
@@ -98,14 +98,14 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
           searchEntities: vi.fn().mockResolvedValue([]),
           getEntity: vi.fn().mockResolvedValue(null),
         },
-        'entityGraph': {
+        entityGraph: {
           trackEntity: vi.fn().mockResolvedValue({
             entityId: stringToUuid('test-entity-id'),
             agentId: stringToUuid('test-agent'),
             names: ['Test Entity'],
             type: 'person',
             summary: 'Test entity',
-            tags: []
+            tags: [],
             platforms: {},
             metadata: {},
             createdAt: new Date().toISOString(),
@@ -115,7 +115,7 @@ export function createMockRuntime(overrides?: Partial<IAgentRuntime>): IAgentRun
           getEntityRelationships: vi.fn().mockResolvedValue([]),
           analyzeInteraction: vi.fn().mockResolvedValue(null),
         },
-        'followup': {
+        followup: {
           scheduleFollowUp: vi.fn().mockResolvedValue({
             id: stringToUuid('test-followup-id'),
             entityId: stringToUuid('test-entity-id'),
@@ -200,13 +200,13 @@ export function createMockState(overrides?: Partial<State>): State {
     agentId: stringToUuid('test-agent'),
     roomId: stringToUuid('test-room'),
     userId: stringToUuid('test-user'),
-    messages: []
-    memories: []
-    goals: []
-    facts: []
-    knowledge: []
-    recentMessages: []
-    recentMessagesData: []
+    messages: [],
+    memories: [],
+    goals: [],
+    facts: [],
+    knowledge: [],
+    recentMessages: [],
+    recentMessagesData: [],
     bio: 'Test agent bio',
     senderName: 'Test User',
     ...overrides,

@@ -163,7 +163,7 @@ export class OrchestrationManager {
             source: 'loaded',
             relevance: 1.0,
             installed: true,
-            capabilities: plugin.actions?.map((a: any) => a.name) || []
+            capabilities: plugin.actions?.map((a: any) => a.name) || [],
           });
         }
       }
@@ -361,16 +361,16 @@ export class OrchestrationManager {
       updatedAt: new Date(),
       userId,
       conversationId,
-      logs: []
-      errors: []
-      userNotifications: []
-      knowledgeIds: []
-      requiredSecrets: []
-      providedSecrets: []
+      logs: [],
+      errors: [],
+      userNotifications: [],
+      knowledgeIds: [],
+      requiredSecrets: [],
+      providedSecrets: [],
       currentIteration: 0,
       maxIterations: 100, // Allow up to 100 iterations for benchmarks
       infiniteMode: false,
-      customInstructions: []
+      customInstructions: [],
       errorAnalysis: new Map(),
     };
 
@@ -427,16 +427,16 @@ export class OrchestrationManager {
       userId,
       conversationId,
       githubRepo,
-      logs: []
-      errors: []
-      userNotifications: []
-      knowledgeIds: []
-      requiredSecrets: []
-      providedSecrets: []
+      logs: [],
+      errors: [],
+      userNotifications: [],
+      knowledgeIds: [],
+      requiredSecrets: [],
+      providedSecrets: [],
       currentIteration: 0,
       maxIterations: 100, // Allow up to 100 iterations for benchmarks
       infiniteMode: false,
-      customInstructions: []
+      customInstructions: [],
       errorAnalysis: new Map(),
     };
 
@@ -2574,7 +2574,7 @@ File: src/actions/myAction.ts
   private async runCommand(
     project: PluginProject,
     command: string,
-    args: string[]
+    args: string[],
     description: string
   ): Promise<{ success: boolean; output: string }> {
     if (!project.localPath) {

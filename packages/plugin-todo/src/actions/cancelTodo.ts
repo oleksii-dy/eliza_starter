@@ -49,7 +49,7 @@ Return an XML object with:\n<response>\n  <taskId>ID of the task being cancelled
 async function extractTaskCancellation(
   runtime: IAgentRuntime,
   message: Memory,
-  availableTasks: TodoData[]
+  availableTasks: TodoData[],
   state: State
 ): Promise<TaskCancellation> {
   try {
@@ -61,8 +61,8 @@ async function extractTaskCancellation(
       .join('\n---\n');
 
     const messageHistory = formatMessages({
-      messages: state.data?.messages || []
-      entities: state.data?.entities || []
+      messages: state.data?.messages || [],
+      entities: state.data?.entities || [],
     });
 
     const prompt = composePrompt({
@@ -76,7 +76,7 @@ async function extractTaskCancellation(
 
     const result = await runtime.useModel(ModelType.TEXT_SMALL, {
       prompt,
-      stopSequences: []
+      stopSequences: [],
     });
 
     // Parse XML from the text results
@@ -291,7 +291,7 @@ export const cancelTodoAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };
 
 export default cancelTodoAction;

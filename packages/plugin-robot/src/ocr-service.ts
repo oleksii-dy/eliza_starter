@@ -6,23 +6,23 @@ export class OCRService {
   private realOCR: RealOCRService | null = null;
   private initialized = false;
   private useFallback = false;
-  
+
   async initialize(): Promise<void> {
     if (this.initialized) return;
-    
+
     try {
       logger.info('[OCR] Initializing OCR service...');
-      
+
       // Try to use real OCR first
       this.realOCR = new RealOCRService();
       await this.realOCR.initialize();
-      
+
       this.initialized = true;
       this.useFallback = false;
       logger.info('[OCR] Real OCR service initialized successfully');
     } catch (error) {
       logger.error('[OCR] Failed to initialize real OCR:', error);
-      
+
       // Fallback to basic OCR simulation
       logger.warn('[OCR] Using fallback OCR implementation');
       this.useFallback = true;
@@ -34,7 +34,7 @@ export class OCRService {
     if (!this.initialized) {
       await this.initialize();
     }
-    
+
     // Use real OCR if available
     if (this.realOCR && !this.useFallback) {
       try {
@@ -44,7 +44,7 @@ export class OCRService {
         this.useFallback = true;
       }
     }
-    
+
     // Fallback implementation
     return this.fallbackOCR(imageBuffer);
   }
@@ -53,11 +53,11 @@ export class OCRService {
     if (!tile.data) {
       return {
         text: '',
-        blocks: []
+        blocks: [],
         fullText: '',
       };
     }
-    
+
     return this.extractText(tile.data);
   }
 
@@ -68,7 +68,7 @@ export class OCRService {
   private async fallbackOCR(imageBuffer: Buffer): Promise<OCRResult> {
     // Fallback implementation for when Tesseract is not available
     logger.debug('[OCR] Using fallback OCR implementation');
-    
+
     const blocks: Array<{
       text: string;
       bbox: BoundingBox;
@@ -79,14 +79,14 @@ export class OCRService {
         confidence: number;
       }>;
     }> = [];
-    
+
     // Simulate finding common UI text
     const mockTexts = [
       { text: 'File Edit View Window Help', x: 10, y: 5, width: 300, height: 20 },
       { text: 'Welcome to the application', x: 100, y: 100, width: 400, height: 40 },
       { text: 'Click here to continue', x: 200, y: 300, width: 200, height: 30 },
     ];
-    
+
     for (const mock of mockTexts) {
       blocks.push({
         text: mock.text,
@@ -94,9 +94,9 @@ export class OCRService {
         confidence: 0.85 + Math.random() * 0.1,
       });
     }
-    
-    const fullText = blocks.map(b => b.text).join('\n');
-    
+
+    const fullText = blocks.map((b) => b.text).join('\n');
+
     return {
       text: fullText,
       blocks,
@@ -116,12 +116,12 @@ export class OCRService {
         logger.error('[OCR] Structured data extraction failed:', error);
       }
     }
-    
+
     // Fallback: return empty structured data
     return {
-      tables: []
-      forms: []
-      lists: []
+      tables: [],
+      forms: [],
+      lists: [],
     };
   }
 
@@ -138,4 +138,4 @@ export class OCRService {
     this.useFallback = false;
     logger.info('[OCR] Service disposed');
   }
-} 
+}

@@ -276,13 +276,11 @@ export class SerperSearchProvider {
         }
       );
 
-      return (
-        response.data.images?.map((img: any) => ({
-          url: img.imageUrl,
-          title: img.title,
-          source: img.source,
-        })) || []
-      );
+      return response.data.images?.map((img: any) => ({
+        url: img.imageUrl,
+        title: img.title,
+        source: img.source,
+      })) || [];
     } catch (error) {
       elizaLogger.error('[Serper] Image search error:', error);
       throw error;

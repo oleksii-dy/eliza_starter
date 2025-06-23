@@ -31,5 +31,5 @@ export const hyperfyEvents = {
     },
   ],
 
-  CONTROL_MESSAGE: []
+  CONTROL_MESSAGE: [],
 };

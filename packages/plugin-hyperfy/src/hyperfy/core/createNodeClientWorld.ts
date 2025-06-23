@@ -115,7 +115,7 @@ export function createNodeClientWorld(): HyperfyWorld {
       },
       model: {}
     },
-    systems: []
+    systems: [],
     actions: {
       execute: (actionName: string, ...args: unknown[]) => {
         console.log(`[Actions] Executing ${actionName}`, args);

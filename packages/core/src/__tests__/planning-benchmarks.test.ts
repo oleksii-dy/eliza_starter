@@ -82,7 +82,7 @@ function createBenchmarkRuntime(): AgentRuntime {
           text: 'Room muted',
         };
       },
-      similes: []
+      similes: [],
     },
     {
       name: 'FOLLOW_ROOM',
@@ -96,7 +96,7 @@ function createBenchmarkRuntime(): AgentRuntime {
           text: 'Room followed',
         };
       },
-      similes: []
+      similes: [],
     },
     {
       name: 'UPDATE_SETTINGS',
@@ -119,7 +119,7 @@ function createBenchmarkRuntime(): AgentRuntime {
           text: `Setting ${key} updated to ${value}`,
         };
       },
-      similes: []
+      similes: [],
     },
     {
       name: 'REPLY',
@@ -133,7 +133,7 @@ function createBenchmarkRuntime(): AgentRuntime {
           text: 'Done',
         };
       },
-      similes: []
+      similes: [],
     },
   ];
 
@@ -227,7 +227,7 @@ describe('Planning Benchmarks', () => {
             })),
             executionModel: 'sequential',
             state: { status: 'pending' },
-            metadata: { createdAt: Date.now(), constraints: [] tags: [] },
+            metadata: { createdAt: Date.now(), constraints: [], tags: [] },
           };
 
           const executionResult = await (runtime as any).executePlan(plan, message);

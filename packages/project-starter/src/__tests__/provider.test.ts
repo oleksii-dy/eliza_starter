@@ -61,7 +61,7 @@ function createRealRuntime(): IAgentRuntime {
     character: {
       name: 'Test Character',
       system: 'You are a helpful assistant for testing.',
-      plugins: []
+      plugins: [],
       settings: {},
     },
     getSetting: (key: string) => null,
@@ -119,7 +119,7 @@ function createRealMemory(): Memory {
     content: {
       text: 'What can you provide?',
       source: 'test',
-      actions: []
+      actions: [],
     },
     metadata: {
       type: 'custom',

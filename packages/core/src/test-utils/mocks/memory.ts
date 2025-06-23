@@ -1,6 +1,6 @@
 /**
  * @fileoverview Mock implementations for Memory and related interfaces
- * 
+ *
  * This module provides comprehensive mock implementations for memory objects,
  * content structures, and memory-related operations.
  */
@@ -29,17 +29,17 @@ export type MockContentOverrides = Partial<Content>;
 
 /**
  * Create a comprehensive mock Memory object with intelligent defaults
- * 
+ *
  * This function provides a fully-featured memory mock that includes
  * realistic content, metadata, and proper typing.
- * 
+ *
  * @param overrides - Partial object to override specific properties
  * @returns Complete mock Memory object
- * 
+ *
  * @example
  * ```typescript
  * import { createMockMemory } from '@elizaos/core/test-utils';
- * 
+ *
  * const mockMessage = createMockMemory({
  *   content: { text: 'Hello, world!' },
  *   entityId: 'user-123'
@@ -80,14 +80,14 @@ export function createMockMemory(overrides: MockMemoryOverrides = {}): Memory {
 
 /**
  * Create a mock Content object with intelligent defaults
- * 
+ *
  * @param overrides - Partial object to override specific properties
  * @returns Complete mock Content object
- * 
+ *
  * @example
  * ```typescript
  * import { createMockContent } from '@elizaos/core/test-utils';
- * 
+ *
  * const mockContent = createMockContent({
  *   text: 'Custom message',
  *   actions: ['SEND_MESSAGE']
@@ -98,13 +98,13 @@ export function createMockContent(overrides: MockContentOverrides = {}): Content
   const baseContent: Content = {
     text: 'Mock content text',
     thought: 'Mock internal thought',
-    actions: []
-    providers: []
+    actions: [],
+    providers: [],
     source: 'test',
     target: undefined,
     url: undefined,
     inReplyTo: undefined,
-    attachments: []
+    attachments: [],
     channelType: 'DM' as ChannelType,
     ...overrides,
   };
@@ -114,7 +114,7 @@ export function createMockContent(overrides: MockContentOverrides = {}): Content
 
 /**
  * Create a mock conversation memory (user message)
- * 
+ *
  * @param text - The message text
  * @param overrides - Additional overrides
  * @returns Mock user message memory
@@ -135,7 +135,7 @@ export function createMockUserMessage(text: string, overrides: MockMemoryOverrid
 
 /**
  * Create a mock agent response memory
- * 
+ *
  * @param text - The response text
  * @param thought - Optional internal thought
  * @param actions - Optional actions executed
@@ -145,7 +145,7 @@ export function createMockUserMessage(text: string, overrides: MockMemoryOverrid
 export function createMockAgentResponse(
   text: string,
   thought?: string,
-  actions: string[] = []
+  actions: string[] = [],
   overrides: MockMemoryOverrides = {}
 ): Memory {
   return createMockMemory({
@@ -166,7 +166,7 @@ export function createMockAgentResponse(
 
 /**
  * Create a mock fact memory for knowledge storage
- * 
+ *
  * @param fact - The factual claim
  * @param confidence - Confidence level (0-1)
  * @param overrides - Additional overrides
@@ -193,7 +193,7 @@ export function createMockFact(
 
 /**
  * Create a mock memory with embedding vector
- * 
+ *
  * @param text - The text content
  * @param dimension - Embedding dimension (default: 1536 for OpenAI)
  * @param overrides - Additional overrides
@@ -205,7 +205,7 @@ export function createMockMemoryWithEmbedding(
   overrides: MockMemoryOverrides = {}
 ): Memory {
   const embedding = new Array(dimension).fill(0).map(() => Math.random());
-  
+
   return createMockMemory({
     content: { text },
     embedding,
@@ -215,7 +215,7 @@ export function createMockMemoryWithEmbedding(
 
 /**
  * Create a batch of mock conversation memories
- * 
+ *
  * @param count - Number of memories to create
  * @param roomId - Room ID for all memories
  * @returns Array of mock conversation memories
@@ -228,8 +228,10 @@ export function createMockConversation(count: number = 5, roomId?: UUID): Memory
     const isUserMessage = i % 2 === 0;
     const memory = isUserMessage
       ? createMockUserMessage(`User message ${i + 1}`, { roomId: actualRoomId })
-      : createMockAgentResponse(`Agent response ${i + 1}`, `Thinking about response ${i + 1}`, [] { roomId: actualRoomId });
-    
+      : createMockAgentResponse(`Agent response ${i + 1}`, `Thinking about response ${i + 1}`, [], {
+          roomId: actualRoomId,
+        });
+
     // Make timestamps sequential
     memory.createdAt = Date.now() - (count - i) * 1000;
     memories.push(memory);
@@ -240,7 +242,7 @@ export function createMockConversation(count: number = 5, roomId?: UUID): Memory
 
 /**
  * Create a mock Media attachment
- * 
+ *
  * @param type - Media type
  * @param url - Media URL
  * @param overrides - Additional overrides

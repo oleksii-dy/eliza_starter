@@ -278,7 +278,7 @@ Return ONLY valid JSON, no explanations.`;
   private async generateWorkflowJson(spec: N8nWorkflowSpecification): Promise<any> {
     const workflow: any = {
       name: spec.name,
-      nodes: []
+      nodes: [],
       connections: {},
       active: false,
       settings: spec.settings || {},

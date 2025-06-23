@@ -12,10 +12,10 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       name: 'TestAgent',
       bio: ['Test bio'],
       system: 'Test system prompt',
-      messageExamples: []
-      postExamples: []
-      topics: []
-      knowledge: []
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      knowledge: [],
       plugins: ['@elizaos/plugin-autocoder'],
     },
 

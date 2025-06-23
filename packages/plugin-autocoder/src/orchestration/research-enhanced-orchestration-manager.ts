@@ -284,7 +284,7 @@ export class ResearchEnhancedOrchestrationManager {
    */
   async updatePlugin(
     pluginPath: string,
-    updateRequirements: string[]
+    updateRequirements: string[],
     targetVersion?: string
   ): Promise<any> {
     const taskSpec: TaskSpecification = {
@@ -333,14 +333,14 @@ export class ResearchEnhancedOrchestrationManager {
             testingStrategy: 'Comprehensive testing with existing test suites',
             performanceConsiderations: ['Optimize for correctness', 'Maintain performance'],
             securityConsiderations: ['No security vulnerabilities', 'Safe code patterns'],
-            codePatterns: []
+            codePatterns: [],
           },
           riskAssessment: {
             complexity: 'medium',
             breakingChanges: false,
             performanceImpact: 'low',
             securityImpact: 'none',
-            risks: []
+            risks: [],
             mitigations: ['Test thoroughly', 'Verify all changes'],
           },
         };
@@ -378,7 +378,7 @@ export class ResearchEnhancedOrchestrationManager {
             breakingChanges: false,
             performanceImpact: 'low',
             securityImpact: 'low',
-            risks: []
+            risks: [],
             mitigations: ['Follow ElizaOS patterns', 'Comprehensive testing'],
           },
         };
@@ -444,22 +444,22 @@ export class ResearchEnhancedOrchestrationManager {
             created_at: new Date().toISOString(),
             version: '1.0.0',
           } as SWEBenchInstance,
-          findings: []
+          findings: [],
           implementationGuidance: {
             approach: 'Standard implementation approach',
             keyConsiderations: ['Follow best practices', 'Ensure quality'],
             testingStrategy: 'Comprehensive testing',
             performanceConsiderations: ['Optimize performance'],
             securityConsiderations: ['Secure implementation'],
-            codePatterns: []
+            codePatterns: [],
           },
           riskAssessment: {
             complexity: 'medium',
             breakingChanges: false,
             performanceImpact: 'low',
             securityImpact: 'none',
-            risks: []
-            mitigations: []
+            risks: [],
+            mitigations: [],
           },
         };
     }
@@ -666,14 +666,14 @@ ${result.recommendations?.map((r: string, i: number) => `${i + 1}. ${r}`).join('
    */
   private async updatePluginImplementation(
     pluginPath: string,
-    requirements: string[]
+    requirements: string[],
     researchContext?: ResearchContext
   ): Promise<any> {
     // This would contain the actual plugin update logic
     // For now, return a basic result
     return {
       success: true,
-      updatedFiles: []
+      updatedFiles: [],
       changes: requirements.map((req) => `Updated: ${req}`),
       version: '2.0.0',
     };

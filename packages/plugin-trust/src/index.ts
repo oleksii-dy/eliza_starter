@@ -242,7 +242,7 @@ export class SecurityModuleServiceWrapper extends Service {
     return this.securityModule.detectMultiAccountPattern(entityIds);
   }
 
-  async detectPhishing(messages: any[] entityId: UUID) {
+  async detectPhishing(messages: any[], entityId: UUID) {
     if (!this.securityModule) throw new Error('Security module not initialized');
     return this.securityModule.detectPhishing(messages, entityId);
   }

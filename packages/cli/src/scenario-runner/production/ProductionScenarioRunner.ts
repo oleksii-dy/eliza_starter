@@ -49,7 +49,7 @@ export class ProductionScenarioRunner {
           name: actor.name,
           bio: [actor.bio || `I am ${actor.name}, a ${actor.role} in this scenario.`],
           system: actor.system || 'You are a helpful assistant participating in a test scenario.',
-          plugins: actor.plugins || []
+          plugins: actor.plugins || [],
           settings: actor.settings,
         };
 
@@ -283,7 +283,7 @@ export class ProductionScenarioRunner {
 
   private async runBenchmarks(
     scenario: Scenario,
-    transcript: TranscriptMessage[]
+    transcript: TranscriptMessage[],
     startTime: number
   ): Promise<MetricsReport> {
     const report: MetricsReport = {
@@ -292,8 +292,8 @@ export class ProductionScenarioRunner {
       duration: Date.now() - startTime,
       messageCount: transcript.length,
       avgResponseTime: 0,
-      benchmarks: []
-      failures: []
+      benchmarks: [],
+      failures: [],
     };
 
     // Calculate average response time

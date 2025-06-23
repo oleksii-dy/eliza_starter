@@ -24,16 +24,44 @@ const PII_PATTERNS = [
 ];
 
 // Blocked domains and IPs for security
-const BLOCKED_DOMAINS = ['localhost', '127.0.0.1', '0.0.0.0', '10.', '172.16.', '192.168.', 'malware.com', 'phishing.net'];
-const BLOCKED_IPS = /^(127\.|10\.|172\.1[6-9]\.|172\.2[0-9]\.|172\.3[0-1]\.|192\.168\.|169\.254\.|::1$|localhost$)/i;
+const BLOCKED_DOMAINS = [
+  'localhost',
+  '127.0.0.1',
+  '0.0.0.0',
+  '10.',
+  '172.16.',
+  '192.168.',
+  'malware.com',
+  'phishing.net',
+];
+const BLOCKED_IPS =
+  /^(127\.|10\.|172\.1[6-9]\.|172\.2[0-9]\.|172\.3[0-1]\.|192\.168\.|169\.254\.|::1$|localhost$)/i;
 
 // Additional patterns for localhost detection
 const LOCALHOST_PATTERNS = [
-  'localhost', '127.0.0.1', '0.0.0.0', '::1',
-  '192.168.', '10.', '172.16.', '172.17.', '172.18.', '172.19.',
-  '172.20.', '172.21.', '172.22.', '172.23.', '172.24.', '172.25.',
-  '172.26.', '172.27.', '172.28.', '172.29.', '172.30.', '172.31.',
-  '169.254.' // Link-local addresses
+  'localhost',
+  '127.0.0.1',
+  '0.0.0.0',
+  '::1',
+  '192.168.',
+  '10.',
+  '172.16.',
+  '172.17.',
+  '172.18.',
+  '172.19.',
+  '172.20.',
+  '172.21.',
+  '172.22.',
+  '172.23.',
+  '172.24.',
+  '172.25.',
+  '172.26.',
+  '172.27.',
+  '172.28.',
+  '172.29.',
+  '172.30.',
+  '172.31.',
+  '169.254.', // Link-local addresses
 ];
 
 function sanitizeInput(input: string): string {
@@ -49,12 +77,12 @@ function sanitizeInput(input: string): string {
 
 function sanitizeForLogging(input: string): string {
   let sanitized = input;
-  
+
   // Remove PII from logs
   PII_PATTERNS.forEach(({ pattern }) => {
     sanitized = sanitized.replace(pattern, '[REDACTED]');
   });
-  
+
   return sanitized;
 }
 
@@ -66,43 +94,43 @@ function sanitizeError(error: unknown): any {
 function isValidUrl(url: string): boolean {
   try {
     const parsedUrl = new URL(url);
-    
+
     // Only allow HTTP/HTTPS
     if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
       return false;
     }
-    
+
     // Block internal/private IPs and localhost with enhanced detection
     const hostname = parsedUrl.hostname.toLowerCase();
-    
+
     // Check against localhost patterns
     for (const pattern of LOCALHOST_PATTERNS) {
       if (hostname === pattern || hostname.startsWith(pattern)) {
         return false;
       }
     }
-    
+
     // Check with regex pattern
     if (BLOCKED_IPS.test(hostname)) {
       return false;
     }
-    
+
     // Block known malicious domains
-    if (BLOCKED_DOMAINS.some(blocked => hostname.includes(blocked))) {
+    if (BLOCKED_DOMAINS.some((blocked) => hostname.includes(blocked))) {
       return false;
     }
-    
+
     // Block non-standard ports for security
     const port = parsedUrl.port;
     if (port && !['80', '443', '8080', '8443'].includes(port)) {
       return false;
     }
-    
+
     // Additional checks for metadata endpoints
     if (hostname.includes('metadata') || hostname.includes('169.254.169.254')) {
       return false;
     }
-    
+
     return true;
   } catch {
     return false;
@@ -112,16 +140,16 @@ function isValidUrl(url: string): boolean {
 async function checkRateLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
   const now = Date.now();
   const entry = rateLimitStore.get(key);
-  
+
   if (!entry || now > entry.resetTime) {
     rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
     return true;
   }
-  
+
   if (entry.count >= limit) {
     return false;
   }
-  
+
   entry.count++;
   return true;
 }
@@ -164,15 +192,15 @@ class WebBrowser {
         ],
       });
       this.page = await this.browser.newPage();
-      
+
       // Set user agent to avoid bot detection
       await this.page.setUserAgent(
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
       );
-      
+
       // Set viewport
       await this.page.setViewport({ width: 1280, height: 720 });
-      
+
       this.isInitialized = true;
     } catch (error) {
       logger.error('Failed to initialize browser:', error);
@@ -191,9 +219,9 @@ class WebBrowser {
 
     try {
       // Navigate to the URL with timeout
-      await this.page.goto(url, { 
-        waitUntil: 'networkidle0', 
-        timeout: 30000 
+      await this.page.goto(url, {
+        waitUntil: 'networkidle0',
+        timeout: 30000,
       });
 
       // Extract page information
@@ -222,7 +250,7 @@ class WebBrowser {
           '#content',
           '.post-content',
           '.entry-content',
-          'body'
+          'body',
         ];
 
         for (const selector of contentSelectors) {
@@ -240,7 +268,7 @@ class WebBrowser {
 
         // Clean up content (remove excessive whitespace)
         content = content.replace(/\s+/g, ' ').trim();
-        
+
         // Limit content length to prevent overwhelming the context
         if (content.length > 5000) {
           content = content.substring(0, 5000) + '...';
@@ -249,14 +277,14 @@ class WebBrowser {
         // Get links
         const linkElements = Array.from(document.querySelectorAll('a[href]'));
         const links = linkElements
-          .map(link => link.getAttribute('href'))
+          .map((link) => link.getAttribute('href'))
           .filter((href): href is string => href !== null && href.startsWith('http'))
           .slice(0, 20); // Limit to first 20 links
 
         // Get images
         const imageElements = Array.from(document.querySelectorAll('img[src]'));
         const images = imageElements
-          .map(img => img.getAttribute('src'))
+          .map((img) => img.getAttribute('src'))
           .filter((src): src is string => src !== null && src.startsWith('http'))
           .slice(0, 10); // Limit to first 10 images
 
@@ -294,9 +322,9 @@ class WebBrowser {
 
     try {
       const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
-      await this.page.goto(searchUrl, { 
-        waitUntil: 'networkidle0', 
-        timeout: 30000 
+      await this.page.goto(searchUrl, {
+        waitUntil: 'networkidle0',
+        timeout: 30000,
       });
 
       // Wait for results to load
@@ -305,24 +333,27 @@ class WebBrowser {
       // Extract search results
       const results = await this.page.evaluate(() => {
         const resultElements = Array.from(document.querySelectorAll('[data-testid="result"]'));
-        return resultElements.slice(0, 5).map(element => {
-          const titleElement = element.querySelector('h2 a, h3 a');
-          const snippetElement = element.querySelector('[data-result="snippet"]');
-          const urlElement = element.querySelector('a[href]');
+        return resultElements
+          .slice(0, 5)
+          .map((element) => {
+            const titleElement = element.querySelector('h2 a, h3 a');
+            const snippetElement = element.querySelector('[data-result="snippet"]');
+            const urlElement = element.querySelector('a[href]');
 
-          const title = titleElement ? titleElement.textContent || '' : '';
-          const snippet = snippetElement ? snippetElement.textContent || '' : '';
-          const url = urlElement ? urlElement.getAttribute('href') || '' : '';
+            const title = titleElement ? titleElement.textContent || '' : '';
+            const snippet = snippetElement ? snippetElement.textContent || '' : '';
+            const url = urlElement ? urlElement.getAttribute('href') || '' : '';
 
-          return {
-            title: title.trim(),
-            content: snippet.trim(),
-            url: url.trim(),
-            links: []
-            images: []
-            metadata: {},
-          };
-        }).filter(result => result.url && result.title);
+            return {
+              title: title.trim(),
+              content: snippet.trim(),
+              url: url.trim(),
+              links: [],
+              images: [],
+              metadata: {},
+            };
+          })
+          .filter((result) => result.url && result.title);
       });
 
       return results;
@@ -367,16 +398,15 @@ export const browseWebAction: Action = {
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
-    
+
     // Basic action validation
-    const hasKeywords = (
+    const hasKeywords =
       text.includes('browse') ||
       text.includes('visit') ||
       text.includes('search') ||
       (text.includes('read') &&
-        (text.includes('website') || text.includes('webpage') || text.includes('http')))
-    );
-    
+        (text.includes('website') || text.includes('webpage') || text.includes('http')));
+
     if (!hasKeywords) {
       return false;
     }
@@ -424,10 +454,11 @@ export const browseWebAction: Action = {
 
     // Security: Input sanitization and validation
     const text = sanitizeInput(message.content.text || '');
-    
+
     // Security: Rate limiting check
     const rateLimitKey = `browse_${runtime.agentId}`;
-    if (!await checkRateLimit(rateLimitKey, 10, 60000)) { // 10 requests per minute
+    if (!(await checkRateLimit(rateLimitKey, 10, 60000))) {
+      // 10 requests per minute
       await callback({
         text: 'Request rate limit exceeded. Please wait before making more web requests.',
         actions: ['BROWSE_WEB_RATE_LIMITED'],
@@ -437,7 +468,7 @@ export const browseWebAction: Action = {
     }
 
     const browser = await getBrowserInstance();
-    
+
     try {
       // Extract search terms or URL from the message
       let searchTerm = '';
@@ -448,14 +479,14 @@ export const browseWebAction: Action = {
       const urlMatch = text.match(/https?:\/\/[^\s]+/);
       if (urlMatch) {
         targetUrl = urlMatch[0];
-        
+
         // Security: URL validation
         if (!isValidUrl(targetUrl)) {
           throw new Error('Invalid or blocked URL');
         }
-        
+
         logger.info(`Browsing validated URL: ${sanitizeForLogging(targetUrl)}`);
-        
+
         try {
           const result = await browser.browse(targetUrl);
           browseResults = [result];
@@ -469,20 +500,21 @@ export const browseWebAction: Action = {
         const searchMatch = text.match(
           /(?:browse|search|visit|read)\s+(?:for\s+)?(.+?)(?:\s+on\s+the\s+web)?$/i
         );
-        searchTerm = searchMatch?.[1] || text.replace(/(?:browse|search|visit|read)\s*/i, '').trim();
-        
+        searchTerm =
+          searchMatch?.[1] || text.replace(/(?:browse|search|visit|read)\s*/i, '').trim();
+
         if (!searchTerm) {
           throw new Error('Could not extract search terms from the message');
         }
 
         // Security: Sanitize search terms
         searchTerm = sanitizeInput(searchTerm);
-        
+
         logger.info(`Searching web for: ${sanitizeForLogging(searchTerm)}`);
-        
+
         try {
           browseResults = await browser.searchDuckDuckGo(searchTerm);
-          
+
           if (browseResults.length === 0) {
             throw new Error('No search results found');
           }
@@ -501,13 +533,23 @@ URL: ${result.url}
 
 ${sanitizeForLogging(result.content)}
 
-${result.metadata.description ? `Description: ${sanitizeForLogging(result.metadata.description)}\n` : ''}${result.links.length > 0 ? `\nRelated Links:\n${result.links.slice(0, 5).map(link => `- ${link}`).join('\n')}` : ''}`;
+${result.metadata.description ? `Description: ${sanitizeForLogging(result.metadata.description)}\n` : ''}${
+          result.links.length > 0
+            ? `\nRelated Links:\n${result.links
+                .slice(0, 5)
+                .map((link) => `- ${link}`)
+                .join('\n')}`
+            : ''
+        }`;
       } else {
-        resultsText = browseResults.map((result, index) => 
-          `${index + 1}. **${sanitizeForLogging(result.title)}**
+        resultsText = browseResults
+          .map(
+            (result, index) =>
+              `${index + 1}. **${sanitizeForLogging(result.title)}**
    URL: ${result.url}
    ${sanitizeForLogging(result.content.substring(0, 200))}${result.content.length > 200 ? '...' : ''}`
-        ).join('\n\n');
+          )
+          .join('\n\n');
       }
 
       // Create a memory of what we found (with sanitized content)
@@ -519,14 +561,16 @@ ${result.metadata.description ? `Description: ${sanitizeForLogging(result.metada
             data: {
               searchTerm: sanitizeForLogging(searchTerm),
               targetUrl: targetUrl ? sanitizeForLogging(targetUrl) : '',
-              results: browseResults.map(result => ({
+              results: browseResults.map((result) => ({
                 ...result,
                 title: sanitizeForLogging(result.title),
                 content: sanitizeForLogging(result.content),
                 metadata: {
                   ...result.metadata,
-                  description: result.metadata.description ? sanitizeForLogging(result.metadata.description) : undefined,
-                }
+                  description: result.metadata.description
+                    ? sanitizeForLogging(result.metadata.description)
+                    : undefined,
+                },
               })),
               timestamp: new Date().toISOString(),
               method: targetUrl ? 'direct_browse' : 'search',
@@ -543,10 +587,10 @@ ${result.metadata.description ? `Description: ${sanitizeForLogging(result.metada
       );
 
       // Provide the actual results (sanitized)
-      const thought = targetUrl 
+      const thought = targetUrl
         ? `I browsed a website and extracted the content.`
         : `I searched the web for "${sanitizeForLogging(searchTerm)}" and found ${browseResults.length} relevant results.`;
-      
+
       const responseText = targetUrl
         ? `I browsed the requested website and extracted the following information:
 
@@ -601,7 +645,7 @@ This information has been saved to my knowledge base for future reference.`;
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };
 
 // Cleanup function to close browser when shutting down

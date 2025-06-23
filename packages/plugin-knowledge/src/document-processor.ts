@@ -458,7 +458,7 @@ async function generateEmbeddingsForChunks(
 async function getContextualizedChunks(
   runtime: IAgentRuntime,
   fullDocumentText: string | undefined,
-  chunks: string[]
+  chunks: string[],
   contentType: string | undefined,
   batchOriginalIndices: number[]
 ): Promise<Array<{ contextualizedText: string; index: number; success: boolean }>> {
@@ -487,7 +487,7 @@ async function getContextualizedChunks(
 async function generateContextsInBatch(
   runtime: IAgentRuntime,
   fullDocumentText: string,
-  chunks: string[]
+  chunks: string[],
   contentType?: string,
   batchIndices?: number[]
 ): Promise<Array<{ contextualizedText: string; success: boolean; index: number }>> {
@@ -591,10 +591,10 @@ async function generateContextsInBatch(
  * Prepare prompts for contextualization
  */
 function prepareContextPrompts(
-  chunks: string[]
+  chunks: string[],
   fullDocumentText: string,
   contentType?: string,
-  batchIndices?: number[]
+  batchIndices?: number[],
   isUsingCacheCapableModel = false
 ): Array<any> {
   return chunks.map((chunkText, idx) => {

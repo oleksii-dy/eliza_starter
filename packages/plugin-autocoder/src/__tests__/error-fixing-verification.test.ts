@@ -437,7 +437,7 @@ export function brokenTypeScript() {
         id: uuidv4(),
         name: 'multi-error-test',
         localPath: testProjectPath,
-        errors: []
+        errors: [],
         currentIteration: 0,
         maxIterations: 5,
       } as any;

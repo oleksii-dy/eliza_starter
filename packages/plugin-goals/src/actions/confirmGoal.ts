@@ -86,8 +86,8 @@ async function extractConfirmationIntent(
     }
 
     const messageHistory = formatMessages({
-      messages: state.data?.messages || []
-      entities: state.data?.entities || []
+      messages: state.data?.messages || [],
+      entities: state.data?.entities || [],
     });
 
     const pendingTaskText = `
@@ -110,7 +110,7 @@ ${pendingTask.recurring ? `Recurring: ${pendingTask.recurring}` : ''}
 
     const result = await runtime.useModel(ModelType.TEXT_SMALL, {
       prompt,
-      stopSequences: []
+      stopSequences: [],
     });
 
     const parsedResult = parseKeyValueXml(result) as ConfirmationResponse | null;
@@ -256,7 +256,7 @@ export const confirmGoalAction: Action = {
           dueDate: pendingGoal.dueDate,
           recurring: pendingGoal.recurring,
         },
-        tags: pendingGoal.tags || []
+        tags: pendingGoal.tags || [],
       });
 
       if (!createdGoalId) {
@@ -361,7 +361,7 @@ export const confirmGoalAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };
 
 export default confirmGoalAction;

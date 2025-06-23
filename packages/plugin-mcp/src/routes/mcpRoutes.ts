@@ -1,22 +1,22 @@
-import type { Route, IAgentRuntime } from "@elizaos/core";
-import type { Request, Response } from "express";
-import type { McpService } from "../service";
-import { MCP_SERVICE_NAME } from "../types";
-import type { McpServer } from "../types";
+import type { Route, IAgentRuntime } from '@elizaos/core';
+import type { Request, Response } from 'express';
+import type { McpService } from '../service';
+import { MCP_SERVICE_NAME } from '../types';
+import type { McpServer } from '../types';
 
 // API route to get MCP servers status
 const getServersRoute: Route = {
-  path: "/mcp/servers",
-  type: "GET",
+  path: '/mcp/servers',
+  type: 'GET',
   public: true,
-  name: "Get MCP Servers",
+  name: 'Get MCP Servers',
   handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
     try {
       const mcpService = runtime.getService(MCP_SERVICE_NAME) as McpService;
       if (!mcpService) {
         res.status(503).json({
           success: false,
-          error: "MCP service not available"
+          error: 'MCP service not available',
         });
         return;
       }
@@ -28,17 +28,19 @@ const getServersRoute: Route = {
         error: server.error,
         toolCount: server.tools?.length || 0,
         resourceCount: server.resources?.length || 0,
-        tools: server.tools?.map(tool => ({
-          name: tool.name,
-          description: tool.description,
-          inputSchema: tool.inputSchema
-        })) || []
-        resources: server.resources?.map(resource => ({
-          uri: resource.uri,
-          name: resource.name,
-          description: resource.description,
-          mimeType: resource.mimeType
-        })) || []
+        tools:
+          server.tools?.map((tool) => ({
+            name: tool.name,
+            description: tool.description,
+            inputSchema: tool.inputSchema,
+          })) || [],
+        resources:
+          server.resources?.map((resource) => ({
+            uri: resource.uri,
+            name: resource.name,
+            description: resource.description,
+            mimeType: resource.mimeType,
+          })) || [],
       }));
 
       res.json({
@@ -46,26 +48,26 @@ const getServersRoute: Route = {
         data: {
           servers: serverDetails,
           totalServers: servers.length,
-          connectedServers: servers.filter((s: McpServer) => s.status === "connected").length
-        }
+          connectedServers: servers.filter((s: McpServer) => s.status === 'connected').length,
+        },
       });
       return;
     } catch (error) {
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : "Internal server error"
+        error: error instanceof Error ? error.message : 'Internal server error',
       });
       return;
     }
-  }
+  },
 };
 
 // API route to call a tool
 const callToolRoute: Route = {
-  path: "/mcp/tools/:serverName/:toolName",
-  type: "POST",
+  path: '/mcp/tools/:serverName/:toolName',
+  type: 'POST',
   public: true,
-  name: "Call MCP Tool",
+  name: 'Call MCP Tool',
   handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
     try {
       const { serverName, toolName } = req.params;
@@ -75,39 +77,39 @@ const callToolRoute: Route = {
       if (!mcpService) {
         res.status(503).json({
           success: false,
-          error: "MCP service not available"
+          error: 'MCP service not available',
         });
         return;
       }
 
       const result = await mcpService.callTool(serverName, toolName, toolArgs || {});
-      
+
       res.json({
         success: true,
         data: {
           result,
           serverName,
           toolName,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
       return;
     } catch (error) {
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : "Tool execution failed"
+        error: error instanceof Error ? error.message : 'Tool execution failed',
       });
       return;
     }
-  }
+  },
 };
 
 // API route to read a resource
 const readResourceRoute: Route = {
-  path: "/mcp/resources/:serverName",
-  type: "POST",
+  path: '/mcp/resources/:serverName',
+  type: 'POST',
   public: true,
-  name: "Read MCP Resource",
+  name: 'Read MCP Resource',
   handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
     try {
       const { serverName } = req.params;
@@ -116,7 +118,7 @@ const readResourceRoute: Route = {
       if (!uri) {
         res.status(400).json({
           success: false,
-          error: "Resource URI is required"
+          error: 'Resource URI is required',
         });
         return;
       }
@@ -125,39 +127,39 @@ const readResourceRoute: Route = {
       if (!mcpService) {
         res.status(503).json({
           success: false,
-          error: "MCP service not available"
+          error: 'MCP service not available',
         });
         return;
       }
 
       const result = await mcpService.readResource(serverName, uri);
-      
+
       res.json({
         success: true,
         data: {
           contents: result.contents,
           serverName,
           uri,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
       return;
     } catch (error) {
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : "Resource read failed"
+        error: error instanceof Error ? error.message : 'Resource read failed',
       });
       return;
     }
-  }
+  },
 };
 
 // API route to reconnect a server
 const reconnectServerRoute: Route = {
-  path: "/mcp/servers/:serverName/reconnect",
-  type: "POST",
+  path: '/mcp/servers/:serverName/reconnect',
+  type: 'POST',
   public: true,
-  name: "Reconnect MCP Server",
+  name: 'Reconnect MCP Server',
   handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
     try {
       const { serverName } = req.params;
@@ -166,7 +168,7 @@ const reconnectServerRoute: Route = {
       if (!mcpService) {
         res.status(503).json({
           success: false,
-          error: "MCP service not available"
+          error: 'MCP service not available',
         });
         return;
       }
@@ -174,11 +176,11 @@ const reconnectServerRoute: Route = {
       // Get current server config
       const servers = mcpService.getServers();
       const server = servers.find((s: McpServer) => s.name === serverName);
-      
+
       if (!server) {
         res.status(404).json({
           success: false,
-          error: `Server ${serverName} not found`
+          error: `Server ${serverName} not found`,
         });
         return;
       }
@@ -186,32 +188,32 @@ const reconnectServerRoute: Route = {
       // Parse config and reconnect
       const config = JSON.parse(server.config);
       await mcpService.reconnectServer(serverName, config);
-      
+
       res.json({
         success: true,
         data: {
           message: `Server ${serverName} reconnection initiated`,
           serverName,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
       return;
     } catch (error) {
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : "Reconnection failed"
+        error: error instanceof Error ? error.message : 'Reconnection failed',
       });
       return;
     }
-  }
+  },
 };
 
 // Route to serve the MCP viewer UI
 const viewerRoute: Route = {
-  path: "/mcp/viewer",
-  type: "GET",
+  path: '/mcp/viewer',
+  type: 'GET',
   public: true,
-  name: "MCP Viewer",
+  name: 'MCP Viewer',
   handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
     try {
       // Serve the HTML page that loads the React app
@@ -256,25 +258,25 @@ const viewerRoute: Route = {
 </body>
 </html>
       `;
-      
+
       res.type('html').send(htmlContent);
       return;
     } catch (error) {
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : "Failed to load viewer"
+        error: error instanceof Error ? error.message : 'Failed to load viewer',
       });
       return;
     }
-  }
+  },
 };
 
 // Route to serve the React bundle
 const viewerBundleRoute: Route = {
-  path: "/mcp/viewer.js",
-  type: "GET",
+  path: '/mcp/viewer.js',
+  type: 'GET',
   public: true,
-  name: "MCP Viewer Bundle",
+  name: 'MCP Viewer Bundle',
   handler: async (req: Request, res: Response, runtime: IAgentRuntime) => {
     try {
       // In production, this would serve the built React bundle
@@ -290,17 +292,17 @@ export function renderMcpViewer(elementId, agentId) {
   root.render(React.createElement(McpViewer, { agentId }));
 }
       `;
-      
+
       res.type('application/javascript').send(jsContent);
       return;
     } catch (error) {
       res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : "Failed to load viewer bundle"
+        error: error instanceof Error ? error.message : 'Failed to load viewer bundle',
       });
       return;
     }
-  }
+  },
 };
 
 export const mcpRoutes: Route[] = [
@@ -309,5 +311,5 @@ export const mcpRoutes: Route[] = [
   readResourceRoute,
   reconnectServerRoute,
   viewerRoute,
-  viewerBundleRoute
-]; 
+  viewerBundleRoute,
+];

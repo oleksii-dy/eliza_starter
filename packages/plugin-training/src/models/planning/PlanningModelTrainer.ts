@@ -111,7 +111,7 @@ export class PlanningModelTrainer {
    * Create dataset files in various formats
    */
   private async createDatasetFiles(
-    examples: PlanningTrainingExample[]
+    examples: PlanningTrainingExample[],
     outputDir: string
   ): Promise<string> {
     const datasetsDir = path.join(outputDir, 'datasets');
@@ -293,7 +293,7 @@ Create a comprehensive strategic plan to achieve the objective while respecting 
             ...example.input,
           },
           output: example.output,
-          conversationContext: []
+          conversationContext: [],
           stateData: {
             scenario_context: example.input.context,
             complexity: example.metadata.complexity,

@@ -56,11 +56,11 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
           name: 'Real Test Agent',
           bio: ['Testing real integration'],
           system: 'You are a test agent for real integration testing.',
-          messageExamples: []
-          postExamples: []
-          topics: []
-          knowledge: []
-          plugins: []
+          messageExamples: [],
+          postExamples: [],
+          topics: [],
+          knowledge: [],
+          plugins: [],
         },
       });
     } catch (error) {
@@ -209,7 +209,7 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
           test_data TEXT NOT NULL,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )`,
-        args: []
+        args: [],
       });
     } catch (error) {
       throw new Error(
@@ -263,7 +263,7 @@ describe('Real ElizaOS Integration - NO MOCKS', () => {
     try {
       await db.execute({
         sql: 'DROP TABLE IF EXISTS real_test_table',
-        args: []
+        args: [],
       });
     } catch (error) {
       throw new Error(

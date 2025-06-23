@@ -48,13 +48,15 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
   constructor(options: PGliteOptions) {
     // For testing, use minimal configuration to avoid WebAssembly issues
     const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
-    
+
     this.options = {
       ...options,
-      extensions: isTest ? {} : {
-        vector,
-        fuzzystrmatch,
-      },
+      extensions: isTest
+        ? {}
+        : {
+            vector,
+            fuzzystrmatch,
+          },
       relaxedDurability: true,
       // Additional stability options for testing
       ...(isTest && {
@@ -120,12 +122,12 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
    */
   private async createPGliteInstance(): Promise<PGlite> {
     // Serialize all instance creation to prevent WebAssembly conflicts
-    return PGliteClientManager.creationMutex = PGliteClientManager.creationMutex.then(async () => {
+    const instancePromise = PGliteClientManager.creationMutex.then(async () => {
       try {
         await this.waitForWebAssemblyCleanup();
 
         logger.info('PGLiteClientManager: Creating new PGLite instance with WebAssembly fix');
-        
+
         const instance = await initializePGLiteWithFix({
           ...this.options,
           retries: 5,
@@ -135,22 +137,26 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
         PGliteClientManager.lastInstanceCreationTime = Date.now();
         logger.info('PGLiteClientManager: New PGLite instance ready');
         return instance;
-
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('PGLiteClientManager: Failed to create instance with WebAssembly fix:', error);
-        
+
         // Check if this is a fundamental WebAssembly compatibility issue
-        if (error.message.includes('WebAssembly compatibility issue')) {
+        if (error instanceof Error && error.message.includes('WebAssembly compatibility issue')) {
           throw new Error(
             'PGLite is not compatible with the current runtime environment. ' +
-            'This appears to be a WebAssembly initialization failure. ' +
-            'Consider using PostgreSQL instead of PGLite for production deployments.'
+              'This appears to be a WebAssembly initialization failure. ' +
+              'Consider using PostgreSQL instead of PGLite for production deployments.'
           );
         }
-        
+
         throw error;
       }
     });
+
+    // Update the mutex for next operation
+    PGliteClientManager.creationMutex = instancePromise.then((): void => {});
+
+    return await instancePromise;
   }
 
   /**
@@ -207,7 +213,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
         await this.client.exec('CREATE EXTENSION IF NOT EXISTS vector');
         logger.info('PGLiteClientManager: Vector extension created successfully');
         vectorExtensionWorking = true;
-      } catch (createError) {
+      } catch (createError: unknown) {
         logger.debug(
           'PGLiteClientManager: CREATE EXTENSION vector failed, testing if already available'
         );
@@ -220,7 +226,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
           await this.client.exec('DROP TABLE test_extension_check');
           logger.info('PGLiteClientManager: Vector extension verified working (already loaded)');
           vectorExtensionWorking = true;
-        } catch (testError) {
+        } catch (testError: unknown) {
           logger.warn('PGLiteClientManager: Vector extension not working:', testError);
         }
       }
@@ -231,7 +237,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
         );
         logger.warn('PGLiteClientManager: Semantic search features will be disabled');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('PGLiteClientManager: Failed to initialize PGLite', error);
 
       // Check if it's a WebAssembly abort error
@@ -252,7 +258,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
       // Already shutting down or closed, just return
       return;
     }
-    
+
     this.logPerformanceStats();
 
     const instanceKey = this.getInstanceKey();
@@ -273,7 +279,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
       logger.info('PGLiteClientManager: Other references exist, not closing instance');
       return;
     }
-    
+
     // Only set shutting down when we're actually going to close
     this.shuttingDown = true;
 
@@ -306,7 +312,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
     try {
       await instance.close();
       logger.info(`PGLiteClientManager: Successfully closed instance ${instanceKey}`);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.debug(`PGLite close error for ${instanceKey} (may be already closed):`, error);
     }
   }
@@ -324,7 +330,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
         try {
           await entry.instance.close();
           logger.debug(`Force closed instance: ${key}`);
-        } catch (error) {
+        } catch (error: unknown) {
           logger.debug(`Force close error for ${key}:`, error);
         }
       })();

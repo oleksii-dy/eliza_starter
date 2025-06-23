@@ -353,9 +353,9 @@ function formatMetrics(metrics?: any): string {
   if (!metrics) return '';
   
   const {
-    trainingLoss = []
-    validationLoss = []
-    accuracy = []
+    trainingLoss = [],
+    validationLoss = [],
+    accuracy = [],
     rewardScore = []
   } = metrics;
 

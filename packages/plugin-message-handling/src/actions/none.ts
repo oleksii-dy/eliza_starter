@@ -30,8 +30,8 @@ export const noneAction: Action = {
   },
   effects: {
     provides: ['acknowledgement'],
-    requires: []
-    modifies: []
+    requires: [],
+    modifies: [],
   },
   examples: [
     [
@@ -155,5 +155,5 @@ export const noneAction: Action = {
         content: { text: 'beautiful all week', actions: ['NONE'] },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 } as Action;

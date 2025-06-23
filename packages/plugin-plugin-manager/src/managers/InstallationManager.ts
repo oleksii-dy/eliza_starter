@@ -10,7 +10,7 @@ import crypto from 'crypto';
 // Safe command execution
 async function safeExecute(
   command: string,
-  args: string[]
+  args: string[],
   options: { cwd?: string; env?: NodeJS.ProcessEnv; timeout?: number } = {}
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
@@ -216,9 +216,7 @@ export class InstallationManager {
       const tarballPath = path.join(tempDir, tarball);
       const stats = await fs.stat(tarballPath);
       if (stats.size > this.MAX_PACKAGE_SIZE) {
-        throw new Error(
-          `Package too large: ${stats.size} bytes (max: ${this.MAX_PACKAGE_SIZE})`
-        );
+        throw new Error(`Package too large: ${stats.size} bytes (max: ${this.MAX_PACKAGE_SIZE})`);
       }
 
       // Extract safely
@@ -250,8 +248,8 @@ export class InstallationManager {
         name: packageJson.name,
         version: packageJson.version,
         status: PluginStatus.READY,
-        missingEnvVars: []
-        buildLog: []
+        missingEnvVars: [],
+        buildLog: [],
         packageJson,
         createdAt: Date.now(),
         dependencies: packageJson.dependencies || {},
@@ -331,8 +329,8 @@ export class InstallationManager {
       name: packageJson.name,
       version: packageJson.version,
       status: PluginStatus.READY,
-      missingEnvVars: []
-      buildLog: []
+      missingEnvVars: [],
+      buildLog: [],
       packageJson,
       createdAt: Date.now(),
       dependencies: packageJson.dependencies || {},
@@ -661,4 +659,4 @@ export class InstallationManager {
   getInstallationCache(): Map<string, PluginState> {
     return new Map(this.installationCache);
   }
-} 
+}

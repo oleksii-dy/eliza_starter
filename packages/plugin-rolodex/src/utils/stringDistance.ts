@@ -64,7 +64,7 @@ export function calculateStringSimilarity(str1: string, str2: string): number {
  */
 export function findBestMatch(
   target: string,
-  candidates: string[]
+  candidates: string[],
   threshold: number = 0.7
 ): { match: string; similarity: number } | null {
   let bestMatch: string | null = null;

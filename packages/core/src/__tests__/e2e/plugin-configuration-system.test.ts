@@ -55,7 +55,7 @@ const testAction: Action = {
   name: 'TEST_ACTION',
   similes: ['test_action'],
   description: 'Test action',
-  examples: []
+  examples: [],
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     const service = runtime.getService('test-database-service') as TestDatabaseService;
@@ -105,7 +105,7 @@ const testPlugin: Plugin = {
   services: [TestDatabaseService],
   actions: [testAction],
   providers: [testProvider],
-  evaluators: []
+  evaluators: [],
 
   init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
     console.log('test-plugin: Initializing...');
@@ -189,10 +189,10 @@ describe('Plugin Configuration System E2E Tests', () => {
       name: 'TestAgent',
       bio: ['Test agent'],
       system: 'Test system',
-      messageExamples: []
-      postExamples: []
+      messageExamples: [],
+      postExamples: [],
       topics: ['testing'],
-      knowledge: []
+      knowledge: [],
       plugins: ['test-plugin'],
       settings: {},
       secrets: {},
@@ -354,7 +354,7 @@ describe('Plugin Configuration System E2E Tests', () => {
     const failingPlugin: Plugin = {
       name: 'failing-plugin',
       description: 'Plugin that fails to initialize',
-      services: []
+      services: [],
 
       init: async () => {
         throw new Error('Plugin initialization failed');

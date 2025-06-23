@@ -33,11 +33,11 @@ describe('Plugin Manager Integration', () => {
       character: {
         name: 'TestAgent',
         bio: ['Test bio'],
-        knowledge: []
-        messageExamples: []
-        postExamples: []
-        topics: []
-        plugins: []
+        knowledge: [],
+        messageExamples: [],
+        postExamples: [],
+        topics: [],
+        plugins: [],
       },
     };
   });
@@ -101,10 +101,10 @@ describe('Plugin Manager Integration', () => {
 
       // Mock filesystem operations to avoid real plugin analysis
       vi.spyOn(serviceDiscovery as any, 'discoverFromFilesystem').mockResolvedValue({
-        plugins: []
-        services: []
-        actions: []
-        providers: []
+        plugins: [],
+        services: [],
+        actions: [],
+        providers: [],
       });
 
       const result = await serviceDiscovery.discoverServices(['test']);
@@ -124,9 +124,9 @@ describe('Plugin Manager Integration', () => {
           plugin: {
             name: '@elizaos/plugin-database',
             description: 'Database operations plugin',
-            services: []
-            actions: []
-            providers: []
+            services: [],
+            actions: [],
+            providers: [],
           },
         },
         {
@@ -134,9 +134,9 @@ describe('Plugin Manager Integration', () => {
           plugin: {
             name: '@elizaos/plugin-weather',
             description: 'Weather information plugin',
-            services: []
-            actions: []
-            providers: []
+            services: [],
+            actions: [],
+            providers: [],
           },
         },
       ];
@@ -188,10 +188,10 @@ describe('Plugin Manager Integration', () => {
       // Mock the service discovery to avoid real filesystem operations
       const mockServiceDiscovery = {
         discoverServices: vi.fn().mockResolvedValue({
-          plugins: []
-          services: []
-          actions: []
-          providers: []
+          plugins: [],
+          services: [],
+          actions: [],
+          providers: [],
         }),
       };
       (orchestrationManager as any).serviceDiscovery = mockServiceDiscovery;
@@ -243,10 +243,10 @@ describe('Plugin Manager Integration', () => {
       // Mock the service discovery to avoid real filesystem operations
       const mockServiceDiscovery = {
         discoverServices: vi.fn().mockResolvedValue({
-          plugins: []
-          services: []
-          actions: []
-          providers: []
+          plugins: [],
+          services: [],
+          actions: [],
+          providers: [],
         }),
       };
       (orchestrationManager as any).serviceDiscovery = mockServiceDiscovery;

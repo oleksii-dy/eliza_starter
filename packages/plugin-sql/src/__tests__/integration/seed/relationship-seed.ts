@@ -24,7 +24,7 @@ export const relationshipTestSourceEntity: Entity = {
   id: relationshipTestSourceEntityId,
   names: ['Source Entity'],
   agentId: relationshipTestAgentId,
-  components: []
+  components: [],
   metadata: {
     type: 'user',
   },
@@ -34,7 +34,7 @@ export const relationshipTestTargetEntity: Entity = {
   id: relationshipTestTargetEntityId,
   names: ['Target Entity'],
   agentId: relationshipTestAgentId,
-  components: []
+  components: [],
   metadata: {
     type: 'user',
   },
@@ -72,7 +72,7 @@ export const relationshipTestRelationships: Relationship[] = [
 export const createTestRelationship = (
   sourceId: UUID,
   targetId: UUID,
-  tags: string[] = []
+  tags: string[] = [],
   metadata: Record<string, any> = {}
 ): Relationship => {
   return {

@@ -32,7 +32,7 @@ export function createSettingFromConfig(configSetting: Omit<Setting, 'value'>): 
     validation: configSetting.validation || undefined,
     public: configSetting.public || false,
     secret: configSetting.secret || false,
-    dependsOn: configSetting.dependsOn || []
+    dependsOn: configSetting.dependsOn || [],
     onSetAction: configSetting.onSetAction || undefined,
     visibleIf: configSetting.visibleIf || undefined,
   };

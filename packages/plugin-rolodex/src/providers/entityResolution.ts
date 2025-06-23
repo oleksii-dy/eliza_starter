@@ -21,7 +21,7 @@ export const entityResolutionProvider: Provider = {
       // Check for potential identity conflicts or duplicates
       const resolutionContext: ResolutionContext = {
         roomId,
-        conversationHistory: state.data?.recentMessages || []
+        conversationHistory: state.data?.recentMessages || [],
         platformContext: {
           platform: message.content.source || 'unknown',
         },

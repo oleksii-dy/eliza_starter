@@ -377,7 +377,7 @@ export function useChannelMessages(
         senderId: sm.authorId,
         isAgent: isAgent,
         createdAt: timestamp,
-        attachments: sm.metadata?.attachments as any[]
+        attachments: sm.metadata?.attachments as any[],
         thought: isAgent ? sm.metadata?.thought : undefined,
         actions: isAgent ? sm.metadata?.actions : undefined,
         channelId: sm.channelId,
@@ -909,7 +909,7 @@ export function useAgentInternalActions(
   agentId: UUID | null,
   agentPerspectiveRoomId?: UUID | null
 ) {
-  return useQuery<AgentLog[] Error>({
+  return useQuery<AgentLog[], Error>({
     queryKey: ['agentInternalActions', agentId, agentPerspectiveRoomId],
     queryFn: async () => {
       if (!agentId) return []; // Or throw error, depending on desired behavior for null agentId
@@ -956,7 +956,7 @@ export function useAgentInternalMemories(
   tableName: string = 'messages',
   includeEmbedding = false
 ) {
-  return useQuery<CoreMemory[] Error>({
+  return useQuery<CoreMemory[], Error>({
     queryKey: [
       'agentInternalMemories',
       agentId,

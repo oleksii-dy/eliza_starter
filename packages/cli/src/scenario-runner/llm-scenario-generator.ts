@@ -34,7 +34,7 @@ export class LLMScenarioGenerator {
 
   async generateActorPersonalities(
     scenarioContext: string,
-    actorRoles: string[]
+    actorRoles: string[],
     complexity: string = 'medium'
   ): Promise<ScenarioActor[]> {
     const prompt = `You are an expert in AI agent persona design. Create realistic, diverse actor personalities for a scenario.
@@ -87,7 +87,7 @@ Create personalities that will thoroughly test the subject agent through realist
 
   async generateAdaptiveVerificationRules(
     scenario: string,
-    actors: ScenarioActor[]
+    actors: ScenarioActor[],
     testObjectives: string[]
   ): Promise<VerificationRule[]> {
     const prompt = `You are an expert test designer specializing in AI agent evaluation. Create comprehensive verification rules that adapt to the specific scenario and actors.
@@ -273,7 +273,7 @@ Make the scenario realistic, challenging, and thoroughly test the capabilities d
         description: originalDescription,
         category: 'llm-generated',
         tags: ['dynamic', 'llm-created'],
-        actors: []
+        actors: [],
         setup: {
           roomName: 'Generated Test Environment',
           roomType: 'group',
@@ -283,7 +283,7 @@ Make the scenario realistic, challenging, and thoroughly test the capabilities d
           maxSteps: 30,
         },
         verification: {
-          rules: []
+          rules: [],
         },
         benchmarks: {
           maxDuration: 120000,

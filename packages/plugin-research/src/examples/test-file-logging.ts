@@ -87,7 +87,7 @@ async function testFileLogging() {
         confidence: 0.9,
         category: 'llm',
         timestamp: Date.now(),
-        citations: []
+        citations: [],
         factualClaims: [
           {
             id: uuidv4(),
@@ -96,10 +96,10 @@ async function testFileLogging() {
             sourceUrls: ['https://example.com/ai-research'],
             verificationStatus: 'verified' as const,
             confidenceScore: 0.9,
-            relatedClaims: []
+            relatedClaims: [],
           },
         ],
-        relatedFindings: []
+        relatedFindings: [],
         verificationStatus: 'verified' as const,
         extractionMethod: 'manual',
       },
@@ -111,7 +111,7 @@ async function testFileLogging() {
         confidence: 0.85,
         category: 'multimodal',
         timestamp: Date.now(),
-        citations: []
+        citations: [],
         factualClaims: [
           {
             id: uuidv4(),
@@ -120,10 +120,10 @@ async function testFileLogging() {
             sourceUrls: ['https://example.org/machine-learning'],
             verificationStatus: 'verified' as const,
             confidenceScore: 0.85,
-            relatedClaims: []
+            relatedClaims: [],
           },
         ],
-        relatedFindings: []
+        relatedFindings: [],
         verificationStatus: 'verified' as const,
         extractionMethod: 'manual',
       },

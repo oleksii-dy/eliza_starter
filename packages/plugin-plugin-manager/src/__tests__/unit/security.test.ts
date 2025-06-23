@@ -12,13 +12,13 @@ describe('Security Tests', () => {
       getSetting: vi.fn(),
       getService: vi.fn(),
       services: new Map(),
-      plugins: []
-      actions: []
-      providers: []
-      evaluators: []
+      plugins: [],
+      actions: [],
+      providers: [],
+      evaluators: [],
     } as any;
     vi.clearAllMocks();
-    
+
     // Create plugin manager service - use static start method
     pluginManagerService = await PluginManagerService.start(mockRuntime);
   });
@@ -74,9 +74,9 @@ describe('Security Tests', () => {
       ];
 
       for (const version of invalidVersions) {
-        await expect(pluginManagerService.installPluginFromRegistry('valid-plugin', version)).rejects.toThrow(
-          'Invalid version'
-        );
+        await expect(
+          pluginManagerService.installPluginFromRegistry('valid-plugin', version)
+        ).rejects.toThrow('Invalid version');
       }
 
       // Valid versions should pass validation but fail at installation
@@ -84,20 +84,27 @@ describe('Security Tests', () => {
 
       // Mock the installPluginFromRegistry to simulate npm failure after validation
       const originalMethod = pluginManagerService.installPluginFromRegistry;
-      pluginManagerService.installPluginFromRegistry = vi.fn().mockImplementation(async (name, version) => {
-        // Validate version first (like the real implementation)
-        if (version && !/^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$/.test(version)) {
-          throw new Error('Invalid version');
-        }
-        // Simulate npm failure
-        throw new Error('npm install failed');
-      });
+      pluginManagerService.installPluginFromRegistry = vi
+        .fn()
+        .mockImplementation(async (name, version) => {
+          // Validate version first (like the real implementation)
+          if (
+            version &&
+            !/^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$/.test(version)
+          ) {
+            throw new Error('Invalid version');
+          }
+          // Simulate npm failure
+          throw new Error('npm install failed');
+        });
 
       for (const version of validVersions) {
         // These should not throw validation errors (they'll fail at npm install)
-        await expect(pluginManagerService.installPluginFromRegistry('valid-plugin', version)).rejects.toThrow('npm install failed');
+        await expect(
+          pluginManagerService.installPluginFromRegistry('valid-plugin', version)
+        ).rejects.toThrow('npm install failed');
       }
-      
+
       // Restore original method
       pluginManagerService.installPluginFromRegistry = originalMethod;
     });
@@ -115,20 +122,21 @@ describe('Security Tests', () => {
 
       // Get the configuration manager to check warnings
       const configManager = (pluginManagerService as any).configurationManager;
-      
+
       for (const config of suspiciousConfigs) {
         const result = await configManager.validateConfiguration('test-plugin', config);
         expect(result.valid).toBe(true); // Still valid but with warnings
         expect(result.warnings).toBeDefined();
         expect(result.warnings!.length).toBeGreaterThan(0);
         // Check if any warning contains suspicious content
-        const hasSuspiciousWarning = result.warnings!.some((warning: string) =>
-          warning.includes('Suspicious content') || 
-          warning.includes('security risk') ||
-          warning.includes('script tags') ||
-          warning.includes('javascript:') ||
-          warning.includes('path traversal') ||
-          warning.includes('event handlers')
+        const hasSuspiciousWarning = result.warnings!.some(
+          (warning: string) =>
+            warning.includes('Suspicious content') ||
+            warning.includes('security risk') ||
+            warning.includes('script tags') ||
+            warning.includes('javascript:') ||
+            warning.includes('path traversal') ||
+            warning.includes('event handlers')
         );
         expect(hasSuspiciousWarning).toBe(true);
       }
@@ -137,9 +145,9 @@ describe('Security Tests', () => {
     it('should handle sensitive configuration values', async () => {
       // This test verifies that the configuration manager properly handles sensitive data
       // by throwing an error when trying to store sensitive values without encryption
-      
+
       const configManager = (pluginManagerService as any).configurationManager;
-      
+
       // Test 1: Sensitive data should be rejected
       vi.spyOn(configManager, 'getRequiredConfiguration').mockResolvedValue([
         {
@@ -156,15 +164,15 @@ describe('Security Tests', () => {
       };
 
       // The ConfigurationManager should throw an error for sensitive data
-      await expect(pluginManagerService.setPluginConfig('test-plugin', sensitiveConfig)).rejects.toThrow(
-        'Cannot store sensitive configuration "API_KEY" without proper encryption'
-      );
-      
+      await expect(
+        pluginManagerService.setPluginConfig('test-plugin', sensitiveConfig)
+      ).rejects.toThrow('Cannot store sensitive configuration "API_KEY" without proper encryption');
+
       // Test 2: Non-sensitive data should work (but we'll mock to avoid file system)
       // Create a simple mock that bypasses file operations
       const originalSaveConfiguration = configManager.saveConfiguration;
       const originalSetConfig = configManager.setConfig;
-      
+
       // Mock both methods to avoid file system operations
       configManager.setConfig = vi.fn().mockResolvedValue(undefined);
       configManager.saveConfiguration = vi.fn().mockImplementation(async (pluginName, config) => {
@@ -176,7 +184,7 @@ describe('Security Tests', () => {
         // Skip the file system operations
         return Promise.resolve();
       });
-      
+
       // Mock for non-sensitive data
       vi.spyOn(configManager, 'getRequiredConfiguration').mockResolvedValue([
         {
@@ -186,12 +194,12 @@ describe('Security Tests', () => {
           sensitive: false,
         },
       ]);
-      
+
       const nonSensitiveConfig = {
         WEBHOOK_URL: 'https://example.com/webhook',
         regularField: 'regular value',
       };
-      
+
       // This should not throw since we mocked setConfig
       try {
         await pluginManagerService.setPluginConfig('test-plugin', nonSensitiveConfig);
@@ -201,10 +209,10 @@ describe('Security Tests', () => {
         console.error('Unexpected error in setPluginConfig:', error);
         throw error;
       }
-      
+
       // Verify the mock was called (setConfig delegates to saveConfiguration internally)
       expect(configManager.setConfig).toHaveBeenCalledWith('test-plugin', nonSensitiveConfig);
-      
+
       // Restore original methods
       configManager.saveConfiguration = originalSaveConfiguration;
       configManager.setConfig = originalSetConfig;
@@ -215,7 +223,7 @@ describe('Security Tests', () => {
     it.skip('should enforce rate limits on registry operations', async () => {
       // Rate limiting is not currently implemented in the RegistryManager
       // This test is skipped until the feature is implemented
-      
+
       // Create a mock axios instance
       const mockAxiosGet = vi.fn().mockResolvedValue({
         data: { objects: [] },
@@ -251,7 +259,7 @@ describe('Security Tests', () => {
       const malformedInputs = [
         null,
         undefined,
-        []
+        [],
         'string',
         123,
         { __proto__: { isAdmin: true } }, // Prototype pollution attempt
@@ -264,7 +272,7 @@ describe('Security Tests', () => {
         const result = await configManager.validateConfiguration('test-plugin', input as any);
         // Should handle gracefully without crashing
         expect(result).toBeDefined();
-        
+
         // For non-object inputs, it should be invalid
         if (!input || typeof input !== 'object' || Array.isArray(input)) {
           expect(result.valid).toBe(false);

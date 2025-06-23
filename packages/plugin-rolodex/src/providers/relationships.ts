@@ -87,7 +87,7 @@ async function formatRelationships(runtime: IAgentRuntime, relationships: Relati
 const relationshipsProvider: Provider = {
   name: 'RELATIONSHIPS',
   description:
-    'Relationships between {{agentName}} and other people, or between other people that {{agentName}} has observed interacting with',
+    'Provides detailed relationship information between entities based on interaction history and trust levels when agent needs social context for personalized responses or relationship management',
   dynamic: true,
   get: async (runtime: IAgentRuntime, message: Memory) => {
     // Get all relationships for the current user
@@ -98,7 +98,7 @@ const relationshipsProvider: Provider = {
     if (!relationships || relationships.length === 0) {
       return {
         data: {
-          relationships: []
+          relationships: [],
         },
         values: {
           relationships: 'No relationships found.',
@@ -112,7 +112,7 @@ const relationshipsProvider: Provider = {
     if (!formattedRelationships) {
       return {
         data: {
-          relationships: []
+          relationships: [],
         },
         values: {
           relationships: 'No relationships found.',

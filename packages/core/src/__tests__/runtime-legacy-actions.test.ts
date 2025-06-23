@@ -90,7 +90,7 @@ describe('Runtime - Legacy Action Return Values', () => {
         description: 'Test action that returns void',
         handler: vi.fn().mockResolvedValue(undefined),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       runtime.registerAction(voidAction);
@@ -134,7 +134,7 @@ describe('Runtime - Legacy Action Return Values', () => {
             return undefined;
           }),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       runtime.registerAction(voidAction);
@@ -163,7 +163,7 @@ describe('Runtime - Legacy Action Return Values', () => {
         description: 'Test action that returns null',
         handler: vi.fn().mockResolvedValue(null),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       runtime.registerAction(nullAction);
@@ -202,7 +202,7 @@ describe('Runtime - Legacy Action Return Values', () => {
         description: 'Test action that returns true',
         handler: vi.fn().mockResolvedValue(true),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       runtime.registerAction(trueAction);
@@ -239,7 +239,7 @@ describe('Runtime - Legacy Action Return Values', () => {
         description: 'Test action that returns false',
         handler: vi.fn().mockResolvedValue(false),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       runtime.registerAction(falseAction);
@@ -284,7 +284,7 @@ describe('Runtime - Legacy Action Return Values', () => {
           text: 'Action completed',
         } as ActionResult),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       const voidAction: Action = {
@@ -292,7 +292,7 @@ describe('Runtime - Legacy Action Return Values', () => {
         description: 'Test action that returns void',
         handler: vi.fn().mockResolvedValue(undefined),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       const boolAction: Action = {
@@ -300,7 +300,7 @@ describe('Runtime - Legacy Action Return Values', () => {
         description: 'Test action that returns boolean',
         handler: vi.fn().mockResolvedValue(true),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       runtime.registerAction(properAction);
@@ -366,7 +366,7 @@ describe('Runtime - Legacy Action Return Values', () => {
         description: 'Test action that returns void',
         handler: vi.fn().mockResolvedValue(undefined),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       runtime.registerAction(voidAction);
@@ -398,7 +398,7 @@ describe('Runtime - Legacy Action Return Values', () => {
           data: { result: 'success' },
         } as ActionResult),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       runtime.registerAction(properAction);
@@ -434,7 +434,7 @@ describe('Runtime - Legacy Action Return Values', () => {
         description: 'Test action that throws',
         handler: vi.fn().mockRejectedValue(new Error('Test error')),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       runtime.registerAction(errorAction);
@@ -474,7 +474,7 @@ describe('Runtime - Legacy Action Return Values', () => {
           data: { result1: true },
         } as ActionResult),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       const action2: Action = {
@@ -482,7 +482,7 @@ describe('Runtime - Legacy Action Return Values', () => {
         description: 'Returns void',
         handler: vi.fn().mockResolvedValue(undefined),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       const action3: Action = {
@@ -499,7 +499,7 @@ describe('Runtime - Legacy Action Return Values', () => {
             } as ActionResult;
           }),
         validate: vi.fn().mockResolvedValue(true),
-        examples: []
+        examples: [],
       };
 
       runtime.registerAction(action1);

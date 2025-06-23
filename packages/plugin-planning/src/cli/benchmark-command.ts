@@ -91,7 +91,7 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning a
       },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   topics: [
     'planning',
     'task management',
@@ -101,8 +101,8 @@ Always prioritize accuracy, efficiency, and user satisfaction in your planning a
     'problem solving',
     'workflow optimization',
   ],
-  knowledge: []
-  plugins: []
+  knowledge: [],
+  plugins: [],
 };
 
 /**

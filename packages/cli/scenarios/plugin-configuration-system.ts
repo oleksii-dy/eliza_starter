@@ -468,9 +468,9 @@ const pluginNoEnvVars: Plugin = {
   name: 'plugin-no-env-vars',
   description: 'Plugin that works without special environment variables',
   services: [AuthService],
-  actions: []
-  providers: []
-  evaluators: []
+  actions: [],
+  providers: [],
+  evaluators: [],
 
   init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
     console.log('plugin-no-env-vars: Initializing (no env vars required)');
@@ -495,9 +495,9 @@ const testCharacter: Character = {
       },
     ],
   ],
-  postExamples: []
+  postExamples: [],
   topics: ['testing', 'configuration', 'plugins'],
-  knowledge: []
+  knowledge: [],
   plugins: ['plugin-with-env-vars', 'plugin-no-env-vars'],
   settings: {
     DATABASE_URL: 'postgresql://test:test@localhost:5432/testdb',
@@ -671,7 +671,7 @@ export async function testPluginConfigurationSystem(runtime: IAgentRuntime): Pro
   const pluginWithMissingEnvVars: Plugin = {
     name: 'plugin-missing-env-vars',
     description: 'Plugin that requires missing environment variables',
-    services: []
+    services: [],
 
     init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
       const missingVar = runtime.getSetting('MISSING_ENV_VAR');

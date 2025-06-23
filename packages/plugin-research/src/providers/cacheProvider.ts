@@ -114,7 +114,7 @@ export function cacheMiddleware(runtime: ExtendedRuntime) {
   // Wrap processActions with cache invalidation
   runtime.processActions = async (
     message: Memory,
-    responses: Memory[]
+    responses: Memory[],
     state?: State,
     callback?: any
   ) => {

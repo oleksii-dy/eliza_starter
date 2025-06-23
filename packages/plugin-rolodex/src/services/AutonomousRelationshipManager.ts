@@ -1,15 +1,9 @@
-import {
-  logger,
-  stringToUuid,
-  type IAgentRuntime,
-  type Memory,
-  type UUID
-} from '@elizaos/core';
+import { logger, stringToUuid, type IAgentRuntime, type Memory, type UUID } from '@elizaos/core';
 import {
   EventBridge,
   RolodexEventType,
   type HealthEvent,
-  type InteractionEvent
+  type InteractionEvent,
 } from '../managers/EventBridge';
 import { RolodexService } from './RolodexService';
 
@@ -409,7 +403,7 @@ export class AutonomousRelationshipManager {
               relationshipId: event.relationshipId,
               currentStatus: event.currentStatus,
               healthScore: event.healthScore,
-              recommendations: event.recommendations || []
+              recommendations: event.recommendations || [],
               metadata: {
                 lastInteractionDays: event.lastInteractionDays,
                 trustScore: event.trustScore,
@@ -585,10 +579,10 @@ export class AutonomousRelationshipManager {
     const trustScore = this.rolodexService
       ? await this.rolodexService.getTrustScore(targetId)
       : null;
-    const trustEval = { 
-      allowed: true, 
-      trustScore: trustScore?.score || 50, 
-      reasoning: 'Trust evaluation' 
+    const trustEval = {
+      allowed: true,
+      trustScore: trustScore?.score || 50,
+      reasoning: 'Trust evaluation',
     };
 
     // Calculate days since last interaction
@@ -697,7 +691,7 @@ export class AutonomousRelationshipManager {
     // Get all relationships that need attention
     const stats = await this.rolodexService.getNetworkStats();
     const insights = {
-      needsAttention: [] as any[] // We'll need to implement this logic differently
+      needsAttention: [] as any[], // We'll need to implement this logic differently
     };
 
     // Create suggestions for entities needing attention
@@ -1264,10 +1258,10 @@ export class AutonomousRelationshipManager {
     const trustScore = this.rolodexService
       ? await this.rolodexService.getTrustScore(entityId)
       : null;
-    const trustEval = { 
-      allowed: true, 
-      trustScore: trustScore?.score || 50, 
-      reasoning: 'Learning evaluation' 
+    const trustEval = {
+      allowed: true,
+      trustScore: trustScore?.score || 50,
+      reasoning: 'Learning evaluation',
     };
 
     // Get recent patterns
@@ -1336,12 +1330,7 @@ export class AutonomousRelationshipManager {
 
     // Decision 4: Privacy adjustments based on trust and behavior
     if (!recentDecisionTypes.includes('privacy_change') && profile) {
-      const shouldAdjustPrivacy = this.shouldAdjustPrivacy(
-        entityId,
-        trustEval,
-        profile,
-        patterns
-      );
+      const shouldAdjustPrivacy = this.shouldAdjustPrivacy(entityId, trustEval, profile, patterns);
       if (shouldAdjustPrivacy) {
         decisions.push({
           entityId,
@@ -1483,7 +1472,10 @@ export class AutonomousRelationshipManager {
           id: decision.entityId,
           metadata: {
             ...contact.metadata,
-            tags: [...(Array.isArray(contact.metadata?.tags) ? contact.metadata.tags : []), 'enhanced-monitoring'],
+            tags: [
+              ...(Array.isArray(contact.metadata?.tags) ? contact.metadata.tags : []),
+              'enhanced-monitoring',
+            ],
             customFields: {
               ...(contact.metadata?.customFields || {}),
               monitoringLevel: 'enhanced',
@@ -1781,7 +1773,7 @@ export class AutonomousRelationshipManager {
     const trustEval = {
       trustScore: trustScore?.score || 50,
       allowed: true,
-      reasoning: 'Learning evaluation'
+      reasoning: 'Learning evaluation',
     };
 
     if (trustEval.trustScore > 70) {
@@ -1804,7 +1796,7 @@ export class AutonomousRelationshipManager {
   }
 
   private mergeLearningInsights(
-    existing: LearningInsight[]
+    existing: LearningInsight[],
     newInsights: LearningInsight[]
   ): LearningInsight[] {
     const merged = [...existing];
@@ -1844,8 +1836,7 @@ export class AutonomousRelationshipManager {
     // Find entities with similar characteristics
     const contacts = await this.rolodexService.searchEntities('', 1000);
     const similarEntities = contacts.filter(
-      (c) =>
-        c.id !== originEntityId && this.areEntitiesSimilar(c.id!, originEntityId, insight)
+      (c) => c.id !== originEntityId && this.areEntitiesSimilar(c.id!, originEntityId, insight)
     );
 
     for (const similarEntity of similarEntities.slice(0, 5)) {

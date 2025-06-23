@@ -74,7 +74,7 @@ class CrossPluginIntegrationTestRunner {
     console.log('📦 Testing Plugin Installation and Loading...');
     const suite: TestSuite = {
       name: 'Plugin Loading Tests',
-      tests: []
+      tests: [],
       duration: 0,
       summary: { passed: 0, failed: 0, skipped: 0, total: 0 },
     };
@@ -170,7 +170,7 @@ class CrossPluginIntegrationTestRunner {
     console.log('🔧 Testing Core Type Compatibility...');
     const suite: TestSuite = {
       name: 'Core Type Compatibility Tests',
-      tests: []
+      tests: [],
       duration: 0,
       summary: { passed: 0, failed: 0, skipped: 0, total: 0 },
     };
@@ -215,7 +215,7 @@ class CrossPluginIntegrationTestRunner {
     console.log('🔗 Testing Service Integration...');
     const suite: TestSuite = {
       name: 'Service Integration Tests',
-      tests: []
+      tests: [],
       duration: 0,
       summary: { passed: 0, failed: 0, skipped: 0, total: 0 },
     };
@@ -277,7 +277,7 @@ class CrossPluginIntegrationTestRunner {
     console.log('⚡ Testing Workflow Actions...');
     const suite: TestSuite = {
       name: 'Workflow Actions Tests',
-      tests: []
+      tests: [],
       duration: 0,
       summary: { passed: 0, failed: 0, skipped: 0, total: 0 },
     };
@@ -341,7 +341,7 @@ class CrossPluginIntegrationTestRunner {
     console.log('🌐 Testing Integration Service...');
     const suite: TestSuite = {
       name: 'Integration Service Tests',
-      tests: []
+      tests: [],
       duration: 0,
       summary: { passed: 0, failed: 0, skipped: 0, total: 0 },
     };
@@ -398,7 +398,7 @@ class CrossPluginIntegrationTestRunner {
     console.log('🎯 Testing End-to-End Scenarios...');
     const suite: TestSuite = {
       name: 'End-to-End Tests',
-      tests: []
+      tests: [],
       duration: 0,
       summary: { passed: 0, failed: 0, skipped: 0, total: 0 },
     };
@@ -432,7 +432,7 @@ class CrossPluginIntegrationTestRunner {
     console.log('⚡ Testing Performance...');
     const suite: TestSuite = {
       name: 'Performance Tests',
-      tests: []
+      tests: [],
       duration: 0,
       summary: { passed: 0, failed: 0, skipped: 0, total: 0 },
     };

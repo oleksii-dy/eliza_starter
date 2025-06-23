@@ -120,7 +120,7 @@ async function extractGoalSelection(
 
     const result = await runtime.useModel(ModelType.TEXT_SMALL, {
       prompt,
-      stopSequences: []
+      stopSequences: [],
     });
 
     // Parse XML from the text results
@@ -170,7 +170,7 @@ async function extractGoalUpdate(
 
     const result = await runtime.useModel(ModelType.TEXT_SMALL, {
       prompt,
-      stopSequences: []
+      stopSequences: [],
     });
 
     // Parse XML from the text results
@@ -373,7 +373,7 @@ export const updateGoalAction: Action = {
         },
       },
     ],
-  ] as ActionExample[][]
+  ] as ActionExample[][],
 };
 
 export default updateGoalAction;

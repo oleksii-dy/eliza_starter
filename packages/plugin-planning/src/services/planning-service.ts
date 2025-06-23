@@ -131,9 +131,9 @@ export class PlanningService extends Service implements IPlanningService {
         parameters: {
           message: responseContent?.text || message.content.text,
           thought: responseContent?.thought,
-          providers: responseContent?.providers || []
+          providers: responseContent?.providers || [],
         },
-        dependencies: index > 0 ? [asUUID(uuidv4())] : []
+        dependencies: index > 0 ? [asUUID(uuidv4())] : [],
       }));
 
       const plan: ActionPlan = {
@@ -371,7 +371,7 @@ export class PlanningService extends Service implements IPlanningService {
     runtime: IAgentRuntime,
     plan: ActionPlan,
     currentStepIndex: number,
-    results: ActionResult[]
+    results: ActionResult[],
     error?: Error
   ): Promise<ActionPlan> {
     try {
@@ -541,7 +541,7 @@ Focus on:
               id: actualId,
               actionName: actionMatch[1].trim(),
               parameters: parametersMatch?.[1] ? JSON.parse(parametersMatch[1]) : {},
-              dependencies: [] // Will be resolved after all steps are parsed
+              dependencies: [], // Will be resolved after all steps are parsed
               _originalId: originalId,
               _dependencyStrings: dependencyStrings,
             } as any);
@@ -577,7 +577,7 @@ Focus on:
           id: asUUID(uuidv4()),
           actionName: 'ANALYZE_INPUT',
           parameters: { goal: context.goal },
-          dependencies: []
+          dependencies: [],
         });
         
         if (context.goal.includes('plan') || context.goal.includes('strategy')) {
@@ -622,7 +622,7 @@ Focus on:
           id: asUUID(uuidv4()),
           actionName: 'REPLY',
           parameters: { text: 'I will help you with this request step by step.' },
-          dependencies: []
+          dependencies: [],
         }],
         executionModel: 'sequential',
         state: { status: 'pending' },
@@ -671,8 +671,8 @@ Focus on:
     plan: ActionPlan,
     message: Memory,
     workingMemory: WorkingMemory,
-    results: ActionResult[]
-    errors: Error[]
+    results: ActionResult[],
+    errors: Error[],
     callback?: HandlerCallback,
     abortSignal?: AbortSignal
   ): Promise<void> {
@@ -708,8 +708,8 @@ Focus on:
     plan: ActionPlan,
     message: Memory,
     workingMemory: WorkingMemory,
-    results: ActionResult[]
-    errors: Error[]
+    results: ActionResult[],
+    errors: Error[],
     callback?: HandlerCallback,
     abortSignal?: AbortSignal
   ): Promise<void> {
@@ -738,8 +738,8 @@ Focus on:
     plan: ActionPlan,
     message: Memory,
     workingMemory: WorkingMemory,
-    results: ActionResult[]
-    errors: Error[]
+    results: ActionResult[],
+    errors: Error[],
     callback?: HandlerCallback,
     abortSignal?: AbortSignal
   ): Promise<void> {
@@ -786,7 +786,7 @@ Focus on:
     step: ActionStep,
     message: Memory,
     workingMemory: WorkingMemory,
-    previousResults: ActionResult[]
+    previousResults: ActionResult[],
     callback?: HandlerCallback,
     abortSignal?: AbortSignal
   ): Promise<ActionResult> {
@@ -900,7 +900,7 @@ Focus on:
   private buildAdaptationPrompt(
     plan: ActionPlan,
     currentStepIndex: number,
-    results: ActionResult[]
+    results: ActionResult[],
     error?: Error
   ): string {
     return `You are an expert AI adaptation system. A plan execution has encountered an issue and needs adaptation.
@@ -960,7 +960,7 @@ Return the adapted plan in the same XML format as the original planning response
               id: actualId,
               actionName: actionMatch[1].trim(),
               parameters: parametersMatch?.[1] ? JSON.parse(parametersMatch[1]) : {},
-              dependencies: [] // Will be resolved after all steps are parsed
+              dependencies: [], // Will be resolved after all steps are parsed
               _originalId: originalId,
               _dependencyStrings: dependencyStrings,
             } as any);
@@ -994,7 +994,7 @@ Return the adapted plan in the same XML format as the original planning response
           id: asUUID(uuidv4()),
           actionName: 'REPLY',
           parameters: { text: 'Plan adaptation completed successfully' },
-          dependencies: []
+          dependencies: [],
         };
 
         return {
@@ -1025,7 +1025,7 @@ Return the adapted plan in the same XML format as the original planning response
         id: asUUID(uuidv4()),
         actionName: 'REPLY',
         parameters: { text: 'Plan adaptation completed successfully' },
-        dependencies: []
+        dependencies: [],
       };
 
       return {

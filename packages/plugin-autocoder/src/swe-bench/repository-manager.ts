@@ -186,7 +186,7 @@ export class RepositoryManager {
           failed: 0,
           skipped: 0,
           duration: 0,
-          failures: []
+          failures: [],
         };
       }
 
@@ -199,7 +199,7 @@ export class RepositoryManager {
           failed: 0,
           skipped: 0,
           duration: 0,
-          failures: []
+          failures: [],
         };
       }
 
@@ -292,7 +292,7 @@ export class RepositoryManager {
         failed: 0,
         skipped: 0,
         duration,
-        failures: []
+        failures: [],
       };
 
       // Try to read JSON results file first
@@ -648,7 +648,7 @@ export class RepositoryManager {
       return {
         passed: testResult.failed === 0,
         total: testResult.total,
-        failures: testResult.failures || []
+        failures: testResult.failures || [],
       };
     } catch (error) {
       elizaLogger.error('[REPO-MANAGER] Error in applyAndTestPatch:', error);

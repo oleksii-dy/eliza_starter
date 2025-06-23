@@ -363,6 +363,7 @@ class LazyTeeWalletProvider extends WalletProvider {
 
 export const evmWalletProvider: Provider = {
   name: 'EVMWalletProvider',
+  description: 'Provides current EVM wallet address and native token balances across all configured chains when agent needs wallet information for blockchain operations or balance inquiries',
   async get(runtime: IAgentRuntime, _message: Memory, state?: State): Promise<ProviderResult> {
     try {
       // Get the EVM service

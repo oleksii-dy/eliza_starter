@@ -128,8 +128,8 @@ describe('createMCPAction', () => {
             description: 'Get weather information',
           },
         ], // Natural language processing detects weather-related tool
-        resources: []
-        dependencies: []
+        resources: [],
+        dependencies: [],
       });
 
       expect(mockCallback).toHaveBeenCalledWith(

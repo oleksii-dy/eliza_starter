@@ -32,9 +32,9 @@ export interface AppInfo {
 export async function importApp(file: File): Promise<AppInfo> {
   // In a real implementation, this would parse the .hyp file format
   // For now, we'll return a basic structure
-  
+
   const name = file.name.replace('.hyp', '');
-  
+
   return {
     blueprint: {
       name,
@@ -52,7 +52,7 @@ export async function importApp(file: File): Promise<AppInfo> {
       unique: false,
       disabled: false,
     },
-    assets: []
+    assets: [],
   };
 }
 
@@ -63,7 +63,7 @@ export function validateApp(app: any): boolean {
   if (!app || typeof app !== 'object') return false;
   if (!app.blueprint || typeof app.blueprint !== 'object') return false;
   if (!app.blueprint.name || typeof app.blueprint.name !== 'string') return false;
-  
+
   return true;
 }
 
@@ -76,4 +76,4 @@ export function serializeApp(app: AppInfo): ArrayBuffer {
   const encoder = new TextEncoder();
   const uint8Array = encoder.encode(json);
   return uint8Array.buffer as ArrayBuffer;
-} 
+}

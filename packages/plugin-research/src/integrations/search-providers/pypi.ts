@@ -177,7 +177,7 @@ export class PyPISearchProvider {
       provider: 'pypi',
       metadata: {
         language: 'python',
-        author: info.author || info.maintainer ? [info.author || info.maintainer] : []
+        author: info.author || info.maintainer ? [info.author || info.maintainer] : [],
         type: 'package',
         domain: 'pypi.org',
       },

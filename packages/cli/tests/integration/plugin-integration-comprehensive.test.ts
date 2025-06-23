@@ -34,10 +34,10 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
       name: 'Test Agent',
       bio: ['Test bio'],
       system: 'Test system prompt',
-      messageExamples: []
-      postExamples: []
-      topics: []
-      knowledge: []
+      messageExamples: [],
+      postExamples: [],
+      topics: [],
+      knowledge: [],
       plugins: [
         '@elizaos/plugin-trust',
         '@elizaos/plugin-rolodex',
@@ -84,7 +84,7 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
             benevolence: 0.5,
             transparency: 0.5,
           },
-          evidence: []
+          evidence: [],
           lastUpdated: Date.now(),
           version: 1,
         };
@@ -101,7 +101,7 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
             benevolence: 0.5,
             transparency: 0.5,
           },
-          evidence: []
+          evidence: [],
           lastUpdated: Date.now(),
           version: 1,
         };
@@ -144,7 +144,7 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
                 linkedAt: new Date().toISOString(),
               },
             },
-            relationships: []
+            relationships: [],
             metadata: {
               verificationHistory: [
                 {
@@ -184,8 +184,8 @@ const createTestRuntime = (): Partial<IAgentRuntime> => {
       getPaymentProfile: vi.fn().mockImplementation((entityId: UUID) => {
         const profile = mockPaymentProfiles.get(entityId) || {
           entityId,
-          preferredMethods: []
-          transactionHistory: []
+          preferredMethods: [],
+          transactionHistory: [],
           riskLevel: 'medium',
           trustScore: 0.5,
           metadata: {},

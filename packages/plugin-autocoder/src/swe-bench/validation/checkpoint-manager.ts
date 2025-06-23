@@ -145,7 +145,7 @@ export class CheckpointManager {
       sessionId,
       instanceId,
       startTime: Date.now(),
-      checkpoints: []
+      checkpoints: [],
       status: 'active',
       finalScore: 0,
       finalPassed: false,
@@ -159,7 +159,7 @@ export class CheckpointManager {
         mostReliablePhase: '',
         leastReliablePhase: '',
         improvementTrend: 'stable',
-        recommendations: []
+        recommendations: [],
       },
     };
 
@@ -256,7 +256,7 @@ export class CheckpointManager {
         details: this.createFailureDetails(
           error instanceof Error ? error : new Error(String(error))
         ),
-        warnings: []
+        warnings: [],
         errors: [
           error instanceof Error
             ? error.message
@@ -359,7 +359,7 @@ export class CheckpointManager {
         mostReliablePhase: '',
         leastReliablePhase: '',
         improvementTrend: 'stable',
-        recommendations: []
+        recommendations: [],
       };
     }
 
@@ -539,8 +539,8 @@ export class CheckpointManager {
       noTestsFound: testResults.noTestsFound || false,
       compilation: {
         success: true, // Assume compilation succeeded if tests ran
-        errors: []
-        warnings: []
+        errors: [],
+        warnings: [],
       },
       execution: {
         reliable: testResults.executionReliable || false,
@@ -552,7 +552,7 @@ export class CheckpointManager {
         successful: testResults.parsingSuccessful || false,
         confidence: testResults.validationScore ? testResults.validationScore / 100 : 0.5,
         method: 'enhanced',
-        warnings: []
+        warnings: [],
       },
       metadata: {
         validationScore: testResults.validationScore,
@@ -655,7 +655,7 @@ export class CheckpointManager {
   /**
    * Determine if final session passed
    */
-  private determineFinalPassed(checkpoints: ValidationCheckpoint[] finalScore: number): boolean {
+  private determineFinalPassed(checkpoints: ValidationCheckpoint[], finalScore: number): boolean {
     if (checkpoints.length === 0) return false;
 
     // Check if minimum score requirement is met
@@ -691,7 +691,7 @@ export class CheckpointManager {
       mostReliablePhase: '',
       leastReliablePhase: '',
       improvementTrend: 'stable',
-      recommendations: []
+      recommendations: [],
     };
 
     // Find most and least reliable phases
@@ -824,7 +824,7 @@ export class CheckpointManager {
       compilation: {
         success: false,
         errors: [error.message],
-        warnings: []
+        warnings: [],
       },
       execution: {
         reliable: false,
@@ -836,7 +836,7 @@ export class CheckpointManager {
         successful: false,
         confidence: 0,
         method: 'failure',
-        warnings: []
+        warnings: [],
       },
       metadata: {
         error: error.message,

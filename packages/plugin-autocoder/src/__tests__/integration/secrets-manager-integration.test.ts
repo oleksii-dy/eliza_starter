@@ -29,11 +29,11 @@ describe('Secrets Manager Integration', () => {
       character: {
         name: 'TestAgent',
         bio: ['Test bio'],
-        knowledge: []
-        messageExamples: []
-        postExamples: []
-        topics: []
-        plugins: []
+        knowledge: [],
+        messageExamples: [],
+        postExamples: [],
+        topics: [],
+        plugins: [],
       },
     };
   });

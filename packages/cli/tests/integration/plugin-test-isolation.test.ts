@@ -92,7 +92,7 @@ export const testPlugin = {
 console.log('ELIZA_TESTING_PLUGIN:', process.env.ELIZA_TESTING_PLUGIN);
 export const envTestPlugin = {
   name: 'env-test-plugin',
-  tests: []
+  tests: [],
 };
 `;
     mkdirSync(join(pluginDir, 'src'), { recursive: true });

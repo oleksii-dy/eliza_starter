@@ -155,7 +155,7 @@ export class RelationshipOntologyManager {
             type: pattern.type,
             strength: 0,
             confidence: pattern.confidence,
-            evidence: []
+            evidence: [],
             firstDetected: new Date(),
             lastUpdated: new Date(),
             trajectory: 'stable'
