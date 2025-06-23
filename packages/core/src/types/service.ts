@@ -133,8 +133,9 @@ export abstract class Service {
    * behaviour but it provides sensible defaults for simple services.
    */
   static async start(runtime: IAgentRuntime): Promise<Service> {
-    const service = new (this as any)(runtime) as Service & {
+    const service = new (this as new (runtime: IAgentRuntime) => { start?: () => Promise<void> | void })(runtime) as Service & {
       start?: () => Promise<void> | void;
+    };
     };
     if (typeof service.start === 'function') {
       await service.start();
