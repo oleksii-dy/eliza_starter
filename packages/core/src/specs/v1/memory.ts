@@ -6,7 +6,7 @@ export function fromV2Memory(memory: MemoryV2): MemoryV1 {
   return {
     id: memory.id,
     userId: memory.entityId,
-    agentId: memory.agentId as any,
+    agentId: memory.agentId as UUID,
     createdAt: memory.createdAt,
     content: memory.content,
     embedding: memory.embedding,
