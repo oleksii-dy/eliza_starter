@@ -39,13 +39,23 @@ export { createTemplateFunction, processTemplate, getTemplateValues } from './te
 
 export type { TemplateType } from './templates';
 
+export {
+  fromV2Handler,
+  toV2Handler,
+  fromV2Action,
+  toV2Action,
+} from './action';
+
+export { DatabaseAdapter } from './database';
+
+export {
+  fromV2Memory,
+  toV2Memory,
+  fromV2KnowledgeItem,
+  toV2KnowledgeItem,
+} from './memory';
+
 // Existing exports
 export * from './messages';
 export * from './posts';
 export * from './runtime';
-
-// TODO: Implement the remaining adapters:
-// - action/handler
-// - database
-// - knowledge / memory
-// - relationships
