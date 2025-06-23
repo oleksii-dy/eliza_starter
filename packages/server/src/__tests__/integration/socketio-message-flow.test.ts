@@ -6,7 +6,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from
 import { io as ioClient, Socket as ClientSocket } from 'socket.io-client';
 import { AgentServer } from '../../index';
 import type { IAgentRuntime, UUID, Character } from '@elizaos/core';
-import { SOCKET_MESSAGE_TYPE, ChannelType, AgentRuntime } from '@elizaos/core';
+import { SOCKET_MESSAGE_TYPE, ChannelType, AgentRuntime, logger } from '@elizaos/core';
 import { createDatabaseAdapter } from '@elizaos/plugin-sql';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -459,7 +459,25 @@ describe('Socket.IO End-to-End Message Flow', () => {
 
       await filtersUpdated;
 
-      // TODO: Test actual log streaming when logs are generated
+      // Generate a log entry and expect it to be streamed to the client
+      const logReceived = new Promise((resolve, reject) => {
+        client1.on('log_stream', (data) => {
+          try {
+            expect(data.type).toBe('log_entry');
+            expect(data.payload).toMatchObject({
+              agentName: 'Test Agent',
+              msg: 'Integration test log message',
+            });
+            resolve(data);
+          } catch (err) {
+            reject(err);
+          }
+        });
+      });
+
+      logger.info({ agentName: 'Test Agent' }, 'Integration test log message');
+
+      await logReceived;
     });
 
     it('should unsubscribe from log stream', async () => {
