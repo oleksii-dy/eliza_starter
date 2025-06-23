@@ -21,7 +21,6 @@ process.env.VISION_OCR_ENABLED = 'true';
 process.env.VISION_FLORENCE2_ENABLED = 'true';
 
 // Set up model provider
-const modelProvider = process.env.MODEL_PROVIDER || 'openai';
 const apiKey = process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY;
 
 if (!apiKey) {
@@ -38,8 +37,8 @@ async function main() {
 
   try {
     // Create database adapter
-    const db = new SqliteAdapter({ 
-      filename: ':memory:' // Use in-memory DB for testing
+    const db = new SqliteAdapter({
+      filename: ':memory:', // Use in-memory DB for testing
     });
     await db.init();
 
@@ -47,7 +46,6 @@ async function main() {
     const runtime = {
       databaseAdapter: db,
       token: apiKey,
-      modelProvider: modelProvider as any,
       character,
       plugins: [visionPlugin],
       getSetting: (key: string) => process.env[key],
@@ -73,7 +71,7 @@ async function main() {
       evaluate: async () => null,
       registerPlugin: async (plugin: any) => {
         console.log(`[Runtime] Registering plugin: ${plugin.name}`);
-        
+
         // Initialize services
         if (plugin.services) {
           for (const ServiceClass of plugin.services) {
@@ -82,12 +80,12 @@ async function main() {
             console.log(`[Runtime] Started service: ${ServiceClass.serviceName}`);
           }
         }
-        
+
         // Register providers
         if (plugin.providers) {
           runtime.providers.push(...plugin.providers);
         }
-        
+
         // Register actions
         if (plugin.actions) {
           runtime.actions.push(...plugin.actions);
@@ -102,8 +100,14 @@ async function main() {
 
     console.log('\n✅ Vision plugin loaded successfully!');
     console.log('🔍 Available services:', Array.from(runtime.services.keys()));
-    console.log('📋 Available actions:', runtime.actions.map((a: any) => a.name));
-    console.log('📊 Available providers:', runtime.providers.map((p: any) => p.name));
+    console.log(
+      '📋 Available actions:',
+      runtime.actions.map((a: any) => a.name)
+    );
+    console.log(
+      '📊 Available providers:',
+      runtime.providers.map((p: any) => p.name)
+    );
 
     // Get vision service
     const visionService = runtime.getService('VISION');
@@ -112,11 +116,11 @@ async function main() {
       console.log('  - Mode:', visionService.getVisionMode());
       console.log('  - Camera:', visionService.getCameraInfo() ? 'Connected' : 'Not connected');
       console.log('  - Active:', visionService.isActive());
-      
+
       // Wait a bit for initial capture
       console.log('\n⏳ Waiting for initial vision capture...');
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
       // Get current scene
       const scene = await visionService.getSceneDescription();
       if (scene) {
@@ -126,7 +130,7 @@ async function main() {
         console.log('  - People:', scene.people.length);
         console.log('  - Change:', scene.changePercentage?.toFixed(1) + '%');
       }
-      
+
       // Get screen capture
       const screen = await visionService.getScreenCapture();
       if (screen) {
@@ -141,14 +145,16 @@ async function main() {
 
     // Keep running for a bit to see updates
     console.log('\n👀 Watching for vision updates (press Ctrl+C to stop)...\n');
-    
+
     setInterval(async () => {
       const scene = await visionService?.getSceneDescription();
       if (scene && scene.sceneChanged) {
-        console.log(`[${new Date().toLocaleTimeString()}] Scene changed:`, scene.description.substring(0, 100) + '...');
+        console.log(
+          `[${new Date().toLocaleTimeString()}] Scene changed:`,
+          scene.description.substring(0, 100) + '...'
+        );
       }
     }, 1000);
-
   } catch (error) {
     console.error('❌ Error:', error);
     process.exit(1);
@@ -161,4 +167,4 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-main().catch(console.error); 
+main().catch(console.error);

@@ -1,5 +1,6 @@
 ---
-title: ElizaOS Unit Testing Guide
+description: 
+globs: 
 alwaysApply: true
 ---
 
@@ -107,7 +108,6 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       messageExamples: [],
       postExamples: [],
       topics: [],
-      adjectives: [],
       knowledge: [],
       clients: [],
       plugins: [],
