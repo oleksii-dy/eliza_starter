@@ -233,7 +233,7 @@ ${message.content.text}`;
     return `${header}${messageStrings.join('\n\n')}`;
   });
 
-  return formattedPosts.join('\n\n');
+  return formattedPosts.join('\n');
 };
 
 /**

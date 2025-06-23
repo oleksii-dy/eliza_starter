@@ -72,7 +72,9 @@ export function createMockRuntime(overrides: Partial<MockRuntime> = {}): MockRun
     ensureConnection: mock().mockResolvedValue(undefined),
     ensureParticipantInRoom: mock().mockResolvedValue(undefined),
     ensureWorldExists: mock().mockResolvedValue(undefined),
-    ensureRoomExists: mock().mockResolvedValue(undefined),
+  ensureRoomExists: mock().mockResolvedValue(undefined),
+  registerSource: mock(),
+  getRegisteredSources: mock().mockReturnValue([]),
 
     // Common database operations
     db: {},
@@ -434,6 +436,9 @@ export type MockRuntime = Partial<IAgentRuntime & IDatabaseAdapter> & {
   getEntity: ReturnType<typeof mock>;
   getWorldSettings: ReturnType<typeof mock>;
   findWorldsForOwner: ReturnType<typeof mock>;
+
+  registerSource: ReturnType<typeof mock>;
+  getRegisteredSources: ReturnType<typeof mock>;
 
   // File, PDF, and Image service methods
   uploadFile: ReturnType<typeof mock>;

@@ -1220,3 +1220,48 @@ describe('Send Message Action (Extended)', () => {
     );
   });
 });
+
+describe('Send Message Action Core Features', () => {
+  it('validate uses registered sources', async () => {
+    const { mockRuntime, mockMessage, mockState } = setupActionTest({
+      runtimeOverrides: {
+        getComponents: mock().mockResolvedValue([]),
+        getRegisteredSources: mock().mockReturnValue(['discord']),
+      },
+    });
+
+    const valid = await sendMessageAction.validate(
+      mockRuntime as unknown as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State
+    );
+
+    expect(valid).toBe(true);
+  });
+
+  it('handler ensures connection', async () => {
+    const sendDM = mock().mockResolvedValue(undefined);
+    const { mockRuntime, mockMessage, mockState, callbackFn } = setupActionTest({
+      runtimeOverrides: {
+        getRoom: mock().mockResolvedValue({ id: 'room', worldId: 'world', type: ChannelType.DM }),
+        getService: mock().mockReturnValue({ sendDirectMessage: sendDM }),
+        getComponent: mock().mockResolvedValue({}),
+        useModel: mock().mockResolvedValue({ targetType: 'user', source: 'discord', identifiers: {} }),
+        ensureConnection: mock().mockResolvedValue(undefined),
+        getRegisteredSources: mock().mockReturnValue(['discord']),
+      },
+    });
+
+    await sendMessageAction.handler(
+      mockRuntime as unknown as IAgentRuntime,
+      mockMessage as Memory,
+      mockState as State,
+      {},
+      callbackFn,
+      []
+    );
+
+    expect(mockRuntime.ensureConnection).toHaveBeenCalled();
+    expect(sendDM).toHaveBeenCalled();
+  });
+});

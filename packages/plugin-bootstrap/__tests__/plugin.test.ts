@@ -74,6 +74,11 @@ describe('Bootstrap Plugin', () => {
           });
         });
       }
+      if (bootstrapPlugin.sources) {
+        bootstrapPlugin.sources.forEach((s) => {
+          runtime.registerSource(s);
+        });
+      }
     });
   });
 
@@ -161,6 +166,18 @@ describe('Bootstrap Plugin', () => {
       // Verify each service was registered
       bootstrapPlugin.services.forEach((service) => {
         expect(mockRuntime.registerService).toHaveBeenCalledWith(service);
+      });
+    }
+  });
+
+  it('should register plugin sources during initialization', async () => {
+    await mockInit({}, mockRuntime as unknown as IAgentRuntime);
+    if (bootstrapPlugin.sources) {
+      expect(mockRuntime.registerSource).toHaveBeenCalledTimes(
+        bootstrapPlugin.sources.length
+      );
+      bootstrapPlugin.sources.forEach((s) => {
+        expect(mockRuntime.registerSource).toHaveBeenCalledWith(s);
       });
     }
   });
