@@ -542,7 +542,7 @@ export class MessageBusService extends Service {
   }
 
   private getAuthHeaders(): Record<string, string> {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = {};
 
     const token =
       (this.runtime.getSetting?.('ELIZA_SERVER_AUTH_TOKEN') as string | undefined) ??
