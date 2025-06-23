@@ -96,6 +96,7 @@ export class AgentRuntime implements IAgentRuntime {
   routes: Route[] = [];
   private taskWorkers = new Map<string, TaskWorker>();
   private sendHandlers = new Map<string, SendHandlerFunction>();
+  private registeredSources = new Set<string>();
   private eventHandlers: Map<string, ((data: any) => void)[]> = new Map();
 
   // A map of all plugins available to the runtime, keyed by name, for dependency resolution.
@@ -258,6 +259,11 @@ export class AgentRuntime implements IAgentRuntime {
     if (plugin.providers) {
       for (const provider of plugin.providers) {
         this.registerProvider(provider);
+      }
+    }
+    if (plugin.sources) {
+      for (const source of plugin.sources) {
+        this.registerSource(source);
       }
     }
     if (plugin.models) {
@@ -1800,7 +1806,14 @@ export class AgentRuntime implements IAgentRuntime {
     return await this.adapter.getRoomsByIds(roomIds);
   }
   async createRoom({ id, name, source, type, channelId, serverId, worldId }: Room): Promise<UUID> {
+    if (!worldId && serverId) {
+      worldId = createUniqueUuid(this.agentId + serverId, serverId);
+    }
     if (!worldId) throw new Error('worldId is required');
+    if (!serverId) {
+      const world = await this.getWorld(worldId);
+      serverId = world?.serverId;
+    }
     const res = await this.adapter.createRooms([
       {
         id,
@@ -1960,6 +1973,15 @@ export class AgentRuntime implements IAgentRuntime {
     }
     this.sendHandlers.set(source, handler);
     this.logger.info(`Registered send handler for source: ${source}`);
+  }
+
+  registerSource(source: string): void {
+    this.registeredSources.add(source);
+    this.logger.debug(`Registered source: ${source}`);
+  }
+
+  getRegisteredSources(): string[] {
+    return Array.from(this.registeredSources);
   }
   async sendMessageToTarget(target: TargetInfo, content: Content): Promise<void> {
     const handler = this.sendHandlers.get(target.source);

@@ -1368,6 +1368,7 @@ export const bootstrapPlugin: Plugin = {
     providers.recentMessagesProvider,
     providers.worldProvider,
   ],
+  sources: ['discord'],
   services: [TaskService],
 };
 

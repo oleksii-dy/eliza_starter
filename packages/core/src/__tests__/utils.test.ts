@@ -630,6 +630,29 @@ describe('Utils Comprehensive Tests', () => {
       // Messages without roomId should be filtered out
       expect(result).toBe('');
     });
+
+    it('should join posts with a single newline', () => {
+      const now = Date.now();
+      const messages: Memory[] = [
+        {
+          id: 'm1' as any,
+          entityId: 'entity-1' as any,
+          roomId: 'room-1' as any,
+          createdAt: now,
+          content: { text: 'One', source: 'chat' } as Content,
+        },
+        {
+          id: 'm2' as any,
+          entityId: 'entity-1' as any,
+          roomId: 'room-2' as any,
+          createdAt: now + 1,
+          content: { text: 'Two', source: 'chat' } as Content,
+        },
+      ];
+
+      const result = formatPosts({ messages, entities: mockEntities });
+      expect(result.includes('\n\n\n')).toBe(false);
+    });
   });
 
   describe('validateUuid', () => {

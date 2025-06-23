@@ -1,7 +1,7 @@
 import { beforeEach, afterEach, describe, expect, it } from 'bun:test';
 import { mock, spyOn } from 'bun:test';
 import { AgentRuntime } from '../runtime';
-import { MemoryType, ModelType } from '../types';
+import { MemoryType, ModelType, ChannelType } from '../types';
 import type {
   Action,
   Agent,
@@ -16,6 +16,7 @@ import type {
   UUID,
 } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { createUniqueUuid } from '../entities';
 const stringToUuid = (id: string): UUID => id as UUID;
 
 // --- Mocks ---
@@ -583,21 +584,53 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
     });
 
     // Copied from your original suite:
-    describe('action management', () => {
+  describe('action management', () => {
       it('should register an action', () => {
         const action = createMockAction('testAction');
         runtime.registerAction(action);
         expect(runtime.actions).toContain(action);
       });
 
-      it('should allow registering multiple actions', () => {
-        const action1 = createMockAction('testAction1');
-        const action2 = createMockAction('testAction2');
-        runtime.registerAction(action1);
-        runtime.registerAction(action2);
-        expect(runtime.actions).toContain(action1);
-        expect(runtime.actions).toContain(action2);
-      });
+    it('should allow registering multiple actions', () => {
+      const action1 = createMockAction('testAction1');
+      const action2 = createMockAction('testAction2');
+      runtime.registerAction(action1);
+      runtime.registerAction(action2);
+      expect(runtime.actions).toContain(action1);
+      expect(runtime.actions).toContain(action2);
     });
+  });
+
+  describe('source registration', () => {
+    it('registers plugin sources', async () => {
+      await runtime.registerPlugin({
+        name: 'srcPlugin',
+        description: 'p',
+        sources: ['discord', 'web'],
+      });
+      expect(runtime.getRegisteredSources()).toEqual(
+        expect.arrayContaining(['discord', 'web'])
+      );
+    });
+  });
+
+  describe('createRoom', () => {
+    it('generates worldId from serverId when missing', async () => {
+      const serverId = 'server-1';
+      const roomId = stringToUuid('room1');
+      const expectedWorldId = createUniqueUuid(runtime.agentId + serverId, serverId);
+      await runtime.createRoom({
+        id: roomId,
+        name: 'r',
+        source: 'discord',
+        type: ChannelType.GROUP,
+        channelId: 'c',
+        serverId,
+      } as any);
+      expect(mockDatabaseAdapter.createRooms).toHaveBeenCalledWith([
+        expect.objectContaining({ worldId: expectedWorldId, serverId })
+      ]);
+    });
+  });
   });
 }); // End of main describe block

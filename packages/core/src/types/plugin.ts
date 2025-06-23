@@ -53,6 +53,8 @@ export interface Plugin {
   models?: {
     [key: string]: (...args: any[]) => Promise<any>;
   };
+  /** List of communication sources (e.g. 'discord', 'telegram') provided by this plugin */
+  sources?: string[];
   events?: PluginEvents;
   routes?: Route[];
   tests?: TestSuite[];

@@ -133,17 +133,15 @@ export const updateEntityAction: Action = {
   description:
     'Add or edit contact details for a person you are talking to or observing in the conversation. Use this when you learn this information from the conversation about a contact. This is for the agent to relate entities across platforms, not for world settings or configuration.',
 
-  validate: async (_runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
-    // Check if we have any registered sources or existing components that could be updated
-    // const worldId = message.roomId;
-    // const agentId = runtime.agentId;
+  validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
+    const worldId = message.roomId;
+    const agentId = runtime.agentId;
 
-    // // Get all components for the current room to understand available sources
-    // const roomComponents = await runtime.getComponents(message.roomId, worldId, agentId);
-
-    // // Get source types from room components
-    // const availableSources = new Set(roomComponents.map(c => c.type));
-    return true; // availableSources.size > 0;
+    const roomComponents = await runtime.getComponents(message.roomId, worldId, agentId);
+    const availableSources = new Set(roomComponents.map((c) => c.type));
+    const registeredSources = runtime.getRegisteredSources?.() || [];
+    registeredSources.forEach((s) => availableSources.add(s));
+    return availableSources.size > 0;
   },
 
   handler: async (

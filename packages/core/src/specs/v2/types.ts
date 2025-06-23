@@ -1287,6 +1287,8 @@ export interface IAgentRuntime extends IDatabaseAdapter {
    * @param handler - The SendHandlerFunction to be called for this source.
    */
   registerSendHandler(source: string, handler: SendHandlerFunction): void;
+  registerSource(source: string): void;
+  getRegisteredSources(): string[];
 
   /**
    * Sends a message to a specified target using the appropriate registered handler.

@@ -174,9 +174,9 @@ export const sendMessageAction: Action = {
     // Get source types from room components
     const availableSources = new Set(roomComponents.map((c) => c.type));
 
-    // TODO: Add ability for plugins to register their sources
-    // const registeredSources = runtime.getRegisteredSources?.() || [];
-    // availableSources.add(...registeredSources);
+    // Include any plugin-registered sources
+    const registeredSources = runtime.getRegisteredSources?.() || [];
+    registeredSources.forEach((s) => availableSources.add(s));
 
     return availableSources.size > 0;
   },
@@ -275,6 +275,17 @@ export const sendMessageAction: Action = {
           });
           return;
         }
+        // Ensure connection then send the message
+        await runtime.ensureConnection({
+          entityId: targetEntity.id!,
+          roomId: room.id,
+          worldId,
+          serverId: (await runtime.getWorld(worldId))?.serverId,
+          name: targetEntity.names[0],
+          source,
+          type: ChannelType.DM,
+        });
+
         // Send the message using the appropriate client
         try {
           await sendDirectMessage(runtime, targetEntity.id!, source, message.content.text, worldId);
@@ -319,6 +330,15 @@ export const sendMessageAction: Action = {
           });
           return;
         }
+        await runtime.ensureConnection({
+          entityId: runtime.agentId,
+          roomId: targetRoom.id,
+          worldId,
+          serverId: (await runtime.getWorld(worldId))?.serverId,
+          name: targetRoom.name,
+          source,
+          type: targetRoom.type,
+        });
 
         // Send the message to the room
         try {
