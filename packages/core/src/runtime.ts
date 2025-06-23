@@ -1812,8 +1812,9 @@ export class AgentRuntime implements IAgentRuntime {
     if (!worldId) throw new Error('worldId is required');
     if (!serverId) {
       const world = await this.getWorld(worldId);
-      serverId = world?.serverId;
-    }
+        serverId = world?.serverId;
+        if (!serverId) throw new Error('serverId is required');
+      }
     const res = await this.adapter.createRooms([
       {
         id,
