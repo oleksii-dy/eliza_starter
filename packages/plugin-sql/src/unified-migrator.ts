@@ -36,30 +36,43 @@ export class UnifiedMigrator {
       return;
     }
 
-    logger.info(`[UnifiedMigrator] Starting unified migration process for ${this.dbType}...`);
+    // Use migration lock to prevent concurrent migrations
+    const connectionKey = `${this.dbType}:${this.agentId}`;
 
-    try {
-      // Step 1: Ensure vector extension (if supported)
-      await this.ensureVectorExtension();
+    await connectionRegistry.withMigrationLock(connectionKey, async () => {
+      // Double-check initialization after acquiring lock
+      if (this.initialized) {
+        logger.debug('[UnifiedMigrator] Already initialized after acquiring lock, skipping');
+        return;
+      }
 
-      // Step 2: Register core tables
-      await this.registerCoreTables();
+      logger.info(`[UnifiedMigrator] Starting unified migration process for ${this.dbType}...`);
 
-      // Step 3: Create all tables (core + plugin tables)
-      await this.createAllTables();
+      try {
+        // Step 1: Ensure vector extension (if supported)
+        await this.ensureVectorExtension();
 
-      // Step 4: Load schema objects for Drizzle
-      await this.loadSchemaObjects();
+        // Step 2: Register core tables
+        await this.registerCoreTables();
 
-      // Step 5: Verify critical tables
-      await this.verifyTables();
+        // Step 3: Create all tables (core + plugin tables)
+        await this.createAllTables();
 
-      this.initialized = true;
-      logger.info(`[UnifiedMigrator] Migration process completed successfully for ${this.dbType}`);
-    } catch (error) {
-      logger.error(`[UnifiedMigrator] Migration process failed for ${this.dbType}:`, error);
-      throw error;
-    }
+        // Step 4: Load schema objects for Drizzle
+        await this.loadSchemaObjects();
+
+        // Step 5: Verify critical tables
+        await this.verifyTables();
+
+        this.initialized = true;
+        logger.info(
+          `[UnifiedMigrator] Migration process completed successfully for ${this.dbType}`
+        );
+      } catch (error) {
+        logger.error(`[UnifiedMigrator] Migration process failed for ${this.dbType}:`, error);
+        throw error;
+      }
+    });
   }
 
   /**
@@ -240,10 +253,12 @@ export class UnifiedMigrator {
             await this.db
               .transaction(async (tx) => {
                 // Test insert capability (will be rolled back)
+                // Use proper UUID format for test - this is a fixed test UUID
+                const testUuid = '00000000-0000-0000-0000-000000000001';
                 const insertQuery =
                   this.dbType === 'pglite'
-                    ? `INSERT INTO ${tableName} (id, name, bio, system) VALUES ('test-id', 'test', 'test', 'test')`
-                    : `INSERT INTO "${tableName}" (id, name, bio, system) VALUES ('test-id', 'test', 'test', 'test')`;
+                    ? `INSERT INTO ${tableName} (id, name, bio, system) VALUES ('${testUuid}', 'test', 'test', 'test')`
+                    : `INSERT INTO "${tableName}" (id, name, bio, system) VALUES ('${testUuid}', 'test', 'test', 'test')`;
                 await tx.execute(sql.raw(insertQuery));
                 // Force rollback
                 throw new Error('ROLLBACK_TEST');
@@ -342,7 +357,6 @@ export class UnifiedMigrator {
   isInitialized(): boolean {
     return this.initialized;
   }
-
   /**
    * Force re-initialization (useful for tests)
    */

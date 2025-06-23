@@ -142,14 +142,17 @@ export const participantsTable = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     entityId: uuid('entity_id').notNull(),
     roomId: uuid('room_id').notNull(),
+    agentId: uuid('agent_id').notNull(),
     userState: text('user_state'),
     metadata: jsonb('metadata').default('{}').notNull(),
     lastActiveAt: timestamp('last_active_at').defaultNow().notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => ({
     entityIdIdx: index('idx_participants_entity').on(table.entityId),
     roomIdIdx: index('idx_participants_room').on(table.roomId),
+    agentIdIdx: index('idx_participants_agent').on(table.agentId),
     uniqueParticipant: uniqueIndex('unique_participant').on(table.entityId, table.roomId),
   })
 );

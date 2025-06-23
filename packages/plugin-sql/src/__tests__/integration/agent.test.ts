@@ -65,7 +65,6 @@ describe('Agent Integration Tests', () => {
           messageExamples: [],
           postExamples: [],
           topics: [],
-          adjectives: [],
           knowledge: [],
           plugins: [],
           settings: {},
@@ -94,7 +93,6 @@ describe('Agent Integration Tests', () => {
           messageExamples: [],
           postExamples: [],
           topics: [],
-          adjectives: [],
           knowledge: [],
           plugins: [],
           settings: {},
@@ -115,7 +113,6 @@ describe('Agent Integration Tests', () => {
           messageExamples: [],
           postExamples: [],
           topics: [],
-          adjectives: [],
           knowledge: [],
           plugins: [],
           settings: {},
@@ -831,7 +828,6 @@ describe('Agent Integration Tests', () => {
           ],
           postExamples: ['Example post'],
           topics: ['topic1', 'topic2'],
-          adjectives: ['smart', 'helpful'],
         };
 
         await adapter.createAgent(complexAgent);

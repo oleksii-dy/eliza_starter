@@ -19,7 +19,7 @@ function createAgentTable() {
     name: factory.text('name').notNull(),
     username: factory.text('username'),
     bio: factory.text('bio').notNull(),
-      system: factory.text('system').notNull(),
+    system: factory.text('system'),
     topics: factory.json('topics').$type<string[]>().default([]),
     knowledge: factory.json('knowledge').$type<string[]>().default([]),
     messageExamples: factory.json('message_examples').$type<any[]>().default([]),
@@ -31,9 +31,8 @@ function createAgentTable() {
     styleAll: factory.json('style_all').$type<string[]>().default([]),
     styleChat: factory.json('style_chat').$type<string[]>().default([]),
     stylePost: factory.json('style_post').$type<string[]>().default([]),
-    people: factory.json('people').$type<string[]>().default([]),
     enabled: factory.boolean('enabled').default(true),
-    status: factory.text('status'),
+    status: factory.text('status').default('active'),
     settings: factory
       .json('settings')
       .$type<{
@@ -63,6 +62,13 @@ function createAgentTable() {
       }>()
       .default({}),
     plugins: factory.json('plugins').$type<string[]>().default([]),
+    modelProvider: factory.text('model_provider'),
+    planningEnabled: factory.boolean('planning_enabled').default(false),
+    temperature: factory.real('temperature').default(0.5),
+    maxTokens: factory.integer('max_tokens').default(50),
+    frequencyPenalty: factory.real('frequency_penalty').default(0.9),
+    presencePenalty: factory.real('presence_penalty').default(0.7),
+    repetitionPenalty: factory.real('repetition_penalty').default(0.0),
   };
 
   return factory.table('agents', tableColumns, (table) => ({

@@ -15,9 +15,8 @@ export const CORE_TABLES: TableSchema[] = [
       "name" TEXT NOT NULL,
       "username" TEXT,
       "bio" TEXT NOT NULL,
-      "system" TEXT NOT NULL,
+      "system" TEXT,
       "topics" JSONB DEFAULT '[]',
-      "adjectives" JSONB DEFAULT '[]',
       "knowledge" JSONB DEFAULT '[]',
       "message_examples" JSONB DEFAULT '[]',
       "post_examples" JSONB DEFAULT '[]',
@@ -25,11 +24,10 @@ export const CORE_TABLES: TableSchema[] = [
       "style_all" JSONB DEFAULT '[]',
       "style_chat" JSONB DEFAULT '[]',
       "style_post" JSONB DEFAULT '[]',
-      "people" JSONB DEFAULT '[]',
       "enabled" BOOLEAN DEFAULT true,
       "status" TEXT DEFAULT 'active',
       "settings" JSONB DEFAULT '{}',
-      "plugins" JSONB DEFAULT '[]'
+      "plugins" JSONB DEFAULT '[]',
     )`,
     // Fallback SQL for PGLite (PostgreSQL-compatible syntax)
     fallbackSql: `CREATE TABLE IF NOT EXISTS agents (
@@ -39,9 +37,8 @@ export const CORE_TABLES: TableSchema[] = [
       name TEXT NOT NULL,
       username TEXT,
       bio TEXT NOT NULL,
-      system TEXT NOT NULL,
+      system TEXT,
       topics TEXT DEFAULT '[]',
-      adjectives TEXT DEFAULT '[]',
       knowledge TEXT DEFAULT '[]',
       message_examples TEXT DEFAULT '[]',
       post_examples TEXT DEFAULT '[]',
@@ -49,7 +46,6 @@ export const CORE_TABLES: TableSchema[] = [
       style_all TEXT DEFAULT '[]',
       style_chat TEXT DEFAULT '[]',
       style_post TEXT DEFAULT '[]',
-      people TEXT DEFAULT '[]',
       enabled BOOLEAN DEFAULT true,
       status TEXT DEFAULT 'active',
       settings TEXT DEFAULT '{}',
@@ -61,19 +57,21 @@ export const CORE_TABLES: TableSchema[] = [
     name: 'cache',
     pluginName: '@elizaos/plugin-sql',
     sql: `CREATE TABLE IF NOT EXISTS "cache" (
-      "key" TEXT PRIMARY KEY,
+      "key" TEXT NOT NULL,
       "agent_id" UUID NOT NULL,
       "value" JSONB NOT NULL,
       "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "expires_at" TIMESTAMP
+      "expires_at" TIMESTAMP,
+      PRIMARY KEY ("key", "agent_id")
     )`,
     // Fallback SQL for PGLite (PostgreSQL-compatible)
     fallbackSql: `CREATE TABLE IF NOT EXISTS cache (
-      key TEXT PRIMARY KEY,
+      key TEXT NOT NULL,
       agent_id TEXT NOT NULL,
       value TEXT NOT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      expires_at TIMESTAMP
+      expires_at TIMESTAMP,
+      PRIMARY KEY (key, agent_id)
     )`,
   },
 

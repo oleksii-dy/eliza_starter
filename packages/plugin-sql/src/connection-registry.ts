@@ -13,6 +13,7 @@ class DatabaseConnectionRegistry {
   private pgLiteManagers = new Map<string, PGliteClientManager>();
   private postgresManagers = new Map<string, PostgresConnectionManager>();
   private adapters = new Map<UUID, PgliteDatabaseAdapter | PgDatabaseAdapter>();
+  private migrationLocks = new Map<string, Promise<void>>();
 
   /**
    * Get or create a PGLite manager for the given path
@@ -68,6 +69,49 @@ class DatabaseConnectionRegistry {
   }
 
   /**
+   * Execute a migration with a lock to prevent concurrent migrations
+   */
+  async withMigrationLock<T>(
+    connectionKey: string,
+    migrationFn: () => Promise<T>
+  ): Promise<T> {
+    const lockKey = `migration:${connectionKey}`;
+    
+    // If a migration is already in progress, wait for it
+    if (this.migrationLocks.has(lockKey)) {
+      logger.info(`[ConnectionRegistry] Migration already in progress for ${connectionKey}, waiting...`);
+      await this.migrationLocks.get(lockKey);
+      logger.info(`[ConnectionRegistry] Previous migration completed for ${connectionKey}`);
+      // Return early - the migration is already done
+      return Promise.resolve() as Promise<T>;
+    }
+
+    // Create a new migration promise
+    const migrationPromise = this.executeMigration(migrationFn);
+    this.migrationLocks.set(lockKey, migrationPromise.then(() => {}).catch(() => {}));
+
+    try {
+      const result = await migrationPromise;
+      return result;
+    } finally {
+      // Clean up the lock after migration completes
+      this.migrationLocks.delete(lockKey);
+    }
+  }
+
+  private async executeMigration<T>(migrationFn: () => Promise<T>): Promise<T> {
+    return await migrationFn();
+  }
+
+  /**
+   * Check if a migration is currently in progress
+   */
+  isMigrationInProgress(connectionKey: string): boolean {
+    const lockKey = `migration:${connectionKey}`;
+    return this.migrationLocks.has(lockKey);
+  }
+
+  /**
    * Clean up all connections
    */
   async cleanup(): Promise<void> {
@@ -106,6 +150,7 @@ class DatabaseConnectionRegistry {
     this.adapters.clear();
     this.pgLiteManagers.clear();
     this.postgresManagers.clear();
+    this.migrationLocks.clear();
   }
 }
 

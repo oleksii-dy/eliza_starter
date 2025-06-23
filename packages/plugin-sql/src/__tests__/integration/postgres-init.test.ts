@@ -26,7 +26,6 @@ describe('PostgreSQL Initialization Tests', () => {
         messageExamples: [],
         postExamples: [],
         topics: [],
-        adjectives: [],
         knowledge: [],
         plugins: [],
       },

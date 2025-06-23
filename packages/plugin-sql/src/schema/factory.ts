@@ -8,6 +8,7 @@ import {
   jsonb as pgJsonb,
   pgTable,
   primaryKey as pgPrimaryKey,
+  real as pgReal,
   text as pgText,
   timestamp as pgTimestamp,
   unique as pgUnique,
@@ -27,6 +28,7 @@ export type JsonColumn = ReturnType<typeof pgJsonb>;
 export type BooleanColumn = ReturnType<typeof pgBoolean>;
 export type TimestampColumn = ReturnType<typeof pgTimestamp>;
 export type IntegerColumn = ReturnType<typeof pgInteger>;
+export type RealColumn = ReturnType<typeof pgReal>;
 
 /**
  * Schema factory to create database-specific column types
@@ -64,6 +66,10 @@ export class SchemaFactory {
 
   integer(name: string) {
     return pgInteger(name);
+  }
+
+  real(name: string) {
+    return pgReal(name);
   }
 
   vector(name: string, dimensions: number) {

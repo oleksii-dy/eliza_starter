@@ -379,6 +379,35 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
   }
 
   /**
+   * Check if an error is specifically a schema mismatch (missing column, etc.)
+   */
+  protected isSchemaMismatchError(error: any): boolean {
+    if (!error) return false;
+
+    const errorMessage = error.message || String(error);
+    const errorCode = error.code;
+
+    // Check for PostgreSQL "column does not exist" errors
+    if (errorCode === '42703') return true;
+
+    // Check for common schema mismatch messages
+    const schemaMismatchMessages = [
+      'column',
+      'does not exist',
+      'relation',
+      'does not exist',
+      'table',
+      'does not exist',
+      'unknown column',
+      'no such column',
+    ];
+
+    return schemaMismatchMessages.some((msg) =>
+      errorMessage.toLowerCase().includes(msg.toLowerCase())
+    );
+  }
+
+  /**
    * Check if vector/embeddings functionality is available
    */
   private async isEmbeddingSupported(): Promise<boolean> {
@@ -501,8 +530,6 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         const plugins =
           typeof row.plugins === 'string' ? JSON.parse(row.plugins) : row.plugins || [];
         const topics = typeof row.topics === 'string' ? JSON.parse(row.topics) : row.topics || [];
-        const adjectives =
-          typeof row.adjectives === 'string' ? JSON.parse(row.adjectives) : row.adjectives || [];
         const knowledge =
           typeof row.knowledge === 'string' ? JSON.parse(row.knowledge) : row.knowledge || [];
         const messageExamples =
@@ -530,6 +557,13 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           messageExamples,
           postExamples,
           style,
+          modelProvider: row.model_provider,
+          planningEnabled: row.planning_enabled,
+          temperature: row.temperature,
+          maxTokens: row.max_tokens,
+          frequencyPenalty: row.frequency_penalty,
+          presencePenalty: row.presence_penalty,
+          repetitionPenalty: row.repetition_penalty,
           createdAt:
             row.created_at instanceof Date
               ? row.created_at.getTime()
@@ -659,11 +693,14 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           messageExamples: agent.messageExamples || [],
           postExamples: agent.postExamples || [],
           style: agent.style || {},
-          styleAll: agent.style?.all || [],
-          styleChat: agent.style?.chat || [],
-          stylePost: agent.style?.post || [],
-          people: (agent as any).people || [],
           plugins: agent.plugins || [],
+          modelProvider: (agent as any).modelProvider || 'openai',
+          planningEnabled: (agent as any).planningEnabled || false,
+          temperature: (agent as any).temperature || 0.5,
+          maxTokens: (agent as any).maxTokens || 50,
+          frequencyPenalty: (agent as any).frequencyPenalty || 0.9,
+          presencePenalty: (agent as any).presencePenalty || 0.7,
+          repetitionPenalty: (agent as any).repetitionPenalty || 0.0,
         };
 
         logger.debug(`[BaseDrizzleAdapter] Creating agent using Drizzle:`, agentData.name);
@@ -683,20 +720,40 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           logger.warn('Agent creation failed due to constraint violation (duplicate):', {
             agentId: agent.id,
             name: agent.name,
+            errorCode: (error as any).code,
+            constraint: (error as any).constraint,
           });
           return false;
         }
 
+        // Check if it's a schema mismatch error
+        if (this.isSchemaMismatchError(error)) {
+          logger.error('Agent creation failed due to schema mismatch:', {
+            agentId: agent.id,
+            name: agent.name,
+            error: errorMessage,
+            errorCode: (error as any).code,
+            suggestion:
+              'The database schema may be out of sync. Try recreating the database or running migrations.',
+          });
+          throw new Error(
+            `Schema mismatch detected when creating agent: ${agent.name}. ${errorMessage}`
+          );
+        }
+
         logger.error('Failed to create agent:', {
           agentId: agent.id,
+          name: agent.name,
           error: errorMessage,
           errorDetails: {
             name: error instanceof Error ? error.name : 'UnknownError',
+            code: (error as any).code,
+            constraint: (error as any).constraint,
             stack: error instanceof Error ? error.stack : 'No stack trace',
             cause: error instanceof Error ? error.cause : undefined,
           },
         });
-        throw new Error(`Failed to create agent: ${agent.name}`);
+        throw new Error(`Failed to create agent: ${agent.name}. ${errorMessage}`);
       }
     });
   }
@@ -2972,24 +3029,88 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
     return this.withDatabase(async () => {
       try {
         // Use raw SQL to avoid Drizzle schema loading issues
-        // PGLite doesn't need explicit UUID casting
         const isPGLite = this.isPGLiteAdapter();
 
-        // Insert multiple participants in a single query
-        for (const entityId of entityIds) {
-          const result = isPGLite
-            ? await this.db.execute(sql`
-                INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
-                VALUES (${entityId}, ${roomId}, ${this.agentId}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                ON CONFLICT (entity_id, room_id) DO NOTHING
-              `)
-            : await this.db.execute(sql`
-                INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
-                VALUES (${entityId}::uuid, ${roomId}::uuid, ${this.agentId}::uuid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                ON CONFLICT (entity_id, room_id) DO NOTHING
-              `);
+        logger.info(
+          `[addParticipantsRoom] Starting - entityIds: ${entityIds.length}, roomId: ${roomId}, isPGLite: ${isPGLite}`
+        );
+
+        // First, ensure the unique constraint exists for PostgreSQL (not needed for PGLite)
+        if (!isPGLite) {
+          try {
+            await this.db.execute(sql`
+              ALTER TABLE participants ADD CONSTRAINT participants_entity_room_unique UNIQUE (entity_id, room_id)
+            `);
+            logger.info(`[addParticipantsRoom] Added unique constraint to participants table`);
+          } catch (constraintError) {
+            // Constraint already exists or other error - that's fine, continue
+            logger.debug(
+              `[addParticipantsRoom] Constraint add attempt:`,
+              (constraintError as Error).message
+            );
+          }
         }
-        logger.debug(entityIds.length, 'Entities linked successfully');
+
+        // Insert multiple participants
+        for (const entityId of entityIds) {
+          try {
+            logger.info(
+              `[addParticipantsRoom] Inserting participant: ${entityId} into room: ${roomId}`
+            );
+
+            // Use appropriate syntax based on adapter type
+            const result = isPGLite
+              ? await this.db.execute(sql`
+                  INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
+                  VALUES (${entityId}, ${roomId}, ${this.agentId}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                  ON CONFLICT (entity_id, room_id) DO NOTHING
+                `)
+              : await this.db.execute(sql`
+                  INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
+                  VALUES (${entityId}::uuid, ${roomId}::uuid, ${this.agentId}::uuid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                  ON CONFLICT (entity_id, room_id) DO NOTHING
+                `);
+            logger.info(
+              `[addParticipantsRoom] Successfully inserted/skipped participant: ${entityId}`
+            );
+          } catch (insertError) {
+            // If ON CONFLICT fails (missing unique constraint), try alternative approach
+            const errorMsg = (insertError as Error).message;
+            logger.warn(
+              `[addParticipantsRoom] INSERT failed for ${entityId}, trying fallback:`,
+              errorMsg
+            );
+
+            // Fallback: Check if participant exists, then insert only if not
+            const checkResult = await this.db.execute(
+              isPGLite
+                ? sql`SELECT 1 FROM participants WHERE entity_id = ${entityId} AND room_id = ${roomId} LIMIT 1`
+                : sql`SELECT 1 FROM participants WHERE entity_id = ${entityId}::uuid AND room_id = ${roomId}::uuid LIMIT 1`
+            );
+
+            const rows = Array.isArray(checkResult) ? checkResult : checkResult.rows || [];
+            if (rows.length === 0) {
+              // Participant doesn't exist, safe to insert
+              await this.db.execute(
+                isPGLite
+                  ? sql`
+                      INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
+                      VALUES (${entityId}, ${roomId}, ${this.agentId}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    `
+                  : sql`
+                      INSERT INTO participants (entity_id, room_id, agent_id, created_at, updated_at)
+                      VALUES (${entityId}::uuid, ${roomId}::uuid, ${this.agentId}::uuid, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    `
+              );
+              logger.info(`[addParticipantsRoom] Fallback insert successful for: ${entityId}`);
+            } else {
+              logger.info(`[addParticipantsRoom] Participant already exists: ${entityId}`);
+            }
+          }
+        }
+        logger.info(
+          `[addParticipantsRoom] Completed successfully - ${entityIds.length} entities processed`
+        );
         return true;
       } catch (error) {
         logger.error('Error adding participants', {
@@ -3379,7 +3500,10 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
                 .split(',')
                 .map((tag: string) => tag.replace(/^"|"$/g, ''))
             : (relationship.tags ?? []),
-        metadata: (relationship.metadata as { [key: string]: unknown }) ?? {},
+        metadata:
+          typeof relationship.metadata === 'string'
+            ? JSON.parse(relationship.metadata)
+            : ((relationship.metadata as { [key: string]: unknown }) ?? {}),
         createdAt: relationship.created_at
           ? relationship.created_at instanceof Date
             ? relationship.created_at.toISOString()

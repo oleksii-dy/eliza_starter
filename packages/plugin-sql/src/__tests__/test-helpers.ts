@@ -68,7 +68,6 @@ export async function createTestDatabase(
         plugins: [],
         knowledge: [],
         topics: [],
-        adjectives: [],
         messageExamples: [],
         postExamples: [],
       };
@@ -77,7 +76,7 @@ export async function createTestDatabase(
       await adapter.init();
 
       // Give the database a moment to fully settle after migrations
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Verify database is ready
       const isReady = await adapter.isReady();
@@ -99,7 +98,9 @@ export async function createTestDatabase(
       const cleanup = async () => {
         await db.execute(sql.raw(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`));
         await adapter.close();
-        await connectionRegistry.cleanup();
+        // Don't call connectionRegistry.cleanup() here as it closes ALL connections
+        // Just remove this specific adapter from the registry
+        connectionRegistry.removeAdapter(agentId);
       };
 
       return { adapter, runtime, cleanup };
@@ -132,7 +133,6 @@ export async function createTestDatabase(
     plugins: [],
     knowledge: [],
     topics: [],
-    adjectives: [],
     messageExamples: [],
     postExamples: [],
   };
@@ -141,7 +141,7 @@ export async function createTestDatabase(
   await adapter.init();
 
   // Give the database a moment to fully settle after migrations
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   // Verify database is ready
   const isReady = await adapter.isReady();
@@ -168,7 +168,7 @@ export async function createTestDatabase(
   const cleanup = async () => {
     await adapter.close();
     // No need to remove temp directory for :memory: database
-    await connectionRegistry.cleanup();
+    connectionRegistry.removeAdapter(agentId);
   };
 
   return { adapter, runtime, cleanup };
@@ -196,7 +196,7 @@ export async function createIsolatedTestDatabase(
 }> {
   // Set test environment flag early
   process.env.ELIZA_TESTING_PLUGIN = 'true';
-  
+
   // Generate a unique test ID for this test
   const uniqueTestId = v4() as UUID;
   const testId = testName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
@@ -242,7 +242,6 @@ export async function createIsolatedTestDatabase(
         plugins: [],
         knowledge: [],
         topics: [],
-        adjectives: [],
         messageExamples: [],
         postExamples: [],
       };
@@ -251,7 +250,7 @@ export async function createIsolatedTestDatabase(
       await adapter.init();
 
       // Give the database a moment to fully settle after migrations
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Verify database is ready
       const isReady = await adapter.isReady();
@@ -284,7 +283,9 @@ export async function createIsolatedTestDatabase(
           console.error(`[TEST] Failed to drop schema ${schemaName}:`, error);
         }
         await adapter.close();
-        await connectionRegistry.cleanup();
+        // Don't call connectionRegistry.cleanup() here as it closes ALL connections
+        // Just remove this specific adapter from the registry
+        connectionRegistry.removeAdapter(testAgentId);
       };
 
       return { adapter, runtime, cleanup, testAgentId };
@@ -317,7 +318,6 @@ export async function createIsolatedTestDatabase(
     plugins: [],
     knowledge: [],
     topics: [],
-    adjectives: [],
     messageExamples: [],
     postExamples: [],
   };
@@ -325,7 +325,7 @@ export async function createIsolatedTestDatabase(
   // Initialize adapter with migrations
   await adapter.init();
   // Give the database a moment to fully settle after migrations
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   // Verify database is ready
   const isReady = await adapter.isReady();
@@ -363,7 +363,7 @@ export async function createIsolatedTestDatabase(
   const cleanup = async () => {
     await adapter.close();
     // No need to remove temp directory for :memory: database
-    await connectionRegistry.cleanup();
+    connectionRegistry.removeAdapter(testAgentId);
   };
 
   return { adapter, runtime, cleanup, testAgentId };

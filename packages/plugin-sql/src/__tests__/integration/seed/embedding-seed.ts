@@ -1,4 +1,12 @@
-import { AgentStatus, ChannelType, type Agent, type Entity, type Memory, type Room, type UUID } from '@elizaos/core';
+import {
+  AgentStatus,
+  ChannelType,
+  type Agent,
+  type Entity,
+  type Memory,
+  type Room,
+  type UUID,
+} from '@elizaos/core';
 
 // Generate fixed UUIDs for testing to avoid type issues
 const fixedUuid = (n: number): UUID =>
@@ -28,7 +36,6 @@ export const embeddingTestAgent = {
   messageExamples: [],
   postExamples: [],
   topics: [],
-  adjectives: [],
   knowledge: [],
   plugins: [],
   settings: {
