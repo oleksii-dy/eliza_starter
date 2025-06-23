@@ -461,18 +461,22 @@ describe('Socket.IO End-to-End Message Flow', () => {
 
       // Generate a log entry and expect it to be streamed to the client
       const logReceived = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Timed out waiting for log stream message'));
-        }, 5000);
-  
-        client1.on('log_stream', (data) => {
+        const logStreamHandler = (data) => {
           try {
-            clearTimeout(timeout);
             expect(data.type).toBe('log_entry');
             expect(data.payload).toMatchObject({
               agentName: 'Test Agent',
               msg: 'Integration test log message',
             });
+            client1.off('log_stream', logStreamHandler);
+            resolve(data);
+          } catch (err) {
+            client1.off('log_stream', logStreamHandler);
+            reject(err);
+          }
+        };
+
+        client1.on('log_stream', logStreamHandler);
             resolve(data);
           } catch (err) {
             clearTimeout(timeout);
