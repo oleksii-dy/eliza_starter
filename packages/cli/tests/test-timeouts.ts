@@ -19,7 +19,9 @@ export const TEST_TIMEOUTS = {
         ? 6 * 60 * 1000
         : 5 * 60 * 1000, // Platform-specific locally
   INDIVIDUAL_TEST: isCI
-    ? 60 * 1000 // 60 seconds in CI for all platforms - matches bunfig.toml
+    ? isWindows
+      ? 90 * 1000  // 90 seconds for Windows CI (some tests need more time)
+      : 60 * 1000  // 60 seconds for other platforms in CI
     : isWindows
       ? 5 * 60 * 1000
       : isMacOS
@@ -46,7 +48,9 @@ export const TEST_TIMEOUTS = {
         ? 75 * 1000
         : 60 * 1000, // Platform-specific locally
   PLUGIN_INSTALLATION: isCI
-    ? 90 * 1000 // 90 seconds in CI (increased to handle slow postinstall scripts)
+    ? isWindows
+      ? 120 * 1000 // 2 minutes for Windows CI (plugins can be slow)
+      : 90 * 1000  // 90 seconds for other platforms in CI
     : process.platform === 'win32'
       ? 3 * 60 * 1000
       : 2 * 60 * 1000, // 3/2 minutes locally

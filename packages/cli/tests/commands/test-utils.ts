@@ -541,6 +541,11 @@ export function getPlatformOptions(baseOptions: any = {}): any {
     }
     platformOptions.killSignal = 'SIGKILL' as NodeJS.Signals;
     platformOptions.windowsHide = true;
+    
+    // Use safer stdio handling on Windows to prevent hanging
+    if (platformOptions.stdio === 'pipe') {
+      platformOptions.stdio = ['ignore', 'pipe', 'pipe'];
+    }
   } else if (process.platform === 'darwin') {
     // macOS specific options
     // Only scale the timeout if one was explicitly provided

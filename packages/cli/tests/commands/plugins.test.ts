@@ -218,7 +218,7 @@ describe('ElizaOS Plugin Commands', () => {
   it(
     'plugins installed-plugins shows installed plugins',
     async () => {
-      const result = execSync(`${elizaosCmd} plugins installed-plugins`, { encoding: 'utf8' });
+      const result = execSync(`${elizaosCmd} plugins installed-plugins`, getPlatformOptions({ encoding: 'utf8' }));
       // Should show previously installed plugins from other tests
       expect(result).toMatch(/@elizaos\/plugin-|github:/);
     },
@@ -242,11 +242,13 @@ describe('ElizaOS Plugin Commands', () => {
         let packageJson = await readFile(join(projectDir, 'package.json'), 'utf8');
         expect(packageJson).toContain('@elizaos/plugin-elevenlabs');
 
-        execSync(`${elizaosCmd} plugins remove @elizaos/plugin-elevenlabs`, {
-          stdio: 'pipe',
-          timeout: TEST_TIMEOUTS.STANDARD_COMMAND,
-          cwd: projectDir,
-        });
+        execSync(`${elizaosCmd} plugins remove @elizaos/plugin-elevenlabs`, 
+          getPlatformOptions({
+            stdio: 'pipe',
+            timeout: TEST_TIMEOUTS.STANDARD_COMMAND,
+            cwd: projectDir,
+          })
+        );
 
         packageJson = await readFile(join(projectDir, 'package.json'), 'utf8');
         expect(packageJson).not.toContain('@elizaos/plugin-elevenlabs');
@@ -272,11 +274,13 @@ describe('ElizaOS Plugin Commands', () => {
 
         // Add all plugins first
         for (const plugin of plugins) {
-          execSync(`${elizaosCmd} plugins add ${plugin} --skip-env-prompt --skip-verification`, {
-            stdio: 'pipe',
-            timeout: TEST_TIMEOUTS.PLUGIN_INSTALLATION,
-            cwd: projectDir,
-          });
+          execSync(`${elizaosCmd} plugins add ${plugin} --skip-env-prompt --skip-verification`, 
+            getPlatformOptions({
+              stdio: 'pipe',
+              timeout: TEST_TIMEOUTS.PLUGIN_INSTALLATION,
+              cwd: projectDir,
+            })
+          );
         }
 
         // Test different remove aliases
@@ -287,11 +291,13 @@ describe('ElizaOS Plugin Commands', () => {
         ];
 
         for (const [command, plugin] of removeCommands) {
-          execSync(`${elizaosCmd} plugins ${command} ${plugin}`, {
-            stdio: 'pipe',
-            timeout: TEST_TIMEOUTS.STANDARD_COMMAND,
-            cwd: projectDir,
-          });
+          execSync(`${elizaosCmd} plugins ${command} ${plugin}`, 
+            getPlatformOptions({
+              stdio: 'pipe',
+              timeout: TEST_TIMEOUTS.STANDARD_COMMAND,
+              cwd: projectDir,
+            })
+          );
         }
       } catch (error: any) {
         console.error('[ERROR] Plugin remove aliases failed:', error.message);
@@ -308,11 +314,13 @@ describe('ElizaOS Plugin Commands', () => {
     'plugins add fails for missing plugin',
     async () => {
       try {
-        execSync(`${elizaosCmd} plugins add missing --skip-env-prompt`, {
-          stdio: 'pipe',
-          timeout: TEST_TIMEOUTS.STANDARD_COMMAND,
-          cwd: projectDir,
-        });
+        execSync(`${elizaosCmd} plugins add missing --skip-env-prompt`, 
+          getPlatformOptions({
+            stdio: 'pipe',
+            timeout: TEST_TIMEOUTS.STANDARD_COMMAND,
+            cwd: projectDir,
+          })
+        );
         expect(false).toBe(true); // Should not reach here
       } catch (e: any) {
         expect(e.status).not.toBe(0);
