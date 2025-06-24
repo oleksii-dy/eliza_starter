@@ -109,8 +109,8 @@ Improve ElizaOS by creating a team of collaborating developer agents, blockchain
 
 ---
 ## API Key Management
-DeepSeek API Key: `sk-a476a9683f274f449f081e9cb3a64fb8`
-(To be moved to environment variable `DEEPSEEK_API_KEY` for the plugin)
+**Note:** API keys should be managed via environment variables (e.g., `DEEPSEEK_API_KEY`) and not hardcoded.
+The `plugin-deepseek` is designed to read `process.env.DEEPSEEK_API_KEY`.
 
 ---
 ## Notes on Web3 Trading Agents & FasMCP:

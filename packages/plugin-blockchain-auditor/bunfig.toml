@@ -1,0 +1,7 @@
+# Bun configuration file for @elizaos/plugin-blockchain-auditor
+
+[test]
+coverage = true
+
+# Log level for Bun's own logging (not application logs)
+# logLevel = "debug"
