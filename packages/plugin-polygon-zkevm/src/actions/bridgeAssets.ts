@@ -48,9 +48,11 @@ const NETWORK_IDS = {
 };
 
 export const bridgeAssetsAction: Action = {
-  name: 'BRIDGE_ASSETS',
-  similes: ['BRIDGE_TOKENS', 'DEPOSIT_ASSETS', 'WITHDRAW_ASSETS', 'BRIDGE_ETH', 'BRIDGE_ERC20'],
-  description: 'Bridges assets (ETH or ERC-20 tokens) between Ethereum and Polygon zkEVM.',
+  name: 'POLYGON_ZKEVM_BRIDGE_ASSETS',
+  similes: ['BRIDGE_TOKENS', 'DEPOSIT_ASSETS', 'WITHDRAW_ASSETS', 'BRIDGE_ETH', 'BRIDGE_ERC20'].map(
+    (s) => `POLYGON_ZKEVM_${s}`
+  ),
+  description: 'Bridge assets (ETH or ERC20 tokens) to or from Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
@@ -108,7 +110,7 @@ export const bridgeAssetsAction: Action = {
       logger.error(`[bridgeAssetsAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['BRIDGE_ASSETS'],
+        actions: ['BRIDGE_ASSETS_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -123,7 +125,7 @@ export const bridgeAssetsAction: Action = {
       logger.error(`[bridgeAssetsAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['BRIDGE_ASSETS'],
+        actions: ['BRIDGE_ASSETS_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -364,29 +366,25 @@ export const bridgeAssetsAction: Action = {
       }
 
       const responseContent: Content = {
-        text: `Successfully ${bridgeParams.direction === 'deposit' ? 'deposited' : 'withdrew'} ${bridgeParams.amount} ${tokenAddress === '0x0000000000000000000000000000000000000000' ? 'ETH' : 'tokens'} ${bridgeParams.direction === 'deposit' ? 'to' : 'from'} Polygon zkEVM!
+        text: `✅ Assets bridged successfully!
 
-Transaction Hash: ${txHash}
-${bridgeTicketId ? `Bridge Ticket ID: ${bridgeTicketId}` : ''}
-Status: Confirmed (${receipt.status === 1 ? 'Success' : 'Failed'})
-Gas Used: ${receipt.gasUsed.toString()}
-Block Number: ${receipt.blockNumber}
+**Transaction Hash:** \`${txHash}\`
+**Amount:** ${bridgeParams.amount} ${tokenAddress === '0x0000000000000000000000000000000000000000' ? 'ETH' : 'tokens'}
+**From:** ${sourceNetworkId === NETWORK_IDS.ethereum ? 'Ethereum' : 'zkEVM'}
+**To:** ${destinationNetworkId === NETWORK_IDS.ethereum ? 'Ethereum' : 'zkEVM'}
+**Bridge Contract:** \`${bridgeAddress}\`
 
-${
-  bridgeParams.direction === 'deposit'
-    ? 'Note: Assets will be available on zkEVM after the bridge processes the deposit (usually within a few minutes).'
-    : 'Note: For withdrawals, you will need to wait for the challenge period and then claim your assets on Ethereum mainnet.'
-}`,
-        actions: ['BRIDGE_ASSETS'],
+Please wait for the transaction to be confirmed.`,
+        actions: ['BRIDGE_ASSETS_ZKEVM'],
         data: {
-          txHash,
+          transactionHash: txHash,
+          amount: bridgeParams.amount,
+          sourceNetwork: sourceNetworkId === NETWORK_IDS.ethereum ? 'Ethereum' : 'zkEVM',
+          destinationNetwork: destinationNetworkId === NETWORK_IDS.ethereum ? 'Ethereum' : 'zkEVM',
           bridgeTicketId,
           depositCount,
           direction: bridgeParams.direction,
           tokenAddress,
-          amount: bridgeParams.amount,
-          sourceNetwork: bridgeParams.direction === 'deposit' ? 'ethereum' : 'zkevm',
-          destinationNetwork: bridgeParams.direction === 'deposit' ? 'zkevm' : 'ethereum',
           gasUsed: receipt.gasUsed.toString(),
           blockNumber: receipt.blockNumber,
           status: receipt.status === 1 ? 'success' : 'failed',
@@ -405,7 +403,7 @@ ${
 
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['BRIDGE_ASSETS'],
+        actions: ['BRIDGE_ASSETS_ZKEVM'],
         data: {
           error: errorMessage,
           bridgeParams,
@@ -424,31 +422,31 @@ ${
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'bridge 0.1 ETH from ethereum to polygon zkevm',
+          text: 'Bridge 1.5 ETH to Polygon zkEVM',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: 'Successfully deposited 0.1 ETH to Polygon zkEVM!\n\nTransaction Hash: 0x1234567890abcdef...\nBridge Ticket ID: 0-12345\nStatus: Confirmed (Success)\nGas Used: 150000\nBlock Number: 18500000\n\nNote: Assets will be available on zkEVM after the bridge processes the deposit (usually within a few minutes).',
-          actions: ['BRIDGE_ASSETS'],
+          text: '✅ Assets bridged successfully! Transaction Hash: 0x123...',
+          action: 'BRIDGE_ASSETS_ZKEVM',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'withdraw 100 USDC from polygon zkevm to ethereum',
+          text: 'Withdraw 1000 USDC from Polygon zkEVM to Ethereum. Token address: 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: 'Successfully withdrew 100 tokens from Polygon zkEVM!\n\nTransaction Hash: 0xabcdef1234567890...\nBridge Ticket ID: 1-67890\nStatus: Confirmed (Success)\nGas Used: 200000\nBlock Number: 8500000\n\nNote: For withdrawals, you will need to wait for the challenge period and then claim your assets on Ethereum mainnet.',
-          actions: ['BRIDGE_ASSETS'],
+          text: '✅ Assets bridged successfully! Transaction Hash: 0x456...',
+          action: 'BRIDGE_ASSETS_ZKEVM',
         },
       },
     ],

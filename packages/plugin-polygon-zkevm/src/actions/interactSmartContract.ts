@@ -23,14 +23,14 @@ import { interactSmartContractTemplate } from '../templates';
 import { callLLMWithTimeout } from '../utils/llmHelpers';
 
 export const interactSmartContractAction: Action = {
-  name: 'INTERACT_SMART_CONTRACT',
+  name: 'POLYGON_ZKEVM_INTERACT_SMART_CONTRACT',
   similes: [
     'CALL_CONTRACT',
     'INVOKE_CONTRACT',
     'EXECUTE_CONTRACT_METHOD',
     'CONTRACT_INTERACTION',
     'SEND_CONTRACT_TRANSACTION',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description:
     'Interacts with a smart contract by calling a state-changing method on Polygon zkEVM.',
 
@@ -90,7 +90,7 @@ export const interactSmartContractAction: Action = {
       logger.error(`[interactSmartContractAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['INTERACT_SMART_CONTRACT'],
+        actions: ['POLYGON_INTERACT_SMART_CONTRACT_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -105,7 +105,7 @@ export const interactSmartContractAction: Action = {
       logger.error(`[interactSmartContractAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['INTERACT_SMART_CONTRACT'],
+        actions: ['POLYGON_INTERACT_SMART_CONTRACT_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -185,7 +185,7 @@ export const interactSmartContractAction: Action = {
       logger.error(`[interactSmartContractAction] ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['INTERACT_SMART_CONTRACT'],
+        actions: ['POLYGON_INTERACT_SMART_CONTRACT_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -247,7 +247,7 @@ export const interactSmartContractAction: Action = {
 **Network:** Polygon zkEVM
 
 This was a read-only function call that doesn't modify blockchain state.`,
-          actions: ['INTERACT_SMART_CONTRACT'],
+          actions: ['POLYGON_INTERACT_SMART_CONTRACT_ZKEVM'],
           data: {
             contractAddress: interactionParams.contractAddress,
             methodName: interactionParams.methodName,
@@ -375,11 +375,8 @@ This was a read-only function call that doesn't modify blockchain state.`,
 **Method Used:** ${methodUsed}
 **Network:** Polygon zkEVM
 
-You can view the transaction on the block explorer:
-- Transaction: ${transactionHash}
-
-The contract method has been executed successfully!`,
-        actions: ['INTERACT_SMART_CONTRACT'],
+This was a state-changing transaction that has been sent to the network.`,
+        actions: ['POLYGON_INTERACT_SMART_CONTRACT_ZKEVM'],
         data: {
           contractAddress: interactionParams.contractAddress,
           methodName: interactionParams.methodName,
@@ -407,7 +404,7 @@ The contract method has been executed successfully!`,
 
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['INTERACT_SMART_CONTRACT'],
+        actions: ['POLYGON_INTERACT_SMART_CONTRACT_ZKEVM'],
         data: { error: errorMessage, errors: errorMessages, interactionParams },
       };
 
@@ -422,31 +419,31 @@ The contract method has been executed successfully!`,
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'call the transfer method on contract 0x742d35Cc6634C0532925a3b8D4C9db96c4b4d8b7 with ABI [{"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}] and args ["0x1234567890123456789012345678901234567890", "1000000000000000000"]',
+          text: 'Call the "mint" function on contract 0x123... with arguments ["0xabc...", 100] on Polygon zkEVM',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: '✅ Smart contract interaction successful on Polygon zkEVM!\n\n**Contract Address:** `0x742d35Cc6634C0532925a3b8D4C9db96c4b4d8b7`\n**Method Called:** `transfer`\n**Arguments:** `["0x1234567890123456789012345678901234567890", "1000000000000000000"]`\n**Transaction Hash:** `0xabcdef1234567890...`\n**Method Used:** alchemy\n**Network:** Polygon zkEVM\n\nYou can view the transaction on the block explorer:\n- Transaction: 0xabcdef1234567890...\n\nThe contract method has been executed successfully!',
-          actions: ['INTERACT_SMART_CONTRACT'],
+          text: '✅ Smart contract interaction successful on Polygon zkEVM! Transaction sent: 0x456... Please wait for confirmation.',
+          action: 'POLYGON_INTERACT_SMART_CONTRACT_ZKEVM',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'interact with contract 0x123abc... call mint function with args [100] and send 0.1 ETH',
+          text: 'Interact with contract 0xdef... on Polygon zkEVM to call "approve" with args ["0x123...", 50]',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: '✅ Smart contract interaction successful on Polygon zkEVM!\n\n**Contract Address:** `0x123abc...`\n**Method Called:** `mint`\n**Arguments:** `[100]`\n**Transaction Hash:** `0xdef456...`\n**Method Used:** rpc\n**Network:** Polygon zkEVM\n\nYou can view the transaction on the block explorer:\n- Transaction: 0xdef456...\n\nThe contract method has been executed successfully!',
-          actions: ['INTERACT_SMART_CONTRACT'],
+          text: '✅ Smart contract interaction successful on Polygon zkEVM! Transaction sent: 0x789... Please wait for confirmation.',
+          action: 'POLYGON_INTERACT_SMART_CONTRACT_ZKEVM',
         },
       },
     ],

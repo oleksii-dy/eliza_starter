@@ -7,7 +7,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   format: ['esm'], // Ensure you're targeting ESM
-  dts: false, // Skip DTS generation to avoid external import issues
+  dts: true,
   external: [
     'dotenv', // Externalize dotenv to prevent bundling
     'fs', // Externalize fs to use Node.js built-in module

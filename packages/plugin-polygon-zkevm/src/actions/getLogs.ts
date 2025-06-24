@@ -18,9 +18,9 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves event logs based on filter criteria
  */
 export const getLogsAction: Action = {
-  name: 'GET_LOGS_ZKEVM',
-  similes: ['GET_EVENTS', 'EVENT_LOGS', 'LOGS', 'CONTRACT_EVENTS'],
-  description: 'Get event logs from contracts on Polygon zkEVM',
+  name: 'POLYGON_ZKEVM_GET_LOGS',
+  similes: ['GET_EVENTS', 'EVENT_LOGS', 'LOGS', 'CONTRACT_EVENTS'].map((s) => `POLYGON_ZKEVM_${s}`),
+  description: 'Gets logs/events for a given contract address on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
@@ -51,7 +51,7 @@ export const getLogsAction: Action = {
         logger.error(`[getLogsAction] Configuration error: ${errorMessage}`);
         const errorContent: Content = {
           text: errorMessage,
-          actions: ['GET_LOGS_ZKEVM'],
+          actions: ['POLYGON_GET_LOGS_ZKEVM'],
           data: { error: errorMessage },
         };
 
@@ -190,7 +190,7 @@ export const getLogsAction: Action = {
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_LOGS_ZKEVM'],
+        actions: ['POLYGON_GET_LOGS_ZKEVM'],
         data: {
           filter,
           logs: logs.slice(0, 10), // Include first 10 logs in data
@@ -207,7 +207,7 @@ export const getLogsAction: Action = {
 
       const errorContent: Content = {
         text: `Error getting logs: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        actions: ['GET_LOGS_ZKEVM'],
+        actions: ['POLYGON_GET_LOGS_ZKEVM'],
         data: { error: error instanceof Error ? error.message : 'Unknown error' },
       };
 
@@ -223,7 +223,7 @@ export const getLogsAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Get logs for contract 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+          text: 'Get logs for contract 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6 on Polygon zkEVM',
         },
       },
       {
@@ -246,7 +246,22 @@ export const getLogsAction: Action = {
   🏷️ Topics: 3
   🎯 Event Signature: 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
   📦 Data: 64 bytes`,
-          actions: ['GET_LOGS_ZKEVM'],
+          action: 'POLYGON_GET_LOGS_ZKEVM',
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'get events for 0x123... from block 1000 to 2000 on Polygon zkEVM',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: "I'll get the event logs for you on Polygon zkEVM.",
+          action: 'POLYGON_GET_LOGS_ZKEVM',
         },
       },
     ],

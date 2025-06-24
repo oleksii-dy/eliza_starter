@@ -18,9 +18,11 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves transaction details by transaction hash
  */
 export const getTransactionByHashAction: Action = {
-  name: 'GET_TRANSACTION_BY_HASH_ZKEVM',
-  similes: ['GET_TX_BY_HASH', 'GET_TRANSACTION', 'TRANSACTION_DETAILS', 'TX_DETAILS'],
-  description: 'Get transaction details by hash on Polygon zkEVM',
+  name: 'POLYGON_ZKEVM_GET_TRANSACTION_BY_HASH',
+  similes: ['GET_TX_BY_HASH', 'GET_TRANSACTION', 'TRANSACTION_DETAILS', 'TX_DETAILS'].map(
+    (s) => `POLYGON_ZKEVM_${s}`
+  ),
+  description: 'Gets transaction details for a given hash on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
@@ -51,7 +53,7 @@ export const getTransactionByHashAction: Action = {
         logger.error(`[getTransactionByHashAction] Configuration error: ${errorMessage}`);
         const errorContent: Content = {
           text: errorMessage,
-          actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
+          actions: ['POLYGON_GET_TRANSACTION_BY_HASH_ZKEVM'],
           data: { error: errorMessage },
         };
 
@@ -109,7 +111,7 @@ export const getTransactionByHashAction: Action = {
       if (!transaction) {
         const errorContent: Content = {
           text: `❌ Transaction not found: ${txHash}`,
-          actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
+          actions: ['POLYGON_GET_TRANSACTION_BY_HASH_ZKEVM'],
         };
         if (callback) {
           await callback(errorContent);
@@ -145,7 +147,7 @@ ${transaction.data && transaction.data !== '0x' ? `**Data:** \`${transaction.dat
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
+        actions: ['POLYGON_GET_TRANSACTION_BY_HASH_ZKEVM'],
         data: {
           transaction: {
             hash: transaction.hash,
@@ -176,7 +178,7 @@ ${transaction.data && transaction.data !== '0x' ? `**Data:** \`${transaction.dat
 
       const errorContent: Content = {
         text: `❌ ${errorMessage}`,
-        actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
+        actions: ['POLYGON_GET_TRANSACTION_BY_HASH_ZKEVM'],
         data: {
           error: errorMessage,
           success: false,
@@ -196,14 +198,14 @@ ${transaction.data && transaction.data !== '0x' ? `**Data:** \`${transaction.dat
       {
         name: '{{user1}}',
         content: {
-          text: 'Get details for transaction 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+          text: 'Get details for transaction 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: "I'll get the transaction details for that hash on Polygon zkEVM.",
-          actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
+          action: 'POLYGON_GET_TRANSACTION_BY_HASH_ZKEVM',
         },
       },
     ],
@@ -211,14 +213,14 @@ ${transaction.data && transaction.data !== '0x' ? `**Data:** \`${transaction.dat
       {
         name: '{{user1}}',
         content: {
-          text: 'Show me transaction 0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+          text: 'Show me transaction 0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890 on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me fetch the details for that transaction.',
-          actions: ['GET_TRANSACTION_BY_HASH_ZKEVM'],
+          text: 'Let me fetch the details for that transaction on Polygon zkEVM.',
+          action: 'POLYGON_GET_TRANSACTION_BY_HASH_ZKEVM',
         },
       },
     ],

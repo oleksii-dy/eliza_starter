@@ -196,13 +196,13 @@ class PolygonSwapActionRunner {
   }
 }
 
-export const swapPolygonAction: Action = {
-  name: 'SWAP_POLYGON_TOKENS',
-  similes: ['POLYGON_SWAP', 'TRADE_POLYGON_TOKENS'],
-  description: 'Swaps tokens on Polygon using LiFi.',
+export const swapAction: Action = {
+  name: 'POLYGON_SWAP_TOKENS',
+  similes: ['SWAP', 'TRADE_TOKENS'].map((s) => `POLYGON_${s}`),
+  description: 'Swaps one token for another using a decentralized exchange on Polygon.',
 
   validate: async (runtime: IAgentRuntime, _m: Memory, _s: State | undefined): Promise<boolean> => {
-    logger.debug('Validating SWAP_POLYGON_TOKENS action...');
+    logger.debug('Validating SWAP_TOKENS action...');
     const checks = [
       runtime.getSetting('WALLET_PRIVATE_KEY'),
       runtime.getSetting('POLYGON_PLUGINS_ENABLED'),
@@ -231,7 +231,7 @@ export const swapPolygonAction: Action = {
     cb: HandlerCallback | undefined,
     _rs: Memory[] | undefined
   ) => {
-    logger.info('Handling SWAP_POLYGON_TOKENS for message:', message.id);
+    logger.info('Handling POLYGON_SWAP_TOKENS for message:', message.id);
     try {
       const walletProvider = await initWalletProvider(runtime);
       const actionRunner = new PolygonSwapActionRunner(walletProvider);
@@ -288,18 +288,18 @@ export const swapPolygonAction: Action = {
         await cb({
           text: successMsg,
           content: { success: true, ...txResult, toAmountDisplay },
-          actions: ['SWAP_POLYGON_TOKENS'],
+          actions: ['POLYGON_SWAP_TOKENS'],
           source: message.content.source,
         });
       }
       return { success: true, ...txResult, toAmountDisplay };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      logger.error('Error in SWAP_POLYGON_TOKENS handler:', errMsg, error);
+      logger.error('Error in POLYGON_SWAP_TOKENS handler:', errMsg, error);
       if (cb) {
         await cb({
           text: `Error swapping tokens: ${errMsg}`,
-          actions: ['SWAP_POLYGON_TOKENS'],
+          actions: ['POLYGON_SWAP_TOKENS'],
           source: message.content.source,
         });
       }
@@ -307,11 +307,36 @@ export const swapPolygonAction: Action = {
     }
   },
   examples: [
-    [
-      {
-        name: 'Swap USDC for DAI',
-        content: { text: 'Swap 100 USDC for DAI on Polygon. Max 0.3% slippage.' },
+    {
+      name: '{{user1}}',
+      content: {
+        text: 'Swap 100 USDC for DAI on Polygon.',
+        context:
+          'Current token mapping: USDC is 0x2791bca1f2de4661ed88a30c99a7a9449aa84174, DAI is 0x8f3cf7ad23cd3cadbd9735df95802323922a03c1.',
       },
-    ],
-  ],
+      content_type: 'text/plain',
+      source: {
+        type: 'api',
+        id: 'user-123',
+      },
+    },
+    {
+      name: '{{user2}}',
+      content: {
+        text: 'Swapping 100 USDC for DAI on Polygon.',
+        action: 'POLYGON_SWAP_TOKENS',
+        params: {
+          chain: 'polygon',
+          fromToken: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+          toToken: '0x8f3cf7ad23cd3cadbd9735df95802323922a03c1',
+          amount: '100',
+        },
+      },
+      content_type: 'application/json',
+      source: {
+        type: 'api',
+        id: 'agent-456',
+      },
+    },
+  ] as ActionExample[],
 };

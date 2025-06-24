@@ -27,7 +27,7 @@ interface CheckpointParams {
 }
 
 export const isL2BlockCheckpointedAction: Action = {
-  name: 'IS_L2_BLOCK_CHECKPOINTED',
+  name: 'POLYGON_IS_L2_BLOCK_CHECKPOINTED',
   description: 'Checks if a Polygon L2 block has been checkpointed on Ethereum L1.',
 
   validate: async (
@@ -35,7 +35,7 @@ export const isL2BlockCheckpointedAction: Action = {
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    logger.debug('Validating IS_L2_BLOCK_CHECKPOINTED action...');
+    logger.debug('Validating POLYGON_IS_L2_BLOCK_CHECKPOINTED action...');
 
     // Check for required settings
     const requiredSettings = [
@@ -48,7 +48,7 @@ export const isL2BlockCheckpointedAction: Action = {
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
         logger.error(
-          `Required setting ${setting} not configured for IS_L2_BLOCK_CHECKPOINTED action.`
+          `Required setting ${setting} not configured for POLYGON_IS_L2_BLOCK_CHECKPOINTED action.`
         );
         return false;
       }
@@ -77,7 +77,7 @@ export const isL2BlockCheckpointedAction: Action = {
     callback: HandlerCallback | undefined,
     _responses: Memory[] | undefined
   ) => {
-    logger.info('Handling IS_L2_BLOCK_CHECKPOINTED action for message:', message.id);
+    logger.info('Handling POLYGON_IS_L2_BLOCK_CHECKPOINTED action for message:', message.id);
 
     try {
       const rpcService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
@@ -97,11 +97,13 @@ export const isL2BlockCheckpointedAction: Action = {
 
       try {
         params = parseJSONObjectFromText(modelResponse) as CheckpointParams;
-        logger.debug('IS_L2_BLOCK_CHECKPOINTED: Extracted params:', params);
+        logger.debug('POLYGON_IS_L2_BLOCK_CHECKPOINTED: Extracted params:', params);
 
         // Check if the model response contains an error
         if (params.error) {
-          logger.warn(`IS_L2_BLOCK_CHECKPOINTED: Model responded with error: ${params.error}`);
+          logger.warn(
+            `POLYGON_IS_L2_BLOCK_CHECKPOINTED: Model responded with error: ${params.error}`
+          );
           throw new Error(params.error);
         }
       } catch (error: unknown) {
@@ -137,7 +139,7 @@ export const isL2BlockCheckpointedAction: Action = {
 
       const responseContent: Content = {
         text: responseMsg,
-        actions: ['IS_L2_BLOCK_CHECKPOINTED'],
+        actions: ['POLYGON_IS_L2_BLOCK_CHECKPOINTED'],
         source: message.content.source,
         data: {
           l2BlockNumber: Number(l2BlockNumber),
@@ -160,7 +162,7 @@ export const isL2BlockCheckpointedAction: Action = {
 
       const responseContent: Content = {
         text: userFriendlyMessage,
-        actions: ['IS_L2_BLOCK_CHECKPOINTED'],
+        actions: ['POLYGON_IS_L2_BLOCK_CHECKPOINTED'],
         source: message.content.source,
         data: {
           error: errorMessage,
@@ -177,17 +179,31 @@ export const isL2BlockCheckpointedAction: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
           text: 'Is Polygon block 15000000 checkpointed on Ethereum yet?',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Checking if Polygon block 15000000 is checkpointed on Ethereum.',
+          action: 'POLYGON_IS_L2_BLOCK_CHECKPOINTED',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Check if L2 block 42123456 has been checkpointed',
+          text: 'Check if L2 block 42123456 has been checkpointed on Polygon',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Checking if L2 block 42123456 has been checkpointed on Polygon.',
+          action: 'POLYGON_IS_L2_BLOCK_CHECKPOINTED',
         },
       },
     ],

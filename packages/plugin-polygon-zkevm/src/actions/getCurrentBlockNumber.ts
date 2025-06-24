@@ -19,15 +19,15 @@ interface CurrentBlockParams {
 }
 
 export const getCurrentBlockNumberAction: Action = {
-  name: 'GET_POLYGON_ZKEVM_BLOCK_NUMBER',
+  name: 'POLYGON_ZKEVM_GET_CURRENT_BLOCK_NUMBER',
   similes: [
     'GET_CURRENT_L2_BLOCK_NUMBER',
-    'CHECK_ZKEVM_BLOCK',
-    'SHOW_LATEST_ZKEVM_BLOCK',
-    'POLYGON_ZKEVM_BLOCK_NUMBER',
-    'GET_ZKEVM_BLOCK_NUMBER',
+    'CHECK_BLOCK',
+    'SHOW_LATEST_BLOCK',
+    'BLOCK_NUMBER',
+    'GET_BLOCK_NUMBER',
     'GET_L2_BLOCK_NUMBER',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description: 'Gets the current block number on Polygon zkEVM (Layer 2 zero-knowledge rollup).',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
@@ -151,7 +151,7 @@ export const getCurrentBlockNumberAction: Action = {
     if (blockNumber !== null) {
       const responseContent: Content = {
         text: `📊 The current Polygon zkEVM block number is **${blockNumber.toLocaleString()}** (retrieved via ${methodUsed}).`,
-        actions: ['GET_POLYGON_ZKEVM_BLOCK_NUMBER'],
+        actions: ['POLYGON_GET_CURRENT_BLOCK_NUMBER_ZKEVM'],
         data: {
           blockNumber,
           network: 'polygon-zkevm',
@@ -171,7 +171,7 @@ export const getCurrentBlockNumberAction: Action = {
 
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_POLYGON_ZKEVM_BLOCK_NUMBER'],
+        actions: ['POLYGON_GET_CURRENT_BLOCK_NUMBER_ZKEVM'],
         data: { error: errorMessage, errors: errorMessages },
       };
 
@@ -195,7 +195,7 @@ export const getCurrentBlockNumberAction: Action = {
         name: '{{user2}}',
         content: {
           text: "I'll get the current block number for Polygon zkEVM.",
-          actions: ['GET_POLYGON_ZKEVM_BLOCK_NUMBER'],
+          action: 'POLYGON_GET_CURRENT_BLOCK_NUMBER_ZKEVM',
         },
       },
     ],
@@ -203,14 +203,14 @@ export const getCurrentBlockNumberAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Show me the latest zkEVM block',
+          text: 'Show me the latest zkEVM block on Polygon',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me fetch the latest block number for you.',
-          actions: ['GET_POLYGON_ZKEVM_BLOCK_NUMBER'],
+          text: 'Let me fetch the latest block number for you on Polygon zkEVM.',
+          action: 'POLYGON_GET_CURRENT_BLOCK_NUMBER_ZKEVM',
         },
       },
     ],

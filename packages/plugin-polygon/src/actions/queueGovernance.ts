@@ -167,12 +167,11 @@ class PolygonQueueGovernanceActionRunner {
 }
 
 export const queueGovernanceAction: Action = {
-  name: 'QUEUE_GOVERNANCE_POLYGON',
-  similes: ['POLYGON_GOV_QUEUE', 'SCHEDULE_POLYGON_PROPOSAL'],
-  description:
-    'Queues a passed governance proposal on a Governor contract on Polygon or other EVM chains.',
+  name: 'POLYGON_QUEUE_GOVERNANCE',
+  similes: ['GOV_QUEUE', 'SCHEDULE_PROPOSAL'].map((s) => `POLYGON_${s}`),
+  description: 'Queues a passed governance proposal for execution on Polygon.',
   validate: async (runtime: IAgentRuntime, _m: Memory, _s: State | undefined): Promise<boolean> => {
-    logger.debug('Validating QUEUE_GOVERNANCE_POLYGON action...');
+    logger.debug('Validating POLYGON_QUEUE_GOVERNANCE action...');
     const checks = [
       runtime.getSetting('WALLET_PRIVATE_KEY'),
       runtime.getSetting('POLYGON_PLUGINS_ENABLED'),
@@ -200,7 +199,7 @@ export const queueGovernanceAction: Action = {
     callback: HandlerCallback | undefined,
     _responses: Memory[] | undefined
   ) => {
-    logger.info('Handling QUEUE_GOVERNANCE_POLYGON for message:', message.id);
+    logger.info('Handling POLYGON_QUEUE_GOVERNANCE for message:', message.id);
     const rawMessageText = message.content.text || '';
     let extractedParams: (Partial<QueueGovernanceParams> & { error?: string }) | null = null;
 
@@ -224,18 +223,18 @@ export const queueGovernanceAction: Action = {
             error?: string;
           };
         }
-        logger.debug('QUEUE_GOVERNANCE_POLYGON: Extracted params via TEXT_SMALL:', extractedParams);
+        logger.debug('POLYGON_QUEUE_GOVERNANCE: Extracted params via TEXT_SMALL:', extractedParams);
 
         if (extractedParams?.error) {
           logger.warn(
-            `QUEUE_GOVERNANCE_POLYGON: Model responded with error: ${extractedParams.error}`
+            `POLYGON_QUEUE_GOVERNANCE: Model responded with error: ${extractedParams.error}`
           );
           throw new Error(extractedParams.error);
         }
       } catch (e: unknown) {
         const errorMsg = e instanceof Error ? e.message : String(e);
         logger.warn(
-          `QUEUE_GOVERNANCE_POLYGON: Failed to parse JSON from model response or model returned error (Proceeding to manual extraction): ${errorMsg}`
+          `POLYGON_QUEUE_GOVERNANCE: Failed to parse JSON from model response or model returned error (Proceeding to manual extraction): ${errorMsg}`
         );
       }
 
@@ -250,7 +249,7 @@ export const queueGovernanceAction: Action = {
         !extractedParams.description
       ) {
         logger.info(
-          'QUEUE_GOVERNANCE_POLYGON: Model extraction insufficient or failed, attempting manual parameter extraction.'
+          'POLYGON_QUEUE_GOVERNANCE: Model extraction insufficient, attempting manual parameter extraction from text.'
         );
         const manualParams = extractQueueGovernanceParamsFromText(rawMessageText);
 
@@ -276,7 +275,7 @@ export const queueGovernanceAction: Action = {
           extractedParams = manualParams;
         }
         logger.debug(
-          'QUEUE_GOVERNANCE_POLYGON: Params after manual extraction attempt:',
+          'POLYGON_QUEUE_GOVERNANCE: Params after manual extraction attempt:',
           extractedParams
         );
       }
@@ -293,15 +292,34 @@ export const queueGovernanceAction: Action = {
         !extractedParams.description
       ) {
         logger.error(
-          'QUEUE_GOVERNANCE_POLYGON: Incomplete parameters after all extraction attempts.',
+          'POLYGON_QUEUE_GOVERNANCE: Invalid or incomplete parameters after all extraction attempts.',
           extractedParams
         );
-        throw new Error(
-          'Incomplete or invalid queue parameters extracted. Required: chain, governorAddress, targets, values, calldatas, description.'
-        );
+        throw new Error('Invalid or incomplete governance queue parameters.');
       }
 
-      const queueParams = extractedParams as QueueGovernanceParams;
+      const queueParams: QueueGovernanceParams = {
+        chain: (extractedParams.chain || 'polygon') as string,
+        governorAddress: extractedParams.governorAddress as Address,
+        targets: (extractedParams.targets || []) as Address[],
+        values: (extractedParams.values || []) as string[],
+        calldatas: (extractedParams.calldatas || []) as Hex[],
+        description: extractedParams.description || '',
+      };
+
+      if (
+        !queueParams.governorAddress ||
+        !queueParams.description ||
+        queueParams.targets.length === 0 ||
+        queueParams.targets.length !== queueParams.values.length ||
+        queueParams.targets.length !== queueParams.calldatas.length
+      ) {
+        logger.error(
+          'POLYGON_QUEUE_GOVERNANCE: Invalid or incomplete parameters after all extraction attempts.',
+          queueParams
+        );
+        throw new Error('Invalid or incomplete governance queue parameters.');
+      }
 
       logger.debug('Queue governance parameters for runner:', queueParams);
       const txResult = await actionRunner.queue(queueParams);
@@ -312,18 +330,18 @@ export const queueGovernanceAction: Action = {
         await callback({
           text: successMsg,
           content: { success: true, ...txResult },
-          actions: ['QUEUE_GOVERNANCE_POLYGON'],
+          actions: ['POLYGON_QUEUE_GOVERNANCE'],
           source: message.content.source,
         });
       }
       return { success: true, ...txResult };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      logger.error('Error in QUEUE_GOVERNANCE_POLYGON handler:', errMsg, error);
+      logger.error(`Error in QUEUE_GOVERNANCE_POLYGON handler: ${errMsg}`, error);
       if (callback) {
         await callback({
-          text: `Error queueing proposal: ${errMsg}`,
-          actions: ['QUEUE_GOVERNANCE_POLYGON'],
+          text: `Error queuing governance proposal: ${errMsg}`,
+          actions: ['POLYGON_QUEUE_GOVERNANCE'],
           source: message.content.source,
         });
       }

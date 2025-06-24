@@ -18,9 +18,11 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves the contract code for a specific address
  */
 export const getCodeAction: Action = {
-  name: 'GET_CODE_ZKEVM',
-  similes: ['GET_CONTRACT_CODE', 'CONTRACT_CODE', 'BYTECODE', 'CODE'],
-  description: 'Get contract code for an address on Polygon zkEVM',
+  name: 'POLYGON_ZKEVM_GET_CODE',
+  similes: ['GET_CONTRACT_CODE', 'CONTRACT_CODE', 'BYTECODE', 'CODE'].map(
+    (s) => `POLYGON_ZKEVM_${s}`
+  ),
+  description: 'Gets the code for a given contract address on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
@@ -50,7 +52,7 @@ export const getCodeAction: Action = {
       logger.error(`[getCodeAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_CODE_ZKEVM'],
+        actions: ['POLYGON_GET_CODE_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -139,7 +141,7 @@ export const getCodeAction: Action = {
 
     const responseContent: Content = {
       text: responseText,
-      actions: ['GET_CODE_ZKEVM'],
+      actions: ['POLYGON_GET_CODE_ZKEVM'],
       data: {
         address,
         code,
@@ -162,14 +164,14 @@ export const getCodeAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Get contract code for 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6',
+          text: 'Get contract code for 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6 on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: "I'll get the contract code for that address on Polygon zkEVM.",
-          actions: ['GET_CODE_ZKEVM'],
+          action: 'POLYGON_GET_CODE_ZKEVM',
         },
       },
     ],
@@ -177,14 +179,14 @@ export const getCodeAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Check if 0x1234567890123456789012345678901234567890 is a contract',
+          text: 'Check if 0x1234567890123456789012345678901234567890 is a contract on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me check if that address contains contract code.',
-          actions: ['GET_CODE_ZKEVM'],
+          text: 'Let me check if that address contains contract code on Polygon zkEVM.',
+          action: 'POLYGON_GET_CODE_ZKEVM',
         },
       },
     ],

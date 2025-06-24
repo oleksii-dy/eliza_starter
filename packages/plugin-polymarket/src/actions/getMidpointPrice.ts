@@ -22,7 +22,7 @@ interface MidpointPriceParams {
  * Fetches the midpoint price (halfway between best bid and best ask) for a specific token
  */
 export const getMidpointPriceAction: Action = {
-  name: 'GET_MIDPOINT_PRICE',
+  name: 'POLYMARKET_GET_MIDPOINT_PRICE',
   similes: [
     'MIDPOINT_PRICE',
     'GET_MIDPOINT',
@@ -74,7 +74,7 @@ export const getMidpointPriceAction: Action = {
       logger.error(`[getMidpointPriceAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_MIDPOINT_PRICE'],
+        actions: ['POLYMARKET_GET_MIDPOINT_PRICE'],
         data: { error: errorMessage },
       };
 
@@ -127,7 +127,7 @@ Please provide a token ID in your request. Examples:
 • "Get midpoint price for token 123456"
 • "What's the midpoint for market token 789012?"
 • "Show me the mid price for 456789"`,
-          actions: ['GET_MIDPOINT_PRICE'],
+          actions: ['POLYMARKET_GET_MIDPOINT_PRICE'],
           data: { error: errorMessage },
         };
 
@@ -159,7 +159,7 @@ The midpoint price represents the halfway point between the best bid and best as
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_MIDPOINT_PRICE'],
+        actions: ['POLYMARKET_GET_MIDPOINT_PRICE'],
         data: {
           tokenId,
           midpoint: midpointResponse.mid,
@@ -187,7 +187,7 @@ Please check:
 • Network connectivity is available
 
 **Token ID**: \`${tokenId}\``,
-        actions: ['GET_MIDPOINT_PRICE'],
+        actions: ['POLYMARKET_GET_MIDPOINT_PRICE'],
         data: {
           error: errorMessage,
           tokenId,
@@ -207,14 +207,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'Get midpoint price for token 123456',
+          text: 'Get midpoint price for token 123456 via Polymarket',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: "I'll fetch the midpoint price for that token.",
-          actions: ['GET_MIDPOINT_PRICE'],
+          text: "I'll fetch the midpoint price for that token via Polymarket.",
+          action: 'POLYMARKET_GET_MIDPOINT_PRICE',
         },
       },
     ],
@@ -222,14 +222,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: "What's the midpoint for market token 789012?",
+          text: "What's the midpoint for market token 789012 via Polymarket?",
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me get the midpoint price for that market token.',
-          actions: ['GET_MIDPOINT_PRICE'],
+          text: 'Let me get the midpoint price for that market token via Polymarket.',
+          action: 'POLYMARKET_GET_MIDPOINT_PRICE',
         },
       },
     ],
@@ -237,14 +237,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'Show me the mid price for 456789',
+          text: 'Show me the mid price for 456789 via Polymarket',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Getting the midpoint price for token 456789.',
-          actions: ['GET_MIDPOINT_PRICE'],
+          text: 'Getting the midpoint price for token 456789 via Polymarket.',
+          action: 'POLYMARKET_GET_MIDPOINT_PRICE',
         },
       },
     ],

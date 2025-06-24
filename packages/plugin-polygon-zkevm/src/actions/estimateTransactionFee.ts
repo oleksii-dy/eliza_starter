@@ -46,7 +46,7 @@ function validateAndNormalizeAddress(address: string): string {
  * Estimates gas limit and total fee for a provided transaction payload
  */
 export const estimateTransactionFeeAction: Action = {
-  name: 'ESTIMATE_TRANSACTION_FEE',
+  name: 'POLYGON_ZKEVM_ESTIMATE_TRANSACTION_FEE',
   similes: [
     'ESTIMATE_FEE',
     'TRANSACTION_FEE',
@@ -54,7 +54,7 @@ export const estimateTransactionFeeAction: Action = {
     'CALCULATE_FEE',
     'GAS_ESTIMATE',
     'TRANSACTION_COST',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description: 'Estimate gas limit and total fee for a transaction on Polygon zkEVM',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
@@ -115,7 +115,7 @@ export const estimateTransactionFeeAction: Action = {
         logger.error(`[estimateTransactionFeeAction] Configuration error: ${errorMessage}`);
         const errorContent: Content = {
           text: errorMessage,
-          actions: ['ESTIMATE_TRANSACTION_FEE'],
+          actions: ['POLYGON_ESTIMATE_TRANSACTION_FEE_ZKEVM'],
           data: { error: errorMessage },
         };
 
@@ -310,7 +310,7 @@ ${transactionInput.priorityFee ? `\n**Note:** Used custom priority fee of ${tran
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['ESTIMATE_TRANSACTION_FEE'],
+        actions: ['POLYGON_ESTIMATE_TRANSACTION_FEE_ZKEVM'],
         data: responseData,
       };
 
@@ -325,7 +325,7 @@ ${transactionInput.priorityFee ? `\n**Note:** Used custom priority fee of ${tran
 
       const errorContent: Content = {
         text: `❌ ${errorMessage}`,
-        actions: ['ESTIMATE_TRANSACTION_FEE'],
+        actions: ['POLYGON_ESTIMATE_TRANSACTION_FEE_ZKEVM'],
         data: {
           error: errorMessage,
           success: false,
@@ -345,14 +345,14 @@ ${transactionInput.priorityFee ? `\n**Note:** Used custom priority fee of ${tran
       {
         name: '{{user1}}',
         content: {
-          text: 'Estimate the transaction fee for sending 0.1 ETH to 0x742d35Cc6634C0532925A3B8D4C9dB96C4B4d8B6',
+          text: 'Estimate transaction fee for sending 1.0 ETH to 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6 on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: "I'll estimate the transaction fee for that transfer on Polygon zkEVM.",
-          actions: ['ESTIMATE_TRANSACTION_FEE'],
+          text: "I'll estimate the transaction fee for that transaction on Polygon zkEVM.",
+          action: 'POLYGON_ESTIMATE_TRANSACTION_FEE_ZKEVM',
         },
       },
     ],
@@ -360,29 +360,14 @@ ${transactionInput.priorityFee ? `\n**Note:** Used custom priority fee of ${tran
       {
         name: '{{user1}}',
         content: {
-          text: 'Calculate the fee for calling a contract at 0x1234567890123456789012345678901234567890 with priority fee of 2 gwei',
+          text: 'What is the total fee to interact with contract 0x123... on Polygon zkEVM?',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me calculate the transaction fee for that contract call with your specified priority fee.',
-          actions: ['ESTIMATE_TRANSACTION_FEE'],
-        },
-      },
-    ],
-    [
-      {
-        name: '{{user1}}',
-        content: {
-          text: 'How much will it cost to deploy a smart contract?',
-        },
-      },
-      {
-        name: '{{user2}}',
-        content: {
-          text: 'I can estimate the transaction fee for contract deployment. Please provide the contract bytecode or transaction details.',
-          actions: ['ESTIMATE_TRANSACTION_FEE'],
+          text: 'Let me calculate the total fee for that contract interaction on Polygon zkEVM.',
+          action: 'POLYGON_ESTIMATE_TRANSACTION_FEE_ZKEVM',
         },
       },
     ],

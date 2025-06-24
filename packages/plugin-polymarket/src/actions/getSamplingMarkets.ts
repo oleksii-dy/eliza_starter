@@ -41,8 +41,8 @@ interface SamplingMarketsParams {
 }
 
 export const getSamplingMarkets: Action = {
-  name: 'GET_SAMPLING_MARKETS',
-  similes: SAMPLING_MARKETS_SIMILES,
+  name: 'POLYMARKET_GET_SAMPLING_MARKETS',
+  similes: SAMPLING_MARKETS_SIMILES.map((s) => `POLYMARKET_${s}`),
   description:
     'Get available Polymarket markets with rewards enabled (sampling markets) - markets where users can earn liquidity rewards',
 
@@ -99,7 +99,7 @@ export const getSamplingMarkets: Action = {
         await callback({
           text: responseMessage,
           content: {
-            action: 'sampling_markets_retrieved',
+            action: 'POLYMARKET_SAMPLING_MARKETS_RETRIEVED',
             markets: markets,
             count: totalCount,
             next_cursor: nextCursor,
@@ -123,7 +123,7 @@ Please check:
         await callback({
           text: errorMessage,
           content: {
-            action: 'sampling_markets_error',
+            action: 'POLYMARKET_SAMPLING_MARKETS_ERROR',
             error: error instanceof Error ? error.message : 'Unknown error',
             timestamp: new Date().toISOString(),
           },
@@ -138,39 +138,39 @@ Please check:
     [
       {
         name: '{{user1}}',
-        content: { text: 'Show me markets with rewards enabled' },
+        content: { text: 'Show me markets with rewards enabled via Polymarket' },
       },
       {
         name: '{{user2}}',
         content: {
           text: '📊 **Sampling Markets (Rewards Enabled)**\n\nFound 15 markets with liquidity rewards:\n\n🏆 **Will Donald Trump win the 2024 election?**\n├─ Category: Politics\n├─ Active: ✅\n├─ Tokens: Yes (0.67) | No (0.33)\n└─ Rewards: Min $10, Max 2% spread\n\n🏆 **Will Bitcoin reach $100k by end of 2024?**\n├─ Category: Crypto\n├─ Active: ✅\n├─ Tokens: Yes (0.45) | No (0.55)\n└─ Rewards: Min $5, Max 1.5% spread\n\n🏆 **Will Lakers make NBA playoffs?**\n├─ Category: Sports\n├─ Active: ✅\n├─ Tokens: Yes (0.78) | No (0.22)\n└─ Rewards: Min $25, Max 3% spread\n\n📈 **Total**: 15 markets • **Next**: Use cursor LTE= for more',
-          action: 'sampling_markets_retrieved',
+          action: 'POLYMARKET_SAMPLING_MARKETS_RETRIEVED',
         },
       },
     ],
     [
       {
         name: '{{user1}}',
-        content: { text: 'Get sampling markets for rewards' },
+        content: { text: 'Get sampling markets for rewards via Polymarket' },
       },
       {
         name: '{{user2}}',
         content: {
           text: '🎁 **Sampling Markets Overview**\n\nShowing markets with liquidity mining rewards:\n\n💰 **Active Reward Markets**: 8\n📊 **Categories**: Politics (3), Sports (2), Crypto (2), Other (1)\n🕒 **Last Updated**: 2024-01-15T10:30:00Z\n\n**Top Reward Opportunities:**\n• Politics markets: Up to 5% APY\n• Sports events: 2-4% rewards\n• Crypto predictions: 3-6% yields\n\n💡 **Tip**: Higher volume markets typically offer better reward rates!',
-          action: 'sampling_markets_retrieved',
+          action: 'POLYMARKET_SAMPLING_MARKETS_RETRIEVED',
         },
       },
     ],
     [
       {
         name: '{{user1}}',
-        content: { text: 'SAMPLING_MARKETS with cursor ABC123' },
+        content: { text: 'SAMPLING_MARKETS with cursor ABC123 via Polymarket' },
       },
       {
         name: '{{user2}}',
         content: {
           text: '📄 **Sampling Markets (Page 2)**\n\nContinuing from cursor ABC123...\n\n🏆 **Will Fed cut rates in March?**\n├─ Category: Economics\n├─ Tokens: Yes/No\n└─ Rewards: Active\n\n🏆 **Super Bowl winner prediction**\n├─ Category: Sports\n├─ Tokens: Team outcomes\n└─ Rewards: 2.5% max spread\n\n📊 **Page Info**: 2 more markets • **Next**: DEF456\n\n🔄 Use "get sampling markets with cursor DEF456" for next page',
-          action: 'sampling_markets_retrieved',
+          action: 'POLYMARKET_SAMPLING_MARKETS_RETRIEVED',
         },
       },
     ],

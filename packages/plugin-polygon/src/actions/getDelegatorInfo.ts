@@ -22,8 +22,10 @@ interface DelegatorParams {
 }
 
 export const getDelegatorInfoAction: Action = {
-  name: 'GET_DELEGATOR_INFO',
-  similes: ['QUERY_STAKE', 'DELEGATOR_DETAILS', 'GET_MY_STAKE', 'GET_L1_DELEGATOR_INFO'],
+  name: 'POLYGON_GET_DELEGATOR_INFO',
+  similes: ['QUERY_STAKE', 'DELEGATOR_DETAILS', 'GET_MY_STAKE', 'GET_L1_DELEGATOR_INFO'].map(
+    (s) => `POLYGON_${s}`
+  ),
   description:
     'Retrieves staking information for a specific delegator address (defaults to agent wallet).',
 
@@ -32,7 +34,7 @@ export const getDelegatorInfoAction: Action = {
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    coreLogger.debug('Validating GET_DELEGATOR_INFO action...');
+    coreLogger.debug('Validating POLYGON_GET_DELEGATOR_INFO action...');
 
     const requiredSettings = [
       'PRIVATE_KEY',
@@ -44,7 +46,7 @@ export const getDelegatorInfoAction: Action = {
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
         coreLogger.error(
-          `Required setting ${setting} not configured for GET_DELEGATOR_INFO action.`
+          `Required setting ${setting} not configured for POLYGON_GET_DELEGATOR_INFO action.`
         );
         return false;
       }
@@ -72,7 +74,7 @@ export const getDelegatorInfoAction: Action = {
     callback: HandlerCallback | undefined,
     _responses: Memory[] | undefined
   ) => {
-    coreLogger.info('Handling GET_DELEGATOR_INFO action for message:', message.id);
+    coreLogger.info('Handling POLYGON_GET_DELEGATOR_INFO action for message:', message.id);
 
     try {
       const polygonService = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
@@ -95,24 +97,30 @@ export const getDelegatorInfoAction: Action = {
           params = (await runtime.useModel(ModelType.OBJECT_LARGE, {
             prompt,
           })) as DelegatorParams;
-          coreLogger.debug('[GET_DELEGATOR_INFO_ACTION] Parsed LLM parameters:', params);
+          coreLogger.debug('[POLYGON_GET_DELEGATOR_INFO_ACTION] Parsed LLM parameters:', params);
 
           // Check if the model returned an error field
           if (params.error) {
-            coreLogger.error('[GET_DELEGATOR_INFO_ACTION] LLM returned an error:', params.error);
+            coreLogger.error(
+              '[POLYGON_GET_DELEGATOR_INFO_ACTION] LLM returned an error:',
+              params.error
+            );
             throw new ValidationError(params.error);
           }
         } catch (error) {
           // If OBJECT_LARGE fails, fall back to TEXT_LARGE and manual parsing
           coreLogger.debug(
-            '[GET_DELEGATOR_INFO_ACTION] OBJECT_LARGE model failed, falling back to TEXT_LARGE and manual parsing',
+            '[POLYGON_GET_DELEGATOR_INFO_ACTION] OBJECT_LARGE model failed, falling back to TEXT_LARGE and manual parsing',
             error instanceof Error ? error : undefined
           );
 
           const textResponse = await runtime.useModel(ModelType.LARGE, {
             prompt,
           });
-          coreLogger.debug('[GET_DELEGATOR_INFO_ACTION] Raw text response from LLM:', textResponse);
+          coreLogger.debug(
+            '[POLYGON_GET_DELEGATOR_INFO_ACTION] Raw text response from LLM:',
+            textResponse
+          );
 
           params = await extractParamsFromText(textResponse);
         }
@@ -124,7 +132,7 @@ export const getDelegatorInfoAction: Action = {
           !Number.isInteger(params.validatorId)
         ) {
           coreLogger.error(
-            '[GET_DELEGATOR_INFO_ACTION] Invalid or missing validatorId from LLM:',
+            '[POLYGON_GET_DELEGATOR_INFO_ACTION] Invalid or missing validatorId from LLM:',
             params.validatorId
           );
           throw new ValidationError(
@@ -146,12 +154,12 @@ export const getDelegatorInfoAction: Action = {
           const wallet = new Wallet(privateKey);
           delegatorAddress = wallet.address;
           coreLogger.info(
-            `[GET_DELEGATOR_INFO_ACTION] No delegatorAddress provided, using agent's wallet: ${delegatorAddress}`
+            `[POLYGON_GET_DELEGATOR_INFO_ACTION] No delegatorAddress provided, using agent's wallet: ${delegatorAddress}`
           );
         }
 
         coreLogger.info(
-          `GET_DELEGATOR_INFO: Fetching info for V:${validatorId} / D:${delegatorAddress}...`
+          `POLYGON_GET_DELEGATOR_INFO: Fetching info for V:${validatorId} / D:${delegatorAddress}...`
         );
 
         const delegatorInfo = await polygonService.getDelegatorInfo(validatorId, delegatorAddress);
@@ -171,7 +179,7 @@ export const getDelegatorInfoAction: Action = {
 
         const responseContent: Content = {
           text: responseMsg,
-          actions: ['GET_DELEGATOR_INFO'],
+          actions: ['POLYGON_GET_DELEGATOR_INFO'],
           source: message.content.source,
           data: {
             validatorId,
@@ -194,16 +202,19 @@ export const getDelegatorInfoAction: Action = {
       } catch (error: unknown) {
         const parsedErrorObj = parseErrorMessage(error);
         coreLogger.error(
-          'Error in GET_DELEGATOR_INFO handler:',
+          'Error in POLYGON_GET_DELEGATOR_INFO handler:',
           parsedErrorObj.message,
           error instanceof Error ? error : parsedErrorObj
         );
 
-        const formattedError = formatErrorMessage('GET_DELEGATOR_INFO', parsedErrorObj.message);
+        const formattedError = formatErrorMessage(
+          'POLYGON_GET_DELEGATOR_INFO',
+          parsedErrorObj.message
+        );
 
         const errorContent: Content = {
           text: `Error retrieving delegator information: ${formattedError}`,
-          actions: ['GET_DELEGATOR_INFO'],
+          actions: ['POLYGON_GET_DELEGATOR_INFO'],
           source: message.content.source,
           data: {
             success: false,
@@ -220,20 +231,20 @@ export const getDelegatorInfoAction: Action = {
     } catch (error: unknown) {
       const parsedErrorObj = parseErrorMessage(error);
       coreLogger.error(
-        'Error in GET_DELEGATOR_INFO handler:',
+        'Error in POLYGON_GET_DELEGATOR_INFO handler:',
         parsedErrorObj.message,
         error instanceof Error ? error : parsedErrorObj
       );
 
       const formattedError = formatErrorMessage(
-        'GET_DELEGATOR_INFO',
+        'POLYGON_GET_DELEGATOR_INFO',
         parsedErrorObj.message,
         parsedErrorObj.details || undefined
       );
 
       const errorContent: Content = {
         text: `Error retrieving delegator information: ${formattedError}`,
-        actions: ['GET_DELEGATOR_INFO'],
+        actions: ['POLYGON_GET_DELEGATOR_INFO'],
         source: message.content.source,
         data: {
           success: false,
@@ -252,25 +263,31 @@ export const getDelegatorInfoAction: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Show my delegation details for validator 123',
+          text: 'Get my stake with validator 42 on Polygon',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Getting your stake with validator 42 on Polygon',
+          action: 'POLYGON_GET_DELEGATOR_INFO',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'How much is address 0x1234... delegating to validator 42?',
+          text: 'Show me details for my delegation to Polygon validator #157',
         },
       },
-    ],
-    [
       {
-        name: 'user',
+        name: '{{user2}}',
         content: {
-          text: 'Check my pending rewards from validator 56',
+          text: 'Showing details for your delegation to validator 157 on Polygon',
+          action: 'POLYGON_GET_DELEGATOR_INFO',
         },
       },
     ],

@@ -46,9 +46,11 @@ function validateAndNormalizeAddress(address: string): string {
  * Estimates gas required for a transaction
  */
 export const estimateGasAction: Action = {
-  name: 'ESTIMATE_GAS_ZKEVM',
-  similes: ['ESTIMATE_GAS', 'GAS_ESTIMATE', 'GAS_COST', 'TRANSACTION_COST'],
-  description: 'Estimate gas cost for a transaction on Polygon zkEVM',
+  name: 'POLYGON_ZKEVM_ESTIMATE_GAS',
+  similes: ['ESTIMATE_GAS', 'GAS_ESTIMATE', 'GAS_COST', 'TRANSACTION_COST'].map(
+    (s) => `POLYGON_ZKEVM_${s}`
+  ),
+  description: 'Estimates the gas required for a transaction on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
@@ -106,7 +108,7 @@ export const estimateGasAction: Action = {
         logger.error(`[estimateGasAction] Configuration error: ${errorMessage}`);
         const errorContent: Content = {
           text: errorMessage,
-          actions: ['ESTIMATE_GAS_ZKEVM'],
+          actions: ['POLYGON_ESTIMATE_GAS_ZKEVM'],
           data: { error: errorMessage },
         };
 
@@ -236,7 +238,7 @@ export const estimateGasAction: Action = {
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['ESTIMATE_GAS_ZKEVM'],
+        actions: ['POLYGON_ESTIMATE_GAS_ZKEVM'],
         data: {
           gasEstimate: gasEstimate.toString(),
           gasPrice: gasPrice.toString(),
@@ -258,7 +260,7 @@ export const estimateGasAction: Action = {
 
       const errorContent: Content = {
         text: `❌ ${errorMessage}`,
-        actions: ['ESTIMATE_GAS_ZKEVM'],
+        actions: ['POLYGON_ESTIMATE_GAS_ZKEVM'],
         data: {
           error: errorMessage,
           success: false,
@@ -278,14 +280,14 @@ export const estimateGasAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Estimate gas for sending 0.1 ETH to 0x742d35Cc6634C0532925A3B8D4C9dB96C4B4d8B6',
+          text: 'Estimate gas cost to send 0.5 ETH to 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6 on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: "I'll estimate the gas cost for that transaction on Polygon zkEVM.",
-          actions: ['ESTIMATE_GAS_ZKEVM'],
+          action: 'POLYGON_ESTIMATE_GAS_ZKEVM',
         },
       },
     ],
@@ -293,14 +295,14 @@ export const estimateGasAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'What would it cost to call a contract at 0x1234567890123456789012345678901234567890?',
+          text: 'how much gas to interact with contract 0x123... on Polygon zkEVM?',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me estimate the gas cost for that contract call.',
-          actions: ['ESTIMATE_GAS_ZKEVM'],
+          text: 'Let me estimate the gas for that contract interaction on Polygon zkEVM.',
+          action: 'POLYGON_ESTIMATE_GAS_ZKEVM',
         },
       },
     ],

@@ -30,7 +30,7 @@ interface GasPriceEstimates {
  * Provides low/medium/high gas price tiers for transaction planning
  */
 export const getGasPriceEstimatesAction: Action = {
-  name: 'GET_GAS_PRICE_ESTIMATES',
+  name: 'POLYGON_ZKEVM_GET_GAS_PRICE_ESTIMATES',
   similes: [
     'GAS_PRICE_TIERS',
     'GAS_ESTIMATES',
@@ -40,7 +40,7 @@ export const getGasPriceEstimatesAction: Action = {
     'TRANSACTION_FEES',
     'GAS_COST',
     'FEE_ESTIMATES',
-  ],
+  ].map((s) => `POLYGON_ZKEVM_${s}`),
   description: 'Get gas price estimates with low/medium/high tiers for Polygon zkEVM transactions',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
@@ -217,7 +217,7 @@ export const getGasPriceEstimatesAction: Action = {
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_GAS_PRICE_ESTIMATES'],
+        actions: ['POLYGON_GET_GAS_PRICE_ESTIMATES_ZKEVM'],
         source: message.content.source,
         data: result,
       };
@@ -229,7 +229,7 @@ export const getGasPriceEstimatesAction: Action = {
 
       const errorContent: Content = {
         text: `❌ Error getting gas price estimates: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        actions: ['GET_GAS_PRICE_ESTIMATES'],
+        actions: ['POLYGON_GET_GAS_PRICE_ESTIMATES_ZKEVM'],
         source: message.content.source,
       };
 
@@ -243,14 +243,14 @@ export const getGasPriceEstimatesAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Get gas price estimates for zkEVM',
+          text: 'Get gas price estimates for Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: '⛽ **Gas Price Estimates for Polygon zkEVM**\n\n**Current Base Price:**\n📊 0.25 gwei (250000000 wei)\n\n**Recommended Tiers:**\n🐌 **Low Priority:** 0.35 gwei (+40.0%)\n   └─ 350000000 wei\n⚡ **Medium Priority:** 0.5 gwei (+100.0%)\n   └─ 750000000 wei\n🚀 **High Priority:** 0.75 gwei (+200.0%)\n   └─ 750000000 wei\n\n**Usage Recommendations:**\n🐌 Low: Non-urgent transactions, can wait 1-2 minutes\n⚡ Medium: Standard transactions, ~30-60 seconds\n🚀 High: Urgent transactions, fastest confirmation\n\n🔗 Retrieved via Alchemy API\n\n💡 *zkEVM gas prices are typically lower than Ethereum mainnet*',
-          actions: ['GET_GAS_PRICE_ESTIMATES'],
+          text: '⛽ **Gas Price Estimates for Polygon zkEVM**\n\n**Current Base Price:**\n📊 0.2500 gwei (250000000 wei)\n\n**Recommended Tiers:**\n🐌 **Low Priority:** 0.3500 gwei (+40.0%)\n   └─ 350000000 wei\n⚡ **Medium Priority:** 0.5000 gwei (+100.0%)\n   └─ 500000000 wei\n🚀 **High Priority:** 0.7500 gwei (+200.0%)\n   └─ 750000000 wei\n\n**Usage Recommendations:**\n🐌 Low: Non-urgent transactions, can wait 1-2 minutes\n⚡ Medium: Standard transactions, ~30-60 seconds\n🚀 High: Urgent transactions, fastest confirmation\n\n🔗 Retrieved via Alchemy API\n\n💡 *zkEVM gas prices are typically lower than Ethereum mainnet*',
+          action: 'POLYGON_GET_GAS_PRICE_ESTIMATES_ZKEVM',
         },
       },
     ],
@@ -258,14 +258,14 @@ export const getGasPriceEstimatesAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'What are the current gas fees?',
+          text: 'what are the gas fees on polygon zkevm',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: '⛽ **Gas Price Estimates for Polygon zkEVM**\n\n**Current Base Price:**\n📊 1.2 gwei (1200000000 wei)\n\n**Recommended Tiers:**\n🐌 **Low Priority:** 1.7 gwei (+41.7%)\n   └─ 1700000000 wei\n⚡ **Medium Priority:** 2.2 gwei (+83.3%)\n   └─ 2200000000 wei\n🚀 **High Priority:** 3.2 gwei (+166.7%)\n   └─ 3200000000 wei\n\n**Usage Recommendations:**\n🐌 Low: Non-urgent transactions, can wait 1-2 minutes\n⚡ Medium: Standard transactions, ~30-60 seconds\n🚀 High: Urgent transactions, fastest confirmation\n\n🔗 Retrieved via Direct RPC\n\n💡 *zkEVM gas prices are typically lower than Ethereum mainnet*',
-          actions: ['GET_GAS_PRICE_ESTIMATES'],
+          text: "I'll get the gas fee estimates for you on Polygon zkEVM.",
+          action: 'POLYGON_GET_GAS_PRICE_ESTIMATES_ZKEVM',
         },
       },
     ],
@@ -280,7 +280,7 @@ export const getGasPriceEstimatesAction: Action = {
         name: '{{user2}}',
         content: {
           text: '⛽ **Gas Price Estimates for Polygon zkEVM**\n\n**Current Base Price:**\n📊 0.8 gwei (800000000 wei)\n\n**Recommended Tiers:**\n🐌 **Low Priority:** 1.3 gwei (+62.5%)\n   └─ 1300000000 wei\n⚡ **Medium Priority:** 1.8 gwei (+125.0%)\n   └─ 1800000000 wei\n🚀 **High Priority:** 2.8 gwei (+250.0%)\n   └─ 2800000000 wei\n\n**Usage Recommendations:**\n🐌 Low: Non-urgent transactions, can wait 1-2 minutes\n⚡ Medium: Standard transactions, ~30-60 seconds\n🚀 High: Urgent transactions, fastest confirmation\n\n🔗 Retrieved via Alchemy API\n\n💡 *zkEVM gas prices are typically lower than Ethereum mainnet*',
-          actions: ['GET_GAS_PRICE_ESTIMATES'],
+          actions: ['POLYGON_GET_GAS_PRICE_ESTIMATES_ZKEVM'],
         },
       },
     ],

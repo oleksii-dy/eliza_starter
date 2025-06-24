@@ -7,14 +7,14 @@ const validatorInfoSchema = z.object({
 });
 
 export const heimdallValidatorInfoAction: Action = {
-  name: 'HEIMDALL_VALIDATOR_INFO',
+  name: 'POLYGON_HEIMDALL_VALIDATOR_INFO',
   similes: [
     'GET_HEIMDALL_VALIDATOR_INFO',
     'HEIMDALL_VALIDATOR_DETAILS',
     'QUERY_VALIDATOR_INFO',
     'VALIDATOR_INFO_HEIMDALL',
     'CHECK_VALIDATOR_HEIMDALL',
-  ],
+  ].map((s) => `POLYGON_${s}`),
   description: 'Queries validator information from Heimdall network (read-only operation)',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     logger.log('Validating Heimdall validator info query...');
@@ -102,14 +102,28 @@ export const heimdallValidatorInfoAction: Action = {
   examples: [
     [
       {
-        name: 'user',
-        content: { text: 'Get validator info for validator 1 on Heimdall' },
+        name: '{{user1}}',
+        content: { text: 'Get validator info for validator 1 on Heimdall on Polygon' },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Getting validator info for validator 1 on Heimdall on Polygon',
+          action: 'POLYGON_HEIMDALL_VALIDATOR_INFO',
+        },
       },
     ],
     [
       {
-        name: 'user',
-        content: { text: 'Show me details for Heimdall validator 42' },
+        name: '{{user1}}',
+        content: { text: 'Show me details for Heimdall validator 42 on Polygon' },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Showing details for Heimdall validator 42 on Polygon',
+          action: 'POLYGON_HEIMDALL_VALIDATOR_INFO',
+        },
       },
     ],
   ],

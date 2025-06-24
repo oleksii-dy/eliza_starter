@@ -172,12 +172,12 @@ class PolygonTransferActionRunner {
 }
 
 export const transferPolygonAction: Action = {
-  name: 'TRANSFER_POLYGON',
-  similes: ['POLYGON_SEND', 'TRANSFER_MATIC_OR_TOKEN_POLYGON'],
+  name: 'POLYGON_TRANSFER',
+  similes: ['SEND', 'TRANSFER_MATIC_OR_TOKEN'].map((s) => `POLYGON_${s}`),
   description: 'Transfers MATIC (native currency) or executes a token transaction on Polygon.',
 
   validate: async (runtime: IAgentRuntime, _m: Memory, _s: State | undefined): Promise<boolean> => {
-    logger.debug('Validating TRANSFER_POLYGON action...');
+    logger.debug('Validating POLYGON_TRANSFER action...');
     const checks = [
       runtime.getSetting('WALLET_PRIVATE_KEY'),
       runtime.getSetting('POLYGON_PLUGINS_ENABLED'),
@@ -206,7 +206,7 @@ export const transferPolygonAction: Action = {
     callback: HandlerCallback | undefined,
     _responses: Memory[] | undefined
   ) => {
-    logger.info('Handling TRANSFER_POLYGON for message:', message.id);
+    logger.info('Handling POLYGON_TRANSFER for message:', message.id);
     try {
       const walletProvider = await initWalletProvider(runtime);
       const actionRunner = new PolygonTransferActionRunner(walletProvider);
@@ -262,20 +262,20 @@ export const transferPolygonAction: Action = {
 
       if (callback) {
         await callback({
-          text: successMsg,
-          content: { success: true, ...txResult, chain: transferParams.fromChain },
-          actions: ['TRANSFER_POLYGON'],
+          text: `Transaction successful: ${txResult.hash}`,
+          content: { success: true, ...txResult, valueDisplay: formatEther(txResult.value) },
+          actions: ['POLYGON_TRANSFER'],
           source: message.content.source,
         });
       }
       return { success: true, ...txResult, chain: transferParams.fromChain };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      logger.error('Error in TRANSFER_POLYGON handler:', errMsg, error);
+      logger.error(`Error in TRANSFER_POLYGON handler: ${errMsg}`, error);
       if (callback) {
         await callback({
-          text: `Error transferring assets: ${errMsg}`,
-          actions: ['TRANSFER_POLYGON'],
+          text: `Error during transfer: ${errMsg}`,
+          actions: ['POLYGON_TRANSFER'],
           source: message.content.source,
         });
       }

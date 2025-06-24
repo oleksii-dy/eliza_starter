@@ -10,9 +10,11 @@ import {
 import { PolygonRpcService } from '../services/PolygonRpcService.js';
 
 export const getPolygonBlockDetailsAction: Action = {
-  name: 'GET_POLYGON_BLOCK_DETAILS',
-  similes: ['SHOW_BLOCK_INFO', 'GET_BLOCK_DATA', 'CHECK_BLOCK_DETAILS', 'GET_POLYGON_BLOCK_INFO'],
-  description: 'Gets details for a specific Polygon block when a block number is mentioned.',
+  name: 'POLYGON_GET_BLOCK_DETAILS',
+  similes: ['SHOW_BLOCK_INFO', 'GET_BLOCK_DATA', 'CHECK_BLOCK_DETAILS', 'GET_BLOCK_INFO'].map(
+    (s) => `POLYGON_${s}`
+  ),
+  description: 'Gets details for a specific block on Polygon by number or hash.',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const content = message.content?.text?.toLowerCase() || '';
 
@@ -183,31 +185,31 @@ export const getPolygonBlockDetailsAction: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
           text: 'get me the details of polygon block 42000000',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
           text: 'Polygon Block 42000000 Details:\n- Hash: 0x1234...\n- Parent Hash: 0x5678...\n- Timestamp: 2024-01-01T00:00:00.000Z\n- Gas Used: 15000000\n- Gas Limit: 30000000\n- Transaction Count: 150\n- Miner: 0xabcd...',
-          actions: ['GET_POLYGON_BLOCK_DETAILS'],
+          action: 'POLYGON_GET_POLYGON_BLOCK_DETAILS',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
           text: 'show me the polygon block details',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
           text: 'Polygon Block 65123456 Details:\n- Hash: 0x1234...\n- Parent Hash: 0x5678...\n- Timestamp: 2024-01-01T00:00:00.000Z\n- Gas Used: 15000000\n- Gas Limit: 30000000\n- Transaction Count: 150\n- Miner: 0xabcd...',
-          actions: ['GET_POLYGON_BLOCK_DETAILS'],
+          action: 'POLYGON_GET_POLYGON_BLOCK_DETAILS',
         },
       },
     ],

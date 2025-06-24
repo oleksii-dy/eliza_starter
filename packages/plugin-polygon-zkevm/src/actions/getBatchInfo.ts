@@ -26,9 +26,9 @@ interface BatchInfo {
 }
 
 export const getBatchInfoAction: Action = {
-  name: 'GET_BATCH_INFO_ZKEVM',
-  similes: ['GET_BATCH', 'BATCH_INFO', 'BATCH_DETAILS', 'ZKEVM_BATCH'],
-  description: 'Get batch information for Polygon zkEVM',
+  name: 'POLYGON_ZKEVM_GET_BATCH_INFO',
+  similes: ['GET_BATCH', 'BATCH_INFO', 'BATCH_DETAILS', 'BATCH'].map((s) => `POLYGON_ZKEVM_${s}`),
+  description: 'Gets information about a specific batch on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
@@ -58,7 +58,7 @@ export const getBatchInfoAction: Action = {
       logger.error(`[getBatchInfoAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_BATCH_INFO_ZKEVM'],
+        actions: ['POLYGON_ZKEVM_GET_BATCH_INFO'],
         data: { error: errorMessage },
       };
 
@@ -170,7 +170,7 @@ ${errorMessages.length > 0 ? `\n**Warnings:**\n${errorMessages.map((msg) => `- $
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_BATCH_INFO_ZKEVM'],
+        actions: ['POLYGON_ZKEVM_GET_BATCH_INFO'],
         data: {
           batchInfo,
           network: 'polygon-zkevm',
@@ -190,7 +190,7 @@ ${errorMessages.length > 0 ? `\n**Warnings:**\n${errorMessages.map((msg) => `- $
 
       const errorContent: Content = {
         text: `❌ ${errorMessage}`,
-        actions: ['GET_BATCH_INFO_ZKEVM'],
+        actions: ['POLYGON_ZKEVM_GET_BATCH_INFO'],
         data: { error: errorMessage, errors: errorMessages, batchNumber },
       };
 
@@ -207,14 +207,14 @@ ${errorMessages.length > 0 ? `\n**Warnings:**\n${errorMessages.map((msg) => `- $
       {
         name: '{{user1}}',
         content: {
-          text: 'Get batch info for batch 123',
+          text: 'Get batch info for batch 123 on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: "I'll get the batch information for batch 123 on Polygon zkEVM.",
-          actions: ['GET_BATCH_INFO_ZKEVM'],
+          action: 'POLYGON_ZKEVM_GET_BATCH_INFO',
         },
       },
     ],
@@ -222,14 +222,14 @@ ${errorMessages.length > 0 ? `\n**Warnings:**\n${errorMessages.map((msg) => `- $
       {
         name: '{{user1}}',
         content: {
-          text: 'Show details for zkEVM batch 456',
+          text: 'Show details for zkEVM batch 456 on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me fetch the details for that batch.',
-          actions: ['GET_BATCH_INFO_ZKEVM'],
+          text: 'Let me fetch the details for that batch on Polygon zkEVM.',
+          action: 'POLYGON_ZKEVM_GET_BATCH_INFO',
         },
       },
     ],

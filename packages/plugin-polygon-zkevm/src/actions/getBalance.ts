@@ -18,9 +18,11 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves the balance of a specific address
  */
 export const getBalanceAction: Action = {
-  name: 'GET_BALANCE_ZKEVM',
-  similes: ['CHECK_BALANCE', 'BALANCE', 'GET_ETH_BALANCE', 'WALLET_BALANCE'],
-  description: 'Get the balance of an address on Polygon zkEVM',
+  name: 'POLYGON_ZKEVM_GET_BALANCE',
+  similes: ['CHECK_BALANCE', 'BALANCE', 'GET_ETH_BALANCE', 'WALLET_BALANCE'].map(
+    (s) => `POLYGON_ZKEVM_${s}`
+  ),
+  description: 'Gets the balance of a given address on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
@@ -50,7 +52,7 @@ export const getBalanceAction: Action = {
       logger.error(`[getBalanceAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_BALANCE_ZKEVM'],
+        actions: ['POLYGON_GET_BALANCE_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -114,7 +116,7 @@ export const getBalanceAction: Action = {
 **Balance:** ${balanceInEth.toFixed(6)} ETH (${balance.toString()} wei)
 **Network:** Polygon zkEVM
 **Method:** ${methodUsed}`,
-      actions: ['GET_BALANCE_ZKEVM'],
+      actions: ['POLYGON_GET_BALANCE_ZKEVM'],
       data: {
         address,
         balance: balance.toString(),
@@ -136,14 +138,14 @@ export const getBalanceAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'What is the balance of 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6?',
+          text: 'What is the balance of 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6 on Polygon zkEVM?',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: "I'll check the balance for that address on Polygon zkEVM.",
-          actions: ['GET_BALANCE_ZKEVM'],
+          action: 'POLYGON_GET_BALANCE_ZKEVM',
         },
       },
     ],
@@ -151,14 +153,14 @@ export const getBalanceAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Check balance for 0x1234567890123456789012345678901234567890',
+          text: 'Check balance for 0x1234567890123456789012345678901234567890 on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me get the balance for that address.',
-          actions: ['GET_BALANCE_ZKEVM'],
+          text: 'Let me get the balance for that address on Polygon zkEVM.',
+          action: 'POLYGON_GET_BALANCE_ZKEVM',
         },
       },
     ],

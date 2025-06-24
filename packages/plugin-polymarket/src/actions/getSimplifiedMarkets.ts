@@ -19,7 +19,7 @@ import type { SimplifiedMarket } from '../types';
  * Fetches markets in a simplified schema with reduced fields
  */
 export const getSimplifiedMarketsAction: Action = {
-  name: 'GET_SIMPLIFIED_MARKETS',
+  name: 'POLYMARKET_GET_SIMPLIFIED_MARKETS',
   similes: [
     'LIST_SIMPLIFIED_MARKETS',
     'SHOW_SIMPLIFIED_MARKETS',
@@ -63,7 +63,7 @@ export const getSimplifiedMarketsAction: Action = {
       logger.error(`[getSimplifiedMarketsAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_SIMPLIFIED_MARKETS'],
+        actions: ['POLYMARKET_GET_SIMPLIFIED_MARKETS'],
         data: { error: errorMessage },
       };
 
@@ -168,7 +168,7 @@ export const getSimplifiedMarketsAction: Action = {
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_SIMPLIFIED_MARKETS'],
+        actions: ['POLYMARKET_GET_SIMPLIFIED_MARKETS'],
         data: {
           markets: validMarkets, // Return only valid markets
           count: validMarkets.length,
@@ -198,7 +198,7 @@ Please check:
 • CLOB_API_URL is correctly configured
 • Network connectivity is available
 • Polymarket CLOB service is operational`,
-        actions: ['GET_SIMPLIFIED_MARKETS'],
+        actions: ['POLYMARKET_GET_SIMPLIFIED_MARKETS'],
         data: {
           error: errorMessage,
           timestamp: new Date().toISOString(),
@@ -217,14 +217,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'Show me simplified market data',
+          text: 'Show me simplified market data via Polymarket',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: "I'll retrieve simplified Polymarket data for faster processing.",
-          actions: ['GET_SIMPLIFIED_MARKETS'],
+          action: 'POLYMARKET_GET_SIMPLIFIED_MARKETS',
         },
       },
     ],
@@ -232,14 +232,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'Get markets in simplified format',
+          text: 'Get markets in simplified format via Polymarket',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: 'Let me fetch the markets using the simplified schema.',
-          actions: ['GET_SIMPLIFIED_MARKETS'],
+          action: 'POLYMARKET_GET_SIMPLIFIED_MARKETS',
         },
       },
     ],
@@ -247,14 +247,14 @@ Please check:
       {
         name: '{{user1}}',
         content: {
-          text: 'I need simple market data for analysis',
+          text: 'I need simple market data for analysis via Polymarket',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: "I'll get the simplified market data with reduced fields for your analysis.",
-          actions: ['GET_SIMPLIFIED_MARKETS'],
+          text: 'Retrieving simplified market data for your analysis.',
+          action: 'POLYMARKET_GET_SIMPLIFIED_MARKETS',
         },
       },
     ],

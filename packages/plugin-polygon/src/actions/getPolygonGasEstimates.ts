@@ -52,20 +52,41 @@ export const getPolygonGasEstimatesAction: Action = {
   examples: [
     [
       {
-        name: 'User',
+        name: '{{user1}}',
         content: { text: 'What are the current gas prices on Polygon?' },
       },
-    ],
-    [
       {
-        name: 'User',
-        content: { text: 'Get Polygon gas estimates' },
+        name: '{{user2}}',
+        content: {
+          text: 'Polygon Gas Estimates (Wei):\n  Safe Low Priority: 1\n  Average Priority:  2\n  Fast Priority:     3\n  Estimated Base:  10000000000',
+          action: 'POLYGON_GET_POLYGON_GAS_ESTIMATES',
+        },
       },
     ],
     [
       {
-        name: 'User',
+        name: '{{user1}}',
+        content: { text: 'Get Polygon gas estimates' },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Polygon Gas Estimates (Wei):\n  Safe Low Priority: 1\n  Average Priority:  2\n  Fast Priority:     3\n  Estimated Base:  10000000000',
+          action: 'POLYGON_GET_POLYGON_GAS_ESTIMATES',
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
         content: { text: 'Fetch gas fees for Polygon network' },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Polygon Gas Estimates (Wei):\n  Safe Low Priority: 1\n  Average Priority:  2\n  Fast Priority:     3\n  Estimated Base:  10000000000',
+          action: 'POLYGON_GET_POLYGON_GAS_ESTIMATES',
+        },
       },
     ],
   ],

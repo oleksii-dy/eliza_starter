@@ -10,9 +10,9 @@ import {
   ModelType,
   parseJSONObjectFromText,
 } from '@elizaos/core';
-import { PolygonRpcService } from '../services/PolygonRpcService';
-import { restakeRewardsL1Template } from '../templates'; // Import the new template
-import { parseErrorMessage } from '../errors';
+import { PolygonRpcService } from '../services/PolygonRpcService.js';
+import { restakeRewardsL1Template } from '../templates/index.js'; // Import the new template
+import { parseErrorMessage } from '../errors.js';
 
 // Define input schema for the LLM-extracted parameters
 interface RestakeRewardsL1Params {
@@ -34,32 +34,33 @@ function extractParamsFromText(text: string): Partial<RestakeRewardsL1Params> {
 }
 
 export const restakeRewardsL1Action: Action = {
-  name: 'RESTAKE_REWARDS_L1',
-  similes: ['COMPOUND_L1_REWARDS', 'REINVEST_STAKING_REWARDS_L1'],
-  description:
-    'Withdraws accumulated L1 staking rewards and re-delegates them to the same Polygon validator.',
+  name: 'POLYGON_RESTAKE_REWARDS_L1',
+  description: 'Restakes accumulated staking rewards on the L1 staking contract.',
+  similes: ['COMPOUND_L1_REWARDS', 'REINVEST_STAKING_REWARDS_L1'].map((s) => `POLYGON_${s}`),
   validate: async (
     runtime: IAgentRuntime,
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    logger.debug('Validating RESTAKE_REWARDS_L1 action...');
+    logger.debug('Validating POLYGON_RESTAKE_REWARDS_L1 action...');
     const requiredSettings = ['PRIVATE_KEY', 'ETHEREUM_RPC_URL', 'POLYGON_PLUGINS_ENABLED'];
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
-        logger.error(`Required setting ${setting} not configured for RESTAKE_REWARDS_L1 action.`);
+        logger.error(
+          `Required setting ${setting} not configured for POLYGON_RESTAKE_REWARDS_L1 action.`
+        );
         return false;
       }
     }
     try {
       const service = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
       if (!service) {
-        logger.error('PolygonRpcService not initialized for RESTAKE_REWARDS_L1.');
+        logger.error('PolygonRpcService not initialized for POLYGON_RESTAKE_REWARDS_L1.');
         return false;
       }
     } catch (error: unknown) {
       logger.error(
-        'Error accessing PolygonRpcService during RESTAKE_REWARDS_L1 validation:',
+        'Error accessing PolygonRpcService during POLYGON_RESTAKE_REWARDS_L1 validation:',
         error
       );
       return false;
@@ -74,7 +75,7 @@ export const restakeRewardsL1Action: Action = {
     callback: HandlerCallback | undefined,
     _recentMessages: Memory[] | undefined
   ) => {
-    logger.info('Handling RESTAKE_REWARDS_L1 action for message:', message.id);
+    logger.info('Handling POLYGON_RESTAKE_REWARDS_L1 action for message:', message.id);
     const rawMessageText = message.content.text || '';
     let params: RestakeRewardsL1Params | null = null;
 
@@ -92,20 +93,23 @@ export const restakeRewardsL1Action: Action = {
       try {
         const result = await runtime.useModel(ModelType.TEXT_SMALL, { prompt });
         params = parseJSONObjectFromText(result) as RestakeRewardsL1Params;
-        logger.debug('RESTAKE_REWARDS_L1: Extracted params via TEXT_SMALL:', params);
+        logger.debug('POLYGON_RESTAKE_REWARDS_L1: Extracted params via TEXT_SMALL:', params);
         if (params.error) {
-          logger.warn(`RESTAKE_REWARDS_L1: Model responded with error: ${params.error}`);
+          logger.warn(`POLYGON_RESTAKE_REWARDS_L1: Model responded with error: ${params.error}`);
           throw new Error(params.error);
         }
       } catch (e) {
         logger.warn(
-          'RESTAKE_REWARDS_L1: Failed to parse JSON from model, trying manual extraction',
+          'POLYGON_RESTAKE_REWARDS_L1: Failed to parse JSON from model, trying manual extraction',
           e
         );
         const manualParams = extractParamsFromText(rawMessageText);
         if (manualParams.validatorId) {
           params = { validatorId: manualParams.validatorId };
-          logger.debug('RESTAKE_REWARDS_L1: Extracted params via manual text parsing:', params);
+          logger.debug(
+            'POLYGON_RESTAKE_REWARDS_L1: Extracted params via manual text parsing:',
+            params
+          );
         } else {
           throw new Error('Could not determine validator ID from the message.');
         }
@@ -125,7 +129,7 @@ export const restakeRewardsL1Action: Action = {
         logger.info(noRewardsMsg);
         const responseContent: Content = {
           text: noRewardsMsg,
-          actions: ['RESTAKE_REWARDS_L1'],
+          actions: ['POLYGON_RESTAKE_REWARDS_L1'],
           source: message.content.source,
           data: { validatorId, status: 'no_rewards', success: true }, // success: true as operation completed as expected
         };
@@ -137,7 +141,7 @@ export const restakeRewardsL1Action: Action = {
       logger.info(successMsg);
       const responseContent: Content = {
         text: successMsg,
-        actions: ['RESTAKE_REWARDS_L1'],
+        actions: ['POLYGON_RESTAKE_REWARDS_L1'],
         source: message.content.source,
         data: {
           validatorId,
@@ -150,10 +154,10 @@ export const restakeRewardsL1Action: Action = {
       return responseContent;
     } catch (error: unknown) {
       const parsedError = parseErrorMessage(error);
-      logger.error('Error in RESTAKE_REWARDS_L1 handler:', parsedError);
+      logger.error('Error in POLYGON_RESTAKE_REWARDS_L1 handler:', parsedError);
       const errorContent: Content = {
         text: `Error restaking rewards (L1): ${parsedError.message}`,
-        actions: ['RESTAKE_REWARDS_L1'],
+        actions: ['POLYGON_RESTAKE_REWARDS_L1'],
         source: message.content.source,
         data: {
           success: false,
@@ -168,17 +172,31 @@ export const restakeRewardsL1Action: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Restake my L1 rewards for validator 7.',
+          text: 'Restake my L1 rewards for validator 7 on Polygon.',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Restaking rewards for validator 7 on Polygon.',
+          action: 'POLYGON_RESTAKE_REWARDS_L1',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Compound my staking rewards on Ethereum for validator ID 88.',
+          text: 'Compound my staking rewards on Ethereum for validator ID 88 on Polygon.',
+        },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Compounding staking rewards for validator 88 on Polygon.',
+          action: 'POLYGON_RESTAKE_REWARDS_L1',
         },
       },
     ],

@@ -15,9 +15,9 @@ import { blockDetailsByNumberTemplate } from '../templates';
 import { callLLMWithTimeout } from '../utils/llmHelpers';
 
 export const getBlockDetailsByNumberAction: Action = {
-  name: 'GET_BLOCK_DETAILS_BY_NUMBER',
-  similes: ['GET_ZKEVM_BLOCK_BY_NUMBER', 'SHOW_ZKEVM_BLOCK_DETAILS_BY_NUMBER'],
-  description: 'Gets details for a specific Polygon zkEVM block by its number.',
+  name: 'POLYGON_ZKEVM_GET_BLOCK_DETAILS_BY_NUMBER',
+  similes: ['GET_BLOCK_BY_NUMBER', 'SHOW_BLOCK_DETAILS_BY_NUMBER'].map((s) => `POLYGON_ZKEVM_${s}`),
+  description: 'Gets block details for a given number on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY'); // Assuming direct env access for now
@@ -51,7 +51,7 @@ export const getBlockDetailsByNumberAction: Action = {
       logger.error(`[getBlockDetailsByNumberAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_BLOCK_DETAILS_BY_NUMBER'],
+        actions: ['POLYGON_GET_BLOCK_DETAILS_BY_NUMBER_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -202,7 +202,7 @@ export const getBlockDetailsByNumberAction: Action = {
 ${JSON.stringify(blockDetails, null, 2)}
 \`\`\`
 ZK-specific fields: ${JSON.stringify(zkevmFields, null, 2)}`,
-        actions: ['GET_BLOCK_DETAILS_BY_NUMBER'],
+        actions: ['POLYGON_GET_BLOCK_DETAILS_BY_NUMBER_ZKEVM'],
         data: {
           block: blockDetails,
           zkevmFields: zkevmFields,
@@ -224,7 +224,7 @@ ZK-specific fields: ${JSON.stringify(zkevmFields, null, 2)}`,
 
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_BLOCK_DETAILS_BY_NUMBER'],
+        actions: ['POLYGON_GET_BLOCK_DETAILS_BY_NUMBER_ZKEVM'],
         data: { error: errorMessage, errors: errorMessages, blockNumber },
       };
 
@@ -238,31 +238,31 @@ ZK-specific fields: ${JSON.stringify(zkevmFields, null, 2)}`,
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
           text: 'get polygon zkevm block details for block 12345',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
           text: 'Here are the details for Polygon zkEVM block 12345 (via alchemy):\n```json\n{\n  "number": 12345,\n  "hash": "0x...",\n  "parentHash": "0x...",\n  "timestamp": 1234567890,\n  "transactions": []\n}\n```\nZK-specific fields: {\n  "zkProverVersion": "1.0.0",\n  "batchIndex": 123\n}',
-          actions: ['GET_BLOCK_DETAILS_BY_NUMBER'],
+          action: 'POLYGON_GET_BLOCK_DETAILS_BY_NUMBER_ZKEVM',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'show block details for 0xabcdef',
+          text: 'show zkevm block details by number 54321',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: 'Here are the details for Polygon zkEVM block 0xabcdef (via rpc):\n```json\n{\n  "number": 12345,\n  "hash": "0xabcdef",\n  "parentHash": "0x...",\n  "timestamp": 1234567890,\n  "transactions": []\n}\n```\nZK-specific fields: {\n  "zkProverVersion": "1.0.0",\n  "batchIndex": 123\n}',
-          actions: ['GET_BLOCK_DETAILS_BY_NUMBER'],
+          text: 'Here are the details for Polygon zkEVM block 54321 (via rpc):\n```json\n{\n  "number": 54321,\n  "hash": "0x...",\n  "parentHash": "0x...",\n  "timestamp": 1234567999,\n  "transactions": []\n}\n```\nZK-specific fields: {\n  "zkProverVersion": "1.0.1",\n  "batchIndex": 456\n}',
+          action: 'POLYGON_GET_BLOCK_DETAILS_BY_NUMBER_ZKEVM',
         },
       },
     ],

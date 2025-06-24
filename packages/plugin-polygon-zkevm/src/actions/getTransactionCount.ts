@@ -18,9 +18,9 @@ import { callLLMWithTimeout } from '../utils/llmHelpers';
  * Retrieves the transaction count (nonce) for a specific address
  */
 export const getTransactionCountAction: Action = {
-  name: 'GET_TRANSACTION_COUNT_ZKEVM',
-  similes: ['GET_NONCE', 'TRANSACTION_COUNT', 'NONCE', 'TX_COUNT'],
-  description: 'Get transaction count (nonce) for an address on Polygon zkEVM',
+  name: 'POLYGON_ZKEVM_GET_TRANSACTION_COUNT',
+  similes: ['GET_NONCE', 'TRANSACTION_COUNT', 'NONCE', 'TX_COUNT'].map((s) => `POLYGON_ZKEVM_${s}`),
+  description: 'Gets the transaction count (nonce) for a given address on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
@@ -50,7 +50,7 @@ export const getTransactionCountAction: Action = {
       logger.error(`[getTransactionCountAction] Configuration error: ${errorMessage}`);
       const errorContent: Content = {
         text: errorMessage,
-        actions: ['GET_TRANSACTION_COUNT_ZKEVM'],
+        actions: ['POLYGON_GET_TRANSACTION_COUNT_ZKEVM'],
         data: { error: errorMessage },
       };
 
@@ -126,7 +126,7 @@ export const getTransactionCountAction: Action = {
 
     const responseContent: Content = {
       text: responseText,
-      actions: ['GET_TRANSACTION_COUNT_ZKEVM'],
+      actions: ['POLYGON_GET_TRANSACTION_COUNT_ZKEVM'],
       data: {
         address,
         latestCount,
@@ -149,14 +149,14 @@ export const getTransactionCountAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'What is the transaction count for 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6?',
+          text: 'What is the transaction count for 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6 on Polygon zkEVM?',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: "I'll get the transaction count for that address on Polygon zkEVM.",
-          actions: ['GET_TRANSACTION_COUNT_ZKEVM'],
+          action: 'POLYGON_GET_TRANSACTION_COUNT_ZKEVM',
         },
       },
     ],
@@ -164,14 +164,14 @@ export const getTransactionCountAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Get nonce for 0x1234567890123456789012345678901234567890',
+          text: 'Get nonce for 0x1234567890123456789012345678901234567890 on Polygon zkEVM',
         },
       },
       {
         name: '{{user2}}',
         content: {
-          text: 'Let me get the nonce for that address.',
-          actions: ['GET_TRANSACTION_COUNT_ZKEVM'],
+          text: 'Let me get the nonce for that address on Polygon zkEVM.',
+          action: 'POLYGON_GET_TRANSACTION_COUNT_ZKEVM',
         },
       },
     ],

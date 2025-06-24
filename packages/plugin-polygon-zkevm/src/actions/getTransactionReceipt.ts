@@ -17,9 +17,11 @@ import { JsonRpcProvider } from 'ethers';
  * Retrieves transaction receipt details by transaction hash
  */
 export const getTransactionReceiptAction: Action = {
-  name: 'GET_TRANSACTION_RECEIPT_ZKEVM',
-  similes: ['GET_TX_RECEIPT', 'TRANSACTION_RECEIPT', 'TX_RECEIPT', 'RECEIPT'],
-  description: 'Get transaction receipt by hash on Polygon zkEVM',
+  name: 'POLYGON_ZKEVM_GET_TRANSACTION_RECEIPT',
+  similes: ['GET_TX_RECEIPT', 'TRANSACTION_RECEIPT', 'TX_RECEIPT', 'RECEIPT'].map(
+    (s) => `POLYGON_ZKEVM_${s}`
+  ),
+  description: 'Gets the transaction receipt for a given hash on Polygon zkEVM.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const alchemyApiKey = runtime.getSetting('ALCHEMY_API_KEY');
@@ -49,7 +51,7 @@ export const getTransactionReceiptAction: Action = {
       if (!txHashMatch) {
         const errorContent: Content = {
           text: 'Please provide a valid transaction hash (0x... 64 characters) to get the transaction receipt.',
-          actions: ['GET_TRANSACTION_RECEIPT_ZKEVM'],
+          actions: ['POLYGON_GET_TRANSACTION_RECEIPT_ZKEVM'],
           source: message.content.source,
         };
         await callback(errorContent);
@@ -80,7 +82,7 @@ export const getTransactionReceiptAction: Action = {
       if (!receipt) {
         const errorContent: Content = {
           text: `Transaction receipt not found: ${txHash}. The transaction may be pending or does not exist.`,
-          actions: ['GET_TRANSACTION_RECEIPT_ZKEVM'],
+          actions: ['POLYGON_GET_TRANSACTION_RECEIPT_ZKEVM'],
           source: message.content.source,
         };
         await callback(errorContent);
@@ -116,7 +118,7 @@ export const getTransactionReceiptAction: Action = {
 
       const responseContent: Content = {
         text: responseText,
-        actions: ['GET_TRANSACTION_RECEIPT_ZKEVM'],
+        actions: ['POLYGON_GET_TRANSACTION_RECEIPT_ZKEVM'],
         source: message.content.source,
       };
 
@@ -127,7 +129,7 @@ export const getTransactionReceiptAction: Action = {
 
       const errorContent: Content = {
         text: `Error getting transaction receipt: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        actions: ['GET_TRANSACTION_RECEIPT_ZKEVM'],
+        actions: ['POLYGON_GET_TRANSACTION_RECEIPT_ZKEVM'],
         source: message.content.source,
       };
 
@@ -141,7 +143,7 @@ export const getTransactionReceiptAction: Action = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Get receipt for transaction 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+          text: 'Get receipt for transaction 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef on Polygon zkEVM',
         },
       },
       {
@@ -156,7 +158,7 @@ export const getTransactionReceiptAction: Action = {
 ⛽ Gas Used: 21000 (100.00% of limit)
 💸 Effective Gas Price: 20.00 Gwei
 🔢 Transaction Index: 0`,
-          actions: ['GET_TRANSACTION_RECEIPT_ZKEVM'],
+          action: 'POLYGON_GET_TRANSACTION_RECEIPT_ZKEVM',
         },
       },
     ],

@@ -16,8 +16,10 @@ const USDC_ADDRESS = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'; // USDC on Po
 const WETH_ADDRESS = '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619'; // WETH on Polygon
 
 export const getUSDCBalanceAction: Action = {
-  name: 'GET_USDC_BALANCE',
-  similes: ['CHECK_USDC_BALANCE', 'SHOW_USDC_BALANCE', 'GET_USDC_AMOUNT'],
+  name: 'POLYGON_GET_USDC_BALANCE',
+  similes: ['CHECK_USDC_BALANCE', 'SHOW_USDC_BALANCE', 'GET_USDC_AMOUNT'].map(
+    (s) => `POLYGON_${s}`
+  ),
   description: 'Gets the USDC balance for the agent wallet on Polygon.',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const content = message.content?.text?.toLowerCase() || '';
@@ -159,8 +161,10 @@ export const getUSDCBalanceAction: Action = {
 };
 
 export const getWETHBalanceAction: Action = {
-  name: 'GET_WETH_BALANCE',
-  similes: ['CHECK_WETH_BALANCE', 'SHOW_WETH_BALANCE', 'GET_WETH_AMOUNT'],
+  name: 'POLYGON_GET_WETH_BALANCE',
+  similes: ['CHECK_WETH_BALANCE', 'SHOW_WETH_BALANCE', 'GET_WETH_AMOUNT'].map(
+    (s) => `POLYGON_${s}`
+  ),
   description: 'Gets the WETH balance for the agent wallet on Polygon.',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const content = message.content?.text?.toLowerCase() || '';
@@ -304,9 +308,11 @@ export const getWETHBalanceAction: Action = {
 };
 
 export const getERC20BalanceAction: Action = {
-  name: 'GET_ERC20_BALANCE',
-  similes: ['CHECK_TOKEN_BALANCE', 'SHOW_TOKEN_BALANCE', 'GET_TOKEN_AMOUNT'],
-  description: 'Gets the ERC-20 token balance for a specific token contract address.',
+  name: 'POLYGON_GET_ERC20_BALANCE',
+  similes: ['CHECK_TOKEN_BALANCE', 'SHOW_TOKEN_BALANCE', 'GET_TOKEN_AMOUNT'].map(
+    (s) => `POLYGON_${s}`
+  ),
+  description: 'Gets the balance of a specified ERC20 token for the agent wallet on Polygon.',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const content = message.content?.text?.toLowerCase() || '';
 
@@ -437,7 +443,7 @@ export const getERC20BalanceAction: Action = {
 
 // Legacy actions - keeping for backward compatibility but not exported
 const getNativeBalanceAction: Action = {
-  name: 'GET_NATIVE_BALANCE_LEGACY',
+  name: 'POLYGON_GET_NATIVE_BALANCE_LEGACY',
   description: 'Legacy action - use getMaticBalanceAction instead',
   validate: async () => false, // Disabled
   handler: async () => ({ text: 'This action is deprecated', actions: [] }),

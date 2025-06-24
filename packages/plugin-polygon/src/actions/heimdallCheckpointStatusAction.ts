@@ -1,14 +1,14 @@
 import { Action, IAgentRuntime, Memory, State, HandlerCallback, logger } from '@elizaos/core';
 
 export const heimdallCheckpointStatusAction: Action = {
-  name: 'HEIMDALL_CHECKPOINT_STATUS',
+  name: 'POLYGON_HEIMDALL_CHECKPOINT_STATUS',
   similes: [
     'GET_HEIMDALL_CHECKPOINT_STATUS',
     'HEIMDALL_CHECKPOINT_LATEST',
     'QUERY_CHECKPOINT_STATUS',
     'CHECKPOINT_STATUS_HEIMDALL',
     'CHECK_LATEST_CHECKPOINT',
-  ],
+  ].map((s) => `POLYGON_${s}`),
   description: 'Queries the latest checkpoint status from Heimdall network (read-only operation)',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     logger.log('Validating Heimdall checkpoint status query...');
@@ -89,14 +89,28 @@ export const heimdallCheckpointStatusAction: Action = {
   examples: [
     [
       {
-        name: 'user',
-        content: { text: 'Get the latest checkpoint status from Heimdall' },
+        name: '{{user1}}',
+        content: { text: 'Get the latest checkpoint status from Heimdall on Polygon' },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Getting the latest checkpoint status from Heimdall on Polygon',
+          action: 'POLYGON_HEIMDALL_CHECKPOINT_STATUS',
+        },
       },
     ],
     [
       {
-        name: 'user',
-        content: { text: 'Show me the current Heimdall checkpoint info' },
+        name: '{{user1}}',
+        content: { text: 'Show me the current Heimdall checkpoint info on Polygon' },
+      },
+      {
+        name: '{{user2}}',
+        content: {
+          text: 'Showing the current Heimdall checkpoint info on Polygon',
+          action: 'POLYGON_HEIMDALL_CHECKPOINT_STATUS',
+        },
       },
     ],
   ],

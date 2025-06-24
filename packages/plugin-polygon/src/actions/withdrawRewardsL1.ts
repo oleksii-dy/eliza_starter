@@ -37,16 +37,17 @@ function extractParamsFromText(text: string): Partial<WithdrawRewardsParams> {
 }
 
 export const withdrawRewardsAction: Action = {
-  name: 'WITHDRAW_REWARDS_L1',
-  similes: ['CLAIM_L1_STAKING_REWARDS', 'COLLECT_VALIDATOR_REWARDS_L1'],
-  description: 'Withdraws accumulated staking rewards from a Polygon validator on Ethereum L1.',
+  name: 'POLYGON_WITHDRAW_REWARDS_L1',
+  description:
+    'Withdraws accumulated staking rewards for a delegator from the L1 staking contract.',
+  similes: ['CLAIM_L1_STAKING_REWARDS', 'COLLECT_VALIDATOR_REWARDS_L1'].map((s) => `POLYGON_${s}`),
 
   validate: async (
     runtime: IAgentRuntime,
     _message: Memory,
     _state: State | undefined
   ): Promise<boolean> => {
-    logger.debug('Validating WITHDRAW_REWARDS_L1 action...');
+    logger.debug('Validating POLYGON_WITHDRAW_REWARDS_L1 action...');
 
     const requiredSettings = [
       'PRIVATE_KEY',
@@ -56,7 +57,9 @@ export const withdrawRewardsAction: Action = {
 
     for (const setting of requiredSettings) {
       if (!runtime.getSetting(setting)) {
-        logger.error(`Required setting ${setting} not configured for WITHDRAW_REWARDS_L1 action.`);
+        logger.error(
+          `Required setting ${setting} not configured for POLYGON_WITHDRAW_REWARDS_L1 action.`
+        );
         return false;
       }
     }
@@ -64,12 +67,12 @@ export const withdrawRewardsAction: Action = {
     try {
       const service = runtime.getService<PolygonRpcService>(PolygonRpcService.serviceType);
       if (!service) {
-        logger.error('PolygonRpcService not initialized for WITHDRAW_REWARDS_L1.');
+        logger.error('PolygonRpcService not initialized for POLYGON_WITHDRAW_REWARDS_L1.');
         return false;
       }
     } catch (error: unknown) {
       logger.error(
-        'Error accessing PolygonRpcService during WITHDRAW_REWARDS_L1 validation:',
+        'Error accessing PolygonRpcService during POLYGON_WITHDRAW_REWARDS_L1 validation:',
         error
       );
       return false;
@@ -86,7 +89,7 @@ export const withdrawRewardsAction: Action = {
     callback: HandlerCallback | undefined,
     _recentMessages: Memory[] | undefined
   ) => {
-    logger.info('Handling WITHDRAW_REWARDS_L1 action for message:', message.id);
+    logger.info('Handling POLYGON_WITHDRAW_REWARDS_L1 action for message:', message.id);
     const rawMessageText = message.content.text || '';
     let params: WithdrawRewardsParams | null = null;
 
@@ -108,16 +111,16 @@ export const withdrawRewardsAction: Action = {
         });
 
         params = parseJSONObjectFromText(result) as WithdrawRewardsParams;
-        logger.debug('WITHDRAW_REWARDS_L1: Extracted params via TEXT_SMALL:', params);
+        logger.debug('POLYGON_WITHDRAW_REWARDS_L1: Extracted params via TEXT_SMALL:', params);
 
         // Check if the model response contains an error
         if (params.error) {
-          logger.warn(`WITHDRAW_REWARDS_L1: Model responded with error: ${params.error}`);
+          logger.warn(`POLYGON_WITHDRAW_REWARDS_L1: Model responded with error: ${params.error}`);
           throw new Error(params.error);
         }
       } catch (e) {
         logger.warn(
-          'WITHDRAW_REWARDS_L1: Failed to parse JSON from model response, trying manual extraction',
+          'POLYGON_WITHDRAW_REWARDS_L1: Failed to parse JSON from model response, trying manual extraction',
           e
         );
 
@@ -127,7 +130,10 @@ export const withdrawRewardsAction: Action = {
           params = {
             validatorId: manualParams.validatorId,
           };
-          logger.debug('WITHDRAW_REWARDS_L1: Extracted params via manual text parsing:', params);
+          logger.debug(
+            'POLYGON_WITHDRAW_REWARDS_L1: Extracted params via manual text parsing:',
+            params
+          );
         } else {
           throw new Error('Could not determine validator ID from the message.');
         }
@@ -139,7 +145,7 @@ export const withdrawRewardsAction: Action = {
       }
 
       const { validatorId } = params;
-      logger.debug(`WITHDRAW_REWARDS_L1 parameters: validatorId: ${validatorId}`);
+      logger.debug(`POLYGON_WITHDRAW_REWARDS_L1 parameters: validatorId: ${validatorId}`);
 
       // Call the service to withdraw rewards
       const txHash = await polygonService.withdrawRewards(validatorId);
@@ -149,7 +155,7 @@ export const withdrawRewardsAction: Action = {
 
       const responseContent: Content = {
         text: successMsg,
-        actions: ['WITHDRAW_REWARDS_L1'],
+        actions: ['POLYGON_WITHDRAW_REWARDS_L1'],
         source: message.content.source,
         data: {
           transactionHash: txHash,
@@ -164,11 +170,11 @@ export const withdrawRewardsAction: Action = {
       return responseContent;
     } catch (error: unknown) {
       const parsedError = parseErrorMessage(error);
-      logger.error('Error in WITHDRAW_REWARDS_L1 handler:', parsedError);
+      logger.error('Error in POLYGON_WITHDRAW_REWARDS_L1 handler:', parsedError);
 
       const errorContent: Content = {
         text: `Error withdrawing rewards: ${parsedError.message}`,
-        actions: ['WITHDRAW_REWARDS_L1'],
+        actions: ['POLYGON_WITHDRAW_REWARDS_L1'],
         source: message.content.source,
         data: {
           success: false,
@@ -187,17 +193,46 @@ export const withdrawRewardsAction: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Withdraw my staking rewards from validator 123',
+          text: 'Withdraw my staking rewards from validator 123 on Polygon L1.',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'I have initiated the withdrawal of staking rewards from validator 123 on L1 via Polygon. The transaction hash is [tx_hash].',
+          actions: ['POLYGON_WITHDRAW_REWARDS_L1'],
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Claim rewards from Polygon validator ID 42',
+          text: 'Claim rewards from Polygon validator ID 42 on the Ethereum mainnet.',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'I am claiming the staking rewards for validator 42 on L1 via Polygon. The transaction hash is [tx_hash].',
+          actions: ['POLYGON_WITHDRAW_REWARDS_L1'],
+        },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'Can you collect my rewards for my Polygon validator?',
+        },
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: "I can help with that. Please provide the validator ID from which you'd like to withdraw rewards on L1 for Polygon.",
+          actions: ['POLYGON_WITHDRAW_REWARDS_L1'],
         },
       },
     ],

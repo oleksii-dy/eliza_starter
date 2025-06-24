@@ -14,9 +14,9 @@ import { PolygonRpcService } from '../services/PolygonRpcService.js';
 import { initWalletProvider } from '../providers/PolygonWalletProvider.js';
 
 export const getMaticBalanceAction: Action = {
-  name: 'GET_MATIC_BALANCE',
-  similes: ['CHECK_MATIC_BALANCE', 'SHOW_POLYGON_BALANCE', 'GET_NATIVE_BALANCE'],
-  description: "Gets the MATIC balance for the agent's address on Polygon (L2).",
+  name: 'POLYGON_GET_MATIC_BALANCE',
+  similes: ['CHECK_MATIC_BALANCE', 'SHOW_BALANCE', 'GET_NATIVE_BALANCE'].map((s) => `POLYGON_${s}`),
+  description: 'Gets the native MATIC balance for the agent wallet on Polygon.',
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     const content = message.content?.text?.toLowerCase() || '';
 
@@ -86,8 +86,8 @@ export const getMaticBalanceAction: Action = {
       const balanceMatic = ethers.formatEther(balanceWei);
 
       const responseContent: Content = {
-        text: `Your MATIC balance (${agentAddress}): ${balanceMatic} MATIC`,
-        actions: ['GET_MATIC_BALANCE'],
+        text: `Your MATIC balance on Polygon (${agentAddress}): ${balanceMatic} MATIC`,
+        actions: ['POLYGON_GET_MATIC_BALANCE'],
         data: {
           address: agentAddress,
           balanceWei: balanceWei.toString(),
@@ -109,7 +109,7 @@ export const getMaticBalanceAction: Action = {
 
       const errorContent: Content = {
         text: userMessage,
-        actions: ['GET_MATIC_BALANCE'],
+        actions: ['POLYGON_GET_MATIC_BALANCE'],
         data: { error: errorMessage },
       };
 
@@ -123,31 +123,31 @@ export const getMaticBalanceAction: Action = {
   examples: [
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'get matic balance',
+          text: 'get matic balance on polygon',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: 'Your MATIC balance (0x1234...): 17.856183245623432226 MATIC',
-          actions: ['GET_MATIC_BALANCE'],
+          text: 'Your MATIC balance on Polygon (0x1234...): 17.856183245623432226 MATIC',
+          action: 'POLYGON_GET_MATIC_BALANCE',
         },
       },
     ],
     [
       {
-        name: 'user',
+        name: '{{user1}}',
         content: {
           text: 'what is my polygon balance?',
         },
       },
       {
-        name: 'assistant',
+        name: '{{user2}}',
         content: {
-          text: 'Your MATIC balance (0x1234...): 17.856183245623432226 MATIC',
-          actions: ['GET_MATIC_BALANCE'],
+          text: 'Your MATIC balance on Polygon (0x1234...): 17.856183245623432226 MATIC',
+          action: 'POLYGON_GET_MATIC_BALANCE',
         },
       },
     ],

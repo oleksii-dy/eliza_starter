@@ -23,7 +23,7 @@ export interface GetAllApiKeysResponse {
  * Retrieves all API keys associated with a Polygon address using ClobClient.getApiKeys()
  */
 export const getAllApiKeysAction = {
-  name: 'GET_API_KEYS',
+  name: 'POLYMARKET_GET_API_KEYS',
   similes: [
     'GET_ALL_API_KEYS',
     'LIST_API_KEYS',
@@ -39,14 +39,14 @@ export const getAllApiKeysAction = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Get my API keys',
+          text: 'Get my API keys via Polymarket',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: "I'll retrieve all API keys associated with your Polymarket account.",
-          action: 'GET_API_KEYS',
+          action: 'POLYMARKET_GET_API_KEYS',
         },
       },
     ],
@@ -54,14 +54,14 @@ export const getAllApiKeysAction = {
       {
         name: '{{user1}}',
         content: {
-          text: 'Show me all my CLOB API credentials',
+          text: 'Show me all my CLOB API credentials via Polymarket',
         },
       },
       {
         name: '{{user2}}',
         content: {
           text: 'Retrieving your Polymarket API keys...',
-          action: 'GET_API_KEYS',
+          action: 'POLYMARKET_GET_API_KEYS',
         },
       },
     ],
@@ -149,7 +149,7 @@ export const getAllApiKeysAction = {
         if (callback) {
           callback({
             text: helpMessage,
-            action: 'GET_API_KEYS',
+            action: 'POLYMARKET_GET_API_KEYS',
             data: {
               success: false,
               error: 'API credentials not found - see setup instructions above',
@@ -188,12 +188,16 @@ export const getAllApiKeysAction = {
       let apiKeys: ApiKeyData[] = [];
 
       // Handle the specific case where apiKeysResponse is { apiKeys: ["id1", "id2"] }
-      if (apiKeysResponse && Array.isArray((apiKeysResponse as any).apiKeys) && (apiKeysResponse as any).apiKeys.every((k: any) => typeof k === 'string')) {
+      if (
+        apiKeysResponse &&
+        Array.isArray((apiKeysResponse as any).apiKeys) &&
+        (apiKeysResponse as any).apiKeys.every((k: any) => typeof k === 'string')
+      ) {
         apiKeys = (apiKeysResponse as any).apiKeys.map((keyId: string) => ({
           key: keyId,
           // Other fields will be undefined as only IDs are provided in this format
           active: true, // Assume active if listed
-          permissions: ['trading'] // Default assumption
+          permissions: ['trading'], // Default assumption
         }));
       } else if (Array.isArray(apiKeysResponse)) {
         // Response is directly an array of more detailed key objects (original handling)
@@ -202,22 +206,34 @@ export const getAllApiKeysAction = {
           secret: key.secret || key.api_secret,
           passphrase: key.passphrase || key.api_passphrase,
           created_at: key.created_at || key.createdAt,
-          active: key.active !== undefined ? key.active : (key.status === 'active'), // Added status check
+          active: key.active !== undefined ? key.active : key.status === 'active', // Added status check
           permissions: key.permissions || ['trading'],
-          label: key.label
+          label: key.label,
         }));
-      } else if (apiKeysResponse && typeof apiKeysResponse === 'object' && (apiKeysResponse as any).data && Array.isArray((apiKeysResponse as any).data)) {
+      } else if (
+        apiKeysResponse &&
+        typeof apiKeysResponse === 'object' &&
+        (apiKeysResponse as any).data &&
+        Array.isArray((apiKeysResponse as any).data)
+      ) {
         // Response is an object with a data field containing an array of detailed key objects
         apiKeys = (apiKeysResponse as any).data.map((key: any) => ({
           key: key.key || key.api_key || key.id || key.key_id,
           secret: key.secret || key.api_secret,
           passphrase: key.passphrase || key.api_passphrase,
           created_at: key.created_at || key.createdAt,
-          active: key.active !== undefined ? key.active : (key.status === 'active'),
+          active: key.active !== undefined ? key.active : key.status === 'active',
           permissions: key.permissions || ['trading'],
-          label: key.label
+          label: key.label,
         }));
-      } else if (apiKeysResponse && typeof apiKeysResponse === 'object' && ((apiKeysResponse as any).key || (apiKeysResponse as any).api_key || (apiKeysResponse as any).id || (apiKeysResponse as any).key_id)) {
+      } else if (
+        apiKeysResponse &&
+        typeof apiKeysResponse === 'object' &&
+        ((apiKeysResponse as any).key ||
+          (apiKeysResponse as any).api_key ||
+          (apiKeysResponse as any).id ||
+          (apiKeysResponse as any).key_id)
+      ) {
         // Response is a single detailed key object (less common for a "get all" type endpoint but handle defensively)
         const key = apiKeysResponse as any;
         apiKeys = [
@@ -226,9 +242,9 @@ export const getAllApiKeysAction = {
             secret: key.secret || key.api_secret,
             passphrase: key.passphrase || key.api_passphrase,
             created_at: key.created_at || key.createdAt,
-            active: key.active !== undefined ? key.active : (key.status === 'active'),
+            active: key.active !== undefined ? key.active : key.status === 'active',
             permissions: key.permissions || ['trading'],
-            label: key.label
+            label: key.label,
           },
         ];
       } // No further specific single object check if it doesn't have key identifier, covered by initial {apiKeys: [...]} check
@@ -278,9 +294,9 @@ export const getAllApiKeysAction = {
 
       // Call callback with success response
       if (callback) {
-        callback({
+        await callback({
           text: successMessage,
-          action: 'GET_API_KEYS',
+          action: 'POLYMARKET_GET_API_KEYS',
           data: responseData,
         });
       }
@@ -307,7 +323,7 @@ export const getAllApiKeysAction = {
       if (callback) {
         callback({
           text: errorMessage,
-          action: 'GET_API_KEYS',
+          action: 'POLYMARKET_GET_API_KEYS',
           data: {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error',
