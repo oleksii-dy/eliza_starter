@@ -1,6 +1,6 @@
 /**
  * TEST TEMPLATES MAIN EXPORTS
- * 
+ *
  * Responsibilities:
  * - Export all test template constants
  * - Export utility functions
@@ -12,11 +12,11 @@ export { UTILS_TS_EXACT_CONTENT } from './utils-template';
 
 // Export test template and utilities
 export {
-    TEST_TS_TEMPLATE,
-    getTestTemplateVariables,
-    type TestTemplateVariables,
+  TEST_TS_TEMPLATE,
+  getTestTemplateVariables,
+  type TestTemplateVariables,
 } from './test-template';
 
 // Re-export for backward compatibility
 export * from './utils-template';
-export * from './test-template'; 
+export * from './test-template';
