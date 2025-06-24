@@ -4,6 +4,15 @@ import { Stage } from '../../core/systems/Stage.js';
 import { MockWorld } from '../test-world-factory.js';
 import * as THREE from '../../core/extras/three.js';
 
+// Global Three.js mocks for headless environment
+if (typeof window === 'undefined') {
+  global.document = {
+    createElement: mock(() => ({
+      getBoundingClientRect: mock(() => ({ left: 0, top: 0, width: 800, height: 600 }))
+    }))
+  } as any;
+}
+
 // Mock LooseOctree
 mock.module('../../core/extras/LooseOctree.js', () => ({
   LooseOctree: mock().mockImplementation(() => ({
@@ -55,9 +64,18 @@ describe('Stage System', () => {
 
     it('should add world rig to scene on init', async () => {
       const viewport = document.createElement('div');
-      await stage.init({ viewport });
-
-      expect(stage.scene.children).toContain(world.rig);
+      
+      // Add timeout to prevent infinite loops
+      const timeout = setTimeout(() => {
+        throw new Error('Test timed out after 5 seconds');
+      }, 5000);
+      
+      try {
+        await stage.init({ viewport });
+        expect(stage.scene.children).toContain(world.rig);
+      } finally {
+        clearTimeout(timeout);
+      }
     });
   });
 

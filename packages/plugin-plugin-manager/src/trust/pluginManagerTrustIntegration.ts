@@ -135,7 +135,7 @@ export async function validatePluginManagerTrust(
 
     return { allowed: true, trustScore };
   } catch (_error) {
-    elizaLogger.error(`Trust validation _error for plugin manager action ${actionName}:`, );_error)
+    elizaLogger.error(`Trust validation error for plugin manager action ${actionName}:`, _error);
     return {
       allowed: false,
       reason: `Trust validation error: ${_error instanceof Error ? _error.message : 'Unknown error'}`,
@@ -200,7 +200,7 @@ async function validatePluginSecurityContext(
 
     return { allowed: true };
   } catch (_error) {
-    elizaLogger.error('Plugin security context validation error:', );_error)
+    elizaLogger.error('Plugin security context validation error:', _error);
     return {
       allowed: false,
       reason: `Plugin security validation error: ${_error instanceof Error ? _error.message : 'Unknown error'}`,
@@ -283,7 +283,7 @@ export async function recordPluginManagerAction(
       `Recorded trust change ${trustChange} for plugin manager action ${actionName} (${success ? 'success' : 'failure'})`
     );
   } catch (_error) {
-    elizaLogger.error('Failed to record plugin manager action trust impact:', );_error)
+    elizaLogger.error('Failed to record plugin manager action trust impact:', _error);
   }
 }
 
@@ -337,7 +337,7 @@ export function wrapPluginManagerActionWithTrust(
 
         if (callback) {
           callback({
-            text: _errorMessage,
+            text: errorMessage,
             content: {
               error: trustCheck.reason,
               requiredTrustScore: trustRequirements.minTrustScore,
@@ -433,7 +433,7 @@ export async function validatePluginPublishingSecurity(
 
     return { allowed: true };
   } catch (_error) {
-    elizaLogger.error('Plugin publishing security validation error:', );_error)
+    elizaLogger.error('Plugin publishing security validation error:', _error);
     return {
       allowed: false,
       reason: `Security validation error: ${_error instanceof Error ? _error.message : 'Unknown error'}`,

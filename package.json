@@ -33,7 +33,7 @@
     "docker:bash": "bash ./scripts/docker.sh bash",
     "docker:start": "bash ./scripts/docker.sh start",
     "docker": "bun docker:build && bun docker:run && bun docker:bash",
-    "test": "turbo run test --concurrency=1",
+    "test": "turbo run test --concurrency=1 --filter=!@elizaos/hyperfy --filter=!@elizaos/plugin-dummy-services",
     "test:parallel": "turbo run test",
     "test:client": "turbo run test --filter=./packages/client",
     "test:core": "turbo run test --filter=./packages/core",

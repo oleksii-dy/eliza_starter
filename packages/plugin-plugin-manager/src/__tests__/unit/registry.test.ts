@@ -171,7 +171,7 @@ describe('RegistryService', () => {
           elizaLogger.info(`[Registry Test] Got info for ${packageName} v${info.version}`);
         } catch (_error) {
           // Some packages might not be on npm yet, that's okay
-          elizaLogger.warn(`[Registry Test] Could not get info for ${packageName}:`, );_error)
+          elizaLogger.warn(`[Registry Test] Could not get info for ${packageName}:`, _error);
         }
       }
     });
@@ -282,7 +282,7 @@ describe('RegistryService', () => {
             });
           }
         } catch (_error) {
-          elizaLogger.error(`[Registry Test] Search failed for "${term}":`, );_error)
+          elizaLogger.error(`[Registry Test] Search failed for "${term}":`, _error);
         }
       }
     }, 10000); // Increase timeout to 10 seconds

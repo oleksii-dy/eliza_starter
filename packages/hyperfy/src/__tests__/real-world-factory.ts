@@ -179,22 +179,14 @@ export class RealTestScenario {
       ...options?.stats
     });
 
+    // Create proper inventory component with equipment array structure
+    const equipment = new Array(11).fill(null); // Standard equipment slots
+    equipment[3] = null; // weapon slot
+    
     player.addComponent('inventory', {
       items: new Array(28).fill(null),
       maxSlots: 28,
-      equipment: {
-        head: null,
-        cape: null,
-        amulet: null,
-        weapon: null,
-        body: null,
-        shield: null,
-        legs: null,
-        gloves: null,
-        boots: null,
-        ring: null,
-        ammo: null
-      },
+      equipment: equipment,
       totalWeight: 0,
       equipmentBonuses: {
         attackStab: 0,

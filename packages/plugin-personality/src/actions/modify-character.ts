@@ -10,6 +10,7 @@ import {
   logger,
 } from '@elizaos/core';
 import { CharacterFileManager } from '../services/character-file-manager.js';
+import { extractJsonFromResponse } from '../utils/json-parser.js';
 
 /**
  * Action for direct character modification based on user requests or self-reflection
@@ -55,7 +56,7 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
         maxTokens: 200,
       });
 
-      const analysis = JSON.parse(intentResponse as string);
+      const analysis = extractJsonFromResponse(intentResponse as string);
       isModificationRequest = analysis.isModificationRequest && analysis.confidence > 0.6;
       requestType = analysis.requestType;
 
@@ -458,7 +459,7 @@ Return JSON: {"isModificationRequest": boolean, "requestType": string, "confiden
       maxTokens: 150,
     });
 
-    const analysis = JSON.parse(response as string);
+    const analysis = extractJsonFromResponse(response as string);
     return {
       isModificationRequest: analysis.isModificationRequest && analysis.confidence > 0.5,
       requestType: analysis.requestType || 'none',
@@ -521,7 +522,7 @@ Example format:
       maxTokens: 500,
     });
 
-    return JSON.parse(response as string);
+    return extractJsonFromResponse(response as string);
   } catch (error) {
     logger.warn('Failed to parse user modification request', error);
     return null;
@@ -600,7 +601,7 @@ Return JSON:
       maxTokens: 800,
     });
 
-    const safetyEvaluation = JSON.parse(response as string);
+    const safetyEvaluation = extractJsonFromResponse(response as string);
 
     logger.info('Character modification safety evaluation', {
       isAppropriate: safetyEvaluation.isAppropriate,

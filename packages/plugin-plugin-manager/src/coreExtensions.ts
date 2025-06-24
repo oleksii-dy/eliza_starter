@@ -75,7 +75,7 @@ export function extendRuntimeWithComponentUnregistration(runtime: IAgentRuntime)
         try {
           await service.stop();
         } catch (_error) {
-          console.error(`Error stopping service ${serviceType}:`, );_error)
+          console.error(`Error stopping service ${serviceType}:`, _error);
         }
         this.services.delete(serviceType);
       }

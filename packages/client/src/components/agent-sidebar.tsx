@@ -3,7 +3,7 @@ import { useAgentPanels, useAgent, type AgentPanel } from '@/hooks/use-query-hoo
 import type { UUID, Agent } from '@elizaos/core';
 import { Columns3, Database, Eye, Code, InfoIcon, Loader2 } from 'lucide-react';
 import { JSX, useMemo } from 'react';
-import { AgentActionViewer } from './agent-action-viewer';
+import { AgentActionViewer } from './AgentActionViewer';
 import { AgentLogViewer } from './agent-log-viewer';
 import { AgentMemoryViewer } from './agent-memory-viewer';
 import { Skeleton } from './ui/skeleton';
@@ -21,7 +21,7 @@ type TabValue = FixedTabValue | string;
 
 export function AgentSidebar({ agentId, agentName, channelId }: AgentSidebarProps) {
   const { currentTab: detailsTab, setTab: setDetailsTab } = useAgentTabState(agentId);
-  const { data: panelsResponse, isLoading: isLoadingPanels } = useAgentPanels(agentId as string, {
+  const { data: panelsResponse, isLoading: isLoadingPanels } = useAgentPanels(agentId as UUID, {
     enabled: !!agentId,
   });
 

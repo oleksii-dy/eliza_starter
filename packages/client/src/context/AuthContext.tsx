@@ -1,6 +1,6 @@
 import { createContext, useState, useContext, ReactNode, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ApiKeyDialog } from '@/components/api-key-dialog';
+import { ApiKeyDialog } from '@/components/ApiKeyDialog';
 import clientLogger from '@/lib/logger';
 
 interface AuthContextType {

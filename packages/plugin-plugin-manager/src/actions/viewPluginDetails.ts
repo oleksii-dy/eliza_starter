@@ -135,7 +135,7 @@ const viewPluginDetailsHandler: Handler = async (
     elizaLogger.error('Error viewing plugin details:', _error);
     if (callback) {
       await callback({
-        text: `Error viewing plugin details: ${_error instanceof Error ? _error.message : 'Unknown _error occurred'}`,
+        text: `Error viewing plugin details: ${_error instanceof Error ? _error.message : 'Unknown error occurred'}`,
       });
     }
     return false;

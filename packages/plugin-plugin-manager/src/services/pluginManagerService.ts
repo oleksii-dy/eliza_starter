@@ -106,7 +106,7 @@ async function getLocalRegistryIndex(): Promise<Record<string, RegistryEntry>> {
 
     return data;
   } catch (error) {
-    logger.error("Failed to fetch plugin registry:", error);
+    logger.error('Failed to fetch plugin registry:', error);
 
     // Return cached data if available, otherwise empty registry
     if (registryCache) {
@@ -197,8 +197,8 @@ async function installFromNpm(
       message: 'Installing dependencies...',
     });
   } catch (error: any) {
-    logger.error('Failed to install npm package:', _error);
-    throw _error;
+    logger.error('Failed to install npm package:', error);
+    throw error;
   }
 }
 
@@ -269,8 +269,8 @@ async function installFromGit(
       await fs.remove(tempDir);
     }
   } catch (error: any) {
-    logger.error('Failed to install git repository:', _error);
-    throw _error;
+    logger.error('Failed to install git repository:', error);
+    throw error;
   }
 }
 
@@ -646,7 +646,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
 
       logger.success(`[PluginManagerService] Plugin ${pluginState.name} loaded successfully`);
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String();_error)
+      const errorMsg = error instanceof Error ? error.message : String(error);
       logger.error(`[PluginManagerService] Failed to load plugin ${pluginState.name}:`, errorMsg);
 
       this.updatePluginState(pluginId, {
@@ -660,7 +660,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
         error: errorMsg,
       });
 
-      throw _error;
+      throw error;
     }
   }
 
@@ -712,7 +712,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
 
       logger.success(`[PluginManagerService] Plugin ${pluginState.name} unloaded successfully`);
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String();_error)
+      const errorMsg = error instanceof Error ? error.message : String(error);
       logger.error(`[PluginManagerService] Failed to unload plugin ${pluginState.name}:`, errorMsg);
 
       this.updatePluginState(pluginId, {
@@ -720,7 +720,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
         error: errorMsg,
       });
 
-      throw _error;
+      throw error;
     }
   }
 
@@ -833,7 +833,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
           pluginState.components!.services.add(serviceType);
           this.trackComponentRegistration(pluginState.id, 'service', serviceType);
         } catch (error) {
-          logger.error(`Failed to register service ${ServiceClass.serviceType}:`, _error);
+          logger.error(`Failed to register service ${ServiceClass.serviceType}:`, error);
         }
       }
     }
@@ -918,7 +918,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
               await service.stop();
               logger.debug(`Stopped service: ${serviceType}`);
             } catch (error) {
-              logger.error(`Error stopping service ${serviceType}:`, _error);
+              logger.error(`Error stopping service ${serviceType}:`, error);
             }
             this.runtime.services.delete(serviceType as ServiceTypeName);
             if (serviceType) {
@@ -1067,10 +1067,10 @@ export class PluginManagerService extends Service implements PluginRegistry {
       logger.success(`Plugin ${pluginName} loaded successfully`);
       return pluginId;
     } catch (error: any) {
-      logger.error(`Failed to load plugin ${pluginName}:`, _error);
+      logger.error(`Failed to load plugin ${pluginName}:`, error);
       pluginInfo.status = 'error';
       pluginInfo.errorDetails = error.message;
-      throw _error;
+      throw error;
     }
   }
 
@@ -1159,7 +1159,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       logger.error(`Could not find a valid plugin export in ${mainEntry}`);
       return null;
     } catch (error: any) {
-      logger.error(`Failed to load plugin module from ${pluginPath}:`, _error);
+      logger.error(`Failed to load plugin module from ${pluginPath}:`, error);
       return null;
     }
   }
@@ -1200,7 +1200,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       logger.info(`[PluginManagerService] Successfully cloned repository to ${destination}`);
       return { success: true, path: destination };
     } catch (error: any) {
-      logger.error('[PluginManagerService] Failed to clone repository:', _error);
+      logger.error('[PluginManagerService] Failed to clone repository:', error);
       return { success: false, error: error.message };
     }
   }
@@ -1582,7 +1582,7 @@ export class PluginManagerService extends Service implements PluginRegistry {
       }
       return pluginData;
     } catch (error) {
-      logger.error('[PluginManagerService] Failed to fetch plugin knowledge from registry:', _error);
+      logger.error('[PluginManagerService] Failed to fetch plugin knowledge from registry:', error);
       // Return empty map on error instead of fake data
       return new Map();
     }

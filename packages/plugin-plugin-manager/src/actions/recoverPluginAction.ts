@@ -293,7 +293,7 @@ export const recoverPluginAction: Action = {
             },
           };
         } catch (_error) {
-          elizaLogger.error('[recoverPluginAction] Error during recovery:', );_error)
+          elizaLogger.error('[recoverPluginAction] Error during recovery:', _error);
 
           const errorMessage = `Error during plugin recovery: ${_error instanceof Error ? _error.message : String(_error)}`;
 
@@ -324,7 +324,7 @@ export const recoverPluginAction: Action = {
         };
       }
     } catch (_error) {
-      elizaLogger.error('[recoverPluginAction] Error during recovery:', );_error)
+      elizaLogger.error('[recoverPluginAction] Error during recovery:', _error);
 
       const errorMessage = `Error during plugin recovery: ${_error instanceof Error ? _error.message : String(_error)}`;
 

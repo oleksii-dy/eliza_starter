@@ -97,7 +97,7 @@ export const updatePluginAction: Action = {
           'This feature requires integration with npm/git versioning systems and automated migration tools.'
       );
     } catch (_error) {
-      elizaLogger.error('[updatePluginAction] Error:', );_error)
+      elizaLogger.error('[updatePluginAction] Error:', _error);
 
       const errorMessage = `Error: ${_error instanceof Error ? _error.message : String(_error)}`;
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import AgentCreator from './components/agent-creator';
 import { AppSidebar } from './components/app-sidebar';
-import { ConnectionErrorBanner } from './components/connection-error-banner';
+import { ConnectionErrorBanner } from './components/ConnectionErrorBanner';
 import EnvSettings from './components/env-settings';
 import { AgentLogViewer } from './components/agent-log-viewer';
 import OnboardingTour from './components/onboarding-tour';

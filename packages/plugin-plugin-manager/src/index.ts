@@ -143,7 +143,7 @@ export const pluginManagerPlugin: Plugin = {
           elizaLogger.info('✔ Configured high-risk operation protection for plugin management');
         }
       } catch (error) {
-        elizaLogger.warn('⚠️ Failed to configure security module protection:', );_error)
+        elizaLogger.warn('⚠️ Failed to configure security module protection:', error);
       }
     } else {
       elizaLogger.warn(

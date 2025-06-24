@@ -13,7 +13,12 @@ export default defineConfig({
     '@elizaos/core',
     'fs-extra',
     'zod',
-    'bun:test'
+    'bun:test',
+    'events',
+    'pg',
+    'fs',
+    'fs-extra',
+    'dotenv'
   ],
   noExternal: [],
   ignoreWatch: ['src/**/*.test.ts', 'src/**/*.test.js'],

@@ -1,5 +1,5 @@
-import { createTestWorld } from '../src/__tests__/createTestWorld'
-import { runVisualDemo } from '../src/rpg/examples/visual-demo'
+import { createTestWorld } from './src/__tests__/createTestWorld'
+import { runVisualDemo } from './src/rpg/examples/visual-demo'
 
 async function testVisualDemo() {
   console.log('=== Testing Visual Representation Demo ===\n')

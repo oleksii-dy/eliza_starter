@@ -193,12 +193,9 @@ export class VisualRepresentationSystem extends System {
     // Add mesh to group
     group.add(mesh);
 
-    // Add group to entity's node
-    if (entity.node && entity.node.add) {
-      entity.node.add(group);
-    } else {
-      console.warn(`[VisualRepresentationSystem] Entity ${entity.id || entity.data?.id} does not have a node property`);
-    }
+    // Store visual group without adding to entity node
+    // (The hyperfy node system is separate from Three.js scene graph)
+    // The visual is tracked in our entityVisuals map instead
 
     // Store visual reference
     this.entityVisuals.set(entity.data.id, { mesh, group, template });
@@ -283,15 +280,15 @@ export class VisualRepresentationSystem extends System {
       startTime: Date.now(),
       duration,
       loop,
-      originalPosition: {
-        x: visual.group.position.x,
-        y: visual.group.position.y,
-        z: visual.group.position.z
+            originalPosition: { 
+        x: visual.group.position.x || 0, 
+        y: visual.group.position.y || 0, 
+        z: visual.group.position.z || 0 
       },
-      originalRotation: {
-        x: visual.group.rotation.x,
-        y: visual.group.rotation.y,
-        z: visual.group.rotation.z
+      originalRotation: { 
+        x: visual.group.rotation.x || 0, 
+        y: visual.group.rotation.y || 0, 
+        z: visual.group.rotation.z || 0 
       }
     };
 
@@ -369,7 +366,10 @@ export class VisualRepresentationSystem extends System {
         // Fall over
         visual.group.rotation.z = animation.originalRotation!.z + progress * Math.PI / 2;
         visual.group.position.y = animation.originalPosition!.y - progress * 0.5;
-        visual.mesh.material.opacity = 1 - progress * 0.5;
+        // Set opacity if material exists
+        if (visual.mesh._material) {
+          visual.mesh._material.opacity = 1 - progress * 0.5;
+        }
         break;
 
       case 'open':
@@ -401,7 +401,9 @@ export class VisualRepresentationSystem extends System {
       case 'shimmer':
         // Material shimmer effect
         const shimmer = 0.7 + Math.sin(progress * Math.PI * 4) * 0.3;
-        visual.mesh.material.opacity = shimmer;
+        if (visual.mesh._material) {
+          visual.mesh._material.opacity = shimmer;
+        }
         break;
 
       case 'sparkle':
@@ -425,8 +427,10 @@ export class VisualRepresentationSystem extends System {
       case 'cast':
         // Casting motion (raise and glow)
         visual.group.position.y = animation.originalPosition!.y + Math.sin(progress * Math.PI) * 0.3;
-        visual.mesh.material.emissive = new THREE.Color(0xffffff);
-        visual.mesh.material.emissiveIntensity = Math.sin(progress * Math.PI) * 0.5;
+        if (visual.mesh._material) {
+          visual.mesh._material.emissive = new THREE.Color(0xffffff);
+          visual.mesh._material.emissiveIntensity = Math.sin(progress * Math.PI) * 0.5;
+        }
         break;
 
       case 'draw':

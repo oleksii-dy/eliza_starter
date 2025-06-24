@@ -5,8 +5,8 @@ import { type Agent, type UUID, ChannelType as CoreChannelType } from '@elizaos/
 import { Plus } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AddAgentCard from '@/components/add-agent-card';
-import AgentCard from '@/components/agent-card';
+import AddAgentCard from '@/components/AddAgentCard';
+import AgentCard from '@/components/AgentCard';
 import GroupCard from '@/components/group-card';
 import GroupPanel from '@/components/group-panel';
 import { Button } from '../components/ui/button';

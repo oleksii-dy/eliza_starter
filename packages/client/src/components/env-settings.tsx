@@ -4,7 +4,7 @@ import { Input } from './ui/input';
 import { Check, Eye, EyeOff, MoreVertical, Settings, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { apiClient } from '@/lib/api';
-import { ApiKeyDialog } from './api-key-dialog';
+import { ApiKeyDialog } from './ApiKeyDialog';
 import { useToast } from '@/hooks/use-toast';
 
 export default function EnvSettings() {

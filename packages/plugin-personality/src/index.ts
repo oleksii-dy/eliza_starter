@@ -6,6 +6,7 @@ import { modifyCharacterAction } from './actions/modify-character.js';
 import { restoreCharacterAction } from './actions/restore-character.js';
 import { characterEvolutionProvider } from './providers/character-evolution.js';
 import { CharacterFileManager } from './services/character-file-manager.js';
+import testSuites from './__tests__/e2e/index.js';
 // Test imports removed - tests now use bun:test format
 // Temporarily comment out scenarios until type issues are resolved
 // import adminCharacterModificationScenario from './scenarios/admin-character-modification.js';
@@ -42,9 +43,8 @@ export const selfModificationPlugin: Plugin = {
   services: [CharacterFileManager],
 
   // Test suites removed - now using bun:test format
-  tests: [],
+  tests: testSuites,
 
-  // Scenario tests for comprehensive workflow validation (temporarily disabled for build)
   scenarios: [
     // adminCharacterModificationScenario,
     // agentSelfModificationScenario,

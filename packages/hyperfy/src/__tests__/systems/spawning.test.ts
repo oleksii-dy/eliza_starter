@@ -491,25 +491,34 @@ describe('SpawningSystem', () => {
 
     it('should throttle updates', () => {
       const updateSpy = spyOn(spawningSystem as any, 'updateSpawner');
+      
+      // Set timeout to prevent infinite loops
+      const timeout = setTimeout(() => {
+        throw new Error('Test timed out - possible infinite loop in fixedUpdate');
+      }, 1000);
 
-      // Register a spawner
-      spawningSystem.registerSpawner({
-        type: SpawnerType.NPC,
-        position: { x: 0, y: 0, z: 0 }
-      });
+      try {
+        // Register a spawner
+        spawningSystem.registerSpawner({
+          type: SpawnerType.NPC,
+          position: { x: 0, y: 0, z: 0 }
+        });
 
-      // First update should process
-      spawningSystem.fixedUpdate(16);
-      expect(updateSpy).toHaveBeenCalledTimes(1);
+        // First update should process
+        spawningSystem.fixedUpdate(16);
+        expect(updateSpy).toHaveBeenCalledTimes(1);
 
-      // Immediate second update should be throttled
-      spawningSystem.fixedUpdate(16);
-      expect(updateSpy).toHaveBeenCalledTimes(1);
+        // Immediate second update should be throttled
+        spawningSystem.fixedUpdate(16);
+        expect(updateSpy).toHaveBeenCalledTimes(1);
 
-      // Update after interval should process
-      (spawningSystem as any).lastUpdateTime = Date.now() - 2000;
-      spawningSystem.fixedUpdate(16);
-      expect(updateSpy).toHaveBeenCalledTimes(2);
+        // Update after interval should process
+        (spawningSystem as any).lastUpdateTime = Date.now() - 2000;
+        spawningSystem.fixedUpdate(16);
+        expect(updateSpy).toHaveBeenCalledTimes(2);
+      } finally {
+        clearTimeout(timeout);
+      }
     });
 
     it('should clean up destroyed entities', () => {

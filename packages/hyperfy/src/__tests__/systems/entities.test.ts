@@ -309,9 +309,13 @@ describe('Entities System', () => {
       // @ts-ignore - accessing private destroy method for testing
       const destroySpy2 = spyOn(entity2, 'destroy' as any);
 
-      // Destroy entity1 during update
+      // Destroy entity1 during update - using a simple flag instead of recursive call
+      let shouldDestroy = true;
       entity1.update = mock(() => {
-        entities.destroyEntity('test-1');
+        if (shouldDestroy) {
+          shouldDestroy = false; // Prevent infinite recursion
+          entities.destroyEntity('test-1');
+        }
       });
 
       expect(() => {
